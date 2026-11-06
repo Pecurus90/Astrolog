@@ -8,6 +8,7 @@ import random
 
 import pytest
 
+from astrolog.pipeline.filters import StandardFilter, answer, resolve
 from astrolog.pipeline.site_sky import level_of, rebuild
 from astrolog.pipeline.sqm_measure import declare_bias, sqm_root
 from astrolog.spine import declarations as decl
@@ -185,3 +186,15 @@ def test_a_bias_declared_later_rewrites_the_site_sky(conn, tmp_path):
     declare_bias(conn, "ZWO ASI2600MM Pro", 50, 400.0, LATER)
     (row,) = _measures(conn)
     assert row["sqm"] != 21.2  # riscritto dai frame col bias nuovo
+
+
+def test_a_filter_answered_later_rewrites_the_site_sky(conn, tmp_path):
+    """Un nome di filtro che l'app non conosce non conta; detto L, le sue pose contano."""
+    _site(conn)
+    _nights_in_four_seasons(conn, _measured(conn, tmp_path))
+    conn.execute("UPDATE pipeline_cards SET filter = 'Lumen'")
+    resolve(conn, "Lumen")
+    rebuild(conn, LATER)
+    assert _measures(conn) == []
+    answer(conn, "Lumen", StandardFilter.L)
+    assert [r["nights"] for r in _measures(conn)] == [4]

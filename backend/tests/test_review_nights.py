@@ -169,6 +169,16 @@ def test_answering_where_i_was_puts_those_poses_in_their_night(client):
     assert [n["key"] for n in dopo if n["site"] is None] != [gruppo["key"]], "non si richiede"
 
 
+def test_answering_where_i_was_rewrites_the_site_sky(client, monkeypatch):
+    """Quelle coordinate ora sono di un sito: i loro frame contano per il suo cielo."""
+    asked = []
+    monkeypatch.setattr(client.app.state.behind, "refresh_sky", lambda: asked.append(True))
+    gruppo = next(n for n in notti(review(client)) if n["frames"] == 2)
+    cima = next(c for c in gruppo["candidates"] if c["name"] == "Cima Ekar")
+    apply(client, unclear=[{"key": gruppo["key"], "site_id": cima["id"]}])
+    assert asked == [True]
+
+
 def test_an_answered_place_stays_on_the_page_but_no_longer_counts(client):
     """Un posto risposto resta in pagina, per poter cambiare idea, ma **non conta piu'** fra le cose
     da confermare: come le camere."""
