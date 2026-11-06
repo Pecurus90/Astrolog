@@ -129,6 +129,21 @@ def test_use_and_dismiss_survive_a_lost_database(client_vuoto, db_path, tmp_path
     assert [tuple(r) for r in rows] == [("Asiago", "frames", 40, None), ("Monte", "scale", None, 3)]
 
 
+def test_a_file_without_nights_restores_a_sky_from_the_frames(client_vuoto, db_path, offline):
+    """Un file scritto prima del passo 27 non porta `sky_nights`: il cielo del file vale intero,
+    non mezzo sopra la misura dai frame (il CHECK lo rifiuterebbe)."""
+    site = create(client_vuoto, bortle=6)
+    _measured(db_path, site["id"], 21.4)
+    client_vuoto.post(f"/api/v1/sites/{site['id']}/sky/use")
+    old = {"name": site["name"], "latitude": site["latitude"], "longitude": site["longitude"],
+           "sky_sqm": 20.5, "sky_source": "measured"}  # fmt: skip
+    conn = connect(db_path)
+    backup.restore(conn, {"version": backup.VERSION, "sites": [old]})
+    row = conn.execute("SELECT sky_sqm, sky_source, sky_nights FROM sites").fetchone()
+    conn.close()
+    assert tuple(row) == (20.5, "measured", None)
+
+
 def test_an_imported_site_finds_its_sky_on_the_frames_already_there(
     client_vuoto, db_path, tmp_path, offline
 ):
@@ -167,6 +182,23 @@ def test_a_dismissal_stays_with_the_place_not_with_the_name(client_vuoto, db_pat
     client_vuoto.app.state.behind.join(10.0)
     _measured(db_path, site["id"], 21.4)
     assert _site(client_vuoto, site["id"])["measured"]["propose"] is True
+
+
+def _sky_asked(client, monkeypatch) -> list[bool]:
+    asked: list[bool] = []
+    monkeypatch.setattr(client.app.state.behind, "refresh_sky", lambda: asked.append(True))
+    return asked
+
+
+def test_a_new_home_and_a_deleted_site_rewrite_the_sky(client_vuoto, monkeypatch, offline):
+    """Casa vince entro 1 km: cambiarla o cancellare un sito sposta i frame da un sito all'altro."""
+    create(client_vuoto, bortle=6)
+    other = create(client_vuoto, name="Monte", latitude=46.0, longitude=11.0)
+    asked = _sky_asked(client_vuoto, monkeypatch)
+    assert client_vuoto.post(f"/api/v1/sites/{other['id']}/default").status_code == 200
+    assert asked == [True]
+    assert client_vuoto.delete(f"/api/v1/sites/{other['id']}").status_code == 200
+    assert asked == [True, True]
 
 
 def _written_meanwhile(client, db_path, when: str):

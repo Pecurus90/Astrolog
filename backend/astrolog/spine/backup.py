@@ -245,6 +245,8 @@ def _restore_site(conn: sqlite3.Connection, site: dict[str, Any], now: str) -> N
     if site.get("is_default"):
         conn.execute("UPDATE sites SET is_default = 0 WHERE is_default = 1 AND name <> ?",
                      (site["name"],))  # fmt: skip
+    if "sky_source" in site:  # the sky is whole: a file older than sky_nights says none
+        site = {"sky_nights": None, **site}
     site_id = _upsert(conn, _Table("sites", _SITE, ("name",)), site, now)
     conn.execute(
         "UPDATE sites SET timezone = ? WHERE name = ?",
