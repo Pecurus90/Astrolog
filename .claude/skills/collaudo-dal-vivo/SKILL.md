@@ -38,7 +38,9 @@ Marco: avvia il backend sulla porta 8765 con la sua cartella dati, cioe' il suo 
 11 px: si ingrandisce la regione e si legge davvero.
 
 **Misurare il CSS senza farsi ingannare.** Ridimensionare la finestra dallo strumento di
-automazione **non e' affidabile**: dice "fatto" e non cambia niente. Una container query
+automazione **non e' affidabile**: dice "fatto" e non cambia niente. Una cattura a misura vera
+(desktop 1440x900, telefono 390x844) la fa `python tools/cattura.py <url> <png> --formato
+telefono`, che stampa anche la console; pagina contro tavola e' il lavoro del `collaudatore`. Una container query
 si misura **restringendo il contenitore** (uno stile inline sul suo genitore); una media
 query si misura **iniettando le regole** del ramo stretto senza l'involucro `@media`. E si
 legge il **valore calcolato** (`getComputedStyle`), non il sorgente: il sorgente dice cosa

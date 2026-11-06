@@ -52,6 +52,7 @@ fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
 | Lavoro meccanico gia' deciso | `sviluppatore` |
 | Revisione del diff | `revisore` |
 | Audit che esegue e misura | `auditore` |
+| Pagina contro tavola nel browser, prima di Marco | `collaudatore` |
 | Traduzione di una pagina finita | `traduttore` |
 
 ## Il codice

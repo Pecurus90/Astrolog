@@ -129,8 +129,9 @@ phase('Audit')
 const questions = ['promesse: ogni cosa che il compito prometteva succede davvero? Provala eseguendo.']
 if (args.surface) {
   questions.push(
-    'collaudo: la superficie toccata funziona nel browser? Skill collaudo-dal-vivo, app isolata ' +
-      '(ASTROLOG_PORT libera, ASTROLOG_DATA_DIR temporanea), mai i dati veri di Marco; spegnila.',
+    'collaudo: la superficie toccata funziona nel browser ed e uguale alla sua tavola? Criteri ' +
+      'del collaudatore, app isolata (ASTROLOG_PORT libera, ASTROLOG_DATA_DIR temporanea), mai ' +
+      'i dati veri di Marco; spegnila.',
   )
 }
 const audits = []
@@ -140,7 +141,7 @@ for (const q of questions) {
     phase: 'Audit',
     label: `audit:${name}`,
     schema: FINDINGS,
-    agentType: name === 'collaudo' ? undefined : 'auditore',
+    agentType: name === 'collaudo' ? 'collaudatore' : 'auditore',
   })
   if (!verdict) return end('failed', { where: `audit ${name}` })
   audits.push({ question: name, ran: verdict.ran || '', findings: verdict.findings })

@@ -64,8 +64,9 @@ Passi:
    `testi-per-pagina`).
 6. **Workflow `costruisci`** con `surface` e in `task` la lista del punto 2; esiti come in
    `/costruisci`.
-7. **Collaudo** pagina contro tavola, desktop e telefono, ogni stato (skill `collaudo-dal-vivo`);
-   le differenze le ripara chi ha scritto, una verifica.
+7. **Collaudo** pagina contro tavola, desktop e telefono, ogni stato: agente `collaudatore`
+   (dentro il workflow, coi suoi criteri e le catture di `tools/cattura.py`); le differenze le
+   ripara chi ha scritto, una verifica.
 8. **Riassunto** come in `/costruisci`; poi **Marco guarda a schermo**.
 9. **Traduzione** (`traduttore`) a pagina finita, guida utente, commit e push come in
    `/costruisci`. Fatto quando la CI su GitHub e' verde.

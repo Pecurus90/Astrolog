@@ -51,6 +51,10 @@ dev = [
   # che apre l'app cadeva all'import del conftest.
   "httpx2>=2.16.0",
   "pre-commit>=4.7.0",  # MIT - runs the checks in .pre-commit-config.yaml
+  # websockets: BSD-3-Clause, Python puro. Entra col difetto che risolve: il collaudatore non
+  # poteva cliccare ne' vedere gli errori di rete in una cattura a misura vera (tools/cattura.py,
+  # Chrome via CDP); Playwright avrebbe portato un browser suo (ADR 0025).
+  "websockets>=16.0",
 ]
 # il rilevatore di duplicati (jscpd) gira da npm, nel frontend: una installazione per tutti e due
 

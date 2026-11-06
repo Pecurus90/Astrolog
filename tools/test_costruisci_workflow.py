@@ -21,7 +21,7 @@ const scenario = JSON.parse(fs.readFileSync(scenarioPath, 'utf8'))
 const calls = []
 const agent = async (prompt, opts) => {
   const label = opts.label || opts.phase
-  calls.push({ label, prompt })
+  calls.push({ label, prompt, agentType: opts.agentType })
   for (const [prefix, reply] of Object.entries(scenario.replies)) {
     if (label.startsWith(prefix)) return reply
   }
@@ -141,7 +141,9 @@ def test_a_question_from_the_fixer_goes_to_marco(tmp_path):
 @needs_node
 def test_a_surface_adds_the_browser_test(tmp_path):
     out = run(tmp_path, BASE, surface=True)
-    assert "audit:collaudo" in labels(out)
+    types = {c["label"]: c.get("agentType") for c in out["calls"]}
+    assert types["audit:collaudo"] == "collaudatore", "page against board, before Marco"
+    assert types["audit:promesse"] == "auditore"
 
 
 @needs_node
