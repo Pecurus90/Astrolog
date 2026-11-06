@@ -75,6 +75,8 @@ backfocus, setup, Deep sky.
 | il pannello di un frame, scritto una volta | `panel_id` | -- | numero del pannello, tessera |
 | se un pannello regge una parte del lavoro del suo mosaico: almeno il 25% del tempo del piu' lungo | `counts_in_mosaic` | pannello che conta | pannello minore, pannello scarto |
 | centro, rotazione e rettangolo scelti nel Planner | `framing` | inquadratura | framing, campo |
+| riaprire nel Planner l'inquadratura di un progetto per cambiarla (Marco, 6/11/2026) | `reframe` | Reinquadra | Reframing |
+| le tre viste del cielo nel Planner, come nella tavola v58.6 (Marco, 6/11/2026) | `sky_view` (`dome`, `sphere`, `inside`) | Cupola, Sfera, Dentro | -- (e' `weather.state` (`ok`, `waiting`, `unknown`)) |
 | centro, scala, rotazione e rettangolo misurati dal solver | `wcs` / `footprint` | il cielo del frame / il campo | astrometria |
 | il gruppo di un frame senza nome e senza cielo: la notte, la camera, il telescopio e il puntamento di chi ha aperto il gruppo. Lo scrive `identify` quando il frame arriva, e si risceglie solo se casa cambia fuso e la notte del frame con lei | `unnamed_key` | -- | cella, id del gruppo |
 | un frame risolto nel cui campo il catalogo non ha nessun candidato: il cielo c'e', ma non dice cosa hai ripreso. Lo scrive `identify`, e resta quando il frame torna in coda | `empty_cone` | senza oggetti identificati | il cielo non ha trovato niente, vuoto, senza oggetto |
@@ -173,7 +175,7 @@ backfocus, setup, Deep sky.
 | sotto i diciotto gradi: la luce del Sole e' meno di quella delle stelle, ed e' il buio di chi fotografa il cielo | `dark` (una fascia) | buio | notte (che e' la finestra da mezzogiorno a mezzogiorno), nero, **buio pieno** (che e' la classe 1 di Bortle, e si legge nello stesso piede) |
 | gli oggetti fuori dal Sistema solare, e il modo del Planner e di Meteo per loro (Marco, 19/10/2026, uso dei forum) | `deep_sky` | Deep sky | cielo profondo, DSO |
 | come si scrive una percentuale (Marco, 19/10/2026) | -- | 40% (attaccato) | 40 % |
-| come si scrivono decimali e migliaia (regola SI, BIPM; Marco, 19/10/2026) | -- | decimali col punto (1.8″), migliaia con lo spazio sottile da 10 000 in su (396 200 km, 1366 m) | 1,8″, 396.200 |
+| come si scrivono decimali e migliaia (regola SI, BIPM: il segno decimale segue la lingua; Marco, 6/11/2026: la virgola ovunque) | -- | decimali con la virgola (1,8″), migliaia con lo spazio sottile da 10 000 in su (396 200 km, 1366 m) | 1.8″, 396.200 |
 | come si scrive il micrometro, in tutta l'app (Marco, 17/10/2026) | -- | µm (Pixel (µm)) | um |
 | ore di buio con qualita' della notte da 60 (ADR 0020); per un progetto o un oggetto del Piano, le sue ore visibili con quella qualita'. **Superata dalla riga «ore di posa»** (ADR 0034) | `usable_hours` | ore utili (dopo ADR 0034: ore di posa) | ore buone, ore serene |
 | le ore di buio contate per quanto rendono: somma di Trasparenza / 100 x ore di buio, divise per banda della Luna («4,6 ore di posa: 3,1 in banda larga, 1,5 solo banda stretta»); nelle proposte del Piano della notte solo «4 h di posa» (ADR 0034; Marco, 24/10/2026). Da costruire | -- | ore di posa | ore utili (e' `usable_hours`), ore buone |
