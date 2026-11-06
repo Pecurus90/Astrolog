@@ -101,7 +101,7 @@ def answer(
     key = filter_key(written)
     if not key or key in FORMS:
         raise ValueError(f"{written!r}: standard spelling or empty, never answered")
-    with transaction(conn, immediate=True):  # reads then writes: lock first, never fails midway
+    with transaction(conn):  # reads then writes: lock first, never fails midway
         own = _filter_named(conn, key)
         if own is not None and (isinstance(target, StandardFilter) or target.strip() != own):
             raise ValueError(f"{written!r}: name of your filter {own!r}, it means that filter")

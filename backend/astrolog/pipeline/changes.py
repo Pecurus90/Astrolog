@@ -106,7 +106,7 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
     written, real = _keys(absolute)
     identity = _identity(absolute)
     ancestors = _above(absolute)
-    with transaction(conn, immediate=True):
+    with transaction(conn):
         same = _same_root(conn, written, real, identity, ancestors)
         if same is not None:
             return same
@@ -241,7 +241,7 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         changes.hidden = sorted(_rel(p, root) for p in walk.hidden)
         changes.online_only = sorted(_rel(p, root) for p in walk.online_only)
         changes.not_fits = dict(walk.not_fits.most_common(LEFT_OUT_KEPT))
-    with transaction(conn, immediate=True):
+    with transaction(conn):
         changes.scan_id = inserted_id(
             conn.execute(
                 "INSERT INTO pipeline_scans"

@@ -85,7 +85,7 @@ def _scan_root(
         skipped = [got for _, got in batch if isinstance(got, Skipped)]
         reasons.update(got.reason for got in skipped)
         _count_unknown(unknown, [got for _, got in batch if isinstance(got, Extracted)])
-        with transaction(conn, immediate=True):
+        with transaction(conn):
             for rel, got in batch:
                 _store(conn, changes, rel, got, now)
             conn.execute(  # running totals: a stopped scan keeps what its saved batches saw
@@ -100,7 +100,7 @@ def _scan_root(
             )
         result.skipped.extend(skipped)
     _left_unread(changes, vanished)
-    with transaction(conn, immediate=True):  # gone and moves together: a crash loses neither
+    with transaction(conn):  # gone and moves together: a crash loses neither
         finish_scan(conn, changes)
         result.moved = _moved(conn, root_id, changes)
         conn.execute(  # name no card carries any more: nothing left to ask

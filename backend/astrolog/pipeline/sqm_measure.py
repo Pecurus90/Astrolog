@@ -65,7 +65,7 @@ def sqm_root(
                 values = _measured(conn, path, row, (catalogues, code))
             except OSError:  # an area file missing: catalogue half installed, the shot waits
                 continue
-            with transaction(conn, immediate=True):
+            with transaction(conn):
                 conn.execute(INSERT, values | {"computed_at": now})
             result.written += 1
         return result
@@ -75,7 +75,7 @@ def declare_bias(
     conn: sqlite3.Connection, camera: str, offset: int | None, bias_adu: float, now: str
 ) -> None:
     """The camera's bias at that offset; its shots' sky brightness written again, and the sites'."""
-    with transaction(conn, immediate=True):
+    with transaction(conn):
         conn.execute(
             "DELETE FROM pipeline_camera_bias WHERE camera = ? AND offset IS ?", (camera, offset)
         )

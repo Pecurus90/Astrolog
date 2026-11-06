@@ -64,7 +64,7 @@ def sky_root(
             return SkyResult()
         values = [_on_sky(row, now) for row in rows]
         _with_altitudes(rows, values)
-        with transaction(conn, immediate=True):
+        with transaction(conn):
             conn.executemany(UPSERT, values)
         return SkyResult(written=len(values))
 

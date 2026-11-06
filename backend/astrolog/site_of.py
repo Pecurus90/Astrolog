@@ -4,6 +4,7 @@ site's sky from the frames, below both pipelines (ADR 0030). Reads sites and dec
 import sqlite3
 from enum import StrEnum
 
+from .db.declared import declared
 from .place import by_distance, coordinates_key, distance_km
 
 # Below this the header's coordinates and the site's are the same place: two decimals already
@@ -46,13 +47,7 @@ def site_by_name(conn: sqlite3.Connection, name: str) -> sqlite3.Row | None:
 
 
 def site_for_coordinates(conn: sqlite3.Connection, key: str | None) -> str | None:
-    if key is None:
-        return None
-    row = conn.execute(
-        "SELECT value FROM declarations WHERE entity_type = ? AND entity_key = ? AND field = ?",
-        (COORDINATES, key, COORDINATES_SITE),
-    ).fetchone()
-    value = None if row is None else row["value"]
+    value = declared(conn, COORDINATES, key, COORDINATES_SITE)
     return value if isinstance(value, str) and value else None
 
 

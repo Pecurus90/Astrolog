@@ -104,7 +104,7 @@ def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -
         "frame_id": row["frame_id"], "file_id": row["file_id"], "outcome": outcome,
         "duration_s": time.perf_counter() - start, "measured_at": now,
     }  # fmt: skip
-    with transaction(conn, immediate=True):
+    with transaction(conn):
         conn.execute(UPSERT, values)
     return outcome
 

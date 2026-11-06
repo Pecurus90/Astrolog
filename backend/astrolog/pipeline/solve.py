@@ -428,7 +428,7 @@ def _write(conn: sqlite3.Connection, row: sqlite3.Row, tried: _Tried, this: _Pas
         "hint_from": tried.hint.hint_from, "field_from": tried.hint.field_from,
     } | _measured(found, row)  # fmt: skip
     values |= _scale_check(values["scale_arcsec_px"], row)  # type: ignore[arg-type]
-    with transaction(conn, immediate=True):
+    with transaction(conn):
         written = conn.execute(UPSERT, values).rowcount
     return outcome if written else None
 
@@ -451,7 +451,7 @@ def _scale_check(solved: float | None, row: sqlite3.Row) -> dict[str, object]:
 def forget(conn: sqlite3.Connection, frame_id: int) -> bool:
     """On request (header fixed, new catalogue): the shot is solved again at the next pass.
     False: nothing to forget. Its measures on the sky go too: they wait for the new one."""
-    with transaction(conn, immediate=True):
+    with transaction(conn):
         conn.execute("DELETE FROM pipeline_sky WHERE frame_id = ?", (frame_id,))
         gone = conn.execute("DELETE FROM pipeline_solutions WHERE frame_id = ?", (frame_id,))
     return gone.rowcount > 0

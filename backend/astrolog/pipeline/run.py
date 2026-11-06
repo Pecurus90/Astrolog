@@ -53,7 +53,7 @@ def run_roots(
 
 def _sky_of_sites(conn: sqlite3.Connection, now: str) -> None:
     try:
-        with transaction(conn, immediate=True):  # sites read under the lock: a move waits
+        with transaction(conn):  # sites read under the lock: a move waits
             rebuild(conn, now)
     except Exception:  # behind the scenes, as a folder
         log.warning("pipeline nuova: cielo dei siti non riscritto", exc_info=True)

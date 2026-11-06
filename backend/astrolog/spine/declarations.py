@@ -7,6 +7,7 @@ from enum import StrEnum
 from typing import Any
 
 from ..clock import now_iso
+from ..db.declared import declared as declared  # the stages read it from here
 from ..site_of import COORDINATES as COORDINATES_ENTITY
 from ..site_of import COORDINATES_SITE
 from ..vocab.header_value import normalize_header_value
@@ -39,19 +40,6 @@ class EntityType(StrEnum):
     MOSAIC = "mosaic"
     # the gear the files leave out, keyed by the header signature (`spine/signature.py`)
     SIGNATURE = "signature"
-
-
-def declared(
-    conn: sqlite3.Connection, entity_type: EntityType, entity_key: str | None, field: str
-) -> Any:
-    """The row's presence wins over what was detected."""
-    if entity_key is None:
-        return None
-    row = conn.execute(
-        "SELECT value FROM declarations WHERE entity_type = ? AND entity_key = ? AND field = ?",
-        (entity_type, entity_key, field),
-    ).fetchone()
-    return None if row is None else row["value"]
 
 
 def write_declaration(  # noqa: PLR0913
