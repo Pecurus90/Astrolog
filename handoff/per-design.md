@@ -9,7 +9,7 @@ Quando la consegna nuova arriva in `handoff/design/`, Claude Code controlla ogni
 sulle tavole: `[fatta vN]` se c'e', di nuovo `[da dare]` con cio' che manca se no. Le voci fatte
 escono alla consegna dopo. Il testo lungo di un brief sta nel suo file accanto (`design-v59.md`).
 
-Consegna controllata: v75 (7/11), in `handoff/design/` al posto della v58.6.
+Consegna controllata: c35517a6 (v75, 7/11), in `handoff/design/` al posto della v58.6.
 
 ## Da dare
 
