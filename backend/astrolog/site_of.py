@@ -1,11 +1,13 @@
 """Which declared site a place belongs to (docs/domini/sito.md): one rule for the nights and for the
 site's sky from the frames, below both pipelines (ADR 0030). Reads sites and declarations only."""
 
+import datetime as dt
 import sqlite3
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Self
 
+from .clock import night_date, now_iso
 from .db.declared import declared
 from .place import by_distance, coordinates_key, distance_km
 
@@ -59,6 +61,14 @@ type Sites = tuple[Site | None, list[Site]]
 
 def home_site(conn: sqlite3.Connection) -> Site | None:
     return _site(conn.execute(_SITE + " WHERE is_default = 1").fetchone())
+
+
+def home_tonight(conn: sqlite3.Connection) -> dt.date:
+    """Tonight's date at home, noon to noon: at two in the morning it is still last night. Without
+    a home or its zone, today in UTC: the archive does not depend on the site."""
+    home = home_site(conn)
+    tonight = night_date(now_iso(), home.timezone) if home else None
+    return dt.date.fromisoformat(tonight) if tonight else dt.datetime.now(dt.UTC).date()
 
 
 def sites(conn: sqlite3.Connection) -> list[Site]:

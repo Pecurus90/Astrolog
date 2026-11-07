@@ -121,6 +121,93 @@
 # ---
 # name: test_the_nights_page_of_two_grouped_nights
   dict({
+    'criteria': list([
+      dict({
+        'key': 'year',
+        'options': list([
+          dict({
+            'camera': None,
+            'chosen': False,
+            'name': None,
+            'nights': 2,
+            'optics': None,
+            'passband': None,
+            'value': '2024',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'site',
+        'options': list([
+          dict({
+            'camera': None,
+            'chosen': False,
+            'name': 'Casa',
+            'nights': 2,
+            'optics': None,
+            'passband': None,
+            'value': '1',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'setup',
+        'options': list([
+          dict({
+            'camera': None,
+            'chosen': False,
+            'name': None,
+            'nights': 2,
+            'optics': None,
+            'passband': None,
+            'value': '1',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'filter',
+        'options': list([
+          dict({
+            'camera': None,
+            'chosen': False,
+            'name': None,
+            'nights': 2,
+            'optics': None,
+            'passband': 'ha',
+            'value': 'Ha',
+          }),
+          dict({
+            'camera': None,
+            'chosen': False,
+            'name': None,
+            'nights': 1,
+            'optics': None,
+            'passband': 'oiii',
+            'value': 'OIII',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'constellation',
+        'options': list([
+        ]),
+      }),
+      dict({
+        'key': 'sky',
+        'options': list([
+          dict({
+            'camera': None,
+            'chosen': False,
+            'name': None,
+            'nights': 2,
+            'optics': None,
+            'passband': None,
+            'value': 'unknown',
+          }),
+        ]),
+      }),
+    ]),
+    'empty': None,
     'items': list([
       dict({
         'filters': list([
@@ -164,17 +251,28 @@
             'untimed': 0,
           }),
         ]),
+        'shooting': dict({
+          'broadband_hours': 0.0,
+          'dark_hours': 4.4,
+          'kind': 'narrowband',
+        }),
         'site': 'Casa',
+        'site_from': 'home',
         'site_source': 'detected',
         'untimed': 0,
         'weather': dict({
           'arrives_on': None,
           'cloud_total_pct': None,
+          'dark_hours': 0.0,
+          'exposure_hours': None,
+          'sky_word': None,
           'state': 'waiting',
+          'transparency': None,
           'usable_hours': None,
           'verdict': None,
           'window': None,
           'window_hours': None,
+          'without_aerosol': False,
         }),
       }),
       dict({
@@ -205,21 +303,40 @@
             'untimed': 0,
           }),
         ]),
+        'shooting': dict({
+          'broadband_hours': 0.0,
+          'dark_hours': 4.5,
+          'kind': 'narrowband',
+        }),
         'site': 'Casa',
+        'site_from': 'home',
         'site_source': 'detected',
         'untimed': 0,
         'weather': dict({
           'arrives_on': None,
           'cloud_total_pct': None,
+          'dark_hours': 0.0,
+          'exposure_hours': None,
+          'sky_word': None,
           'state': 'waiting',
+          'transparency': None,
           'usable_hours': None,
           'verdict': None,
           'window': None,
           'window_hours': None,
+          'without_aerosol': False,
         }),
       }),
     ]),
-    'limit': 100,
+    'limit': 20,
+    'months': list([
+      dict({
+        'integration_s': 1320.0,
+        'month': '2024-05',
+        'nights': 2,
+        'untimed': 0,
+      }),
+    ]),
     'offset': 0,
     'reading_done_pct': None,
     'still_reading': 0,

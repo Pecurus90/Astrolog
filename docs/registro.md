@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 343; senza fonte: 1.
-Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T tecnico: 81.
+Valori: 350; senza fonte: 1.
+Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 40; T tecnico: 84.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -66,7 +66,9 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| night_list(limit=) | `Query(100, ge=1, le=500)` | T |
+| _Values | `Annotated[list[str] \| None, Query(max_length=120)]` | T |
+| night_list(limit=) | `Query(20, ge=1, le=500)` | P docs/domini/notti.md |
+| night_list(q=) | `Query(None, max_length=200)` | T |
 
 ### api/pipeline.py
 
@@ -800,11 +802,26 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T
 | CREDITS_PER_CALL | `8_000` | M cost of one call, as the account's usage page reports it |
 | MIN_GAP_H | `max(12, math.ceil(24 * 365 / CALLS_PER_YEAR))` | T |
 
+### weather/nights.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| _STEP_MIN | `5` | T |
+| _OFFSETS | `[timedelta(minutes=-30 + _STEP_MIN * (k + 0.5)) for k in range(60 /...` | T |
+
 ### weather/openmeteo.py
 
 | simbolo | valore | fonte |
 |---|---|---|
 | FORECAST_DAYS | `8` | T |
+
+### weather/score.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| GOOD_FROM | `70.0` | P ADR 0034 |
+| UNCERTAIN_FROM | `40.0` | P ADR 0034 |
+| AOD_FACTOR | `2.0` | P ADR 0034 |
 
 ### weather/verdict.py
 

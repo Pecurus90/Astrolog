@@ -6,7 +6,7 @@ qualcuno sposta un numero, cade la prova che dice da dove veniva.
 
 import dataclasses
 
-from astrolog.weather import verdict
+from astrolog.weather import score, verdict
 
 
 def ora(at, sky="dark", **campi):
@@ -34,12 +34,13 @@ def notte(*buie, prima=("day", "civil")):
     return ore
 
 
-def test_the_verdict_follows_the_okta_classes_of_the_total_cloud():
-    """FEW fino a 2 okta (25%) si fa; SCT fino a 4 (50%) e' incerta; da BKN in su no."""
-    assert verdict.assess(notte({"cloud_total_pct": 25.0})).verdict == "go"
-    assert verdict.assess(notte({"cloud_total_pct": 25.1})).verdict == "marginal"
-    assert verdict.assess(notte({"cloud_total_pct": 50.0})).verdict == "marginal"
-    assert verdict.assess(notte({"cloud_total_pct": 50.1})).verdict == "nogo"
+def test_the_clouds_word_follows_the_okta_classes_of_the_total_cloud():
+    """FEW fino a 2 okta (25%); SCT fino a 4 (50%) incerta; da BKN in su no. E' la parola delle
+    nuvole, accanto al verdetto della notte, che viene dalla Trasparenza (ADR 0034)."""
+    assert verdict.cloud_word(25.0) == "go"
+    assert verdict.cloud_word(25.1) == "marginal"
+    assert verdict.cloud_word(50.0) == "marginal"
+    assert verdict.cloud_word(50.1) == "nogo"
 
 
 def test_the_verdict_looks_only_at_the_dark_hours():
@@ -47,9 +48,10 @@ def test_the_verdict_looks_only_at_the_dark_hours():
     ore = notte({"cloud_total_pct": 0.0}, {"cloud_total_pct": 10.0})
     ore[0].values["cloud_total_pct"] = 100.0
     ore[1].values["cloud_total_pct"] = 100.0
-    detto = verdict.assess(ore)
+    detto = score.assess(ore)
     assert detto.verdict == "go"
     assert detto.cloud_total_pct == 5.0
+    assert detto.transparency == 95.0
     assert detto.window == "dark"
     assert detto.window_hours == 2
 
@@ -59,26 +61,26 @@ def test_without_dark_the_night_is_the_hours_with_the_sun_down():
     l'orizzonte, e lo si dice."""
     ore = [ora("2026-06-21T22:00:00+02:00", sky="nautical", cloud_total_pct=80.0)]
     ore.append(ora("2026-06-21T12:00:00+02:00", sky="day", cloud_total_pct=0.0))
-    detto = verdict.assess(ore)
+    detto = score.assess(ore)
     assert detto.window == "sun_down"
     assert detto.verdict == "nogo"
 
 
 def test_where_the_sun_never_sets_there_is_no_verdict():
-    detto = verdict.assess([ora("2026-06-21T00:00:00+02:00", sky="day")])
+    detto = score.assess([ora("2026-06-21T00:00:00+02:00", sky="day")])
     assert detto.verdict is None
     assert detto.window is None
     assert detto.usable_hours is None
 
 
 def test_without_the_total_cloud_there_is_no_verdict_and_no_usable_hours():
-    detto = verdict.assess(notte({"cloud_total_pct": None}, {"cloud_total_pct": 0.0}))
+    detto = score.assess(notte({"cloud_total_pct": None}, {"cloud_total_pct": 0.0}))
     assert detto.verdict is None
     assert detto.usable_hours is None
 
 
 def test_the_usable_hours_are_the_dark_hours_the_verdict_would_call_clear():
-    detto = verdict.assess(
+    detto = score.assess(
         notte({"cloud_total_pct": 25.0}, {"cloud_total_pct": 26.0}, {"cloud_total_pct": 0.0})
     )
     assert detto.usable_hours == 2
@@ -87,7 +89,7 @@ def test_the_usable_hours_are_the_dark_hours_the_verdict_would_call_clear():
 def test_the_usable_hours_are_said_as_an_interval_and_a_count():
     """ "Dalle 20 alle 23, 2 ore": l'intervallo va dalla prima ora serena alla fine dell'ultima, e
     il conto dice che in mezzo ce n'e' una coperta."""
-    detto = verdict.assess(
+    detto = score.assess(
         notte({"cloud_total_pct": 0.0}, {"cloud_total_pct": 80.0}, {"cloud_total_pct": 10.0})
     )
     assert (detto.usable_since, detto.usable_until, detto.usable_hours) == (
@@ -98,7 +100,7 @@ def test_the_usable_hours_are_said_as_an_interval_and_a_count():
 
 
 def test_a_night_without_clear_hours_has_no_interval():
-    detto = verdict.assess(notte({"cloud_total_pct": 90.0}))
+    detto = score.assess(notte({"cloud_total_pct": 90.0}))
     assert (detto.usable_since, detto.usable_until, detto.usable_hours) == (None, None, 0)
 
 
@@ -109,14 +111,14 @@ def test_the_end_of_an_interval_is_the_next_hour_of_the_night_even_when_the_cloc
         ora("2026-10-25T02:00:00+02:00"),
         ora("2026-10-25T02:00:00+01:00", cloud_total_pct=90.0),
     ]
-    assert verdict.assess(ore).usable_until == "2026-10-25T02:00:00+01:00"
+    assert score.assess(ore).usable_until == "2026-10-25T02:00:00+01:00"
 
 
 def test_the_page_shows_from_the_last_hour_of_day_to_the_first_after_dawn():
     """A ottobre 18-08: l'ultima ora di giorno prima del crepuscolo e la prima dopo l'alba."""
     cieli = ["day", "day", "civil", "dark", "dark", "civil", "day", "day"]
     ore = [ora(f"2026-09-25T{17 + i:02d}:00:00+02:00", sky=s) for i, s in enumerate(cieli)]
-    detto = verdict.assess(ore)
+    detto = score.assess(ore)
     assert (detto.shown_from, detto.shown_until) == (
         "2026-09-25T18:00:00+02:00",
         "2026-09-25T23:00:00+02:00",
@@ -124,13 +126,13 @@ def test_the_page_shows_from_the_last_hour_of_day_to_the_first_after_dawn():
 
 
 def test_where_the_sun_never_sets_nothing_is_shown():
-    detto = verdict.assess([ora("2026-06-21T00:00:00+02:00", sky="day")])
+    detto = score.assess([ora("2026-06-21T00:00:00+02:00", sky="day")])
     assert (detto.shown_from, detto.shown_until) == (None, None)
 
 
 def test_the_wind_aloft_is_told_but_does_not_change_the_verdict():
     """Il vento in quota si confronta col solito, non pesa: stessa notte, stesso verdetto."""
-    calmo = verdict.assess(notte({"wind_700hpa_kmh": 0.0}))
-    tempesta = verdict.assess(notte({"wind_700hpa_kmh": 300.0}))
+    calmo = score.assess(notte({"wind_700hpa_kmh": 0.0}))
+    tempesta = score.assess(notte({"wind_700hpa_kmh": 300.0}))
     assert tempesta.wind_700hpa_kmh == 300.0
     assert dataclasses.replace(tempesta, wind_700hpa_kmh=0.0) == calmo

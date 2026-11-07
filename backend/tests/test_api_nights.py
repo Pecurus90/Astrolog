@@ -208,7 +208,7 @@ def test_the_page_counts_the_poses_still_waiting_for_an_answer(archivio):
     # **Dal gruppo piu' grosso**: chi apre la pagina deve vedere per primo cio' che gli tiene
     # fuori piu' ore, non cio' che il database restituisce per primo.
     assert notti(archivio)["waiting"] == [
-        {"answer_at": "never", "frames": 2},
+        {"answer_at": "date", "frames": 2},
         {"answer_at": "review", "frames": 1},
     ]
     # La Dashboard ne dice il totale ("2 frame fuori dai conti"), senza quelli da confermare: la
@@ -227,16 +227,15 @@ def test_the_page_says_when_the_reading_is_not_over(archivio):
     assert notti(archivio)["still_reading"] > 0
 
 
-def test_a_frame_with_no_answer_to_give_does_not_send_you_anywhere(archivio):
-    """Una posa che l'header non data non ha **nessuna** risposta da dare: non entra in nessuna
-    notte e non c'e' niente da cliccare. Mandarla nel mucchio di *Da confermare* manderebbe
-    l'utente davanti a un elenco dove quella posa non compare."""
+def test_a_frame_without_a_date_is_answered_in_review(archivio):
+    """Una posa che l'header non data aspetta la data che scrivi tu, in *Da confermare*, sezione
+    dei frame senza data (Marco, 6/11/2026; DECISIONI v65): non e' piu' una posa senza risposta."""
     with db(archivio) as conn:
         posa(conn, quando=None, hash_="senza data")
         corri(conn)
         conn.commit()
 
-    assert notti(archivio)["waiting"] == [{"answer_at": "never", "frames": 1}]
+    assert notti(archivio)["waiting"] == [{"answer_at": "date", "frames": 1}]
 
 
 def test_the_ways_of_having_no_nights_are_different_answers(db_path):
@@ -252,12 +251,20 @@ def test_the_ways_of_having_no_nights_are_different_answers(db_path):
         with TestClient(create_app(db_path), base_url="http://localhost") as c:
             vuoto = notti(c)
         assert (vuoto["totals"]["nights"], vuoto["waiting"], vuoto["still_reading"]) == (0, [], 0)
+        assert vuoto["empty"] == "no_folders"
+        conn.execute(
+            "INSERT INTO folders(root_path, created_at) VALUES('/dati/astro', '2026-01-01')"
+        )
+        conn.commit()
+        with TestClient(create_app(db_path), base_url="http://localhost") as c:
+            assert notti(c)["empty"] == "no_frames"
 
         posa(conn, quando="2024-05-17T22:00:00Z", hash_="senza casa")
         conn.commit()
         with TestClient(create_app(db_path), base_url="http://localhost") as c:
             leggendo = notti(c)
         assert leggendo["still_reading"] == 1, "c'e' lavoro da fare, non una domanda"
+        assert leggendo["empty"] == "reading"
 
         corri(conn)
         conn.commit()
@@ -265,6 +272,7 @@ def test_the_ways_of_having_no_nights_are_different_answers(db_path):
             senza_casa = notti(c)
         assert senza_casa["waiting"] == [{"answer_at": "site", "frames": 1}]
         assert senza_casa["still_reading"] == 0
+        assert senza_casa["empty"] == "no_site"
 
         # E il quarto: c'e' un sito, ma quella posa e' stata ripresa altrove e l'app chiede dove.
         luogo(conn, ROMA)

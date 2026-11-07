@@ -1,58 +1,105 @@
-"""The rows and their order come from SQL (`spine/nights.py`): two screens ordering on their own
-would agree by chance."""
+"""The rows and their order come from the spine (`spine/nights.py`, `spine/night_criteria.py`):
+two screens ordering on their own would agree by chance."""
 
+import datetime as dt
 import sqlite3
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from ..spine import nights
+from ..db.config import read as read_settings
+from ..site_of import home_tonight
+from ..spine import night_calendar, nights
+from ..spine.night_criteria import Chosen, Key, select
 from ..weather import history
 from .deps import get_db
-from .models_nights import NightList
+from .models_nights import NightList, NightMonth
 
 router = APIRouter(prefix="/api/v1", tags=["nights"])
 
+# [T] a criterion's value: a year, an id, a filter's name, a constellation, a verdict
+_Values = Annotated[list[str] | None, Query(max_length=120)]
+
 
 @router.get("/nights", response_model=NightList)
-def night_list(
-    limit: int = Query(100, ge=1, le=500),  # [T]
+def night_list(  # noqa: PLR0913 - one parameter per criterion of the sheet
+    limit: int = Query(20, ge=1, le=500),  # [P docs/domini/notti.md] 20 at a time
     offset: int = Query(0, ge=0),
     night: int | None = Query(None, ge=1),
+    q: str | None = Query(None, max_length=200),  # [T]
+    year: _Values = None,
+    site: _Values = None,
+    setup: _Values = None,
+    filter_name: Annotated[list[str] | None, Query(alias="filter", max_length=120)] = None,
+    constellation: _Values = None,
+    sky: _Values = None,
     conn: sqlite3.Connection = Depends(get_db),
 ) -> NightList:
-    """The archive's nights, newest first. Beside them travel the two things that explain a short
-    list: how many frames wait for an answer (`waiting`) and how many the spine has still to read
-    (`still_reading`).
+    """The archive's nights that pass the criteria, newest first, `limit` at a time. Beside them
+    the criteria with their counts, the months of the whole list, the archive's totals and the
+    two things that explain a short list: frames waiting for an answer (`waiting`) and frames the
+    spine has still to read (`still_reading`).
 
-    The factory cap is the same as the Archive's (100): there are many more rows -- one per night,
-    not one per object -- but they are looked at the same way, scrolling back in time, and asking
-    for twenty at a time would be five rounds to see a year.
+    Within a criterion one value is enough, across criteria all hold; each value says how many
+    nights it would give with the other choices applied.
 
-    `night` asks a single night by id, wherever it falls in the list: the search opens it there.
-    An id that is not there gives no rows, not an error -- an old address, not a broken request."""
+    `night` asks a single night by id, wherever it falls and whatever the criteria: the search
+    opens it there. An id that is not there gives no rows, not an error -- an old address."""
+    by = {
+        Key.YEAR: year,
+        Key.SITE: site,
+        Key.SETUP: setup,
+        Key.FILTER: filter_name,
+        Key.CONSTELLATION: constellation,
+        Key.SKY: sky,
+    }
+    chosen = select(conn, Chosen(q, {k: v for k, v in by.items() if v}), history.KIND)
+    listed = (
+        chosen.ids if night is None else [i for i in chosen.ids if i == night] or _one(conn, night)
+    )
     left = nights.still_reading(conn)
     waiting = nights.waiting(conn)
-    # The spine already sends the page's shape: copying it field by field would be two name lists
-    # to keep in step, and validating still rejects a missing or mistyped field here.
     return NightList.model_validate(
         {
             "items": nights.page(
                 conn,
-                limit=limit,
-                offset=offset,
+                ids=listed[offset : offset + limit],
                 weather=nights.Observed(history.KIND, history.arrives_on),
-                night=night,
+                max_pct=read_settings(conn).moon_broadband_max_pct,
             ),
-            "total": nights.how_many(conn, night),
+            "total": len(listed),
             "limit": limit,
             "offset": offset,
-            # once: the pages after the first come by scrolling and would count it again
+            "criteria": chosen.criteria,
+            "months": nights.months(conn, listed),
             "totals": nights.archive_totals(conn) if offset == 0 else None,
             "waiting": waiting,
             "waiting_frames": sum(
                 w["frames"] for w in waiting if w["answer_at"] != nights.AnswerAt.REVIEW
             ),
+            "empty": nights.empty(conn, waiting, left),
             "still_reading": left,
             "reading_done_pct": nights.reading_done_pct(conn, left),
         }
+    )
+
+
+def _one(conn: sqlite3.Connection, night: int) -> list[int]:
+    """The asked night even outside the criteria."""
+    row = conn.execute("SELECT id FROM nights WHERE id = ?", (night,)).fetchone()
+    return [row[0]] if row else []
+
+
+@router.get("/nights/calendar", response_model=NightMonth)
+def night_month(
+    # [T] years 1000-9899: the dates around stay inside Python's calendar
+    month: str = Query(pattern=r"^(1\d|[2-8]\d|9[0-8])\d\d-(0[1-9]|1[0-2])$"),
+    conn: sqlite3.Connection = Depends(get_db),
+) -> NightMonth:
+    """A month of nights for the calendar: one sign per night with its verdict, the month's nights,
+    good ones and hours; and the months it moves between, from the first with nights to tonight's
+    at home. A month without nights is an empty month."""
+    first_day = dt.date.fromisoformat(f"{month}-01")
+    return NightMonth.model_validate(
+        night_calendar.month(conn, first_day, history.KIND, home_tonight(conn))
     )

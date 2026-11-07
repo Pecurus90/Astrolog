@@ -272,12 +272,9 @@ def calendar_nights(
 ) -> list[CalendarNight]:
     """For each night (date, window start, hours): the Moon at mid-window, and how long the sky is
     astronomically dark with the Moon below the rise/set altitude. One call per body for all."""
-    grids = [night_grid(start, hours=h, step_min=CALENDAR_STEP_MIN) for _, start, h in nights]
-    everything = [i for g in grids for i in g]
-    if not everything:
+    if not nights:
         return []
-    suns = bodies.body_altitudes("sun", everything, latitude, longitude)
-    moons = bodies.body_altitudes("moon", everything, latitude, longitude)
+    darks = dark_seconds(nights, latitude, longitude)
     # Middle found in UTC, asked in site zone: the phase name takes the site's noon-to-noon night.
     middles = phases(
         [
@@ -285,19 +282,27 @@ def calendar_nights(
             for _, start, h in nights
         ]
     )
+    return [
+        CalendarNight(date, p.phase_key, p.illumination_pct, dark_s, moonless_s)
+        for (date, _, _), p, (dark_s, moonless_s) in zip(nights, middles, darks, strict=True)
+    ]
+
+
+def dark_seconds(
+    nights: Sequence[tuple[str, dt.datetime, float]], latitude: float, longitude: float
+) -> list[tuple[int, int]]:
+    """For each night: seconds of astronomical dark, and of those with the Moon down."""
+    grids = [night_grid(start, hours=h, step_min=CALENDAR_STEP_MIN) for _, start, h in nights]
+    everything = [i for g in grids for i in g]
+    if not everything:
+        return [(0, 0) for _ in nights]
+    suns = bodies.body_altitudes("sun", everything, latitude, longitude)
+    moons = bodies.body_altitudes("moon", everything, latitude, longitude)
     step_s = CALENDAR_STEP_MIN * 60
     out, at = [], 0
-    for (date, _, _), grid, phase_now in zip(nights, grids, middles, strict=True):
+    for grid in grids:
         span = range(at, at + len(grid) - 1)  # the last sample closes the window
         dark = [k for k in span if suns[k] < ASTRO_DEG]
-        out.append(
-            CalendarNight(
-                night=date,
-                phase_key=phase_now.phase_key,
-                illumination_pct=phase_now.illumination_pct,
-                dark_s=len(dark) * step_s,
-                moonless_dark_s=sum(1 for k in dark if moons[k] < RISESET_DEG) * step_s,
-            )
-        )
+        out.append((len(dark) * step_s, sum(1 for k in dark if moons[k] < RISESET_DEG) * step_s))
         at += len(grid)
     return out

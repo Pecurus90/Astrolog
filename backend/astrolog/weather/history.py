@@ -12,7 +12,7 @@ from typing import Any
 
 from .. import net
 from ..clock import iso_z, night_date
-from . import fetches, nights, openmeteo, verdict
+from . import fetches, nights, openmeteo, score, verdict
 from .fetches import Source
 from .forecast import COLUMNS, NightRow, Outcome, Status
 
@@ -64,6 +64,12 @@ def arrives_on(night: str, timezone: str, now: datetime | None = None) -> str | 
     today = night_date(iso_z(now or datetime.now(UTC)), timezone)
     first = asked_from(night)
     return first if today is not None and today < first else None
+
+
+def _summary_json(hours: list[verdict.Hour]) -> str:
+    """The score and the clouds' okta word, written once: the Nights read them as they are."""
+    summary = score.assess(hours)
+    return json.dumps({**asdict(summary), "sky_word": verdict.sky_word(summary.cloud_total_pct)})
 
 
 def _due_site(conn: sqlite3.Connection, now: datetime) -> tuple[dict[str, Any] | None, list[str]]:
@@ -142,7 +148,7 @@ def _write(
                 Source.ARCHIVE,
                 fetched_at,
                 nights.hours_json(hours),
-                json.dumps(asdict(verdict.assess(hours))),
+                _summary_json(hours),
             )
         )
     conn.executemany(_INSERT, [astuple(r) for r in rows])

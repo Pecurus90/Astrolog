@@ -7,7 +7,7 @@ dove veniva. Il semaforo lo decidono solo le nuvole; le altre misure pesano acca
 
 import pytest
 
-from astrolog.weather import judge, verdict
+from astrolog.weather import judge, score
 from test_weather_verdict import notte, ora
 
 
@@ -17,7 +17,7 @@ def livello(misura, **valori):
 
 
 def misure(ore):
-    return {m.code: m for m in judge.measures(ore, verdict.assess(ore))}
+    return {m.code: m for m in judge.measures(ore, score.assess(ore))}
 
 
 @pytest.mark.parametrize(
@@ -245,7 +245,7 @@ def test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then
         {"wind_gust_kmh": 30.0, "seeing_arcsec": 1.0},
         {"precip_mm": 0.2, "seeing_arcsec": 1.0},
     )
-    codici = [m.code for m in judge.measures(ore, verdict.assess(ore))]
+    codici = [m.code for m in judge.measures(ore, score.assess(ore))]
     # le nuvole e le nuvole basse aprono sempre: sono le carte del semaforo
     assert codici[:2] == ["cloud", "cloud_low"]
     assert codici[2:5] == ["gust", "rain", "wind"]

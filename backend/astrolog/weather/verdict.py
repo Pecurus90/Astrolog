@@ -1,5 +1,5 @@
-"""A night's verdict, its clear hours and the hours worth showing. Only total cover makes the
-verdict, blocking every object alike; the other measures weigh beside it (`judge`)."""
+"""A night's hours, its window and the shape of its summary. The verdict comes from the hourly
+Transparency (`score`, ADR 0034); the clouds keep their own okta word beside it (`judge`)."""
 
 import math
 from collections.abc import Callable, Mapping, Sequence
@@ -46,17 +46,28 @@ class Window(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Hour:
-    """An hour of a night: its local instant, its sky band when the source needs one, and the
-    source's quantities by our names."""
+    """An hour: local instant, sky band, quantities by our names. `dark`/`down`: share of the hour
+    around `at` in the dark and with the Sun set; without them the band at `at` stands for all."""
 
     at: str
     sky: Sky | None
     values: dict[str, Any]
+    dark: float | None = None
+    down: float | None = None
+
+    @property
+    def dark_share(self) -> float:
+        return self.dark if self.dark is not None else float(self.sky == Sky.DARK)
+
+    @property
+    def down_share(self) -> float:
+        return self.down if self.down is not None else float(self.sky not in (None, Sky.DAY))
 
     def row(self) -> dict[str, Any]:
         """As written in `hourly_json`: a source without sky bands has no `sky` key."""
-        head = {"at": self.at} if self.sky is None else {"at": self.at, "sky": self.sky}
-        return {**head, **self.values}
+        if self.sky is None:
+            return {"at": self.at, **self.values}
+        return {"at": self.at, "sky": self.sky, "dark": self.dark, "down": self.down, **self.values}
 
 
 type Bites = Callable[[Hour], bool]
@@ -77,6 +88,11 @@ class Summary:
     shown_from: str | None
     shown_until: str | None
     wind_700hpa_kmh: float | None
+    # score v4 (ADR 0034, `score.py`): None without every window hour's clouds
+    transparency: float | None = None
+    exposure_hours: float | None = None
+    dark_hours: float = 0.0
+    without_aerosol: bool = False
 
 
 def window(hours: Sequence[Hour]) -> tuple[list[Hour], Window | None]:
@@ -86,6 +102,16 @@ def window(hours: Sequence[Hour]) -> tuple[list[Hour], Window | None]:
     if dark:
         return dark, Window.DARK
     down = [h for h in hours if h.sky != Sky.DAY]
+    return (down, Window.SUN_DOWN) if down else ([], None)
+
+
+def weighted(hours: Sequence[Hour]) -> tuple[list[tuple[Hour, float]], Window | None]:
+    """Every hour holding some of the dark, with its share; else of the Sun set. Only the score
+    weighs edge hours: the clear hours and the measures keep `window`."""
+    dark = [(h, h.dark_share) for h in hours if h.dark_share > 0]
+    if dark:
+        return dark, Window.DARK
+    down = [(h, h.down_share) for h in hours if h.down_share > 0]
     return (down, Window.SUN_DOWN) if down else ([], None)
 
 
@@ -110,7 +136,8 @@ def when(
     return hit[0], end, len(hit)
 
 
-def _verdict(clouds: float | None) -> Verdict | None:
+def cloud_word(clouds: float | None) -> Verdict | None:
+    """The clouds' own word, on the okta classes: no longer the night's verdict (`score`)."""
     if clouds is None:
         return None
     if clouds <= CLOUD_GO_MAX_PCT:
@@ -119,11 +146,11 @@ def _verdict(clouds: float | None) -> Verdict | None:
 
 
 def is_clear(h: Hour) -> bool:
-    """An hour the verdict calls clear: one rule for the usable hours and the clear stretch."""
+    """An hour the clouds call clear: one rule for the clear hours and the clear stretch."""
     return (c := h.values.get("cloud_total_pct")) is not None and c <= CLOUD_GO_MAX_PCT
 
 
-def _shown(hours: Sequence[Hour]) -> tuple[str | None, str | None]:
+def shown(hours: Sequence[Hour]) -> tuple[str | None, str | None]:
     night = [i for i, h in enumerate(hours) if h.sky != Sky.DAY]
     if not night:
         return None, None
@@ -131,25 +158,5 @@ def _shown(hours: Sequence[Hour]) -> tuple[str | None, str | None]:
     return hours[max(first - 1, 0)].at, hours[min(last + 1, len(hours) - 1)].at
 
 
-def assess(hours: Sequence[Hour]) -> Summary:
-    """Verdict and usable hours are `None` unless every night hour reports `cloud_total_pct`.
-    Usable hours are the night's hours the verdict would call clear, so the two never disagree."""
-    night, span = window(hours)
-    after = {h.at: n.at for h, n in zip(hours, hours[1:], strict=False)}
-    cover: list[Any] = [h.values.get("cloud_total_pct") for h in night]
-    complete = bool(night) and None not in cover
-    clouds = _mean([c for c in cover if c is not None]) if complete else None
-    since, until, clear = when(night, is_clear, after)
-    shown_from, shown_until = _shown(hours)
-    return Summary(
-        verdict=_verdict(clouds),
-        cloud_total_pct=clouds,
-        usable_hours=clear if complete else None,
-        usable_since=since if complete else None,
-        usable_until=until if complete else None,
-        window=span,
-        window_hours=len(night),
-        shown_from=shown_from,
-        shown_until=shown_until,
-        wind_700hpa_kmh=_mean(_values(night, "wind_700hpa_kmh")),
-    )
+def mean_of(hours: Sequence[Hour], field: str) -> float | None:
+    return _mean(_values(hours, field))

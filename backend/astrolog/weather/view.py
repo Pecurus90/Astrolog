@@ -12,7 +12,7 @@ from ..db.replace_table import replace_rows
 from ..ephemeris import RISESET_DEG, moon
 from ..ephemeris.sun import Sky
 from ..site_of import Site
-from . import judge, openmeteo, position, verdict
+from . import judge, openmeteo, position, score, verdict
 from .fetches import Source
 
 KIND = "forecast"
@@ -143,8 +143,10 @@ def rebuild(conn: sqlite3.Connection, site: Site) -> None:
             verdict.Hour(
                 at=o["at"],
                 sky=o["sky"],
+                dark=o.get("dark"),
+                down=o.get("down"),
                 values={
-                    **{k: v for k, v in o.items() if k not in ("at", "sky")},
+                    **{k: v for k, v in o.items() if k not in ("at", "sky", "dark", "down")},
                     **dict.fromkeys(SKY_FIELDS),
                     **sky.get(o["at"], {}),
                     "moon_pct": lit[o["at"]],
@@ -153,9 +155,7 @@ def rebuild(conn: sqlite3.Connection, site: Site) -> None:
             for o in series[r["night_date"], r["source"]]
         ]
         model = r["source"].removeprefix("open-meteo/")
-        written.append(
-            _Night(r["night_date"], model, r["fetched_at"], hours, verdict.assess(hours))
-        )
+        written.append(_Night(r["night_date"], model, r["fetched_at"], hours, score.assess(hours)))
     replace_rows(
         conn,
         "weather_view",

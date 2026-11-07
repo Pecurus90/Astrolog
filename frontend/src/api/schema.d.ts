@@ -459,18 +459,40 @@ export interface paths {
         };
         /**
          * Night List
-         * @description The archive's nights, newest first. Beside them travel the two things that explain a short
-         *     list: how many frames wait for an answer (`waiting`) and how many the spine has still to read
-         *     (`still_reading`).
+         * @description The archive's nights that pass the criteria, newest first, `limit` at a time. Beside them
+         *     the criteria with their counts, the months of the whole list, the archive's totals and the
+         *     two things that explain a short list: frames waiting for an answer (`waiting`) and frames the
+         *     spine has still to read (`still_reading`).
          *
-         *     The factory cap is the same as the Archive's (100): there are many more rows -- one per night,
-         *     not one per object -- but they are looked at the same way, scrolling back in time, and asking
-         *     for twenty at a time would be five rounds to see a year.
+         *     Within a criterion one value is enough, across criteria all hold; each value says how many
+         *     nights it would give with the other choices applied.
          *
-         *     `night` asks a single night by id, wherever it falls in the list: the search opens it there.
-         *     An id that is not there gives no rows, not an error -- an old address, not a broken request.
+         *     `night` asks a single night by id, wherever it falls and whatever the criteria: the search
+         *     opens it there. An id that is not there gives no rows, not an error -- an old address.
          */
         get: operations["night_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nights/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Night Month
+         * @description A month of nights for the calendar: one sign per night with its verdict, the month's nights,
+         *     good ones and hours; and the months it moves between, from the first with nights to tonight's
+         *     at home. A month without nights is an empty month.
+         */
+        get: operations["night_month"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1339,9 +1361,7 @@ export interface paths {
         };
         /**
          * This Year
-         * @description The current year up to tonight: the night date at home, noon to noon, so whoever looks at
-         *     two in the morning still counts last night. Without a home site, or with a zone that does not
-         *     resolve, today in UTC: the archive does not depend on the site.
+         * @description The current year up to tonight at home (`site_of.home_tonight`).
          */
         get: operations["this_year"];
         put?: never;
@@ -1679,6 +1699,16 @@ export interface components {
              */
             folders: components["schemas"]["FolderEntry"][];
         };
+        /** CalendarDay */
+        CalendarDay: {
+            /** Day */
+            day: number;
+            /**
+             * Nights
+             * @description Two sites the same day: two signs.
+             */
+            nights: components["schemas"]["DayNight"][];
+        };
         /**
          * CameraBiasIn
          * @description A camera's bias at one offset, as the files write both (ADR 0021, ADR 0022).
@@ -1771,6 +1801,67 @@ export interface components {
             /** Covers */
             covers: boolean | null;
             missing: components["schemas"]["Missing"] | null;
+        };
+        /** Criterion */
+        Criterion: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "year" | "site" | "setup" | "filter" | "constellation" | "sky";
+            /**
+             * Options
+             * @description In the order the page shows them.
+             */
+            options: components["schemas"]["CriterionOption"][];
+        };
+        /**
+         * CriterionOption
+         * @description A value of a criterion: a year, a site id, a setup id, a filter's name, a constellation's
+         *     IAU code, a verdict or `unknown`.
+         */
+        CriterionOption: {
+            /** Value */
+            value: string;
+            /**
+             * Nights
+             * @description How many nights it would give with the other criteria's choices applied; at zero the page shows it off.
+             */
+            nights: number;
+            /** Chosen */
+            chosen: boolean;
+            /**
+             * Name
+             * @description A site's or a named setup's name.
+             */
+            name?: string | null;
+            /**
+             * Optics
+             * @description A setup's optics, for an unnamed one.
+             */
+            optics?: string | null;
+            /**
+             * Camera
+             * @description A setup's camera, for an unnamed one.
+             */
+            camera?: string | null;
+            /**
+             * Passband
+             * @description A filter's band: its colour.
+             */
+            passband?: string | null;
+        };
+        /** DayNight */
+        DayNight: {
+            /** Id */
+            id: number;
+            /** Site */
+            site: string;
+            /**
+             * Verdict
+             * @description Null without the night's weather.
+             */
+            verdict: ("go" | "marginal" | "nogo") | null;
         };
         /** FileNotRead */
         FileNotRead: {
@@ -2777,6 +2868,23 @@ export interface components {
              */
             field: ("brand" | "model" | "optical_design" | "camera_type" | "sensor" | "pixel_size_um" | "width_px" | "height_px" | "adc_bits" | "cooled" | "cooling_c" | "aperture_mm" | "focal_mm" | "image_circle_mm" | "required_backfocus_mm" | "backfocus_tolerance_mm" | "reducer_factor" | "thickness_mm" | "prism_mm" | "filter_size" | "step_um" | "total_steps" | "weight_kg" | "payload_kg" | "payload_no_cw_kg" | "slots" | "notes") | null;
         };
+        /**
+         * MonthSum
+         * @description A month of the list: every night that passes the criteria, not only the loaded ones.
+         */
+        MonthSum: {
+            /**
+             * Month
+             * @description `YYYY-MM`.
+             */
+            month: string;
+            /** Nights */
+            nights: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
+        };
         /** MoonCalendarNightOut */
         MoonCalendarNightOut: {
             /** Date */
@@ -3032,6 +3140,14 @@ export interface components {
              */
             site_source: string;
             /**
+             * Site From
+             * @description Where the site comes from: the frames' coordinates, home for frames without them, or your answer in To confirm.
+             * @enum {string}
+             */
+            site_from: "frames" | "home" | "answer";
+            /** @description Null without the site's zone or without astronomical dark. */
+            shooting: components["schemas"]["Shooting"] | null;
+            /**
              * Frames
              * @description How many frames, rewritten copies excluded.
              */
@@ -3067,6 +3183,21 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+            /**
+             * Criteria
+             * @description In the sheet's order.
+             */
+            criteria: components["schemas"]["Criterion"][];
+            /**
+             * Empty
+             * @description Why the archive has no nights at all; null when it has some. The site comes before the answers, the answers before the wait.
+             */
+            empty: ("no_folders" | "no_frames" | "no_site" | "reading" | "waiting") | null;
+            /**
+             * Months
+             * @description Newest first.
+             */
+            months: components["schemas"]["MonthSum"][];
             /** @description The whole archive's, on the first page only (`offset` 0). */
             totals: components["schemas"]["ArchiveTotals"] | null;
             /** Waiting */
@@ -3086,6 +3217,43 @@ export interface components {
              * @description How far that work has gone, 0-99, rounded down; null when nothing is left.
              */
             reading_done_pct: number | null;
+        };
+        /**
+         * NightMonth
+         * @description A month of the Nights' calendar.
+         */
+        NightMonth: {
+            /**
+             * Month
+             * @description `YYYY-MM`.
+             */
+            month: string;
+            /**
+             * Days
+             * @description Only the days with nights, in order.
+             */
+            days: components["schemas"]["CalendarDay"][];
+            /** Nights */
+            nights: number;
+            /**
+             * Good
+             * @description Nights whose verdict is `go`.
+             */
+            good: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
+            /**
+             * First Month
+             * @description The first month with nights; null without any.
+             */
+            first_month: string | null;
+            /**
+             * Last Month
+             * @description Tonight's month at home: the calendar stops there.
+             */
+            last_month: string;
         };
         /**
          * NightObject
@@ -3121,7 +3289,10 @@ export interface components {
          *     recognised.
          */
         NightWeather: {
-            /** Verdict */
+            /**
+             * Verdict
+             * @description From the night's Transparency (score v4, ADR 0034): go from 70, marginal from 40, nogo below; null without every window hour's clouds.
+             */
             verdict: ("go" | "marginal" | "nogo") | null;
             /** Cloud Total Pct */
             cloud_total_pct: number | null;
@@ -3132,10 +3303,37 @@ export interface components {
             /** Window Hours */
             window_hours: number | null;
             /**
+             * Transparency
+             * @description 0-100: the light the night let through, its window hours weighted by their minutes of dark; zero in the hours a rule blocks.
+             */
+            transparency?: number | null;
+            /**
+             * Exposure Hours
+             * @description Ore di posa: the Transparency / 100 summed over the window's hours, tenths.
+             */
+            exposure_hours?: number | null;
+            /**
+             * Dark Hours
+             * @description The window's length in hours, tenths: the dark, or the Sun down.
+             * @default 0
+             */
+            dark_hours: number;
+            /**
+             * Without Aerosol
+             * @description Some window hour has no aerosol: the Transparency is the clouds' alone.
+             * @default false
+             */
+            without_aerosol: boolean;
+            /**
              * State
              * @enum {string}
              */
             state: "ok" | "waiting" | "unknown";
+            /**
+             * Sky Word
+             * @description The mean cover in the dark in okta classes (WMO 2700), written with the history; null without the clouds.
+             */
+            sky_word?: ("clear" | "scattered" | "broken" | "overcast") | null;
             /**
              * Arrives On
              * @description `waiting` on a young night: the date (site zone) the reanalysis is asked. Null otherwise, also when it is due and only the service's answer is missing.
@@ -3889,6 +4087,28 @@ export interface components {
             offset: number;
         };
         /**
+         * Shooting
+         * @description What the Moon left of the night's astronomical dark (`docs/domini/notti.md`). **Computed**
+         *     like the Moon, with the calendar's threshold.
+         */
+        Shooting: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "broadband" | "narrowband" | "mixed";
+            /**
+             * Broadband Hours
+             * @description Hours of dark good for broadband, tenths.
+             */
+            broadband_hours: number;
+            /**
+             * Dark Hours
+             * @description Hours of astronomical dark, tenths.
+             */
+            dark_hours: number;
+        };
+        /**
          * Sides
          * @description Width and height: degrees for the field, millimetres for the sensor.
          */
@@ -4364,15 +4584,15 @@ export interface components {
         /**
          * WaitingPoses
          * @description Frames no night has gathered, grouped by **where the answer is given**: a question in
-         *     *To confirm* (`review`), the site to declare (`site`), or nowhere (`never`) -- the case of a
-         *     frame without a date, which no answer can fix.
+         *     *To confirm* (`review`), the site to choose (`site`), the date to write (`date`), or nowhere
+         *     (`never`) for a reason the app does not map.
          */
         WaitingPoses: {
             /**
              * Answer At
              * @enum {string}
              */
-            answer_at: "review" | "site" | "never";
+            answer_at: "review" | "site" | "date" | "never";
             /** Frames */
             frames: number;
         };
@@ -4400,7 +4620,10 @@ export interface components {
          *     (`None` until the site's climatology exists). It is what Tonight says.
          */
         WeatherBriefOut: {
-            /** Verdict */
+            /**
+             * Verdict
+             * @description From the night's Transparency (score v4, ADR 0034): go from 70, marginal from 40, nogo below; null without every window hour's clouds.
+             */
             verdict: ("go" | "marginal" | "nogo") | null;
             /** Cloud Total Pct */
             cloud_total_pct: number | null;
@@ -4410,6 +4633,28 @@ export interface components {
             window: ("dark" | "sun_down") | null;
             /** Window Hours */
             window_hours: number | null;
+            /**
+             * Transparency
+             * @description 0-100: the light the night let through, its window hours weighted by their minutes of dark; zero in the hours a rule blocks.
+             */
+            transparency?: number | null;
+            /**
+             * Exposure Hours
+             * @description Ore di posa: the Transparency / 100 summed over the window's hours, tenths.
+             */
+            exposure_hours?: number | null;
+            /**
+             * Dark Hours
+             * @description The window's length in hours, tenths: the dark, or the Sun down.
+             * @default 0
+             */
+            dark_hours: number;
+            /**
+             * Without Aerosol
+             * @description Some window hour has no aerosol: the Transparency is the clouds' alone.
+             * @default false
+             */
+            without_aerosol: boolean;
             agreement: components["schemas"]["WeatherAgreementOut"];
             /** Usable Since */
             usable_since: string | null;
@@ -4590,7 +4835,10 @@ export interface components {
          *     dawn. A `trend` night carries the summary without usable hours, measures or hours.
          */
         WeatherNightOut: {
-            /** Verdict */
+            /**
+             * Verdict
+             * @description From the night's Transparency (score v4, ADR 0034): go from 70, marginal from 40, nogo below; null without every window hour's clouds.
+             */
             verdict: ("go" | "marginal" | "nogo") | null;
             /** Cloud Total Pct */
             cloud_total_pct: number | null;
@@ -4600,6 +4848,28 @@ export interface components {
             window: ("dark" | "sun_down") | null;
             /** Window Hours */
             window_hours: number | null;
+            /**
+             * Transparency
+             * @description 0-100: the light the night let through, its window hours weighted by their minutes of dark; zero in the hours a rule blocks.
+             */
+            transparency?: number | null;
+            /**
+             * Exposure Hours
+             * @description Ore di posa: the Transparency / 100 summed over the window's hours, tenths.
+             */
+            exposure_hours?: number | null;
+            /**
+             * Dark Hours
+             * @description The window's length in hours, tenths: the dark, or the Sun down.
+             * @default 0
+             */
+            dark_hours: number;
+            /**
+             * Without Aerosol
+             * @description Some window hour has no aerosol: the Transparency is the clouds' alone.
+             * @default false
+             */
+            without_aerosol: boolean;
             agreement: components["schemas"]["WeatherAgreementOut"];
             /** Usable Since */
             usable_since: string | null;
@@ -5418,6 +5688,13 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 night?: number | null;
+                q?: string | null;
+                year?: string[] | null;
+                site?: string[] | null;
+                setup?: string[] | null;
+                filter?: string[] | null;
+                constellation?: string[] | null;
+                sky?: string[] | null;
             };
             header?: never;
             path?: never;
@@ -5432,6 +5709,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NightList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    night_month: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NightMonth"];
                 };
             };
             /** @description Validation Error */

@@ -4,11 +4,12 @@ on the source: a sky source whose series starts late still gives the night under
 import json
 import zoneinfo
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from ..clock import night_window
-from ..ephemeris import sun
+from ..ephemeris import ASTRO_DEG, RISESET_DEG, sun
 from .verdict import Hour
 
 # A night's date and its hours as `(index in the series, instant)`.
@@ -36,18 +37,29 @@ def covered(timezone: str, times: Sequence[datetime], first: str, *, whole: bool
         day += timedelta(days=1)
 
 
+@dataclass(frozen=True, slots=True)
+class HourSky:
+    """The band at the hour's instant; the share of the hour in the dark and with the Sun set."""
+
+    band: sun.Sky
+    dark: float
+    down: float
+
+
 def hours(
     series: Mapping[str, Sequence[Any]],
     pairs: Sequence[tuple[int, datetime]],
     tz: zoneinfo.ZoneInfo,
-    sky: Mapping[datetime, sun.Sky] | None = None,
+    sky: Mapping[datetime, HourSky] | None = None,
 ) -> list[Hour]:
-    """`sky` adds each hour's band, looked up by instant (for the forecast)."""
+    """`sky` adds each hour's band and shares, looked up by instant."""
     return [
         Hour(
             at=instant.astimezone(tz).isoformat(),
-            sky=None if sky is None else sky[instant],
+            sky=None if sky is None else sky[instant].band,
             values={name: values[i] for name, values in series.items()},
+            dark=None if sky is None else sky[instant].dark,
+            down=None if sky is None else sky[instant].down,
         )
         for i, instant in pairs
     ]
@@ -62,8 +74,22 @@ def empty(night: Sequence[Hour]) -> bool:
     return all(v is None for h in night for v in h.values.values())
 
 
-def sky(latitude: float, longitude: float, night_list: Sequence[Night]) -> dict[datetime, sun.Sky]:
-    """Every hour's sky band in a single ephemeris call."""
+# An hourly value stands for the hour around its instant; its shares are read on this grid. [T]
+_STEP_MIN = 5
+_OFFSETS = [timedelta(minutes=-30 + _STEP_MIN * (k + 0.5)) for k in range(60 // _STEP_MIN)]  # [T]
+
+
+def sky(latitude: float, longitude: float, night_list: Sequence[Night]) -> dict[datetime, HourSky]:
+    """Every hour's band and shares in a single ephemeris call."""
     instants = [t for _, pairs in night_list for _, t in pairs]
     bands = sun.sky_at(instants, latitude, longitude)
-    return {t: bands[i] for i, t in enumerate(instants)}
+    grid = [t + d for t in instants for d in _OFFSETS]
+    alts = sun.altitudes(grid, latitude, longitude)
+    n = len(_OFFSETS)
+    out = {}
+    for i, t in enumerate(instants):
+        mine = alts[i * n : (i + 1) * n]
+        dark = sum(a <= ASTRO_DEG for a in mine) / n
+        down = sum(a <= RISESET_DEG for a in mine) / n
+        out[t] = HourSky(bands[i], dark, down)
+    return out

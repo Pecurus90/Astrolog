@@ -37,6 +37,7 @@ type Dove = Elenco["waiting"][number]["answer_at"]
 const RIGA: Record<Dove, { titolo: Chiave; testo: Chiave; dove?: string; vai?: Chiave; primario?: boolean }> = {
   review: { titolo: "nights.waiting.review", testo: "nights.waiting.review.why", dove: "/da-confermare", vai: "nights.waiting.where" },
   site: { titolo: "nights.waiting.site", testo: "nights.waiting.site.why", dove: "/impostazioni/sito", vai: "nights.waiting.site.how", primario: true },
+  date: { titolo: "nights.waiting.never", testo: "nights.waiting.never.why" },
   never: { titolo: "nights.waiting.never", testo: "nights.waiting.never.why" },
 }
 

@@ -10,7 +10,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from astrolog.clock import night_window
 from astrolog.db.connect import connect, ensure_database
+from astrolog.ephemeris import moon
 from astrolog.weather import history, openmeteo
 from astrolog.weather.fetches import Source
 from test_weather_forecast import Finto
@@ -24,8 +26,10 @@ def archivio(inizio="2026-01-01T00:00", giorni=400, nuvole=10.0):
     hourly: dict[str, list] = {
         "time": [(t0 + timedelta(hours=i)).strftime("%Y-%m-%dT%H:%M") for i in range(ore)]
     }
+    # dry: since score v4 (ADR 0034) any rain zeroes the hour
+    asciutto = {"cloud_total_pct": nuvole, "precip_mm": 0.0}
     for loro, nostro in history.VARIABLES.items():
-        hourly[loro] = [nuvole if nostro == "cloud_total_pct" else 5.0] * ore
+        hourly[loro] = [asciutto.get(nostro, 5.0)] * ore
     return {"hourly": hourly}
 
 
@@ -68,6 +72,19 @@ def test_a_night_older_than_five_days_gets_its_observed_weather(db):
         Source.ARCHIVE,
     )
     assert json.loads(riga["summary_json"])["verdict"] == "go"
+
+
+def test_a_past_night_says_its_exposure_hours_out_of_its_dark(db):
+    """«N ore di posa su M di buio» (ADR 0034): il buio e' quello del calendario della Luna,
+    contato per altra via, e con il 10% di nuvole se ne posa il 90%; senza aerosol, detto."""
+    notte(db, "2026-03-10")
+    history.step(db, fetch=Finto(archivio()), now=ADESSO)
+    detto = json.loads(scritte(db)[0]["summary_json"])
+    inizio, ore = night_window("2026-03-10", "Europe/Rome")
+    (luna,) = moon.calendar_nights([("2026-03-10", inizio, ore)], 45.55, 11.5)
+    assert detto["dark_hours"] == pytest.approx(luna.dark_s / 3600, abs=0.1)
+    assert detto["exposure_hours"] == pytest.approx(0.9 * detto["dark_hours"], abs=0.1)
+    assert (detto["transparency"], detto["without_aerosol"]) == (90.0, True)
 
 
 def test_a_recent_night_waits_for_the_reanalysis(db):
@@ -166,7 +183,10 @@ def test_the_nights_page_reads_the_weather_of_each_night_as_written(db):
     per_data = {
         r["night_date"]: r["weather"]
         for r in notti.page(
-            db, limit=10, offset=0, weather=notti.Observed(history.KIND, history.arrives_on)
+            db,
+            ids=[r[0] for r in db.execute("SELECT id FROM nights")],
+            weather=notti.Observed(history.KIND, history.arrives_on),
+            max_pct=25,
         )
     }
     assert per_data["2026-03-10"]["state"] == "ok"

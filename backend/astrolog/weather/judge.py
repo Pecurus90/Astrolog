@@ -13,6 +13,7 @@ from .verdict import (
     Hour,
     Summary,
     Verdict,
+    cloud_word,
     when,
     window,
 )
@@ -410,7 +411,8 @@ def measures(hours: Sequence[Hour], summary: Summary) -> list[MeasureNight]:
     night, _ = window(hours)
     shown = shown_hours(hours, summary)
     after = {h.at: n.at for h, n in zip(hours, hours[1:], strict=False)}
-    judged = [_night(s, night, shown, after, summary.verdict) for s in SCALES.values()]
+    clouds_said = cloud_word(summary.cloud_total_pct)
+    judged = [_night(s, night, shown, after, clouds_said) for s in SCALES.values()]
     judged = [m for m in judged if m.code != Measure.MOON or m.known_hours]
     clouds, rest = judged[:2], judged[2:]
     rest.sort(key=lambda m: (_RANK[m.level] if m.known_hours else len(_RANK), m.since or "~"))

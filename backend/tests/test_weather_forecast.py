@@ -20,7 +20,10 @@ def risposta(
     inizio="2026-09-24T00:00", ore=10 * 24, modelli=openmeteo.MODELS, per_modello=None, **valori
 ):
     """Una risposta di Open-Meteo: ogni variabile vale `valori.get(nostro_nome, 0)` per ogni ora,
-    o una funzione dell'ora se e' una funzione; `per_modello` cambia i valori di un modello solo."""
+    o una funzione dell'ora se e' una funzione; `per_modello` cambia i valori di un modello solo.
+    La visibilita' parte da 24 km (in metri): a 0 sarebbe nebbia, e dal punteggio v4 la nebbia
+    azzera l'ora."""
+    valori = {"visibility_km": 24000.0, **valori}
     t0 = datetime.fromisoformat(inizio)
     tempi = [(t0 + timedelta(hours=i)).strftime("%Y-%m-%dT%H:%M") for i in range(ore)]
     hourly: dict[str, list] = {"time": tempi}

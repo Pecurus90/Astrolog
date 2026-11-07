@@ -20,6 +20,14 @@ Dal controllo della v76 (7/11), file e righe di `handoff/design/pagine/`:
 - [da dare] Telaio, helmet (10): `alPulse` e `alHalo` ora sono nel foglio (astrolog.css 553-554)
   ma restano anche nell'helmet: via dall'helmet, una casa sola.
 
+Dal porting delle Notti (passo 33, 7/11):
+- [da dare] Notti, fonte del sito (231): un terzo caso, il sito scelto rispondendo in Da
+  confermare: «· dalla tua risposta in Da confermare» (Marco, 7/11). Oggi la tavola decide la fonte
+  dal nome del sito (`/casa/i`): la fonte la manda l'app, tre valori.
+- [da dare] Notti, cielo (205, `SZ`): lo storico del meteo non ha l'aerosol, quindi ogni notte
+  passata dice «· senza aerosol» accanto alle ore di posa, nella carta e nelle righe (ADR 0034,
+  DECISIONI v60). Nella tavola `SZ` e' vuoto: mostrarlo.
+
 ## Date, da controllare alla consegna
 
 Nessuna.

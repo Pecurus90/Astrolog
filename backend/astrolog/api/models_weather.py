@@ -147,11 +147,30 @@ class WeatherSkyOut(BaseModel):
     never comes -- the arc with the Sun below the horizon; `None` where the Sun does not set. The
     same shape serves the forecast (Weather) and the history (Nights)."""
 
-    verdict: Literal["go", "marginal", "nogo"] | None
+    verdict: Literal["go", "marginal", "nogo"] | None = Field(
+        description="From the night's Transparency (score v4, ADR 0034): go from 70, marginal "
+        "from 40, nogo below; null without every window hour's clouds."
+    )
     cloud_total_pct: float | None
     usable_hours: int | None
     window: Literal["dark", "sun_down"] | None
     window_hours: int | None
+    transparency: float | None = Field(
+        default=None,
+        description="0-100: the light the night let through, its window hours weighted by their "
+        "minutes of dark; zero in the hours a rule blocks.",
+    )
+    exposure_hours: float | None = Field(
+        default=None,
+        description="Ore di posa: the Transparency / 100 summed over the window's hours, tenths.",
+    )
+    dark_hours: float = Field(
+        default=0.0, description="The window's length in hours, tenths: the dark, or the Sun down."
+    )
+    without_aerosol: bool = Field(
+        default=False,
+        description="Some window hour has no aerosol: the Transparency is the clouds' alone.",
+    )
 
 
 class WeatherBriefOut(WeatherSkyOut):

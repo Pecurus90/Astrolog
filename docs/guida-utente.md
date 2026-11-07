@@ -496,9 +496,12 @@ alla volta.
 In testa alla scheda leggi **quante ore di buio sereno** avra' la notte, il semaforo, **da che ora
 a che ora** (*dalle 23:00 alle 02:00, 3 ore*: se il conto e' piu' piccolo dell'intervallo, in mezzo
 c'e' un'ora coperta) e **quanti modelli sono d'accordo**, che e' cio' che ti dice quanto fidarti.
-Il semaforo lo decidono **solo le nuvole**, perche' sono l'unica cosa che ferma tutti i soggetti
-allo stesso modo: **buona** fino a due ottavi di cielo coperto, **incerta** fino a quattro,
-**non adatta** oltre -- le soglie dei bollettini meteo.
+Il semaforo lo decide la **Trasparenza** della notte, da 0 a 100: quanta luce lasciano passare le
+nuvole e la foschia (l'aerosol) in ogni ora di buio. Un'ora vale 0 se piove, se c'e' nebbia, se le
+nuvole sono oltre la meta' del cielo, se il vento arriva a 29 km/h o le raffiche passano i 25. La
+notte e' la media delle sue ore, ognuna per la parte di buio che contiene: **buona** da 70,
+**incerta** da 40, **non adatta** sotto. Le ore serene restano quelle con al massimo due ottavi
+di cielo coperto.
 
 Accanto ci sono gli **altri fattori**, che non modificano il verdetto: le misure che in qualche ora della notte
 diventano *incerte* o *non adatte* -- le nuvole basse, la pioggia, il vento, la condensa, il jet stream,

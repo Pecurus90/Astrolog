@@ -88,8 +88,12 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   di Marco, ADR 0034). Le **Ore di posa** sono le ore di buio contate per quanto rendono, divise
   per banda della Luna ("4,6 ore di posa: 3,1 in banda larga"). Il **Seeing** ha la sua parola,
   fuori dal voto; senza chiave Meteoblue viene dal jet stream, detto. Un dato che manca (aerosol)
-  esce dal conto e la pagina dice quale. Condensa e vento incerto sono avvisi accanto. Il codice di
-  oggi giudica ancora dalle sole nuvole: cambia quando si costruisce l'ADR 0034.
+  esce dal conto e la pagina dice quale. Condensa e vento incerto sono avvisi accanto. Costruiti
+  (`weather/score.py`, 7/11/2026): Trasparenza, verdetto, Ore di posa in tutto, "senza aerosol";
+  ogni ora pesa per la sua parte di buio, letta ogni 5 minuti attorno all'ora. Arrivano con il
+  porting del Meteo e della Dashboard la divisione per banda della Luna e la linea ora per ora; il
+  buio nautico con ADR 0035. Le ore serene (`usable_*`) restano le nuvole sole, per le pagine di
+  oggi. Prove: `backend/tests/test_weather_score.py`.
 - **Ogni misura ha anche la sua parola.** Ogni misura con soglia ha la sua parola
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e
   il conto delle ore che la portano. Le soglie stanno in `backend/astrolog/weather/judge.py`, con
