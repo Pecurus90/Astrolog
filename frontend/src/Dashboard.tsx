@@ -20,7 +20,7 @@ import { AzioniDelVuoto, VuotoDellaSezione } from "./Vuoto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { useColonnaStretta } from "./colonna"
-import { type Chiave, durata, fa, giorno, giornoBreve, giornoEMese, giornoENumero, numero, oraDelSito, orario, t } from "./i18n"
+import { type Chiave, durata, fa, giorno, giornoBreve, giornoEMese, giornoENumero, maiuscola, numero, oraDelSito, orario, t } from "./i18n"
 import { useRevisione } from "./api/revisione"
 
 type Meteo = components["schemas"]["WeatherOut"]
@@ -30,7 +30,6 @@ type NotteDellArchivio = components["schemas"]["Night"]
 /** Le sei carte del meteo, sempre al loro posto (Marco, 12/10/2026, `docs/domini/meteo.md`). */
 const SEI: readonly Destra[] = ["cloud", "seeing", "jet", "wind", "condensation", "aerosol"]
 
-const conMaiuscola = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 /**
  * La **Dashboard** sul disegno v37 (`pagine/dashboard.html` e `dashboard-telefono.html` del
@@ -342,7 +341,7 @@ function Prossime({ detto, telefono }: { detto: Meteo; telefono: boolean }) {
         )}
         <p>
           {/* dalla quarta notte la previsione e' una tendenza, e lo dice (Marco, 26/9 e 14/10/2026) */}
-          <b>{n.trend ? `${conMaiuscola(giornoENumero(n.night))} \u00b7 ${t("weather.night.trend")}` : conMaiuscola(giornoENumero(n.night))}</b>
+          <b>{n.trend ? `${maiuscola(giornoENumero(n.night))} \u00b7 ${t("weather.night.trend")}` : maiuscola(giornoENumero(n.night))}</b>
           <span>{oreDellaVoce(n)}</span>
           {n.sky_word && <span>{cieloInParole(n)}</span>}
         </p>
@@ -501,7 +500,7 @@ function DaRiprendere({ finora }: { finora: boolean }) {
         <Link className="as-riga" to={`/notti?notte=${ultima.id}`}>
           <span className="as-riga__segno" aria-hidden="true" />
           <span>
-            <b>{conMaiuscola(giornoEMese(ultima.night_date))}</b>
+            <b>{maiuscola(giornoEMese(ultima.night_date))}</b>
             {finora ? t("dashboard.work.night.sofar") : comeEAndata(ultima)}
           </span>
           <span className="as-riga__freccia" aria-hidden="true">{"\u2192"}</span>

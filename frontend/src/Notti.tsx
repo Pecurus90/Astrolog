@@ -1,415 +1,550 @@
-import { useInfiniteQuery } from "@tanstack/react-query"
-import type { CSSProperties } from "react"
-import { useSearchParams } from "react-router"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useState } from "react"
+import { useNavigate, useSearchParams } from "react-router"
 
-import { Avanza, Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { Altre, paginaDopo } from "./Elenco"
-import { BarraDeiFiltri } from "./FiltriUsati"
-import { Finestra } from "./NotteDelMeteo"
-import { Semaforo } from "./Semaforo"
-import { Disco } from "./Stanotte"
-import { AzioniDelVuoto, Vuoto } from "./Vuoto"
+import { Avviso, type SegnoAvviso } from "./componenti/Avviso"
+import { CalendarioNotti, type GiornoNotti } from "./componenti/CalendarioNotti"
+import { Carta } from "./componenti/Carta"
+import { Filtri, type GruppoFiltri } from "./componenti/Filtri"
+import { useFormato } from "./componenti/formato"
+import { gesto } from "./componenti/gesto"
+import { type CartaScheletro, type PilaScheletro, Scheletro } from "./componenti/Scheletro"
+import { Striscia, type NotteStriscia } from "./componenti/Striscia"
+import { Pagina } from "./componenti/Pagina"
+import type { Formato } from "./componenti/Tema"
+import { paginaDopo } from "./Elenco"
+import { VARIANTE } from "./FiltriUsati"
 import { api } from "./api/client"
-import type { components } from "./api/schema"
-import { type Chiave, giornoDellaSettimana, notte, numero, ore, t } from "./i18n"
+import { costellazione } from "./costellazioni"
+import { type Chiave, maiuscola, meseEAnno, numero, t } from "./i18n"
+import { AConfronto, Protagonista, TuttoLArchivio, type VoceFuori } from "./NottiCarte"
+import {
+  type Elenco,
+  type Mese,
+  type Notte,
+  cielo,
+  esitoDi,
+  giornoBreve,
+  oreDi,
+  parolaDi,
+  ripresa,
+  sommaDelMese,
+  titoloDi,
+} from "./NottiDati"
 
-type Notte = components["schemas"]["Night"]
-type Elenco = components["schemas"]["NightList"]
+// 20 alla volta (tavola v76, `Carica altre`); la striscia porta le ultime 7.
+const PER_VOLTA = 20
+const IN_STRISCIA = 7
 
-// Quante righe per volta, come l'Archivio: si guarda indietro nel tempo, e chiederne venti per
-// volta sarebbe cinque giri per vedere un anno.
-const PER_VOLTA = 100
+// Le carte dello scheletro con le misure di quelle vere (tavola v76, `SK`, 288-291).
+const SCHELETRO_DESK: (CartaScheletro | PilaScheletro)[] = [
+  {
+    col: "span 8",
+    h: "560px",
+    blocchi: [
+      { riga: [{ h: "28px", w: "300px" }, t("nights.loading")], tra: true },
+      { h: "64px", w: "240px" },
+      { griglia: "1.4fr 1fr", gap: "12px", h: "150px", figli: [{ r: "22px" }, { r: "22px" }] },
+      { flex: "1" },
+    ],
+  },
+  {
+    col: "span 4",
+    pila: [
+      { h: "380px", pad: "24px", blocchi: [{ h: "100%" }] },
+      { flex: "1", pad: "24px", blocchi: [{ h: "100%" }] },
+    ],
+  },
+  {
+    col: "span 12",
+    h: "520px",
+    gap: "10px",
+    blocchi: [
+      { h: "24px", w: "160px", r: "12px" },
+      { flex: "1", r: "18px" },
+      { flex: "1", r: "18px" },
+      { flex: "1", r: "18px" },
+      { flex: "1", r: "18px" },
+    ],
+  },
+]
+const SCHELETRO_TEL: CartaScheletro[] = [
+  { h: "390px", gap: "12px", blocchi: [t("nights.loading"), { flex: "1" }] },
+  { h: "420px", blocchi: [{ h: "100%" }] },
+]
 
-// Mentre la lettura mette i frame nelle notti la pagina si rilegge, o la pista resterebbe ferma: non
-// al ritmo della scansione, perche' ogni pagina di notti chiede la Luna all'effemeride.
+// Mentre la lettura mette i frame nelle notti la pagina si rilegge: non al ritmo della scansione,
+// perche' ogni pagina di notti chiede la Luna all'effemeride.
 export const MENTRE_LEGGE_MS = 15000
 
-// Quanti oggetti per notte si mostrano: gli altri si contano ("e 2 altri"). Il backend li manda
-// gia' dal piu' ripreso.
-const OGGETTI_IN_VISTA = 3
+type Criterio = Elenco["criteria"][number]
+type Scelte = Partial<Record<Criterio["key"], string[]>>
 
-// Dove si va a rispondere, deciso dal backend (`spine/nights`): qui c'e' solo **come si dice** e
-// dove porta. `never` non ha un'azione: quei frame non hanno una risposta da dare. Il primario va
-// al sito, il primo nell'ordine del disegno (sito, archivio, meteo, progetto, casi).
-type Dove = Elenco["waiting"][number]["answer_at"]
+const CIELO: Record<string, Chiave> = {
+  go: "ui.outcome.good",
+  marginal: "ui.outcome.uncertain",
+  nogo: "ui.outcome.unsuitable",
+  unknown: "nights.sky.silent",
+}
 
-const RIGA: Record<Dove, { titolo: Chiave; testo: Chiave; dove?: string; vai?: Chiave; primario?: boolean }> = {
-  review: { titolo: "nights.waiting.review", testo: "nights.waiting.review.why", dove: "/da-confermare", vai: "nights.waiting.where" },
-  site: { titolo: "nights.waiting.site", testo: "nights.waiting.site.why", dove: "/impostazioni/sito", vai: "nights.waiting.site.how", primario: true },
-  date: { titolo: "nights.waiting.never", testo: "nights.waiting.never.why" },
-  never: { titolo: "nights.waiting.never", testo: "nights.waiting.never.why" },
+function nomeDellaScelta(chiave: Criterio["key"], o: Criterio["options"][number]): string {
+  if (chiave === "constellation") return costellazione(o.value)
+  if (chiave === "sky") return CIELO[o.value] ? t(CIELO[o.value] as Chiave) : o.value
+  if (chiave === "setup") return o.name ?? ([o.optics, o.camera].filter(Boolean).join(" + ") || o.value)
+  if (chiave === "filter" && o.value === "__no_filter__") return t("filters.none")
+  return o.name ?? o.value
+}
+
+async function chiedi(query: Record<string, unknown>): Promise<Elenco> {
+  const { data, error } = await api.GET("/api/v1/nights", { params: { query } })
+  if (error) throw new Error(t("nights.failed"))
+  return data
 }
 
 /**
- * Le **Notti**: quando hai ripreso, da dove, e cosa hai fatto quella sera. Il disegno e' il v29,
- * forma A, il registro: una carta per notte in cinque colonne che si confrontano dall'alto in basso.
- *
- * - **Qui non si calcola niente.** Ore, frame, oggetti, filtri, la barra di ogni oggetto, la Luna e
- *   il meteo arrivano gia' fatti dal backend, che sa quali frame escludere (le copie riscritte non
- *   sono un'altra ora di cielo) e in che ordine mettere i filtri.
- * - **Una notte e' una carta**, anche con due oggetti dentro: spaccarla spezzerebbe le sue ore, e
- *   due carte con la stessa data sembrerebbero un doppione. La vista per oggetto e' l'Archivio.
- * - **Un elenco corto ha due spiegazioni**, e stanno in testa, una riga per motivo: i frame che
- *   aspettano una risposta -- raggruppati dal backend per **dove** si risponde -- e la lettura che
- *   non e' finita. Senza, chi apre la pagina a meta' corsa crede di avere tre notti.
- * - **Non avere notti ha quattro motivi**, e sono quattro risposte diverse: nessun frame, nessun
- *   sito di casa, frame fermi su una domanda, o l'app che non ci e' ancora arrivata.
- * - **Una notte sola si apre dall'indirizzo** (`/notti?notte=<id>`, la usa la ricerca): niente
- *   totali ne' righe di stato, quella notte e il ritorno a tutte.
+ * Le **Notti** (tavola v76, `docs/domini/notti.md`): la notte protagonista, le ultime sette, il
+ * calendario del mese, i criteri, l'elenco a confronto e tutto l'archivio. Qui non si calcola:
+ * esiti, ore di posa, ripresa, conteggi dei criteri e mesi arrivano dal backend.
  */
 export function Notti() {
+  const formato = useFormato()
+  const tel = formato === "telefono"
+  const vai = useNavigate()
   const [indirizzo] = useSearchParams()
   const scritto = indirizzo.get("notte")
-  // solo un id intero positivo si chiede: un indirizzo storto e' una notte che non c'e'
   const una = scritto !== null && /^[1-9][0-9]*$/.test(scritto) ? Number(scritto) : null
   const storta = scritto !== null && una === null
-  const elenco = useInfiniteQuery({
-    queryKey: ["nights", una],
+
+  const [scelte, setScelte] = useState<Scelte>({})
+  const [q, setQ] = useState("")
+  const [sel, setSel] = useState<number | null>(null)
+  const [mese, setMese] = useState<string | null>(null)
+  const [criteriAperti, setCriteriAperti] = useState(false)
+  const [calAperto, setCalAperto] = useState(false)
+  const [righeAperte, setRigheAperte] = useState(false)
+
+  const criteri = { ...scelte, ...(q.trim() ? { q: q.trim() } : {}) }
+  const lista = useInfiniteQuery({
+    queryKey: ["nights", una, criteri],
     enabled: !storta,
     initialPageParam: 0,
-    queryFn: async ({ pageParam }) => {
-      const { data, error } = await api.GET("/api/v1/nights", {
-        params: { query: { limit: PER_VOLTA, offset: pageParam, ...(una ? { night: una } : {}) } },
+    queryFn: ({ pageParam }) =>
+      chiedi({ limit: PER_VOLTA, offset: pageParam, ...(una ? { night: una } : criteri) }),
+    getNextPageParam: paginaDopo,
+    placeholderData: (prima) => prima,
+    refetchInterval: (qq) => (qq.state.data?.pages[0]?.still_reading ? MENTRE_LEGGE_MS : false),
+  })
+  const striscia = useQuery({
+    queryKey: ["nights", "latest"],
+    enabled: una === null && !storta,
+    queryFn: () => chiedi({ limit: IN_STRISCIA }),
+    // come la lista: una notte nata durante la lettura entra anche qui
+    refetchInterval: (qq) => (qq.state.data?.still_reading ? MENTRE_LEGGE_MS : false),
+  })
+  const pagine = lista.data?.pages ?? []
+  const prima = pagine[0]
+  const righe = pagine.flatMap((p) => p.items)
+  const ultime = striscia.data?.items ?? []
+  const scelto = sel ?? una ?? ultime[0]?.id ?? righe[0]?.id
+  const nota = [...ultime, ...righe].find((n) => n.id === scelto)
+  const sola = useQuery({
+    queryKey: ["nights", "one", scelto],
+    enabled: scelto !== undefined && nota === undefined && !lista.isPending,
+    queryFn: () => chiedi({ night: scelto, limit: 1 }),
+    // la notte di prima resta a schermo mentre arriva la nuova: il layout non salta
+    placeholderData: (prima) => prima,
+  })
+  const protagonista = nota ?? sola.data?.items[0]
+  const solaPersa = nota === undefined && (sola.isError || (sola.isSuccess && !sola.data.items.length))
+  const meseVisto = mese ?? protagonista?.night_date.slice(0, 7)
+  const calendario = useQuery({
+    queryKey: ["nights", "calendar", meseVisto],
+    enabled: meseVisto !== undefined && una === null,
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/nights/calendar", {
+        params: { query: { month: meseVisto ?? "" } },
       })
       if (error) throw new Error(t("nights.failed"))
       return data
     },
-    getNextPageParam: paginaDopo,
-    refetchInterval: (q) => (q.state.data?.pages.at(-1)?.still_reading ? MENTRE_LEGGE_MS : false),
   })
-  const pagine = elenco.data?.pages ?? []
-  const righe = pagine.flatMap((p) => p.items)
-  const ultima = pagine.at(-1)
 
-  return (
-    <div className="as-pagina">
-      <div className="as-registro">
-        {elenco.isPending && !storta && <InLettura />}
-        {elenco.error && (
-          <Avviso
-            esito="allarme"
-            pagina
-            azioni={
-              <Bottone verso="primario" onClick={() => void elenco.refetch()}>
-                {t("nights.retry")}
-              </Bottone>
-            }
-          >
-            {elenco.error.message}
-          </Avviso>
-        )}
+  // dal calendario il mese resta quello sfogliato; dalla striscia e dall'elenco segue la notte
+  const scegli = (id: number, tieniMese = false) => {
+    setSel(id)
+    if (!tieniMese) setMese(null)
+  }
 
-        {scritto !== null && (
-          <Bottone verso="nudo" a="/notti">
-            {t("nights.all")}
-          </Bottone>
-        )}
-        {(storta || (una !== null && ultima && righe.length === 0)) && <Sparita />}
-
-        {scritto === null && ultima && pagine[0]?.totals && <Testa pagina={ultima} tot={pagine[0].totals} />}
-        {scritto === null && ultima && righe.length === 0 && <Niente pagina={ultima} />}
-
-        {righe.length > 0 && (
-          <div className="as-registro__elenco" role="list" aria-label={t("nights.title")}>
-            {scritto === null && <Capi />}
-            {righe.map((riga) => (
-              <UnaNotte key={riga.id} notte={riga} />
-            ))}
-          </div>
-        )}
-
-        {ultima && elenco.hasNextPage && (
-          <div className="as-registro__carico">
-            <span>{t("nights.shown", { n: numero(righe.length), di: numero(ultima.total) })}</span>
-            <Altre elenco={elenco} testo="nights.more" />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-/** Mentre la pagina chiede le notti: i totali e le prime tre carte tengono il loro posto, cosi'
- *  niente salta quando arrivano. */
-function InLettura() {
-  return (
-    <>
-      <div className="as-registro__testa">
-        <p className="as-soprattitolo">{t("nights.totals.title")}</p>
-        <span className="as-scheletro as-registro__scheletro-cifre" />
-      </div>
-      <div className="as-registro__elenco" aria-busy="true" aria-label={t("nights.loading")}>
-        <span className="as-scheletro as-registro__scheletro" />
-        <span className="as-scheletro as-registro__scheletro" />
-        <span className="as-scheletro as-registro__scheletro" />
-      </div>
-    </>
-  )
-}
-
-/** La notte dell'indirizzo che non c'e' piu': i suoi frame sono stati tolti o spostati. */
-function Sparita() {
-  return (
-    <Vuoto sotto={1} titolo="nights.gone" perche="nights.gone.why">
-      <AzioniDelVuoto>
-        <Bottone a="/notti">{t("nights.all.short")}</Bottone>
-      </AzioniDelVuoto>
-    </Vuoto>
-  )
-}
-
-/** Cosa tiene l'archivio intero, e una riga per ogni cosa che spiega un elenco piu' corto. */
-function Testa({ pagina, tot }: { pagina: Elenco; tot: NonNullable<Elenco["totals"]> }) {
-  // il totale arriva con la prima pagina sola: le altre non lo rifanno
-  return (
-    <>
-      <header className="as-registro__testa">
-        <p className="as-soprattitolo">{t("nights.totals.title")}</p>
-        <div className="as-registro__totali">
-          <p className="as-registro__totale">
-            <b>{numero(tot.nights)}</b>
-            {t("nights.totals.nights")}
-          </p>
-          <p className="as-registro__totale">
-            <b>{numero(tot.frames)}</b>
-            {t("nights.totals.frames")}
-          </p>
-          {tot.integration_s > 0 && (
-            <p className="as-registro__totale">
-              <b>{ore(tot.integration_s)}</b>
-              {t("nights.totals.hours", { n: ore(tot.integration_s) })}
-            </p>
-          )}
-          {tot.untimed > 0 && (
-            <p className="as-registro__totale">
-              <b>{numero(tot.untimed)}</b>
-              {t("nights.totals.untimed")}
-            </p>
-          )}
-        </div>
-        <p className="as-registro__nota">{t("nights.totals.copies")}</p>
-      </header>
-      {(pagina.waiting.length > 0 || pagina.still_reading > 0) && (
-        <div className="as-registro__stati">
-          {pagina.waiting.map((gruppo) => (
-            <Ferme key={gruppo.answer_at} gruppo={gruppo} />
-          ))}
-          {pagina.still_reading > 0 && <Lettura pagina={pagina} />}
-        </div>
-      )}
-    </>
-  )
-}
-
-/** Un gruppo di frame che nessuna notte ha raccolto: quanti sono, e dove si risponde. */
-function Ferme({ gruppo }: { gruppo: Elenco["waiting"][number] }) {
-  const riga = RIGA[gruppo.answer_at]
-  return (
-    <Avviso
-      esito={riga.dove ? "attesa" : "neutro"}
-      titolo={t(riga.titolo, { n: numero(gruppo.frames) })}
-      azioni={
-        riga.dove &&
-        riga.vai && (
-          <Bottone verso={riga.primario ? "primario" : "tenue"} a={riga.dove}>
-            {t(riga.vai)}
-          </Bottone>
-        )
-      }
-    >
-      {t(riga.testo)}
-    </Avviso>
-  )
-}
-
-/** La lettura al lavoro: quanti frame devono ancora trovare la loro notte, e quanto ha fatto. */
-function Lettura({ pagina }: { pagina: Elenco }) {
-  const fatto = pagina.reading_done_pct
-  return (
-    <Avviso
-      esito="lavoro"
-      titolo={t("nights.reading", { n: numero(pagina.still_reading) })}
-      sotto={fatto != null && <Avanza pct={fatto} />}
-    >
-      {t("nights.reading.why")}
-    </Avviso>
-  )
-}
-
-/** I quattro modi di non avere notti, in ordine di cosa fare: dichiarare il sito (senza, non ne
- *  nascera' mai una), rispondere alle domande, aspettare la lettura, o cominciare a leggere. */
-function Niente({ pagina }: { pagina: Elenco }) {
-  const senzaCasa = pagina.waiting.some((v) => v.answer_at === "site")
-  const ferme = pagina.waiting.length > 0
-  const quale: { titolo: Chiave; perche: Chiave; dove?: string; gesto?: Chiave } = senzaCasa
-    ? {
-        titolo: "nights.empty.noSite",
-        perche: "nights.empty.noSite.why",
-        dove: "/impostazioni/sito",
-        gesto: "nights.empty.noSite.how",
-      }
-    : ferme
-      ? {
-          titolo: "nights.empty.waiting",
-          perche: "nights.empty.waiting.why",
-          dove: "/da-confermare",
-          gesto: "nights.waiting.where",
-        }
-      : pagina.still_reading > 0
-        ? { titolo: "nights.empty.notYet", perche: "nights.empty.notYet.why" }
-        : {
-            titolo: "nights.empty.noFrames",
-            perche: "nights.empty.noFrames.why",
-            dove: "/impostazioni",
-            gesto: "nights.empty.noFrames.how",
-          }
-  return (
-    <Vuoto sotto={1} titolo={quale.titolo} perche={quale.perche}>
-      {quale.dove && quale.gesto && (
-        <AzioniDelVuoto>
-          <Bottone verso="primario" a={quale.dove}>
-            {t(quale.gesto)}
-          </Bottone>
-        </AzioniDelVuoto>
-      )}
-    </Vuoto>
-  )
-}
-
-/** Le intestazioni delle cinque colonne, una volta sola in cima: sotto 1180 il foglio le nasconde. */
-function Capi() {
-  return (
-    <div className="as-notte as-notte--capi" aria-hidden="true">
-      <span className="as-soprattitolo">{t("nights.col.when")}</span>
-      <span className="as-soprattitolo">{t("nights.col.done")}</span>
-      <span className="as-soprattitolo">{t("nights.col.objects")}</span>
-      <span className="as-soprattitolo">{t("nights.col.filters")}</span>
-      <span className="as-soprattitolo">{t("nights.col.sky")}</span>
-    </div>
-  )
-}
-
-/** Una notte: quando e dove, quanto, cosa, con che filtri, che cielo. */
-function UnaNotte({ notte: riga }: { notte: Notte }) {
-  const data = notte(riga.night_date)
-  const giorno = giornoDellaSettimana(riga.night_date)
-  return (
-    <div
-      className="as-carta as-notte"
-      role="listitem"
-      aria-label={t("nights.card", { data, giorno, sito: riga.site })}
-    >
-      <div className="as-notte__quando">
-        <h2 className="as-notte__data">
-          {data} <span className="as-notte__giorno">{t("nights.weekday", { giorno })}</span>
-        </h2>
-        <p className="as-notte__sito">
-          <svg className="as-notte__segno" viewBox="0 0 20 20" aria-hidden="true">
-            <use href="#i-m-sito" />
-          </svg>
-          {riga.site}
-        </p>
-      </div>
-      <div className="as-notte__fatto">
-        <Fatto notte={riga} />
-      </div>
-      <div className="as-notte__oggetti">
-        <Oggetti oggetti={riga.objects} />
-      </div>
-      <div className="as-notte__filtri">
-        <BarraDeiFiltri filtri={riga.filters} perFrame={riga.integration_s === 0} />
-      </div>
-      <div className="as-notte__cielo">
-        {riga.moon && (
-          <p className="as-luna__fase as-notte__luna">
-            <Disco luna={riga.moon} className="as-luna__faccia--giorno" />
-            <span className="as-luna__dice">
-              <span className="as-luna__nome">{t(`moon.${riga.moon.phase_key}`)}</span>
-              <span className="as-luna__quanto">{t("tonight.illuminated", { pct: riga.moon.illumination_pct })}</span>
-            </span>
-          </p>
-        )}
-        <Cielo meteo={riga.weather} />
-      </div>
-    </div>
-  )
-}
-
-/** Le ore in grande, o "senza tempo" a parole quando nessun frame dice la durata; sotto i frame. */
-function Fatto({ notte: riga }: { notte: Notte }) {
-  return (
-    <>
-      {riga.integration_s > 0 ? (
-        <p className="as-notte__ore">{t("nights.hours", { h: ore(riga.integration_s) })}</p>
-      ) : (
-        <p className="as-notte__ore as-notte__ore--parole">{t("nights.untimed", { n: numero(riga.untimed) })}</p>
-      )}
-      <p className="as-notte__frame">{t("nights.frames", { n: numero(riga.frames) })}</p>
-      {riga.integration_s > 0 && riga.untimed > 0 && (
-        <p className="as-notte__frame as-notte__frame--senza">{t("nights.untimed", { n: numero(riga.untimed) })}</p>
-      )}
-    </>
-  )
-}
-
-/** I primi oggetti, ognuno con la barra delle sue ore in quella notte; gli altri contati. */
-function Oggetti({ oggetti }: { oggetti: Notte["objects"] }) {
-  const altri = oggetti.length - OGGETTI_IN_VISTA
-  return (
-    <>
-      <ul className="as-notte__lista">
-        {oggetti.slice(0, OGGETTI_IN_VISTA).map((o) => (
-          <li key={o.key} className="as-notte__oggetto">
-            <span className="as-notte__nome">{o.name ?? o.key}</span>
-            <span className="as-notte__barra-ore" style={{ "--quanto": `${o.bar_pct}%` } as CSSProperties} />
-            <span className="as-notte__cifra">
-              {o.integration_s > 0 ? t("nights.hours", { h: ore(o.integration_s) }) : t("nights.object.untimed")}
-            </span>
-          </li>
-        ))}
-      </ul>
-      {altri > 0 && <p className="as-notte__altri">{t("nights.objects.more", { n: numero(altri) })}</p>}
-    </>
-  )
-}
-
-/** Il cielo vero di quella notte, come lo storico l'ha scritto, o perche' non c'e' ancora. Qui
- *  non si decide niente: lo stato, la data e i numeri arrivano fatti. */
-function Cielo({ meteo }: { meteo: Notte["weather"] }) {
-  if (meteo.state === "waiting") {
-    return meteo.arrives_on ? (
+  let corpo
+  if (storta || (una !== null && prima && righe.length === 0)) {
+    corpo = (
       <>
-        <p className="as-notte__attesa">{t("nights.weather.arrives", { data: notte(meteo.arrives_on) })}</p>
-        <p className="as-notte__utili">{t("nights.weather.arrives.why")}</p>
+        <div className="al-notti__riga-1">
+          <TutteLeNotti />
+        </div>
+        <Avviso tipo="pagina" formato={formato} segno="?" titolo={t("nights.gone")} testo={t("nights.gone.why")} azione={t("nights.gone.how")} onAzione={() => void vai("/notti")} />
+      </>
+    )
+  } else if (lista.isPending) {
+    corpo = <Scheletro formato={formato} carte={tel ? SCHELETRO_TEL : SCHELETRO_DESK} testo={t("nights.loading")} />
+  } else if (!prima) {
+    // solo senza nessuna pagina: un giro di rinnovo o \u00ABCarica altre\u00BB che falliscono tengono i dati
+    corpo = (
+      <Avviso tipo="pagina" formato={formato} segno="!" titolo={t("nights.failed")} azione={t("nights.retry")} onAzione={() => void lista.refetch()} />
+    )
+  } else if (prima.empty) {
+    corpo = <Vuoto pagina={prima} formato={formato} vai={(a) => void vai(a)} />
+  } else {
+    // \u2039 \u203A nell'ordine dell'elenco; una notte fuori dalle righe caricate non ha vicine note
+    const indice = righe.findIndex((n) => n.id === scelto)
+    const solaNotte = una !== null
+    const pista = righe
+    const prev = indice >= 0 ? righe[indice + 1] : undefined
+    const next = indice > 0 ? righe[indice - 1] : undefined
+    const attivi = (q.trim() ? 1 : 0) + Object.values(scelte).reduce((a, v) => a + (v?.length ?? 0), 0)
+    const togli = () => {
+      setScelte({})
+      setQ("")
+    }
+    const gruppi: GruppoFiltri[] = prima.criteria.map((c) => ({
+      l: t(`nights.criteria.${c.key}`),
+      opz: c.options.map((o) => ({
+        l: nomeDellaScelta(c.key, o),
+        c: numero(o.nights),
+        sel: o.chosen,
+        // the dot takes the band's token, the one its bar class paints with
+        ...(c.key === "filter" && o.passband && VARIANTE[o.passband] ? { tinta: { fondo: `var(--filtro-${(VARIANTE[o.passband] ?? "").split("--")[1] ?? ""})` } } : {}),
+        no: o.nights === 0 && !o.chosen,
+        on: () => {
+          const ora = new Set(scelte[c.key] ?? [])
+          if (ora.has(o.value)) ora.delete(o.value)
+          else ora.add(o.value)
+          setScelte({ ...scelte, [c.key]: [...ora] })
+        },
+      })),
+    }))
+    const stato = righeDiStato(prima)
+    const fuori = vociFuori(prima)
+    const notteProt = solaPersa ? (
+      <Avviso tipo="pagina" formato={formato} segno="?" colonne={8} titolo={t("nights.gone")} testo={t("nights.gone.why")} />
+    ) : (
+      protagonista && (
+      <Protagonista
+        notte={protagonista}
+        formato={formato}
+        sola={solaNotte}
+        onPrima={prev ? () => scegli(prev.id) : undefined}
+        onDopo={next ? () => scegli(next.id) : undefined}
+      />
+      )
+    )
+    const cal = calendario.data && (
+      <CalendarioDelMese
+        mese={calendario.data}
+        scelta={scelto}
+        formato={formato}
+        onScegli={(id) => scegli(id, true)}
+        onMese={setMese}
+      />
+    )
+    const corpoFiltri = (
+      <Filtri
+        gruppi={gruppi}
+        campo={t("nights.criteria.field")}
+        q={q}
+        onCerca={setQ}
+        attivi={attivi}
+        onTogli={togli}
+        formato={formato}
+        {...(tel
+          ? {
+              mostra: prima.total
+                ? t("nights.criteria.show", { n: numero(prima.total) })
+                : t("nights.criteria.show.none"),
+              onMostra: () => setCriteriAperti(false),
+              rientro: "0 16px",
+            }
+          : {})}
+      />
+    )
+
+    corpo = tel ? (
+      <>
+        {solaNotte && <TutteLeNotti />}
+        {!solaNotte && (
+          <div className="al-notti__colonna-12">
+            <div className="al-notti__riga-22">
+              <a className="al-notti__riga-23" href="#" onClick={gesto(() => { setCalAperto(!calAperto); setCriteriAperti(false); setMese(null) })} aria-expanded={calAperto ? "true" : "false"} aria-label={t("nights.month.phone.label")} style={{ background: calAperto ? "var(--accento)" : "var(--carta-2)", color: calAperto ? "var(--scelta-testo)" : "var(--testo)" }}>
+                <span className="al-notti__blocco-10">{calAperto ? maiuscola(meseEAnno(meseVisto ?? "")) : t("nights.month.phone", { mese: maiuscola(meseEAnno(meseVisto ?? "")) })}</span>
+                <span className="al-notti__testo-20" aria-hidden="true">{calAperto ? "\u25B4" : "\u25BE"}</span>
+              </a>
+              <Filtri parte="bottone" attivi={attivi} aperto={criteriAperti} onApri={() => { setCriteriAperti(!criteriAperti); setCalAperto(false) }} formato="telefono" />
+            </div>
+            <div role="tablist" aria-label={t("nights.strip")} className="al-scelta al-scelta--segmentato al-scelta--sottili">
+              {pista.map((n) => (
+                <a key={n.id} href="#" role="tab" aria-selected={n.id === scelto ? "true" : "false"} aria-label={`${titoloDi(n)}, ${oreDi(n.integration_s) ?? t("nights.untimed")}, ${n.site}`} onClick={gesto(() => scegli(n.id))} className="al-scelta__voce">
+                  {giornoBreve(n)}
+                  <span className="al-notti__testo-21">{oreDi(n.integration_s) ?? t("nights.untimed")}</span>
+                </a>
+              ))}
+            </div>
+            <span className="al-notti__riga-24">
+              <span>{attivi ? t("nights.list.chosen", { n: numero(prima.total) }) : t("nights.list.recent")}</span>
+              {stato.length > 0 && (
+                <a className="al-notti__riga-25" href="#" role="button" aria-expanded={righeAperte ? "true" : "false"} onClick={gesto(() => setRigheAperte(!righeAperte))}>
+                  <b className="al-notti__testo-22" aria-hidden="true" style={{ color: stato.some((r) => r.s === "!") ? "var(--avviso)" : "var(--testo)" }}>{stato.some((r) => r.s === "!") ? "!" : "?"}</b>
+                  {stato.length === 1 ? stato[0]?.t : t("nights.status.many", { n: stato.length })}
+                  <span className="al-notti__testo-8" aria-hidden="true">{righeAperte ? "\u25B4" : "\u25BE"}</span>
+                </a>
+              )}
+            </span>
+            {righeAperte && <Righe righe={stato} formato="telefono" vai={(a) => void vai(a)} />}
+            {(calAperto || criteriAperti || prima.total === 0) && (
+              <Carta formato="telefono" etichetta={t("nights.month.criteria")} ritardo={0} padding="16px 0 18px" gap={12}>
+                {criteriAperti && corpoFiltri}
+                {prima.total === 0 && (
+                  <span className="al-notti__colonna-13">
+                    <b className="al-notti__testo-23">{t("nights.list.empty")}</b>
+                    <span className="al-notti__testo-2">{t("nights.list.empty.phone")}</span>
+                  </span>
+                )}
+                {calAperto && <div className="al-notti__colonna-14">{cal}</div>}
+              </Carta>
+            )}
+          </div>
+        )}
+        {notteProt}
+        {!solaNotte && prima.totals && <TuttoLArchivio tot={prima.totals} fuori={fuori} formato="telefono" />}
       </>
     ) : (
       <>
-        <p className="as-notte__attesa">{t("nights.weather.waiting")}</p>
-        <p className="as-notte__utili">{t("nights.weather.waiting.why")}</p>
+        {solaNotte && (
+          <div className="al-notti__riga-1">
+            <TutteLeNotti />
+          </div>
+        )}
+        {!solaNotte && stato.length > 0 && (
+          <div className="al-notti__griglia-1">
+            <Righe righe={stato} formato="desktop" vai={(a) => void vai(a)} />
+          </div>
+        )}
+        <div className="al-notti__griglia-2">
+          {!solaNotte && (
+            <Carta formato="desktop" etichetta={t("nights.strip")} colonne={12} ritardo={0} padding="22px 28px 24px" gap={14}>
+              <div className="al-notti__riga-2">
+                <span className="al-notti__testo-1">{t("nights.strip")}</span>
+                <span className="al-notti__testo-2">{t((prima.totals?.nights ?? 0) > IN_STRISCIA ? "nights.strip.latest" : "nights.strip.recent")}</span>
+              </div>
+              <Striscia notti={ultime.map((n, i) => inStriscia(n, ultime[i - 1], n.id === scelto, () => scegli(n.id)))} etichetta={t("nights.strip")} formato="desktop" />
+            </Carta>
+          )}
+          {notteProt}
+          {!solaNotte && (
+            <div className="al-notti__colonna-4">
+              <Carta formato="desktop" etichetta={t("nights.calendar")} ritardo={60} padding="24px" gap={14}>
+                {cal}
+              </Carta>
+            </div>
+          )}
+          {!solaNotte && (
+            <Carta formato="desktop" etichetta={t("nights.criteria.label")} colonne={criteriAperti ? 3 : 12} ritardo={160} padding="22px 20px" gap={14}>
+              <div className="al-notti__riga-12">
+                <span className="al-notti__riga-13">
+                  <span className="al-notti__testo-1">{t("nights.criteria")}</span>
+                  <span className="al-notti__testo-2">
+                    {attivi
+                      ? `${t("nights.criteria.on", { n: attivi })} \u00B7 ${t("nights.month.nights", { n: numero(prima.total) })}`
+                      : t("nights.criteria.none")}
+                  </span>
+                </span>
+                <span className="al-notti__riga-14">
+                  <Filtri parte="togli" attivi={attivi} onTogli={togli} formato="desktop" />
+                  <a href="#" onClick={gesto(() => setCriteriAperti(!criteriAperti))} aria-expanded={criteriAperti ? "true" : "false"} className="al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra">
+                    {t(criteriAperti ? "nights.criteria.close" : "nights.criteria.open")}
+                    <span className="al-notti__testo-8" aria-hidden="true">{criteriAperti ? "\u25B4" : "\u25BE"}</span>
+                  </a>
+                </span>
+              </div>
+              {criteriAperti && corpoFiltri}
+            </Carta>
+          )}
+          {!solaNotte && (
+            <AConfronto
+              notti={righe}
+              mesi={prima.months}
+              colonne={criteriAperti ? 9 : 12}
+              sotto={attivi ? t("nights.list.chosen", { n: numero(prima.total) }) : t("nights.list.sub")}
+              conta={t("nights.shown", { n: numero(righe.length), di: numero(prima.total) })}
+              scelta={scelto}
+              onScegli={scegli}
+              altre={
+                lista.hasNextPage || lista.isFetchNextPageError
+                  ? {
+                      testo: t(lista.isFetchingNextPage ? "nights.more.busy" : lista.isFetchNextPageError ? "nights.retry" : "nights.more"),
+                      spento: lista.isFetchingNextPage,
+                      occupato: lista.isFetchingNextPage,
+                      errore: lista.isFetchNextPageError,
+                      onAltre: () => void lista.fetchNextPage(),
+                    }
+                  : null
+              }
+            />
+          )}
+          {!solaNotte && prima.totals && <TuttoLArchivio tot={prima.totals} fuori={fuori} formato="desktop" />}
+        </div>
       </>
     )
   }
-  if (meteo.state === "unknown") {
-    return (
-      <>
-        <p className="as-notte__meteo">
-          <Semaforo livello={null}>{t("nights.weather.unknown")}</Semaforo>
-        </p>
-        <p className="as-notte__utili">{t("nights.weather.unknown.why")}</p>
-      </>
-    )
+
+  return (
+    <div className="as-pagina">
+      <Pagina formato={formato}>{corpo}</Pagina>
+    </div>
+  )
+}
+
+
+function TutteLeNotti() {
+  const vai = useNavigate()
+  return (
+    <a href="/notti" onClick={gesto(() => void vai("/notti"))} className="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--blocco al-bottone--a-sinistra">
+      {t("nights.all")}
+    </a>
+  )
+}
+
+function inStriscia(n: Notte, prima: Notte | undefined, scelta: boolean, on: () => void): NotteStriscia {
+  const c = cielo(n)
+  const nuovoMese = !prima || prima.night_date.slice(0, 7) !== n.night_date.slice(0, 7)
+  const nomeMese = nuovoMese ? (meseEAnno(n.night_date.slice(0, 7)).split(" ")[0] ?? "") : ""
+  const r = ripresa(n)
+  return {
+    day: giornoBreve(n),
+    tag: nomeMese,
+    tagS: nomeMese,
+    sel: scelta,
+    esito: c.esito === -1 ? "mancante" : c.esito,
+    pillT: c.striscia,
+    ...(r ? { rip: r } : {}),
+    hours: oreDi(n.integration_s) ?? t("nights.untimed"),
+    range: n.site,
+    on,
   }
-  if (meteo.verdict == null || meteo.cloud_total_pct == null) return <p className="as-notte__utili">{t("nights.weather.none")}</p>
+}
+
+function CalendarioDelMese({
+  mese,
+  scelta,
+  formato,
+  onScegli,
+  onMese,
+}: {
+  mese: Mese
+  scelta: number | undefined
+  formato: Formato
+  onScegli: (id: number) => void
+  onMese: (m: string) => void
+}) {
+  const [anno, numMese] = mese.month.split("-").map(Number) as [number, number]
+  const nome = meseEAnno(mese.month).split(" ")[0] ?? ""
+  const giorni: GiornoNotti[] = mese.days.map((g) => {
+    const prima = g.nights[0]
+    return {
+      d: g.day,
+      esiti: g.nights.map((n) => esitoDi(n.verdict)),
+      esito: esitoDi(g.verdict),
+      sel: g.nights.some((n) => n.id === scelta),
+      ...(prima ? { on: () => onScegli(prima.id) } : {}),
+      aria: t("nights.day.label", { giorno: `${g.day} ${nome}`, quante: t("nights.day.nights", { n: g.nights.length }), notti: g.nights.map((n) => `${n.site} ${parolaDi(esitoDi(n.verdict))}`).join(", ") }),
+    }
+  })
+  const sposta = (passi: number) => {
+    const d = new Date(Date.UTC(anno, numMese - 1 + passi, 1))
+    onMese(d.toISOString().slice(0, 7))
+  }
+  const conta = mese.nights
+    ? `${t("nights.month.nights", { n: numero(mese.nights) })} \u00B7 ${t("nights.month.good", { n: numero(mese.good) })}`
+    : t("nights.month.none")
+  return (
+    <CalendarioNotti
+      anno={anno}
+      mese={numMese - 1}
+      giorni={giorni}
+      {...(mese.tonight.startsWith(mese.month) ? { oggi: Number(mese.tonight.slice(8, 10)) } : {})}
+      sub={sommaDelMese(mese.nights, mese.integration_s)}
+      {...(formato === "desktop"
+        ? {
+            numero: oreDi(mese.integration_s) ?? t("nights.month.noHours"),
+            numeroL: t("nights.month.at", { mese: nome }),
+            conta,
+          }
+        : {})}
+      onPrima={() => sposta(-1)}
+      onDopo={() => sposta(1)}
+      primaNo={!mese.first_month || mese.month <= mese.first_month}
+      dopoNo={mese.month >= mese.last_month}
+      formato={formato}
+    />
+  )
+}
+
+interface RigaDiStato {
+  s: SegnoAvviso
+  t: string
+  a?: { testo: string; dove: string }
+}
+
+/** Le righe in cima, una per motivo: il sito, le risposte, la data, la lettura. */
+function righeDiStato(p: Elenco): RigaDiStato[] {
+  const quanti = (dove: string) => p.waiting.find((w) => w.answer_at === dove)?.frames ?? 0
+  const righe: RigaDiStato[] = []
+  if (quanti("site")) righe.push({ s: "!", t: t("nights.waiting.site", { n: numero(quanti("site")) }), a: { testo: t("nights.waiting.site.how"), dove: "/impostazioni/sito" } })
+  if (quanti("review")) righe.push({ s: "!", t: t("nights.waiting.review", { n: numero(quanti("review")) }), a: { testo: t("nights.waiting.review.how"), dove: "/da-confermare" } })
+  if (quanti("date")) righe.push({ s: "?", t: t("nights.waiting.date", { n: numero(quanti("date")) }) })
+  if (p.still_reading) righe.push({ s: "?", t: t("nights.reading", { pct: p.reading_done_pct ?? 0 }) })
+  return righe
+}
+
+function vociFuori(p: Elenco): VoceFuori[] {
+  const quanti = (dove: string) => p.waiting.find((w) => w.answer_at === dove)?.frames ?? 0
+  const voci: VoceFuori[] = [
+    { chiave: "review", n: quanti("review"), a: "/da-confermare" },
+    { chiave: "site", n: quanti("site"), a: "/impostazioni/sito" },
+    // la sezione dei frame senza data nasce col porting di Da confermare
+    { chiave: "date", n: quanti("date"), a: null },
+  ]
+  return voci.filter((v) => v.n > 0)
+}
+
+function Righe({ righe, formato, vai }: { righe: RigaDiStato[]; formato: Formato; vai: (a: string) => void }) {
   return (
     <>
-      <p className="as-notte__meteo">
-        <Semaforo livello={meteo.verdict}>{t(`weather.word.${meteo.verdict}`)}</Semaforo>
-        <span className="as-notte__nuvole">{t(`nights.weather.${meteo.verdict}`, { pct: numero(meteo.cloud_total_pct) })}</span>
-      </p>
-      <p className="as-notte__utili">
-        <Finestra cielo={meteo} />
-      </p>
+      {righe.map((r) => (
+        <Avviso key={r.t} tipo="riga" formato={formato} segno={r.s} titolo={r.t} {...(r.a ? { azione: r.a.testo, onAzione: () => vai(r.a?.dove ?? "/") } : {})} />
+      ))}
     </>
+  )
+}
+
+const VUOTI: Record<NonNullable<Elenco["empty"]>, { titolo: Chiave; testo: Chiave; azione?: Chiave; dove?: string }> = {
+  no_folders: { titolo: "nights.empty.noFolders", testo: "nights.empty.noFolders.why", azione: "nights.empty.noFolders.how", dove: "/impostazioni/cartelle" },
+  no_frames: { titolo: "nights.empty.noFrames", testo: "nights.empty.noFrames.why", azione: "nights.empty.noFrames.how", dove: "/impostazioni/cartelle" },
+  no_site: { titolo: "nights.empty.noSite", testo: "nights.empty.noSite.why", azione: "nights.empty.noSite.how", dove: "/impostazioni/sito" },
+  reading: { titolo: "nights.empty.reading", testo: "nights.empty.reading.why" },
+  waiting: { titolo: "nights.empty.waiting", testo: "nights.empty.waiting.why", azione: "nights.empty.waiting.how", dove: "/da-confermare" },
+}
+
+function Vuoto({ pagina, formato, vai }: { pagina: Elenco; formato: Formato; vai: (a: string) => void }) {
+  const v = VUOTI[pagina.empty ?? "no_frames"]
+  const ferme = pagina.waiting.reduce((a, w) => a + w.frames, 0)
+  return (
+    <Avviso
+      tipo="pagina"
+      formato={formato}
+      segno="?"
+      titolo={t(v.titolo, { pct: pagina.reading_done_pct ?? 0 })}
+      testo={t(v.testo, { n: numero(ferme) })}
+      {...(v.azione && v.dove ? { azione: t(v.azione), onAzione: () => vai(v.dove ?? "/") } : {})}
+    />
   )
 }

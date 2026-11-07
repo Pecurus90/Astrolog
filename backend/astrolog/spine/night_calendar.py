@@ -39,11 +39,21 @@ def month(
         days.setdefault(day, []).append({"id": r["id"], "site": r["site"], "verdict": r["verdict"]})
     return {
         "month": first_day.isoformat()[:7],
-        "days": [{"day": d, "nights": ns} for d, ns in days.items()],
+        "days": [{"day": d, "verdict": _best(ns), "nights": ns} for d, ns in days.items()],
         "nights": len(rows),
         "good": sum(r["verdict"] == Verdict.GO for r in rows),
         "integration_s": float(sum(r["integration_s"] for r in rows)),
         "untimed": sum(r["untimed"] for r in rows),
         "first_month": conn.execute(_FIRST).fetchone()[0],
         "last_month": tonight.isoformat()[:7],
+        "tonight": tonight.isoformat(),
     }
+
+
+_RANK = [Verdict.GO, Verdict.MARGINAL, Verdict.NOGO]
+
+
+def _best(nights: list[dict[str, Any]]) -> str | None:
+    """The day's colour: its best night's verdict, as the sheet paints it."""
+    said = [n["verdict"] for n in nights if n["verdict"] in _RANK]
+    return min(said, key=_RANK.index) if said else None

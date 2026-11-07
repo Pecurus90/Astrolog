@@ -334,6 +334,20 @@ describe("l accessibilita della prima pagina", () => {
     // vuoto non ci sarebbero.
     rispondi({
       ...STANOTTE,
+      "/api/v1/nights/calendar": {
+        stato: 200,
+        corpo: {
+          month: "2024-05",
+          days: [{ day: 18, verdict: "marginal", nights: [{ id: 7, site: "Cima Ekar", verdict: "marginal" }] }],
+          nights: 1,
+          good: 0,
+          integration_s: 10800,
+          untimed: 1,
+          first_month: "2024-05",
+          last_month: "2026-11",
+          tonight: "2026-11-07",
+        },
+      },
       "/api/v1/nights": {
         stato: 200,
         corpo: {
@@ -343,20 +357,41 @@ describe("l accessibilita della prima pagina", () => {
               night_date: "2024-05-18",
               site: "Cima Ekar",
               site_source: "declared",
+              site_from: "answer",
+              shooting: { kind: "mixed", broadband_hours: 3, dark_hours: 8 },
               frames: 3,
               integration_s: 10800,
               untimed: 1,
-              objects: [{ key: "m-51", name: "M 51", frames: 3, integration_s: 10800 }],
-              filters: [{ name: "Ha", frames: 3, integration_s: 10800 }],
-              weather: { state: "ok", verdict: "marginal", cloud_total_pct: 40, usable_hours: 3, window: "dark", window_hours: 8 },
+              objects: [{ key: "m-51", name: "M 51", frames: 3, integration_s: 10800, untimed: 0, bar_pct: 100 }],
+              filters: [{ name: "Ha", passband: "HA", frames: 3, integration_s: 10800 }],
+              moon: { phase_key: "waxing_gibbous", illumination_pct: 69, lit_side: "right" },
+              weather: {
+                state: "ok",
+                arrives_on: null,
+                verdict: "marginal",
+                cloud_total_pct: 40,
+                usable_hours: 3,
+                window: "dark",
+                window_hours: 8,
+                transparency: 55,
+                exposure_hours: 4.4,
+                dark_hours: 8,
+                without_aerosol: true,
+                sky_word: "scattered",
+              },
             },
           ],
           total: 300,
           limit: 1,
           offset: 0,
-          totals: { nights: 300, frames: 900, integration_s: 360000, untimed: 1 },
+          criteria: [{ key: "year", options: [{ value: "2024", nights: 300, chosen: false }] }],
+          months: [{ month: "2024-05", nights: 1, integration_s: 10800, untimed: 1 }],
+          empty: null,
+          totals: { nights: 300, frames: 900, integration_s: 360000, untimed: 1, objects: 40 },
           waiting: [{ answer_at: "review", frames: 12 }],
+          waiting_frames: 0,
           still_reading: 431,
+          reading_done_pct: 19,
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -366,7 +401,7 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /notti/i }))
-    await screen.findByRole("button", { name: /carica altre/i })
+    await screen.findByRole("link", { name: /carica altre/i })
 
     expect(await violazioni(container)).toEqual([])
   })

@@ -18,7 +18,6 @@ export const itComponenti = {
   "ui.filterBar.label": "Filtri: {filtri}",
   "ui.filterBar.frames": "{n} frame",
   "ui.filterBar.frames.one": "1 frame",
-  "ui.filterBar.hours": "{h} h",
   "ui.filterBar.untimed": "senza durata",
   "ui.calendar.prev": "Mese prima",
   "ui.calendar.next": "Mese dopo",

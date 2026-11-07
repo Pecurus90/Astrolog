@@ -157,6 +157,18 @@ def test_a_choice_at_zero_stays_listed_with_its_zero(client):
     assert c["filter"]["Ha"] == (0, False)
 
 
+def test_a_night_without_a_filter_is_found_by_its_own_choice(client, db_path):
+    """Frame senza filtro nell'header: una scelta sua in fondo ai filtri, che li trova."""
+    conn = connect(db_path)
+    conn.execute("UPDATE frames SET filter_id = NULL WHERE date_obs LIKE '2024-05-08%'")
+    conn.commit()
+    conn.close()
+    filtri = [o["value"] for o in notti(client)["criteria"][3]["options"]]
+    assert filtri[-1] == "__no_filter__"
+    trovate = notti(client, filter="__no_filter__")["items"]
+    assert [n["night_date"] for n in trovate] == ["2024-05-08"]
+
+
 def test_an_object_is_found_by_name_and_common_name(client):
     """Come la Ricerca: ogni nome dell'oggetto, senza spazi ne' maiuscole."""
     assert notti(client, q="m45")["total"] == 3
@@ -212,6 +224,7 @@ def test_the_month_has_a_sign_per_night_and_its_totals(client):
         (23, [None]),
     ]
     assert (mese["nights"], mese["good"], mese["integration_s"]) == (3, 1, 1800.0)
+    assert [g["verdict"] for g in mese["days"]] == ["go", None, None]
 
 
 def test_the_months_go_from_the_first_night_to_today(client):

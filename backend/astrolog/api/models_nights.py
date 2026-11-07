@@ -136,7 +136,7 @@ class WaitingPoses(BaseModel):
 
 class CriterionOption(BaseModel):
     """A value of a criterion: a year, a site id, a setup id, a filter's name, a constellation's
-    IAU code, a verdict or `unknown`."""
+    IAU code (`__no_filter__` for frames naming none), a verdict or `unknown`."""
 
     value: str
     nights: int = Field(
@@ -197,6 +197,9 @@ class DayNight(BaseModel):
 
 class CalendarDay(BaseModel):
     day: int
+    verdict: Literal["go", "marginal", "nogo"] | None = Field(
+        description="The day's colour: its best night's verdict; null when none has weather."
+    )
     nights: list[DayNight] = Field(description="Two sites the same day: two signs.")
 
 
@@ -211,3 +214,4 @@ class NightMonth(BaseModel):
     untimed: int
     first_month: str | None = Field(description="The first month with nights; null without any.")
     last_month: str = Field(description="Tonight's month at home: the calendar stops there.")
+    tonight: str = Field(description="Tonight's night date at home: the calendar marks it.")

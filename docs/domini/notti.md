@@ -137,8 +137,10 @@ durata dell'archivio intero, e «Le copie calibrate non sono contate.»
 
 **Fuori da ogni notte, tre voci con la loro risposta** (DECISIONI v65, 5.2; Marco, 6/11/2026):
 *da confermare* («aspettano una risposta») porta a Da confermare; *senza sito* («scegli il sito:
-entrano nelle notti») a Da confermare, sezione dei siti; *senza data* («scrivi la data o la notte
-della cartella») a Da confermare, sezione dei frame senza data. Una voce a zero non c'e'. Le
+entrano nelle notti») dove si sceglie il sito (Impostazioni › Sito: sono i frame senza nessun sito
+o col fuso che non si riconosce; quelli lontani da ogni sito sono gia' fra *da confermare*); *senza
+data* («scrivi la data o la notte della cartella») a Da confermare, sezione dei frame senza data.
+Una voce a zero non c'e'. Le
 stesse tre sono le righe di stato in cima, con l'azione. Supera "un frame senza data non ha
 risposta" (contratto del 9/2026): la data la scrivi tu. La sezione dei frame senza data nasce col
 porting di Da confermare; fino ad allora la voce si conta e non porta da nessuna parte, perche'

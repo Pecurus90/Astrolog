@@ -1,5 +1,5 @@
 import { VARIANTE } from "../FiltriUsati"
-import { numero, ore, t } from "../i18n"
+import { numero, oreEMinuti, t } from "../i18n"
 import { type Formato, useTema } from "./Tema"
 
 /** One filter of the night, as the app sends it. */
@@ -40,10 +40,7 @@ export function BarraFiltri({
     ...f,
     variante: VARIANTE[f.banda] ?? VARIANTE["UNKNOWN"],
     fr: t("ui.filterBar.frames", { n: numero(f.frame) }),
-    h:
-      f.secondi === null
-        ? t("ui.filterBar.untimed")
-        : t("ui.filterBar.hours", { h: ore(f.secondi) }),
+    h: f.secondi === null ? t("ui.filterBar.untimed") : oreEMinuti(f.secondi),
   }))
   const detto = t("ui.filterBar.label", {
     filtri: pezzi.map((f) => `${f.nome} ${f.h}`).join(", "),

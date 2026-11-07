@@ -395,3 +395,20 @@ test_the_card_asks_only_what_the_app_uses - step 32, ADR 0021: the card is the m
 test_tilt_reaches_the_frame_through_measure - step 32.2, ADR 0044: one field for both tilts; renamed test_tilt_and_astap_off_axis_reach_the_frame_through_measure
 test_a_frame_with_no_answer_to_give_does_not_send_you_anywhere - step 33, Marco 6/11/2026: a frame without a date is answered in To confirm; renamed test_a_frame_without_a_date_is_answered_in_review
 test_the_verdict_follows_the_okta_classes_of_the_total_cloud - step 33, ADR 0034: the verdict comes from the Transparency; renamed test_the_clouds_word_follows_the_okta_classes_of_the_total_cloud, v4 in test_weather_score
+chi deve dichiarare il sito non viene mandato a Da confermare - step 33, sheet v76 replaces the v29 register; now ogni voce fuori da ogni notte porta dove si risponde
+di ogni oggetto dice le ore con la sua barra, e conta quelli oltre i primi tre - step 33, sheet v76 replaces the v29 register; renamed di ogni oggetto dice le ore con la sua barra
+dice quanti frame aspettano una risposta, e porta a Da confermare - step 33, sheet v76 replaces the v29 register; now ogni voce fuori da ogni notte porta dove si risponde
+elenca le notti, dalla piu' recente - step 33, sheet v76 replaces the v29 register; now la notte piu' recente e' la protagonista
+i quattro modi di non avere notti dicono quattro cose diverse - step 33, sheet v76 replaces the v29 register: five ways; renamed i modi di non avere notti dicono cose diverse
+in cima ci sono le notti, le ore e i frame di tutto l'archivio - step 33, sheet v76 replaces the v29 register: the totals sit at the bottom; now in fondo c'e' tutto l'archivio
+quando ce n e' piu' di una pagina, si vedono anche le altre - step 33, sheet v76 replaces the v29 register; renamed quando ce n'e' piu' di una pagina, si vedono anche le altre
+se le notti non si leggono lo dice, invece di sembrare un archivio vuoto - step 33, sheet v76 replaces the v29 register; renamed se le notti non si leggono lo dice, con Riprova
+un frame senza risposta possibile non porta da nessuna parte - step 33, Marco 6/11/2026: a frame without a date is answered in To confirm
+un oggetto senza tempo lo dice, invece di zero ore - step 33, sheet v76 replaces the v29 register; covered by una notte di cui nessun frame dice la durata non scrive zero ore
+una notte che l'archivio non racconta lo dice, invece di un cielo inventato - step 33, sheet v76 replaces the v29 register; covered by una notte giovane dice il giorno in cui arriva il meteo
+una notte con due oggetti resta una riga sola - step 33, sheet v76 replaces the v29 register: one protagonist night with its objects; covered by di ogni oggetto dice le ore con la sua barra
+una notte di un sito senza fuso dice che il meteo non si puo' sapere - step 33, sheet v76 replaces the v29 register; renamed una notte di un sito senza fuso dice che il meteo non si puo' sapere, e porta al sito
+una notte dice che luna c'era, con quanto era illuminata - step 33, sheet v76 replaces the v29 register; renamed una notte dice che luna c'era, e la ripresa dice banda larga o stretta
+una notte il cui meteo non e' ancora arrivato lo dice - step 33, sheet v76 replaces the v29 register; covered by the silent sky in NottiDati.cielo and the backend test test_a_young_night_says_the_day_its_weather_arrives
+una notte porta il giorno, il sito, gli oggetti, le ore e i frame - step 33, sheet v76 replaces the v29 register; now la notte piu' recente e' la protagonista
+una notte ripresa dice com'era il cielo, e quante ore sono state serene - step 33, ADR 0034: exposure hours replace clear hours; renamed una notte ripresa dice com'era il cielo

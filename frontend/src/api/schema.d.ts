@@ -1704,6 +1704,11 @@ export interface components {
             /** Day */
             day: number;
             /**
+             * Verdict
+             * @description The day's colour: its best night's verdict; null when none has weather.
+             */
+            verdict: ("go" | "marginal" | "nogo") | null;
+            /**
              * Nights
              * @description Two sites the same day: two signs.
              */
@@ -1818,7 +1823,7 @@ export interface components {
         /**
          * CriterionOption
          * @description A value of a criterion: a year, a site id, a setup id, a filter's name, a constellation's
-         *     IAU code, a verdict or `unknown`.
+         *     IAU code (`__no_filter__` for frames naming none), a verdict or `unknown`.
          */
         CriterionOption: {
             /** Value */
@@ -3254,6 +3259,11 @@ export interface components {
              * @description Tonight's month at home: the calendar stops there.
              */
             last_month: string;
+            /**
+             * Tonight
+             * @description Tonight's night date at home: the calendar marks it.
+             */
+            tonight: string;
         };
         /**
          * NightObject

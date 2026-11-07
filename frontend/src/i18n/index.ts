@@ -164,6 +164,23 @@ export function ore(secondi: number): string {
   return formatta(secondi / 3600, unDecimale)
 }
 
+/** Le ore di una notte come le scrive la tavola v76 (`tema.js`, `ore`): `2 h 18`, `45 min`,
+ *  `< 6 min` sotto il decimo d'ora, mai "0 h". */
+export function oreEMinuti(secondi: number): string {
+  const h = secondi / 3600
+  if (h < 0.1) return `< ${numero(6)} min`
+  if (h < 1) return `${numero(Math.round(h * 60))} min`
+  const intere = Math.floor(h + 1e-9)
+  const minuti = Math.round((h - intere) * 60)
+  if (minuti === 60) return `${numero(intere + 1)} h`
+  return minuti ? `${numero(intere)} h ${String(minuti).padStart(2, "0")}` : `${numero(intere)} h`
+}
+
+/** Un numero con un decimale fisso, all'italiana: `4,0`. Le ore di posa (tavola v76, `posaN`). */
+export function unDecimale(n: number): string {
+  return formatta(n, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}
+
 /** Quanto e' durata una cosa, come si legge: `4 s`, `2 min 14 s`, `1 h 12 min`.
  *
  * Non e' `ore()`, che serve alle **ore di integrazione** e scrive un decimale: una lettura dura
@@ -300,6 +317,23 @@ export function giornoEMese(data: string): string {
 /** Il giorno col mese, senza il giorno della settimana: *4 gennaio*. */
 export function giornoDelMese(data: string): string {
   return new Intl.DateTimeFormat(lingua, { day: "numeric", month: "long", timeZone: "UTC" }).format(mezzanotteUtc(data))
+}
+
+/** La prima lettera maiuscola: un titolo che comincia con un giorno o un mese. */
+export function maiuscola(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+/** Il titolo di una notte (tavola v76): *Domenica 20 settembre 2026*, l'iniziale maiuscola. */
+export function dataLunga(data: string): string {
+  const scritta = new Intl.DateTimeFormat(lingua, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(mezzanotteUtc(data))
+  return maiuscola(scritta)
 }
 
 /** Un mese col suo anno, da `YYYY-MM`: *settembre 2026*. */

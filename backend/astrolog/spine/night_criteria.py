@@ -24,6 +24,8 @@ class Key(StrEnum):
 
 
 SKY_UNKNOWN = "unknown"
+# frames whose header names no filter: a choice of their own, last (sheet: "nessun filtro")
+NO_FILTER = "__no_filter__"
 _SKY_ORDER = [Verdict.GO, Verdict.MARGINAL, Verdict.NOGO, SKY_UNKNOWN]
 
 _FRAMED = "f.night_id IS NOT NULL AND f.copy_of IS NULL"
@@ -33,8 +35,8 @@ _FACTS: dict[Key, str] = {
     Key.SITE: "SELECT n.id, CAST(n.site_id AS TEXT) FROM nights n",
     Key.SETUP: f"SELECT DISTINCT f.night_id, CAST(f.rig_id AS TEXT) FROM frames f"  # noqa: S608
     f" WHERE {_FRAMED} AND f.rig_id IS NOT NULL",
-    Key.FILTER: f"SELECT DISTINCT f.night_id, x.name FROM frames f"  # noqa: S608
-    f" JOIN filters x ON x.id = f.filter_id WHERE {_FRAMED}",
+    Key.FILTER: f"SELECT DISTINCT f.night_id, COALESCE(x.name, '{NO_FILTER}') FROM frames f"  # noqa: S608
+    f" LEFT JOIN filters x ON x.id = f.filter_id WHERE {_FRAMED}",
     Key.CONSTELLATION: f"SELECT DISTINCT f.night_id, e.constellation FROM frames f"  # noqa: S608
     " JOIN objects o ON o.id = f.object_id JOIN catalog_entries e ON e.slug = o.catalog_slug"
     f" WHERE {_FRAMED}",
@@ -107,7 +109,8 @@ def _ordered(key: Key, values: set[str], labels: Mapping[str, dict[str, Any]]) -
     if key == Key.SKY:
         return [v for v in _SKY_ORDER if v in values] + sorted(values - set(_SKY_ORDER))
     if key == Key.FILTER:
-        return [v for v in labels if v in values] + sorted(values - labels.keys())
+        rest = sorted(values - labels.keys() - {NO_FILTER})
+        return [v for v in labels if v in values] + rest + [NO_FILTER] * (NO_FILTER in values)
     if key in (Key.SITE, Key.SETUP):
 
         def shown(v: str) -> str:

@@ -16,6 +16,7 @@ import "@fontsource/atkinson-hyperlegible-mono/600.css"
 import "@fontsource/atkinson-hyperlegible-mono/700.css"
 // v58 sheet first, old after: its :root wins for as- pages; al- pages sit under Tema's data-modo.
 import "./stili/consegna/astrolog.css"
+import "./stili/consegna/caratteri.css"
 // Il foglio della consegna: dentro, prima i token e poi i mattoni che li leggono.
 import "./stili/astrolog.css"
 // e in coda il poco che e' nostro: la catena delle altezze fino al nodo radice.
