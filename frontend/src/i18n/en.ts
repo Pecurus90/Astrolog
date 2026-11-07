@@ -7,6 +7,7 @@
 import { enArchivio } from "./en-archivio"
 import { enDashboard } from "./en-dashboard"
 import { enAttrezzatura } from "./en-attrezzatura"
+import { enComponenti } from "./en-componenti"
 import { enGuscio } from "./en-guscio"
 import { enImpostazioni } from "./en-impostazioni"
 import { enLetture } from "./en-letture"
@@ -30,6 +31,7 @@ export const en = {
   ...enSito,
   ...enSolver,
   ...enMeteo,
+  ...enComponenti,
   "scan.start": "Scan",
   "scan.stop": "Stop",
   "scan.resume": "Resume",

@@ -13,6 +13,10 @@ Consegna controllata: b19a233a
 
 ## Da dare
 
+- [da dare] Foglio (`astrolog.css`): `@keyframes skPulse` vive solo nell'helmet di
+  `componenti/Scheletro.dc.html`; il foglio lo nomina (righe 864, 929, 1378, 2037, 2187, 2266) ma
+  non lo definisce. Portato alla lettera, lo scheletro e i tondi di MisureFrame e Attrezzatura
+  restano fermi: serve la regola nel foglio.
 - [da dare] Misure dei frame, tessera Curvatura (Marco, 7/11): non piu' una % ma l'aberrazione
   fuori asse di ASTAP, in px (e in ″ con la scala): HFD delle stelle oltre il 75% verso gli
   angoli meno HFD del centro. Senza giudizio: ASTAP non da' soglie. La tessera Tilt resta in %

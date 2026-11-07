@@ -23,3 +23,9 @@ body {
   height: 0;
   overflow: hidden;
 }
+
+/* v58 sheet rings any checked radio; off on Stanotte's as- site choice, leaves with its port.
+   Its selector plus one class: specificity must beat it, order alone does not. */
+[role="radiogroup"] button.as-menu__voce[role="radio"][aria-checked="true"]:not(.al-scelta__voce):not(.al-bottone--pieno) {
+  box-shadow: none;
+}

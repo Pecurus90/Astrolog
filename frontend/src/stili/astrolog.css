@@ -199,7 +199,7 @@
   --raggio-minimo:  6px;
   --raggio-medio:   10px;
   --raggio-grande:  12px;
-  --raggio-carta:   16px;
+  --as-raggio-carta:   16px;
   --raggio-pillola: 999px;
 
   /* --- tipografia (v23): Atkinson Hyperlegible, Next per il testo e Mono
@@ -238,7 +238,7 @@
 
   /* --- durate e velature ----------------------------------------------- */
   --durata-lampo:  90ms;    /* fondi al passaggio del mouse */
-  --durata-breve:  160ms;   /* comparse */
+  --as-durata-breve:  160ms;   /* comparse */
   --durata-media:  240ms;   /* avanzamento */
   --durata-scorre: 1100ms;  /* la luce che scorre su uno scheletro */
   --curva:         cubic-bezier(.2,.6,.3,1);
@@ -353,7 +353,7 @@
   --bersaglio-minimo:         0px;
   --bottone-luce:             inset 0 1px 0 rgb(255 255 255 / .12); /* il filo di luce in cima al primario */
   /* vetro: superfici appena accese sulla carta, lette dalla tinta del tema */
-  --vetro:                    rgb(var(--tinta-velo) / .055);
+  --as-vetro:                    rgb(var(--tinta-velo) / .055);
   --vetro-sopra:              rgb(var(--tinta-velo) / .10);
   --vetro-premuto:            rgb(var(--tinta-velo) / .14);
   --vetro-filo:               rgb(var(--tinta-velo) / .12);
@@ -632,7 +632,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --durata-lampo: 1ms; --durata-breve: 1ms; --durata-media: 1ms;
+    --durata-lampo: 1ms; --as-durata-breve: 1ms; --durata-media: 1ms;
     --durata-scorre: 1ms; 
   }
 }
@@ -795,7 +795,7 @@ body.as-app, .as-app {
 .as-carta {
   background: var(--fondo-carta);
   border: 0;
-  border-radius: var(--raggio-carta);
+  border-radius: var(--as-raggio-carta);
   box-shadow: var(--ombra-carta);
   overflow: clip;
 }
@@ -841,7 +841,7 @@ body.as-app, .as-app {
    <a class="as-riga" href="#"><span class="as-riga__segno as-riga__segno--attesa"></span>
    <span><b>32 casi da confermare</b>…</span><span class="as-riga__freccia">→</span></a>
    ========================================================================== */
-.as-riga { display: grid; grid-template-columns: var(--riga-segno-colonna) minmax(0,1fr) auto; gap: var(--spazio-3); align-items: center; padding: var(--spazio-4); border-radius: var(--raggio-carta); background: var(--fondo-carta); box-shadow: var(--ombra-carta); color: var(--inchiostro-tenue); text-decoration: none; }
+.as-riga { display: grid; grid-template-columns: var(--riga-segno-colonna) minmax(0,1fr) auto; gap: var(--spazio-3); align-items: center; padding: var(--spazio-4); border-radius: var(--as-raggio-carta); background: var(--fondo-carta); box-shadow: var(--ombra-carta); color: var(--inchiostro-tenue); text-decoration: none; }
 .as-riga > span:nth-child(2) { display: grid; gap: var(--stacco-minimo); }
 .as-riga b { color: var(--inchiostro); font-weight: var(--peso-forte); }
 /* il segno: anello spento; --attesa e' il rombo pieno dell'attesa */
@@ -898,7 +898,7 @@ body.as-app, .as-app {
    BOTTONE — .as-bottone
    ========================================================================== */
 .as-bottone {
-  --bottone-fondo: var(--vetro);
+  --bottone-fondo: var(--as-vetro);
   --bottone-linea: var(--vetro-filo);
   --bottone-inchiostro: var(--inchiostro);
   display: inline-flex; align-items: center; justify-content: center; gap: var(--spazio-2);
@@ -911,7 +911,7 @@ body.as-app, .as-app {
   cursor: pointer;
   /* su un <a> niente sottolineatura del browser: la dichiara solo --nudo */
   text-decoration: none;
-  transition: background var(--durata-lampo) var(--curva), border-color var(--durata-lampo) var(--curva), box-shadow var(--durata-breve) var(--curva), transform var(--durata-lampo) var(--curva);
+  transition: background var(--durata-lampo) var(--curva), border-color var(--durata-lampo) var(--curva), box-shadow var(--as-durata-breve) var(--curva), transform var(--durata-lampo) var(--curva);
 }
 /* il primario si illumina: sfumatura dell'accento e un bagliore sotto, come
    la voce scelta del telaio. Uno solo per stato (DECISIONI, v21). */
@@ -921,7 +921,7 @@ body.as-app, .as-app {
   box-shadow: var(--bottone-luce), var(--bagliore-accento);
 }
 /* il tenue e' di vetro: una superficie appena accesa col suo filo */
-.as-bottone--tenue      { --bottone-fondo: var(--vetro); --bottone-linea: var(--vetro-filo); --bottone-inchiostro: var(--inchiostro); }
+.as-bottone--tenue      { --bottone-fondo: var(--as-vetro); --bottone-linea: var(--vetro-filo); --bottone-inchiostro: var(--inchiostro); }
 :root[data-tema="atlante"] .as-bottone:not(.as-bottone--primario):not(.as-bottone--nudo) { --bottone-linea: var(--linea-forte); }   /* sulla carta chiara il vetro ha bisogno del suo filo pieno */
 .as-bottone--nudo {
   --bottone-fondo: transparent; --bottone-linea: transparent;
@@ -950,7 +950,7 @@ body.as-app, .as-app {
 .as-bottone[aria-disabled="true"]:hover,
 .as-bottone[aria-disabled="true"]:active {
   cursor: default; transform: none; text-decoration: none;
-  background: var(--vetro); box-shadow: none;
+  background: var(--as-vetro); box-shadow: none;
   --bottone-linea: var(--vetro-filo); --bottone-inchiostro: var(--inchiostro-debole);
 }
 .as-bottone--nudo[aria-disabled="true"] { background: transparent; --bottone-linea: transparent; }
@@ -1183,7 +1183,7 @@ body.as-app, .as-app {
   grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
   gap: var(--spazio-2) var(--spazio-4);
   padding: var(--spazio-4) var(--spazio-5);
-  border-radius: var(--raggio-carta); background: var(--fondo-carta); box-shadow: var(--ombra-carta);
+  border-radius: var(--as-raggio-carta); background: var(--fondo-carta); box-shadow: var(--ombra-carta);
 }
 .as-avviso--pagina .as-avviso__segno { align-self: start; }
 .as-avviso--pagina .as-avviso__testo { font-size: var(--testo-corpo); }
@@ -1261,7 +1261,7 @@ body.as-app, .as-app {
    Sul telefono tutti in colonna. La scelta del sito non e' un pannello: e'
    un menu (44-menu.css).
    ========================================================================== */
-.as-pannello { display: grid; gap: var(--spazio-3); padding: var(--spazio-4) var(--spazio-5); border-radius: var(--raggio-carta); background: var(--fondo-carta); box-shadow: var(--ombra-carta); }
+.as-pannello { display: grid; gap: var(--spazio-3); padding: var(--spazio-4) var(--spazio-5); border-radius: var(--as-raggio-carta); background: var(--fondo-carta); box-shadow: var(--ombra-carta); }
 .as-pannello[hidden] { display: none; }
 .as-pannello__capo { display: flex; align-items: center; flex-wrap: wrap; gap: var(--spazio-2) var(--spazio-4); }
 .as-pannello__capo .as-bottone { margin-left: auto; }
@@ -1422,7 +1422,7 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-pesano li { display: grid; justify-items: start; gap: var(--spazio-1); padding: var(--spazio-2) 0; border-top: 1px solid var(--linea); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
 .as-pesano li:last-child { border-bottom: 1px solid var(--linea); }
 .as-pesano li b { color: var(--inchiostro); font-weight: var(--peso-medio); }
-.as-pesano li .as-semaforo { padding: 2px var(--spazio-3) 2px var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
+.as-pesano li .as-semaforo { padding: 2px var(--spazio-3) 2px var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--as-vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
 :root[data-tema="atlante"] .as-pesano li .as-semaforo { box-shadow: inset 0 0 0 1px var(--linea-forte); }
 .as-pesano li > span:last-child { text-wrap: pretty; }
 /* oltre i primi due, gli altri si aprono sotto: il bottone dice quanti sono, la freccia se e' aperto */
@@ -1653,7 +1653,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
 .as-luna b { color: var(--inchiostro); font-weight: var(--peso-medio); }
 .as-luna:hover b { text-decoration: underline; text-underline-offset: var(--sottolineatura-stacco); }
 .as-luna:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
-.as-luna__apri { width: var(--luna-apri); height: var(--luna-apri); fill: none; stroke: var(--inchiostro-debole); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: rotate var(--durata-breve) var(--curva); }
+.as-luna__apri { width: var(--luna-apri); height: var(--luna-apri); fill: none; stroke: var(--inchiostro-debole); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: rotate var(--as-durata-breve) var(--curva); }
 .as-luna[aria-expanded="true"] .as-luna__apri { rotate: 180deg; }
 @container colonna (max-width: 899px) {
   .as-luna__faccia--testa { width: var(--luna-disco-testa-telefono); height: var(--luna-disco-testa-telefono); }
@@ -1945,7 +1945,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
 .as-foglio__maniglia { align-self: center; width: 36px; height: 4px; border-radius: var(--raggio-pillola); background: var(--linea-forte); }
 .as-foglio__testa { display: flex; align-items: center; justify-content: space-between; }
 .as-foglio__titolo { margin: 0; font-family: var(--carattere-titolo); font-size: var(--titolo-riga); font-weight: var(--peso-forte); }
-.as-foglio__lavoro { display: grid; gap: var(--spazio-2); padding: var(--spazio-3) var(--spazio-4); border-radius: var(--raggio-carta); background: var(--fondo-carta); border: 1px solid var(--linea); font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-foglio__lavoro { display: grid; gap: var(--spazio-2); padding: var(--spazio-3) var(--spazio-4); border-radius: var(--as-raggio-carta); background: var(--fondo-carta); border: 1px solid var(--linea); font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
 .as-foglio__lavoro-riga { display: flex; align-items: center; gap: var(--spazio-3); }
 .as-foglio__voci { list-style: none; margin: 0; padding: 0; display: grid; }
 .as-foglio__voce {
@@ -2246,7 +2246,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
 .as-trova {
   position: absolute; z-index: 5; top: calc(100% + var(--spazio-2)); right: 0; width: max(100%, var(--trova-largo));
   display: grid; gap: var(--spazio-1); padding: var(--spazio-2);
-  border-radius: var(--raggio-carta); background: var(--fondo-carta);
+  border-radius: var(--as-raggio-carta); background: var(--fondo-carta);
   box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa);
   font-size: var(--testo-corpo); color: var(--inchiostro); text-align: left;
 }
@@ -2282,7 +2282,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
   .as-telaio__alto--cerca .as-cerca .as-campo-cerca { height: var(--riga-alta); font-size: var(--testo-corpo); }
   .as-telaio__alto--cerca .as-telaio__tasto { display: none; }
   .as-telaio__alto--cerca .as-cerca__annulla { display: inline-flex !important; }
-  .as-telaio__alto--cerca .as-trova { top: 100%; left: 0; right: 0; width: auto; border-radius: 0 0 var(--raggio-carta) var(--raggio-carta); }
+  .as-telaio__alto--cerca .as-trova { top: 100%; left: 0; right: 0; width: auto; border-radius: 0 0 var(--as-raggio-carta) var(--as-raggio-carta); }
   .as-telaio__alto--cerca .as-trova__piede { display: none; }
 }
 
@@ -2391,7 +2391,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
   position: relative; box-sizing: border-box;
   display: inline-flex; align-items: center; gap: var(--spazio-2);
   min-height: var(--riga-alta); padding: var(--spazio-2) var(--spazio-5);
-  border-radius: var(--raggio-pillola); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo);
+  border-radius: var(--raggio-pillola); background: var(--as-vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo);
   cursor: pointer;
 }
 :root[data-tema="atlante"] .as-scelta-fissa__voce { box-shadow: inset 0 0 0 1px var(--linea-forte); }
@@ -2454,7 +2454,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
 .as-volta__scelta { justify-self: end; flex-wrap: nowrap; white-space: nowrap; }
 .as-volta[data-mostra="progetti"] .as-volta__gruppo--sistema, .as-volta[data-mostra="sistema"] .as-volta__gruppo--progetti { display: none; }
 .as-volta__posto { position: relative; touch-action: pan-y; }
-.as-volta__tela { display: block; width: 100%; height: 420px; border-radius: var(--raggio-carta); box-shadow: 0 0 0 1px var(--cornice-dato); cursor: crosshair; }
+.as-volta__tela { display: block; width: 100%; height: 420px; border-radius: var(--as-raggio-carta); box-shadow: 0 0 0 1px var(--cornice-dato); cursor: crosshair; }
 /* le tappe del crepuscolo, dal giorno alla notte (stop del gradiente) */
 .as-volta__tappa--giorno { stop-color: #7d5446; }
 .as-volta__tappa--civile { stop-color: #4a3050; }
@@ -2603,7 +2603,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
    cursore (frecce, Inizio, Fine; Esc torna alla notte).
    ========================================================================== */
 .as-cielo { display: grid; gap: var(--spazio-2); }
-.as-cielo__tela { position: relative; border-radius: var(--raggio-carta); overflow: hidden; background: #020309; box-shadow: 0 0 0 1px var(--cornice-dato); }
+.as-cielo__tela { position: relative; border-radius: var(--as-raggio-carta); overflow: hidden; background: #020309; box-shadow: 0 0 0 1px var(--cornice-dato); }
 .as-cielo__tela:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
 .as-cielo__tela [hidden] { display: none; }
 .as-cielo__tela .as-volta__lettore { top: var(--spazio-6); }
@@ -2957,7 +2957,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
 .as-registro__elenco { display: grid; gap: var(--spazio-3); }
 .as-registro__carico { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--spazio-3) var(--spazio-5); color: var(--inchiostro-tenue); }
 .as-registro__ritorno { justify-self: start; }
-.as-registro__scheletro { height: var(--registro-scheletro); border-radius: var(--raggio-carta); }
+.as-registro__scheletro { height: var(--registro-scheletro); border-radius: var(--as-raggio-carta); }
 .as-registro__scheletro-cifre { width: var(--registro-scheletro-cifre); max-width: 100%; height: var(--cifra-lettura-prima); }
 
 @container colonna (max-width: 899px) {
@@ -3046,7 +3046,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
 .as-carta-oggetto__dati { grid-row: 1; grid-column: 2; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--stacco-minimo); align-content: start; min-width: 0; }
 .as-carta-oggetto__nome { font-family: var(--carattere-titolo); font-size: var(--testo-lungo); font-weight: var(--peso-forte); line-height: 1.2; min-width: 0; }
 .as-carta-oggetto__apri { color: inherit; text-decoration: none; }
-.as-carta-oggetto__apri::after { content: ""; position: absolute; inset: 0; border-radius: var(--raggio-carta); }
+.as-carta-oggetto__apri::after { content: ""; position: absolute; inset: 0; border-radius: var(--as-raggio-carta); }
 .as-carta-oggetto__apri:focus-visible { outline: none; }
 .as-carta-oggetto:has(.as-carta-oggetto__apri:focus-visible) { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
 .as-carta-oggetto:has(.as-carta-oggetto__apri:hover) { background: var(--fondo-rilievo); }
@@ -3068,7 +3068,7 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
    Sul desktop sotto la carta, sopra le altre; una riga per produzione.
    Le righe si scorrono con le frecce (il velo e il filo); non aprono
    ancora niente, e non ne hanno il segno: il modale e' rimandato. */
-.as-produzioni { position: absolute; z-index: 3; top: calc(100% + var(--spazio-1)); left: 0; width: max(100%, var(--produzioni-largo)); display: grid; gap: var(--spazio-1); padding: var(--spazio-2); border-radius: var(--raggio-carta); background: var(--fondo-carta); box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa); box-sizing: border-box; }
+.as-produzioni { position: absolute; z-index: 3; top: calc(100% + var(--spazio-1)); left: 0; width: max(100%, var(--produzioni-largo)); display: grid; gap: var(--spazio-1); padding: var(--spazio-2); border-radius: var(--as-raggio-carta); background: var(--fondo-carta); box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa); box-sizing: border-box; }
 .as-produzioni__capo { margin: 0; padding: var(--spazio-1) var(--spazio-3) 0; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
 .as-produzioni__voci { display: grid; gap: var(--stacco-minimo); margin: 0; padding: 0; list-style: none; }
 .as-produzioni__voci > li + li { border-top: 1px solid var(--linea); padding-top: var(--stacco-minimo); }
@@ -3104,7 +3104,7 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
 /* --- gli scheletri --------------------------------------------------------- */
 .as-archivio__scheletro-barra { height: var(--segmentato-alto); width: 100%; border-radius: var(--raggio-pillola); }
 .as-archivio__scheletro-campo { height: var(--riga-alta); width: 100%; max-width: var(--archivio-cerca-massima); border-radius: var(--raggio-medio); }
-.as-archivio__scheletro-carta { height: var(--archivio-scheletro-carta); border-radius: var(--raggio-carta); }
+.as-archivio__scheletro-carta { height: var(--archivio-scheletro-carta); border-radius: var(--as-raggio-carta); }
 .as-archivio__scheletro-riga { height: var(--archivio-scheletro-riga); border-radius: var(--raggio-minimo); }
 
 /* --- sotto 900: il telefono ------------------------------------------------- */
@@ -3236,13 +3236,13 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
 .as-gesti > :first-child { margin-right: auto; }
 
 /* un esito con un'azione: su vetro, perche' si stacchi dai campi */
-.as-esito { display: grid; gap: var(--spazio-3); padding: var(--spazio-4); border-radius: var(--raggio-grande); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
+.as-esito { display: grid; gap: var(--spazio-3); padding: var(--spazio-4); border-radius: var(--raggio-grande); background: var(--as-vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
 .as-esito .as-avviso { padding: 0; }
 .as-passo .as-avviso { padding: 0; }
 
 /* --- i posti trovati ------------------------------------------------------ */
 .as-posti { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--stacco-minimo); }
-.as-posti__voce { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-1) var(--spazio-3); min-height: var(--riga-alta); padding: var(--spazio-2) var(--spazio-3); border-radius: var(--raggio-medio); background: var(--vetro); }
+.as-posti__voce { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-1) var(--spazio-3); min-height: var(--riga-alta); padding: var(--spazio-2) var(--spazio-3); border-radius: var(--raggio-medio); background: var(--as-vetro); }
 .as-posti__nome { font-weight: var(--peso-medio); }
 .as-posti__dove { display: block; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
 .as-posti__cifre { display: block; font: var(--testo-minuto)/1.4 var(--carattere-cifre); font-variant-numeric: tabular-nums; color: var(--inchiostro-debole); }
@@ -3260,7 +3260,7 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
 .as-sfoglia__azioni { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2); }
 .as-sfoglia__elenco { margin: 0; padding: var(--spazio-1); list-style: none; max-height: var(--sfoglia-alto); overflow-y: auto; display: grid; align-content: start; gap: var(--stacco-minimo); border-radius: var(--raggio-grande); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea); }
 .as-sfoglia__voce { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-3); min-height: var(--riga-alta); padding: 0 var(--spazio-1) 0 var(--spazio-3); border-radius: var(--raggio-minimo); }
-.as-sfoglia__voce:hover { background: var(--vetro); }
+.as-sfoglia__voce:hover { background: var(--as-vetro); }
 .as-sfoglia__voce svg { width: var(--icona-meteo-piccola); height: var(--icona-meteo-piccola); color: var(--inchiostro-debole); }
 .as-sfoglia__nome { font-family: var(--carattere-cifre); font-size: var(--testo-corpo); overflow-wrap: anywhere; }
 .as-sfoglia__niente { margin: 0; padding: var(--spazio-4) var(--spazio-3); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
@@ -3303,7 +3303,7 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
   .as-passi__tappa[aria-current="step"] .as-passi__segno { box-shadow: 0 0 0 var(--campo-modulo-alone) var(--accento-velo); }
   .as-passi__nota { display: none; }
   /* la carta da bordo a bordo, fino in fondo */
-  .as-passo { margin: 0 calc(-1 * var(--spazio-4)); border-radius: var(--raggio-carta) var(--raggio-carta) 0 0; }
+  .as-passo { margin: 0 calc(-1 * var(--spazio-4)); border-radius: var(--as-raggio-carta) var(--as-raggio-carta) 0 0; }
   .as-passo__corpo { gap: var(--spazio-5); padding: var(--spazio-5) var(--spazio-4); }
   .as-passo__perche { font-size: var(--testo-corpo); }
   /* i gesti restano in vista; con due modi di andare avanti il primario prende una riga sua, sopra */
@@ -3371,7 +3371,7 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
 .as-conferma-indice { position: sticky; top: var(--spazio-5); display: grid; gap: var(--spazio-2); }
 .as-conferma-indice ol { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--stacco-minimo); }
 .as-conferma-indice a { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-2); min-height: var(--riga-alta); padding: var(--spazio-1) var(--spazio-3); border-radius: var(--raggio-minimo); font-size: var(--testo-corpo); color: var(--inchiostro-tenue); text-decoration: none; }
-.as-conferma-indice a:hover { background: var(--vetro); color: var(--inchiostro); }
+.as-conferma-indice a:hover { background: var(--as-vetro); color: var(--inchiostro); }
 .as-conferma-indice a[aria-current] { background: var(--accento-velo); box-shadow: inset var(--filo) 0 0 var(--accento-sopra); color: var(--inchiostro); font-weight: var(--peso-medio); }
 .as-conferma-indice__n { font-family: var(--carattere-cifre); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
 .as-conferma-indice__fatto { font-family: var(--carattere-cifre); font-weight: var(--peso-grosso); color: var(--esito-buono-inchiostro); }
@@ -3490,8 +3490,8 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
 .as-conferma__sk-voce { height: var(--riga-alta); }
 .as-conferma__sk-conto { height: var(--cifra-lettura-prima); width: 30%; }
 .as-conferma__sk-frase { height: 1em; width: 70%; }
-.as-conferma__sk-chiusa { height: var(--conferma-sk-chiusa); border-radius: var(--raggio-carta); }
-.as-conferma__sk-carta { height: var(--conferma-sk-carta); border-radius: var(--raggio-carta); }
+.as-conferma__sk-chiusa { height: var(--conferma-sk-chiusa); border-radius: var(--as-raggio-carta); }
+.as-conferma__sk-carta { height: var(--conferma-sk-carta); border-radius: var(--as-raggio-carta); }
 
 /* ── foglio/79-telefono.css ───────────────────────────────────────────── */
 /* ==========================================================================
@@ -3557,7 +3557,7 @@ a.as-tel-apri::after { transform: rotate(-45deg); margin-bottom: 0; }
 .as-tel-pesa-segno { display: inline-flex; align-items: center; gap: var(--spazio-1); font-size: var(--testo-minuto); color: var(--inchiostro-accento); white-space: nowrap; }
 .as-tel-pesa-segno::after { content: ""; width: var(--tel-freccia-piccola); height: var(--tel-freccia-piccola); margin: 0 var(--stacco-minimo) var(--tel-freccia-alza); border-right: var(--segno-filo) solid currentColor; border-bottom: var(--segno-filo) solid currentColor; transform: rotate(45deg); }
 [aria-expanded="true"] .as-tel-pesa-segno::after { transform: rotate(-135deg); margin-bottom: calc(-1 * var(--tel-freccia-alza)); }
-.as-tel-testa > .as-tel-pesanti { position: absolute; left: 0; right: 0; top: 100%; z-index: var(--tel-sopra); margin-top: var(--spazio-2); padding: var(--spazio-4); border-radius: var(--raggio-carta); background: var(--fondo-carta); box-shadow: 0 0 0 1px var(--linea-forte), var(--ombra-carta); }
+.as-tel-testa > .as-tel-pesanti { position: absolute; left: 0; right: 0; top: 100%; z-index: var(--tel-sopra); margin-top: var(--spazio-2); padding: var(--spazio-4); border-radius: var(--as-raggio-carta); background: var(--fondo-carta); box-shadow: 0 0 0 1px var(--linea-forte), var(--ombra-carta); }
 .as-tel-testa > .as-tel-pesanti[hidden] { display: none; }
 .as-tel-pesanti .as-tel-pesano { flex-direction: column; align-items: stretch; gap: 0; }
 .as-tel-pesanti .as-tel-pesano > li + li { border-top: 1px solid var(--linea); }
@@ -3611,7 +3611,7 @@ a.as-tel-apri::after { transform: rotate(-45deg); margin-bottom: 0; }
 button.as-tel-pesa { cursor: pointer; }
 button.as-tel-pesa:hover > .as-semaforo { background: var(--vetro-sopra); }
 button.as-tel-pesa:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
-.as-tel-pesa > .as-semaforo { gap: var(--spazio-1); padding: var(--stacco-minimo) var(--spazio-3) var(--stacco-minimo) var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
+.as-tel-pesa > .as-semaforo { gap: var(--spazio-1); padding: var(--stacco-minimo) var(--spazio-3) var(--stacco-minimo) var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--as-vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
 .as-tel-pesa .tv-provvisorio { white-space: normal; }
 .as-tel-pesano > li:only-child { color: var(--inchiostro-tenue); }
 .as-tel-dettaglio { grid-column: 1 / -1; min-width: 0; }

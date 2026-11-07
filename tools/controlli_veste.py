@@ -25,8 +25,13 @@ from controlli_foglio import pavimenti_del_cielo
 # L'impronta della consegna portata alla lettera. Si cambia SOLO riportando una consegna nuova
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
+# Old sheet (as-, v37.3): three tokens renamed `--as-*` while it lives beside the new one (step
+# 33, Marco's exception to ADR 0012). New sheet (al-, v58.6) in `consegna/`, byte for byte.
+CONSEGNA = "consegna/astrolog.css"
 IMPRONTE = {
-    FOGLIO: "7bab8711792ffc14ed28329236b3d40ef0991e6edfa49c190d2f99868af7f58b",
+    FOGLIO: "5898fc939379f7ba5e46f43a76743dc749cd23e9f539c44c889b7782a0bf2f87",
+    CONSEGNA: "b9d077488887333817189ec2bfb92b14d5a9ab74663e4b125d88f76919019e23",
+    "consegna/caratteri.css": "edf0e4ef85f0a477a69bb683f68ef01d1264a2176724602ee40e353290c4ba5d",
 }
 
 
@@ -182,6 +187,9 @@ MATTONI_CHE_PARLANO = {
     "frontend/src/Avviso.tsx",
     "frontend/src/Campo.tsx",
     "frontend/src/CartaSola.tsx",
+    # the v58 bricks: Avviso with its sign, Scheletro saying "Caricamento" to who listens
+    "frontend/src/componenti/Avviso.tsx",
+    "frontend/src/componenti/Scheletro.tsx",
 }
 
 
@@ -230,6 +238,7 @@ def tutti(root: str) -> list[tuple[str, list[str]]]:
     return [
         ("contrasto dei token (WCAG 1.4.3 e 1.4.11)", sotto_soglia(root)),
         ("classi as-* che il foglio non ha", classi_inventate(root)),
+        ("classi al-* che il foglio nuovo non ha", classi_al_inventate(root)),
         ("classi scritte fuori dal loro mattone", classi_fuori_casa(root)),
         ("avvisi scritti senza il mattone Avviso", avvisi_a_mano(root)),
         ("fogli della consegna toccati a mano", fogli_cambiati(root)),
@@ -251,7 +260,7 @@ def classi_in_attesa(root: str) -> set[str]:
         return {r for r in righe if r and not r.startswith("#")}
 
 
-def classi_usate(root: str) -> tuple[set[str], list[str]]:
+def classi_usate(root: str, prefisso: str = "as-") -> tuple[set[str], list[str]]:
     """Le classi `as-*` scritte nel codice, e i posti dove non si riesce a leggerle.
 
     Si leggono le classi **scritte per esteso**, anche dentro le graffe (`className={... "as-x"}`),
@@ -262,6 +271,7 @@ def classi_usate(root: str) -> tuple[set[str], list[str]]:
     arriva e' peggio di una che non c'e', perche' sembra che abbia guardato."""
     usate: set[str] = set()
     illeggibili: list[str] = []
+    nelle_stringhe = re.compile(rf"""["']([^"'\n]*\b{prefisso}[a-z0-9_-]+[^"'\n]*)["']""")
     for percorso in _sorgenti(root):
         if not os.path.isfile(percorso):
             continue
@@ -271,10 +281,10 @@ def classi_usate(root: str) -> tuple[set[str], list[str]]:
         # ogni stringa del file che contiene una classe: un mattone le tiene in una mappa, non
         # dentro l'attributo, e guardare solo `className` lascerebbe fuori proprio i mattoni.
         # Apici soltanto, mai i backtick: in una docstring `as-campo*` e' prosa, non una classe.
-        for stringa in re.findall(r"""["']([^"'\n]*\bas-[a-z0-9_-]+[^"'\n]*)["']""", testo):
-            usate |= {c for c in stringa.split() if c.startswith("as-")}
+        for stringa in nelle_stringhe.findall(testo):
+            usate |= {c for c in stringa.split() if c.startswith(prefisso)}
         for scritto in re.findall(r'class(?:Name)?="([^"]*)"', testo):
-            usate |= {c for c in scritto.split() if c.startswith("as-")}
+            usate |= {c for c in scritto.split() if c.startswith(prefisso)}
         for dentro_graffe in _fra_graffe(testo):
             parole = []
             for stringa in re.findall(r'["\'`]([^"\'`]*)["\'`]', dentro_graffe):
@@ -283,8 +293,31 @@ def classi_usate(root: str) -> tuple[set[str], list[str]]:
                 illeggibili.append(
                     f"{detto}: una classe che non so leggere ({dentro_graffe.strip()[:40]})"
                 )
-            usate |= {c for c in parole if c.startswith("as-")}
+            usate |= {c for c in parole if c.startswith(prefisso)}
     return usate, illeggibili
+
+
+def _classi_del_foglio(testo: str, prefisso: str) -> set[str]:
+    """Classes the sheet really dresses: outside comments, plus the BEM blocks of its elements."""
+    nel_foglio = set(
+        re.findall(rf"\.({prefisso}[a-z0-9_-]+)", re.sub(r"/\*.*?\*/", "", testo, flags=re.S))
+    )
+    return nel_foglio | {c.split("__")[0] for c in nel_foglio if "__" in c}
+
+
+def classi_al_inventate(root: str) -> list[str]:
+    """The `al-*` classes written in the code that the new sheet lacks.
+
+    `classi_inventate` on the v58 sheet: both sheets live together through step 33, and a typo
+    leaves a new class bare like an old one. Unreadable classes are said by the as- guard, which
+    reads the same files."""
+    percorso = os.path.join(root, *STILI, *CONSEGNA.split("/"))
+    if not os.path.isfile(percorso):
+        return [f"{'/'.join((*STILI, CONSEGNA))}: non c'e', e allora non si e' guardato niente"]
+    with open(percorso, encoding="utf-8") as h:
+        nel_foglio = _classi_del_foglio(h.read(), "al-")
+    usate, _ = classi_usate(root, "al-")
+    return sorted(usate - nel_foglio)
 
 
 def classi_inventate(root: str) -> list[str]:
@@ -302,10 +335,7 @@ def classi_inventate(root: str) -> list[str]:
     testo = leggi_foglio(root)
     if isinstance(testo, list):
         return testo
-    # a class a comment of the sheet names is not dressed by it
-    nel_foglio = set(re.findall(r"\.(as-[a-z0-9_-]+)", re.sub(r"/\*.*?\*/", "", testo, flags=re.S)))
-    # a BEM block whose elements the sheet dresses exists, even with no rule of its own
-    nel_foglio |= {c.split("__")[0] for c in nel_foglio if "__" in c}
+    nel_foglio = _classi_del_foglio(testo, "as-")
     usate, illeggibili = classi_usate(root)
     attesa = classi_in_attesa(root)
     elenco = "/".join(ATTESA)

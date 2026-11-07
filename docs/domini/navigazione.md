@@ -44,6 +44,17 @@ Le prove del frontend si chiamano col loro titolo; stanno in `frontend/tests/sch
 della notte) e Cerca coi suoi sette gruppi come nel Telaio di Design v31.8. Questo contratto si
 riscrive quando si porta il telaio; fino ad allora dove lo contraddice vale il disegno.
 
+**Due fogli per tutto il passo 33** (Marco, 7/11/2026): il nuovo (prefisso `al-`, consegna v58.6)
+sta alla lettera in `frontend/src/stili/consegna/` coi suoi caratteri; il vecchio (`as-`, v37.3)
+resta finche' l'ultima pagina non e' portata. `main.tsx` importa prima il nuovo e poi il vecchio,
+cosi' sul `:root` vincono i token del vecchio e le pagine `as-` non cambiano; una pagina portata
+sta sotto l'involucro `Tema` (`src/componenti/Tema.tsx`: `data-modo`, `data-accento`, scuro e
+ambra in partenza), da cui il foglio nuovo ridichiara i suoi. I tre token con lo stesso nome solo
+nel `:root` (`--raggio-carta`, `--durata-breve`, `--vetro`) nel vecchio diventano `--as-*`
+([ADR 0012](../adr/0012-il-disegno-viene-da-claude-design.md)). I componenti comuni della consegna
+(`Avviso`, `Scheletro`, `Carta`, `Pillola`, `PillolaScelta`, `Finestra`) stanno in
+`src/componenti/`, provati in `componenti.test.tsx` e montati con la prima pagina portata.
+
 **Il binario, nell'ordine del disegno** (Marco in Claude Design, v15-v26): Dashboard, Notti,
 Archivio, Progetti, Statistiche, Attrezzatura; uno stacco; Planner, Carta del cielo, Meteo. In
 fondo, staccate, Da confermare e Impostazioni. Niente gruppi con titolo: lo stacco basta a

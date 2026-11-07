@@ -61,6 +61,7 @@ def test_only_italian_texts_are_read():
     assert not glossario.in_scope("old/docs/x.md")
     assert glossario.in_scope("handoff/design-selezione.md")
     assert not glossario.in_scope("handoff/design/docs/x.md")
+    assert not glossario.in_scope("frontend/src/stili/consegna/astrolog.css")
 
 
 def test_main_fails_on_a_misuse(tmp_path, monkeypatch):

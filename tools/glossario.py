@@ -29,6 +29,8 @@ OUT_OF_SCOPE = (
     "docs/domini/glossario.md",
     "docs/registro.md",
     "frontend/src/i18n/en.ts",
+    # Design's v58 sheet, copied byte for byte like handoff/design
+    "frontend/src/stili/consegna/astrolog.css",
 )
 NOTE = re.compile(r"\([^)]*\)")
 OPEN, CLOSE = chr(0xAB), chr(0xBB)  # the Italian quotes of the messages

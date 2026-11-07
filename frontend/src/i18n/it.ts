@@ -3,6 +3,7 @@
  */
 import { itArchivio } from "./it-archivio"
 import { itAttrezzatura } from "./it-attrezzatura"
+import { itComponenti } from "./it-componenti"
 import { itDashboard } from "./it-dashboard"
 import { itGuscio } from "./it-guscio"
 import { itImpostazioni } from "./it-impostazioni"
@@ -27,6 +28,7 @@ export const it = {
   ...itGuscio,
   ...itSito,
   ...itSolver,
+  ...itComponenti,
   "scan.start": "Scansiona",
   "scan.stop": "Interrompi",
   "scan.resume": "Riprendi",

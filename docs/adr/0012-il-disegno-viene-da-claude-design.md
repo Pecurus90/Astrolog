@@ -28,3 +28,7 @@ consegnato da Claude Design e mattoni nostri. Marco ridisegna tutte le pagine co
 - Le guardie sul foglio (`tools/controlli_*.py`) giudicano il contenuto della consegna, e un
   numero nostro scritto nel foglio si tiene fermo con una guardia.
 - Il frontend non entra nel refactor del backend.
+- **Eccezione dichiarata** (Marco, 7/11/2026): finche' il foglio vecchio (v37.3) convive col nuovo
+  (v58.6, passo 33) ha tre token rinominati, `--as-raggio-carta`, `--as-durata-breve`,
+  `--as-vetro`, perche' non tocchino quelli del nuovo; il nuovo resta alla lettera. Esce col
+  vecchio foglio.

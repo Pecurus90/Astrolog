@@ -137,6 +137,46 @@ def test_a_class_that_does_not_exist_is_caught(tmp_path):
     assert controlli_veste.classi_inventate(str(tmp_path)) == ["as-elenco-nudo"]
 
 
+def test_no_al_class_in_the_code_is_missing_from_the_new_sheet():
+    """Every `al-*` written in the app exists in the new sheet (step 33: the two sheets coexist)."""
+    assert controlli_veste.classi_al_inventate(ROOT) == []
+
+
+def _radice_col_foglio_nuovo(tmp_path, foglio, codice):
+    """A fake root with the new sheet in `stili/consegna/` and one code file."""
+    consegna = tmp_path / "frontend" / "src" / "stili" / "consegna"
+    consegna.mkdir(parents=True)
+    (consegna / "astrolog.css").write_text(foglio, encoding="utf-8")
+    (tmp_path / "frontend" / "src" / "Pezzo.tsx").write_text(codice, encoding="utf-8")
+    return str(tmp_path)
+
+
+def test_an_al_class_that_does_not_exist_is_caught(tmp_path):
+    """**The guard seen red** on the new sheet: an invented `al-*`, in a map or composed, is red;
+    a block whose elements the sheet dresses exists; a class named only in a comment does not."""
+    radice = _radice_col_foglio_nuovo(
+        tmp_path,
+        "/* .al-finta non vale */\n.al-carta { color: red; }\n.al-scheda__titolo { color: red; }\n",
+        'export const x = <p className="al-carta al-scheda al-cartina" />\n'
+        'const M = { a: "al-finta" }\n'
+        "export const y = <p className={`al-carta al-carta--${tono}`} />\n",
+    )
+    assert controlli_veste.classi_al_inventate(radice) == [
+        "al-carta--${tono}",
+        "al-cartina",
+        "al-finta",
+    ]
+
+
+def test_a_missing_new_sheet_is_said_not_ignored(tmp_path):
+    """Without the new sheet nothing was looked at: red, not an empty green."""
+    (tmp_path / "frontend" / "src").mkdir(parents=True)
+    colpe = controlli_veste.classi_al_inventate(str(tmp_path))
+    assert colpe == [
+        "frontend/src/stili/consegna/astrolog.css: non c'e', e allora non si e' guardato niente"
+    ]
+
+
 def _radice_con_attesa(tmp_path, foglio, codice, attesa):
     """Una radice finta: il foglio, un file di codice e l'elenco delle classi in attesa."""
     stili = tmp_path / "frontend" / "src" / "stili"
@@ -363,6 +403,11 @@ def test_the_sheets_are_the_ones_delivered():
     assert controlli_veste.fogli_cambiati(ROOT) == []
 
 
+def test_the_new_sheet_is_watched_too():
+    """The new sheet and its fonts sheet carry a fingerprint: byte for byte like the old one."""
+    assert {"consegna/astrolog.css", "consegna/caratteri.css"} <= set(controlli_veste.IMPRONTE)
+
+
 def test_a_sheet_touched_by_hand_is_caught(tmp_path):
     """**La guardia vista rossa**, l'altra meta': una riga aggiunta al foglio si vede."""
     finto = tmp_path / "frontend" / "src" / "stili"
@@ -370,6 +415,7 @@ def test_a_sheet_touched_by_hand_is_caught(tmp_path):
     for nome in controlli_veste.IMPRONTE:
         # copia **binaria**: rileggere e riscrivere il testo su Windows cambia i fine riga, e
         # l'impronta cambierebbe per quello invece che per la modifica che si vuole provare
+        (finto / nome).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(os.path.join(ROOT, "frontend", "src", "stili", nome), finto / nome)
     with open(finto / controlli_veste.FOGLIO, "ab") as h:
         h.write(b"\n.as-bottone { background: red; }\n")
@@ -383,6 +429,7 @@ def test_rewritten_line_endings_say_so(tmp_path):
     finto.mkdir(parents=True)
     for nome in controlli_veste.IMPRONTE:
         origine = os.path.join(ROOT, "frontend", "src", "stili", nome)
+        (finto / nome).parent.mkdir(parents=True, exist_ok=True)
         with open(origine, "rb") as h:
             (finto / nome).write_bytes(h.read().replace(b"\n", b"\r\n"))
     colpe = controlli_veste.fogli_cambiati(str(tmp_path))
@@ -403,5 +450,6 @@ def test_a_missing_sheet_is_said_not_ignored(tmp_path, mancante):
     for nome in controlli_veste.IMPRONTE:
         if nome == mancante:
             continue
+        (finto / nome).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(os.path.join(ROOT, "frontend", "src", "stili", nome), finto / nome)
     assert controlli_veste.fogli_cambiati(str(tmp_path)) == [f"frontend/src/stili/{mancante}"]
