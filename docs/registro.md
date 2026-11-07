@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 336; senza fonte: 1.
-Fonti: C norma: 172; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T tecnico: 81.
+Valori: 343; senza fonte: 1.
+Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T tecnico: 81.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -191,6 +191,12 @@ Fonti: C norma: 172; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T
 | SF_DATALESS | `0x40000000` | C Apple TN3150; xnu sys/stat.h |
 | LONG_PATH_THRESHOLD | `240` | T |
 
+### measure_list.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| STARTS | `(1, 51, 101, 201, 401, 801, 1601, 3201, 6401)` | C ImageAnalysis par. 2.1.7; software-ok |
+
 ### net.py
 
 | simbolo | valore | fonte |
@@ -322,6 +328,18 @@ Fonti: C norma: 172; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T
 |---|---|---|
 | LOW_EXTENDED_DEG | `30.0` | P ADR 0039: Kasten-Young, Patat 2003, seeing X^0.6 |
 | LOW_STAR_DEG | `45.0` | P ADR 0039 |
+
+### pipeline/inspection.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| THIRDS | `3` | C ASTAP unit_inspector_plot.pas CCDinspector: the nine areas; software-ok |
+| OUTER_SHARE | `0.75` | C ASTAP manual, hnsky.org/astap.htm, Image inspection; software-ok |
+| TILT_GOOD_PCT | `10.0` | C ASTAP manual: "equal or less than 10% ... good"; software-ok |
+| TILT_PROBLEM_PCT | `20.0` | C ASTAP manual: "equal or more than 20% ... tilt problem"; software-ok |
+| SEVERE_UNDER_PX | `1.5` | C Howell et al. 1996, PASP 108:1074 |
+| IDEAL_LOW_PX | `2.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
+| IDEAL_HIGH_PX | `3.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
 
 ### pipeline/mmt.py
 
@@ -547,7 +565,6 @@ Fonti: C norma: 172; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| STARTS | `(1, 51, 101, 201, 401, 801, 1601, 3201, 6401)` | C ImageAnalysis par. 2.1.7; software-ok |
 | WIDTH | `50` | C ImageAnalysis par. 2.1.7; software-ok |
 | SATURATED_SHARE | `0.75` | C ImageAnalysis par. 2.1.7; software-ok |
 | MAX_SATURATED | `0.4` | C ImageAnalysis par. 2.1.7; software-ok |
@@ -836,10 +853,11 @@ Fonti: C norma: 172; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T
 | 0034 | Le regole del meteo con le fonti verificate, e il punteggio della notte v4 | accettata, 24/10/2026 (Marco); costruite le soglie (`weather/judge.py`, commit 07077958); non costruiti punteggio v4, Ore di posa, seeing dal jet, buio nautico, calendario a tre gradini. | domini/meteo.md |
 | 0035 | Le regole del cielo con le fonti verificate | accettata, 24/10/2026; costruiti classe 1 a 22,00, Garstang, SQM 7-23, Luna a -0,833 topocentrica, nomi delle fasi (commit 26656192, 9046559a, 1f464d3d); non costruiti tabella Bortle di ASTAP (Issue #28, aspetta il foglio di Design) e buio nautico. | domini/sito.md |
 | 0036 | Le regole di ASTAP con le fonti verificate, e il catalogo stellare D50 | accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano |  |
-| 0037 | Le regole delle misure dei frame con le fonti verificate | accettata, 24/10/2026; superata in parte da ADR 0039 (2,5 MAD -> Qn, eccentricita' 0,45/0,71/0,6, oggetto basso 30°, Bortle su 6 mesi) e da ADR 0042 (tilt e curvatura come Image Analysis, 30/10/2026). Nessun codice: le misure nascono con `measure`. |  |
+| 0037 | Le regole delle misure dei frame con le fonti verificate | accettata, 24/10/2026; superata in parte da ADR 0039 (2,5 MAD -> Qn, eccentricita' 0,45/0,71/0,6, oggetto basso 30°, Bortle su 6 mesi) e da ADR 0042 (tilt e curvatura come Image Analysis, 30/10/2026); il tilt di ASTAP torna accanto con ADR 0044 (7/11/2026). Nessun codice: le misure nascono con `measure`. |  |
 | 0038 | Le regole di file, oggetti e API con le fonti, e l'oggetto annidato che si chiede | accettata, 24/10/2026 (Marco: l'oggetto annidato si chiede). Ultimi tre gruppi della |  |
 | 0039 | Le soglie deboli ricavate da fisica e statistica, o tarate su ogni utente | accettata, 24/10/2026; supera in parte ADR 0022, 0034, 0036, 0037. Il resto nella fase 4; gia' costruiti: le raffiche a 25 km/h di ADR 0034, il tempo di ASTAP (`pipeline/timeouts.py`). |  |
 | 0040 | Il metodo: sette regole tenute da macchine, congelato fino al 21/11/2026 | accettata, 24/10/2026 (Marco). Supera in parte ADR 0001, 0015, 0025, 0027, 0028, 0030, |  |
 | 0041 | Il tetto di saturazione e' il fondo scala dichiarato | accettata, 29/10/2026 (Marco); supera ADR 0022 punto 7 nella parte "il tetto dall'istogramma". Passo 26.45. | domini/misure.md |
 | 0042 | Le misure del frame sono quelle di Image Analysis | accettata, 30/10/2026 (Marco). Supera ADR 0022 punto 4 (FWHM ed eccentricita' dalla |  |
 | 0043 | I cicli caldi delle misure compilati con numba; i Mac Intel escono dai bersagli | accettata, 4/11/2026 (Marco). Passo 26.57. |  |
+| 0044 | Il tilt e l'aberrazione fuori asse di ASTAP tornano accanto a Image Analysis <!-- software-ok --> | accettata, 7/11/2026 (Marco: scelte del 6/11 al passo 32.1 e del 7/11 al passo 32.2). |  |

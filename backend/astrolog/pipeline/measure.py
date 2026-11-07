@@ -9,13 +9,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..db.transaction import transaction
+from ..measure_list import STARTS
 from .debayer import pattern_of
+from .inspection import sampling_class
 from .pixels import Pixels, Unmeasurable, Why, read_pixels
 from .scan import busy
 from .shape import Shape
 from .shots import first_per_shot
 from .stars import Measured, measure_frame
-from .transparency import STARTS
 from .values import as_number
 
 # Light shots without a row, or whose last file was unreadable; plain file before its copy.
@@ -44,8 +45,9 @@ _SHAPE = (
     "eccentricity_sigma", "psf_residual", "psf_residual_sigma",
 )  # fmt: skip
 _LADDER = {start: f"ladder_{start}_dex" for start in STARTS}
-_WRITTEN = ("file_id", "outcome", *_NUMBERS, *_SHAPE, *_LADDER.values(), "sky_rate_adu_s",
-            "duration_s", "measured_at")  # fmt: skip
+_INSPECTION = ("hfd_tilt_pct", "tilt_level", "off_axis_px")  # Measured only
+_WRITTEN = ("file_id", "outcome", *_NUMBERS, *_SHAPE, "sampling_class", *_INSPECTION,
+            *_LADDER.values(), "sky_rate_adu_s", "duration_s", "measured_at")  # fmt: skip
 # Only an unreadable row is written over: the others stay (misure.md).
 UPSERT = (
     f"INSERT INTO pipeline_measures (frame_id, {', '.join(_WRITTEN)})"  # noqa: S608 - our names
@@ -98,6 +100,10 @@ def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -
             values["sky_rate_adu_s"] = found.median_adu / row["exposure_s"]
         if found.shape is not None:
             values |= _shape_values(found.shape)
+        if isinstance(found, Measured):
+            seen = found.inspection
+            values |= dict(zip(_INSPECTION, (seen.tilt_pct, seen.tilt_level, seen.off_axis_px),
+                               strict=True))  # fmt: skip
     else:
         outcome = read.why.value
     values |= {
@@ -113,7 +119,7 @@ def _shape_values(shape: Shape) -> dict[str, object]:
     return {
         "shape": shape.kind.value, "shape_stars": shape.stars, "fwhm_px": shape.fwhm_px,
         "eccentricity": shape.eccentricity, "angle_deg": shape.angle_deg,
-        "psf_residual": shape.psf_residual,
+        "psf_residual": shape.psf_residual, "sampling_class": sampling_class(shape.fwhm_px),
         "fwhm_sigma_px": spread.fwhm_px if (spread := shape.spread) else None,
         "eccentricity_sigma": spread.eccentricity if spread else None,
         "psf_residual_sigma": spread.psf_residual if spread else None,

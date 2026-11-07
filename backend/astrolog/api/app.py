@@ -37,6 +37,7 @@ from . import (
     folders,
     gear,
     gear_write,
+    measures,
     nights,
     page,
     pipeline,
@@ -303,21 +304,8 @@ def create_app(  # noqa: PLR0913
             catalog_version=catalog_load.loaded_version(conn),
         )
 
-    app.include_router(archive.router)
-    app.include_router(backup.router)
-    app.include_router(gear.router)
-    app.include_router(gear_write.router)
-    app.include_router(nights.router)
-    app.include_router(folders.router)
-    app.include_router(scan.router)
-    app.include_router(search.router)
-    app.include_router(pipeline.router)
-    app.include_router(review.router)
-    app.include_router(sites.router)
-    app.include_router(settings.router)
-    app.include_router(tonight.router)
-    app.include_router(vocab.router)
-    app.include_router(weather.router)
-    app.include_router(year.router)
+    for routes in (archive, backup, gear, gear_write, measures, nights, folders, scan, search,
+                   pipeline, review, sites, settings, tonight, vocab, weather, year):  # fmt: skip
+        app.include_router(routes.router)
     page.mount_fallback(app)  # last: `page.mount_fallback` says why
     return app

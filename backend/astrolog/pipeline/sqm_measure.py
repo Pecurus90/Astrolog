@@ -10,11 +10,11 @@ from pathlib import Path
 from typing import Any
 
 from ..db.transaction import transaction
+from ..sqm_shots import SQM_SHOTS
 from .pixels import Pixels, read_pixels
 from .scan import busy
 from .site_sky import rebuild
 from .sqm import Wcs, calibrate, scale_arcsec, sky_brightness
-from .sqm_shots import SQM_SHOTS
 from .star_catalogue import catalogue_in
 
 # Shots with their sky row and solution, without a sky brightness yet; card of the measured file.

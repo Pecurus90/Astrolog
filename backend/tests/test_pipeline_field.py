@@ -341,17 +341,22 @@ def test_the_brightness_ladder_follows_the_transmission_not_the_sky_nor_much_the
     assert frames["bright sky"][1] == pytest.approx(frames["clear"][1], abs=0.01 / 2.5)
 
 
-def test_tilt_reaches_the_frame_through_measure() -> None:
-    """Stars wider towards +x: tilt over 0; an even field near 0."""
+def test_tilt_and_astap_off_axis_reach_the_frame_through_measure() -> None:
+    """Stars wider towards +x: tilt over 0, ASTAP's over 10%; an even field near 0 for both."""
     side, per_side = 900, 10
     data = _sky(side=side)
     for y, x in _grid(per_side, margin=30, side=side):
         _stars(data, [(y, x)], 1.8 + 0.6 * x / side, 6e4)
     found = measure_frame(data, saturation=65535.0, pattern=None)
+    assert isinstance(found, Measured)
     assert found.fwhm_tilt is not None and found.fwhm_tilt > 0.2
+    assert found.inspection.tilt_pct is not None and found.inspection.tilt_pct > 10
     flat = _sky(side=side)
     _stars(flat, _grid(per_side, margin=30, side=side), 2.0, 6e4)
     even = measure_frame(flat, saturation=65535.0, pattern=None)
+    assert isinstance(even, Measured)
     assert even.fwhm_tilt is not None and even.fwhm_tilt < 0.05
     assert even.fwhm_curvature is not None and abs(even.fwhm_curvature) < 0.05
     assert even.elongation_coherence is not None
+    assert even.inspection.tilt_pct is not None and even.inspection.tilt_pct < 5
+    assert even.inspection.off_axis_px is not None and abs(even.inspection.off_axis_px) < 0.1

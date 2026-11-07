@@ -4,6 +4,7 @@
 Moffat integrata sul pixel) e punto 7 (gradiente in % della mediana), ADR 0037 per tilt e
 curvatura dall'HFD nelle zone di ASTAP, e il SubframeSelector come riferimento del confronto <!-- software-ok -->
 (passo 24.05, `docs/domini/misure.md`). <!-- software-ok -->
+Corretta da ADR 0044 (7/11/2026): il tilt e l'aberrazione fuori asse di ASTAP tornano accanto.
 
 ## Contesto
 

@@ -62,7 +62,10 @@ def test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values(conn, tmp_p
     _solve(conn)
     assert sky_root(conn, root, LATER).written == 1
     [row] = _sky(conn)
-    [hfd, fwhm] = conn.execute("SELECT hfd_px, fwhm_px FROM pipeline_measures").fetchone()
+    [hfd, fwhm, off_axis] = conn.execute(
+        "SELECT hfd_px, fwhm_px, off_axis_px FROM pipeline_measures"
+    ).fetchone()
+    assert row["off_axis_arcsec"] == pytest.approx(off_axis * _SCALE)
     assert row["solved"] == 1 and row["computed_at"] == LATER
     assert row["mid_utc"] == "2025-06-29T21:32:30.000000+00:00"
     assert row["altitude_deg"] == pytest.approx(_altitude(_CENTRE))
@@ -144,6 +147,7 @@ def test_an_unsolved_shot_takes_its_altitude_from_the_card_then_its_solution(con
     sky_root(conn, root, LATER)
     [row] = _sky(conn)
     assert row["solved"] == 0 and row["hfd_arcsec"] is None and row["hfd_zenith_arcsec"] is None
+    assert row["off_axis_arcsec"] is None
     assert row["altitude_deg"] == pytest.approx(_altitude((241.254763508206, 17.7165957446809)))
     assert sky_root(conn, root, LATER).written == 0
     _solve(conn)
@@ -172,6 +176,8 @@ def test_an_unreadable_measure_waits(conn, tmp_path):
                  " gradient_angle_deg = NULL, row_banding = NULL, column_banding = NULL,"
                  " trails = NULL,"
                  " fwhm_tilt = NULL, fwhm_curvature = NULL, elongation_angle_deg = NULL,"
+                 " hfd_tilt_pct = NULL, tilt_level = NULL, off_axis_px = NULL,"
+                 " sampling_class = NULL,"
                  " elongation_coherence = NULL,"
                  " fwhm_sigma_px = NULL, eccentricity_sigma = NULL, psf_residual = NULL,"
                  " psf_residual_sigma = NULL, psf_signal_weight = NULL, median_adu = NULL,"

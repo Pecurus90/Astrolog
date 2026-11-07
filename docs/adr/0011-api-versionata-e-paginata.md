@@ -18,6 +18,7 @@ cinquantamila frame in una cartella.
   una sola cartella (`/folders/browse`), i siti proposti da una ricerca (`/places`, col tetto di
   `place.search`), la ricerca (`/search`, un menu di pochi per tipo, con `total`) e Da confermare (`/review`), che manda cio' che e' da guardare: cresce con cio'
   che e' nuovo, mentre gli oggetti gia' visti si leggono a pagine (`/review/objects/settled`).
+  Le misure di un frame (`/pipeline/frames/{id}/measures`): l'elenco lo fissa il catalogo.
 
 ## Conseguenze
 

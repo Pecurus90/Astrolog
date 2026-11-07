@@ -25,6 +25,7 @@ from .field import (
     psf_signal_weight,
     psf_snr,
 )
+from .inspection import Inspection, inspect
 from .median import median3x3
 from .mmt import Background, mstar_nstar
 from .noise import NOISE_FLOOR_ADU, Mrs, mrs, structure_noise
@@ -100,6 +101,7 @@ class Measured(Across):
     background_adu: float
     noise_adu: float
     shape: Shape | None  # on stars of any roundness: a trailed frame still has one
+    inspection: Inspection  # ASTAP's tilt and off-axis aberration (inspection.py); software-ok
 
 
 @dataclass(frozen=True)
@@ -168,7 +170,7 @@ def measure_frame(
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(seen.hfds) < MIN_STARS:
         return TooFewStars(**common)
-    return Measured(**common, hfd_px=float(np.median(seen.hfds)))
+    return Measured(**common, hfd_px=float(np.median(seen.hfds)), inspection=seen.inspection)
 
 
 @dataclass(frozen=True)
@@ -189,6 +191,7 @@ class _SepStars:
     objects: np.ndarray  # sep's detections
     usable: np.ndarray  # those fit to measure (_kept)
     hfds: np.ndarray  # px, round ones spread on the grid
+    inspection: Inspection  # usable ones of any roundness spread on the grid: coma stays in
 
 
 def _first_pass(raw: np.ndarray) -> _Sky:
@@ -205,8 +208,14 @@ def _sep_stars(sky: _Sky, sensor: np.ndarray, saturation: float) -> _SepStars:
     objects = _found_aside(sky.images[1], noise)
     usable = _kept(sensor, objects, saturation)
     round_ones = usable[_round(objects[usable])]
-    hfds = _hfd(sky.images, objects, _spread(objects, round_ones, sensor.shape))
-    return _SepStars(noise, objects, usable, hfds)
+    chosen = _spread(objects, round_ones, sensor.shape)
+    inspected = _spread(objects, usable, sensor.shape)
+    both = np.union1d(chosen, inspected)  # one pass, a star in both measured once
+    measured = _hfd(sky.images, objects, both)
+    hfds = measured[np.isin(both, chosen)]
+    at = np.isin(both, inspected) & np.isfinite(measured)
+    found = inspect(measured[at], objects["x"][both[at]], objects["y"][both[at]], sensor.shape)
+    return _SepStars(noise, objects, usable, hfds[np.isfinite(hfds)], found)
 
 
 def _flux(said: Estimates, noise: float, stars: int) -> dict[str, Any]:
@@ -424,8 +433,8 @@ def _peaks(raw: np.ndarray, objects: np.ndarray, guess: np.ndarray) -> np.ndarra
 def _hfd(
     images: tuple[np.ndarray, np.ndarray], objects: np.ndarray, keep: np.ndarray
 ) -> np.ndarray:
-    """HFD on the raw residual less the ring median on the filtered copy. No segment mask: a
-    masked nebula empties the ring (Rosette)."""
+    """HFD of each of `keep` on the raw residual less the ring median on the filtered copy. No
+    segment mask: a masked nebula empties the ring (Rosette)."""
     if len(keep) == 0:
         return np.array([])
     residual, filtered = images
@@ -439,10 +448,9 @@ def _hfd(
         flux, _, _ = sep.sum_circle(residual, x, y, radius, subpix=SUBPIX)
         enclosed[i] = flux - sky * np.pi * radius**2
     total = enclosed[-1]
-    good = total > 0
-    radii = np.empty(len(keep))
-    for j in np.flatnonzero(good):
+    radii = np.full(len(keep), np.nan)  # NaN: no light over the sky, no HFD
+    for j in np.flatnonzero(total > 0):
         radii[j] = (
             np.interp(total[j] / 2, np.maximum.accumulate(enclosed[:, j]), steps) * aperture[j]
         )
-    return 2 * radii[good]
+    return 2 * radii

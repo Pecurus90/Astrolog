@@ -13,6 +13,15 @@ Consegna controllata: b19a233a
 
 ## Da dare
 
+- [da dare] Misure dei frame, tessera Curvatura (Marco, 7/11): non piu' una % ma l'aberrazione
+  fuori asse di ASTAP, in px (e in ″ con la scala): HFD delle stelle oltre il 75% verso gli
+  angoli meno HFD del centro. Senza giudizio: ASTAP non da' soglie. La tessera Tilt resta in %
+  col giudizio 10 / 20 %.
+- [da dare] Misure dei frame, tessera Gradiente (Marco, 7/11): niente % del fondo, nessuna fonte
+  pubblica la definisce. Restano le unita' di rumore e il lato chiaro come angolo sul cielo.
+- [da dare] Misure dei frame, dettaglio: FWHMTilt e FWHMCurvature di Image Analysis sono rapporti
+  senza unita' (ImageAnalysis eq. 26-27), non px: si scrivono come numeri puri.
+
 - [da dare] Selezione dei frame (v63), parole: i file che la scansione non legge si chiamano
   «esclusi», non «saltati»: e' gia' la parola del glossario, che vieta «saltati» e «scartati» per
   loro (Marco, 6/11). La Selezione tiene «Scarta / Tieni / da scartare / scartate» (approvate).

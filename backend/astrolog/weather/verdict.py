@@ -9,6 +9,7 @@ from enum import StrEnum
 from typing import Any
 
 from ..ephemeris.sun import Sky
+from ..levels import Verdict
 
 # [C WMO/ICAO code D-8: FEW 1-2 oktas, SCT 3-4] go to FEW 2/8, marginal to SCT 4/8.
 # https://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome
@@ -36,12 +37,6 @@ def sky_word(cloud_pct: float | None) -> SkyWord | None:
         return SkyWord.OVERCAST
     eighths = math.floor(cloud_pct / 12.5 + 0.5)
     return SkyWord.SCATTERED if eighths <= 4 else SkyWord.BROKEN
-
-
-class Verdict(StrEnum):
-    GO = "go"
-    MARGINAL = "marginal"
-    NOGO = "nogo"
 
 
 class Window(StrEnum):

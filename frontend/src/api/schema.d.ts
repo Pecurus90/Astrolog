@@ -397,6 +397,30 @@ export interface paths {
         patch: operations["edit_filter"];
         trace?: never;
     };
+    "/api/v1/pipeline/frames/{frame_id}/measures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Measures
+         * @description Every measure of one frame (`measure_list.py`), in its order, each with its
+         *     value or the code of why it has none; the stages' outcomes and the written words beside.
+         *
+         *     Not paged: one frame's list is fixed by the catalogue, it does not grow with the archive
+         *     (ADR 0011). Reads only what the stages wrote. 404 `frame_not_found`: no such frame.
+         */
+        get: operations["measures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/nights": {
         parameters: {
             query?: never;
@@ -2102,6 +2126,48 @@ export interface components {
             total: number;
         };
         /**
+         * FrameMeasuresOut
+         * @description What the three stages wrote for one frame; the words beside the numbers.
+         */
+        FrameMeasuresOut: {
+            /** Frame Id */
+            frame_id: number;
+            /**
+             * Measure Outcome
+             * @description Null: not measured yet.
+             */
+            measure_outcome: ("measured" | "too_few_stars" | "unreadable" | "not_supported" | "fz_unsupported") | null;
+            /**
+             * Solved
+             * @description Null: the sky row is not written yet.
+             */
+            solved: boolean | null;
+            /**
+             * Sqm Outcome
+             * @description Null: no sky brightness row; the measures say why (`sqm_pending`, ...).
+             */
+            sqm_outcome: ("measured" | "calibration_failed" | "no_altitude" | "unreadable") | null;
+            /** Shape */
+            shape: ("fitted" | "estimated" | "unmeasurable") | null;
+            /**
+             * Tilt Level
+             * @description ASTAP's tilt judged: up to 10% go, from 20% nogo (ADR 0044). software-ok
+             */
+            tilt_level: ("go" | "marginal" | "nogo") | null;
+            /**
+             * Sampling Class
+             * @description FWHM in px, ADR 0022.
+             */
+            sampling_class: ("severe_under" | "under" | "ideal" | "over") | null;
+            /**
+             * Angle Axis
+             * @description Stars' long axis on the sky.
+             */
+            angle_axis: ("ra" | "dec") | null;
+            /** Measures */
+            measures: components["schemas"]["MeasureOut"][];
+        };
+        /**
          * GearAnswer
          * @description What the user said about a signature: the **names** of the pieces, never row numbers. An
          *     empty field is a part not answered, not a part that was not there.
@@ -2253,6 +2319,12 @@ export interface components {
             /** Run Started */
             run_started: boolean;
         };
+        /**
+         * Group
+         * @description The brief's groups (handoff/design-v59.md, 1.1), the tiles' among them.
+         * @enum {string}
+         */
+        Group: "stars_shape" | "signal" | "background" | "field" | "sky" | "moon_sun" | "brightness" | "ladder";
         /** GuideScale */
         GuideScale: {
             /** Value */
@@ -2591,6 +2663,20 @@ export interface components {
             into_name: string;
             /** Into Frames */
             into_frames: number;
+        };
+        /** MeasureOut */
+        MeasureOut: {
+            /**
+             * Key
+             * @description The measure's name, the same in the Selection's formula.
+             */
+            key: string;
+            unit: components["schemas"]["Unit"];
+            group: components["schemas"]["Group"];
+            /** Value */
+            value: number | null;
+            /** @description Why `value` is null; null with a value. */
+            silent: components["schemas"]["Silent"] | null;
         };
         /** MeteoblueKeyIn */
         MeteoblueKeyIn: {
@@ -3747,6 +3833,12 @@ export interface components {
             missing: components["schemas"]["Missing"] | null;
         };
         /**
+         * Silent
+         * @description Why a measure has no value: its stage's outcome, or the measure's own reason.
+         * @enum {string}
+         */
+        Silent: "not_measured_yet" | "too_few_stars" | "unreadable" | "not_supported" | "fz_unsupported" | "sky_pending" | "not_solved" | "no_site_time_or_centre" | "no_site_or_time" | "below_horizon" | "sqm_pending" | "sqm_not_this_filter" | "calibration_failed" | "no_altitude" | "needs_camera_bias" | "sky_under_bias" | "no_bias_declared" | "under_5_stars" | "no_fit" | "not_fitted" | "under_32_fits" | "an_area_without_stars" | "centre_or_ring_empty" | "round_stars" | "flat_sky" | "no_exposure" | "noise_zero" | "no_pixel_under_model" | "no_psf_snr_or_mstar" | "under_50_stars";
+        /**
          * SiteCandidate
          * @description A site already declared, with how far it is from those coordinates: it is what one clicks to
          *     answer. Recomputed on reading, not saved.
@@ -4147,6 +4239,11 @@ export interface components {
             candidates: components["schemas"]["SiteCandidate"][];
             subjects: components["schemas"]["Subjects"];
         };
+        /**
+         * Unit
+         * @enum {string}
+         */
+        Unit: "px" | "arcsec" | "adu" | "adu_per_s" | "count" | "ratio" | "fraction" | "noise" | "pct" | "deg" | "hours" | "bits" | "dex" | "mag" | "mag_arcsec2";
         /**
          * UnnamedGroup
          * @description Where and when of frames the header does not name and the sky says nothing about, grouped
@@ -5151,6 +5248,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GearWritten"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    measures: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                frame_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameMeasuresOut"];
                 };
             };
             /** @description Validation Error */

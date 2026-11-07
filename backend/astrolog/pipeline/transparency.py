@@ -7,10 +7,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from ..measure_list import STARTS
 from ..robust import biweight_fit
 
-# Windows of 50 consecutive ranks by decreasing flux, from these ranks.
-STARTS = (1, 51, 101, 201, 401, 801, 1601, 3201, 6401)  # [C ImageAnalysis par. 2.1.7; software-ok]
+# Windows of 50 consecutive ranks by decreasing flux, from STARTS.
 WIDTH = 50  # [C ImageAnalysis par. 2.1.7; software-ok]
 # Saturated: peak at 3/4 of the frame's highest pixel or more.
 SATURATED_SHARE = 0.75  # [C ImageAnalysis par. 2.1.7; software-ok]

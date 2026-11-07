@@ -18,7 +18,7 @@ from .scan import busy
 # Measured shots without a row, or with one before their solution came. Site and time from the
 # card of the file measured: a copy's card may say other.
 PENDING = (
-    "SELECT m.frame_id, m.hfd_px, m.fwhm_px, m.angle_deg, m.gradient_angle_deg,"
+    "SELECT m.frame_id, m.hfd_px, m.fwhm_px, m.off_axis_px, m.angle_deg, m.gradient_angle_deg,"
     " c.start_utc, c.exposure_s, c.site_lat_deg, c.site_lon_deg,"
     " c.pointing_ra_deg, c.pointing_dec_deg, s.ra_deg, s.dec_deg, s.scale_arcsec_px,"
     " s.cd1_1, s.cd1_2, s.cd2_1, s.cd2_2"
@@ -34,7 +34,7 @@ PENDING = (
 # Named as MoonAndSun's fields and as their columns.
 LIGHT = ("moon_altitude_deg", "moon_separation_deg", "moon_illumination", "sun_altitude_deg")
 _COLUMNS = (
-    "solved", "mid_utc", "altitude_deg", "airmass", "hfd_arcsec", "fwhm_arcsec",
+    "solved", "mid_utc", "altitude_deg", "airmass", "hfd_arcsec", "fwhm_arcsec", "off_axis_arcsec",
     "hfd_zenith_arcsec", "fwhm_zenith_arcsec", "angle_pa_deg", "angle_axis", "gradient_pa_deg",
     "azimuth_deg", "hour_angle_h", *LIGHT, "computed_at",
 )  # fmt: skip
@@ -94,6 +94,7 @@ def _on_sky(row: sqlite3.Row, now: str) -> dict[str, object]:
         "frame_id": row["frame_id"], "solved": int(row["ra_deg"] is not None),
         "mid_utc": mid_exposure(row["start_utc"], row["exposure_s"]),
         "hfd_arcsec": _arcsec(row["hfd_px"], scale), "fwhm_arcsec": _arcsec(row["fwhm_px"], scale),
+        "off_axis_arcsec": _arcsec(row["off_axis_px"], scale),
         "angle_pa_deg": angle, "angle_axis": None if angle is None else sky_axis(angle),
         "gradient_pa_deg": _turned(cd, row["gradient_angle_deg"]),
         "altitude_deg": None, "airmass": None, "computed_at": now,

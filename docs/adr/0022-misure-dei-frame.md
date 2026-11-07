@@ -45,7 +45,8 @@ che resta nasce coi test.
 7. **Altre misure**: fondo e rumore in ADU (solo stessa camera, guadagno, posa); ~~gradiente sul
    frame ridotto, (max - min) / mediana~~, col lato piu' chiaro; ~~tilt e curvatura dalla HFD in
    cinque zone (quattro angoli e centro)~~ (superati da ADR 0042, passo 26.52: gradiente, tilt e
-   curvatura come Image Analysis; il lato chiaro resta); stelle sature (`DATAMAX` o il tetto dall'istogramma);
+   curvatura come Image Analysis; il lato chiaro resta; il tilt dalle HFD e l'aberrazione fuori
+   asse di ASTAP tornano accanto con ADR 0044); stelle sature (`DATAMAX` o il tetto dall'istogramma);
    FWHM e HFD anche allo zenit, valore / X^0,6 (ESO, "seeing varies with the airmass to the power
    of 3/5th"), con sito e coordinate.
 8. **SQM**: il metodo di ASTAP portato (MPL-2.0, nei crediti; `-sqm` c'e' solo nell'eseguibile

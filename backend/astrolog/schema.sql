@@ -1195,6 +1195,13 @@ CREATE TABLE pipeline_measures (
   trails         INTEGER CHECK (trails >= 0 AND trails <= 16),  -- Trails: scie lunghe, al massimo 16
   fwhm_tilt      REAL CHECK (fwhm_tilt >= 0),  -- FWHMTilt, eq. 26-27; NULL: meno di 32 fit
   fwhm_curvature REAL,                         -- FWHMCurvature, con segno: + stelle piu' grandi agli angoli
+  -- ispettore di ASTAP sulle HFD (inspection.py, ADR 0044): tilt fra gli angoli in % della HFD
+  -- mediana, col giudizio 10/20; NULL: un'area dei nove senza stelle. Fuori asse: anello meno centro
+  hfd_tilt_pct   REAL CHECK (hfd_tilt_pct >= 0),
+  tilt_level     TEXT CHECK (tilt_level IN ('go', 'marginal', 'nogo')),
+  off_axis_px    REAL,  -- con segno: + stelle piu' grandi al bordo; NULL: centro o anello vuoti
+  -- campionamento della FWHM (ADR 0022): sotto 1,5 px grave, 2-3 ideale
+  sampling_class TEXT CHECK (sampling_class IN ('severe_under', 'under', 'ideal', 'over')),
   elongation_angle_deg REAL CHECK (elongation_angle_deg >= 0 AND elongation_angle_deg < 180),  -- antiorario da +x
   elongation_coherence REAL CHECK (elongation_coherence >= 0 AND elongation_coherence <= 1),  -- eq. 28-29
   -- scala di luminosita' (transparency.py, Image Analysis par. 2.1.7): mediana del log10 del flusso
@@ -1238,6 +1245,9 @@ CREATE TABLE pipeline_measures (
   CHECK ((stars IS NULL) = (trails IS NULL)),
   -- campo e scala sui fit del piano misurato; a colori psf_count e' dei canali, quindi si lega a stars
   CHECK ((fwhm_tilt IS NULL) = (fwhm_curvature IS NULL) AND (fwhm_tilt IS NULL OR stars >= 32)),
+  CHECK ((hfd_tilt_pct IS NULL) = (tilt_level IS NULL)
+    AND (coalesce(hfd_tilt_pct, off_axis_px) IS NULL OR outcome = 'measured')),
+  CHECK ((sampling_class IS NULL) = (fwhm_px IS NULL)),
   CHECK ((elongation_angle_deg IS NULL) = (elongation_coherence IS NULL)
     AND (elongation_angle_deg IS NULL OR stars IS NOT NULL)),
   CHECK (coalesce(ladder_1_dex, ladder_51_dex, ladder_101_dex, ladder_201_dex, ladder_401_dex,
@@ -1257,6 +1267,7 @@ CREATE TABLE pipeline_sky (
   airmass       REAL CHECK (airmass >= 1),  -- Pickering 2002; NULL: sotto l'orizzonte
   hfd_arcsec    REAL CHECK (hfd_arcsec > 0),  -- px per scala risolta
   fwhm_arcsec   REAL CHECK (fwhm_arcsec > 0),
+  off_axis_arcsec REAL,  -- aberrazione fuori asse di ASTAP per scala, con segno
   hfd_zenith_arcsec  REAL CHECK (hfd_zenith_arcsec > 0),  -- / airmass^0,6 (ESO)
   fwhm_zenith_arcsec REAL CHECK (fwhm_zenith_arcsec > 0),
   -- asse lungo come angolo di posizione, da Nord verso Est; asse del cielo piu' vicino
@@ -1282,7 +1293,8 @@ CREATE TABLE pipeline_sky (
     AND (sun_altitude_deg IS NULL OR mid_utc IS NOT NULL)
     AND (moon_separation_deg IS NULL OR moon_altitude_deg IS NOT NULL)),
   CHECK (airmass IS NULL OR altitude_deg >= 0),
-  CHECK (solved = 1 OR coalesce(hfd_arcsec, fwhm_arcsec, angle_pa_deg, gradient_pa_deg) IS NULL),
+  CHECK (solved = 1 OR coalesce(hfd_arcsec, fwhm_arcsec, off_axis_arcsec, angle_pa_deg,
+    gradient_pa_deg) IS NULL),
   CHECK ((hfd_zenith_arcsec IS NULL) = (hfd_arcsec IS NULL OR airmass IS NULL)),
   CHECK ((fwhm_zenith_arcsec IS NULL) = (fwhm_arcsec IS NULL OR airmass IS NULL)),
   CHECK ((angle_pa_deg IS NULL) = (angle_axis IS NULL))

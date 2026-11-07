@@ -25,10 +25,13 @@ parole in [`glossario.md`](glossario.md).
 | Gradiente e banding sono quelli di Image Analysis, in unita' di rumore; il lato chiaro e' nostro e un fondo piatto non lo inventa (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_background.py` (superficie picco-picco sul rumore, riquadri luminosi scartati, saturi e bordi vuoti fuori, rumore bianco senza banding, righe spostate di 0,3 sigma, file alterne del mosaico), `test_the_biweight_fit_drops_the_outliers_a_least_squares_follows`, `test_a_sky_on_a_plane_has_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_side` |
 | Le scie di satelliti, aerei e meteore si contano come Image Analysis: lunghe almeno un quarto del lato corto, sottili, fino a 16; il bordo di una nebulosa no (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_trails.py` (cielo senza scie, 4 sigma trovata in campo rado e denso, 2 sigma persa nel denso e trovata nel rado, meteora corta, tratteggio sotto il 35%, bordo e filamento di nebulosa, due incrociate, al massimo 16, stelle mascherate lungo la scia, bordo vuoto), `test_the_trails_are_written` |
 | La trasparenza di una serie (stesso campo e filtro) come Image Analysis: estinzione relativa al frame piu' trasparente, estinzione da nuvole oltre la legge di Bouguer; il flusso delle stelle e' il nostro (Marco, 30/10 e 4/11/2026) <!-- software-ok --> | `test_pipeline_transparency.py` (finestre dal rango 1, 51, 101, 201..., sature sopra le altre, 40% sature fuori, frame piu' trasparente a zero, flusso al secondo, finestra dei piu' frame, suo fit di Bouguer su Abell 2151 entro 1e-6, nuvole che non inclinano la retta, sola costante sotto 0,05 di massa d'aria, sotto 5 frame niente nuvole), `test_the_upper_biweight_fit_downweights_only_the_points_above` (`test_robust.py`), `test_the_aperture_flux_holds_the_moffat_out_to_its_full_width_at_a_tenth`, `test_each_fit_knows_its_detected_star` (`test_pipeline_psf_fit.py`), `test_the_brightness_ladder_follows_the_transmission_not_the_sky_nor_much_the_seeing` (`test_pipeline_field.py`), `test_the_brightness_ladder_is_written` |
-| Tilt, curvatura ed elongazione sono quelli di Image Analysis: dalle FWHM e dagli angoli di tutte le stelle fittate, muti sotto 32 fit o con stelle tonde (Marco, 30/10/2026) <!-- software-ok --> | `test_tilt_and_curvature_are_the_documented_surface`, `test_under_32_stars_no_tilt`, `test_aligned_elongations_give_their_angle_counterclockwise_and_full_coherence`, `test_crossed_elongations_have_no_coherence`, `test_round_stars_or_none_have_no_elongation`, `test_tilt_reaches_the_frame_through_measure` (`backend/tests/test_pipeline_field.py`) |
+| Tilt, curvatura ed elongazione sono quelli di Image Analysis: dalle FWHM e dagli angoli di tutte le stelle fittate, muti sotto 32 fit o con stelle tonde (Marco, 30/10/2026) <!-- software-ok --> | `test_tilt_and_curvature_are_the_documented_surface`, `test_under_32_stars_no_tilt`, `test_aligned_elongations_give_their_angle_counterclockwise_and_full_coherence`, `test_crossed_elongations_have_no_coherence`, `test_round_stars_or_none_have_no_elongation`, `test_tilt_and_astap_off_axis_reach_the_frame_through_measure` (`backend/tests/test_pipeline_field.py`) |
 | La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_and_azimuth_agree_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
 | FWHM e HFD anche in secondi d'arco dalla scala risolta e allo zenit; senza soluzione niente secondi, senza sito o ora niente altezza ne' zenit | `test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values`, `test_a_value_at_the_zenith_is_divided_by_the_airmass_to_the_three_fifths`, `test_without_a_site_there_is_no_altitude_but_the_arcseconds_stay`, `test_without_a_start_there_is_no_time_nor_altitude`, `test_the_mid_exposure_is_the_start_plus_half` (`backend/tests/test_pipeline_sky_measure.py`) |
 | Di ogni posa so dove puntava e che luce aveva: azimut e angolo orario del centro, Luna e Sole a meta' posa, quanto la Luna e' lontana e illuminata, il lato del pilastro (Image Analysis par. 2.1.1; Marco, 30/10/2026) <!-- software-ok --> | `test_a_shot_gets_where_it_pointed_and_the_moon_and_sun_of_its_moment`, `test_without_a_centre_the_moon_and_sun_stay_but_not_the_distance` (`backend/tests/test_pipeline_sky_measure.py`), `test_the_altitude_and_azimuth_agree_with_astropy`, `test_the_hour_angle_is_the_apparent_sidereal_time_less_the_place_of_date` (`test_pipeline_altitude.py`), `test_ephemeris_frames.py`, `test_the_pier_side_is_east_or_west_as_written_else_unknown` (`test_pipeline_card.py`) |
+| Il tilt e la curvatura come li legge l'ispettore di ASTAP dalle HFD: nove aree a terzi, tilt fra gli angoli in % della HFD mediana col giudizio 10 / 20 %, aberrazione fuori asse in px e in ″; tacciono se manca una stella dove servono (Marco, 6/11 e 7/11/2026; ADR 0044) <!-- software-ok --> | `test_pipeline_inspection.py` (angolo piu' largo, anello piu' largo, fuori asse negativo, confini 10 / 20, area vuota, centro vuoto), `test_tilt_and_astap_off_axis_reach_the_frame_through_measure`, `test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values` |
+| Il campionamento della FWHM in pixel: sottocampionata (grave), sottocampionata, ideale, sovracampionata | `test_the_sampling_classes_of_adr_0022`, `test_a_light_is_measured_once_and_written` |
+| Ogni misura di un frame da una rotta sola, col valore o col perche' manca, cosi' come gli stadi l'hanno scritta | `test_api_measures.py` (catalogo uguale alle colonne, frame non ancora misurato, senza soluzione, risolto senza SQM per il filtro, troppo poche stelle, pixel non letti col cielo dalle card, frame inesistente) |
 | La direzione delle stelle e il lato chiaro del gradiente girati col cielo: "in AR" o "in Dec" | `test_a_pixel_direction_turns_into_its_position_angle_on_the_sky` (`test_pipeline_footprint.py`), `test_the_shape_and_the_bright_side_turn_with_the_sky`, `test_the_nearer_sky_axis_names_the_direction`, `test_a_solution_without_its_matrix_gives_arcseconds_but_no_direction`, `test_round_stars_and_a_flat_sky_have_no_direction` |
 | Una soluzione arrivata dopo la misura riscrive le misure col cielo, una dimenticata le porta via | `test_an_unsolved_shot_takes_its_altitude_from_the_card_then_its_solution`, `test_a_forgotten_solution_takes_its_sky_measures_along`, `test_an_unreadable_measure_waits`, `test_a_stop_writes_nothing` |
 | Una nebulosa sotto le stelle e' cielo, non stella | `test_a_nebula_under_the_stars_is_sky_the_ring_follows` |
@@ -337,15 +340,17 @@ MPL-2.0; ADR 0022 punto 8):
 sensore, fondo e rumore in ADU; la forma (fit, stimata, non misurabile) con le sue stelle, FWHM
 in pixel, eccentricita' e direzione; il tetto e le stelle sature, il PSF SNR e il PSF Signal
 Weight, le statistiche dei pixel (mediana, SkyRate, Sigma, entropia, NoiseRatio, SNR, M\*, N\*), il campo (gradiente col
-lato chiaro, banding, scie, tilt, curvatura, elongazione), la scala di luminosita'; durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
-massa d'aria, FWHM e HFD in secondi d'arco e allo zenit, direzione e lato chiaro sul cielo con
+lato chiaro, banding, scie, tilt, curvatura, elongazione), il tilt di ASTAP col suo giudizio e
+l'aberrazione fuori asse, il campionamento, la scala di luminosita'; durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
+massa d'aria, FWHM e HFD in secondi d'arco e allo zenit, l'aberrazione fuori asse in secondi d'arco, direzione e lato chiaro sul cielo con
 l'asse. In `pipeline_solutions` la matrice CD e il pixel di riferimento. In `pipeline_sqm`:
 esito (misurato, calibrazione fallita, senza altezza, illeggibile), catalogo, zero point, stelle
 di calibrazione, cielo in ADU, colori, bias tolto, SQM, durata, ora. Il fondo si confronta solo con la stessa camera,
 guadagno e posa (ADR 0022). Le misure scritte negli header da altri programmi non si leggono.
 
-**La pipeline vecchia** non lancia piu' `-analyse` (D1, +0,3 s a frame) e non ha piu'
-`frame_metrics`: nessuno la leggeva, e un `-analyse` che non rispondeva si richiedeva a ogni giro.
+**L'elenco** ha una casa (`backend/astrolog/measure_list.py`, sotto pipeline e app, ADR 0030):
+colonna, unita', gruppo, codice del perche' manca; i ″ senza i px prendono il codice dei px.
+`GET /api/v1/pipeline/frames/{id}/measures` lo legge senza calcolare. Tilt di ASTAP: ADR 0044.
 
 ## I testi a schermo
 
@@ -370,28 +375,22 @@ porta setup e oggetti. Nessuna misura del frame cambia: il rumore del frame e' l
 una scala su milioni di pixel, come il SubframeSelector la confronta.
 
 - **Soglia relativa**: mediana ± 2,5 Qn (`robust.relative_bounds`), sotto 10 valori tace; tace
-  anche a Qn zero (valori ripetuti), dove la soglia sarebbe la mediana stessa. Qn di
-  Rousseeuw e Croux (JASA 88:1273, 1993), costante 2,21914 = 1/(√2 Φ⁻¹(5/8)) (p. 1277; il 2,2219
-  dei primi lavori e' un refuso) e fattori di piccolo campione di robustbase 0.99-7 (tavola fino a
-  12, poi polinomio in 1/n, simulazione di Maechler su 2^27 campioni): quelli che vanno con
-  2,21914. I fattori del 1992 (n/(n+1,4), n/(n+3,8)) vanno col refuso e non si usano. Il k-esimo
-  scarto si sceglie esatto senza la matrice delle coppie: 50.000 valori in 0,04 s.
+  anche a Qn zero (valori ripetuti). Qn di Rousseeuw e Croux 1993, costante 2,21914 e fattori di
+  piccolo campione di robustbase 0.99-7; fonti e scelte accanto ai numeri in `robust.py`.
 - **Eccentricita' rispetto al setup** (`pipeline/setup_rules.py`): fuori solo sopra mediana +
   2,5 Qn, una coda (stelle piu' tonde non sono uno scarto); avviso "stelle allungate" se la
   mediana del setup supera 0,6 (b/a 0,8), sotto 10 frame non si dice.
 - **Raffiche per setup**: FWHM² = calma² + c v⁴ (ADR 0039) su un punto per ora di meteo (la
-  raffica e' oraria), fit di Theil-Sen (Sen 1968: un frame con le nuvole non lo inclina).
-  Incerto dove il vento aggiunge una volta calma² (FWHM × √2, tempo doppio), niente dove la
-  aggiunge tre volte (FWHM doppia), come il seeing contro il pavimento del setup. Nessuna
-  estrapolazione: sotto 10 punti, senza crescita o con la soglia oltre la raffica piu' forte
-  misurata resta il 25 km/h (`domini/meteo.md`); "niente" oltre i dati non si dice.
+  raffica e' oraria), fit di Theil-Sen; incerto a FWHM × √2, niente a FWHM doppia; senza dati
+  sufficienti resta il 25 km/h (`domini/meteo.md`, ADR 0039).
 
 ## Cosa non fa ancora, e con cosa arrivera'
 
 - **Bias (ADU) a schermo**: col porting di Attrezzatura (fase 5) e il setup della pipeline
   (passo 40); oggi si dichiara solo da codice (`declare_bias`).
 - **Le regole fra frame collegate**: al passo 40 (setup, oggetti) e 40.1 (zona di selezione,
-  con "al limite" a 1 Qn). Oggetto basso: `pipeline/frame_rules.py`, puro (Bortle: `domini/sito.md`).
+  con "al limite" a 1 Qn), coi giudizi di gruppo o setup (FWHM col limite del setup, fuoco, SNR,
+  HFD, eccentricita', oggetto basso, SQM e Bortle) e i criteri della Selezione. Oggetto basso: `pipeline/frame_rules.py`, puro (Bortle: `domini/sito.md`).
 - **A schermo**: col porting delle pagine (fase 5). Le tavole di Design (`handoff/design/`,
   26/10/2026) chiedono le stesse misure; quattro scarti vanno al censimento (passo 24.1):
   eccentricita' a soglie fisse 0,45/0,71 (ADR 0039 le ha tolte), soglia relativa con la MAD

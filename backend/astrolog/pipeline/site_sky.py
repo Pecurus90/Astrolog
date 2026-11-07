@@ -12,10 +12,10 @@ import numpy as np
 from ..clock import night_date
 from ..db.replace_table import replace_rows
 from ..site_of import Site, known_sites, site_at
+from ..sqm_shots import SQM_SHOTS
 from ..twilight import ASTRO_DEG
 from ..units import hundredths
 from .frame_rules import LOW_EXTENDED_DEG
-from .sqm_shots import SQM_SHOTS
 
 # "No-Sun no-Moon": "Sun below -18 deg and Moon below -5 deg" (Sun: astronomical night,
 # `twilight.ASTRO_DEG`); Moon light still reaches the sky just under the horizon
