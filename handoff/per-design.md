@@ -9,42 +9,30 @@ Quando la consegna nuova arriva in `handoff/design/`, Claude Code controlla ogni
 sulle tavole: `[fatta vN]` se c'e', di nuovo `[da dare]` con cio' che manca se no. Le voci fatte
 escono alla consegna dopo. Il testo lungo di un brief sta nel suo file accanto (`design-v59.md`).
 
-Consegna controllata: c35517a6 (v75, 7/11), in `handoff/design/` al posto della v58.6.
+Consegna controllata: 94e305ae (v76, 7/11), in `handoff/design/` al posto della v75.
 
 ## Da dare
 
-Dal secondo controllo della v75 (7/11), file e righe di `handoff/design/pagine/`:
-- [da dare] Selezione dei frame: il Gradiente e' ancora in % (370, criteri 378, 476, formula 591):
-  in unita' di rumore come nelle Misure (`grad/100*bg/rum`, MisureFrame 192).
-- [da dare] Virgola decimale, i residui: Statistiche assi SQM (446, 449), Eccentricita' (393,
-  412), ore con passo 2,5 (358, 365, 375, 525); Progetti 254-255 (eccentricita', SQM); Piano
-  della notte 616, 649 (mag); Attrezzatura 427 («1.25″»). Migliaia con lo spazio sottile: Planner
-  785 «22 080 oggetti», non «22.080» (glossario).
-- [da dare] Dashboard 603: la pillola «sale fino a 64° alle 05:30» non torna con la curva della
-  Luna della stessa carta (356, circa 57° a quell'ora): il numero della pillola dalla curva.
-- [da dare] Meteo 334, 385: raffiche derivate «fino a 25 km/h» accanto al Vento «buona»; sotto 25
-  o il giudizio coerente.
-- [da dare] Impostazioni, via «Dalla mappa» senza chiave: SezioneServizi 84 dice che «resta
-  spenta», Impostazioni 501, 507 la lascia scegliere. Una delle due.
-- [da dare] Attrezzatura, «Unisci a» (188): l'unione sposta frame e il giro riparte
-  (`docs/domini/attrezzatura.md` 112): anche qui l'avviso «frame da rielaborare».
-- [da dare] Misure dei frame, tessera Curvatura (358): il testo nomina la regola, «HFD oltre il
-  75% verso gli angoli meno HFD al centro».
-- [da dare] Percorso di ASTAP d'esempio: placeholder `/opt/astap/astap_cli` (Primo avvio 86) e
-  predefinito `Programmi/astap/astap_cli` (Primo avvio 138, Impostazioni 349, 430, 590,
-  SezioneServizi 103): uno solo, non legato a Windows italiano.
-- [da dare] Selezione dei frame: la cartella d'esempio `nas/astro` (275, 444, 455, 634) e «nas/astro
-  risponde piano»: un nome generico.
-- [da dare] Cerca (componenti/Cerca 84): «Carta del cielo» e' una pagina senza indirizzo; vive nel
-  Planner, va tolta dalla ricerca.
-- [da dare] Foglio: `alHalo` e `alPulse` (Telaio 126-127) solo nell'helmet del Telaio: nel foglio,
-  come `skPulse`.
+Dal controllo della v76 (7/11), file e righe di `handoff/design/pagine/`:
+- [da dare] Meteo: la carta del Vento dice «raffiche fino a 13 km/h» (`picco`, 276, 284, 291 e i
+  giorni 305-318), la carta delle Raffiche ne mostra il massimo derivato (vento x 1,5, 334): nella
+  prima notte 20 km/h. Un numero solo: il `picco` del Vento dalla stessa serie delle Raffiche.
+- [da dare] Telaio, helmet (10): `alPulse` e `alHalo` ora sono nel foglio (astrolog.css 553-554)
+  ma restano anche nell'helmet: via dall'helmet, una casa sola.
 
 ## Date, da controllare alla consegna
 
 Nessuna.
 
 ## Fatte
+
+- [fatta v76] Le undici voci del secondo controllo della v75: Gradiente della Selezione in unita'
+  di rumore; virgola e spazio sottile negli ultimi numeri (Statistiche, Progetti, Piano della
+  notte, Attrezzatura, Planner «22 080»); pillola della Luna dalla curva; raffiche sotto 25 nella
+  notte buona; «Dalla mappa» senza chiave si sceglie ma non da' cielo, detto in SezioneServizi;
+  «Unisci a» con frame da rielaborare; Curvatura con la regola del 75%; ASTAP
+  `/opt/astap/astap_cli` ovunque; cartella d'esempio `Condivisa/Astro`; Cerca senza Carta del
+  cielo; `alPulse` e `alHalo` nel foglio.
 
 - [fatta v73] Brief v59, punti 0-12 (`design-v59.md`), e la scala di Bortle di ASTAP
   (`design-bortle-astap.md`, `soglie.js` 91).
