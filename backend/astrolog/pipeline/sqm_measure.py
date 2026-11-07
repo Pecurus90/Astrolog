@@ -33,6 +33,15 @@ PENDING = (  # SQM_SHOTS is a constant: nothing from outside in the text
 
 BIAS = "SELECT bias_adu FROM pipeline_camera_bias WHERE camera = ? AND offset IS ?"
 
+# Every camera and offset the lights write, and every declared bias, even one back from a backup.
+BIASES = (
+    "SELECT camera, offset, MAX(bias_adu) AS bias_adu, SUM(frames) AS frames FROM ("
+    " SELECT camera, offset, NULL AS bias_adu, COUNT(*) AS frames FROM pipeline_cards"
+    " WHERE camera IS NOT NULL AND frame_type = 'light' GROUP BY camera, offset"
+    " UNION ALL SELECT camera, offset, bias_adu, 0 FROM pipeline_camera_bias"
+    ") GROUP BY camera, offset ORDER BY camera, offset"
+)
+
 INSERT = (
     "INSERT INTO pipeline_sqm (frame_id, file_id, outcome, catalogue, zero_point_mag,"
     " calibration_stars, sky_adu, colour, bias_adu, sqm, duration_s, computed_at)"
@@ -69,6 +78,11 @@ def sqm_root(
                 conn.execute(INSERT, values | {"computed_at": now})
             result.written += 1
         return result
+
+
+def biases(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    """Read only: camera, offset, the declared bias or NULL, the light frames with them."""
+    return conn.execute(BIASES).fetchall()
 
 
 def declare_bias(

@@ -34,6 +34,7 @@ from ..worker.worker import Worker
 from . import (
     archive,
     backup,
+    camera_bias,
     folders,
     gear,
     gear_write,
@@ -304,8 +305,9 @@ def create_app(  # noqa: PLR0913
             catalog_version=catalog_load.loaded_version(conn),
         )
 
-    for routes in (archive, backup, gear, gear_write, measures, nights, folders, scan, search,
-                   pipeline, review, sites, settings, tonight, vocab, weather, year):  # fmt: skip
+    for routes in (archive, backup, camera_bias, gear, gear_write, measures, nights, folders, scan,
+                   search, pipeline, review, sites, settings, tonight, vocab, weather,
+                   year):  # fmt: skip
         app.include_router(routes.router)
     page.mount_fallback(app)  # last: `page.mount_fallback` says why
     return app

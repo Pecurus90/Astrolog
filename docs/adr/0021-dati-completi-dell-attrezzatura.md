@@ -1,7 +1,7 @@
 # 0021 -- L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola
 
 **Stato:** accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029).
-Backend costruito (passo 32, 6/11/2026); restano la pagina (passo 33) e il campionamento in Meteo (14).
+Backend costruito (passo 32, 6/11/2026; il bias per offset con la sua rotta 7/11); restano la pagina (passo 33) e il campionamento in Meteo (14).
 
 ## Contesto
 

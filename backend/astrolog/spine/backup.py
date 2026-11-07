@@ -80,6 +80,9 @@ def collect(conn: sqlite3.Connection, *, this_machine: bool) -> dict[str, Any]:
             "SELECT entity_type, entity_key, field, value, created_at FROM declarations"
             " ORDER BY entity_type, entity_key, field"
         ),
+        "camera_biases": rows(
+            "SELECT camera, offset, bias_adu FROM pipeline_camera_bias ORDER BY camera, offset"
+        ),
     }
 
 
@@ -170,6 +173,7 @@ def has_answers(data: dict[str, Any]) -> bool:
 
 _ANSWERS: Final = (
     "config", "sites", "folders", "instruments", "filters", "header_aliases", "declarations",
+    "camera_biases",
 )  # fmt: skip
 
 
@@ -181,7 +185,9 @@ def summary(data: dict[str, Any]) -> dict[str, Any]:
         "folders": len(data.get("folders", [])),
         "instruments": len(data.get("instruments", [])),
         "filters": len(data.get("filters", [])),
-        "answers": len(data.get("declarations", [])) + len(data.get("header_aliases", [])),
+        "answers": sum(
+            len(data.get(k, [])) for k in ("declarations", "header_aliases", "camera_biases")
+        ),
     }
 
 
@@ -204,20 +210,31 @@ def restore(conn: sqlite3.Connection, data: dict[str, Any], *, this_machine: boo
             _upsert(conn, _Table("instruments", _INSTRUMENT, ("kind", "name")), instrument, now)
         for f in data.get("filters", []):
             _restore_filter(conn, f, now)
-        for a in data.get("header_aliases", []):
-            conn.execute(
-                "INSERT INTO header_aliases(kind, header_value, target_key, created_at)"
-                " VALUES(?, ?, ?, ?) ON CONFLICT(kind, header_value)"
-                " DO UPDATE SET target_key = excluded.target_key",
-                (a["kind"], a["header_value"], a["target_key"], now),
-            )
-        for d in data.get("declarations", []):
-            conn.execute(
-                "INSERT OR REPLACE INTO declarations(entity_type, entity_key, field, value,"
-                " created_at) VALUES(?, ?, ?, ?, ?)",
-                (d["entity_type"], d["entity_key"], d["field"], d["value"], d["created_at"]),
-            )
+        _restore_answers(conn, data, now)
         gear_usage.restore_rigs(conn, now)
+
+
+def _restore_answers(conn: sqlite3.Connection, data: dict[str, Any], now: str) -> None:
+    """The answers keyed by what they answer, not by a row id."""
+    for a in data.get("header_aliases", []):
+        conn.execute(
+            "INSERT INTO header_aliases(kind, header_value, target_key, created_at)"
+            " VALUES(?, ?, ?, ?) ON CONFLICT(kind, header_value)"
+            " DO UPDATE SET target_key = excluded.target_key",
+            (a["kind"], a["header_value"], a["target_key"], now),
+        )
+    for d in data.get("declarations", []):
+        conn.execute(
+            "INSERT OR REPLACE INTO declarations(entity_type, entity_key, field, value,"
+            " created_at) VALUES(?, ?, ?, ?, ?)",
+            (d["entity_type"], d["entity_key"], d["field"], d["value"], d["created_at"]),
+        )
+    for b in data.get("camera_biases", []):  # the unique index on camera and offset replaces
+        conn.execute(
+            "INSERT OR REPLACE INTO pipeline_camera_bias (camera, offset, bias_adu)"
+            " VALUES (?, ?, ?)",
+            (b["camera"], b["offset"], b["bias_adu"]),
+        )
 
 
 class _Table(NamedTuple):

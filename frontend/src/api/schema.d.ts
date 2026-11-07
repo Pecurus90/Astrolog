@@ -176,6 +176,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gear/camera-biases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Camera Biases
+         * @description Every camera and offset the light frames write, with its declared bias or null, and every
+         *     declared bias even without frames (back from a backup). Not paged: one row per camera and
+         *     offset, they do not grow with the archive.
+         */
+        get: operations["camera_biases"];
+        /**
+         * Declare Camera Bias
+         * @description Declares the bias of a camera at an offset; its shots' sky brightness is written again.
+         *
+         *     404 `camera_not_found`: no light frame writes that camera with that offset. 409 `worker_busy`
+         *     while the worker runs.
+         */
+        put: operations["declare_camera_bias"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gear": {
         parameters: {
             query?: never;
@@ -1649,6 +1678,44 @@ export interface components {
              * @description The visible subfolders, sorted.
              */
             folders: components["schemas"]["FolderEntry"][];
+        };
+        /**
+         * CameraBiasIn
+         * @description A camera's bias at one offset, as the files write both (ADR 0021, ADR 0022).
+         */
+        CameraBiasIn: {
+            /**
+             * Camera
+             * @description The camera as the files write it.
+             */
+            camera: string;
+            /**
+             * Offset
+             * @description Null: the files do not write the offset.
+             */
+            offset: number | null;
+            /**
+             * Bias Adu
+             * @description A bias of zero is no bias: it is not declared.
+             */
+            bias_adu: number;
+        };
+        /**
+         * CameraBiasOut
+         * @description One camera and offset of the files, or of a declared bias; `frames`: its light frames.
+         */
+        CameraBiasOut: {
+            /** Camera */
+            camera: string;
+            /** Offset */
+            offset: number | null;
+            /**
+             * Bias Adu
+             * @description Null: not declared yet.
+             */
+            bias_adu: number | null;
+            /** Frames */
+            frames: number;
         };
         /**
          * ChartOut
@@ -4953,6 +5020,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BackupStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    camera_biases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CameraBiasOut"][];
+                };
+            };
+        };
+    };
+    declare_camera_bias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CameraBiasIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CameraBiasOut"];
                 };
             };
             /** @description Validation Error */

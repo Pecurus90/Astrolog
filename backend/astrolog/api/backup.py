@@ -12,6 +12,7 @@ from fastapi.responses import Response
 
 from ..db.connect import connect
 from ..spine import backup
+from .camera_bias import declare_restored
 from .deps import get_db
 from .models_site import BackupCounts, BackupStatus
 from .paths import validate_root
@@ -79,6 +80,7 @@ def restore_backup(request: Request, conn: sqlite3.Connection = Depends(get_db))
     data = backup.read(backup.path_for(request.app.state.db_path))
     assert data is not None  # the status just said found
     backup.restore(conn, data)
+    declare_restored(conn, data)
     sky_follows(request)
     request.app.state.backup_offer = False
     return _status(request)
@@ -123,6 +125,7 @@ def import_backup(
     try:
         data = {**data, "folders": _folders_here(data, request.app.state.data_root)}
         backup.restore(conn, data, this_machine=False)
+        declare_restored(conn, data)
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         raise HTTPException(status_code=422, detail={"code": "not_a_backup"}) from e
     sky_follows(request)

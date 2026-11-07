@@ -304,3 +304,20 @@ class GearWritten(BaseModel):
     id: int
     requeued: int
     run_started: bool
+
+
+class CameraBiasIn(BaseModel):
+    """A camera's bias at one offset, as the files write both (ADR 0021, ADR 0022)."""
+
+    camera: str = Field(min_length=1, description="The camera as the files write it.")
+    offset: int | None = Field(ge=0, description="Null: the files do not write the offset.")
+    bias_adu: float = Field(gt=0, description="A bias of zero is no bias: it is not declared.")
+
+
+class CameraBiasOut(BaseModel):
+    """One camera and offset of the files, or of a declared bias; `frames`: its light frames."""
+
+    camera: str
+    offset: int | None
+    bias_adu: float | None = Field(description="Null: not declared yet.")
+    frames: int

@@ -223,7 +223,12 @@ e' quella scelta, altrimenti la piu' usata; la guida e' una, ottica o fuori asse
 toglie l'altra. I distanziali stanno fra le dichiarazioni del setup, uno per campo
 (`spacer:<nome>`), e le loro ore sono quelle dei setup che li portano (`rig_spacers`); se due
 setup diventano uno, vincono i distanziali di quello che resta, come la montatura
-(`test_two_rigs_that_become_one_keep_the_spacers_of_the_one_kept`). La pagina
+(`test_two_rigs_that_become_one_keep_the_spacers_of_the_one_kept`). Il bias della camera per lo
+SQM (ADR 0022) e' uno per camera e offset, come i file li scrivono: `GET /api/v1/gear/camera-biases`
+li elenca tutti, dichiarati o no, coi frame di luce che li portano; `PUT` lo dichiara (404
+`camera_not_found` se nessun frame li scrive) e riscrive lo SQM di quei frame; viaggia nel
+backup (`camera_biases`) e, ripristinato o importato, riscrive lo SQM come dichiararlo
+(`test_an_imported_bias_rewrites_the_sky_brightness_as_declaring_it_does`). La pagina
 di oggi non chiede ancora i campi nuovi: arrivano col porting della tavola, insieme alle loro
 etichette. "(vuoto:
 dai file)" solo sulle parti che i file possono dire (non i distanziali). Il programma di ripresa
