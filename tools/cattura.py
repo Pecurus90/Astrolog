@@ -19,6 +19,7 @@ SIZES = {"desktop": (1440, 900), "stretto": (1280, 800), "telefono": (390, 844)}
 LOAD_S = 3.0  # after navigate: the page's scripts and first fetches
 STEP_MS = 800  # after a step's script, before its shot
 START_S = 15.0
+START_TRIES = 2  # a CI runner's Chrome at times dies or hangs at start, Issue #51
 CANDIDATES = [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -138,10 +139,16 @@ class Page:
             f.write(base64.b64decode(data))
 
 
-def _debugger_url(profile: str) -> str:
+class ChromeStartError(RuntimeError):
+    """Chrome exited or never opened its debugging port."""
+
+
+def _debugger_url(profile: str, proc: subprocess.Popen) -> str:
     deadline = time.monotonic() + START_S
     port_file = os.path.join(profile, "DevToolsActivePort")
     while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            raise ChromeStartError(f"Chrome uscito all'avvio con codice {proc.returncode}")
         try:
             with open(port_file, encoding="utf-8") as f:
                 port = f.readline().strip()
@@ -150,7 +157,29 @@ def _debugger_url(profile: str) -> str:
             return next(t["webSocketDebuggerUrl"] for t in tabs if t["type"] == "page")
         except (OSError, ValueError, StopIteration):
             time.sleep(0.2)
-    raise TimeoutError("Chrome non ha aperto la porta di debug")
+    raise ChromeStartError("Chrome non ha aperto la porta di debug")
+
+
+def _start(chrome: str, size: tuple[int, int], profile: str) -> tuple[subprocess.Popen, str]:
+    """Chrome and its page's debugger URL; a failed start is tried again in a clean profile."""
+    attempt = 0
+    while True:
+        folder = os.path.join(profile, str(attempt))
+        proc = subprocess.Popen(
+            chrome_command(chrome, size, folder),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        try:
+            return proc, _debugger_url(folder, proc)
+        except ChromeStartError:
+            _kill_tree(proc)
+            attempt += 1
+            if attempt == START_TRIES:
+                raise
+        except BaseException:
+            _kill_tree(proc)
+            raise
 
 
 def _kill_tree(proc: subprocess.Popen) -> None:
@@ -204,13 +233,9 @@ def run(plan: dict) -> dict:
         raise FileNotFoundError("Chrome non trovato: installalo o indica ASTROLOG_CHROME")
     size = window(plan.get("formato", "desktop"), plan.get("altezza"))
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as profile:
-        proc = subprocess.Popen(
-            chrome_command(chrome, size, profile),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        proc, url = _start(chrome, size, profile)
         try:
-            with connect(_debugger_url(profile), max_size=2**27) as ws:
+            with connect(url, max_size=2**27) as ws:
                 page = Page(ws)
                 _open(page, plan, size)
                 values = _steps(page, plan, size[0])

@@ -3,7 +3,9 @@ before each shot, the console with network errors, and every screen of a board o
 
 import json
 import os
+import subprocess
 import sys
+import time
 
 import pytest
 
@@ -66,6 +68,15 @@ def test_a_screen_label_becomes_a_file_name():
     )
 
 
+def test_a_chrome_dead_at_start_is_told_at_once_with_its_code(tmp_path):
+    proc = subprocess.Popen([sys.executable, "-c", "raise SystemExit(3)"])
+    proc.wait()
+    began = time.monotonic()
+    with pytest.raises(cattura.ChromeStartError, match="3"):
+        cattura._debugger_url(str(tmp_path), proc)
+    assert time.monotonic() - began < 2, "no waiting for a port a dead Chrome never opens"
+
+
 needs_chrome = pytest.mark.skipif(cattura.find_chrome() is None, reason="Chrome is not installed")
 
 PAGE = """<!doctype html><html><body style="margin:0">
@@ -98,3 +109,32 @@ def test_a_real_capture_with_steps_console_and_screens(tmp_path):
     screen = tmp_path / "schermi" / "telefono-nome-vuoto.png"
     assert screen.stat().st_size > 0
     assert json.dumps(result["screens"]) == json.dumps([str(screen)])
+
+
+# the first start dies at once, the second is the real Chrome
+FLAKY_CHROME = """import os, subprocess, sys
+mark = sys.argv[1]
+if not os.path.exists(mark):
+    open(mark, "w").close()
+    sys.exit(1)
+if os.name == "nt":
+    sys.exit(subprocess.call(sys.argv[2:]))
+os.execvp(sys.argv[2], sys.argv[2:])"""
+
+
+@needs_chrome
+def test_a_chrome_that_dies_at_start_gets_one_more_try(tmp_path, monkeypatch):
+    wrapper = tmp_path / "flaky.py"
+    wrapper.write_text(FLAKY_CHROME, encoding="utf-8")
+    real = cattura.chrome_command
+    mark = str(tmp_path / "started")
+    monkeypatch.setattr(
+        cattura,
+        "chrome_command",
+        lambda *a: [sys.executable, str(wrapper), mark, *real(*a)],
+    )
+    page = tmp_path / "pagina.html"
+    page.write_text(PAGE, encoding="utf-8")
+    result = cattura.run({"url": page.as_uri(), "carica": 0.5})
+    assert os.path.exists(mark), "the first start really died"
+    assert result["values"] == []
