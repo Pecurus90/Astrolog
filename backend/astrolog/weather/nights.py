@@ -79,10 +79,18 @@ _STEP_MIN = 5
 _OFFSETS = [timedelta(minutes=-30 + _STEP_MIN * (k + 0.5)) for k in range(60 // _STEP_MIN)]  # [T]
 
 
-def sky(latitude: float, longitude: float, night_list: Sequence[Night]) -> dict[datetime, HourSky]:
-    """Every hour's band and shares in a single ephemeris call."""
+def sky(
+    latitude: float, longitude: float, night_list: Sequence[Night], *, shares: bool = True
+) -> dict[datetime, HourSky]:
+    """Every hour's band and shares in a single ephemeris call. Without `shares` the band stands
+    for the whole hour: twelve times fewer Sun positions, for whoever reads only the band."""
     instants = [t for _, pairs in night_list for _, t in pairs]
     bands = sun.sky_at(instants, latitude, longitude)
+    if not shares:
+        return {
+            t: HourSky(b, float(b == sun.Sky.DARK), float(b != sun.Sky.DAY))
+            for t, b in zip(instants, bands, strict=True)
+        }
     grid = [t + d for t in instants for d in _OFFSETS]
     alts = sun.altitudes(grid, latitude, longitude)
     n = len(_OFFSETS)

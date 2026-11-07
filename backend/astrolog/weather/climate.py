@@ -67,7 +67,7 @@ def _night_means(
     one shoots."""
     zone = cast("str", site.timezone)  # `step` returned before asking without one
     covered = nights.covered(zone, times, times[0].date().isoformat(), whole=True)
-    sky = nights.sky(site.latitude, site.longitude, covered)
+    sky = nights.sky(site.latitude, site.longitude, covered, shares=False)
     tz = zoneinfo.ZoneInfo(zone)
     means = []
     for _, pairs in covered:
