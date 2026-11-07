@@ -18,7 +18,7 @@
 <span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Selezione dei frame, gli stati · desktop 1440 px</span>
 <span style="font-size:15px;color:var(--tavola-tenue);max-width:900px">Ogni schermo si accende quando entra nella vista. Frame, misure, immagini e progetti simulati: M 31 L e Hα, NGC 7000 Hα, M 33 L in tre notti di ottobre 2026.</span>
 <div style="display:flex;gap:80px;align-items:flex-start">
-<sc-for list="{{ desk }}" as="it" hint-placeholder-count="6"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:16px;width:1440px;min-height:2000px;flex:none"><div style="display:flex;gap:12px;align-items:baseline;color:var(--tavola-testo)"><span style="font-size:22px;font-weight:500">{{ it.titolo }}</span><span style="font-size:15px;color:var(--tavola-tenue)">{{ it.nota }}</span></div><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Selezione dei frame" stato="{{ it.st }}" errore="{{ it.err }}" vista="{{ it.vista }}" formato="desktop" hint-size="1440px,2000px"></dc-import></sc-if></div></sc-for>
+<sc-for list="{{ desk }}" as="it" hint-placeholder-count="6"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:16px;width:1440px;min-height:2000px;flex:none"><div style="display:flex;gap:12px;align-items:baseline;color:var(--tavola-testo)"><span style="font-size:22px;font-weight:500">{{ it.titolo }}</span><span style="font-size:15px;color:var(--tavola-tenue)">{{ it.nota }}</span></div><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Selezione dei frame" stato="{{ it.st }}" errore="{{ it.err }}" immagine="{{ it.img }}" progetti="{{ it.prog }}" formato="desktop" hint-size="1440px,2000px"></dc-import></sc-if></div></sc-for>
 </div>
 </div>
 <div style="display:flex;flex-direction:column;gap:32px">
@@ -47,19 +47,26 @@ class Component extends DCLogic {
   renderVals() {
     const on = this.state.on;
     const D = [
-      ['L\u0027esempio', 'M 31: le nuvole del 12/10 e le scie a mano da scartare; L in due pose (300 s e 180 s)', 'esempio', 'nessuno', 'selezione'],
-      ['Appena aperto', 'Nessuna scelta a mano: decidono solo le soglie', 'appena aperto', 'nessuno', 'selezione'],
-      ['Misura in corso', 'Gli ultimi 12 frame del 18/10 senza misure: tenuti, le soglie non li toccano', 'misura in corso', 'nessuno', 'selezione'],
-      ['Notte da misurare', 'Delle notti, il 18/10: nessuna misura ancora, il grafico lo dice', 'notte da misurare', 'nessuno', 'selezione'],
-      ['Nessun progetto in corso', '«Parti dalle notti»; i progetti si creano dal Planner', 'nessun progetto in corso', 'nessuno', 'selezione'],
-      ['Modifiche da applicare', 'SNR 2 MAD e FWHM a valore 2,9″ scritti ma non applicati: «! modifiche da applicare», e la FWHM sotto il limite del setup', 'modifiche da applicare', 'nessuno', 'selezione'],
-      ['Formula con errore', '«FWHM / > 0.012»: il segno ✕ dice dove, Applica spento', 'formula con errore', 'nessuno', 'selezione'],
-      ['Dopo lo spostamento', '10 frame in «scartate» nella radice dell\u0027archivio, con le cartelle e «Elimina dal disco…»', 'dopo lo spostamento', 'nessuno', 'selezione'],
-      ['Elimina, col cestino', '3 frame in «scartate» su D: ed E:: vanno nel cestino del computer, «Metti nel cestino»', 'elimina, col cestino', 'nessuno', 'selezione'],
-      ['Elimina, senza cestino (NAS)', '7 frame in «scartate» sul NAS: «Su questa cartella non c\u0027è il cestino…», «Elimina per sempre»', 'elimina, senza cestino (NAS)', 'nessuno', 'selezione'],
-      ['Errore: NAS in sola lettura', 'Premi «Sposta in «scartate»»: l\u0027avviso dice quanti sì, quanti no e perché', 'esempio', 'cartella in sola lettura (NAS)', 'selezione'],
-      ['Impostazioni · le soglie del setup', 'Setup e filtro; la formula vale per tutti i filtri del setup', 'esempio', 'nessuno', 'impostazioni']];
-    const desk = D.map(([titolo, nota, st, err, vista], i) => { const k = 'd' + i, nn = String(i + 1).padStart(2, '0'); return { titolo: nn + ' · ' + titolo, nota, st, err, vista, label: 'Desktop · ' + nn + ' · ' + titolo, ref: this.rif(k), on: !!on[k] }; });
+      ['L\u0027esempio', 'M 31: le nuvole del 12/10 e le scie a mano da scartare; L in due pose (300 s e 180 s)', 'esempio', 'nessuno', ''],
+      ['Appena aperto', 'Nessuna scelta a mano: decidono solo le soglie', 'appena aperto', 'nessuno', ''],
+      ['Caricamento', 'Lo scheletro del telaio, finché le misure non arrivano', 'caricamento', 'nessuno', ''],
+      ['Errore dell\u0027app', '«AstroLog non risponde, riprova»: il telaio resta, il contenuto no', 'errore dell\u0027app', 'nessuno', ''],
+      ['Misura in corso', 'Gli ultimi 12 frame del 18/10 senza misure: tenuti, le soglie non li toccano', 'misura in corso', 'nessuno', ''],
+      ['Notte da misurare', 'Delle notti, il 18/10: nessuna misura ancora, il grafico lo dice', 'notte da misurare', 'nessuno', ''],
+      ['Nessun progetto in corso', '«Parti dalle notti»; i progetti si creano dal Planner', 'nessun progetto in corso', 'nessuno', ''],
+      ['Modifiche da applicare', 'SNR a 2 rispetto al gruppo e FWHM a valore 2,9″ scritti ma non applicati: «! modifiche da applicare», e la FWHM sotto il limite del setup', 'modifiche da applicare', 'nessuno', ''],
+      ['Formula con errore', '«FWHM / > 0,012»: il segno ✕ dice dove, Applica spento', 'formula con errore', 'nessuno', ''],
+      ['Dopo lo spostamento', '10 frame in «scartate» nella radice dell\u0027archivio, con le cartelle e «Elimina dal disco…»', 'dopo lo spostamento', 'nessuno', ''],
+      ['Elimina, col cestino', '3 frame in «scartate» su «Dati» ed «Esterno»: vanno nel cestino del computer, «Metti nel cestino»', 'elimina, col cestino', 'nessuno', ''],
+      ['Elimina, senza cestino (NAS)', '7 frame in «scartate» sul NAS: «Su questa cartella non c\u0027è il cestino…», «Elimina per sempre»', 'elimina, senza cestino (NAS)', 'nessuno', ''],
+      ['Errore: NAS in sola lettura', 'Premi «Sposta in «scartate»»: l\u0027avviso dice quanti sì, quanti no e perché', 'esempio', 'cartella in sola lettura (NAS)', ''],
+      ['Gruppo sotto 10 frame', 'NGC 7000 Hα, 8 frame: le soglie rispetto al gruppo tacciono e lo dicono', 'gruppo sotto 10 frame', 'nessuno', ''],
+      ['Due guadagni', 'M 31 L 300 s con guadagno 100 e 0: due gruppi, non si fondono nel grafico', 'due guadagni', 'nessuno', ''],
+      ['Spostamento in corso', 'Il NAS è lento: 4 di 10, la barra avanza; Sposta spento', 'spostamento in corso', 'nessuno', ''],
+      ['Senza scala del cielo', 'FWHM e HFD in px', 'senza scala del cielo', 'nessuno', ''],
+      ['Anteprima non ancora', 'L\u0027app non ha ancora l\u0027immagine: le sole misure', 'esempio', 'nessuno', 'senza immagine'],
+      ['Progetti non ancora', 'Si parte dalle notti; «Un progetto in corso» arriva coi Progetti', 'esempio', 'nessuno', 'senza progetti']];
+    const desk = D.map(([titolo, nota, st, err, x], i) => { const k = 'd' + i, nn = String(i + 1).padStart(2, '0'); return { titolo: nn + ' · ' + titolo, nota, st, err, img: x === 'senza immagine' ? 'non ancora' : 'c\u0027è', prog: x === 'senza progetti' ? 'non ancora' : 'ci sono', label: 'Desktop · ' + nn + ' · ' + titolo, ref: this.rif(k), on: !!on[k] }; });
     const T = [['Da rivedere', 'I frame da scartare o al limite, uno alla volta; ‹ › o col dito', 'esempio'], ['Notte da misurare', 'Il 18/10 senza misure', 'notte da misurare'], ['Nessun progetto in corso', '«Parti dalle notti»', 'nessun progetto in corso']];
     const tel = T.map(([titolo, nota, st], i) => { const k = 't' + i, nn = String(i + 1).padStart(2, '0'); return { titolo: nn + ' · ' + titolo, nota, st, label: 'Telefono · ' + nn + ' · ' + titolo, ref: this.rif(k), on: !!on[k] }; });
     return { desk, tel };

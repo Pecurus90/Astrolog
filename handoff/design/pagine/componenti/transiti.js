@@ -12,7 +12,7 @@
   const BUSSOLA = ['nord', 'nord-est', 'est', 'sud-est', 'sud', 'sud-ovest', 'ovest', 'nord-ovest'];
   const verso = (dx, dy) => BUSSOLA[Math.round(((Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360) / 45) % 8];
   const km = v => (v < 1 ? Math.round(v * 1000 / 10) * 10 + ' m' : v.toFixed(1).replace('.', ',') + ' km');
-  // ev: { id, az (direzione della traccia a terra, gradi da nord), off (km del sito a destra della linea), strip (km), alt (altezza del corpo), met (0 sereno, 1 velato, 2 coperto, null non previsto) }
+  // ev: { id, az (direzione della traccia a terra, gradi da nord), off (km del sito a destra della linea), strip (km), alt (altezza del corpo), met (0 sereno, 1 nuvoloso, 2 coperto: dalle classi okta dell'app; null non previsto) }
   function striscia(ev) {
     const a = ev.az * Math.PI / 180, u = [Math.sin(a), Math.cos(a)], n = [Math.cos(a), -Math.sin(a)], h = ev.strip / 2;
     const L0 = [-n[0] * ev.off, -n[1] * ev.off], L = 45;

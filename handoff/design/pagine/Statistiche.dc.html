@@ -12,7 +12,7 @@
 <style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}button,select{font:inherit;color:inherit}[role=tablist]{scrollbar-width:none}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@keyframes alWipe{from{clip-path:inset(-12px 100% -12px -12px)}to{clip-path:inset(-12px -12px -12px -12px)}}@keyframes alGrow{from{transform:scale(1,0)}}@keyframes alPop{from{opacity:0;transform:scale(.6)}}[data-al-wait] *{animation-play-state:paused!important}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
 </helmet>
 <div class="al-stat__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
-<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ F.f }}" pagina="Statistiche" etichetta="{{ F.lab }}" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" app="{{ appSt }}" formato="{{ F.f }}" pagina="Statistiche" etichetta="{{ F.lab }}" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
 
 <sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><div class="al-stat__colonna-1">
 <sc-if value="{{ testa.ctl }}" hint-placeholder-val="{{ true }}">
@@ -59,7 +59,7 @@
 <span></span>
 <div class="al-stat__centro-4" aria-hidden="true" style="grid-template-columns:{{ cal.cols }}"><sc-for list="{{ cal.mesi }}" as="m" hint-placeholder-count="12"><span class="al-stat__blocco-7" style="grid-column:{{ m.c }} / span 4">{{ m.l }}</span></sc-for></div>
 <div class="al-stat__centro-5" aria-hidden="true" style="grid-template-rows:{{ cal.rows }}"><sc-for list="{{ cal.gg }}" as="g" hint-placeholder-count="7"><span class="al-stat__riga-9">{{ g }}</span></sc-for></div>
-<div class="al-stat__centro-6" role="img" aria-label="{{ cal.aria }}" style="grid-template-rows:{{ cal.rows }};grid-auto-columns:{{ cal.cs }}"><sc-for list="{{ cal.celle }}" as="c" hint-placeholder-count="120"><span class="al-stat__blocco-8" title="{{ c.a }}" onMouseEnter="{{ c.on }}" onClick="{{ c.on }}" style="background:{{ c.bg }};box-shadow:{{ c.sh }};cursor:{{ c.cur }};animation-delay:{{ c.dl }}"></span></sc-for></div>
+<div class="al-stat__centro-6" role="group" tabindex="0" onKeyDown="{{ kb.cal }}" onBlur="{{ kb.via }}" aria-label="{{ cal.aria }}" aria-description="{{ kb.aiuto }}" style="grid-template-rows:{{ cal.rows }};grid-auto-columns:{{ cal.cs }}"><sc-for list="{{ cal.celle }}" as="c" hint-placeholder-count="120"><span class="al-stat__blocco-8" title="{{ c.a }}" data-rov="{{ c.rov }}" onMouseEnter="{{ c.on }}" onClick="{{ c.on }}" style="background:{{ c.bg }};box-shadow:{{ c.sh }};cursor:{{ c.cur }};animation-delay:{{ c.dl }}"></span></sc-for></div>
 </div>
 </div>
 <sc-if value="{{ T.cal }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.cal.x }}px;top:{{ T.cal.y }}px;transform:{{ T.cal.tf }}"><b class="al-riquadro__titolo">{{ T.cal.s }}</b><sc-for list="{{ T.cal.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if></div>
@@ -74,11 +74,11 @@
 <div class="al-stat__centro-7" style="grid-template-columns:{{ L.vol }}">
 <div class="al-stat__colonna-3"><span class="al-stat__testo-2">{{ vb.tit }}</span>
 <div class="al-stat__blocco-10" ref="{{ rVb }}" onMouseLeave="{{ tipVia }}">
-<svg class="al-stat__grafico-2" width="{{ vb.w }}" height="{{ vb.h }}" role="img" aria-label="{{ vb.aria }}">
+<svg class="al-stat__grafico-2" width="{{ vb.w }}" height="{{ vb.h }}" role="group" tabindex="0" onKeyDown="{{ kb.vb }}" onBlur="{{ kb.via }}" aria-label="{{ vb.aria }}" aria-description="{{ kb.aiuto }}">
 <sc-for list="{{ vb.gy }}" as="g" hint-placeholder-count="4"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
 
 <sc-for list="{{ vb.mk }}" as="k" hint-placeholder-count="0"><line class="al-stat__tratto-2" x1="{{ k.lx }}" x2="{{ k.lx }}" y1="{{ k.y1 }}" y2="{{ k.y2 }}" stroke-dasharray="2 3"></line></sc-for>
-<sc-for list="{{ vb.b }}" as="b" hint-placeholder-count="20"><rect class="al-stat__tratto-3" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="1" fill="{{ b.c }}" style="animation-delay:{{ b.dl }}"></rect></sc-for><sc-for list="{{ vb.b }}" as="b" hint-placeholder-count="20"><rect x="{{ b.hx }}" y="{{ b.hy }}" width="{{ b.hw }}" height="{{ b.hh }}" fill="transparent" onMouseEnter="{{ b.on }}" onClick="{{ b.on }}"></rect></sc-for>
+<sc-for list="{{ vb.b }}" as="b" hint-placeholder-count="20"><rect class="al-stat__tratto-3" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="1" fill="{{ b.c }}" style="animation-delay:{{ b.dl }}"></rect></sc-for><sc-for list="{{ vb.b }}" as="b" hint-placeholder-count="20"><rect x="{{ b.hx }}" y="{{ b.hy }}" width="{{ b.hw }}" height="{{ b.hh }}" fill="transparent" data-rov="1" onMouseEnter="{{ b.on }}" onClick="{{ b.on }}"></rect></sc-for>
 </svg><sc-for list="{{ vb.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ vb.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ vb.mk }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
 <sc-if value="{{ T.vb }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.vb.x }}px;top:{{ T.vb.y }}px;transform:{{ T.vb.tf }}"><b class="al-riquadro__titolo">{{ T.vb.s }}</b><sc-for list="{{ T.vb.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
 </div></div>
@@ -106,12 +106,12 @@
 <sc-if value="{{ cap.ok }}" hint-placeholder-val="{{ true }}">
 <div class="al-stat__riga-18"><sc-for list="{{ cap.leg }}" as="l" hint-placeholder-count="2"><span class="al-stat__riga-19"><svg class="al-stat__grafico-3" width="14" height="14" aria-hidden="true"><path d="{{ l.d }}" fill="{{ l.c }}"></path></svg><span class="al-stat__colonna-6"><span>{{ l.l }}</span><span class="al-stat__testo-16">{{ l.m }}</span></span></span></sc-for></div>
 <div class="al-stat__blocco-10" ref="{{ rCap }}" onMouseLeave="{{ tipVia }}">
-<svg class="al-stat__grafico-2" width="{{ cap.w }}" height="{{ cap.h }}" role="img" aria-label="{{ cap.aria }}">
+<svg class="al-stat__grafico-2" width="{{ cap.w }}" height="{{ cap.h }}" role="group" tabindex="0" onKeyDown="{{ kb.cap }}" onBlur="{{ kb.via }}" aria-label="{{ cap.aria }}" aria-description="{{ kb.aiuto }}">
 <sc-for list="{{ cap.gy }}" as="g" hint-placeholder-count="4"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
 
 <sc-for list="{{ cap.wh }}" as="w" hint-placeholder-count="20"><line x1="{{ w.x }}" x2="{{ w.x }}" y1="{{ w.y1 }}" y2="{{ w.y2 }}" stroke="{{ w.c }}" stroke-width="2.5" stroke-linecap="round" opacity="{{ w.o }}"></line></sc-for>
 <sc-for list="{{ cap.tr }}" as="r" hint-placeholder-count="2"><path class="al-stat__tratto-9" d="{{ r.d }}" fill="none" stroke="{{ r.c }}" stroke-width="1.75" stroke-dasharray="{{ r.da }}" stroke-linejoin="round"></path></sc-for>
-<sc-for list="{{ cap.pt }}" as="q" hint-placeholder-count="20"><path d="{{ q.d }}" fill="{{ q.f }}" stroke="{{ q.c }}" stroke-width="1.5"></path></sc-for><sc-for list="{{ cap.pt }}" as="q" hint-placeholder-count="20"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="8" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
+<sc-for list="{{ cap.pt }}" as="q" hint-placeholder-count="20"><path d="{{ q.d }}" fill="{{ q.f }}" stroke="{{ q.c }}" stroke-width="1.5"></path></sc-for><sc-for list="{{ cap.pt }}" as="q" hint-placeholder-count="20"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="8" fill="transparent" data-rov="1" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
 </svg><sc-for list="{{ cap.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ cap.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
 <sc-if value="{{ T.cap }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.cap.x }}px;top:{{ T.cap.y }}px;transform:{{ T.cap.tf }}"><b class="al-riquadro__titolo">{{ T.cap.s }}</b><sc-for list="{{ T.cap.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
 </div>
@@ -126,26 +126,26 @@
 <span class="al-stat__riga-20"><span class="al-stat__testo-17">{{ cie.big }}</span><span class="al-stat__testo-2">{{ cie.bigL }}</span></span>
 <div class="al-stat__riga-21"><span class="al-stat__riga-13"><i class="al-stat__blocco-13"></i>Luna sotto −5°</span><span class="al-stat__riga-13"><i class="al-stat__blocco-11" style="border-top:2px dashed {{ cie.lc }}"></i>Luna su</span></div>
 <div class="al-stat__blocco-10" ref="{{ rCm }}" onMouseLeave="{{ tipVia }}">
-<svg class="al-stat__grafico-2" width="{{ cm.w }}" height="{{ cm.h }}" role="img" aria-label="{{ cm.aria }}">
+<svg class="al-stat__grafico-2" width="{{ cm.w }}" height="{{ cm.h }}" role="group" tabindex="0" onKeyDown="{{ kb.cm }}" onBlur="{{ kb.via }}" aria-label="{{ cm.aria }}" aria-description="{{ kb.aiuto }}">
 <sc-for list="{{ cm.gy }}" as="g" hint-placeholder-count="3"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
 
 <path class="al-stat__tratto-10" d="{{ cm.ps }}" fill="none" stroke="{{ cie.lc }}" stroke-width="1.75" stroke-dasharray="5 4"></path>
 <path class="al-stat__tratto-11" d="{{ cm.pg }}" fill="none" stroke-width="1.75"></path>
-<sc-for list="{{ cm.pt }}" as="q" hint-placeholder-count="12"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="3" fill="{{ q.c }}"></circle></sc-for><sc-for list="{{ cm.pt }}" as="q" hint-placeholder-count="12"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="9" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
+<sc-for list="{{ cm.pt }}" as="q" hint-placeholder-count="12"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="3" fill="{{ q.c }}"></circle></sc-for><sc-for list="{{ cm.pt }}" as="q" hint-placeholder-count="12"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="9" fill="transparent" data-rov="1" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
 </svg><sc-for list="{{ cm.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ cm.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
 <sc-if value="{{ T.cm }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.cm.x }}px;top:{{ T.cm.y }}px;transform:{{ T.cm.tf }}"><b class="al-riquadro__titolo">{{ T.cm.s }}</b><sc-for list="{{ T.cm.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
 </div>
 <span class="al-stat__testo-2">a ogni ora della notte, Luna sotto −5°</span>
 <div class="al-stat__blocco-10" ref="{{ rCo }}" onMouseLeave="{{ tipVia }}">
-<svg class="al-stat__grafico-2" width="{{ co.w }}" height="{{ co.h }}" role="img" aria-label="{{ co.aria }}">
+<svg class="al-stat__grafico-2" width="{{ co.w }}" height="{{ co.h }}" role="group" tabindex="0" onKeyDown="{{ kb.co }}" onBlur="{{ kb.via }}" aria-label="{{ co.aria }}" aria-description="{{ kb.aiuto }}">
 <sc-for list="{{ co.gy }}" as="g" hint-placeholder-count="3"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
 
 <path class="al-stat__tratto-12" d="{{ co.p }}" fill="none" stroke-width="1.75"></path>
-<sc-for list="{{ co.pt }}" as="q" hint-placeholder-count="9"><circle class="al-stat__tratto-13" cx="{{ q.x }}" cy="{{ q.y }}" r="3"></circle></sc-for><sc-for list="{{ co.pt }}" as="q" hint-placeholder-count="9"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="10" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
+<sc-for list="{{ co.pt }}" as="q" hint-placeholder-count="9"><circle class="al-stat__tratto-13" cx="{{ q.x }}" cy="{{ q.y }}" r="3"></circle></sc-for><sc-for list="{{ co.pt }}" as="q" hint-placeholder-count="9"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="10" fill="transparent" data-rov="1" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
 </svg><sc-for list="{{ co.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ co.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
 <sc-if value="{{ T.co }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.co.x }}px;top:{{ T.co.y }}px;transform:{{ T.co.tf }}"><b class="al-riquadro__titolo">{{ T.co.s }}</b><sc-for list="{{ T.co.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
 </div>
-<div class="al-stat__colonna-8"><div class="al-stat__riga-22" data-tipbox="1" onMouseLeave="{{ tipVia }}"><b class="al-stat__testo-18">{{ cie.bortle }}</b><button class="al-stat__centro-8" type="button" aria-label="Come si misura il Bortle" onMouseEnter="{{ cie.info }}" onClick="{{ cie.info }}" style="width:{{ L.ib }};height:{{ L.ib }}">i</button><sc-if value="{{ T.bor }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.bor.x }}px;top:{{ T.bor.y }}px;transform:{{ T.bor.tf }}"><b class="al-riquadro__titolo">{{ T.bor.s }}</b><sc-for list="{{ T.bor.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if></div><span class="al-stat__testo-19">Solo frame L, senza filtro o a colori: i filtri a banda stretta non misurano il cielo.</span></div>
+<div class="al-stat__colonna-8"><div class="al-stat__riga-22" data-tipbox="1" onMouseLeave="{{ tipVia }}"><b class="al-stat__testo-18">{{ cie.bortle }}</b><button class="al-stat__centro-8" type="button" aria-label="Come si misura il Bortle" onMouseEnter="{{ cie.info }}" onClick="{{ cie.info }}" style="width:{{ L.ib }};height:{{ L.ib }}">i</button><sc-if value="{{ T.bor }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.bor.x }}px;top:{{ T.bor.y }}px;transform:{{ T.bor.tf }}"><b class="al-riquadro__titolo">{{ T.bor.s }}</b><sc-for list="{{ T.bor.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if></div><span class="al-stat__testo-19">Solo frame L, senza filtro o a colori: i filtri a banda stretta non misurano il cielo.</span><sc-if value="{{ cie.prop }}" hint-placeholder-val="{{ false }}"><a class="al-stat__bortle-prop" href="{{ cie.propH }}">? {{ cie.prop }} ↗</a></sc-if></div>
 </sc-if>
 <sc-if value="{{ cie.no }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ F.f }}" segno="?" titolo="Le misure dei frame non ci sono ancora." testo="Lo SQM si legge dai frame L, senza filtro o a colori." modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if>
 </dc-import>
@@ -157,29 +157,29 @@
 <sc-if value="{{ sta.annoOn }}" hint-placeholder-val="{{ true }}"><select key="{{ sta.annoTel.v }}" defaultValue="{{ sta.annoTel.v }}" onChange="{{ sta.annoTel.on }}" aria-label="Anno" class="al-tendina" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ sta.annoTel.o }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></sc-if>
 <div role="radiogroup" aria-label="Vista" style="flex:none;display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--carta-2)"><sc-for list="{{ sta.visTel }}" as="v" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ v.on }}" aria-label="{{ v.l }}" title="{{ v.l }}" onClick="{{ v.scegli }}" style="width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:transparent;color:{{ v.fg }};box-shadow:{{ v.sh }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ v.d }}"></path></svg></button></sc-for></div>
 </div></div>
-<div class="al-stat__colonna-10" data-tipbox="1" onMouseLeave="{{ tipVia }}"><sc-if value="{{ sta.gDesk }}" hint-placeholder-val="{{ true }}"><div class="al-stat__griglia-2" role="table" aria-label="Mesi per anno" onMouseLeave="{{ tipVia }}">
+<div class="al-stat__colonna-10" data-tipbox="1" onMouseLeave="{{ tipVia }}"><sc-if value="{{ sta.gDesk }}" hint-placeholder-val="{{ true }}"><div class="al-stat__griglia-2" role="table" tabindex="0" onKeyDown="{{ kb.sta }}" onBlur="{{ kb.via }}" aria-label="Mesi per anno" aria-description="{{ kb.aiuto }}" onMouseLeave="{{ tipVia }}">
 <span></span><sc-for list="{{ sta.mesi }}" as="m" hint-placeholder-count="12"><span class="al-stat__blocco-14">{{ m }}</span></sc-for>
-<sc-for list="{{ sta.righe }}" as="r" hint-placeholder-count="6"><span class="al-stat__riga-9" style="margin-top:{{ r.mt }}"><span class="al-stat__pillola-1" style="background:{{ r.bg }};color:{{ r.fg }};font-weight:{{ r.fw }}">{{ r.l }}</span></span><sc-for list="{{ r.c }}" as="c" hint-placeholder-count="12"><span class="al-stat__centro-10" role="cell" aria-label="{{ c.a }}" onMouseEnter="{{ c.on }}" onClick="{{ c.on }}" style="margin-top:{{ r.mt }};background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.sh }};animation-delay:{{ c.dl }}">{{ c.s }}</span></sc-for></sc-for>
+<sc-for list="{{ sta.righe }}" as="r" hint-placeholder-count="6"><span class="al-stat__riga-9" style="margin-top:{{ r.mt }}"><span class="al-stat__pillola-1" style="background:{{ r.bg }};color:{{ r.fg }};font-weight:{{ r.fw }}">{{ r.l }}</span></span><sc-for list="{{ r.c }}" as="c" hint-placeholder-count="12"><span class="al-stat__centro-10" role="cell" data-rov="1" aria-label="{{ c.a }}" onMouseEnter="{{ c.on }}" onClick="{{ c.on }}" style="margin-top:{{ r.mt }};background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.sh }};animation-delay:{{ c.dl }}">{{ c.s }}</span></sc-for></sc-for>
 </div></sc-if>
 
 <sc-if value="{{ sta.gTel }}" hint-placeholder-val="{{ false }}"><div class="al-stat__colonna-6"><sc-for list="{{ sta.tel }}" as="r" hint-placeholder-count="12"><a class="al-stat__griglia-3" href="#" onClick="{{ r.on }}" aria-label="{{ r.a }}"><span class="al-stat__colonna-6"><span class="al-stat__testo-14">{{ r.l }}</span><span class="al-stat__testo-16">{{ r.media }}</span></span><span class="al-stat__centro-12" style="background:{{ r.bg }};color:{{ r.fg }}">{{ r.s }}</span></a></sc-for></div>
 </sc-if>
 <sc-if value="{{ sta.linee }}" hint-placeholder-val="{{ false }}"><div class="al-stat__colonna-1">
 <div class="al-stat__blocco-10" ref="{{ rStl }}" onMouseLeave="{{ tipVia }}">
-<svg class="al-stat__grafico-2" width="{{ stl.w }}" height="{{ stl.h }}" role="img" aria-label="{{ stl.aria }}">
+<svg class="al-stat__grafico-2" width="{{ stl.w }}" height="{{ stl.h }}" role="group" tabindex="0" onKeyDown="{{ kb.stl }}" onBlur="{{ kb.via }}" aria-label="{{ stl.aria }}" aria-description="{{ kb.aiuto }}">
 <sc-for list="{{ stl.gy }}" as="g" hint-placeholder-count="4"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
 <sc-for list="{{ stl.alt }}" as="p" hint-placeholder-count="5"><path class="al-stat__tratto-14" d="{{ p.d }}" fill="none" stroke-width="1.25" stroke-linejoin="round" opacity="0.45" style="animation-delay:{{ p.dl }}"></path></sc-for>
 <sc-if value="{{ stl.med }}" hint-placeholder-val="{{ true }}"><path class="al-stat__tratto-15" d="{{ stl.med }}" fill="none" stroke-width="1.5" stroke-dasharray="5 4"></path></sc-if>
 <path class="al-stat__tratto-16" d="{{ stl.hl }}" fill="none" stroke-width="2.5" stroke-linejoin="round"></path>
 <sc-if value="{{ stl.cur }}" hint-placeholder-val="{{ false }}"><line class="al-stat__tratto-6" x1="{{ stl.cur.x }}" x2="{{ stl.cur.x }}" y1="{{ stl.cur.y1 }}" y2="{{ stl.cur.y2 }}" stroke-dasharray="2 3"></line></sc-if><sc-for list="{{ stl.pt }}" as="q" hint-placeholder-count="12"><circle class="al-stat__tratto-17" cx="{{ q.x }}" cy="{{ q.y }}" r="{{ q.r }}" stroke-width="1.5"></circle></sc-for>
-<sc-for list="{{ stl.hit }}" as="q" hint-placeholder-count="12"><rect x="{{ q.x }}" y="{{ q.y }}" width="{{ q.w }}" height="{{ q.h }}" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></rect></sc-for>
+<sc-for list="{{ stl.hit }}" as="q" hint-placeholder-count="12"><rect x="{{ q.x }}" y="{{ q.y }}" width="{{ q.w }}" height="{{ q.h }}" fill="transparent" data-rov="1" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></rect></sc-for>
 </svg><sc-for list="{{ stl.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-2" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});font-size:{{ g.fs }};font-weight:{{ g.fw }};color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ stl.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-2" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});font-size:{{ g.fs }};font-weight:{{ g.fw }};color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ stl.fine }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-2" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});font-size:{{ g.fs }};font-weight:{{ g.fw }};color:{{ g.c }}">{{ g.l }}</span></sc-for>
 <sc-if value="{{ T.stl }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.stl.x }}px;top:{{ T.stl.y }}px;transform:{{ T.stl.tf }}"><b class="al-riquadro__titolo">{{ T.stl.s }}</b><sc-for list="{{ T.stl.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
 </div>
 <span class="al-stat__riga-15"><sc-for list="{{ stl.leg }}" as="l" hint-placeholder-count="3"><span class="al-stat__riga-13"><i class="al-stat__blocco-11" style="border-top:{{ l.w }} {{ l.st }} {{ l.c }};opacity:{{ l.o }}"></i>{{ l.l }}</span></sc-for></span>
 </div></sc-if>
-<div class="al-stat__centro-13" style="grid-template-columns:{{ L.stag }}">
-<sc-for list="{{ sta.stag }}" as="s" hint-placeholder-count="4"><span class="al-stat__riga-24" onMouseEnter="{{ s.on }}" onClick="{{ s.on }}" style="background:{{ s.bg }};color:{{ s.fg }}"><span class="al-stat__colonna-11"><span class="al-stat__testo-20">{{ s.l }}</span><span class="al-stat__testo-21">{{ s.m }}</span></span><b class="al-stat__testo-22">{{ s.s }}</b></span></sc-for>
+<div class="al-stat__centro-13" role="group" tabindex="0" onKeyDown="{{ kb.stag }}" onBlur="{{ kb.via }}" aria-label="Stagioni" aria-description="{{ kb.aiuto }}" style="grid-template-columns:{{ L.stag }}">
+<sc-for list="{{ sta.stag }}" as="s" hint-placeholder-count="4"><span class="al-stat__riga-24" data-rov="1" onMouseEnter="{{ s.on }}" onClick="{{ s.on }}" style="background:{{ s.bg }};color:{{ s.fg }}"><span class="al-stat__colonna-11"><span class="al-stat__testo-20">{{ s.l }}</span><span class="al-stat__testo-21">{{ s.m }}</span></span><b class="al-stat__testo-22">{{ s.s }}</b></span></sc-for>
 </div><sc-if value="{{ T.sta }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.sta.x }}px;top:{{ T.sta.y }}px;transform:{{ T.sta.tf }}"><b class="al-riquadro__titolo">{{ T.sta.s }}</b><sc-for list="{{ T.sta.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if></div>
 <div class="al-stat__riga-10">
 <span class="al-stat__colonna-12"><span class="al-stat__testo-23" aria-live="polite" style="color:{{ sta.rigaC }}">{{ sta.riga }}</span><sc-if value="{{ sta.nota }}" hint-placeholder-val="{{ false }}"><span class="al-stat__testo-19">{{ sta.nota }}</span></sc-if></span>
@@ -191,7 +191,7 @@
 <span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">Per filtro</span><span class="al-stat__testo-2">{{ fil.sub }}</span></span>
 <div class="al-stat__centro-14" style="grid-template-columns:{{ L.fil }}">
 <div class="al-stat__colonna-13" data-tipbox="1" onMouseLeave="{{ tipVia }}">
-<div class="al-stat__riga-25" role="img" aria-label="{{ fil.aria }}" style="gap:{{ fil.gap }}"><sc-for list="{{ fil.bar }}" as="b" hint-placeholder-count="12"><span class="al-stat__colonna-14" onMouseEnter="{{ b.on }}" onClick="{{ b.on }}" style="background:{{ b.hv }}"><span class="al-stat__testo-24">{{ b.tot }}</span><span class="al-stat__riga-26" style="animation-delay:{{ b.dl }}"><sc-for list="{{ b.seg }}" as="s" hint-placeholder-count="3"><span class="al-stat__blocco-16" onMouseEnter="{{ s.on }}" onClick="{{ s.on }}" style="height:{{ s.h }}px;background:{{ s.bg }};border:{{ s.bd }}"></span></sc-for></span></span></sc-for></div>
+<div class="al-stat__riga-25" role="group" tabindex="0" onKeyDown="{{ kb.fil }}" onBlur="{{ kb.via }}" aria-label="{{ fil.aria }}" aria-description="{{ kb.aiuto }}" style="gap:{{ fil.gap }}"><sc-for list="{{ fil.bar }}" as="b" hint-placeholder-count="12"><span class="al-stat__colonna-14" data-rov="1" onMouseEnter="{{ b.on }}" onClick="{{ b.on }}" style="background:{{ b.hv }}"><span class="al-stat__testo-24">{{ b.tot }}</span><span class="al-stat__riga-26" style="animation-delay:{{ b.dl }}"><sc-for list="{{ b.seg }}" as="s" hint-placeholder-count="3"><span class="al-stat__blocco-16" onMouseEnter="{{ s.on }}" onClick="{{ s.on }}" style="height:{{ s.h }}px;background:{{ s.bg }};border:{{ s.bd }}"></span></sc-for></span></span></sc-for></div>
 <div class="al-stat__riga-27" aria-hidden="true" style="gap:{{ fil.gap }}"><sc-for list="{{ fil.bar }}" as="b" hint-placeholder-count="12"><span class="al-stat__blocco-17">{{ b.l }}</span></sc-for></div>
 <span class="al-stat__testo-14" aria-live="polite" style="color:{{ fil.rigaC }}">{{ fil.riga }}</span><sc-if value="{{ T.fil }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.fil.x }}px;top:{{ T.fil.y }}px;transform:{{ T.fil.tf }}"><b class="al-riquadro__titolo">{{ T.fil.s }}</b><sc-for list="{{ T.fil.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
 </div>
@@ -217,7 +217,7 @@
 </div>
 </dc-import></sc-if></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pieno&quot;,&quot;primo anno&quot;,&quot;zero frame&quot;,&quot;misure dei frame non ancora calcolate&quot;,&quot;sito senza meteo storico&quot;,&quot;un setup solo&quot;],&quot;default&quot;:&quot;pieno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pieno&quot;,&quot;primo anno&quot;,&quot;zero frame&quot;,&quot;misure dei frame non ancora calcolate&quot;,&quot;sito senza meteo storico&quot;,&quot;un setup solo&quot;,&quot;caricamento&quot;,&quot;errore dell'app&quot;],&quot;default&quot;:&quot;pieno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
 class Component extends DCLogic {
   state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, cw: {} };
   componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
@@ -237,7 +237,10 @@ class Component extends DCLogic {
     ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js', 'dati-statistiche.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
-  renderVals() {
+  // Stato dell'app (v60): caricamento ed errore li mostra il Telaio
+  renderVals() { const r = this.renderVals0(), st = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stato')) || this.props.stato || '';
+    return { ...r, appSt: st === 'errore dell\u0027app' ? 'errore' : st === 'caricamento' ? 'caricamento' : 'normale' }; }
+  renderVals0() {
     const telSel = (opts) => { opts = opts || []; const c = opts.find(o => o.sel === true || o.sel === 'true') || opts[0] || {}; return { v: c.l, o: opts.map(o => ({ v: o.l, l: o.l })), on: e => { const o = opts.find(x => x.l === e.target.value); o && o.on({ preventDefault() {}, stopPropagation() {} }); } }; };
 
     if (!this.alPronto()) return { pronto: false };
@@ -311,21 +314,19 @@ class Component extends DCLogic {
     // 2 · L'anno in un colpo
     const big = { tit: noMet ? 'notti buone ' + (tutto ? anni[0] + '–' + last : 'nel ' + Y) : 'notti buone sfruttate ' + (tutto ? anni[0] + '–' + last : 'nel ' + Y), n: num(A.sfruttate), su: 'su ' + A.buone + ' notti buone',
       conf: B && !noMet ? cl + ' ' + B.sfruttate + ' su ' + B.buone : '', ok: !noMet, no: noMet,
-      aiuto: noMet ? 'Le notti buone si contano quando arriva il meteo delle notti passate.' : 'Notti con qualità da 70 al sito, e in quante sei uscito.' };
+      aiuto: noMet ? 'Le notti buone e le notti buone perse si contano quando arriva il meteo delle notti senza frame.' : 'Notti con trasparenza da 70 al sito, e in quante hai ripreso. Dove manca l\u0027aerosol la trasparenza conta solo le nuvole: «senza aerosol».' };
     const VERDE = t.pills[0][1], ROSSO = t.pills[2][1];
     const dlt2 = (a, b, f, u, ub) => ({ dd: a > b ? '+' + f(a - b) + (u || '') : a < b ? '−' + f(b - a) + (u || '') : 'uguale', ic: a > b ? 'M1 10L5 6L8 8L14 2M10 2H14V6' : a < b ? 'M1 2L5 6L8 4L14 10M10 10H14V6' : 'M1 6H14', dc: a > b ? VERDE : a < b ? ROSSO : t.hMu, dr: cl + ' ' + f(b) + (ub ?? u ?? '') });
     const rA = A.resa == null ? null : Math.round(A.resa * 100), rB = B && B.resa != null ? Math.round(B.resa * 100) : null;
     const celle = [
-      { l: 'notti uscite', v: num(A.uscite), ...(B ? dlt2(A.uscite, B.uscite, num) : {}), k: 'uscite' },
+      { l: 'notti di ripresa', v: num(A.uscite), ...(B ? dlt2(A.uscite, B.uscite, num) : {}), k: 'uscite' },
       { l: 'ore integrate', v: h0(A.ore), ...(B ? dlt2(Math.round(A.ore), Math.round(B.ore), num, ' h') : {}), k: 'ore' },
       { l: 'frame', v: num(A.pose), ...(B ? dlt2(A.pose, B.pose, num) : {}), k: 'pose' },
-      { l: 'resa del buio', v: rA == null ? '–' : rA + ' %', ...(rB != null && rA != null ? dlt2(rA, rB, String, ' punti', ' %') : {}), k: 'resa' }];
-    const note = ['Resa del buio: ore integrate sulle ore di buio delle notti in cui sei uscito.'];
+      { l: 'resa del buio', v: rA == null ? '–' : rA + '%', ...(rB != null && rA != null ? dlt2(rA, rB, String, ' punti', '%') : {}), k: 'resa' }];
+    const note = ['Resa del buio: ore integrate sulle ore di buio delle notti in cui hai ripreso.'];
     if (curY && B) note.push('Confronto fino al 30 settembre, come il ' + Y + '.');
-    if (!noMet && !primo && (tutto || Y <= G.app.y || (C != null && C <= G.app.y))) note.push('Notti prima del ' + G.app.l + ': qualità senza seeing.');
 
     // 3 · Calendario
-    const appC = SD.ts(G.app.y, G.app.m, G.app.d);
     const cy = tutto ? (st.calY && anni.includes(st.calY) ? st.calY : last) : Y;
     const gy = G.giorni.filter(g => g.y === cy), j1 = (new Date(Date.UTC(cy, 0, 1)).getUTCDay() + 6) % 7, nc = Math.ceil((j1 + gy.length) / 7);
     const cs = tel ? 14 : Math.max(11, Math.min(19, Math.floor((cw('cal') - 34) / nc) - 3));
@@ -334,17 +335,16 @@ class Component extends DCLogic {
     let perse = 0, uscC = 0;
     const cel = Array.from({ length: j1 }, () => ({ bg: 'transparent', sh: 'none', cur: 'default' })).concat(gy.map((g, gi) => { const o = uscita(g), persa = !g.futuro && !o && g.buona && !noMet;
       if (persa) perse++; if (o) uscC++;
-      // Notti prima dell'app: la qualità si conta senza seeing (soglie.senzaPassate); accanto «senza seeing»
-      const qS = g.q + (g.t < appC ? ' · ' + ALsoglie.senzaRiga(ALsoglie.senzaPassate) : '');
-      const s = g.futuro ? null : dl(g) + ' · ' + (o ? fh(g.ore) + (noMet ? '' : ' · qualità ' + qS) : persa ? 'notte buona, non sei uscito · qualità ' + qS : 'nessuna uscita' + (noMet ? '' : ' · qualità ' + qS));
-      const rows = g.futuro ? null : [o ? RW('ore', fh(g.ore)) : RW(persa ? 'notte buona, non sei uscito' : 'nessuna uscita')].concat(noMet ? [] : [RW('qualità', qS)]);
+      const qS = String(g.q) + (g.doy % 17 === 0 ? ' · senza aerosol' : ''); // v67: senza aerosol, simulato
+      const s = g.futuro ? null : dl(g) + ' · ' + (o ? fh(g.ore) + (noMet ? '' : ' · trasparenza ' + qS) : persa ? 'notte buona, non hai ripreso · trasparenza ' + qS : 'nessuna ripresa' + (noMet ? '' : ' · trasparenza ' + qS));
+      const rows = g.futuro ? null : [o ? RW('ore', fh(g.ore)) : RW(persa ? 'notte buona, non hai ripreso' : 'nessuna ripresa')].concat(noMet ? [] : [RW('trasparenza', qS)]);
       const sh = []; if (hov === g.doy) sh.push('0 0 0 2px ' + t.text); if (g.futuro) sh.push('inset 0 0 0 1px ' + t.line); else if (persa) sh.push('inset 0 0 0 2px ' + t.text);
       return { bg: g.futuro ? 'transparent' : o ? STEP[stepDi(g.ore)] : t.card2, sh: sh.length ? sh.join(',') : 'none', a: s || undefined, cur: s ? 'pointer' : 'default', dl: (Math.floor((gi + j1) / 7) * 0.012).toFixed(3) + 's',
-        on: s ? tipE('cal', g.doy, dl(g), rows) : undefined }; }));
+        on: s ? tipE('cal', g.doy, dl(g), rows) : undefined, rov: s ? '1' : undefined }; }));
     const cal = { cols: 'repeat(' + nc + ',' + cs + 'px)', rows: 'repeat(7,' + cs + 'px)', cs: cs + 'px', celle: cel, gg: ['lun', '', 'mer', '', 'ven', '', 'dom'],
       mesi: M3.map((l, i) => ({ l, c: Math.floor((SD.doyDi(cy, i + 1, 1) + j1) / 7) + 1 })),
-      sub: cy + ' · ' + uscC + ' notti uscite' + (noMet ? '' : ' · ' + perse + (perse === 1 ? ' notte buona persa' : ' notti buone perse')),
-      aria: 'Calendario delle notti del ' + cy + ': ' + uscC + ' notti uscite' + (noMet ? '' : ', ' + perse + ' notti buone perse'),
+      sub: cy + ' · ' + uscC + ' notti di ripresa' + (noMet ? '' : ' · ' + perse + (perse === 1 ? ' notte buona persa' : ' notti buone perse')),
+      aria: 'Calendario delle notti del ' + cy + ': ' + uscC + ' notti di ripresa' + (noMet ? '' : ', ' + perse + ' notti buone perse'),
       riga: tel ? 'Tocca un giorno per vederne le ore.' : 'Passa sopra un giorno per vederne le ore.', rigaC: t.muted,
       leg: STEP, persa: !noMet, anni: tutto ? anni.map(y => ({ l: String(y), sel: y === cy, on: () => set({ calY: y, tip: null }) })) : null };
 
@@ -390,7 +390,7 @@ class Component extends DCLogic {
       : 'M' + fx(x - r) + ' ' + fx(y) + 'a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0a' + r + ' ' + r + ' 0 1 0 ' + -2 * r + ' 0';
     const MIS = { fwhm: { l: 'FWHM allo zenit', px: true }, hfd: { l: 'HFD allo zenit', px: true }, ecc: { l: 'Eccentricità', px: false } };
     const mis = st.mis || 'fwhm', MI = MIS[mis];
-    const val = (v, k) => MI.px ? v.toFixed(1) + '″ · ' + (v / SD.SETUP[k].scala).toFixed(1) + ' px' : v.toFixed(2);
+    const val = (v, k) => MI.px ? v.toFixed(1).replace('.', ',') + '″ · ' + (v / SD.SETUP[k].scala).toFixed(1).replace('.', ',') + ' px' : v.toFixed(2);
     const HC = tel ? 220 : 300, wK = cw('cap');
     // Confronta setup (v31.7): due setup scelti nello stesso periodo, in ″; la tendina in testa qui non conta
     const inP = g => !g.futuro && g.out && (tutto || g.y === Y), oreP = k => G.giorni.reduce((a, g) => a + (inP(g) && g.setup === k ? g.ore : 0), 0);
@@ -409,11 +409,11 @@ class Component extends DCLogic {
         const d = seg.filter(sg => sg.length > 1).map(sg => sg.map((q, i) => { const w = sg.slice(Math.max(0, i - 3), i + 4).map(z => z.m.med); return (i ? 'L' : 'M') + fx(s.X(q.x)) + ' ' + fx(s.Y(med(w))); }).join('')).join('');
         if (d) tr.push({ d, c: COL[k], da: si ? '5 4' : 'none' }); }));
       const ord = pts.slice().sort((a, b) => b.si - a.si);
-      capV = { ok: true, w: wK, h: HC, gy: gridY(wK, s, tk, v => MI.px ? v.toFixed(1) + '″' : v.toFixed(2)), gx: tutto ? gxAnni(s, HC) : gxMesi(s, HC, tel ? 2 : 1), tr,
+      capV = { ok: true, w: wK, h: HC, gy: gridY(wK, s, tk, v => MI.px ? v.toFixed(1).replace('.', ',') + '″' : v.toFixed(2)), gx: tutto ? gxAnni(s, HC) : gxMesi(s, HC, tel ? 2 : 1), tr,
         wh: ord.filter(q => q.m.n >= 4).map(q => ({ x: fx(s.X(q.x)), y1: fx(s.Y(q.m.q1)), y2: fx(s.Y(q.m.q3)), c: COL[q.k], o: q.si ? 0.3 : 0.45 })),
         pt: ord.map(q => { const x = s.X(q.x), y = s.Y(q.m.med);
           return { x: fx(x), y: fx(y), d: forma(q.k, x, y, 3.2), c: COL[q.k], f: q.si ? t.card : COL[q.k],
-            on: tipOn('cap', clampX(x, wK, 150), y, dl(q.g) + ' ' + q.g.y, [RW(MI.l.replace(' allo zenit', ''), val(q.m.med, q.k))].concat(q.m.n >= 4 ? [RW('quartili', MI.px ? q.m.q1.toFixed(1) + '–' + q.m.q3.toFixed(1) + '″' : q.m.q1.toFixed(2) + '–' + q.m.q3.toFixed(2))] : [], [RW('frame', q.m.n)], usati.length > 1 ? [RW('setup', SN(q.k))] : [])) }; }),
+            on: tipOn('cap', clampX(x, wK, 150), y, dl(q.g) + ' ' + q.g.y, [RW(MI.l.replace(' allo zenit', ''), val(q.m.med, q.k))].concat(q.m.n >= 4 ? [RW('quartili', MI.px ? AL.virg(q.m.q1, 1) + '–' + AL.virg(q.m.q3, 1) + '″' : AL.virg(q.m.q1, 2) + '–' + AL.virg(q.m.q3, 2))] : [], [RW('frame', q.m.n)], usati.length > 1 ? [RW('setup', SN(q.k))] : [])) }; }),
         leg: SD.ORDINE.filter(k => pts.some(q => q.k === k)).map(k => { const mA = med(pts.filter(q => q.k === k && q.si === 0).map(q => q.m.med)), mC = med(pts.filter(q => q.k === k && q.si === 1).map(q => q.m.med));
           return { d: forma(k, 7, 7, 4.5), c: COL[k], l: SN(k), m: perSet ? 'mediana ' + val(med(pts.filter(q => q.k === k).map(q => q.m.med)), k) : (mA != null ? 'mediana ' + val(mA, k) : 'nessuna notte nel ' + Y) + (mC != null ? ' · ' + C + ' ' + val(mC, k) : '') }; }),
         aria: MI.l + ', notte per notte' };
@@ -423,7 +423,7 @@ class Component extends DCLogic {
     if (perSet) capNote.push('Punto pieno ' + SN(sA) + ', punto vuoto e linea tratteggiata ' + SN(sB) + '; la barretta va dal primo al terzo quartile, sotto 4 misure niente barretta. Linea: mediana mobile su 7 notti.' + (MI.px ? ' In ″ si confronta fra setup diversi; i px al passaggio.' : ''));
     else if (!tutto) capNote.push('Punto pieno ' + Y + (C != null ? ', punto vuoto e linea tratteggiata ' + C : '') + '; la barretta va dal primo al terzo quartile, sotto 4 misure niente barretta. Linea: mediana mobile su 7 notti.');
     else capNote.push('La barretta va dal primo al terzo quartile, sotto 4 misure niente barretta. Linea: mediana mobile su 7 notti.');
-    if (MI.px) capNote.push('Allo zenit: valore diviso per la massa d\u0027aria alla 0.6 (ESO).');
+    if (MI.px) capNote.push('Allo zenit: valore diviso per la massa d\u0027aria alla 0,6 (ESO).');
     if (escl && MI.px) capNote.push(escl + ' frame senza massa d\u0027aria esclusi.');
     const cap = { ...capV, no: noMis, note: capNote, cmpOn, cmp: [['anni', 'Anni'], ['setup', 'Setup']].map(([k, l]) => ({ l, sel: (perSet ? 'setup' : 'anni') === k, on: () => set({ capM: k, tip: null }) })),
       sels: perSet ? [['capA', sA, 'Primo setup'], ['capB', sB, 'Secondo setup']].map(([sk, v, l], i) => ({ l, v, on: e => set({ [sk]: e.target.value, tip: null }), opz: usP.filter(k => k !== (i ? sA : sB)).map(k => ({ v: k, l: SN(k) })) })) : [],
@@ -440,32 +440,37 @@ class Component extends DCLogic {
       const all = mG.concat(mS).filter(v => v != null);
       if (all.length) { const tk = ticks(Math.min(...all), Math.max(...all), 3), s = scala(wM, HS, tk.lo, tk.hi), X = i => s.X((i + 0.5) / 12);
         const path = a => { let d = '', on = false; a.forEach((v, i) => { if (v == null) { on = false; return; } d += (on ? 'L' : 'M') + fx(X(i)) + ' ' + fx(s.Y(v)); on = true; }); return d; };
-        const rCm = i => [RW('Luna sotto −5°', mG[i] == null ? '–' : mG[i].toFixed(2)), RW('Luna su', mS[i] == null ? '–' : mS[i].toFixed(2)), RW('notti', Math.max(nG[i], nS[i]))];
+        const rCm = i => [RW('Luna sotto −5°', mG[i] == null ? '–' : AL.virg(mG[i], 2)), RW('Luna su', mS[i] == null ? '–' : AL.virg(mS[i], 2)), RW('notti', Math.max(nG[i], nS[i]))];
         const pt = []; mG.forEach((v, i) => v != null && pt.push({ x: fx(X(i)), y: fx(s.Y(v)), c: t.accent, on: tipOn('cm', clampX(X(i), wM, 80), s.Y(v), cap1(MESI[i]), rCm(i), 'm' + i) }));
         mS.forEach((v, i) => v != null && pt.push({ x: fx(X(i)), y: fx(s.Y(v)), c: LC, on: tipOn('cm', clampX(X(i), wM, 80), s.Y(v), cap1(MESI[i]), rCm(i), 'm' + i) }));
         cm = { w: wM, h: HS, gy: gridY(wM, s, tk, v => v.toFixed(1)), gx: M3.map((l, i) => gxL(X(i), HS, l[0])), pg: path(mG), ps: path(mS), pt, aria: 'SQM mese per mese, con la Luna sotto −5° e con la Luna su' };
         const oo = cN.filter(g => g.ore9), oreM = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => oo.length ? oo.reduce((a, g) => a + g.ore9[i], 0) / oo.length : null), HL = ['21', '22', '23', '00', '01', '02', '03', '04', '05'];
         const wO = cw('co'), tk2 = ticks(Math.min(...oreM), Math.max(...oreM), 3), s2 = scala(wO, HS, tk2.lo, tk2.hi), X2 = i => s2.X(i / 8);
         co = { w: wO, h: HS, gy: gridY(wO, s2, tk2, v => v.toFixed(1)), gx: HL.map((l, i) => gxL(X2(i), HS, l)).filter((_, i) => !tel || i % 2 === 0), p: oreM.map((v, i) => (i ? 'L' : 'M') + fx(X2(i)) + ' ' + fx(s2.Y(v))).join(''),
-          pt: oreM.map((v, i) => ({ x: fx(X2(i)), y: fx(s2.Y(v)), on: tipOn('co', clampX(X2(i), wO, 60), s2.Y(v), 'alle ' + HL[i], [RW('SQM', v.toFixed(2))]) })), aria: 'SQM medio dalle 21 alle 05' };
-        const t12 = SD.ts(2025, 9, 30), sg = G.giorni.filter(g => g.sqmGiu != null && g.t > t12 && g.t <= tO && SD.SETUP[g.setup].bias), mesiB = new Set(sg.map(g => g.y * 12 + g.m)).size, mT = med(cN.filter(g => g.sqmGiu != null).map(g => g.sqmGiu));
-        cie = { ...cie, ok: true, big: mT != null ? mT.toFixed(2) : '–', bigL: 'mag/arcsec², mediana con la Luna sotto −5°', bortle: mesiB >= 6 ? 'Bortle ' + ALsoglie.misure.bortleDi(med(sg.map(g => g.sqmGiu))) + ' · misurato su ' + sg.length + ' notti' : 'Servono notti in 6 mesi diversi: finora ' + sg.length + (sg.length === 1 ? ' notte' : ' notti') + ' in ' + mesiB + (mesiB === 1 ? ' mese' : ' mesi') + '.', info: tipE('bor', 'b', 'Come si misura', [RW('periodo', 'ultimi 12 mesi'), RW('notti', 'in almeno 6 mesi diversi'), RW('frame', 'L, senza filtro o a colori, col bias'), RW('Sole', 'sotto −18°'), RW('Luna', 'sotto −5°'), RW('oggetto', 'sopra 30°'), RW('conto', 'una mediana per notte, poi delle notti')], true) };
+          pt: oreM.map((v, i) => ({ x: fx(X2(i)), y: fx(s2.Y(v)), on: tipOn('co', clampX(X2(i), wO, 60), s2.Y(v), 'alle ' + HL[i], [RW('SQM', AL.virg(v, 2))]) })), aria: 'SQM medio dalle 21 alle 05' };
+        // v67 (brief 11.1): almeno 4 mesi senza buchi di oltre 3, sugli ultimi 12 fino all'ultima notte misurata
+        const sg0 = G.giorni.filter(g => g.sqmGiu != null && g.t <= tO && SD.SETUP[g.setup].bias), mU = sg0.length ? Math.max(...sg0.map(g => g.y * 12 + g.m)) : 0,
+          sg = sg0.filter(g => g.y * 12 + g.m > mU - 12), mm = [...new Set(sg.map(g => g.y * 12 + g.m))].sort((a, b) => a - b), mesiB = mm.length,
+          mc = [...new Set(mm.map(x => x % 12))].sort((a, b) => a - b), buco = mc.length ? Math.max(...mc.map((x, i) => (i ? x - mc[i - 1] : x + 12 - mc[mc.length - 1]) - 1)) : 12,   // in giro sui 12: dicembre tocca gennaio
+          bOk = mesiB >= 4 && buco <= 3, mT = med(cN.filter(g => g.sqmGiu != null).map(g => g.sqmGiu));
+        cie = { ...cie, ok: true, big: mT != null ? AL.virg(mT, 2) : '–', bigL: 'mag/arcsec², mediana con la Luna sotto −5°', bortle: bOk ? 'Bortle ' + ALsoglie.misure.bortleDi(med(sg.map(g => g.sqmGiu))) + ' · misurato su ' + sg.length + ' notti in ' + mesiB + ' mesi' : 'Servono notti in almeno 4 mesi, senza buchi di oltre 3: finora ' + sg.length + (sg.length === 1 ? ' notte' : ' notti') + ' in ' + mesiB + (mesiB === 1 ? ' mese' : ' mesi') + '.',
+          prop: bOk && sito === 'Passo Coe' ? 'Il sito non ha un cielo: in Impostazioni › Siti si propone Bortle ' + ALsoglie.misure.bortleDi(med(sg.map(g => g.sqmGiu))) + '.' : '', propH: 'Impostazioni.dc.html?sezione=siti', info: tipE('bor', 'b', 'Come si misura', [RW('periodo', 'ultimi 12 mesi, fino all\u0027ultima notte misurata'), RW('mesi', 'almeno 4, senza buchi di oltre 3'), RW('frame', 'L, senza filtro o a colori, col bias'), RW('Sole', 'sotto −18°'), RW('Luna', 'sotto −5°'), RW('oggetto', 'sopra 30°'), RW('conto', 'una mediana per notte, poi delle notti')], true) };
       }
     }
 
     // 6 · Stagioni
     const misS = st.misS || 'notti';
     const appT = SD.ts(G.app.y, G.app.m, G.app.d), molti = setup === 'tutti' && usati.length > 1;
-    const pxS = p => p == null ? '' : ' · ' + p.toFixed(1) + ' px';
+    const pxS = p => p == null ? '' : ' · ' + p.toFixed(1).replace('.', ',') + ' px';
     // Misure della griglia: g gruppo, met dal meteo, fr dai frame, set dipende dal setup (segue la tendina in testa; «Tutti» = tutti i setup insieme, v31.2), tutte = tutte le notti (non solo le uscite), inv = più basso è meglio
     const MS = {
-      notti: { g: 'cielo', l: 'Notti buone e uscite', lo: 'meno uscite', hi: 'più uscite' },
-      qual: { g: 'cielo', l: 'Qualità della notte', lo: 'qualità più bassa', hi: 'più alta', met: 1, tutte: 1, get: g => g.q, f: v => String(Math.round(v)), d: v => 'qualità mediana ' + Math.round(v), sub: 'qualità della notte mediana, da 0 a 100, tutte le notti' },
-      seeing: { g: 'cielo', l: 'Seeing', lo: 'seeing peggiore', hi: 'migliore', met: 1, tutte: 1, inv: 1, get: g => g.seeing, f: v => v.toFixed(1) + '″', d: v => 'seeing mediano ' + v.toFixed(1) + '″', sub: 'seeing mediano, tutte le notti' },
-      fwhm: { g: 'frame', l: 'FWHM', lo: 'FWHM più alta', hi: 'più bassa', fr: 1, set: 1, inv: 1, get: g => g.fwhm.med, f: v => v.toFixed(1) + '″', d: (v, p) => 'FWHM mediana allo zenit ' + v.toFixed(1) + '″' + pxS(p), sub: 'FWHM mediana allo zenit, ″' },
-      hfd: { g: 'frame', l: 'HFD', lo: 'HFD più alta', hi: 'più bassa', fr: 1, set: 1, inv: 1, get: g => g.hfd.med, f: v => v.toFixed(1) + '″', d: (v, p) => 'HFD mediana allo zenit ' + v.toFixed(1) + '″' + pxS(p), sub: 'HFD mediana allo zenit, ″' },
-      ecc: { g: 'frame', l: 'Eccentricità', lo: 'stelle meno rotonde', hi: 'più rotonde', fr: 1, inv: 1, get: g => g.ecc.med, f: v => v.toFixed(2), d: v => 'eccentricità mediana ' + v.toFixed(2), sub: 'eccentricità mediana' },
-      sqm: { g: 'frame', l: 'SQM', lo: 'cielo più chiaro', hi: 'più buio', fr: 1, get: g => g.sqmGiu, f: v => v.toFixed(2), d: v => 'SQM mediano ' + v.toFixed(2) + ' mag/arcsec²', sub: 'SQM mediano, mag/arcsec², Luna sotto −5°, frame L o a colori' },
+      notti: { g: 'cielo', l: 'Notti buone e di ripresa', lo: 'meno notti', hi: 'più notti' },
+      qual: { g: 'cielo', l: 'Trasparenza della notte', lo: 'trasparenza più bassa', hi: 'più alta', met: 1, tutte: 1, get: g => g.q, f: v => String(Math.round(v)), d: v => 'trasparenza mediana ' + Math.round(v), sub: 'trasparenza della notte mediana, da 0 a 100, tutte le notti' },
+      seeing: { g: 'cielo', l: 'Seeing', lo: 'seeing peggiore', hi: 'migliore', met: 1, tutte: 1, inv: 1, get: g => g.seeing, f: v => v.toFixed(1).replace('.', ',') + '″', d: v => 'seeing mediano ' + v.toFixed(1).replace('.', ',') + '″', sub: 'seeing mediano, tutte le notti' },
+      fwhm: { g: 'frame', l: 'FWHM', lo: 'FWHM più alta', hi: 'più bassa', fr: 1, set: 1, inv: 1, get: g => g.fwhm.med, f: v => v.toFixed(1).replace('.', ',') + '″', d: (v, p) => 'FWHM mediana allo zenit ' + v.toFixed(1).replace('.', ',') + '″' + pxS(p), sub: 'FWHM mediana allo zenit, ″' },
+      hfd: { g: 'frame', l: 'HFD', lo: 'HFD più alta', hi: 'più bassa', fr: 1, set: 1, inv: 1, get: g => g.hfd.med, f: v => v.toFixed(1).replace('.', ',') + '″', d: (v, p) => 'HFD mediana allo zenit ' + v.toFixed(1).replace('.', ',') + '″' + pxS(p), sub: 'HFD mediana allo zenit, ″' },
+      ecc: { g: 'frame', l: 'Eccentricità', lo: 'stelle meno rotonde', hi: 'più rotonde', fr: 1, inv: 1, get: g => g.ecc.med, f: v => AL.virg(v, 2), d: v => 'eccentricità mediana ' + AL.virg(v, 2), sub: 'eccentricità mediana' },
+      sqm: { g: 'frame', l: 'SQM', lo: 'cielo più chiaro', hi: 'più buio', fr: 1, get: g => g.sqmGiu, f: v => AL.virg(v, 2), d: v => 'SQM mediano ' + AL.virg(v, 2) + ' mag/arcsec²', sub: 'SQM mediano, mag/arcsec², Luna sotto −5°, frame L o a colori' },
       ore: { g: 'volumi', l: 'Ore integrate', lo: 'meno ore', hi: 'più ore', sub: 'ore integrate, mese per mese' } };
     const M = MS[misS], inv = !!M.inv;
     const nN = n => n + (n === 1 ? ' notte' : ' notti');
@@ -474,14 +479,14 @@ class Component extends DCLogic {
     const cella = (gg, l) => { const pass = gg.filter(g => !g.futuro); if (!pass.length) return { v: null, why: l + ': deve ancora venire' };
       const Lm = misS === 'ore' ? 'ore' : M.l;
       const out = pass.filter(uscita);
-      if (misS === 'notti') { const b = noMet ? null : pass.filter(g => g.buona).length; return { v: out.length, s: (b == null ? '–' : b) + ' · ' + out.length, d: l + ': ' + (b == null ? 'meteo storico in arrivo' : b + (b === 1 ? ' notte buona' : ' notti buone')) + ', ' + out.length + (out.length === 1 ? ' uscita' : ' uscite'), tt: l, rw: [RW('notti buone', b == null ? '–' : b), RW('uscite', out.length)] }; }
+      if (misS === 'notti') { const b = noMet ? null : pass.filter(g => g.buona).length; return { v: out.length, s: (b == null ? '–' : b) + ' · ' + out.length, d: l + ': ' + (b == null ? 'meteo storico in arrivo' : b + (b === 1 ? ' notte buona' : ' notti buone')) + ', ' + out.length + (out.length === 1 ? ' notte di ripresa' : ' notti di ripresa'), tt: l, rw: [RW('notti buone', b == null ? '–' : b), RW('notti', out.length)] }; }
       if (M.met && noMet) return { v: null, why: l + ': meteo storico in arrivo' };
       if (M.fr && noMis) return { v: null, why: l + ': misure dei frame non ancora calcolate' };
-      if (!M.tutte && !out.length) return { v: null, why: l + ': nessuna uscita' };
+      if (!M.tutte && !out.length) return { v: null, why: l + ': nessuna ripresa' };
       if (misS === 'ore') { const h = out.reduce((a, g) => a + g.ore, 0); return { v: h, s: h0(h), d: l + ': ' + fh(h) + ' in ' + nN(out.length), tt: l, rw: [RW('ore', fh(h)), RW('notti', out.length)] }; }
       const vs = valori(pass, out);
-      if (!vs.length) return { v: null, why: l + ': ' + (misS === 'seeing' && pass[pass.length - 1].t < appT ? 'seeing non archiviato prima del ' + G.app.l : misS === 'sqm' ? 'nessun frame L o a colori con la Luna sotto −5°' : setup !== 'tutti' ? 'nessuna uscita con ' + SN(setup) : 'nessun dato') };
-      const v = med(vs.map(M.get)), px = pxDi(vs); return { v, s: M.f(v), d: l + ': ' + M.d(v, px) + ', ' + nN(vs.length), tt: l, rw: [RW(Lm, M.f(v) + (px != null ? ' · ' + px.toFixed(1) + ' px' : '')), RW('notti', vs.length)] }; };
+      if (!vs.length) return { v: null, why: l + ': ' + (misS === 'seeing' && pass[pass.length - 1].t < appT ? 'seeing non archiviato prima del ' + G.app.l : misS === 'sqm' ? 'nessun frame L o a colori con la Luna sotto −5°' : setup !== 'tutti' ? 'nessuna ripresa con ' + SN(setup) : 'nessun dato') };
+      const v = med(vs.map(M.get)), px = pxDi(vs); return { v, s: M.f(v), d: l + ': ' + M.d(v, px) + ', ' + nN(vs.length), tt: l, rw: [RW(Lm, M.f(v) + (px != null ? ' · ' + px.toFixed(1).replace('.', ',') + ' px' : '')), RW('notti', vs.length)] }; };
     const telY = st.staY && anni.includes(st.staY) ? st.staY : (tutto ? last : Y);
     const grid = anni.map(y => ({ y, c: M3.map((_, i) => cella(G.giorni.filter(g => g.y === y && g.m === i + 1), MESI[i] + ' ' + y)) }));
     const vals = grid.flatMap(r => r.c.map(c => c.v)).filter(v => v != null), vLo = Math.min(...vals), vHi = Math.max(...vals);
@@ -496,7 +501,7 @@ class Component extends DCLogic {
       const k = passo(c.v); return { s: c.s, bg: SC[k].bg, fg: SC[k].fg, sh: hovS === id ? '0 0 0 2px ' + t.text : 'none', a: c.d, on: tipE('sta', id, cap1(c.tt), c.rw) }; };
     const media = i => { const cc = grid.map(r => r.c[i]).filter(c => c.v != null); if (!cc.length) return { v: null, why: MESI[i] + ', media: nessun dato' };
       if (misS === 'notti') { const gg = grid.map(r => G.giorni.filter(g => g.y === r.y && g.m === i + 1 && !g.futuro)).filter(a => a.length), b = noMet ? null : gg.reduce((a, x) => a + x.filter(g => g.buona).length, 0) / gg.length, u = gg.reduce((a, x) => a + x.filter(uscita).length, 0) / gg.length;
-        return { v: u, s: (b == null ? '–' : b.toFixed(1)) + ' · ' + u.toFixed(1), d: MESI[i] + ', media di ' + gg.length + ' anni: ' + (b == null ? 'meteo storico in arrivo' : b.toFixed(1) + ' notti buone') + ', ' + u.toFixed(1) + ' uscite', tt: MESI[i] + ', media', rw: [RW('notti buone', b == null ? '–' : b.toFixed(1)), RW('uscite', u.toFixed(1)), RW('anni', gg.length)] }; }
+        return { v: u, s: (b == null ? '–' : AL.virg(b, 1)) + ' · ' + AL.virg(u, 1), d: MESI[i] + ', media di ' + gg.length + ' anni: ' + (b == null ? 'meteo storico in arrivo' : AL.virg(b, 1) + ' notti buone') + ', ' + AL.virg(u, 1) + ' notti di ripresa', tt: MESI[i] + ', media', rw: [RW('notti buone', b == null ? '–' : AL.virg(b, 1)), RW('notti', AL.virg(u, 1)), RW('anni', gg.length)] }; }
       const v = cc.reduce((a, c) => a + c.v, 0) / cc.length, s = misS === 'ore' ? h0(v) : M.f(v);
       return { v, s, d: MESI[i] + ', media di ' + cc.length + (cc.length === 1 ? ' anno: ' : ' anni: ') + (misS === 'ore' ? fh(v) : M.d(v)), tt: MESI[i] + ', media', rw: [RW(misS === 'ore' ? 'ore' : M.l, misS === 'ore' ? fh(v) : s), RW('anni', cc.length)] }; };
     const righeS = grid.map(r => ({ l: String(r.y), on: r.y === Y, bg: r.y === Y ? t.accent : 'transparent', fg: r.y === Y ? t.hPillFg : t.text, fw: r.y === Y ? 600 : 400, mt: '0px', c: r.c.map((c, i) => ({ ...vista(c, r.y + '-' + i), dl: ((anni.indexOf(r.y) * 12 + i) * 0.008).toFixed(3) + 's' })) }));
@@ -505,10 +510,10 @@ class Component extends DCLogic {
     const STG = [['inverno', 'dic · gen · feb', [12, 1, 2]], ['primavera', 'mar · apr · mag', [3, 4, 5]], ['estate', 'giu · lug · ago', [6, 7, 8]], ['autunno', 'set · ott · nov', [9, 10, 11]]];
     const stag = STG.map(([l, m, mm], si) => { const per = anni.map(y => G.giorni.filter(g => !g.futuro && mm.some(x => (x === 12 ? g.y === y - 1 : g.y === y) && g.m === x))).filter(a => a.length);
       let c; const pass = per.flat(), out = pass.filter(uscita);
-      if (misS === 'notti') { const b = noMet ? null : per.reduce((a, x) => a + x.filter(g => g.buona).length, 0) / per.length, u = out.length / per.length; c = { v: u, s: (b == null ? '–' : b.toFixed(1)) + ' · ' + u.toFixed(1), d: '', tt: l + ', media per anno', rw: [RW('notti buone', b == null ? '–' : b.toFixed(1)), RW('uscite', u.toFixed(1))] }; }
+      if (misS === 'notti') { const b = noMet ? null : per.reduce((a, x) => a + x.filter(g => g.buona).length, 0) / per.length, u = out.length / per.length; c = { v: u, s: (b == null ? '–' : AL.virg(b, 1)) + ' · ' + AL.virg(u, 1), d: '', tt: l + ', media per anno', rw: [RW('notti buone', b == null ? '–' : AL.virg(b, 1)), RW('notti', AL.virg(u, 1))] }; }
       else if (misS === 'ore') { const h = out.reduce((a, g) => a + g.ore, 0) / per.length; c = { v: h / 3, s: h0(h), d: '', tt: l + ', media per anno', rw: [RW('ore', fh(h))] }; }
       else { const vs = (M.met && noMet) || (M.fr && noMis) ? [] : valori(pass, out), v = med(vs.map(M.get));
-        const px = v == null ? null : pxDi(vs); c = v == null ? { v: null, why: cap1(l) + ': nessun dato' } : { v, s: M.f(v), d: '', tt: l, rw: [RW(M.l, M.f(v) + (px != null ? ' · ' + px.toFixed(1) + ' px' : '')), RW('notti', vs.length)] }; }
+        const px = v == null ? null : pxDi(vs); c = v == null ? { v: null, why: cap1(l) + ': nessun dato' } : { v, s: M.f(v), d: '', tt: l, rw: [RW(M.l, M.f(v) + (px != null ? ' · ' + px.toFixed(1).replace('.', ',') + ' px' : '')), RW('notti', vs.length)] }; }
       const vv = vista(c, 's-' + si);
       return { l: cap1(l), m, s: vv.s, bg: t.card2, fg: t.text, on: vv.on }; });
     const telR = grid.find(r => r.y === telY);
@@ -517,7 +522,7 @@ class Component extends DCLogic {
     const wS = cw('stl'), HSt = tel ? 200 : 240, valsL = grid.flatMap(r => r.c.map(c => c.v)).concat(primo ? [] : medie.map(c => c.v)).filter(v => v != null);
     let stl = {};
     if (linee && valsL.length) { const tk = ticks(Math.min(...valsL), Math.max(...valsL), 4), s = scala(wS, HSt, tk.lo, tk.hi), X = i => s.X((i + 0.5) / 12);
-      const fT2 = v => misS === 'ore' ? v + ' h' : misS === 'notti' || misS === 'qual' ? String(Math.round(v * 10) / 10) : misS === 'ecc' ? v.toFixed(2) : misS === 'sqm' ? v.toFixed(1) : v.toFixed(1) + '″';
+      const fT2 = v => misS === 'ore' ? v + ' h' : misS === 'notti' || misS === 'qual' ? String(Math.round(v * 10) / 10) : misS === 'ecc' ? AL.virg(v, 2) : misS === 'sqm' ? AL.virg(v, 1) : AL.virg(v, 1) + '″';
       const path = cc => { let d = '', on = false; cc.forEach((c, i) => { if (c.v == null) { on = false; return; } d += (on ? 'L' : 'M') + fx(X(i)) + ' ' + fx(s.Y(c.v)); on = true; }); return d; };
       const hr = grid.find(r => r.y === telY), lastI = hr.c.map(c => c.v != null).lastIndexOf(true), cw2 = (wS - PL - PR) / 12;
       const fine = []; if (lastI >= 0) fine.push({ x: fx(X(lastI) + 8), y: fx(s.Y(hr.c[lastI].v)), tf: '0,-50%', c: t.text, fs: '12px', fw: 600, l: String(telY) });
@@ -526,20 +531,20 @@ class Component extends DCLogic {
         pt: hr.c.map((c, i) => c.v == null ? null : { x: fx(X(i)), y: fx(s.Y(c.v)), r: tip && tip.k === 'stl' && tip.id === i ? 5 : 3.5 }).filter(Boolean),
         hit: M3.map((_, i) => { const c = hr.c[i], y = c.v != null ? s.Y(c.v) : s.Y((tk.lo + tk.hi) / 2);
           return { x: fx(X(i) - cw2 / 2), y: PT, w: fx(cw2), h: HSt - PT - PB, on: () => { const z = this.state.tip; if (z && z.k === 'stl' && z.id === i) return; set({ tip: { k: 'stl', id: i, x: clampX(X(i), wS, 70), y: PT, tf: 'translate(-50%,0)', s: cap1(MESI[i]),
-            rows: grid.slice().reverse().map(r => ({ l: String(r.y), v: r.c[i].v == null ? '–' : misS === 'notti' ? String(r.c[i].v) : r.c[i].s, fw: r.y === telY ? 600 : 400, o: r.y === telY ? 1 : 0.72 })).concat(primo ? [] : [{ l: 'media', v: medie[i].v == null ? '–' : misS === 'notti' ? medie[i].v.toFixed(1) : medie[i].s, fw: 400, o: 0.72 }]) } }); } }; }),
+            rows: grid.slice().reverse().map(r => ({ l: String(r.y), v: r.c[i].v == null ? '–' : misS === 'notti' ? String(r.c[i].v) : r.c[i].s, fw: r.y === telY ? 600 : 400, o: r.y === telY ? 1 : 0.72 })).concat(primo ? [] : [{ l: 'media', v: medie[i].v == null ? '–' : misS === 'notti' ? AL.virg(medie[i].v, 1) : medie[i].s, fw: 400, o: 0.72 }]) } }); } }; }),
         cur: tip && tip.k === 'stl' ? { x: fx(X(tip.id)), y1: PT, y2: HSt - PB } : null,
         leg: [{ l: String(telY), st: 'solid', c: t.accent, w: '2.5px', o: 1 }].concat(primo ? [] : [{ l: 'media', st: 'dashed', c: t.text, w: '1.5px', o: 1 }], anni.length > 1 ? [{ l: 'gli altri anni', st: 'solid', c: t.muted, w: '1.25px', o: 0.6 }] : []),
-        aria: (misS === 'notti' ? 'Notti uscite' : M.l) + ' mese per mese, ' + telY + (primo ? '' : ' con la media e gli altri anni') };
-      if (misS === 'notti') stl.aria = 'Notti uscite mese per mese, ' + telY; }
+        aria: (misS === 'notti' ? 'Notti di ripresa' : M.l) + ' mese per mese, ' + telY + (primo ? '' : ' con la media e gli altri anni') };
+      if (misS === 'notti') stl.aria = 'Notti di ripresa mese per mese, ' + telY; }
     const GR = [['cielo', 'Cielo'], ['frame', 'Frame'], ['volumi', 'Volumi']], PRIMA = { cielo: 'notti', frame: 'fwhm', volumi: 'ore' };
     const sta = { vis: [['griglia', 'Griglia'], ['linee', 'Linee']].map(([k, l]) => ({ l, sel: vistaS === k, on: () => set({ vistaS: k, tip: null }) })), linee, gLeg: !linee, gDesk: !tel && !linee, gTel: tel && !linee, annoOn: tel || linee, // v54.1: desktop come il telefono: Misura ▾ · Anno ▾ (solo nelle linee: la griglia mostra tutti gli anni) · vista a icone
       // Telefono (v52.2): una riga sola: Misura ▾ (raggruppata Cielo · Frame · Volumi), Anno ▾, vista a due icone
-      misTel: { v: misS, on: e => set({ misS: e.target.value, tip: null }), gruppi: GR.map(([g, l]) => ({ l, o: Object.entries(MS).filter(([, m]) => m.g === g).map(([k, m]) => ({ v: k, l: ({ notti: 'Notti buone', qual: 'Qualità', ore: 'Ore integrate' })[k] || m.l })) })) },
+      misTel: { v: misS, on: e => set({ misS: e.target.value, tip: null }), gruppi: GR.map(([g, l]) => ({ l, o: Object.entries(MS).filter(([, m]) => m.g === g).map(([k, m]) => ({ v: k, l: ({ notti: 'Notti buone', qual: 'Trasparenza', ore: 'Ore integrate' })[k] || m.l })) })) },
       annoTel: { v: String(telY), on: e => set({ staY: Number(e.target.value), tip: null }), o: anni.map(y => ({ v: String(y), l: String(y) })) },
       visTel: [['griglia', 'Griglia', 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'], ['linee', 'Linee', 'M3 18l5-6 4 4 9-10']].map(([k, l, d]) => ({ l, d, on: String(vistaS === k), fg: vistaS === k ? 'var(--testo)' : 'var(--tenue)', sh: vistaS === k ? 'inset 0 0 0 2px var(--accento)' : 'none', scegli: () => set({ vistaS: k, tip: null }) })), grp: GR.map(([k, l]) => ({ l, sel: M.g === k, on: () => M.g !== k && set({ misS: PRIMA[k], tip: null }) })),
       opz: Object.entries(MS).filter(([, m]) => m.g === M.g).map(([k, m]) => ({ l: m.l, sel: k === misS, on: () => set({ misS: k, tip: null }) })), mesi: M3, righe: righeS, stag, tel: staTel,
 
-      sub: misS === 'notti' ? (linee ? 'notti uscite, mese per mese' : '«9 · 6»: notti buone e uscite, mese per mese') : M.sub + (M.set && setup !== 'tutti' ? ' · ' + SN(setup) : ''), nota: M.set && molti ? 'Tutti i setup insieme: in px FWHM e HFD cambiano da un setup all\u0027altro.' : '',
+      sub: misS === 'notti' ? (linee ? 'notti di ripresa, mese per mese' : '«9 · 6»: notti buone e notti di ripresa, mese per mese') : M.sub + (M.set && setup !== 'tutti' ? ' · ' + SN(setup) : ''), nota: M.set && molti ? 'Tutti i setup insieme: in px FWHM e HFD cambiano da un setup all\u0027altro.' : '',
       riga: linee ? (tel ? 'Tocca un mese per gli anni a confronto.' : 'Passa sopra un mese per gli anni a confronto.') : (tel ? 'Tocca un mese' : 'Passa sopra un mese') + ': il valore, o perché manca.', rigaC: t.muted,
       lo: M.lo, hi: M.hi, leg: (inv ? SC.slice().reverse() : SC).map(c => c.bg) };
 
@@ -561,12 +566,19 @@ class Component extends DCLogic {
     const perS = SD.ORDINE.map(k => ({ k, gg: A.out.filter(g => g.setup === k) })).filter(x => x.gg.length).map(x => { const h = x.gg.reduce((a, g) => a + g.ore, 0), ogg = new Set(x.gg.flatMap(g => g.ogg)).size;
       const fw = med(x.gg.map(g => g.fwhm.med));
       return { h, n: SN(x.k), hL: h0(h), a: num(x.gg.reduce((a, g) => a + g.pose, 0)) + ' frame · ' + ogg + (ogg === 1 ? ' oggetto' : ' oggetti') + ' · ' + x.gg.length + (x.gg.length === 1 ? ' notte' : ' notti'),
-        px: noMis ? 'non ancora calcolata' : fw.toFixed(1) + '″', as: noMis ? '' : (fw / SD.SETUP[x.k].scala).toFixed(1) + ' px · ' + SD.SETUP[x.k].scala.toFixed(2) + '″/px' }; }).sort((a, b) => b.h - a.h);
+        px: noMis ? 'non ancora calcolata' : fw.toFixed(1).replace('.', ',') + '″', as: noMis ? '' : (fw / SD.SETUP[x.k].scala).toFixed(1).replace('.', ',') + ' px · ' + SD.SETUP[x.k].scala.toFixed(2).replace('.', ',') + '″/px' }; }).sort((a, b) => b.h - a.h);
     const setS = { ok: usati.length > 1 && stato !== 'un setup solo', sub: 'in ordine di ore' + (tutto ? ', ' + periodo : ', nel ' + Y),
       righe: perS.map(r => ({ n: r.n, h: r.hL, a: r.a, px: r.px, as: r.as, tipo: r.tipo, tb: r.tb })), nota: noMis ? '' : 'FWHM mediana allo zenit. In ″ si confronta fra setup diversi; in px dipende dalla scala.' };
 
     const S = { vuoto, main: !vuoto };
-    return { pronto: true, modo, accento: p.accento, setModo: m => set({ modo: m }), t, F, L, S, T, testa, optAnni, annoTel, sels, big, celle, note, cal, vol, vb, vc, cap, cie, cm, co, sta, fil, set: setS,
+    // v67 (brief 11.5): celle e punti da tastiera. Il grafico o la griglia prende il fuoco; le frecce passano da un elemento all'altro e aprono il riquadro.
+    const rov = (k, lista, su, perColonne) => e => { const a = perColonne ? su : 1, b = perColonne ? 1 : su || 1, step = { ArrowRight: a, ArrowLeft: -a, ArrowDown: b, ArrowUp: -b }[e.key]; if (step == null && e.key !== 'Home' && e.key !== 'End') return; e.preventDefault();
+      const L0 = (lista || []).filter(x => x && x.on); if (!L0.length) return; const r = this._rov || (this._rov = {}); let i = r[k] == null ? -1 : r[k];
+      i = e.key === 'Home' ? 0 : e.key === 'End' ? L0.length - 1 : Math.max(0, Math.min(L0.length - 1, i + step)); r[k] = i;
+      const el = e.currentTarget.querySelectorAll('[data-rov]')[i] || e.currentTarget; L0[i].on({ type: 'focus', currentTarget: el }); };
+    const kb = { cal: rov('cal', cal.celle, 7, true), vb: rov('vb', vb && vb.b), cap: rov('cap', cap.pt), cm: rov('cm', cm.pt), co: rov('co', co.pt), stl: rov('stl', stl.hit), sta: rov('sta', (sta.righe || []).flatMap(r => r.c), 12), stag: rov('stag', sta.stag), fil: rov('fil', fil.bar),
+      via: () => { if (this.state.tip) set({ tip: null }); }, aiuto: 'Frecce per passare da un elemento all\u0027altro.' };
+    return { kb, pronto: true, modo, accento: p.accento, setModo: m => set({ modo: m }), t, F, L, S, T, testa, optAnni, annoTel, sels, big, celle, note, cal, vol, vb, vc, cap, cie, cm, co, sta, fil, set: setS,
       // Telefono (v52.3): le scelte delle carte in tendina, una riga sola
       calT: cal.anni ? telSel(cal.anni) : null,  capT: { // v56.18: le tendine anche sul desktop (Calendario, Capacità)
         mis: cap.ok ? telSel(cap.opz) : null, cmp: cap.cmpOn ? telSel(cap.cmp.map(o => ({ ...o, l: 'con ' + o.l.toLowerCase() }))) : null }, tipVia,

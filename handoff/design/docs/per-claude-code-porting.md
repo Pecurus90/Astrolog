@@ -1,6 +1,6 @@
-# Per Claude Code · porting (v58.5, 26/10/2026)
+# Per Claude Code · porting (v75, 7/11/2026)
 
-Da Claude Design. Il disegno di AstroLog e' finito e pulito: questo progetto e' la fonte del porting. Sostituisce `docs/archivio/per-claude-code-porting-v32.md` (resta valido per tutto cio' che qui non e' detto).
+Da Claude Design. Versione finale dopo il brief del 6/11 (v60–v73): sostituisce in `handoff/design/` la consegna v58.6. La tavola e' la specifica, aspetto e funzioni (regola del 27/10); controlla ogni pagina con la lista di /porta-tavola prima di portarla. Sostituisce `docs/archivio/per-claude-code-porting-v32.md` (resta valido per tutto cio' che qui non e' detto).
 
 ## Da dove partire
 
@@ -42,7 +42,7 @@ Ogni pagina e' desktop e telefono nello stesso file (formato automatico, o `?for
 | `Selezione dei frame.dc.html` | Avanzamento, Avviso, CalendarioNotti, Carta, Finestra, Pillola, PillolaScelta, Telaio | `?stato=` `?modo=` `?accento=` `?vista=` `?progetto=` `?notte=` `?errore=` `?anteprima=` |
 | `Statistiche.dc.html` | Avviso, Carta, PillolaScelta, Telaio | `?stato=` |
 
-Tavole degli stati difficili: Attrezzatura, Da confermare, Dashboard, Meteo, Notti, Primo avvio, Progetti, Riepilogo, Selezione dei frame (`pagine/* stati.dc.html`). Planner, Piano della notte, Statistiche, Impostazioni portano i loro stati nei Tweaks e in `?stato=`.
+Tavole degli stati difficili: Attrezzatura, Da confermare, Dashboard, Impostazioni, Meteo, Notti, Primo avvio, Progetti, Riepilogo, Selezione dei frame (`pagine/* stati.dc.html`). Planner, Piano della notte, Statistiche portano i loro stati nei Tweaks e in `?stato=`. Da confermare apre una sezione con `?sezione=` (`siti`, `senza-data`).
 
 ## Il Planner (v57–v58)
 
@@ -69,6 +69,54 @@ Tre modi con le linguette in alto: Cielo profondo · Sistema solare · Eventi (`
 - Il caricatore `alPronto()` e i `?…` dei Tweaks: servono alla tavola.
 - `tema.js`: rimanda ai `var(--…)` del foglio per i colori a schermo; tiene i valori solo per i disegni SVG e canvas (Luna, cupola, grafici). Nel codice vero i colori vengono dal foglio.
 - `docs/archivio/`: brief e note chiusi.
+
+## v59 (27/10): i ritocchi dopo l'inventario
+
+Fatti nella tavola, che resta la specifica (DECISIONI v59): Luna 25 / 65 / 0°; Ore di posa al posto delle ore utili (`soglie.posa…`, nel Planner «visibili»); Attrezzatura «Elimina» (Modulo `m.elimina`); «Progetti finiti» in Da confermare, chiesta una volta dalla Dashboard. Classi nuove nel foglio: `al-c-modulo__elimina…`, `al-c-modulo__conferma…`, `al-conf__fin…`. Chiusi poi in v60 (Meteo del Sole: «Sole non disponibile») e v72 (progetto senza obiettivo).
+
+## v60–v73 (6–7/11): il brief prima del porting
+
+Il brief intero e' in `docs/archivio/brief-porting-v59.md`; ogni punto ha la sua sezione in DECISIONI, con le parole a schermo. In breve, cosa cambia per il porting:
+
+- **Regole comuni (v60)**: Trasparenza al posto della Qualita' (`soglie.notte`), cielo in quattro classi okta (`soglie.cielo`), ore di posa, «rispetto al gruppo» al posto del MAD, virgola decimale con una casa sola (`AL.virg` in `tema.js`), colore mai da solo, bersagli da 44. **Telaio** con la prop `app` (normale · caricamento · errore): le pagine passano solo lo stato.
+- **Dashboard e Meteo (v61)**: meteo tre per riga sul telefono, calendario della Luna a tre gradini (CalendarioNotti `gradini`), seeing senza chiave da 126 km/h, Sole non disponibile (prop `sole`), otto stati nuovi.
+- **Misure dei frame (v62)**: «Altre misure» a gruppi, trasparenza e nuvole con una serie, tilt in px, gradiente in unita' di rumore, frame non confrontabili.
+- **Selezione dei frame (v63)**: le partenze si salvano solo in Impostazioni › Selezione dei frame (`ALsoglie.selezione`); sei criteri nuovi; gruppo con guadagno.
+- **Archivio, Riepilogo, Notti (v64–v65)**: stili fissi nel foglio; Luna col lato illuminato (`Luna.lato`); Carica altre in corso e non riuscito.
+- **Da confermare e Attrezzatura (v66–v67)**: filtri a piu' bande, Correggi, Montatura, Frame senza data; frame da rielaborare per ogni modifica che cambia il cielo.
+- **Impostazioni e Primo avvio (v68)**: siti completi, carta «Il cielo del sito» con le quattro vie, ASTAP con D50, chiavi solo in Servizi, Lingua, Cartelle, Backup, Automazione per postazione.
+- **Statistiche (v69)**: Bortle misurato (4 mesi), grafici da tastiera.
+- **Telaio e Sistema (v70)**: pastiglia Stanotte (`menu="stanotte"`); la Carta del cielo vive solo nel Planner.
+- **Planner (v71)**: OpenNGC e stelle fino a mag 6,5 nel pacchetto dell'app (la tavola tiene un catalogo ridotto); immagini dal proxy dell'app, Sole da Helioviewer; un progetto per setup; mosaici 20 %; ore e pose di partenza in Impostazioni (`planner.oreNuovo`, `planner.posaL`, `planner.posaS`); Luna per filtro nei criteri; campionamento col seeing; «mesi buoni». PlannerEventi2: `preset.mappa` (spento finche' i servizi delle mappe non sono scelti: restano striscia, sito e Google Maps) e `preset.orbita` («orbita in caricamento»).
+- **Progetti (v72)**: Reinquadra; doppione con un altro setup, Prima di salvare con «{durata} già riprese non conterebbero più» (la conta l'app), errore di salvataggio, Elimina non riuscito; prima scansione «Tutti finiti · Scelgo io · Decido dopo»; progetto senza obiettivo con «Scrivi l'obiettivo».
+- **Piano della notte (v73)**: proposte «4 h di posa».
+
+**Restano disegnati, arrivano dopo**: esportazioni N.I.N.A. e SharpCap, ricerche online (JPL, MPC, VizieR, AAVSO, TNS), eventi dall'orbita vera, la mappa del transito, la carta Sole del Meteo, Diagnostica e «Ultimo tentativo» dei servizi.
+
+**Stato**: v60–v73 da approvare da Marco sulla tavola, parole comprese.
+
+## v75 (7/11): le 15 voci del controllo della v73
+
+Da `handoff/per-design.md`, sezione «Da dare». Una riga per voce, nell'ordine della coda:
+
+1. **skPulse nel foglio**: `astrolog.css` definisce ora tutti i movimenti che nomina (`skPulse`, `alSpin`, `alFill` con `@property --p`, `alGrow`, `alGrowX`, `alFade`, `alPop`, `alWipe`), accanto ad `alIn`. Gli helmet delle tavole li ripetono ancora, ma non servono piu'.
+2. **Curvatura** (MisureFrame): l'aberrazione fuori asse di ASTAP, HFD verso gli angoli meno HFD del centro, in px col segno e in ″ con la scala («+0,29 px · +0,6″»; senza scala solo px). Nessun giudizio. In tessera, nella tabella per filtro, nel sensore e nel frame (tessera «Curvatura» a parte; «Tilt» resta in % col giudizio 10 / 20 %).
+3. **Gradiente**: tolta la % del fondo (tessera e frame); restano «× rumore» e il lato chiaro.
+4. **FWHMTilt e FWHMCurvature**: tessera «Tilt · curvatura dalla FWHM», due numeri puri, «numeri puri: fra gli angoli · angoli e centro».
+5. **Fonti della Selezione** (`soglie.js`, `SELM`): «Rousseeuw & Croux 1993» per ogni 2,5 rispetto al gruppo; altezza «massa d'aria 2 (AAVSO)»; Luna sorta «dall'orizzonte, quando sorge»; Luna illuminata «regola di ING: grigio fino a 0,65». Nessun ADR a schermo.
+6. **Parole**: «ore visibili» in Notti; «ore di posa col Sole alto» in Meteo stati; «verdetto» in Meteo; Statistiche «notti di ripresa», «nessuna ripresa», «non hai ripreso» al posto di uscite e uscito; tutte le percentuali a schermo attaccate («96%»), anche in `soglie.cieloT`, Planner, Telaio, Selezione, Statistiche, PlannerEventi2 e PlannerSolare2.
+7. **Virgola in Statistiche**: ogni `toFixed` a schermo passa da `AL.virg`.
+8. **Luna**: 25% «regola di ING: buio sotto 0,25»; 0° «dall'orizzonte, quando sorge» (Impostazioni e `soglie.imp`).
+9. **SQM a mano**: da 7 a 23, «Un numero da 7 a 23.».
+10. **Dalla mappa**: «… quando bastano, propongono di correggerlo.»
+11. **Servizio del cielo**: «Servizio del cielo · lightpollutionmap.info», World Atlas della luce artificiale, chiave gratuita chiesta con una email all'autore, 500 richieste al giorno; «Dove si prende ↗» apre https://www.lightpollutionmap.info/.
+12. **Piano della notte, Ricerca senza chiavi**: «Serve la chiave AAVSO in Impostazioni › Servizi.» (e TNS), rimando «Impostazioni › Servizi ↗» a `Impostazioni.dc.html?sezione=servizi`.
+13. **Archivio**: lo stato «errore dell'app» c'era gia' (Tweak «stato» o `?stato=errore dell'app`): lo disegna il Telaio con la prop `app="errore"`, «AstroLog non risponde, riprova» e Riprova, come nelle altre pagine. Stili fissi nel foglio: la radice ha `data-formato` e le misure del formato sono classi (`al-arch__pagina`, `__carta-testo`, `__elenco-righe`, `__solo-desk`, `__elenco-ore`, `__campo-riga`, `__testo-13--forte`). Restano inline solo i dati: colonne delle anteprime per produzione e l'immagine caricata.
+14. **Bortle misurato**: il buco fra i mesi si conta in giro sui 12 (Statistiche, Impostazioni `regolaOk`); con poche misure «Servono notti in almeno 4 mesi, senza buchi di oltre 3: finora {n} notti in {m} mesi.» (anche in Misure dei frame e in Impostazioni).
+15. **NAS**: Selezione «La cartella … è in sola lettura», «Erano su un disco senza cestino», «… sono su un disco senza cestino»; Primo avvio, percorso d'esempio `/opt/astap/astap_cli`.
+16. **Dati d'esempio**: Dashboard raffiche 22 km/h con «buona»; Luna «sale fino a 64° alle 05:30», dentro il buio.
+
+**Risposta v68 chiusa**: le quattro vie del cielo sono quelle dell'app; il servizio e' lightpollutionmap.info.
 
 ## Domande aperte
 

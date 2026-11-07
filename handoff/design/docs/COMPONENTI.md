@@ -94,7 +94,7 @@ Lo usano: Dashboard, Notti, Progetti, Selezione dei frame (tipo luna: notti con 
 
 ## CardMeteo
 
-La carta di una notte nel Meteo: verdetto, ore utili, Luna.
+La carta di una notte nel Meteo: verdetto, ore di posa (v59), Luna.
 
 | parametro | tipo | valori | partenza |
 |---|---|---|---|
@@ -317,6 +317,8 @@ Un modulo: campi, tendine, tipi a tasselli, errore sotto, unità a destra.
 
 Classi: `al-bottone`, `al-campo`, `al-tendina`, `al-c-modulo__…`.
 
+v59: `m.elimina` (facoltativo) mette in fondo «Elimina» in rosso: `{ bottone, chiede, dis, cls, perche, haVai, vaiUnisci, domanda, esce, siL, busy, apri, si, no }`. Classi `al-c-modulo__elimina`, `__elimina-l` (`--spento`), `__elimina-nota`, `__conferma`, `__conferma-segno`, `__conferma-testo`, `__conferma-sub`, `__conferma-azioni`, `__conferma-si`.
+
 Lo usano: Attrezzatura, Sistema.
 
 ## Pillola
@@ -391,7 +393,7 @@ Gli eventi del Planner (v57–v58): transiti della ISS su Sole e Luna, eclissi, 
 | modi | Array | le linguette Cielo profondo · Sistema solare · Eventi |  |
 | corredo | object | il setup scelto (focale, pixel, sensore) |  |
 | corSel | object | i setup per «Setup ▾» |  |
-| preset | object | stato iniziale (tipo, periodo, sel, nessuno, issErr) |  |
+| preset | object | stato iniziale (tipo, periodo, sel, nessuno, issErr); \`mappa\` (v71: false finché i servizi delle mappe non sono scelti), \`orbita\` (v71: true = «orbita in caricamento») |  |
 | sito | boolean |  | true |
 | modo, accento | string |  |  |
 

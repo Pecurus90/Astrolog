@@ -57,7 +57,16 @@ class Component extends DCLogic {
       ['Finito dalla prima scansione', 'M 27: obiettivo = ore fatte, «dalla prima scansione · agosto 2025», calendario dalle ore', 'normale', 'imp-M27'],
       ['In Modifica', 'IC 1396: nome, setup in pillole, obiettivo per filtro con − e +; le ore fatte restano', 'normale', 'ic1396', true],
       ['Calendario su più mesi', 'IC 1396 aperto sul primo mese con notti: ‹ spenta, › verso settembre', 'normale', 'ic1396', false, 'primo mese'],
-      ['Oltre il 100%', 'NGC 6960: ✓ nell\u0027anello, «+ 10 min» a destra, «di 8 h · + 10 min» nella scheda', 'obiettivo raggiunto', 'ngc6960']];
+      ['Caricamento', 'Lo scheletro del telaio', 'caricamento', 'ic1396'],
+      ['Errore dell\u0027app', '«AstroLog non risponde, riprova»', 'errore dell\u0027app', 'ic1396'],
+      ['Oltre il 100%', 'NGC 6960: ✓ nell\u0027anello, «+ 10 min» a destra, «di 8 h · + 10 min» nella scheda', 'obiettivo raggiunto', 'ngc6960'],
+      ['Prima scansione finita', 'La domanda, una volta: Tutti finiti · Scelgo io ↗ · Decido dopo. Senza risposta restano in Archivio', 'prima scansione finita', 'ic1396'],
+      ['Senza obiettivo', 'M 33, «In corso» alla prima scansione: niente percentuale, «Scrivi l\u0027obiettivo»', 'senza obiettivo', 'imp-M33c'],
+      ['Stesso oggetto, due setup', 'M 31 con FRA400 e con RedCat: un progetto per setup', 'stesso oggetto, due setup', 'm31red'],
+      ['Doppione con un altro setup', 'Modifica: M 31 passa a FRA400, che ha già il suo progetto; Salva spento', 'doppione con un altro setup', 'm31red'],
+      ['Prima di salvare', 'Modifica: IC 1396 passa a 103APO; «14 h 20 già riprese non conterebbero più»', 'prima di salvare', 'ic1396'],
+      ['Errore di salvataggio', 'Modifica non salvata: AstroLog non risponde; Riprova', 'errore di salvataggio', 'ic1396'],
+      ['Elimina non riuscito', 'NGC 6992: la conferma resta con l\u0027errore; Riprova', 'elimina non riuscito', 'ngc6992']];
     const on = this.state.on;
     const mk = (f) => T.map(([titolo, nota, st, p, mod, cal], i) => { const k = f + i, nn = String(i + 1).padStart(2, '0');
       return { titolo: nn + ' · ' + titolo, nota, st, p, mod: !!mod, cal: cal || 'ultimo mese', label: (f === 't' ? 'Telefono' : 'Desktop') + ' · ' + nn + ' · ' + titolo, ref: this.rif(k), on: !!on[k] }; });

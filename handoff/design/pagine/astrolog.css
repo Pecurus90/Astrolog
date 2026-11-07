@@ -541,6 +541,16 @@
 .al-pannello__titolo { font-size: 17px; font-weight: 500; }
 @keyframes alFadeUp { from { opacity: 0; transform: translateY(6px); } }
 @keyframes alIn { from { opacity: 0; transform: translateY(14px); } }
+/* Movimenti nominati dalle regole qui sotto (v75): prima vivevano solo negli helmet delle tavole. --p e' la quota degli anelli (alFill). */
+@property --p { syntax: '<number>'; inherits: false; initial-value: 100; }
+@keyframes skPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes alSpin { to { transform: rotate(360deg); } }
+@keyframes alFill { from { --p: 0; } }
+@keyframes alGrow { from { transform: scaleY(0); } }
+@keyframes alGrowX { from { transform: scaleX(0); } }
+@keyframes alFade { from { opacity: 0; } }
+@keyframes alPop { from { opacity: 0; transform: scale(.6); } }
+@keyframes alWipe { from { clip-path: inset(-12px 100% -12px -12px); } to { clip-path: inset(-12px -12px -12px -12px); } }
 
 /* Campo e tendina (v32): un campo solo per testo, numeri e tendine. 44 di altezza (36 --piccolo sul desktop, sempre 44 sul telefono), angoli 12,
    fondo carta-2 con l'anello della linea; --rovescio sopra carta-2 (fondo carta), --vuoto (senza fondo). --tondo per le ricerche, --numero allineato a destra.
@@ -703,13 +713,15 @@ button.al-bottone { margin: 0; font-style: inherit; line-height: inherit; letter
 .al-c-card-meteo__testo-1 { font-size: 14px; color: var(--tenue); }
 .al-c-card-meteo__blocco-2 { display: block; font-size: 11px; font-weight: 600; color: var(--testo); }
 .al-c-card-meteo__pillola-1 { background: var(--carta); border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600; }
-.al-c-card-meteo__tondo-1 { width: 28px; height: 28px; margin: -4px -4px -4px 0; border-radius: 50%; background: var(--carta); display: grid; place-items: center; font-size: 15px; }
-.al-c-card-meteo__tondo-2 { width: 28px; height: 28px; border-radius: 50%; background: var(--carta); display: grid; place-items: center; font-size: 13px; }
+.al-c-card-meteo__tondo-1 { position: relative; width: 28px; height: 28px; margin: -4px -4px -4px 0; border-radius: 50%; background: var(--carta); display: grid; place-items: center; font-size: 15px; }
+/* v60: il tondo resta da 28, il bersaglio e' da 44 */
+.al-c-card-meteo__tondo-1::after, .al-c-card-meteo__tondo-2::after { content: ''; position: absolute; inset: -8px; border-radius: 50%; }
+.al-c-card-meteo__tondo-2 { position: relative; width: 28px; height: 28px; border-radius: 50%; background: var(--carta); display: grid; place-items: center; font-size: 13px; }
 .al-c-card-meteo__colonna-2 { display: flex; flex-direction: column; gap: 10px; }
 .al-c-card-meteo__riga-2 { display: flex; align-items: baseline; gap: 4px; }
 .al-c-card-meteo__testo-2 { font-size: 38px; font-weight: 300; line-height: 1; letter-spacing: -.02em; }
 .al-c-card-meteo__testo-3 { color: var(--tenue); }
-.al-c-card-meteo__riga-3 { display: flex; gap: 3px; align-items: end; height: 40px; border-radius: 6px; }
+.al-c-card-meteo__riga-3 { display: flex; gap: 3px; align-items: end; height: 44px; border-radius: 6px; }
 .al-c-card-meteo__riga-4 { flex: 1; height: 100%; display: flex; align-items: flex-end; }
 .al-c-card-meteo__pillola-2 { width: 100%; border-radius: 999px; transition: opacity .16s; }
 .al-c-card-meteo__colonna-3 { display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 1.35; }
@@ -982,6 +994,10 @@ button.al-bottone { margin: 0; font-style: inherit; line-height: inherit; letter
 .al-c-misure-frame__colonna-3--prima { background: var(--accento-tessera); box-shadow: inset 0 0 0 2px var(--accento); }
 .al-c-misure-frame__colonna-3--seconda { outline: 2px dashed var(--testo); }
 .al-c-misure-frame__spark { stroke: var(--tenue); }
+/* v62: Altre misure, la cella con la tendina in fondo alle tessere */
+.al-c-misure-frame__altre { border-radius: 18px; padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; box-shadow: inset 0 0 0 1.5px var(--linea); }
+.al-c-misure-frame__altre-tendina { width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; font-family: var(--carattere); }
+.al-c-riepilogo__ecc { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; text-wrap: pretty; }
 .al-c-misure-frame__spark--prima { stroke: var(--accento); }
 .al-c-misure-frame__barra { fill: var(--barra-mese); stroke: none; }
 .al-c-misure-frame__barra--accesa { fill: var(--accento); stroke: var(--accento); }
@@ -1073,6 +1089,20 @@ button.al-bottone { margin: 0; font-style: inherit; line-height: inherit; letter
 .al-c-modulo__riga-9 { bottom: 84px; z-index: 2; display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 20px; }
 .al-c-modulo__tondo-4 { width: 14px; height: 14px; box-sizing: border-box; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: alSpin .8s linear infinite; }
 .al-c-modulo__blocco-7 { flex: 1 1 200px; min-width: 0; font-size: 14px; line-height: 1.4; color: var(--tenue); }
+/* Elimina pezzo (v59): testo rosso in fondo alla scheda, conferma nella stessa carta, come in Progetti */
+.al-c-modulo__elimina { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; border-top: 1px solid var(--linea); padding-top: 14px; }
+.al-c-modulo__elimina-l { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; color: var(--male); font-size: 15px; font-weight: 600; text-decoration: none; }
+.al-c-modulo__elimina-l:hover { text-decoration: underline; }
+.al-c-modulo__elimina-l--spento { color: var(--tenue); opacity: .6; cursor: not-allowed; }
+.al-c-modulo__elimina-l--spento:hover { text-decoration: none; }
+.al-c-modulo__elimina-nota { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; width: 100%; }
+.al-c-modulo__conferma { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; background: var(--carta-2); border-radius: 18px; padding: 12px 14px; animation: alFadeUp .3s ease-out both; }
+.al-c-modulo__conferma-segno { width: 24px; height: 24px; flex: none; border-radius: 50%; background: var(--male); color: var(--carta); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.al-c-modulo__conferma-testo { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 2px; font-weight: 600; }
+.al-c-modulo__conferma-sub { font-size: 14px; font-weight: 400; color: var(--tenue); }
+.al-c-modulo__conferma-azioni { display: flex; gap: 8px; }
+.al-c-modulo__conferma-si { display: flex; align-items: center; border-radius: 999px; padding: 0 16px; background: var(--male); color: var(--carta); font-size: 14px; font-weight: 600; text-decoration: none; }
+.al-c-modulo__conferma-si[aria-busy="true"] { opacity: .7; cursor: progress; }
 
 /* Pillola (v32: lo style= della pagina; inline restano solo i valori dai dati) */
 .al-c-pillola__blocco-1 { display: contents; }
@@ -1683,7 +1713,9 @@ button.al-bottone { margin: 0; font-style: inherit; line-height: inherit; letter
 .al-dash__pillola-13 { background: var(--scelta); color: var(--scelta-testo); border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .al-dash__riga-37 { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
 .al-dash__blocco-13 { font-size: 12px; color: var(--tenue); padding: 0 20px; margin-top: -6px; }
-.al-dash__riga-38 { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 20px 4px; scroll-padding: 0 20px; }
+/* v61: sul telefono le sei carte del meteo tre per riga, due file piene (brief del 12/10) */
+.al-dash__riga-38 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; padding: 0 16px 4px; }
+.al-dash__riga-38 .al-c-card-meteo__colonna-6 { width: auto; min-width: 0; padding: 12px; }
 .al-dash__colonna-26 { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 .al-dash__griglia-18 { display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 12px; align-items: center; min-height: 44px; padding-top: 12px; border-top: 1px solid var(--linea); }
 .al-dash__colonna-27 { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
@@ -2315,6 +2347,19 @@ button.al-bottone { margin: 0; font-style: inherit; line-height: inherit; letter
 .al-conf__testo-10 { font-size: 13px; color: var(--tenue); }
 .al-conf__blocco-8 { margin: 0; font-size: 14px; line-height: 1.5; color: var(--tenue); max-width: 680px; text-wrap: pretty; }
 .al-conf__centro-2 { display: grid; gap: 8px 16px; align-items: center; background: var(--carta-2); border-radius: 18px; min-width: 0; }
+/* Progetti finiti (v59): una riga per oggetto e setup, Finito · In corso */
+.al-conf__fin { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.al-conf__fin-barra { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+.al-conf__fin-conto { font-size: 15px; font-weight: 600; }
+.al-conf__fin-comandi { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.al-conf__fin-tendina { position: relative; display: inline-flex; }
+.al-conf__fin-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.al-conf__fin-riga { padding: 12px 12px 12px 18px; }
+.al-conf__fin-setup { font-size: 14px; color: var(--testo); }
+.al-conf__fin-nota { grid-column: 1 / -1; }
+.al-conf__fin-scelte { flex-wrap: nowrap; }
+.al-conf__fin-scelte .al-scelta__voce { white-space: nowrap; flex: none; }
+.al-conf__fin-piede { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding-top: 4px; }
 .al-conf__colonna-14 { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .al-conf__testo-11 { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
 .al-conf__blocco-9 { font-size: 14px; line-height: 1.4; min-width: 0; overflow-wrap: anywhere; }
@@ -4003,3 +4048,124 @@ select.al-tendina { -webkit-appearance: none; -moz-appearance: none; appearance:
 .al-bottone--cielo.al-bottone--scelta[aria-checked="true"], [role="radiogroup"] > .al-bottone--cielo[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--cielo-accento); }
 [role="radiogroup"] button[role="radio"][aria-checked="true"]:not(.al-scelta__voce):not(.al-bottone--pieno) { box-shadow: inset 0 0 0 2px var(--cielo-accento, var(--accento)); }
 button.al-scelta__voce { border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; }
+
+/* v63: Impostazioni › Selezione dei frame, le partenze delle soglie */
+.al-imp__sel-testa { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 16px; }
+.al-imp__sel-tendina { flex: none; min-height: 44px; box-sizing: border-box; max-width: 100%; font-family: var(--carattere); }
+.al-imp__sel-sotto { margin: 10px 0 6px; font-size: 13px; line-height: 1.45; color: var(--tenue); text-wrap: pretty; }
+.al-imp__sel-riga { display: grid; grid-template-columns: minmax(190px, auto) auto minmax(0, 1fr); align-items: center; gap: 8px 16px; padding: 10px 0; border-top: 1px solid var(--linea); }
+.al-imp__sel-riga--spenta .al-imp__sel-campi { opacity: .6; }
+.al-imp__sel-campi { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.al-imp__sel-op, .al-imp__sel-tipo { min-height: 44px; font-family: var(--carattere); }
+.al-imp__sel-numero { width: 72px; min-height: 44px; }
+.al-imp__sel-formula { width: 100%; min-width: 220px; min-height: 44px; }
+.al-imp__sel-fonte { display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.4; color: var(--tenue); text-wrap: pretty; min-width: 0; }
+.al-imp__sel-come { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 14px; line-height: 1.45; text-wrap: pretty; }
+[data-formato="telefono"] .al-imp__sel-riga { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 14px 0; }
+/* v63: Selezione dei frame, spostamento in corso, anteprima che arriva dopo, collegamento alle partenze */
+.al-sel__sposta { display: flex; flex-direction: column; gap: 8px; padding: 18px 22px; border-radius: 24px; background: var(--carta); box-shadow: inset 0 0 0 1.5px var(--accento); }
+.al-sel__sposta-testa { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.al-sel__sposta-barra { display: block; height: 8px; border-radius: 999px; background: var(--carta-2); overflow: hidden; }
+.al-sel__sposta-pieno { display: block; height: 100%; border-radius: 999px; background: var(--accento); }
+.al-sel__provvisorio { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; padding: 18px; border-radius: 18px; background: var(--carta-2); font-size: 14px; line-height: 1.45; text-wrap: pretty; }
+.al-sel__collega { color: var(--testo); text-decoration: underline; text-underline-offset: 3px; }
+/* v64: Archivio, stili fissi passati al foglio (brief 4.1); la vista scelta ha anche la parola (0.9) */
+.al-arch__riga-fine { display: flex; justify-content: flex-end; }
+.al-arch__ordine-vista { display: flex; gap: 8px; align-items: center; flex: none; }
+.al-tendina.al-arch__ordine { flex: none; min-height: 44px; box-sizing: border-box; font-family: var(--carattere); }
+.al-arch__viste { flex: none; display: flex; gap: 2px; padding: 2px; border-radius: 999px; background: var(--carta-2); }
+.al-arch__vista { min-width: 44px; height: 44px; padding: 0 13px; border: 0; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; background: transparent; color: var(--tenue); font: inherit; font-size: 13px; stroke-width: 1.6; }
+.al-arch__vista svg { stroke-width: inherit; flex: none; }
+.al-arch__vista[aria-checked="true"] { background: var(--carta); color: var(--testo); box-shadow: inset 0 0 0 2px var(--accento); stroke-width: 2.4; font-weight: 600; }
+.al-arch__vista-parola { display: none; }
+.al-arch__vista[aria-checked="true"] .al-arch__vista-parola { display: inline; }
+.al-arch__carta-corpo { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.al-arch__foto-griglia { position: absolute; inset: 0; display: grid; grid-auto-rows: 1fr; gap: 2px; }
+.al-arch__foto-parte { background-size: cover; background-position: center; }
+.al-arch__foto-tasti { position: absolute; left: 0; right: 0; top: 0; display: grid; grid-auto-rows: 1fr; gap: 2px; pointer-events: none; z-index: 2; }
+.al-arch__foto-cella { position: relative; }
+.al-arch__foto-tasto { position: absolute; right: 6px; bottom: 6px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--carta); color: var(--testo); cursor: pointer; pointer-events: auto; }
+.al-arch__foto-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* v65: Notti, barra delle ore di posa con la riga, fonte del sito, fuori da ogni notte, Carica altre non riuscito */
+.al-notti__barra-posa { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.al-notti__sito-fonte { color: var(--tenue); margin-left: 4px; }
+.al-notti__fuori-voce { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.al-notti__altre-errore { display: flex; gap: 10px; align-items: center; font-size: 14px; line-height: 1.4; text-wrap: pretty; }
+/* v66: Da confermare, la scheda di Correggi sotto l'oggetto riconosciuto */
+.al-conf__corr { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: 18px; background: var(--carta-2); list-style: none; }
+
+/* v67: Impostazioni, siti completi (Aggiungi, Rinomina, Elimina, il cielo del sito), cartelle (Sposta, Togli, NAS), Lingua, ASTAP */
+.al-imp__pila { grid-column: span 4; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.al-imp__siti { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.al-bottone.al-imp__aggiungi[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--accento); font-weight: 600; }
+.al-imp__sito-testa { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.al-imp__sito-nome { font-size: 22px; font-weight: 500; }
+.al-imp__sito-rin { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.al-imp__sito-gesti { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.al-imp__sito-fondo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--linea); }
+.al-imp__sito-fondo--riga { flex-direction: row; }
+.al-bottone[aria-disabled="true"].al-imp__elimina, .al-bottone[aria-disabled="true"].al-imp__salva, .al-imp__sito-rin .al-bottone[aria-disabled="true"] { opacity: .45; cursor: default; pointer-events: none; }
+.al-imp__pannello { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 18px; background: var(--carta-2); font-size: 14px; line-height: 1.45; text-wrap: pretty; margin-bottom: 12px; }
+.al-imp__cielo-esito { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 12px; text-wrap: pretty; }
+.al-imp__cielo-riga { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 0; border-top: 1px solid var(--linea); min-width: 0; }
+.al-imp__cielo-val { font-size: 20px; font-weight: 500; }
+.al-imp__mesi { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; width: 100%; max-width: 420px; }
+.al-imp__mese { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--tenue); }
+.al-imp__mese::before { content: ''; width: 100%; height: 8px; border-radius: 999px; box-sizing: border-box; border: 1.5px solid var(--tenue); }
+.al-imp__mese--fatto { color: var(--testo); font-weight: 600; }
+.al-imp__mese--fatto::before { background: var(--accento); border: 0; }
+.al-imp__nas { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border-radius: 18px; background: var(--carta-2); }
+.al-imp__nas-voce { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 0 2px; border-top: 1px solid var(--linea); font-size: 14px; }
+.al-imp__nas-voce[aria-pressed="true"] { font-weight: 600; }
+.al-imp__cart-pannello { margin: 0 0 12px 34px; }
+[data-formato="telefono"] .al-imp__cart-pannello { margin-left: 0; }
+[data-formato="telefono"] .al-imp__riga-10 { flex-wrap: wrap; }
+.al-campo.al-imp__coord { width: 140px; }
+.al-imp__nuovo-dati { display: flex; flex-direction: column; }
+.al-imp__allinea { align-items: center; padding-top: 12px; border-top: 1px solid var(--linea); }
+/* v67: Statistiche, la proposta del Bortle al sito senza cielo; il fuoco sui grafici */
+.al-stat__bortle-prop { font-size: 13px; font-weight: 600; line-height: 1.4; text-wrap: pretty; }
+.al-stat__grafico-2:focus-visible, [role="group"][tabindex="0"]:focus-visible, [role="table"][tabindex="0"]:focus-visible { outline: 2px solid var(--testo); outline-offset: 4px; border-radius: 8px; }
+/* v67: Telaio, la pastiglia Stanotte e il suo riquadro (sito, Luna, meteo della notte) */
+.al-c-telaio__notte-ancora { position: relative; display: inline-flex; }
+.al-c-telaio__stanotte { gap: 8px; }
+.al-c-telaio__stanotte-t { font-size: 12px; font-weight: 600; color: inherit; opacity: .72; }
+.al-c-telaio__notte { position: absolute; right: 0; top: calc(100% + 10px); z-index: 40; width: 360px; box-sizing: border-box; display: flex; flex-direction: column; padding: 18px 20px; border-radius: 24px; background: var(--carta); color: var(--testo); box-shadow: inset 0 0 0 1px var(--linea), 0 16px 40px rgba(0,0,0,.3); text-align: left; animation: alFadeUp .2s ease-out both; }
+.al-c-telaio__notte--tel { position: relative; right: auto; top: auto; width: auto; margin: 0 16px 12px; }
+.al-c-telaio__notte-testa { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.al-c-telaio__notte-tit { font-size: 16px; font-weight: 600; }
+.al-c-telaio__notte-sotto { font-size: 12px; color: var(--tenue); }
+.al-c-telaio__notte-riga { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--linea); }
+.al-c-telaio__notte-l { font-size: 13px; color: var(--tenue); padding-top: 1px; }
+.al-c-telaio__notte-v { display: flex; flex-direction: column; gap: 2px; font-size: 14px; min-width: 0; }
+.al-c-telaio__notte-v b { font-weight: 500; }
+.al-c-telaio__notte-s { font-size: 12px; color: var(--tenue); line-height: 1.35; text-wrap: pretty; }
+.al-c-telaio__notte-gesti { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 1px solid var(--linea); }
+
+/* Archivio (v75): le misure che cambiavano col formato, prima scritte sulle righe della tavola. Desktop qui, telefono sotto. */
+.al-arch__pagina { gap: 16px; }
+.al-arch__testo-2 { font-size: 64px; }
+.al-arch__centro-1 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.al-arch__riga-7, .al-arch__foto-tasti { aspect-ratio: 3 / 2; }
+.al-arch__riga-7 { background: var(--foto-fondo); }
+.al-arch__blocco-7 { font-size: 22px; }
+.al-arch__carta-testo { padding: 14px 16px 16px; }
+.al-arch__blocco-8 { font-size: 16px; }
+.al-arch__testo-6 { font-size: 24px; }
+.al-arch__elenco-righe { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr) 100px minmax(0, 1fr) 110px 24px; gap: 16px; }
+.al-arch__solo-desk { display: flex; }
+.al-arch__elenco-ore { align-items: flex-start; }
+.al-arch__campo-riga { grid-template-columns: 150px minmax(0, 1fr) 170px; }
+.al-arch__testo-13 { color: var(--tenue); }
+.al-arch__testo-13--forte { color: var(--testo); }
+[data-formato="telefono"] .al-arch__pagina { gap: 10px; }
+[data-formato="telefono"] .al-arch__testo-2 { font-size: 48px; }
+[data-formato="telefono"] .al-arch__centro-1 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+[data-formato="telefono"] .al-arch__blocco-7 { font-size: 20px; }
+[data-formato="telefono"] .al-arch__carta-testo { padding: 12px 12px 14px; }
+[data-formato="telefono"] .al-arch__blocco-8 { font-size: 15px; }
+[data-formato="telefono"] .al-arch__testo-6 { font-size: 22px; }
+[data-formato="telefono"] .al-arch__elenco-righe { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+[data-formato="telefono"] .al-arch__solo-desk { display: none; }
+[data-formato="telefono"] .al-arch__elenco-ore { align-items: flex-end; }
+[data-formato="telefono"] .al-arch__campo-riga { grid-template-columns: minmax(0, 1fr); }

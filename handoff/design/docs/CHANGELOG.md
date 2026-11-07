@@ -1,5 +1,79 @@
 # AstroLog — cronologia
 
+## v75 — Le 15 voci del controllo della v73 — 7/11/2026
+
+- Foglio: i movimenti (skPulse e gli altri sette) definiti in `astrolog.css`; Archivio con `data-formato` e le misure del formato in classi.
+- MisureFrame: curvatura in px e ″ col segno, senza giudizio; tessere Tilt e Curvatura separate nel frame; «Tilt · curvatura dalla FWHM» in numeri puri; gradiente senza %.
+- Parole: ore visibili, ore di posa, verdetto, notti di ripresa; percentuali attaccate; virgola in Statistiche; fonti pubbliche in Impostazioni (Luna, Selezione dei frame); SQM da 7 a 23; «propongono di correggerlo»; servizio del cielo lightpollutionmap.info; Ricerca con «Impostazioni › Servizi ↗»; niente NAS nei testi della Selezione; percorso di ASTAP senza la \ di Windows.
+- Bortle misurato in giro sui 12 mesi (Statistiche, Impostazioni) con la frase del 24/10.
+- Dashboard: raffiche 22 km/h, Luna a 64° alle 05:30.
+- Pacchetto `consegna/astrolog-v75.zip`.
+
+## v74 — Esportazione per Claude Code — 7/11/2026
+
+- `docs/per-claude-code-porting.md` alla v73 (sezione v60–v73, cosa arriva dopo, cosa confermare); README. Pacchetto: l'intero progetto, in `consegna/astrolog-v73.zip`.
+
+## v71–v73 — Fase 5: Planner, Progetti, Piano della notte (brief 8) — 7/11/2026
+
+- v71 Planner: OpenNGC e mag 6,5 nel credito, immagini dal proxy, Sole da Helioviewer; Eventi «orbita in caricamento» e transiti senza mappa (striscia, sito, Google Maps); un progetto per setup («ha già un progetto con questo setup»), Prima di salvare con «{durata} già riprese non conterebbero più»; mosaici 20 %; ore e pose di partenza da Impostazioni (tre righe nuove); Luna per filtro nei criteri; «con l'orizzonte di Cima Ekar»; campionamento col seeing e consigli nella tendina dei setup; N.I.N.A., Per oggetto, Durante i frame, mesi buoni; quattro stati nuovi.
+- v72 Progetti: Reinquadra; due setup, doppione, Prima di salvare, errore di salvataggio, Elimina non riuscito; prima scansione «Tutti finiti · Scelgo io · Decido dopo» (anche in Dashboard); senza obiettivo con «Scrivi l'obiettivo». Tavola: sette righe.
+- v73 Piano della notte: «4 h di posa».
+
+## v67–v70 — Fase 4: Impostazioni, Primo avvio, Statistiche, Telaio e Sistema (brief 9, 11, 12) — 7/11/2026
+
+- v67: Da confermare stati con Montatura, Frame senza data, Correggi, «non ancora cercato»; Attrezzatura di nuovo leggibile, campionamento con la virgola.
+- v68 Impostazioni: siti completi (Aggiungi, Rinomina, Elimina, altitudine e fuso con la provenienza), carta «Il cielo del sito» (quattro vie, Bortle misurato, 12 tacche); ASTAP (da dove viene, Cercalo tu, cataloghi, D50); chiavi solo in Servizi (servizio del cielo nuovo); Lingua; Cartelle (Sposta, Togli, non raggiungibile, NAS); Backup (stati nuovi); orizzonte dal Planner; Sole spento; postazione = montatura. Tavola nuova `Impostazioni stati`. Primo avvio: D50.
+- v69 Statistiche: Bortle con la regola dei 4 mesi, proposta al sito senza cielo; «senza aerosol»; notti buone perse; grafici e celle da tastiera. Misure dei frame: stessa regola.
+- v70 Telaio: pastiglia Stanotte (sito, Luna, meteo); Carta del cielo solo nel Planner. Sistema aggiornato.
+
+## v66 — Da confermare e Attrezzatura (brief 3 e 10) — 7/11/2026
+
+- Da confermare: filtri a più bande con nm, proposte già scritte, perché l'app dubita e i due vuoti, Mostra altri e Correggi, esiti di Applica, quale nome resta con Unisci, sezioni nuove Montatura e Frame senza data, Hα e Hβ; `?sezione=` dalle Notti.
+- Attrezzatura: scala «ricavata dal cielo»; frame da rielaborare per ogni modifica che cambia il cielo.
+
+## v65 — Notti (brief 5) — 7/11/2026
+
+- Riga sotto la barra delle ore di posa; fuori da ogni notte con la risposta per voce; Luna col lato illuminato (`lato`); fonte del sito; oggetti nel totale; Carica altre in corso e non riuscito.
+
+## v64 — Archivio e Riepilogo (brief 4) — 7/11/2026
+
+- Archivio: stili fissi passati al foglio; vista scelta con la parola; «Togli i criteri».
+- Riepilogo: ↗ Progetti solo per gli oggetti con un progetto.
+
+## v63 — Selezione dei frame (brief 2) — 6/11/2026
+
+- Impostazioni: sezione nuova «Selezione dei frame», l'unico posto che salva le partenze (`ALsoglie.selezione` in soglie.js). La Selezione le cambia solo per il gruppo; uscita la vista regole dentro la pagina.
+- Sei criteri nuovi, formula con tutte le misure e l'elenco a gruppi, eccentricità sul setup, guadagno nel gruppo, FWHM e HFD in px, nota per frame dall'app.
+- Stati: gruppo sotto 10 frame, spostamento in corso, senza scala del cielo, due guadagni; Tweak «immagine» e «progetti» per ciò che arriva dopo.
+
+## v62 — Misure dei frame (brief 1) — 6/11/2026
+
+- MisureFrame: «Altre misure» a gruppi (una alla volta, ricordata), trasparenza e nuvole con «serve una serie», tilt e curvatura in px nel frame, gradiente in unità di rumore, fondo e rumore con frame non confrontabili (camera, guadagno o tempo di posa, la ragione accanto), stati «serie troppo corta» e «frame non confrontabili».
+- Riepilogo: avviso dell'eccentricità del setup nella carta Setup. Riepilogo stati: via «le misurerà sep».
+- Virgola decimale: `AL.virg` (tema.js) e' la sola casa, `ALsoglie.num` rimanda li'; Misure dei frame, MisureFrame, Attrezzatura, Riepilogo.
+
+## v61 — Dashboard e Meteo (brief 6–7) — 6/11/2026
+
+- Cielo in quattro classi (Sereno · Nuvole sparse · Nuvoloso · Coperto); Kp «attivo · tempesta geomagnetica», scala NOAA SWPC; parole del 6/11 approvate.
+- Meteo del Sole: «Sole non disponibile», usciti i pesi del giorno.
+- Dashboard: meteo tre per riga sul telefono (computer: fila da sei); calendario della Luna a tre gradini con le ore senza Luna; Luna coerente; buio senza Luna; Sole non disponibile; Progetti solo con progetti; otto stati nuovi.
+- Meteo: seeing «scarso · stima dal vento in quota» da 126 km/h, sotto solo l'invito alla chiave; fonte che tace generica; anno CAMS dai dati; femminile.
+
+## v60 — Brief prima del porting, punto 0 — 6/11/2026
+
+- Trasparenza al posto della Qualita' (`soglie.notte`, `senzaRiga` «senza aerosol»); via pesi e «limita».
+- Cielo in classi okta (`soglie.cielo`, `cieloT`); condensa mai «non adatta»; raffiche 25 km/h; fonte ING accanto al 65.
+- «Rispetto al gruppo» al posto del MAD a schermo; virgola decimale (`soglie.num`).
+- Telaio con `app` (caricamento · errore) e stati nuovi in dieci pagine; Cerca e Riepilogo coi loro.
+- Colore mai da solo (Archivio, Notti, calendario della Luna, Kp, Planner); bersagli da 44 in CardMeteo; dati di prova generici.
+
+## v59 — Ritocchi dopo l'inventario — 27/10/2026
+
+- Luna: partenza 25 % · 65 % · dall'orizzonte (`soglie.js`, Impostazioni).
+- Ore di posa al posto delle ore utili: `soglie.posa…`; Meteo, Dashboard, Notti, Riepilogo, Piano della notte, Sistema; nel Planner e in Impostazioni «visibili».
+- Attrezzatura: Elimina pezzo, conferma nella carta, spento coi frame; `Modulo` con `m.elimina`; cinque stati nella tavola.
+- Da confermare: sezione «Progetti finiti» (Finito · In corso, Tutti finiti, ordine, Decido dopo); Dashboard «prima scansione finita»; stati nelle tavole.
+
 ## v58 — Transiti con la mappa — 25/10/2026
 
 - v58.6 (26/10): consegna `docs/per-claude-code-porting.md`; Sistema col vetro e i Planner su desktop e telefono; bottoni del cielo profondo sulle classi.

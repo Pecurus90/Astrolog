@@ -46,7 +46,8 @@
   // Numeri: decimali col punto, migliaia con lo spazio sottile da 10 000; ore coi minuti, mai "0 h"
   const al = n => { n = Math.round(Number(n)); return n === 8 || n === 11 || (n >= 80 && n <= 89) ? 'all\u0027' : 'al '; };
   const num = n => { const s = String(n), [i, d] = s.split('.'); return Math.abs(parseInt(i, 10)) < 10000 ? s : i.replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F') + (d ? '.' + d : ''); };
-  const virg = (v, d) => v.toFixed(d);
+  // Numeri all'italiana (Marco, 6/11): virgola decimale e segno meno vero. La sola casa: ALsoglie.num rimanda qui.
+  const virg = (v, d) => (+v).toFixed(d ?? 1).replace('.', ',').replace('-', '\u2212');
   const ore = x => { if (x == null) return 'senza durata'; if (x < 0.1) return '< 6 min'; if (x < 1) return Math.round(x * 60) + ' min'; const h = Math.floor(x + 1e-9), m = Math.round((x - h) * 60); return m ? h + ' h ' + String(m).padStart(2, '0') : h + ' h'; };
   // Trasparenza: sull'esadecimale rgba(); sui token del foglio color-mix (anche l'opacita' puo' essere un token)
   const rgba = (c, o) => { if (typeof c === 'string' && c[0] === '#' && typeof o === 'number') { const n = parseInt(c.slice(1), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + o + ')'; }

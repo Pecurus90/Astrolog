@@ -13,7 +13,9 @@
 </helmet>
 <div class="al-avvio__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
 <sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-avvio__colonna-1" data-screen-label="Primo avvio">
-<div class="al-avvio__centro-1" style="max-width:{{ L.max }};padding:{{ L.pad }};grid-template-columns:{{ L.cols }};gap:{{ L.gap }}">
+<sc-if value="{{ appCar }}" hint-placeholder-val="{{ false }}"><div style="max-width:{{ L.max }};width:100%;margin:0 auto;padding:{{ L.pad }};box-sizing:border-box"><dc-import name="componenti/Scheletro" formato="{{ formato }}" carte="{{ appSk }}" testo="Leggo le impostazioni…" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,420px"></dc-import></div></sc-if>
+<sc-if value="{{ appErr }}" hint-placeholder-val="{{ false }}"><div style="max-width:{{ L.max }};width:100%;margin:0 auto;padding:{{ L.pad }};box-sizing:border-box"><dc-import name="componenti/Avviso" tipo="pagina" formato="{{ formato }}" segno="!" titolo="AstroLog non risponde, riprova" testo="Le impostazioni non si leggono. Nessun dato è cambiato." azione="Riprova" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,96px"></dc-import></div></sc-if>
+<div class="al-avvio__centro-1" style="display:{{ appD }};max-width:{{ L.max }};padding:{{ L.pad }};grid-template-columns:{{ L.cols }};gap:{{ L.gap }}">
 
 <div class="al-avvio__colonna-2" style="position:{{ L.asPos }};gap:{{ L.asGap }}">
 <div class="al-avvio__colonna-3"><h1 class="al-avvio__testo-1" style="font-size:{{ L.h1 }}">Primo avvio</h1><p class="al-avvio__testo-2">Tutti i passi sono facoltativi.</p></div>
@@ -81,11 +83,11 @@
 <div class="al-avvio__colonna-22"><span class="al-avvio__testo-13">Senza ASTAP</span><span class="al-avvio__testo-20">I file vengono catalogati e le ore contate, ma gli oggetti ripresi non vengono identificati.</span></div>
 <div class="al-avvio__colonna-22"><span class="al-avvio__testo-13">Download</span><a class="al-avvio__riga-15" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">Scarica ASTAP dal sito dell'autore ↗</a><span class="al-avvio__testo-12">L'app non scarica né installa ASTAP.</span></div>
 </div>
-<div class="al-avvio__colonna-12"><span class="al-avvio__testo-13">Già installato</span><div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-astap">Percorso di ASTAP</label><div class="al-avvio__riga-6"><input id="pa-astap" value="{{ F.astap.v }}" onChange="{{ F.astap.on }}" onBlur="{{ F.astap.bl }}" placeholder="C:\Program Files\astap\astap_cli.exe" aria-invalid="{{ F.astap.inv }}" aria-describedby="pa-astap-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"><a href="#" role="button" aria-disabled="{{ A.verifica.dis }}" aria-busy="{{ A.verifica.busy }}" onClick="{{ A.verifica.on }}" class="{{ A.verifica.cls }} al-avvio__blocco-4"><sc-if value="{{ A.verifica.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ A.verifica.l }}</a></div><sc-if value="{{ F.astap.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-astap-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.astap.err }}</span></sc-if><span class="al-avvio__testo-12">Percorso del programma (astap_cli), non della cartella.</span></div></div>
+<div class="al-avvio__colonna-12"><span class="al-avvio__testo-13">Già installato</span><div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-astap">Percorso di ASTAP</label><div class="al-avvio__riga-6"><input id="pa-astap" value="{{ F.astap.v }}" onChange="{{ F.astap.on }}" onBlur="{{ F.astap.bl }}" placeholder="/opt/astap/astap_cli" aria-invalid="{{ F.astap.inv }}" aria-describedby="pa-astap-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"><a href="#" role="button" aria-disabled="{{ A.verifica.dis }}" aria-busy="{{ A.verifica.busy }}" onClick="{{ A.verifica.on }}" class="{{ A.verifica.cls }} al-avvio__blocco-4"><sc-if value="{{ A.verifica.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ A.verifica.l }}</a></div><sc-if value="{{ F.astap.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-astap-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.astap.err }}</span></sc-if><span class="al-avvio__testo-12">Percorso del programma (astap_cli), non della cartella.</span></div></div>
 </div></sc-if>
 <sc-if value="{{ V.astapCat }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-12">
 <dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ A.cat.s }}" titolo="{{ A.cat.t }}" testo="{{ A.cat.x }}" azione="{{ A.cat.a }}" on-azione="{{ A.cat.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import>
-<div class="al-avvio__colonna-22"><a class="al-avvio__riga-15" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">Scarica il catalogo stellare ↗</a><span class="al-avvio__testo-20">Catalogo consigliato: D80 (circa 1.25 GB), nella stessa cartella di ASTAP.</span></div>
+<div class="al-avvio__colonna-22"><a class="al-avvio__riga-15" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">Scarica il catalogo stellare ↗</a><span class="al-avvio__testo-20">Catalogo consigliato: D50, nella stessa cartella di ASTAP; D80 per i campi molto stretti.</span></div>
 </div></sc-if>
 <sc-if value="{{ A.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ A.esito.s }}" titolo="{{ A.esito.t }}" testo="{{ A.esito.x }}" azione="{{ A.esito.a }}" on-azione="{{ A.esito.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></sc-if>
 
@@ -100,7 +102,7 @@
 <sc-if value="{{ barraTel }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__riga-18"><sc-if value="{{ g.salta }}" hint-placeholder-val="{{ true }}"><a class="al-avvio__riga-17" href="Dashboard.dc.html">Salta</a></sc-if><span class="al-avvio__blocco-9"></span><sc-if value="{{ g.indietro }}" hint-placeholder-val="{{ true }}"><a href="#" role="button" aria-disabled="{{ g.indietro.dis }}" aria-busy="{{ g.indietro.busy }}" onClick="{{ g.indietro.on }}" class="{{ g.indietro.cls }} al-avvio__blocco-4"><sc-if value="{{ g.indietro.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ g.indietro.l }}</a></sc-if><a href="#" role="button" aria-disabled="{{ g.avanti.dis }}" aria-busy="{{ g.avanti.busy }}" onClick="{{ g.avanti.on }}" class="{{ g.avanti.cls }} al-avvio__blocco-4"><sc-if value="{{ g.avanti.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ g.avanti.l }}</a></div></sc-if>
 </div></sc-if></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;passo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;backup&quot;,&quot;nome&quot;,&quot;sito&quot;,&quot;tema&quot;,&quot;cartelle&quot;,&quot;seeing&quot;,&quot;astap&quot;,&quot;chiusura&quot;],&quot;default&quot;:&quot;nome&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;nome: scritto&quot;,&quot;nome: salvataggio non riuscito&quot;,&quot;sito: ricerca in corso&quot;,&quot;sito: risultati&quot;,&quot;sito: selezionato&quot;,&quot;sito: nessun risultato&quot;,&quot;sito: ricerca non riuscita&quot;,&quot;sito: coordinate non valide&quot;,&quot;sito: salvataggio&quot;,&quot;sito: sito non salvato&quot;,&quot;tema: chiaro · turchese&quot;,&quot;tema: automatico&quot;,&quot;tema: automatico senza sito&quot;,&quot;cartelle: verifica in corso&quot;,&quot;cartelle: file trovati&quot;,&quot;cartelle: conteggio parziale&quot;,&quot;cartelle: non raggiungibile&quot;,&quot;cartelle: già registrata&quot;,&quot;cartelle: aggiunte&quot;,&quot;cartelle: NAS&quot;,&quot;cartelle: NAS vuota&quot;,&quot;cartelle: NAS senza elenco&quot;,&quot;seeing: verifica in corso&quot;,&quot;seeing: chiave valida&quot;,&quot;seeing: chiave salvata&quot;,&quot;seeing: chiave rimossa&quot;,&quot;seeing: non riconosciuta&quot;,&quot;seeing: non risponde&quot;,&quot;seeing: risposta non valida&quot;,&quot;astap: verifica in corso&quot;,&quot;astap: trovato&quot;,&quot;astap: trovato senza catalogo&quot;,&quot;astap: percorso sbagliato&quot;,&quot;chiusura: scansione non partita&quot;,&quot;chiusura: passi saltati&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;astap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;non trovato&quot;,&quot;catalogo mancante&quot;,&quot;installato&quot;],&quot;default&quot;:&quot;non trovato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;,&quot;automatico&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;passo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;backup&quot;,&quot;nome&quot;,&quot;sito&quot;,&quot;tema&quot;,&quot;cartelle&quot;,&quot;seeing&quot;,&quot;astap&quot;,&quot;chiusura&quot;],&quot;default&quot;:&quot;nome&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;lettura delle impostazioni&quot;,&quot;errore dell'app&quot;,&quot;nome: scritto&quot;,&quot;nome: salvataggio non riuscito&quot;,&quot;sito: ricerca in corso&quot;,&quot;sito: risultati&quot;,&quot;sito: selezionato&quot;,&quot;sito: nessun risultato&quot;,&quot;sito: ricerca non riuscita&quot;,&quot;sito: coordinate non valide&quot;,&quot;sito: salvataggio&quot;,&quot;sito: sito non salvato&quot;,&quot;tema: chiaro · turchese&quot;,&quot;tema: automatico&quot;,&quot;tema: automatico senza sito&quot;,&quot;cartelle: verifica in corso&quot;,&quot;cartelle: file trovati&quot;,&quot;cartelle: conteggio parziale&quot;,&quot;cartelle: non raggiungibile&quot;,&quot;cartelle: già registrata&quot;,&quot;cartelle: aggiunte&quot;,&quot;cartelle: NAS&quot;,&quot;cartelle: NAS vuota&quot;,&quot;cartelle: NAS senza elenco&quot;,&quot;seeing: verifica in corso&quot;,&quot;seeing: chiave valida&quot;,&quot;seeing: chiave salvata&quot;,&quot;seeing: chiave rimossa&quot;,&quot;seeing: non riconosciuta&quot;,&quot;seeing: non risponde&quot;,&quot;seeing: risposta non valida&quot;,&quot;astap: verifica in corso&quot;,&quot;astap: trovato&quot;,&quot;astap: trovato senza catalogo&quot;,&quot;astap: percorso sbagliato&quot;,&quot;chiusura: scansione non partita&quot;,&quot;chiusura: passi saltati&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;astap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;non trovato&quot;,&quot;catalogo mancante&quot;,&quot;installato&quot;],&quot;default&quot;:&quot;non trovato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;,&quot;automatico&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
 class Component extends DCLogic {
   state = this.preset(this.props);
   componentDidMount() { this._rsz = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rsz); }
@@ -126,17 +128,17 @@ class Component extends DCLogic {
     if (vista !== 'backup') {
       const fino = vista === 'chiusura' ? steps.length : i, DEF = { nome: 'fatto', sito: 'fatto', tema: 'fatto', cartelle: 'fatto', seeing: 'saltato', astap: 'saltato' };
       steps.slice(0, fino).forEach(k => { s.marks[k] = DEF[k]; });
-      if (s.marks.nome) s.nome = 'Marco';
+      if (s.marks.nome) s.nome = 'Elena';
       if (s.marks.sito) s.sito = { nome: 'Cima Ekar', bortle: 3 };
       if (s.marks.cartelle) s.aggiunte = TRE.slice();
     }
     const SITO = () => Object.assign(s, { q: 'Cima Ekar', ricerca: 'risultati', scelto: 0, sNome: 'Cima Ekar', lat: '45.8486 N', lon: '11.5689 E', bortle: 3 });
     const PC = (perc, verifica) => Object.assign(s, { perc, vPath: perc, verifica });
     const KEY = (esitoChiave, chiave) => Object.assign(s, { esitoChiave, chiave: chiave || '' });
-    const AST = (esitoAstap, astapPerc) => Object.assign(s, { esitoAstap, astapPerc: astapPerc || 'C:\\Program Files\\astap\\astap_cli.exe' });
+    const AST = (esitoAstap, astapPerc) => Object.assign(s, { esitoAstap, astapPerc: astapPerc || 'Programmi/astap/astap_cli' });
     ({
-      'nome: scritto': () => { s.nome = 'Marco'; },
-      'nome: salvataggio non riuscito': () => { s.nome = 'Marco'; s.salvaErr = 'nome'; },
+      'nome: scritto': () => { s.nome = 'Elena'; },
+      'nome: salvataggio non riuscito': () => { s.nome = 'Elena'; s.salvaErr = 'nome'; },
       'sito: ricerca in corso': () => { s.q = 'Cima Ekar'; s.ricerca = 'in corso'; },
       'sito: risultati': () => { s.q = 'Cima Ekar'; s.ricerca = 'risultati'; },
       'sito: selezionato': SITO,
@@ -148,11 +150,11 @@ class Component extends DCLogic {
       'tema: chiaro · turchese': () => { s.modo = 'chiaro'; s.accento = 'turchese · petrolio'; },
       'tema: automatico': () => { s.modo = 'automatico'; },
       'tema: automatico senza sito': () => { s.sito = null; s.marks.sito = 'saltato'; },
-      'cartelle: verifica in corso': () => PC('D:\\Astro\\2026', 'in corso'),
-      'cartelle: file trovati': () => PC('D:\\Astro\\2026', 'trovati'),
-      'cartelle: conteggio parziale': () => PC('E:\\Archivio\\Deep sky', 'parziale'),
-      'cartelle: non raggiungibile': () => PC('F:\\Riprese', 'irraggiungibile'),
-      'cartelle: già registrata': () => PC('D:\\Astro\\2026', 'registrata'),
+      'cartelle: verifica in corso': () => PC('Dati/Astro/2026', 'in corso'),
+      'cartelle: file trovati': () => PC('Dati/Astro/2026', 'trovati'),
+      'cartelle: conteggio parziale': () => PC('Esterno/Archivio/Deep sky', 'parziale'),
+      'cartelle: non raggiungibile': () => PC('Esterno 2/Riprese', 'irraggiungibile'),
+      'cartelle: già registrata': () => PC('Dati/Astro/2026', 'registrata'),
       'cartelle: aggiunte': () => { s.aggiunte = TRE.slice(); },
       'cartelle: NAS': () => { s.dove = 'nas'; },
       'cartelle: NAS vuota': () => { s.dove = 'nas'; s.nasDir = '/data/astro/2026/Cima Ekar/IC 1396 Proboscide d\u0027Elefante/Ha 300 s'; },
@@ -167,7 +169,7 @@ class Component extends DCLogic {
       'astap: verifica in corso': () => AST('in corso'),
       'astap: trovato': () => AST('trovato'),
       'astap: trovato senza catalogo': () => AST('senza catalogo'),
-      'astap: percorso sbagliato': () => AST('sbagliato', 'C:\\Program Files\\astap'),
+      'astap: percorso sbagliato': () => AST('sbagliato', 'Programmi/astap'),
       'chiusura: scansione non partita': () => { s.scansione = false; },
       'chiusura: passi saltati': () => { s.nome = ''; s.sito = null; s.aggiunte = []; Object.assign(s.marks, { nome: 'saltato', sito: 'saltato', cartelle: 'saltato' }); }
     }[stato] || (() => {}))();
@@ -179,7 +181,10 @@ class Component extends DCLogic {
   indietro() { this.setState(s => ({ i: Math.max(0, s.i - 1), salvaErr: null })); }
   verifica(path) { this.setState({ verifica: 'in corso', vPath: path });
     this.dopo(900, () => { const q = path.trim(); this.setState({ verifica: /^f:|riprese/i.test(q) ? 'irraggiungibile' : /archivio/i.test(q) ? 'parziale' : 'trovati' }); }); }
-  renderVals() {
+  // Lettura delle impostazioni (v60): caricamento ed errore
+  renderVals() { const r = this.renderVals0(), st = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stato')) || this.props.stato || '', car = st === 'lettura delle impostazioni', err = st === 'errore dell\u0027app';
+    return { ...r, appCar: car, appErr: err, appD: car || err ? 'none' : 'grid', appSk: [{ h: '120px', blocchi: [{ h: '32px', w: '50%' }, 'Leggo le impostazioni…'] }, { h: '280px', blocchi: [{ h: '28px', w: '40%' }, { flex: '1' }] }] }; }
+  renderVals0() {
     if (!this.alPronto()) return { pronto: false };
     const p = this.props, s = this.state, fP = AL.formatoScelto(p.formato), tel = AL.telefono(fP, (this.state.w ?? window.innerWidth));
     const visto = s.modo === 'automatico' ? 'scuro' : s.modo, t = { ...AL.tema(visto, s.accento) };
@@ -218,7 +223,7 @@ class Component extends DCLogic {
     const EC = { trovati: { s: '✓', t: 'File trovati', x: '1240 file FITS · ' + s.vPath, a: 'Aggiungi cartella', on: aggiungi },
       parziale: { s: '✓', t: 'Conteggio parziale', x: 'Conteggio interrotto a 5000: i file sono di più.', a: 'Aggiungi cartella', on: aggiungi },
       irraggiungibile: { s: '!', t: 'Cartella non raggiungibile', x: 'Controlla il percorso o collega il disco, poi riprova.', a: '' },
-      registrata: { s: '!', t: 'Cartella già registrata', x: 'Corrisponde a \\\\nas\\astro\\2026: stessi file. I dati associati vengono mantenuti.', a: 'Usa questo percorso', on: aggiungi } }[s.verifica] || null;
+      registrata: { s: '!', t: 'Cartella già registrata', x: 'Corrisponde a nas/astro/2026: stessi file. I dati associati vengono mantenuti.', a: 'Usa questo percorso', on: aggiungi } }[s.verifica] || null;
     const sgOk = { s: '✓', bg: t.pillOkBg, fg: t.pillOkFg, bd: 'transparent', bs: 'solid' };
     const C = { esito: key === 'cartelle' ? EC : null, lista: key === 'cartelle' && s.aggiunte.length > 0, aggiunte: s.aggiunte.map(a => ({ ...a, sg: sgOk })),
       aiuto: nas ? 'Percorso interno al container, non quello del computer.' : '',
@@ -299,7 +304,7 @@ const BORTLE = [["cielo eccellente, buio pieno","La Via Lattea proietta ombre, e
   ["cielo di città","Il cielo è grigio o arancione e ci si legge; molte stelle delle costellazioni sono deboli o non si vedono affatto."],
   ["centro città","Le costellazioni si perdono e, a occhio nudo, a parte le Pleiadi non si vede nessun oggetto Messier: restano Luna, pianeti e gli ammassi più luminosi."]];
 const POSTI = [{ n: 'Cima Ekar, Asiago (VI), Italia', nome: 'Cima Ekar', lat: '45.8486 N', lon: '11.5689 E' }, { n: 'Pennar, Asiago (VI), Italia', nome: 'Pennar', lat: '45.8664 N', lon: '11.5264 E' }];
-const TRE = [{ p: 'D:\\Astro\\2026', n: '1240 file FITS' }, { p: 'E:\\Archivio\\Deep sky', n: 'oltre 5000 file FITS' }, { p: 'E:\\Archivio\\Calibrazione', n: '486 file FITS' }];
+const TRE = [{ p: 'Dati/Astro/2026', n: '1240 file FITS' }, { p: 'Esterno/Archivio/Deep sky', n: 'oltre 5000 file FITS' }, { p: 'Esterno/Archivio/Calibrazione', n: '486 file FITS' }];
 const NAS = { '/data': ['astro', 'backup', 'foto'], '/data/astro': ['2024', '2025', '2026', 'calibrazione'], '/data/astro/2026': ['Casa', 'Cima Ekar'],
   '/data/astro/2026/Cima Ekar': ['IC 1396 Proboscide d\u0027Elefante', 'M 31 Galassia di Andromeda', 'NGC 7000 Nebulosa Nord America', 'dark', 'flat'],
   '/data/astro/2026/Cima Ekar/IC 1396 Proboscide d\u0027Elefante': ['Ha 300 s', 'OIII 300 s', 'SII 300 s'] };

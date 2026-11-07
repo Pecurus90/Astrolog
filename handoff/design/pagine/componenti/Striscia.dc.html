@@ -52,7 +52,7 @@ class Component extends DCLogic {
     if (!notti) { // Esempio (dati simulati): le sette notti di Meteo, la prima scelta.
       const q = ALsoglie.esito.nuvole;
       const R = [['mer 30', 'stanotte', 0, '9 ore', '21–03', [5,8,10,10,8,6,8,12,16,22,26,40,30,20]], ['gio 1', '', 2, 'nessuna ora', 'coperto', [60,75,85,92,96,98,98,97,95,94,90,85,80,75]], ['ven 2', '', 0, '8 ore', '21–05', [12,8,6,4,3,3,4,5,6,7,8,10,14,18]],
-        ['sab 3', '', 1, '9 ore di buio', 'nuvole al 38%'], ['dom 4', '', 0, '9 ore di buio', 'nuvole al 14%'], ['lun 5', '', 0, '9 ore di buio', 'nuvole al 9%'], ['mar 6', '', 2, '9 ore di buio', 'nuvole al 72%']];
+        ['sab 3', '', 1, '9 ore di buio', 'Nuvole sparse · 38%'], ['dom 4', '', 0, '9 ore di buio', 'Nuvole sparse · 14%'], ['lun 5', '', 0, '9 ore di buio', 'Nuvole sparse · 9%'], ['mar 6', '', 2, '9 ore di buio', 'Nuvoloso · 72%']];
       notti = R.map(([day, tag, s, hours, range, d], i) => { const on = i === this.state.sel;
         return { day, tag, tagS: d ? tag : 'tendenza', tend: !d, sel: on, esito: s, pillT: AL.PAROLE[s], hours, range, on: () => this.setState({ sel: i }),
           cells: d ? d.map((x, h) => ({ h: (20 + x * 0.8) + '%', bg: h < 3 || h > 11 ? (on ? AL.rgba(t.hPillFg, 0.3) : t.sparkOff) : t.pills[q(x)][1] })) : [] }; }); }

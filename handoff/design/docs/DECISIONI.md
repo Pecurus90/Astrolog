@@ -13,6 +13,210 @@ Le decisioni del vecchio sistema (fino alla v38) stanno in
 4. Carta «È stagione» nella Dashboard (progetti salvati, per priorita').
 5. Poi si cancellano le tavole di prova: `Planner proposte`, `Telefono comandi`, `Telaio vivo` (restano `Planner telefono` e `Planner desktop` come riferimento finche' il porting non e' fatto).
 
+## v75 — Le 15 voci del controllo della v73 (7/11/2026, da Claude Code via Marco; da approvare)
+
+- Fonte: `handoff/per-design.md` del repo, «Da dare». Le correzioni, voce per voce, sono in `docs/per-claude-code-porting.md`, sezione v75.
+- **Curvatura** (Marco, 7/11): l'aberrazione fuori asse di ASTAP, in px col segno e in ″ con la scala, senza giudizio (ASTAP non da' soglie). Il tilt resta in % col giudizio 10 / 20 %. Supera DECISIONI v62, 1.2.
+- **Gradiente** (Marco, 7/11): niente % del fondo; unita' di rumore e lato chiaro. Supera v62, 1.3.
+- **FWHMTilt e FWHMCurvature**: numeri puri, non px.
+- **Fonti a schermo**: pubbliche, mai un ADR o un nome di persona. Rousseeuw & Croux 1993 per i 2,5 rispetto al gruppo; ING per 25% e 65%; «dall'orizzonte, quando sorge» per lo 0°.
+- **Percentuali attaccate** ovunque a schermo («96%»), glossario del 19/10.
+- **Bortle misurato**: i mesi si contano in giro sui 12; la frase dei dati scarsi e' quella del 24/10.
+- **Servizio del cielo**: lightpollutionmap.info (World Atlas), chiave gratuita per email all'autore, 500 richieste al giorno. Chiusa la domanda v68: le quattro vie sono quelle dell'app.
+- **Foglio**: tutti i movimenti nominati stanno nel foglio.
+- Pacchetto: `consegna/astrolog-v75.zip` al posto della v73.
+
+## v74 — Esportazione per Claude Code (7/11/2026, Marco: «vai»)
+
+- La consegna e' l'intero progetto (`pagine/`, `docs/`, README, CLAUDE.md); `_ds/` e i `support.js` sono dell'ambiente di Design e non si portano (vedi «Cosa non serve portare»). `docs/per-claude-code-porting.md` porta il riassunto di v60–v73. Claude Code la mette in `handoff/design/` al posto della v58.6.
+- Il pacchetto sta nel progetto (Marco: «così può scaricarlo anche Claude»): `consegna/astrolog-v73.zip` con `consegna/LEGGIMI.md`. L'indirizzo pubblico del file dura un'ora; se scade, se ne chiede uno nuovo.
+
+## v71 — Brief prima del porting, Planner (punto 8) (7/11/2026; da approvare; parole proposte)
+
+- **Cielo** (8.1): nell'app stelle fino a mag 6,5 e i 22.080 oggetti di OpenNGC (Sh2 compreso), con le librerie nel pacchetto. La tavola tiene il suo catalogo ridotto e lo dice nel credito: «Nell'app: … qui un catalogo ridotto».
+- **Immagini** (8.2): passano dal proxy dell'app («immagini di Aladin dal proxy dell'app»); senza rete «restano le stelle disegnate», il campo e le misure restano giusti. Il Sole da Helioviewer: credito «· via Helioviewer, dal proxy dell'app» nel Sistema solare e negli Eventi.
+- **Eventi** (8.3): stato nuovo «orbita in caricamento» (Tweak del Planner): i transiti dicono «orbita in caricamento…» al posto dell'ora; nella scheda «Orbita in caricamento», il giudizio «? Orbita del giorno in caricamento: ora, striscia e posti arrivano con lei», niente traccia, fasi, numeri, sequenza e calendario. PlannerEventi2: `preset.orbita`.
+- **Mappa del transito** (8.4): finché i servizi delle mappe non sono scelti, via «Disco · Mappa» e «Sulla mappa»; restano striscia, sito e «Apri in Google Maps ↗», con la riga «La mappa arriva quando sono scelti i servizi delle mappe…». PlannerEventi2: `preset.mappa` (spento); `Mappa del transito.html` resta per quando arriva.
+- **Un progetto per setup** (8.5, ADR 0033): nel Planner il progetto in corso e' quello dell'oggetto **con quel setup**. Con lo stesso setup: «● M 31 ha già un progetto con questo setup: salvando aggiorni quello.» (Aggiorna). Con un altro: «● M 31 ha già un progetto con FRA400: salvando ne fai un secondo, con 103APO. Un progetto per setup.» (Salva). Nella tendina dei setup la riga «● ha già un progetto con questo setup · 9 h 10 di 12 h». Cambiare setup non chiede piu' «Prima di salvare»: fa un altro progetto.
+- **Prima di salvare** (8.5): «Hai cambiato la rotazione (0° → 20°): 9 h 10 già riprese non conterebbero più. I frame nuovi non combaciano con quelli fatti senza ritagliare o riallineare.» (la durata la conta l'app).
+- **Mosaici** (8.6): sovrapposizione di partenza 20 %, scelte 10 · 20 · 30 %, sotto «partenza 20 %, come N.I.N.A.».
+- **Crea** (8.7): ore e pose di partenza da Impostazioni › Planner, con la fonte: «Progetto nuovo: ore in tutto» 10 h (divise fra i filtri dello schema), «posa in banda larga» 120 s, «posa in banda stretta» 300 s (`planner.oreNuovo`, `planner.posaL`, `planner.posaS`; fonte «nessuna convenzione»). Nel Planner, sotto i filtri: «Partenza da Impostazioni › Planner: …». Con un progetto in corso: «Ore: quelle che mancano al progetto».
+- **Luna per filtro** (8.8): nei criteri esce «Distanza dalla Luna 40°»; entra «Luna, per il filtro»: Banda larga · OIII · Banda stretta · Non conta, con la distanza di stanotte («oltre 98° per la banda larga, …») dalla regola di Impostazioni › Planner. Nella carta della notte la riga «Luna, per il filtro: 62 % · a 75° · ✓ larga · ✓ OIII · ✓ stretta».
+- **Orizzonte** (8.10): «sopra i 30° col buio, con l'orizzonte di Cima Ekar».
+- **Campionamento col seeing** (8.11): nella tendina dei setup, per ogni setup «1,3 px per stella, sottocampionata (grave) · consiglio: dithering a ogni frame, poi drizzle»; sopra 3 px «bin 2×2»; in mezzo «dithering ogni pochi frame». In fondo «Seeing tipico di Cima Ekar: 2,6″, dalle tue riprese (simulato). Da 2 a 3 px per stella è il campionamento ideale.» Giudizio da `misure.camp`.
+- **Esportazioni e ricerche online** (8.12): restano disegnate.
+- **Parole** (8.14): «N.I.N.A.»; «Per oggetto» e «Durante i frame» (gruppi dei tempi in `soglie.js` e Impostazioni: «Per bersaglio» non combaciava piu' col titolo); **«mesi buoni»** al posto di «stagione» nel Planner (carta «Mesi buoni», «mese buono», «Mesi buoni ancora per», sezione del telefono), in Impostazioni («Mesi buoni: …»), nel vetro della Dashboard («✓ mese buono»). Le chiavi restano (`planner.stagione`).
+- **Stati nuovi** (8.15) nel Tweak «stato»: «doppione con un altro setup», «prima di salvare», «errore di salvataggio» («! Progetto non salvato: AstroLog non risponde.» con Riprova, al posto del ✓ Salvato), «orbita in caricamento»; «fuori stagione» diventa «fuori dai mesi buoni».
+
+## v72 — Brief prima del porting, Progetti (punto 8) (7/11/2026; da approvare)
+
+- **Reinquadra ↗** al posto di «Reframing ↗»; in Modifica «… si cambiano con «Reinquadra»; un progetto per setup».
+- **Un progetto per setup**: stato «stesso oggetto, due setup» (M 31 con FRA400 e con RedCat). In Modifica, scegliendo un setup che ha già il suo progetto: «✕ M 31 ha già un progetto con questo setup: Askar FRA400 · ASI2600MM Pro.» e Salva spento.
+- **Prima di salvare**: cambiando setup a un progetto con ore fatte, al primo Salva «! Prima di salvare · Con Askar 103APO · ASI2600MM Pro le 14 h 20 già riprese non conterebbero più: sono di un altro setup. I frame restano nell'archivio.» e «Salva lo stesso».
+- **Errore di salvataggio**: «! Modifica non salvata: AstroLog non risponde. Riprova.», il bottone diventa Riprova. **Elimina non riuscito**: la conferma resta con «! Non eliminato: AstroLog non risponde. Riprova.».
+- **Prima scansione** (8.9): in cima all'elenco, una volta, «? Quali progetti sono finiti?» con «Tutti finiti · Scelgo io ↗ · Decido dopo» (Scelgo io porta in Da confermare › Progetti finiti). Senza risposta restano in Archivio. Stessi tre gesti nella carta della Dashboard (prima «Rispondi · Decido dopo»).
+- **Senza obiettivo**: il progetto «In corso» della prima scansione ha «—» nell'anello, «senza obiettivo», «dalla prima scansione · obiettivo da scrivere» e l'azione piena «Scrivi l'obiettivo» (apre Modifica con un'ora sopra le fatte).
+- Caricamento ed errore dell'app c'erano (v60). Tavola `Progetti stati`: sette righe nuove, telefono e desktop.
+
+## v73 — Brief prima del porting, Piano della notte (punto 8) (7/11/2026; da approvare)
+
+- **Proposte del Deep sky** (8.13): «4 h di posa» e basta (via «… visibili ·»); senza previsione «ore di posa senza previsione». L'ordine «chiude / di posa / mancano» c'era (v59): «Prima chi si chiude, poi le ore di posa, poi le ore mancanti.».
+- Luna per filtro: c'era. Parole: nessun «NINA» o «stagione» rimasto.
+
+## v70 — Brief prima del porting, Telaio e Sistema (punto 12) (7/11/2026; da approvare)
+
+- **Stanotte** (12.1): nella barra del computer, accanto al sito, la pastiglia «Stanotte · Cima Ekar ▾» apre un riquadro: Sito (Bortle, predefinito, «Cambia ↗» in Impostazioni › Siti), Luna (fase, quando sorge, cosa vuol dire per la banda larga), Meteo (verdetto col segno, ore di posa, buio e buio senza Luna, «Meteo ↗»); in fondo «Apri il Meteo ↗» e «Piano della notte ↗». Sul telefono lo apre il titolo con il sito, in testa alla pagina. Senza sito la pastiglia dice «Aggiungi sito» e porta alle Impostazioni. Dati simulati, quelli della Dashboard d'esempio. Telaio: `menu="stanotte"` per le tavole.
+- **Carta del cielo** (12.2): una casa sola, il Planner (la cupola sta li'). Esce la voce «Carta del cielo» dal menu Altro del telefono; il Planner prende il suo segno, sul computer e sul telefono, con «il cielo e cosa riprendere».
+- **Sistema** (12.3): «ore utili» e «Qualita' della notte» erano gia' usciti (v59–v60). Aggiornati il menu Altro, le regole del telaio (Stanotte; Planner con la Carta del cielo dentro).
+
+## v69 — Brief prima del porting, Statistiche (punto 11) (7/11/2026; da approvare)
+
+- **Bortle misurato** (11.1): almeno 4 mesi senza buchi di oltre 3, sugli ultimi 12 fino all'ultima notte misurata (prima «notti in 6 mesi diversi»). Testo dei dati scarsi: «Ancora poche misure: {n} notti in {m} mesi[, con un buco di {b} mesi].»; nel riquadro «Come si misura» le due righe nuove. Proposto anche al sito senza cielo: per Passo Coe «? Il sito non ha un cielo: in Impostazioni › Siti si propone Bortle {n}. ↗». Stessa regola in Misure dei frame (testo e 12 tacche) e in Impostazioni › Siti.
+- **Trasparenza e «senza aerosol»** (11.2): la Trasparenza c'era (v60). Nel calendario la notte senza aerosol dice «trasparenza 72 · senza aerosol» (simulato: una notte su 17); l'aiuto delle notti buone lo spiega.
+- **Frase dei setup** (11.3): c'era: «In ″ si confronta fra setup diversi; in px dipende dalla scala.»
+- **Notti buone perse** (11.4): lo stato «Meteo storico in arrivo» resta; l'aiuto dice che le notti buone e quelle perse si contano quando arriva il meteo delle notti senza frame.
+- **Tastiera** (11.5): calendario, volumi, capacita', cielo (mesi e ore), stagioni (griglia, linee, tessere) e filtri prendono il fuoco con Tab; le frecce passano da una cella o da un punto all'altro e aprono lo stesso riquadro del passaggio (nel calendario ← → di settimana, ↑ ↓ di giorno; nella griglia ↑ ↓ di anno); Inizio e Fine; uscendo il riquadro si chiude. Un solo arresto di Tab per grafico.
+
+## v68 — Brief prima del porting, Impostazioni e Primo avvio (punto 9) (7/11/2026; da approvare; parole proposte)
+
+- **Siti completi** (9.1): pillole dei siti e «+ Aggiungi sito». Il sito: Rinomina (col nome doppio «C'è già un sito con questo nome.»), coordinate, altitudine e fuso con la provenienza («dalla ricerca per nome», «scritte a mano», «dalle coordinate nei frame»; «dal modello del terreno», «scritta a mano»; «dalle coordinate»), notti, predefinito, orizzonte, «Elimina il sito» (spento con le notti: «Ha 112 notti: non si elimina. Le notti restano col loro sito.»; spento per il predefinito; senza notti conferma nella carta). Nuovo sito per nome (ricerca, risultati, «Nessun luogo con questo nome…») o per coordinate; poi nome, altitudine che si cambia, fuso; «Il cielo e l'orizzonte si scelgono dopo, nel sito.»
+- **Il cielo del sito**, carta nuova: le quattro vie, una alla volta: Dalle misure · Bortle a mano · SQM a mano (con la tabella di ASTAP) · Dalla mappa (il servizio del cielo, chiave in Servizi); «Lascia vuoto». Il **Bortle misurato**: proposta «Le misure di {sito} dicono Bortle {n} (SQM …, … notti in … mesi). Nel sito c'è Bortle {m}.» con Usa · Lascia, o Usa · Lascia vuoto per il sito senza cielo; dopo la scelta l'esito; le 12 tacche dei mesi (piena = mese misurato, con la lettera e il titolo) e «misurato su n notti». Regola come Statistiche (v69). **Da confermare con Claude Code**: le quattro vie sono la lettura di Design del brief («le quattro vie per il cielo»); il servizio del cielo e' quello della mappa della luce artificiale.
+- Tweak «sito»: Cima Ekar (proposta) · Casa (dati scarsi) · Passo Coe (senza cielo) · SQM a mano · Dalla mappa, con e senza chiave · Rinomina · Aggiungi per nome, per coordinate, nessun luogo · Elimina un sito senza notti.
+- **ASTAP** (9.2): «Da dove viene: installato a parte, da hnsky.org»; «Cercalo tu» propone un percorso («Trovato in …: il percorso non cambia finché non lo scegli.» · Usa questo percorso); i cataloghi dai nomi trovati, uno per riga, vuoto = «nessun catalogo»; **consigliato D50**, D80 per i campi molto stretti (Marco 6/11, ADR 0036). Anche Primo avvio e Diagnostica. Tweak «astap»: installato · più cataloghi · catalogo mancante.
+- **Servizi** (9.3): carta nuova «Servizio del cielo» (senza chiave la via «Dalla mappa» resta spenta). Le chiavi Meteoblue, AAVSO e TNS solo qui: uscite da Meteo (resta «La chiave Meteoblue sta in Servizi» con Apri Servizi) e da Planner › Ricerca (riga «in Impostazioni › Servizi»). Meteoblue senza chiave: «solo una stima dal vento in quota, quando è forte: «scarso»» (come v61).
+- **Lingua** (9.4): carta in Generale, Italiano · English; «I nomi letti dai file restano come sono.»
+- **Cartelle** (9.5): stato «non raggiungibile» per cartella (segno «!», «il disco «Esterno» non risponde · i frame restano in archivio»; Tweak «cartelle»); **Sposta** (nuovo percorso, verifica, «Stessi file in …: cambia solo il percorso…»); **Togli** con conferma «I frame restano nell'archivio; la cartella non entra più nelle scansioni.»; sul NAS l'elenco delle cartelle si sfoglia anche qui.
+- **Backup** (9.6): «Le tue risposte … e le impostazioni»; stati «file illeggibile» e «ripristino non riuscito»; percorso generico.
+- **Orizzonte** (9.7): la linea e la legenda seguono l'altezza minima del Planner («· dal Planner»), non 30° fissi.
+- **Meteo apre su** (9.8): Sole spento, «arriva col Sole, insieme al Sistema solare». Diagnostica e «Ultimo tentativo» dei servizi col «?»: arrivano dopo.
+- **Automazione** (9.9): una carta per postazione col nome della montatura; sotto quali setup ci monti e «Scegli cosa c'è alla postazione: vale per ogni setup su questa montatura.»
+- **Tavola** nuova `pagine/Impostazioni stati.dc.html`: 22 telefoni (Siti, Nuovo sito ed Elimina, Generale · cartelle · Meteo · ASTAP, Servizi e Backup) e 9 desktop. Impostazioni ha i Tweak `sito` e `cartelle`; Telaio `menu="stanotte"`.
+
+## v67 — Chiusura della fase 3 (7/11/2026)
+
+- **Da confermare stati**: righe nuove «Oggetti · non ancora cercato», «Oggetti · Correggi», «Frame senza data», «Montatura» (telefono) e le stesse sul desktop.
+- **Attrezzatura** in verifica: la v66 aveva rotto la pagina (un commento `//` chiudeva la riga del Salva); corretto. Il campionamento e il potere risolutore scrivevano ancora col punto: ora `AL.virg` («1,11″/px», «seeing fra 2,2 e 3,3″»). «F/6.8» resta: e' un nome letto dai file.
+
+## v66 — Brief prima del porting, Da confermare e Attrezzatura (punti 3 e 10) (7/11/2026; da approvare)
+
+Da confermare:
+- **Filtro nuovo con piu' bande** (3.1): «Bande: una o più (i filtri doppi ne hanno due)», scelta multipla; per ogni banda scelta un campo «Hα, in nm», facoltativo. Risposta «Nuovo filtro: Antlia ALP-T 5nm · Hα 5 nm + OIII 5 nm».
+- **Proposte gia' pronte** (3.2): il nome del mosaico arriva scritto («Nome proposto dall'app: l'oggetto con più frame nel campo. Si cambia.»); in «Altra camera» la focale arriva dall'ottica nei frame («Proposta dall'ottica nei frame, Askar FRA400.»).
+- **Perche' l'app dubita** (3.3): prova «Perché l'app dubita: metodo … · fiducia …». I due vuoti: «Nessun oggetto trovato: il plate solving non riconosce il campo» e «Non ancora cercato: il plate solving non è ancora passato su questi frame» (Tweak «Oggetti · non ancora cercato»).
+- **Oggetti riconosciuti** (3.4): «Mostra altri 50 di 213» (l'app li manda 50 per volta); **Correggi** apre sotto la riga una scheda: «Resta M 33 · Altro nome · Non è un oggetto», col campo per il nome; si salva con Applica e conta nelle modifiche da applicare (Tweak «Oggetti · Correggi»).
+- **Esiti di Applica** (3.5): «La rielaborazione è in coda: parte dopo, i numeri si aggiornano da soli.»; «"Nessun filtro" c'era già in Attrezzatura: i frame usano quello.»; motivo nuovo «filtro contro le bande» (non applicato).
+- **Campi che l'app non ha ancora** (3.6): restano come sono.
+- **Unisci** (3.7): sotto «Sì, unisci a …» «resta «ZWO ASI2600MM Pro», il nome con più frame (1032 contro 412)».
+- **Montatura** (3.8): sezione nuova, chiesta una volta: «EQ6-R è la tua montatura? Sì, è la montatura · La montatura è un'altra» (col nome). Progetti finiti c'era (v59).
+- **Frame senza data** (3.9): sezione nuova. «Scrivo la data» (gg/mm/aaaa, la sera della ripresa) o «Scelgo una notte» fra quelle con lo stesso setup; prove: data nei file, data del file sul disco («è quella della copia, non della ripresa»). Le Notti ci arrivano con `?sezione=senza-data`, e `?sezione=siti` apre Frame senza sito.
+- **Sigle** (3.10): Hα, Hβ al posto di HA, HB.
+
+Attrezzatura:
+- **Elimina pezzo** (10.1): c'era (v59), coi suoi stati.
+- **Pixel** (10.2): nella carta Campo «arcosecondi per pixel · ricavati dal cielo».
+- **Misure da rifare** (10.3): «N frame da rielaborare: cambia il cielo dei frame» per ogni modifica di sensore, pixel, risoluzione, focale, fattore o tipo, non solo del sensore.
+- **Campi del Modulo** (10.4): restano.
+
+## v65 — Brief prima del porting, Notti (punto 5) (7/11/2026; da approvare)
+
+- **Barra delle ore di posa** (5.1): sotto le tacche la riga «una tacca per ora di buio: le piene contano le ore di posa, non dicono quando». Desktop e telefono.
+- **Fuori da ogni notte** (5.2): tre voci con la loro risposta. «da confermare · aspettano una risposta» → Da confermare; «senza sito · scegli il sito: entrano nelle notti» → `Da confermare?sezione=siti`; «senza data · scrivi la data o la notte della cartella» → `Da confermare?sezione=senza-data` (la sezione nuova del brief 3.9, da disegnare nella fase di Da confermare). La riga di stato dei frame senza data ha «Scrivi la data».
+- **Luna** (5.3): il componente Luna ha `lato` (destra · sinistra), quello che manda l'app; vale anche a sud. `crescente` resta per le tavole che non lo passano. Le Notti passano `lato`.
+- **Fonte del sito** (5.4): accanto al sito della notte, in tenue: «· dalle coordinate nei frame» o «· il sito di casa, dalle Impostazioni» (lo dice l'app; simulato).
+- **Tutto l'archivio** (5.4): «240 oggetti · 18 430 frame · 486 ore · 312 frame senza durata».
+- **Carica altre** (5.5): stati «carica altre in corso» (bottone «Carico altre…», spento) e «carica altre non riuscito» (bottone «Riprova» e la riga «! Le altre notti non sono arrivate: AstroLog non risponde. Riprova.»).
+
+## v64 — Brief prima del porting, Archivio e Riepilogo (punto 4) (7/11/2026; da approvare)
+
+- **Archivio, errore** (4.1): c'era gia' dal Telaio (v60, stato «errore dell'app»).
+- **Archivio, stili nel foglio** (4.1): ordine e vista (righe 29 e 35), corpo della carta (53), anteprima e tasti dell'anteprima (55, 63) passano a classi di `astrolog.css` (`al-arch__ordine-vista`, `__ordine`, `__viste`, `__vista`, `__carta-corpo`, `__foto-griglia`, `__foto-parte`, `__foto-tasti`, `__foto-tasto`, `__foto-file`). Restano inline solo i valori vivi (colonne della griglia secondo le produzioni, proporzione dell'anteprima, immagine).
+- **Vista Carte / Elenco** (0.9): la scelta, oltre a fondo, bordo e tratto piu' spesso, ha la parola accanto all'icona («▦ Carte»); l'altra resta solo icona.
+- **«Togli tutti» → «Togli i criteri»** nell'avviso «Nessun oggetto con questi criteri», come il bottone di Filtri.
+- **Riepilogo, ↗ Progetti** (4.2): solo se l'oggetto ha un progetto (lo dice l'app; simulato: IC 1396, NGC 7000, M 31) e apre `Progetti?oggetto=…`. Gli altri oggetti della notte non hanno la freccia.
+- **Riepilogo, «ore utili»** (4.2) ed **errore e «non trovato»**: gia' fatti in v60–v61.
+
+ (punto 2) (6/11/2026, Marco: «A, con i valori di partenza salvati solo in Impostazioni»; parole proposte, Marco le approva sulla tavola)
+
+- **Una casa per le partenze** (2.9, scelta A): sezione nuova **Impostazioni › Selezione dei frame** (fra Automazione e Servizi; `?sezione=selezione`), desktop e telefono: setup in tendina, filtro in linguette, una riga per soglia (interruttore, confronto, valore, «rispetto al gruppo» o «valore»), la partenza e la fonte accanto, la formula del setup, «Rimetti i valori di partenza», carta «Come funzionano». **Solo qui si salvano** (`ALsoglie.selezione`, chiavi `selezione.<setup>.<filtro>` e `selezione.<setup>.fx`). La Selezione le legge e le cambia **solo per il gruppo che guardi** («cambiata per questo gruppo» · Ripristina; sotto la tabella «Valgono per questo gruppo: … Le partenze … in Impostazioni › Selezione dei frame ↗»). Uscita la vista regole dentro la pagina (Tweak «vista», le linguette finte); il tondo ↗ in testa apre Impostazioni.
+- **Criteri in piu'** (2.1), spenti di partenza: Peso del segnale (< 2,5 rispetto al gruppo), Scie (> 0), Fondo al secondo (> 2,5 rispetto al gruppo), Altezza della Luna (> 0°), Distanza dalla Luna (< 30°), Luna illuminata (> 65 %). Nel grafico in «Altre misure ▾» accanto alle linguette delle misure.
+- **Formula** (2.1): legge tutte le misure del punto 1.1, coi nomi in italiano o quelli del SubframeSelector (PSFSignalWeight, SkyRate, PSFResidual, FWHMSigma, NoiseRatio, MStar…); l'elenco «Aggiungi…» le mostra a gruppi. Trasparenza e nuvole non ancora (servono la serie, v62).
+- **Eccentricita'** (2.2): parte relativa, 2,5 rispetto al **setup** e solo verso l'alto (le stelle le allunga il setup); resta spenta.
+- **Gruppo** (2.3): oggetto, setup, filtro, tempo di posa e guadagno. Due guadagni con lo stesso tempo di posa sono due linguette («L · guadagno 100», «L · guadagno 0»); «gain» → «guadagno» anche nella riga del frame. Stato nuovo «due guadagni».
+- **FWHM e HFD in px** senza scala del cielo (2.4): stato «senza scala del cielo».
+- **Stati** (2.5): «gruppo sotto 10 frame» (la soglia dice «tace» e, sotto, «tace: 8 frame nel gruppo, ne servono 10»; anche nell'aiuto del grafico); «spostamento in corso» (carta con «Sposto 10 frame in «scartate»… 4 di 10», la barra, «nas/astro risponde piano…»; Sposta spento). Caricamento ed errore c'erano.
+- **Anteprima del frame** (2.6): Tweak «immagine» (c'è · non ancora). Senza immagine: «? L'anteprima del frame arriva dopo: per ora le sole misure», niente stretch, ingrandimento e schermo intero; Scarta e Tieni restano.
+- **Nota per frame** (2.7): esce il campo «Perché?». La scia la scrive l'app («scia di satellite · la trova l'app»; con la soglia Scie spenta «… la soglia Scie è spenta»); per le altre ragioni il frame dice la regola che l'ha segnato.
+- **Progetti** (2.8): Tweak «progetti» (ci sono · non ancora). Senza: «Parti da» ha solo «Delle notti», sotto «I progetti arrivano dopo: per ora si parte dalle notti…».
+- **Parole** (2.10), proposta da fissare nel glossario: **Scarta** / **Tieni** (i gesti), **da scartare** (lo stato che le soglie o la mano danno al frame), **in «scartate»** (la cartella). Per i file che la scansione non legge, al posto di «scartati»: **saltati** («saltati dalla scansione»), cosi' «scartare» vale solo per la Selezione.
+
+## v62 — Brief prima del porting, Misure dei frame (punto 1) (6/11/2026, Marco: «vai»; parole proposte, Marco le approva sulla tavola)
+
+Brief intero in `docs/archivio/brief-porting-v59.md`. Componente MisureFrame (pagina Misure dei frame, finestra della notte, Riepilogo).
+
+- **Altre misure** (1.1): in fondo alle 12 tessere una cella «Altre misure» con la tendina a gruppi (Stelle e forma · Segnale · Fondo e pixel · Cielo · Luna e Sole · Trasparenza e nuvole). Una misura alla volta: diventa una tessera, entra nei grafici (fino a due, come le altre) e nella tabella Per filtro; la pagina la ricorda (`astrolog.misure.altra`). Senza soglia pubblica, senza pillola. Nomi in italiano, nella tendina accanto il nome originale (es. «Peso del segnale · PSF Signal Weight», «Fondo al secondo · SkyRate»). Valori simulati.
+  - Casi: lato del pilastro «est · ovest · est e ovest» col conto dei frame; coerenza dell'allungamento da 0,7 «stesso verso: inseguimento o vento», sotto «versi diversi: ottica»; punto zero dello SQM solo con L, nessun filtro e a colori; senza sito «senza sito».
+  - **Trasparenza e nuvole**: su una serie di almeno 5 frame dello stesso campo e filtro; sotto, «? serve una serie» (stato nuovo «serie troppo corta» nei Tweaks e nella tavola degli stati).
+- **Tilt e curvatura** (1.2): la tessera resta in % alla ASTAP col giudizio 10 / 20 %; nel frame una tessera in piu' «Tilt · curvatura in px» (dalla FWHM: fra gli angoli · angoli e centro), senza giudizio.
+- **Gradiente** (1.3): in unita' di rumore («1,9 × rumore»), sotto la % del fondo; nella tessera, nel frame e nei grafici.
+- **Fondo cielo e rumore** (1.4): ogni frame ha camera, guadagno e tempo di posa. Se i frame scelti ne mescolano uno o piu', la tessera dice «non confrontabili» con la ragione, e il grafico ha la riga «frame non confrontabili, guadagno (100 e 0), tempo di posa (300 s e 180 s): fondo e rumore non si confrontano fra loro»; se cambia solo il tempo di posa, in piu' «il fondo al secondo sì». Stato nuovo «frame non confrontabili». «gain» → «guadagno» nella nota di Per filtro.
+- **Eccentricita' del setup** (1.5): l'avviso sta nel **Riepilogo**, carta Setup, sotto il setup: «! Stelle allungate su tutto il setup: eccentricità mediana 0,62 su {n} frame, sopra 0,6. Di solito inseguimento, tilt o collimazione.» (simulato sul primo setup). Attrezzatura lo potra' ripetere nella sua fase.
+- **Riepilogo stati** (1.6): via «le misurerà sep»; le misure arrivano dalla misura dei frame.
+- Virgola: MisureFrame e la pagina scrivevano ancora col punto (`toFixed`): ora con la virgola (″, px, assi dei grafici, «SQM 19,6», «0,52»). **Una casa sola**: `AL.virg` in `tema.js` scrive virgola e segno meno vero; `ALsoglie.num` rimanda li'. Cosi' anche Attrezzatura (rapporto focale, campo, sensore) e Riepilogo (distanze) passano alla virgola.
+
+## v61 — Brief prima del porting, Dashboard e Meteo (punti 6–7) (6/11/2026, Marco: «sì, Dashboard e Meteo»)
+
+- **Tre carte per riga sul telefono** (brief del 12/10, guida utente): le sei carte del Meteo della notte in due file piene da tre, non piu' la striscia che scorre. Sul computer resta la fila da sei (Marco, 6/11).
+- **Calendario della Luna a tre gradini** (componente CalendarioNotti, prop `gradini` [{ d, g, h }]): ✓ banda larga buona (Luna fino al 25 %, pieno), ! al limite (fino al 65 %, tratteggio), ◐ solo banda stretta (vuoto); accanto le ore di buio senza Luna («✓ 9 h»). Via la regola delle 4 ore. `soglie.senzaLuna`; legenda con le soglie delle Impostazioni.
+- **Luna coerente**: età in giorni interi («21 giorni», come la pillola; piena il 24, come il calendario), distanza una sola (371 240 km), il sorgere col punto della bussola («est-nord-est, alle 23:40») al posto dei 68°. «Tramonta domani 15:17» anche nella legenda del grafico.
+- **Buio senza Luna** accanto al buio: «20:48–05:48 · senza Luna 20:48–23:40» (legenda e riga sotto il numero).
+- **Sole**: prop `sole` (non disponibile · disponibile), partenza «non disponibile»: la scelta Luna · Sole ha la sola Luna. La carta resta disegnata.
+- **Progetti** solo con progetti in corso: stato «senza progetti» (niente carta, niente vista; «Le prossime 3 notti» a tutta riga). «Crea un progetto» di «Per cominciare» porta al Planner.
+- **Stati nuovi** (Tweaks e tavola, telefono): senza progetti, sito senza fuso (avviso «Fuso orario del sito non riconosciuto…» con Modifica sito; meteo «Notti non calcolabili»), Luna che non sorge, Luna che non tramonta, calendario non ancora scritto, prima previsione non arrivata («? Prima previsione in arrivo», diversa da «! Meteo non raggiungibile»), seeing con chiave non valida, giorni polari («Nessun buio»).
+- **Femminile** (glossario): buona · incerta · non adatta anche per le misure, Dashboard, Meteo, Sistema, CardMeteo.
+- **Meteo**: «Cambio del modello non riuscito: AstroLog non risponde.»; seeing senza chiave (ADR 0034, Marco 6/11): un gradino solo dal jet stream, meteoblue: da 126 km/h «scarso · stima dal vento in quota», sotto solo l'invito alla chiave Meteoblue (`soglie.seeingStima`); anche nella Dashboard. Niente «buono» e «medio»: senza fonte, e la carta del Jet stream mostra gia' il vento. Fonte che tace: un testo solo per ogni misura («Il servizio non ha mandato questa misura per la notte…»), stati nuovi «aerosol non disponibile» e «jet stream non disponibile». Anno CAMS dai dati. Tolto «Al massimo quattro misure» (non scattava mai).
+- Restano disegnati, arrivano dopo (brief 7.1, 7.3): eventi della notte dei pianeti, campionamento.
+
+## v60 — Brief prima del porting, punto 0: regole comuni (6/11/2026, da Claude Code; parole proposte, Marco le approva sulla tavola)
+
+Brief «Per Claude Design — brief completo prima del porting (v59)» del 6/11, che raccoglie e sostituisce i brief aperti. Si fa a fasi, una per conversazione; questa e' il punto 0. Dove il brief contraddice la tavola v59 si tiene la tavola e si segnala (Marco, 6/11).
+
+- **Luna**: la partenza 25 / 65 / 0° c'era gia' (v59). Fonte accanto al 65: «regola di ING: grigio fino a 0,65» (prima «Marco, 24/10/2026»). `soglie.js` e Impostazioni.
+- **Ore di posa**: gia' fatte in v59; nessun «ore utili» rimasto.
+- **Trasparenza al posto della Qualita'** (ADR 0034): di notte il numero 0-100 e' la Trasparenza oraria (`soglie.notte`: 0 nelle ore che bloccano, altrimenti l'aerosol tolte le nuvole), media sul buio, verdetto 70 / 40. Usciti i pesi 35/30/12/9/9/5 e «limita X» (anche l'anello della carta meteo che «limitava» e la prop `limita` di CardMeteo). Seeing fuori dal voto: niente «senza seeing»; senza aerosol «senza aerosol». Dashboard, Meteo (racconto: «Diventa buona · trasparenza da 82»), Notti, Statistiche, Sistema. Il Meteo del Sole tiene i pesi di prima finche' Marco decide (DECISIONI v59, «Da decidere»).
+- **Cielo in quattro classi okta** (`soglie.cielo`, `cieloT`; Marco 24/10, glossario; confini confermati il 6/11, come l'app: docs/domini/meteo.md, WMO 2700, classi METAR): Sereno (0 okta) · Nuvole sparse (1–4) · Nuvoloso (5–7) · Coperto (8), okta = copertura / 12,5; il numero accanto: «Nuvoloso · 62 %». Le classi a cinque («poco / parzialmente / molto nuvoloso») sono superate. Meteo, Striscia, Notti, Dashboard prossime notti, transiti (0 sereno · 1 nuvoloso · 2 coperto).
+- **Condensa** mai «non adatta» (`esito.condensa`: sotto 3 °C «incerta»); **raffiche** a 25 km/h.
+- **2,5 Qn**: a schermo «rispetto al gruppo» e «dispersione del gruppo», niente sigle; nella formula `_dispersione` (`_mad` resta sinonimo). Selezione, stati, `soglie.js` (commenti).
+- **Virgola decimale**: `soglie.num(x, dec)`; Dashboard, Meteo (`nf`), Statistiche, Planner, Progetti, Misure dei frame, Archivio, Attrezzatura, Da confermare, Impostazioni, Primo avvio, Sistema, `dati.js`. La formula d'esempio «FWHM / SNR > 0,012» (la formula accetta punto e virgola). Restano col punto: numeri di versione (FireCapture 2.7, AstroLog 0.9) e nomi dei filtri letti dai file.
+- **Stati dell'app**: il **Telaio** ha la prop `app` (normale · caricamento · errore): con l'errore il contenuto lascia il posto all'Avviso «! AstroLog non risponde, riprova» (Riprova), col caricamento allo Scheletro. Le pagine passano solo lo stato. Stati nuovi nei Tweaks: Archivio, Meteo, Dashboard «errore dell'app»; Progetti, Statistiche, Selezione dei frame, Impostazioni anche «caricamento»; Impostazioni «errore di salvataggio» (riga «Impostazione non salvata: AstroLog non risponde, riprova.»); Primo avvio «lettura delle impostazioni» ed «errore dell'app»; Riepilogo «errore dell'app» e «non trovato» (notte · oggetto); Cerca «cerco» ed «errore dell'app». Righe nuove nelle tavole degli stati.
+- **Colore mai da solo**: Archivio, la vista scelta ha anche il fondo e il tratto piu' spesso; Notti, la riga scelta ha l'anello; calendario della Luna, i giorni buoni e la legenda col ✓; Kp, «!» da 4 e «✕» da 5 sopra le barre, con la legenda «Kp attivo · tempesta geomagnetica» e la fonte «scala NOAA SWPC»; Planner, i mesi buoni col ✓ sotto la lettera.
+- **44 px**: ↗ e × di CardMeteo restano tondi da 28, il bersaglio e' 44 (`::after`); barrette alte 44 (in larghezza non ci stanno: l'ora si sceglie anche con le frecce); ↻ del Meteo era gia' dentro un bersaglio da 44.
+- **Dati di prova generici**: nome «Elena» al posto di «Marco»; percorsi con la barra `/` e dischi col nome («Dati», «Esterno», «nas/astro»), non lettere di Windows; «Il disco «Esterno» non risponde».
+- **Parole approvate** (Marco, 6/11; vanno nel glossario): Trasparenza · senza aerosol · rispetto al gruppo · dispersione del gruppo · AstroLog non risponde, riprova · Impostazione non salvata · Leggo le impostazioni… · Cerco… · Notte non trovata · Oggetto non trovato · Kp attivo · tempesta geomagnetica (per intero; fonte: scala NOAA SWPC, Kp 4 attivo, da 5 tempesta).
+- **Meteo del Sole** (Marco, 6/11): niente nome per ora. Fino alla carta Sole (col Sistema solare, brief 6.6) l'obiettivo Sole del Meteo mostra «? Sole non disponibile», senza voto, senza striscia, senza carte: usciti i pesi del giorno (`PUNTI_GIORNO`, `soglie.ora`, `qualita`). Il nome delle ore di giorno si decide quando arriva quel passo. Supera il «Da decidere» di v59.
+- **Barrette del Meteo**: in larghezza restano strette; l'ora si sceglie anche con le frecce (Marco, 6/11: va bene).
+- **Fasi, in ordine** (Marco, 6/11): 1. Dashboard e Meteo (6–7, fatto in v61). 2. Pagine dei frame: Misure (1), Selezione (2), Archivio e Riepilogo (4), con le Notti (5), che riusano gli stessi giudizi e le stesse misure. 3. Da confermare e Attrezzatura (3, 10). 4. Impostazioni, Primo avvio, Statistiche, Telaio e Sistema (9, 11, 12). 5. Per ultimi Planner, Piano della notte, Progetti (8): molte parti arrivano dopo.
+- **Alla fine**: l'esportazione della versione finale per Claude Code, che la mette in `handoff/design/` al posto della v58.6 e controlla ogni pagina con la lista di /porta-tavola prima di portarla.
+
+## v59 — Ritocchi dopo l'inventario delle tavole (27/10/2026, da Claude Code; parole proposte, Marco le approva sulla tavola)
+
+Regola del porting (Marco, 27/10): la tavola e' la specifica, aspetto e funzioni; il codice si adegua. Eccezioni: cio' che non si puo' fare e le decisioni di Marco piu' recenti della tavola.
+
+- **Luna, la partenza** (ADR 0034, Marco 24/10): 25 % · 65 % · dall'orizzonte (0°). Fonte accanto al 65: «Marco, 24/10/2026»; accanto a 0°: «Marco, 24/10/2026: la Luna conta da quando sorge». I tre campi restano (−5 / 0 / 5 / 10°); il −5 di TESS resta una scelta. `soglie.js` (LUNA0, registro), Impostazioni. A schermo: le notti con Luna fra 50 e 65 % passano da «solo banda stretta» a «al limite» (Dashboard d'esempio: Luna al 62 %, tutta in banda larga). Il −5° delle misure del cielo (SQM, Statistiche, Misure dei frame) e' un'altra regola: resta.
+- **Ore di posa al posto delle ore utili** (ADR 0034): somma di (trasparenza / 100) × ore di buio, divisa per banda della Luna; non decide il verdetto. `soglie.js`: `posa`, `posaN`, `posaOre`, `posaBande`, `posaTesto`, `trasparenzaOra` (nel disegno: 0 nelle ore che bloccano, altrimenti l'aerosol tolte le nuvole; nell'app la da' il motore). Uscita `utile: 60`.
+  - Meteo e Dashboard: il numero protagonista e' «Ore di posa» («7,5 ore»), sotto «3,1 in banda larga, 1,5 solo banda stretta» quando la Luna divide la notte; nella striscia delle notti «3,1 larga · 1,5 stretta». Al passaggio sul grafico: «0,9 ore di posa» per l'ora.
+  - Piano della notte: «{h} visibili · {h} di posa»; ordine «chiude / di posa / mancano»; il verdetto della notte «{h} di posa su {h} di buio» (trasparenza simulata dall'esito: 90 · 50 · 0).
+  - Notti e Riepilogo: «4,0 ore di posa su 9 di buio». Progetti in Dashboard: «4,1 ore · di posa stanotte».
+  - Planner: senza meteo, quindi «visibili» ovunque (liste, ordine, Stanotte, stagione, avviso senza sito). Impostazioni › Planner: «Stagione: ore visibili almeno, il 15 del mese».
+  - Sistema: gli esempi.
+  - **Da decidere**: il Meteo del Sole (di giorno non c'e' buio) teneva «ore utili»; ora dice «ore buone» (qualita' da 60, col Sole alto). Marco sceglie: «ore buone», ore di posa anche col Sole, o altro.
+- **Attrezzatura, Elimina pezzo** (contratto, Marco 21/10): in fondo alla scheda del pezzo, «Elimina» in rosso; conferma nella stessa carta «Eliminare {pezzo}? Non tiene frame.» Elimina · Annulla (come Progetti); se il pezzo era scelto in un setup, «Esce anche da {setup}.». Un pezzo con frame: «Elimina» spento, sotto «Lo usano {n} frame di {setup}: nessuna ora si perde. Uniscilo a un altro pezzo, se e' lo stesso.» e il bottone «Unisci a» che porta alla tendina. Errore: quello della pagina («Dati non aggiornati: ricarica la pagina. Nessuna modifica salvata.»). Con la scansione in corso: spento, «si elimina al termine». `Modulo` ha `m.elimina`; classi `al-c-modulo__elimina…`, `__conferma…`. Tweaks e tavola: «Elimina · …» (cinque stati, desktop e telefono).
+- **Prima scansione, i progetti finiti** (Marco, 27/10). Scelta di Design: la domanda vive in **Da confermare**, sezione «Progetti finiti», la prima; la Dashboard a fine scansione la chiede una volta con una carta («Prima scansione finita · Quali progetti sono finiti?», Rispondi ↗ · Decido dopo). Cosi' c'e' un posto solo e «Decido dopo» non sposta niente.
+  - Una riga per oggetto e setup: nome, setup, ore per filtro, ultima notte; Finito · In corso (risposta ad anello). In corso: «Diventa un progetto in Progetti: {ore} fatte, l'obiettivo lo scrivi tu.». Senza risposta resta in Archivio.
+  - In testa il conto («5 oggetti ripresi · 2 in corso · 1 finito · 2 senza risposta»), l'ordine «Per ultima notte ▾ · Per nome · Per ore» (i recenti in cima) e «Tutti finiti» (con degli In corso: «Gli altri finiti», che li lascia). 12 righe, poi «Mostra altri 50». In fondo «Decido dopo»: la sezione si chiude («decidi dopo: restano in Archivio», Riapri).
+  - Applica: In corso diventa progetto, Finito resta in Archivio; l'esito «… 2 progetti nuovi in Progetti, con le ore fatte: l'obiettivo lo scrivi tu.»; le righe senza risposta restano nella domanda.
+  - Stati (Tweaks «Progetti finiti · …» e tavola): archivio piccolo, archivio grande (200), un oggetto con due setup (NGC 7000), decido dopo, nessun oggetto riconosciuto (la sezione non c'e'); Dashboard «prima scansione finita».
+  - **Resta da disegnare**: in Progetti il progetto senza obiettivo («Scrivi l'obiettivo», niente percentuale). Si fa quando Marco approva.
+
 ## v57 — Planner, Sistema solare ed Eventi nella forma del cielo profondo (25/10/2026, Marco: «vai»)
 
 Brief in `docs/archivio/brief-planner-solare-eventi.md` (i cinque punti scelti da Claude, approvati da Marco). Componenti `PlannerSolare2` e `PlannerEventi2`, riscritti; il Planner passa solo i dati.

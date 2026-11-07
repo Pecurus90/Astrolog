@@ -319,7 +319,7 @@ class Component extends DCLogic {
     const DAY = GG.map((g, i) => ({ i, dove: (GG[i + 1] || 'mercoledì 7 ottobre') + ' · di giorno', corto: CORTO[i], lat: 45.85, t0: 390, t1: 1200, sr: 445 + Math.round(1.5 * i), ss: 1151 - 2 * i, dk0: null, dk1: null,
       luna: { pct: FASE[i], rise: null, tr: (M(RISE[i]) + 457 + 720) % 1440 }, met: i === 2 ? null : [[390, 0], [840, 1], [960, 0]], verd: 0, giorno: true }));
     const SENZA = limiti({ i: 0, dove: 'domenica 21 giugno', corto: 'Stanotte', lat: 51, ss: M('21:31'), c1: M('22:22'), n1: M('23:37'), dk0: null, dk1: null, n2: M('02:12'), c2: M('03:27'), sr: M('04:18'), luna: { pct: 3, rise: null, tr: M('13:00') }, met: [[M('19:00'), 0]], verd: 0 });
-    const EV = [{ id: 'iss', notte: 0, n: 'ISS sulla Luna', ora: '03:41:12', a: M('03:36'), d: 10, sub: '03:41:12 · durata 0.8 s', cop: 'il transito della ISS delle 03:41' }];
+    const EV = [{ id: 'iss', notte: 0, n: 'ISS sulla Luna', ora: '03:41:12', a: M('03:36'), d: 10, sub: '03:41:12 · durata 0,8 s', cop: 'il transito della ISS delle 03:41' }];
     // Seeing simulato (classi di Meteo: 0 buono, 1 incerto, 2 non adatto), notte e giorno: dalla previsione di Meteoblue
     const SEE = [[M('18:00'), 1], [M('02:00'), 0], [M('03:30'), 1], [M('04:30'), 0], [M('06:00'), 1]], SEED = [[360, 1], [510, 0], [600, 1]];
     return this._d = { P, SOL, SOLE, RIC, POS, NOTTI, DAY, SENZA, EV, SEE, SEED }; }
@@ -599,12 +599,14 @@ class Component extends DCLogic {
     const PL = (s, tx, lv) => ({ s: s ? s + ' ' : '', t: tx, bg: lv == null ? t.card : t.pills[lv][0], fg: lv == null ? t.text : t.pills[lv][1] });
     let prop = [], flex = [], fissi = [], propH = '', campo = null, vuotoT0 = '', planner = false;
     if (modoK === 'ds') {
+      const trAt = m => [90, 50, 0][metAt(m)] ?? 0;
       const PR = stato === 'nessun progetto' ? [] : D.P.filter(x => x.pos === posK);
-      const metr = x => { let vis = 0, ut = 0, nota = '', fv = null, st = null; if (dk) for (let m = N.dk0; m < N.dk1; m += 5) if (ok(x, m)) { vis += 5; if (metAt(m) === 0) ut += 5; if (fv == null) fv = m; if (st == null && !passa(x, 'l', m)) st = m; }
-        if (x.man.some(f => LARGA[f[0]]) && st != null) nota = st === fv ? 'tutta la notte solo banda stretta' : 'dalle ' + F(st) + ' solo banda stretta'; return { vis, ut: N.met ? ut : null, nota }; };
+      // Ore di posa (ADR 0034): trasparenza / 100 per i minuti alto e al buio. Nel disegno la trasparenza viene dall'esito dell'ora (simulata: 90 · 50 · 0).
+      const metr = x => { let vis = 0, ut = 0, nota = '', fv = null, st = null; if (dk) for (let m = N.dk0; m < N.dk1; m += 5) if (ok(x, m)) { vis += 5; ut += 5 * trAt(m) / 100; if (fv == null) fv = m; if (st == null && !passa(x, 'l', m)) st = m; }
+        if (x.man.some(f => LARGA[f[0]]) && st != null) nota = st === fv ? 'tutta la notte solo banda stretta' : 'dalle ' + F(st) + ' solo banda stretta'; return { vis, ut: N.met ? Math.round(ut / 5) * 5 : null, nota }; };
       const propL = stato === 'nessun progetto alto' || buioNo ? [] : PR.map(x => ({ x, ...metr(x) })).filter(r => r.vis >= 60).sort((a, b) => (!!b.x.chiude - !!a.x.chiude) || ((b.ut ?? b.vis) - (a.ut ?? a.vis)) || (b.x.tot - a.x.tot));
       prop = propL.map(({ x, vis, ut, nota }) => { const q = { x, fix: false, d: Math.min(120, Math.round(x.tot / 5) * 5) };
-        return { id: x.id, n: x.n, set: POS.set, ic: IC.ds, col: t.pal[x.col], lock: false, puo: true, ore: H(vis) + ' visibili · ' + (ut == null ? 'utili senza previsione' : ut ? H(ut) + ' utili' : 'nessuna ora utile'),
+        return { id: x.id, n: x.n, set: POS.set, ic: IC.ds, col: t.pal[x.col], lock: false, puo: true, ore: ut == null ? 'ore di posa senza previsione' : ut ? H(ut) + ' di posa' : 'nessuna ora di posa',
           pills: [lunaPill(x)].concat(x.chiude ? [PL('◷', x.chiude, 1)] : []), nota, righe: x.mos ? [{ s: 'mosaico ' + x.mos.n + ' pannelli: tutti ogni notte, dal più indietro', fg: t.muted, fw: 400 }] : null, nel: nelDi(x.id),
           man: x.man.map(([k, v]) => { const tn = AL.tinta(t, k), off = !!(nota && LARGA[k]); return { s: AL.FD[k][0] + ' ' + H(v), c: tn.bg, bd: tn.bd, op: off ? 0.4 : 1, fg: off ? t.muted : t.text }; }), ...dsH(x, q) }; });
       flex = propL.map(r => ({ x: r.x, need: Math.ceil(r.x.tot * ohR(r.x)) }));   // l'ordine delle proposte
@@ -619,7 +621,7 @@ class Component extends DCLogic {
         on: e => set({ campoT: e.target.value }), key: e => { if (e.key === 'Enter') { e.preventDefault(); this._campo && this._campo(); } }, add: e => { prev(e); this._campo && this._campo(); } };
       this._campo = () => { if (!rete || !sig || COMx.some(c => c.n.toLowerCase() === sig.toLowerCase())) return; const h = this.hash(sig);
         set({ campoT: '', comete: [...COMx, { id: 'c-' + h, n: sig, kind: 'c', cat: 'cometa', dec: 25 + h % 40, tr: M('20:30') + h % 240, mag: 7 + (h % 50) / 10, luna: 40 + h % 60, d: 45 }] }); };
-      propH = 'Prima chi si chiude, poi le ore utili, poi le ore mancanti. Le comete per sigla. Trascina sulla linea del tempo o Aggiungi.';
+      propH = 'Prima chi si chiude, poi le ore di posa, poi le ore mancanti. Le comete per sigla. Trascina sulla linea del tempo o Aggiungi.';
       planner = stato === 'nessun progetto'; vuotoT0 = stato === 'nessun progetto' ? 'Nessun progetto ancora.' : buioNo ? 'Nessun buio stanotte.' : 'Nessun progetto alto più di ' + AMIN + ' gradi stanotte.';
     } else if (modoK === 'ss') {
       const solV = buioNo ? [] : SOLx.map(x => { let a0 = null, a1 = null, mx = -90, mxT = null, adc = 0; if (hasW) for (let m = W0; m < W1; m += 5) { const h = altO(x, m); if (h > mx) { mx = h; mxT = m; } if (ok(x, m)) { if (a0 == null) a0 = m; a1 = m + 5; if (h < ADC) adc += 5; } } return { x, a0, a1, mx, mxT, adc }; })
@@ -649,7 +651,7 @@ class Component extends DCLogic {
         const ore = x.cat === 'exo' ? 'transito ' + F(x.t1) + '–' + F(x.t2) + ' · base 1 h prima e dopo' : x.ecl ? 'minimo ' + F(x.min) + ' · binaria a eclisse' : r.a0 != null ? 'sopra ' + AMIN + '° ' + F(r.a0) + '–' + F(r.a1) + ' · ' + mn(x.d) : mn(x.d);
         return { id: x.id, n: x.n, set: POS.set, ic: IC[x.cat], col: colDi(x), lock: r.fix, puo: !(r.fix && nel), ore, pills: [PL('', TIPO[x.cat] + (r.fix ? ' · ora fissa' : ''), null)], man: null, nota: '', righe: righe.length ? righe : null, nel, link: x.cat === 'aavso' ? { l: 'Alert ↗', h: 'https://www.aavso.org/aavso-alert-notices' } : null, ...dsH(x, q) }; });
       // Senza chiave la riga del tipo lo dice
-      [['aavso', 'Campagne AAVSO', 'AAVSO', haAAVSO], ['sn', 'Supernove', 'TNS', haTNS]].forEach(([k, n, ch, ha]) => { if (!ha && cr[k] && !buioNo && stato !== 'Ricerca senza oggetti') prop.push({ id: 'k-' + k, n, set: '', ic: IC[k], col: t.muted, lock: false, puo: false, ore: 'Serve la chiave ' + ch + ' in Impostazioni.', pills: null, man: null, nota: '', righe: null, nel: '', link: { l: 'Impostazioni ↗', h: 'Impostazioni.dc.html?sezione=planner' }, ds: () => {}, de: () => {}, add: () => {} }); });
+      [['aavso', 'Campagne AAVSO', 'AAVSO', haAAVSO], ['sn', 'Supernove', 'TNS', haTNS]].forEach(([k, n, ch, ha]) => { if (!ha && cr[k] && !buioNo && stato !== 'Ricerca senza oggetti') prop.push({ id: 'k-' + k, n, set: '', ic: IC[k], col: t.muted, lock: false, puo: false, ore: 'Serve la chiave ' + ch + ' in Impostazioni › Servizi.', pills: null, man: null, nota: '', righe: null, nel: '', link: { l: 'Impostazioni › Servizi ↗', h: 'Impostazioni.dc.html?sezione=servizi' }, ds: () => {}, de: () => {}, add: () => {} }); });
       fissi = ricV.filter(r => r.fix).sort((a, b) => b.hMid - a.hMid);
       flex = ricV.filter(r => !r.fix).map(r => ({ x: r.x, need: r.x.d }));
       const nm = this.state.campoT.trim();
@@ -744,9 +746,9 @@ class Component extends DCLogic {
       on: e => { prev(e); if (!on) set({ giorni: { ...this.state.giorni, [K0]: k === 'g' }, sel: null, annulla: null, ask: false }); } }; }) : null;
     const solLine = giorno ? 'Filtro solare sempre davanti all\u0027ottica. Tetto e sicurezza li gestisce N.I.N.A.' : '';
     const mA = this.state.modoAsk, modoAsk = mA ? { t: 'Il piano di stanotte si svuota: cambio?', si: e => { prev(e); set({ modi: { ...this.state.modi, [K0]: mA }, piani: { ...this.state.piani, [K]: [] }, modoAsk: null, sel: null, annulla: null, foglio: null, campoT: '' }); }, no: e => { prev(e); set({ modoAsk: null }); } } : null;
-    let utN = 0; if (dk && N.met) for (let m = N.dk0; m < N.dk1; m += 5) if (metAt(m) === 0) utN += 5;
+    let utN = 0; if (dk && N.met) for (let m = N.dk0; m < N.dk1; m += 5) utN += 5 * ([90, 50, 0][metAt(m)] ?? 0) / 100; utN = Math.round(utN / 5) * 5;
     const verd = giorno ? (N.met ? { s: AL.SEGNI[N.verd], t: 'giorno ' + AL.PAROLE[N.verd], bg: t.pills[N.verd][0], fg: t.pills[N.verd][1], sub: 'Sole dalle ' + F(N.sr) + ' alle ' + F(N.ss) } : { s: '?', t: 'senza previsione', bg: t.card2, fg: t.text, sub: 'Sole dalle ' + F(N.sr) + ' alle ' + F(N.ss) }) : buioNo ? { s: '◐', t: 'nessun buio', bg: t.card2, fg: t.text, sub: 'crepuscolo dalle ' + F(N.ss) + ' alle ' + F(N.sr) }
-      : N.met ? { s: AL.SEGNI[N.verd], t: 'notte ' + AL.PAROLE[N.verd], bg: t.pills[N.verd][0], fg: t.pills[N.verd][1], sub: (utN ? H(utN) + ' utili' : 'nessuna ora utile') + ' su ' + H(buio) + ' di buio' }
+      : N.met ? { s: AL.SEGNI[N.verd], t: 'notte ' + AL.PAROLE[N.verd], bg: t.pills[N.verd][0], fg: t.pills[N.verd][1], sub: (utN ? H(utN) + ' di posa' : 'nessuna ora di posa') + ' su ' + H(buio) + ' di buio' }
       : { s: '?', t: 'senza previsione', bg: t.card2, fg: t.text, sub: H(buio) + ' di buio' };
     const sitoT = sito ? (buioNo ? 'Sito di prova a 51° N' : 'Cima Ekar') : '';
     const vistaT = 'elenco';   // v30.1 (Marco): il telefono e' l'elenco della v28.4, la linea verticale e' uscita

@@ -229,7 +229,7 @@ class Component extends DCLogic {
     const ovN = Math.round(ov * 100);
     const mosP = mosV ? { l: mos ? String(tessere.length) : 'spento', aria: mos ? tessere.length + ' pannelli' : 'spento', aperto: pop === 'mos' ? 'true' : 'false', apri: e => { prev(e); set({ pop: pop === 'mos' ? null : 'mos' }); },
       acceso: mos ? 'true' : 'false', on: mos ? 'true' : undefined, cambia: e => { prev(e); set({ mos: !mos }); },
-      modi: (mosV.modi || []).map(m => ({ l: m.l, sel: m.sel ? 'true' : 'false', on: e => { prev(e); m.on(); } })), ov: ovN + ' %', ovMeno: e => { prev(e); set({ ov: Math.max(0, ovN - 5) }); }, ovPiu: e => { prev(e); set({ ov: Math.min(50, ovN + 5) }); },
+      modi: (mosV.modi || []).map(m => ({ l: m.l, sel: m.sel ? 'true' : 'false', on: e => { prev(e); m.on(); } })), ov: ovN + '%', ovMeno: e => { prev(e); set({ ov: Math.max(0, ovN - 5) }); }, ovPiu: e => { prev(e); set({ ov: Math.min(50, ovN + 5) }); },
       conto: tessere.length + (tessere.length === 1 ? ' pannello' : ' pannelli') + (tessere.grid ? ' su ' + tessere.grid[0] + ' × ' + tessere.grid[1] : ''), nota: isMoon && g('mm') !== 'zona' ? 'Il pannello 1 è sul terminatore: riprendilo per primo.' : g('mm') === 'zona' && !g('zona') ? 'Trascina sul disco per disegnare la zona.' : 'Rotazione entro 10°, o restano buchi fra i pannelli.' } : null;
     const zoom = { piu: R.st.zoomIn, meno: R.st.zoomOut, adatta: R.st.centra };
     // La ripresa salvata in Progetti: gli stessi numeri del Piano della notte
@@ -358,7 +358,7 @@ class Component extends DCLogic {
       return ce('g', { key: 'lj' + i }, ce('circle', { cx: lx, cy: ly, r: Math.max(1.8, Rpx * 0.04), fill: AL.CIELO_D.stella }), ce('text', { x: lx, y: ly + (i % 2 ? 18 : -10), fill: AL.CIELO_D.testo, fontSize: 11, fontWeight: 600, textAnchor: 'middle', style: { paintOrder: 'stroke', stroke: AL.NERO, strokeWidth: 3, strokeOpacity: 0.7 } }, n2)); }) : null;
     const fasEl = (isMoon || interno) && illum < 0.995 ? ce('g', { transform: ruota }, ce('path', { d: ombra(Rpx), fill: AL.NERO, fillOpacity: isMoon ? 0.72 : 0.85 }), ce('path', { d: termin(Rpx), fill: 'none', stroke: tm.accent, strokeWidth: 1.25, strokeOpacity: 0.9 })) : null;
     // Mosaico (Luna e Sole): tessere sugli assi della camera
-    // Sovrapposizione vuota: 20 %, nel mosaico e nella stima
+    // Sovrapposizione vuota: 20%, nel mosaico e nella stima
     const ovN = parseFloat(g('ov')), mos = !pianeta && g('mos'), ov = (isNaN(ovN) ? 20 : Math.max(0, Math.min(50, ovN))) / 100, a = -rot * R;
     const toCam = (dx, dy) => [dx * Math.cos(a) + dy * Math.sin(a), -dx * Math.sin(a) + dy * Math.cos(a)], toScr = (u, v) => [u * Math.cos(a) - v * Math.sin(a), u * Math.sin(a) + v * Math.cos(a)];
     const zona = g('zona'), zonaM = mos && g('mm') === 'zona';
@@ -403,7 +403,7 @@ class Component extends DCLogic {
       centra: e => { prev(e); set({ pan: [0, 0], zoom: 1, nome: null }); }, zoomIn: e => { prev(e); set({ zoom: Math.min(isMoon ? 12 : 6, g('zoom') * 1.5), nome: null }); }, zoomOut: e => { prev(e); set({ zoom: Math.max(grande ? 0.01 : 0.3, g('zoom') / 1.5), nome: null }); } };
     const nomeV = nome ? { n: nome.n, x: (nome.px + pan[0] - nome.pan[0]) + 'px', y: (nome.py + pan[1] - nome.pan[1]) + 'px' } : null;
     const msg = grande && fov0 / g('zoom') < Math.max(fw, fh2 * SW / SH) ? 'Il campo è ' + Math.round(Math.min(fw, fh2) / diam) + ' volte ' + b0[0] + ': lo vedi intero con −' : (isSun || isMoon) && !net ? (isSun ? 'Immagine del Sole non disponibile senza rete' : 'Mappa della Luna non disponibile senza rete') : isSun && imgS === 'errore' ? 'Immagine del Sole di oggi non arrivata' : null;
-    const credito = isMoon ? 'CDS Aladin Sky Atlas, Unistra/CNRS · LROC/ASU, NASA' : isSun ? (g('sole') === 'ha' ? 'GONG, NISP/NSO/AURA/NSF with NOAA' : 'Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams') : corpo === 'marte' ? 'Viking MDIM 2.1: NASA/USGS, pubblico dominio' : corpo === 'giove' ? 'Disco disegnato dall\u0027app · la mappa OPAL (NASA, ESA) arriverà' : 'Credito: NASA, ESA';
+    const credito = isMoon ? 'CDS Aladin Sky Atlas, Unistra/CNRS · LROC/ASU, NASA' : isSun ? (g('sole') === 'ha' ? 'GONG, NISP/NSO/AURA/NSF with NOAA' : 'Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams') + ' · via Helioviewer, dal proxy dell\u0027app' : corpo === 'marte' ? 'Viking MDIM 2.1: NASA/USGS, pubblico dominio' : corpo === 'giove' ? 'Disco disegnato dall\u0027app · la mappa OPAL (NASA, ESA) arriverà' : 'Credito: NASA, ESA';
 
     const passi = [['−1 g', -1, 'Un giorno prima'], ['−1 h', -1 / 24, 'Un\u0027ora prima'], ['+1 h', 1 / 24, 'Un\u0027ora dopo'], ['+1 g', 1, 'Un giorno dopo']].map(([l, d, aria]) => ({ l, aria, on: e => { prev(e); set({ dt: dt + d, nome: null }); } }));
     const quando = { data: GG[quando0.getDay()] + ' ' + quando0.getDate() + ' ' + MM[quando0.getMonth()] + ' ' + quando0.getFullYear(), sub: 'alle ' + hh(quando0) + (dt === 0 ? ' · adesso' : ''), adesso: e => { prev(e); set({ dt: 0, nome: null }); } };

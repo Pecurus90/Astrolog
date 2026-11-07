@@ -13,7 +13,7 @@
 </helmet>
 <div class="al-sel__testo-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}" data-formato="{{ fmt }}">
 <sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
-<dc-import name="componenti/Telaio" formato="{{ fmt }}" pagina="{{ telPag }}" etichetta="{{ etichetta }}" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" anteprima="{{ anteprima }}" hint-size="100%,100vh">
+<dc-import name="componenti/Telaio" app="{{ appSt }}" formato="{{ fmt }}" pagina="{{ telPag }}" etichetta="{{ etichetta }}" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" anteprima="{{ anteprima }}" hint-size="100%,100vh">
 
 <sc-if value="{{ V.pagina }}" hint-placeholder-val="{{ true }}">
 <div class="al-sel__colonna-1">
@@ -24,7 +24,7 @@
 <sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><span class="al-sel__testo-3">Prima dello stacking: togli i frame che non servono. Le soglie segnano, tu decidi, poi li sposti in «scartate». Dati simulati.</span></sc-if>
 <sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-3">Qui guardi i frame e cosa segnano le soglie. Scartare, tenere e spostare si fa dal computer. Dati simulati.</span></sc-if>
 </div>
-<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ apriRegole }}" class="al-bottone al-bottone--tenue al-bottone--icona" aria-label="Apri le soglie dei setup" title="Soglie dei setup" style="border-radius:50%;width:44px;flex:none">↗</button></sc-if>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><a href="Impostazioni.dc.html?sezione=selezione" target="_top" class="al-bottone al-bottone--tenue al-bottone--icona" aria-label="Apri le partenze delle soglie in Impostazioni" title="Impostazioni · Selezione dei frame" style="border-radius:50%;width:44px;flex:none">↗</a></sc-if>
 </div>
 
 <dc-import name="componenti/Carta" formato="{{ fmt }}" padding="var(--sel-carta-pad)" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="La scelta" hint-size="100%,420px">
@@ -84,6 +84,7 @@
 </div>
 <sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-sel__riga-9">
 <dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" opzioni="{{ misO }}" etichetta="Misura" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import>
+<label class="al-sel__riga-10">Altre misure<select class="al-tendina al-tendina--piccolo" value="{{ misAltV }}" onChange="{{ misAltCambia }}"><option value="">—</option><sc-for list="{{ misAltO }}" as="o" hint-placeholder-count="6"><option value="{{ o.k }}" selected="{{ o.sel }}">{{ o.l }}</option></sc-for></select></label>
 <label class="al-sel__riga-10">Confronta con<select class="al-tendina al-tendina--piccolo" value="{{ misBV }}" onChange="{{ misBCambia }}"><sc-for list="{{ misBO }}" as="o" hint-placeholder-count="5"><option value="{{ o.k }}" selected="{{ o.sel }}">{{ o.l }}</option></sc-for></select></label>
 </div></sc-if>
 <div class="al-sel__riga-11">
@@ -104,25 +105,25 @@
 <span class="al-sel__testo-18">{{ PV.pos }}</span>
 <button type="button" onClick="{{ PV.dopo }}" aria-label="Frame dopo" class="al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--icona al-sel__blocco-8">›</button>
 </div>
-<div class="al-sel__blocco-9" onTouchStart="{{ PV.ts }}" onTouchEnd="{{ PV.te }}" style="background:{{ PV.fondo }}">
+<sc-if value="{{ PV.noImg }}" hint-placeholder-val="{{ false }}"><div class="al-sel__provvisorio" role="note"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" fondo="carta2" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import><span>L'anteprima del frame arriva dopo: per ora le sole misure, qui sotto. Si scarta e si tiene lo stesso.</span></div></sc-if>
+<sc-if value="{{ PV.img }}" hint-placeholder-val="{{ true }}"><div class="al-sel__blocco-9" onTouchStart="{{ PV.ts }}" onTouchEnd="{{ PV.te }}" style="background:{{ PV.fondo }}">
 <div class="{{ PV.vcls }}" role="img" aria-label="{{ PV.al }}"><sc-for list="{{ PV.viste }}" as="w" hint-placeholder-count="1"><svg class="al-sel__grafico-1" viewBox="{{ w.vb }}" width="100%" preserveAspectRatio="xMidYMid slice" style="background:{{ PV.fondo }}">
 <sc-for list="{{ PV.stelle }}" as="q" hint-placeholder-count="30"><ellipse cx="{{ q.x }}" cy="{{ q.y }}" rx="{{ q.rx }}" ry="{{ q.ry }}" transform="rotate(35 {{ q.x }} {{ q.y }})" opacity="{{ q.o }}" class="al-sel__stella"></ellipse></sc-for>
 <sc-if value="{{ PV.scia }}" hint-placeholder-val="{{ false }}"><line class="al-sel__scia" x1="-10" y1="182" x2="310" y2="34" stroke-width="1.4" opacity=".85"></line></sc-if>
 </svg></sc-for></div>
 <span class="al-sel__strato-3">frame simulato</span>
 <div class="al-sel__strato-4"><div class="al-sel__riga-14" role="radiogroup" aria-label="Ingrandimento"><sc-for list="{{ PV.zmO }}" as="o" hint-placeholder-count="3"><button type="button" class="al-bottone al-sel__tondo-3" role="radio" aria-checked="{{ o.sel }}" aria-label="{{ o.l }}" title="{{ o.l }}" onClick="{{ o.on }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ o.d }}"></path></svg></button></sc-for></div><button type="button" class="al-bottone al-sel__tondo-4" onClick="{{ PV.fsApri }}" aria-label="Schermo intero" title="Schermo intero"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V3h4M11 3h4v4M15 11v4h-4M7 15H3v-4"></path></svg></button></div>
-</div>
+</div></sc-if>
 <div class="al-sel__riga-15">
 <sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" class="al-bottone al-sel__tondo-5 al-sel__tondo-5--pericolo" onClick="{{ PV.ko.on }}" aria-pressed="{{ PV.ko.p }}" aria-label="{{ PV.ko.al }}" title="{{ PV.ko.al }} (S)">✕</button></sc-if>
 <button type="button" class="al-bottone al-sel__tondo-6" onClick="{{ PV.play }}" aria-pressed="{{ PV.playA }}" aria-label="{{ PV.playL }}" title="{{ PV.playL }}">{{ PV.playS }}</button><a href="#" onClick="{{ PV.velGira }}" aria-label="{{ PV.velA }}" title="{{ PV.velA }}" class="al-tendina al-tendina--piccolo al-sel2__riga-1">{{ PV.velL }}<span class="al-sel2__testo-1" aria-hidden="true">↻</span></a>
 <sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" class="al-bottone al-sel__tondo-5 al-sel__tondo-5--tieni" onClick="{{ PV.ok.on }}" aria-pressed="{{ PV.ok.p }}" aria-label="{{ PV.ok.al }}" title="{{ PV.ok.al }} (T)">✓</button></sc-if>
 </div>
 <sc-if value="{{ PV.extraD }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ PV.extra.on }}" class="al-bottone al-bottone--testo al-bottone--piccolo al-sel__blocco-10">{{ PV.extra.l }}</button></sc-if>
-<dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" allinea="flex-start" opzioni="{{ PV.strO }}" etichetta="Stretch" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import>
-<span class="al-sel__testo-19">{{ PV.strN }}</span>
+<sc-if value="{{ PV.img }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" allinea="flex-start" opzioni="{{ PV.strO }}" etichetta="Stretch" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import>
+<span class="al-sel__testo-19">{{ PV.strN }}</span></sc-if>
 <div class="al-sel__colonna-12"><b class="al-sel__testo-20">{{ PV.file }}</b><span class="al-sel__testo-8">{{ PV.sub }}</span></div>
 <span class="al-sel__riga-16"><span aria-hidden="true" class="{{ PV.st.cls }}">{{ PV.st.s }}</span><span class="al-sel__colonna-14"><span>{{ PV.st.l }}</span><sc-if value="{{ PV.st.sub }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-21">{{ PV.st.sub }}</span></sc-if></span></span>
-<sc-if value="{{ PV.notaD }}" hint-placeholder-val="{{ false }}"><input type="text" value="{{ PV.nota.v }}" onChange="{{ PV.nota.on }}" aria-label="Perché lo scarti" placeholder="Perché? per esempio scia di satellite" class="al-campo al-campo--piccolo al-campo--piena"></sc-if>
 <div class="al-sel__griglia-2">
 <sc-for list="{{ PV.righe }}" as="r" hint-placeholder-count="6"><span>{{ r.n }}</span><b class="al-sel__testo-22">{{ r.v }}</b><dc-import name="componenti/Pillola" esito="{{ r.es }}" segno="{{ r.zs }}" testo="{{ r.zt }}" classe="al-sel__pillola-1" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></sc-for>
 </div>
@@ -165,8 +166,8 @@
 <div class="al-sel__blocco-15"><a href="#" onClick="{{ r.opT }}" aria-haspopup="listbox" aria-expanded="{{ r.opE }}" aria-label="{{ r.opA }}" class="al-tendina al-tendina--piccolo al-sel__riga-27">{{ r.opV }}<span class="al-sel__testo-28" aria-hidden="true">▾</span></a><sc-if value="{{ r.opMenu }}" hint-placeholder-val="{{ false }}"><div class="al-sel__strato-1" onClick="{{ r.opChiudi }}"></div><div class="al-sel__strato-11" role="listbox" aria-label="{{ r.opA }}"><sc-for list="{{ r.opO }}" as="o" hint-placeholder-count="4"><a class="al-sel__riga-28" href="#" role="option" aria-selected="{{ o.selA }}" onClick="{{ o.on }}"><b class="al-sel__blocco-16">{{ o.l }}</b><span class="al-sel__testo-29">{{ o.a }}</span></a></sc-for></div></sc-if></div>
 <input type="text" inputmode="decimal" value="{{ r.v }}" onChange="{{ r.onV }}" aria-label="{{ r.vA }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--piccolo al-campo--numero al-sel__blocco-17">
 <span class="al-sel__testo-30">{{ r.u }}</span>
-<sc-if value="{{ r.qui }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tenue);white-space:nowrap"><span aria-hidden="true">✎</span>cambiata qui<button type="button" class="al-bottone al-bottone--testo al-bottone--piccolo" onClick="{{ r.ripristina }}" aria-label="{{ r.ripA }}" style="min-height:44px">Ripristina</button></span></sc-if>
-<sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-31" role="alert">✕ {{ r.err }}</span></sc-if>
+<sc-if value="{{ r.qui }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tenue);white-space:nowrap"><span aria-hidden="true">✎</span>cambiata per questo gruppo<button type="button" class="al-bottone al-bottone--testo al-bottone--piccolo" onClick="{{ r.ripristina }}" aria-label="{{ r.ripA }}" style="min-height:44px">Ripristina</button></span></sc-if>
+<sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-31" role="alert">✕ {{ r.err }}</span></sc-if><sc-if value="{{ r.tace }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-8">? {{ r.tace }}</span></sc-if>
 </span>
 <b class="al-sel__testo-32">{{ r.conta }}</b>
 </div></sc-for>
@@ -174,8 +175,8 @@
 <div class="al-sel__centro-6">
 <dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ TB.fx.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,44px"></dc-import>
 <span class="al-sel__riga-26">
-<input type="text" value="{{ TB.fx.testo }}" onInput="{{ TB.fx.onT }}" aria-label="Formula" aria-invalid="{{ TB.fx.inv }}" placeholder="per esempio FWHM / SNR &gt; 0.012" spellcheck="false" class="al-campo al-campo--piccolo al-sel__blocco-19">
-<select class="al-tendina al-tendina--piccolo al-sel__blocco-20" aria-label="Aggiungi alla formula" value="" onChange="{{ TB.fx.onAdd }}"><option value="">Aggiungi…</option><sc-for list="{{ TB.fx.chips }}" as="c" hint-placeholder-count="16"><option value="{{ c.l }}">{{ c.n }}</option></sc-for></select>
+<input type="text" value="{{ TB.fx.testo }}" onInput="{{ TB.fx.onT }}" aria-label="Formula" aria-invalid="{{ TB.fx.inv }}" placeholder="per esempio FWHM / SNR &gt; 0,012" spellcheck="false" class="al-campo al-campo--piccolo al-sel__blocco-19">
+<select class="al-tendina al-tendina--piccolo al-sel__blocco-20" aria-label="Aggiungi alla formula" value="" onChange="{{ TB.fx.onAdd }}"><option value="">Aggiungi…</option><sc-for list="{{ TB.fx.chips }}" as="g" hint-placeholder-count="7"><optgroup label="{{ g.g }}"><sc-for list="{{ g.o }}" as="c" hint-placeholder-count="6"><option value="{{ c.l }}">{{ c.n }}</option></sc-for></optgroup></sc-for></select>
 </span>
 <b class="al-sel__testo-32">{{ TB.fx.conta }}</b>
 </div>
@@ -183,6 +184,7 @@
 <span class="{{ TB.fx.esCls }}" role="status" aria-live="polite"><span aria-hidden="true" class="{{ TB.fx.esSCls }}">{{ TB.fx.esS }}</span><span class="al-sel__blocco-22">{{ TB.fx.es }}</span></span>
 </div>
 </div>
+<span class="al-sel__testo-25">Valgono per questo gruppo: {{ TB.gruppo }}. Le partenze di ogni setup e filtro si salvano in <a href="Impostazioni.dc.html?sezione=selezione" target="_top" class="al-sel__collega">Impostazioni › Selezione dei frame ↗</a>.</span>
 </div>
 </div></sc-if>
 
@@ -192,6 +194,8 @@
 </dc-import>
 
 <sc-if value="{{ E }}" hint-placeholder-val="{{ false }}"><div role="status"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ fmt }}" segno="{{ E.s }}" titolo="{{ E.t }}" testo="{{ E.x }}" azione="{{ E.a }}" on-azione="{{ E.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></div></sc-if>
+
+<sc-if value="{{ SPO }}" hint-placeholder-val="{{ false }}"><div class="al-sel__sposta" role="status" aria-live="polite"><span class="al-sel__sposta-testa"><b>{{ SPO.t }}</b><span>{{ SPO.n }}</span></span><span class="al-sel__sposta-barra" role="progressbar" aria-valuemin="0" aria-valuemax="{{ SPO.tot }}" aria-valuenow="{{ SPO.fatti }}" aria-label="Frame spostati"><span class="al-sel__sposta-pieno" style="width:{{ SPO.w }}"></span></span><span class="al-sel__testo-8">{{ SPO.x }}</span></div></sc-if>
 
 <sc-if value="{{ SC.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ fmt }}" padding="var(--sel-carta-pad)" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="In scartate" hint-size="100%,240px">
 <div class="al-sel__riga-7">
@@ -213,52 +217,6 @@
 <button type="button" onClick="{{ SB.via }}" aria-label="Togli la selezione" class="al-bottone al-bottone--piccolo al-bottone--icona">×</button>
 </div></sc-if>
 
-</div>
-</sc-if>
-
-<sc-if value="{{ V.regole }}" hint-placeholder-val="{{ false }}">
-<div class="al-sel__colonna-1">
-<div class="al-sel__colonna-19">
-<button type="button" class="al-bottone al-sel__riga-35" onClick="{{ chiudiRegole }}">← Selezione dei frame</button>
-<span class="al-sel__riga-36"><h1 class="al-sel__testo-38">Impostazioni</h1><span class="al-sel__testo-12">le soglie di ogni setup</span></span>
-<dc-import name="componenti/PillolaScelta" forma="linguette" scorre="{{ L.tel }}" opzioni="{{ tabs }}" etichetta="Sezioni" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import>
-</div>
-<div class="al-sel__centro-7">
-<dc-import name="componenti/Carta" formato="{{ fmt }}" colonne="8" padding="var(--sel-carta-pad)" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Soglie per setup" hint-size="100%,420px">
-<div class="al-sel__colonna-20"><span class="al-sel__testo-39">Scarta i frame con…</span>
-<select key="{{ TI.corT.v }}" defaultValue="{{ TI.corT.v }}" onChange="{{ TI.corT.on }}" aria-label="Setup" class="al-tendina al-tendina--tondo" style="flex:none;align-self:flex-start;max-width:100%;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ TI.corT.o }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select>
-<dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" allinea="flex-start" opzioni="{{ TI.filtri }}" etichetta="Filtro" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import>
-<span class="al-sel__riga-37"><span class="al-sel__testo-5">{{ TI.sub }}</span><sc-if value="{{ TI.stato }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="avviso" segno="!" testo="modifiche da applicare" classe="al-sel__pillola-3" modo="{{ modo }}" accento="{{ accento }}" hint-size="180px,22px"></dc-import></sc-if><button type="button" onClick="{{ TI.applica }}" aria-disabled="{{ TI.appNo }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">Applica</button></span></div>
-<sc-for list="{{ TI.righe }}" as="r" hint-placeholder-count="5"><div class="al-sel__centro-5">
-<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ r.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,44px"></dc-import>
-<span class="{{ r.rcls }}">
-<div class="al-sel__blocco-15"><a href="#" onClick="{{ r.opT }}" aria-haspopup="listbox" aria-expanded="{{ r.opE }}" aria-label="{{ r.opA }}" class="al-tendina al-tendina--piccolo al-sel__riga-27">{{ r.opV }}<span class="al-sel__testo-28" aria-hidden="true">▾</span></a><sc-if value="{{ r.opMenu }}" hint-placeholder-val="{{ false }}"><div class="al-sel__strato-1" onClick="{{ r.opChiudi }}"></div><div class="al-sel__strato-11" role="listbox" aria-label="{{ r.opA }}"><sc-for list="{{ r.opO }}" as="o" hint-placeholder-count="4"><a class="al-sel__riga-28" href="#" role="option" aria-selected="{{ o.selA }}" onClick="{{ o.on }}"><b class="al-sel__blocco-16">{{ o.l }}</b><span class="al-sel__testo-29">{{ o.a }}</span></a></sc-for></div></sc-if></div>
-<input type="text" inputmode="decimal" value="{{ r.v }}" onChange="{{ r.onV }}" aria-label="{{ r.vA }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--piccolo al-campo--numero al-sel__blocco-17">
-<span class="al-sel__testo-30">{{ r.u }}</span>
-<sc-if value="{{ r.qui }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tenue);white-space:nowrap"><span aria-hidden="true">✎</span>cambiata qui<button type="button" class="al-bottone al-bottone--testo al-bottone--piccolo" onClick="{{ r.ripristina }}" aria-label="{{ r.ripA }}" style="min-height:44px">Ripristina</button></span></sc-if>
-<sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-31" role="alert">✕ {{ r.err }}</span></sc-if>
-</span>
-<b class="al-sel__testo-32">{{ r.conta }}</b>
-</div></sc-for>
-<div class="al-sel__colonna-17">
-<div class="al-sel__centro-6">
-<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ TI.fx.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,44px"></dc-import>
-<span class="al-sel__riga-26">
-<input type="text" value="{{ TI.fx.testo }}" onInput="{{ TI.fx.onT }}" aria-label="Formula" aria-invalid="{{ TI.fx.inv }}" placeholder="per esempio FWHM / SNR &gt; 0.012" spellcheck="false" class="al-campo al-campo--piccolo al-sel__blocco-19">
-<select class="al-tendina al-tendina--piccolo al-sel__blocco-20" aria-label="Aggiungi alla formula" value="" onChange="{{ TI.fx.onAdd }}"><option value="">Aggiungi…</option><sc-for list="{{ TI.fx.chips }}" as="c" hint-placeholder-count="16"><option value="{{ c.l }}">{{ c.n }}</option></sc-for></select>
-</span>
-<b class="al-sel__testo-32">{{ TI.fx.conta }}</b>
-</div>
-<div class="al-sel__riga-29">
-<span class="{{ TI.fx.esCls }}" role="status" aria-live="polite"><span aria-hidden="true" class="{{ TI.fx.esSCls }}">{{ TI.fx.esS }}</span><span class="al-sel__blocco-22">{{ TI.fx.es }}</span></span>
-</div>
-</div>
-</dc-import>
-<dc-import name="componenti/Carta" formato="{{ fmt }}" colonne="4" padding="var(--sel-carta-pad)" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Come funzionano" hint-size="100%,300px">
-<span class="al-sel__testo-39">Come funzionano</span>
-<sc-for list="{{ COME }}" as="c" hint-placeholder-count="5"><span class="al-sel__griglia-3"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" segno="{{ c.s }}" fondo="carta2" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import><span>{{ c.t }}</span></span></sc-for>
-</dc-import>
-</div>
 </div>
 </sc-if>
 
@@ -300,26 +258,27 @@
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;esempio&quot;,&quot;appena aperto&quot;,&quot;misura in corso&quot;,&quot;dopo lo spostamento&quot;,&quot;notte da misurare&quot;,&quot;nessun progetto in corso&quot;,&quot;formula con errore&quot;,&quot;modifiche da applicare&quot;,&quot;elimina, col cestino&quot;,&quot;elimina, senza cestino (NAS)&quot;],&quot;default&quot;:&quot;esempio&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;errore&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;nessuno&quot;,&quot;cartella in sola lettura (NAS)&quot;,&quot;disco staccato&quot;,&quot;file aperto da un altro programma&quot;],&quot;default&quot;:&quot;nessuno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;vista&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;selezione&quot;,&quot;impostazioni&quot;],&quot;default&quot;:&quot;selezione&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;esempio&quot;,&quot;appena aperto&quot;,&quot;misura in corso&quot;,&quot;dopo lo spostamento&quot;,&quot;notte da misurare&quot;,&quot;nessun progetto in corso&quot;,&quot;formula con errore&quot;,&quot;modifiche da applicare&quot;,&quot;elimina, col cestino&quot;,&quot;elimina, senza cestino (NAS)&quot;,&quot;caricamento&quot;,&quot;errore dell'app&quot;,&quot;gruppo sotto 10 frame&quot;,&quot;spostamento in corso&quot;,&quot;senza scala del cielo&quot;,&quot;due guadagni&quot;],&quot;default&quot;:&quot;esempio&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;errore&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;nessuno&quot;,&quot;cartella in sola lettura (NAS)&quot;,&quot;disco staccato&quot;,&quot;file aperto da un altro programma&quot;],&quot;default&quot;:&quot;nessuno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;immagine&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;c'è&quot;,&quot;non ancora&quot;],&quot;default&quot;:&quot;c'è&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;progetti&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ci sono&quot;,&quot;non ancora&quot;],&quot;default&quot;:&quot;ci sono&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
 class Component extends DCLogic {
   state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440 };
   componentDidMount() { this._kd = e => this._fsKey && this._fsKey(e); window.addEventListener('keydown', this._kd); this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); this._rs(); if (typeof ResizeObserver !== 'undefined') { this._ro = new ResizeObserver(() => { if (window.innerWidth !== this.state.w) this._rs(); }); this._ro.observe(document.documentElement); } }
   componentWillUnmount() { window.removeEventListener('keydown', this._kd); this._alw && clearInterval(this._alw); this._play && clearInterval(this._play); this._ro && this._ro.disconnect(); window.removeEventListener('resize', this._rs); }
-  componentDidUpdate(pp) { if (pp.stato !== this.props.stato || pp.errore !== this.props.errore) this.setState(this.inizio(this.props.stato)); if (pp.vista !== this.props.vista) this.setState({ vista: null }); }
+  componentDidUpdate(pp) { if (pp.stato !== this.props.stato || pp.errore !== this.props.errore) this.setState(this.inizio(this.props.stato)); }
   alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
     ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
-  // Archivio simulato: cinque gruppi (oggetto + setup + filtro + posa + guadagno) in tre notti
-  archivio() { if (this._A) return this._A;
+  // Archivio simulato: sei gruppi (oggetto + setup + filtro + tempo di posa + guadagno) in tre notti
+  archivio(st) { if (this._A && this._Ast === st) return this._A; this._Ast = st;
     const SET = { fra: { k: 'fra', n: 'Askar FRA400 + ZWO ASI2600MM Pro', b: 'FRA400 + 2600MM', sc: 1.94, ap: 72, mb: 52, gain: 100 }, a103: { k: 'a103', n: 'Askar 103 + ZWO ATR2600M', b: 'Askar 103 + ATR2600M', sc: 1.385, ap: 103, mb: 52, gain: 100 } };
-    const NOTTI = [{ k: 'n05', n: '5 ottobre', c: '5/10', d: '2026-10-05', disco: 'D:\\Astro' }, { k: 'n12', n: '12 ottobre', c: '12/10', d: '2026-10-12', disco: '\\\\NAS\\astro' }, { k: 'n18', n: '18 ottobre', c: '18/10', d: '2026-10-18', disco: 'E:\\Astro' }];
+    const NOTTI = [{ k: 'n05', n: '5 ottobre', c: '5/10', d: '2026-10-05', disco: 'Dati/Astro' }, { k: 'n12', n: '12 ottobre', c: '12/10', d: '2026-10-12', disco: 'nas/astro' }, { k: 'n18', n: '18 ottobre', c: '18/10', d: '2026-10-18', disco: 'Esterno/Astro' }];
     const GR = [
       { k: 'm31L', o: 'M 31', s: 'fra', f: 'l', posa: 300, cul: 85, tr: 23.8, b: { hfd: 5.6, snr: 380, st: 2300, ecc: .37, bg: 780, sqm: 19.62 }, parti: [['n05', 40, 20.67], ['n12', 40, 21.0], ['n18', 40, 22.25]] },
       { k: 'm31L180', o: 'M 31', s: 'fra', f: 'l', posa: 180, cul: 85, tr: 23.8, b: { hfd: 5.5, snr: 290, st: 2150, ecc: .37, bg: 470, sqm: 19.62 }, parti: [['n18', 20, 20.4]] },
+      { k: 'm31Lg0', o: 'M 31', s: 'fra', f: 'l', posa: 300, gain: 0, cul: 85, tr: 23.8, b: { hfd: 5.6, snr: 300, st: 2100, ecc: .37, bg: 640, sqm: 19.62 }, parti: [['n12', 12, 24.75]] },
       { k: 'm31H', o: 'M 31', s: 'fra', f: 'ha', posa: 600, cul: 85, tr: 23.8, b: { hfd: 6.0, snr: 210, st: 950, ecc: .35, bg: 300 }, parti: [['n05', 16, 24.4], ['n18', 16, 19.3]] },
-      { k: 'n7000', o: 'NGC 7000', s: 'fra', f: 'ha', posa: 600, cul: 88, tr: 20.3, b: { hfd: 6.2, snr: 240, st: 3200, ecc: .34, bg: 320 }, parti: [['n12', 12, 18.85]] },
+      { k: 'n7000', o: 'NGC 7000', s: 'fra', f: 'ha', posa: 600, cul: 88, tr: 20.3, b: { hfd: 6.2, snr: 240, st: 3200, ecc: .34, bg: 320 }, parti: [['n12', st === 'gruppo sotto 10 frame' ? 8 : 12, 18.85]] },
       { k: 'm33L', o: 'M 33', s: 'a103', f: 'l', posa: 180, cul: 75, tr: 24.6, b: { hfd: 4.1, snr: 300, st: 1800, ecc: .41, bg: 820, sqm: 19.55 }, parti: [['n12', 30, 21.2], ['n18', 30, 22.0]] }];
     const list = [], idx = {}, pad = n => String(n).padStart(4, '0'), R = Math.PI / 180;
     GR.forEach((g, gk) => { const S = SET[g.s], FN = g.f === 'l' ? 'L' : 'Ha', ON = g.o.replace(' ', ''); let num = 0;
@@ -333,21 +292,30 @@ class Component extends DCLogic {
           if (g.k === 'm31L' && nk === 'n05' && i === 36) hfd = g.b.hfd * 1.14;
           if (g.k === 'm31H' && nk === 'n05' && i === 15) hfd = g.b.hfd * 1.17;
           if (g.k === 'm33L' && nk === 'n18' && i === 9) ecc = .76;
+          // v63: le misure in piu' (brief 1.1 e 2.1), simulate. Scie: le tre scartate a mano e qualcuna sparsa. Luna per notte: illuminata, distanza, sorge.
+          const LU = [[31, 64, 1.2], [72, 46, 3.4], [14, 82, .4]][ni], gu = g.gain != null ? g.gain : S.gain;
+          const scie = g.k === 'm31L' && ((nk === 'n05' && i === 22) || (nk === 'n18' && (i === 5 || i === 14))) ? 1 + (i % 2) : (gk * 7 + i + ni) % 41 === 13 ? 1 : 0;
+          const lalt = Math.max(-30, 48 * Math.sin((ora - 18 - LU[2]) / 11 * Math.PI)), psw = snr * Math.sqrt(st) / (hfd * hfd) / 100;
           const f = { id: g.k + '-' + nk + '-' + i, g: g.k, o: g.o, s: g.s, f: g.f, n: nk, ni, i, ora, t: ni * 100 + ora, posa: g.posa, mb: S.mb, sc: S.sc,
-            file: ON + '_' + FN + '_' + g.posa + 's_' + pad(num) + '.fits', dir: N.disco + '\\' + N.d + '\\' + g.o + '\\' + FN, radice: N.disco, rel: N.d + '\\' + g.o + '\\' + FN, gain: S.gain,
+            file: ON + '_' + FN + '_' + g.posa + 's_' + (g.gain != null ? 'g' + g.gain + '_' : '') + pad(num) + '.fits', dir: N.disco + '/' + N.d + '/' + g.o + '/' + FN, radice: N.disco, rel: N.d + '/' + g.o + '/' + FN, gain: gu, psw, scie, skyr: bg / g.posa, lalt, ldist: LU[1] + 3 * Math.sin(ph), lill: LU[0] + i * .03,
+            psfres: .02 + .006 * (1 + Math.sin(ph * 2.1)) + (hfd - g.b.hfd) * .004, fwsig: (.15 + .03 * Math.sin(ph)) * hfd / 5.6, eccsig: .05 + .02 * Math.sin(ph * 1.4), sat: Math.round(st * .012), flux: st * snr * .8, mflux: snr * .8, cnt: Math.round(st * .93),
+            med: bg + 8, sig: bg * .025 + 2, ent: 3.2 + bg / 1000, nr: .85 + .05 * Math.sin(ph), mst: bg / 65535, nst: (bg * .025 + 2) / 65535, bandr: .1 + .1 * (1 + Math.sin(ph * 3)), bandc: .08 + .08 * (1 + Math.sin(ph * 2.3)),
+            gdir: 80 + 20 * Math.sin(ph * .3), az: (180 + (ora - g.tr) * 15 + 360) % 360, ha: ora - g.tr, pier: ora < g.tr ? 0 : 1, salt: -18 - 25 * Math.sin(Math.min(1, Math.max(0, (ora - 19) / 10)) * Math.PI), zp: sqm != null ? 20.9 - (X - 1) * .15 : null,
             hfd, fw: hfd / 1.36, stelle: Math.round(st), ecc, snr, bg, grad, X, sqm };
           list.push(f); idx[f.id] = f; } }); });
     return (this._A = { SET, NOTTI, GR, list, idx }); }
-  inizio(st) { const man = {}, scart = {}, nota = {}, id = (n, i) => 'm31L-' + n + '-' + i;
-    if (st !== 'appena aperto') { [id('n05', 36), id('n12', 18)].forEach(k => { man[k] = 'tenuto'; }); [id('n05', 22), id('n18', 5), id('n18', 14)].forEach(k => { man[k] = 'escluso'; nota[k] = 'scia di satellite'; }); }
+  inizio(st) { const man = {}, scart = {}, id = (n, i) => 'm31L-' + n + '-' + i;
+    if (st !== 'appena aperto') { [id('n05', 36), id('n12', 18)].forEach(k => { man[k] = 'tenuto'; }); [id('n05', 22), id('n18', 5), id('n18', 14)].forEach(k => { man[k] = 'escluso'; }); }
     if (st === 'dopo lo spostamento') { for (let i = 19; i <= 25; i++) scart[id('n12', i)] = true; [id('n05', 22), id('n18', 5), id('n18', 14)].forEach(k => { scart[k] = true; }); }
     if (st === 'elimina, col cestino') [id('n05', 22), id('n18', 5), id('n18', 14)].forEach(k => { scart[k] = true; });
     if (st === 'elimina, senza cestino (NAS)') for (let i = 19; i <= 25; i++) { scart[id('n12', i)] = true; man[id('n12', i)] = 'escluso'; }
-    return { man, scart, nota, canc: {}, sel: {}, storia: [], esito: null, fin: st && st.indexOf('elimina') === 0 ? 'cancella' : null, riprova: false, hov: null, br: null, cur: null, playing: false }; }
-  // La formula: misure (FWHM, HFD, Eccentricità, Stelle, SNR, Fondo, Gradiente), anche con _mediana _mad _min _max del gruppo; + − × ÷, parentesi, < > ≤ ≥, «e» / «o». Vera = il frame si scarta.
+    return { man, scart, canc: {}, sel: {}, storia: [], esito: null, fin: st && st.indexOf('elimina') === 0 ? 'cancella' : null, riprova: false, hov: null, br: null, cur: null, playing: false }; }
+  // La formula (v63, brief 2.1): tutte le misure dei frame, anche senza soglia, coi nomi in italiano o quelli del SubframeSelector (PSFSignalWeight, SkyRate…), anche con _mediana _dispersione _min _max del gruppo (_mad resta come sinonimo); + − × ÷, parentesi, < > ≤ ≥, «e» / «o». Vera = il frame si scarta.
   formula(testo) {
-    const NOMI = { fwhm: 'fw', hfd: 'hfd', stelle: 'stelle', 'eccentricità': 'ecc', eccentricita: 'ecc', ecc: 'ecc', snr: 'snr', fondo: 'bg', gradiente: 'grad', altezza: 'alt' }, SUF = { mediana: 'md', mad: 'mad', min: 'min', max: 'max' };
-    const s = (testo || '').trim(); if (!s) return { err: 'Scrivi una formula, per esempio FWHM / SNR > 0.012.' };
+    const NOMI = { fwhm: 'fw', hfd: 'hfd', stelle: 'stelle', 'eccentricità': 'ecc', eccentricita: 'ecc', ecc: 'ecc', snr: 'snr', fondo: 'bg', gradiente: 'grad', altezza: 'alt', peso: 'psw', psfsignalweight: 'psw', scie: 'scie', fondoalsecondo: 'skyr', skyrate: 'skyr', lunaaltezza: 'lalt', lunadistanza: 'ldist', lunailluminata: 'lill',
+      psfresidual: 'psfres', fwhmsigma: 'fwsig', eccentricitysigma: 'eccsig', stellesature: 'sat', psfflux: 'flux', psfmeanflux: 'mflux', psfcount: 'cnt', median: 'med', sigma: 'sig', entropia: 'ent', noiseratio: 'nr', mstar: 'mst', nstar: 'nst',
+      banderighe: 'bandr', bandecolonne: 'bandc', latochiaro: 'gdir', azimut: 'az', angoloorario: 'ha', latopilastro: 'pier', puntozero: 'zp', solealtezza: 'salt' }, SUF = { mediana: 'md', dispersione: 'mad', mad: 'mad', min: 'min', max: 'max' };
+    const s = (testo || '').trim(); if (!s) return { err: 'Scrivi una formula, per esempio FWHM / SNR > 0,012.' };
     const tk = []; let i = 0;
     while (i < s.length) { const c = s[i];
       if (/\s/.test(c)) { i++; continue; }
@@ -356,8 +324,8 @@ class Component extends DCLogic {
       const num = s.slice(i).match(/^\d+(?:[.,]\d+)?/); if (num) { tk.push({ t: 'n', v: parseFloat(num[0].replace(',', '.')) }); i += num[0].length; continue; }
       const w = s.slice(i).match(/^[A-Za-zÀ-ÿ_]+/); if (w) { const x = w[0].toLowerCase(); i += w[0].length;
         if (x === 'e' || x === 'and') { tk.push({ t: 'op', v: 'e' }); continue; } if (x === 'o' || x === 'or') { tk.push({ t: 'op', v: 'o' }); continue; }
-        const [b, sf] = x.split('_'); if (!NOMI[b]) return { err: '«' + w[0] + '» non è una misura: usa FWHM, HFD, Eccentricità, Stelle, SNR, Fondo, Gradiente, Altezza.' };
-        if (sf && !SUF[sf]) return { err: 'Dopo «' + w[0].split('_')[0] + '_» va mediana, mad, min o max.' };
+        const [b, sf] = x.split('_'); if (!NOMI[b]) return { err: '«' + w[0] + '» non è una misura: le misure sono nell\u0027elenco «Aggiungi…».' };
+        if (sf && !SUF[sf]) return { err: 'Dopo «' + w[0].split('_')[0] + '_» va mediana, dispersione, min o max.' };
         tk.push({ t: 'v', m: NOMI[b], q: sf ? SUF[sf] : null }); continue; }
       return { err: 'Il segno «' + c + '» non si usa: servono + − × ÷, parentesi e < > ≤ ≥.' }; }
     let p = 0; const usa = new Set(), isOp = v => tk[p] && tk[p].t === 'op' && tk[p].v === v, fail = m => { throw new Error(m); };
@@ -373,18 +341,20 @@ class Component extends DCLogic {
     const logic = (sub, word) => () => { let a = sub(); while (isOp(word)) { p++; const b = sub(); if (a.k !== 'b' || b.k !== 'b') fail('«' + word + '» lega due confronti, per esempio FWHM > 3 ' + word + ' Stelle < 500.'); const x = a, y = b;
         a = { k: 'b', fn: (f, g) => { const u = x.fn(f, g), v = y.fn(f, g); if (u == null || v == null) return null; return word === 'e' ? u && v : u || v; } }; } return a; };
     const pAnd = logic(pCmp, 'e'); pOr = logic(pAnd, 'o');
-    try { const r = pOr(); if (p < tk.length) fail('Verso la fine c\u0027è qualcosa di troppo.'); if (r.k !== 'b') fail('Manca il confronto: aggiungi per esempio > 0.012.'); return { fn: r.fn, usa: [...usa] }; } catch (e) { return { err: e.message }; } }
-  renderVals() {
+    try { const r = pOr(); if (p < tk.length) fail('Verso la fine c\u0027è qualcosa di troppo.'); if (r.k !== 'b') fail('Manca il confronto: aggiungi per esempio > 0,012.'); return { fn: r.fn, usa: [...usa] }; } catch (e) { return { err: e.message }; } }
+  // Stato dell'app (v60): caricamento ed errore li mostra il Telaio
+  renderVals() { const r = this.renderVals0(), st = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stato')) || this.props.stato || '';
+    return { ...r, appSt: st === 'errore dell\u0027app' ? 'errore' : st === 'caricamento' ? 'caricamento' : 'normale' }; }
+  renderVals0() {
     if (!this.alPronto()) return { pronto: false };
     if (!this._ini) { const st0 = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stato')) || this.props.stato || 'esempio';
-      Object.assign(this.state, this.inizio(st0), { sg: {}, sgT: {}, bz: st0 === 'formula con errore' ? { fra: { fx: { on: true, testo: 'FWHM / > 0.012' } } } : st0 === 'modifiche da applicare' ? { 'fra|l': { fw: { tipo: 'abs', v: 2.9 }, snr: { v: 2 } } } : {} },
-        st0 === 'notte da misurare' ? { parti: 'notte', nn: ['n18'] } : st0 === 'nessun progetto in corso' ? { parti: 'progetto' } : {}); this._ini = true; }
+      Object.assign(this.state, this.inizio(st0), { sg: {}, sgT: {}, bz: st0 === 'formula con errore' ? { fra: { fx: { on: true, testo: 'FWHM / > 0,012' } } } : st0 === 'modifiche da applicare' ? { 'fra|l': { fw: { tipo: 'abs', v: 2.9 }, snr: { v: 2 } } } : {} },
+        st0 === 'notte da misurare' ? { parti: 'notte', nn: ['n18'] } : st0 === 'nessun progetto in corso' ? { parti: 'progetto' } : st0 === 'gruppo sotto 10 frame' ? { parti: 'notte', nn: ['n12'], cf: 'ha|600|100' } : st0 === 'due guadagni' ? { parti: 'notte', nn: ['n12'], cf: 'l|300|0' } : st0 === 'spostamento in corso' ? { parti: 'notte', nn: ['n12'] } : {}); this._ini = true; }
     const p = this.props, s = this.state, set = o => this.setState(o), no = e => { if (e && e.preventDefault) e.preventDefault(); };
     const q0 = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams(), modo = s.modo || q0.get('modo') || p.modo || 'scuro', accento = q0.get('accento') || p.accento, t = AL.tema(modo, accento);
     const tel = AL.telefono(AL.formatoScelto(p.formato), s.w), fmt = tel ? 'telefono' : 'desktop';
     const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
-    const vista = s.vista || (qs.get('vista') === 'regole' || p.vista === 'impostazioni' ? 'regole' : 'pagina');
-    const A = this.archivio(), P = (v, d) => v == null || isNaN(v) ? '—' : v.toFixed(d), FDn = k => (AL.FD[k] || AL.FD.ignoto)[0];
+    const A = this.archivio(qs.get('stato') || p.stato || 'esempio'), P = (v, d) => v == null || isNaN(v) ? '—' : AL.virg(v, d), FDn = k => (AL.FD[k] || AL.FD.ignoto)[0];
     const qn = (a, q) => { const b = a.slice().sort((x, y) => x - y); if (!b.length) return null; const i = (b.length - 1) * q, lo = Math.floor(i); return b[lo] + (b[Math.min(lo + 1, b.length - 1)] - b[lo]) * (i - lo); };
     const hhmm = h => { const m = Math.round(h * 60) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
     const MB = n => n >= 1000 ? P(n / 1000, 2) + ' GB' : n + ' MB', H = fr => fr.reduce((a, f) => a + f.posa, 0) / 3600;
@@ -392,51 +362,58 @@ class Component extends DCLogic {
     const L = { desk: !tel, tel };
     // Le misure
     const STATO = qs.get('stato') || p.stato || 'esempio', inCorso = STATO === 'misura in corso', daMis = STATO === 'notte da misurare', misurato = f => !(inCorso && f.g === 'm31L' && f.n === 'n18' && f.i >= 28) && !(daMis && f.n === 'n18');
-    const M = { fw: { l: 'FWHM', u: '″', get: f => f.fw, fmt: v => P(v, 2) + '″' }, hfd: { l: 'HFD', u: '″', get: f => f.hfd, fmt: v => P(v, 2) + '″' },
+    // Senza scala del cielo (brief 2.4) FWHM e HFD in px
+    const noScala = STATO === 'senza scala del cielo', uA = noScala ? ' px' : '″';
+    const M = { fw: { l: 'FWHM', u: uA, get: f => noScala ? f.fw / f.sc : f.fw, fmt: v => P(v, 2) + uA }, hfd: { l: 'HFD', u: uA, get: f => noScala ? f.hfd / f.sc : f.hfd, fmt: v => P(v, 2) + uA },
       ecc: { l: 'Eccentricità', u: '', get: f => f.ecc, fmt: v => P(v, 2) }, stelle: { l: 'Stelle', u: '', get: f => f.stelle, fmt: v => AL.num(Math.round(v)) },
       snr: { l: 'SNR', u: '', get: f => f.snr, fmt: v => AL.num(Math.round(v)) }, bg: { l: 'Fondo cielo', u: 'ADU', get: f => f.bg, fmt: v => AL.num(Math.round(v)) + ' ADU' },
       grad: { l: 'Gradiente', u: '%', get: f => f.grad, fmt: v => P(v, 1) + '%' }, X: { l: 'Massa d\u0027aria', u: '', get: f => f.X, fmt: v => P(v, 2) },
-      sqm: { l: 'Luminosità del cielo', u: '', get: f => f.sqm, fmt: v => 'SQM ' + P(v, 2) }, alt: { l: 'Altezza', u: '°', get: f => Math.asin(1 / f.X) * 180 / Math.PI, fmt: v => Math.round(v) + '°' } };
-    const MK = Object.keys(M), getM = (m, f) => m === 'X' || m === 'alt' ? M[m].get(f) : misurato(f) ? M[m].get(f) : null;
-    const fmtS = (m, v) => ['stelle', 'snr', 'bg'].includes(m) ? AL.num(Math.round(v)) + (M[m].u ? ' ' + M[m].u : '') : m === 'alt' ? Math.round(v) + '°' : P(v, 2) + M[m].u;
+      sqm: { l: 'Luminosità del cielo', u: '', get: f => f.sqm, fmt: v => 'SQM ' + P(v, 2) }, alt: { l: 'Altezza', u: '°', get: f => Math.asin(1 / f.X) * 180 / Math.PI, fmt: v => Math.round(v) + '°' },
+      // v63, criteri in piu' (brief 2.1)
+      psw: { l: 'Peso del segnale', u: '', get: f => f.psw, fmt: v => P(v, 2) }, scie: { l: 'Scie', u: '', get: f => f.scie, fmt: v => String(Math.round(v)) }, skyr: { l: 'Fondo al secondo', u: 'ADU/s', get: f => f.skyr, fmt: v => P(v, 2) + ' ADU/s' },
+      lalt: { l: 'Altezza della Luna', u: '°', get: f => f.lalt, fmt: v => Math.round(v) + '°' }, ldist: { l: 'Distanza dalla Luna', u: '°', get: f => f.ldist, fmt: v => Math.round(v) + '°' }, lill: { l: 'Luna illuminata', u: '%', get: f => f.lill, fmt: v => Math.round(v) + '%' } };
+    // Le misure senza soglia, solo per la formula
+    const FXM = Object.fromEntries(['psfres', 'fwsig', 'eccsig', 'sat', 'flux', 'mflux', 'cnt', 'med', 'sig', 'ent', 'nr', 'mst', 'nst', 'bandr', 'bandc', 'gdir', 'az', 'ha', 'pier', 'salt', 'zp'].map(k => [k, { get: f => f[k] }]));
+    const LIBERE = ['X', 'alt', 'lalt', 'ldist', 'lill', 'az', 'ha', 'pier', 'salt'];
+    const MK = Object.keys(M), MK0 = ['fw', 'hfd', 'ecc', 'stelle', 'snr', 'bg', 'grad', 'X', 'sqm', 'alt'], MKN = MK.filter(k => !MK0.includes(k));
+    const getM = (m, f) => { const x = M[m] || FXM[m]; if (!x) return null; return LIBERE.includes(m) || misurato(f) ? x.get(f) : null; };
+    const fmtS = (m, v) => ['stelle', 'snr', 'bg', 'scie'].includes(m) ? AL.num(Math.round(v)) + (M[m].u ? ' ' + M[m].u : '') : ['alt', 'lalt', 'ldist'].includes(m) ? Math.round(v) + '°' : m === 'lill' ? Math.round(v) + '%' : P(v, 2) + (M[m].u && M[m].u !== '″' && M[m].u[0] !== ' ' ? ' ' + M[m].u : M[m].u);
     const vivi = A.list.filter(f => !s.canc[f.id]);
     // Statistiche del gruppo (oggetto + setup + filtro + posa + guadagno, tutte le notti) per le soglie relative e la formula
-    const stC = {}, gst = (g, m) => { const k = g + '|' + m; if (stC[k]) return stC[k]; const a = vivi.filter(f => f.g === g).map(f => getM(m, f)).filter(v => v != null); const md = qn(a, .5), mad = md == null ? null : 1.4826 * qn(a.map(v => Math.abs(v - md)), .5);
+    // L'eccentricita' si conta sul setup (brief 2.2): le stelle le allunga il setup, non il gruppo
+    const stC = {}, gst = (g, m) => { const k = g + '|' + m; if (stC[k]) return stC[k]; const sg0 = m === 'ecc' ? (A.GR.find(x => x.k === g) || {}).s : null; const a = vivi.filter(f => sg0 ? f.s === sg0 : f.g === g).map(f => getM(m, f)).filter(v => v != null); const md = qn(a, .5), mad = md == null ? null : 1.4826 * qn(a.map(v => Math.abs(v - md)), .5);
       return (stC[k] = { md, mad, min: a.length ? Math.min(...a) : null, max: a.length ? Math.max(...a) : null, n: a.length }); };
-    // Le soglie, per setup e filtro (in Impostazioni e qui): sei misure e una formula.
-    const SK = ['fw', 'ecc', 'stelle', 'snr', 'bg', 'alt'];
-    // Partenze uguali per ogni setup (Claude Code, v36.2): relative col MAD scalato, 2,5 come in Leys et al. 2013; eccentricità e altezza spente
-    const D0 = { fw: { on: true, op: '>', tipo: 'rel', v: 2.5 }, ecc: { on: false, op: '>', tipo: 'abs', v: .6 }, stelle: { on: true, op: '<', tipo: 'rel', v: 2.5 }, snr: { on: true, op: '<', tipo: 'rel', v: 2.5 }, bg: { on: false, op: '>', tipo: 'rel', v: 2.5 }, alt: { on: false, op: '<', tipo: 'abs', v: 30 }, fx: { on: false, testo: 'FWHM / SNR > 0.012' } };
-    const DEF = { fra: D0, a103: D0 };
-    const TIPO = {}, DEFF = {};
-    // Le soglie applicate stanno in s.sg (setup|filtro; la formula per setup); quelle che stai scrivendo in s.bz, finche' non premi Applica
-    const righeDi = (sk, fk, bz) => { const d = DEF[sk], k2 = sk + '|' + fk, o = s.sg[k2] || {}, b = bz ? (s.bz[k2] || {}) : {}, fo = s.sg[sk] || {}, fb = bz ? (s.bz[sk] || {}) : {}, r = {};
-      Object.keys(d).forEach(k => { const fx = k === 'fx'; r[k] = { ...d[k], ...(((DEFF[sk] || {})[fk] || {})[k] || {}), ...((fx ? fo : o)[k] || {}), ...((fx ? fb : b)[k] || {}) }; if (TIPO[k]) r[k].tipo = TIPO[k]; }); return r; };
-    const rrC = {}, RR = (sk, fk, bz) => { const k = sk + '|' + fk + (bz ? '|b' : ''); return rrC[k] || (rrC[k] = righeDi(sk, fk, bz)); };
+    // Le soglie (v63, brief 2.9): le partenze per setup e filtro vengono da Impostazioni › Selezione dei frame (ALsoglie.selezione), l'unico posto che le salva.
+    // Qui si cambiano solo per il gruppo che guardi: s.sg (applicate) e s.bz (scritte, finche' non premi Applica), per chiave di gruppo. Non vanno in Impostazioni.
+    const SK = ALsoglie.selezione.misure.map(x => x[0]);
+    const grDi = gk => A.GR.find(g => g.k === gk), PART = (sk, fk) => ALsoglie.selezione.get(sk, fk);
+    const righeDi = (gk, bz) => { const g = grDi(gk), d = PART(g.s, g.f), o = s.sg[gk] || {}, b = bz ? (s.bz[gk] || {}) : {}, r = {}; Object.keys(d).forEach(k => { r[k] = { ...d[k], ...(o[k] || {}), ...(b[k] || {}) }; }); return r; };
+    const rrC = {}, RR = (gk, bz) => { const k = gk + (bz ? '|b' : ''); return rrC[k] || (rrC[k] = righeDi(gk, bz)); };
     const fxC = {}, FXof = tx => fxC[tx] || (fxC[tx] = this.formula(tx));
     const su = o => o === '>' || o === '≥';
     const soglia = (r, m, g) => { if (r.tipo === 'abs') return r.v; const q = gst(g, m); return q.n < 10 || q.mad == null ? null : su(r.op) ? q.md + r.v * q.mad : q.md - r.v * q.mad; };
     const cmp = (v, op, th) => op === '>' ? v > th : op === '≥' ? v >= th : op === '<' ? v < th : v <= th;
     const colpisce = (r, m, f) => { const v = getM(m, f), th = soglia(r, m, f.g); return v != null && th != null && cmp(v, r.op, th); };
     const getF = (m, f, q) => q ? gst(f.g, m)[q] : getM(m, f);
-    const fxDi = f => { const r = RR(f.s, f.f).fx, c = FXof(r.testo); return r.on && c.fn && misurato(f) ? c.fn(f, getF) === true : false; };
+    const fxDi = f => { const r = RR(f.g).fx, c = FXof(r.testo); return r.on && c.fn && misurato(f) ? c.fn(f, getF) === true : false; };
     const nomeR = (m, r, g) => { const v = r.tipo === 'abs' ? r.v : g != null ? soglia(r, m, g) : null; return M[m].l + ' ' + r.op + (v != null ? ' ' + fmtS(m, v) : ''); }; // v56.31: solo il valore, niente mediana a schermo
-    const colpi = f => { if (!misurato(f)) return []; const R0 = RR(f.s, f.f); return SK.filter(m => R0[m].on && colpisce(R0[m], m, f)).map(m => nomeR(m, R0[m], f.g)).concat(fxDi(f) ? ['la formula'] : []); };
+    const colpi = f => { if (!misurato(f)) return []; const R0 = RR(f.g); return SK.filter(m => R0[m].on && colpisce(R0[m], m, f)).map(m => nomeR(m, R0[m], f.g)).concat(fxDi(f) ? ['la formula'] : []); };
     // Lo stato di un frame: in «scartate» > da scartare a mano > tenuto a mano > non misurato > da scartare per le soglie > tenuto
     const SG = { esc: 'scartare', tenm: 'tenuto-mano', scart: 'scartata', nm: 'tenuto', ten: 'tenuto' };
     const ST = {}; vivi.forEach(f => { const pr = colpi(f); let x;
-      if (s.scart[f.id]) x = { k: 'scart', l: 'in «scartate»', sub: f.radice + '\\scartate\\' + f.rel, s: '→' };
-      else if (s.man[f.id] === 'escluso') x = { k: 'escm', l: 'da scartare · a mano', sub: s.nota[f.id] || '', s: '✕' };
+      if (s.scart[f.id]) x = { k: 'scart', l: 'in «scartate»', sub: f.radice + '/scartate/' + f.rel, s: '→' };
+      else if (s.man[f.id] === 'escluso') x = { k: 'escm', l: 'da scartare · a mano', sub: f.scie > 0 ? 'scia di satellite · la trova l\u0027app' : '', s: '✕' };
       else if (s.man[f.id] === 'tenuto') x = { k: 'tenm', l: 'tenuto a mano', sub: pr.length ? 'le soglie lo scarterebbero: ' + pr.join(' · ') : '', s: '✓' };
       else if (!misurato(f)) x = { k: 'nm', l: 'non misurato', sub: 'misura in corso: le soglie non lo toccano', s: '?' };
       else if (pr.length) x = { k: 'escr', l: 'da scartare', sub: pr.join(' · '), s: '✕' };
-      else x = { k: 'ten', l: 'tenuto', sub: '', s: '✓' };
+      else x = { k: 'ten', l: 'tenuto', sub: f.scie > 0 ? 'scia di satellite · la soglia Scie è spenta' : '', s: '✓' };
       ST[f.id] = { ...x, pr, cls: 'al-segno al-sel__segno--' + SG[x.k === 'escm' || x.k === 'escr' ? 'esc' : x.k] }; });
     const tenuto = f => ['ten', 'tenm', 'nm'].includes(ST[f.id].k), escluso = f => ['escm', 'escr'].includes(ST[f.id].k);
-    const alLimite = f => misurato(f) && SK.some(m => { const r = RR(f.s, f.f)[m]; if (!r.on) return false; const v = getM(m, f), th = soglia(r, m, f.g); if (v == null || th == null || cmp(v, r.op, th)) return false; const q = gst(f.g, m); return r.tipo === 'rel' && Math.abs(v - th) <= (q.mad || 0); });
+    const alLimite = f => misurato(f) && SK.some(m => { const r = RR(f.g)[m]; if (!r.on) return false; const v = getM(m, f), th = soglia(r, m, f.g); if (v == null || th == null || cmp(v, r.op, th)) return false; const q = gst(f.g, m); return r.tipo === 'rel' && Math.abs(v - th) <= (q.mad || 0); });
     // La scelta: un progetto in corso o delle notti (l'archivio e' gia' pulito)
     if (!this._link) { this._link = true; const lp = { m31: 0, ngc7000: 1, m33: 2 }[qs.get('progetto')], ln = A.NOTTI.find(n => n.d === qs.get('notte')); if (lp != null) Object.assign(this.state, { parti: 'progetto', pi: lp }); if (ln) Object.assign(this.state, { parti: 'notte', nn: [ln.k] }); }
-    const parti = s.parti === 'notte' ? 'notte' : 'progetto', pi = s.pi || 0, cnt = fn => vivi.filter(fn).length;
+    const senzaProg = (qs.get('progetti') || p.progetti) === 'non ancora';
+    const parti = senzaProg || s.parti === 'notte' ? 'notte' : 'progetto', pi = s.pi || 0, cnt = fn => vivi.filter(fn).length;
     const PROG = [{ k: 'p1', n: 'M 31 · Galassia di Andromeda', gr: ['m31L', 'm31L180', 'm31H'], ob: { l: 14, ha: 8 } }, { k: 'p2', n: 'NGC 7000 · Nebulosa Nord America', gr: ['n7000'], ob: { ha: 6 } }, { k: 'p3', n: 'M 33 · Galassia del Triangolo', gr: ['m33L'], ob: { l: 5 } }];
     if (STATO === 'nessun progetto in corso') PROG.length = 0;
     const nessuno = parti === 'progetto' && !PROG.length, P0 = PROG[Math.min(pi, PROG.length - 1)] || { n: '', gr: [], ob: {} }, inSel = parti === 'progetto' ? f => P0.gr.includes(f.g) : () => true;
@@ -444,8 +421,8 @@ class Component extends DCLogic {
     const nnV = parti === 'progetto' ? [] : !nnOk.length ? [A.NOTTI[A.NOTTI.length - 1].k] : nnOk, notteDi = k => A.NOTTI.find(n => n.k === k);
     const inV = f => inSel(f) && (!nnV.length || nnV.includes(f.n)), V = vivi.filter(inV).sort((a, b) => a.t - b.t);
     const reset = { sel: {}, hov: null, br: null, cur: null };
-    const partiO = [['progetto', 'Un progetto in corso'], ['notte', 'Delle notti']].map(([k, l]) => ({ l, sel: k === parti ? 'true' : 'false', on: e => { no(e); set({ parti: k, dd: null, ...reset }); } }));
-    const partiSub = parti === 'progetto' ? 'i frame del progetto, notte per notte, contro l\u0027obiettivo' : 'tutti gli oggetti delle notti scelte nel calendario';
+    const partiO = [['progetto', 'Un progetto in corso'], ['notte', 'Delle notti']].filter(([k]) => !senzaProg || k === 'notte').map(([k, l]) => ({ l, sel: k === parti ? 'true' : 'false', on: e => { no(e); set({ parti: k, dd: null, ...reset }); } }));
+    const partiSub = senzaProg ? 'I progetti arrivano dopo: per ora si parte dalle notti, tutti gli oggetti delle notti scelte.' : parti === 'progetto' ? 'i frame del progetto, notte per notte, contro l\u0027obiettivo' : 'tutti gli oggetti delle notti scelte nel calendario';
     const norm = x => (x || '').toLowerCase().replace(/\s+/g, ''), qq = norm(s.q);
     const vociDD = PROG.map((x, i) => ({ l: x.n, sub: Object.keys(x.ob).map(k => FDn(k) + ' ' + AL.ore(x.ob[k])).join(' · ') + ' di obiettivo · ' + AL.num(cnt(f => x.gr.includes(f.g))) + ' frame', sel: i === pi, i }))
       .filter(v => !qq || norm(v.l).includes(qq)).map(v => ({ ...v, sel: v.sel ? 'true' : 'false', on: e => { no(e); set({ pi: v.i, dd: null, q: '', ...reset }); } }));
@@ -464,10 +441,10 @@ class Component extends DCLogic {
     const allaRegola = ids => { const m = { ...s.man }; ids.forEach(k => { delete m[k]; }); fai({ man: m }); };
     // Le azioni sui file, con gli errori simulati (Tweaks «errore»)
     const ERR = s.riprova ? 'nessuno' : (qs.get('errore') || p.errore || 'nessuno');
-    const falli = f => ERR.indexOf('sola lettura') >= 0 ? f.dir.indexOf('\\\\NAS') === 0 : ERR.indexOf('disco') === 0 ? f.dir.indexOf('E:') === 0 : ERR.indexOf('file') === 0 ? f.id === 'm31L-n18-14' : false;
+    const falli = f => ERR.indexOf('sola lettura') >= 0 ? f.dir.indexOf('nas/') === 0 : ERR.indexOf('disco') === 0 ? f.dir.indexOf('Esterno/') === 0 : ERR.indexOf('file') === 0 ? f.id === 'm31L-n18-14' : false;
     const perche = fl => { const d = [...new Set(fl.map(f => f.dir))];
-      return ERR.indexOf('sola lettura') >= 0 ? (d.length === 1 ? 'La cartella ' + d[0] : 'Le cartelle ' + d.join(', ')) + ' sul NAS è in sola lettura. Dai il permesso di scrittura, poi riprova.'
-        : ERR.indexOf('disco') === 0 ? 'Il disco E: non risponde: è staccato. Ricollegalo, poi riprova.' : fl[0].file + ' è aperto in un altro programma. Chiudilo, poi riprova.'; };
+      return ERR.indexOf('sola lettura') >= 0 ? (d.length === 1 ? 'La cartella ' + d[0] : 'Le cartelle ' + d.join(', ')) + ' è in sola lettura. Dai il permesso di scrittura, poi riprova.'
+        : ERR.indexOf('disco') === 0 ? 'Il disco «Esterno» non risponde: è staccato. Ricollegalo, poi riprova.' : fl[0].file + ' è aperto in un altro programma. Chiudilo, poi riprova.'; };
     const VERBI = { sposta: ['Spostati', 'spostati', 'spostato'], riporta: ['Riportati indietro', 'riportati indietro', 'riportato indietro'], cancella: ['Eliminati', 'eliminati', 'eliminato'] };
     const esegui = (az, ids) => { const fr = ids.map(k => A.idx[k]), ok = fr.filter(f => !falli(f)), ko = fr.filter(falli), sc = { ...s.scart }, cn = { ...s.canc }, m = { ...s.man };
       ok.forEach(f => { if (az === 'sposta') { sc[f.id] = true; if (!m[f.id]) m[f.id] = 'escluso'; } if (az === 'riporta') delete sc[f.id]; if (az === 'cancella') { delete sc[f.id]; cn[f.id] = true; } });
@@ -475,13 +452,13 @@ class Component extends DCLogic {
       const esito = ko.length ? { s: '!', t: v[0] + ' ' + ok.length + ' di ' + fr.length + ' frame', x: ko.length + (ko.length === 1 ? ' non ' + v[2] + '. ' : ' non ' + v[1] + '. ') + perche(ko), a: 'Riprova ' + (ko.length === 1 ? 'il frame' : 'i ' + ko.length), az, ids: ko.map(f => f.id) }
         : az === 'sposta' ? { s: '✓', t: ok.length + ' frame in «scartate» · ' + mb + ' · ' + dirs + (dirs === 1 ? ' cartella' : ' cartelle'), x: 'Lo stacking non li vede più.', a: 'Riporta indietro', az: 'annullaSposta', ids: ok.map(f => f.id) }
         : az === 'riporta' ? { s: '✓', t: ok.length + ' frame riportati alla cartella di prima', x: 'Restano da scartare finché non li tieni.', a: '', ids: [] }
-        : (n => ({ s: '✓', t: ok.length + ' frame eliminati · ' + mb, x: n === ok.length ? 'Erano sul NAS: cancellati per sempre.' : n ? (ok.length - n) + ' nel cestino, ' + n + ' cancellati per sempre (NAS).' : 'Sono nel cestino del computer.', a: '', ids: [] }))(ok.filter(f => f.radice.indexOf('\\\\') === 0).length);
+        : (n => ({ s: '✓', t: ok.length + ' frame eliminati · ' + mb, x: n === ok.length ? 'Erano su un disco senza cestino: cancellati per sempre.' : n ? (ok.length - n) + ' nel cestino, ' + n + ' cancellati per sempre (disco senza cestino).' : 'Sono nel cestino del computer.', a: '', ids: [] }))(ok.filter(f => f.radice.indexOf('nas/') === 0).length);
       set({ scart: sc, canc: cn, man: m, esito, fin: null, sel: {}, cancN: az === 'cancella' ? (s.cancN || 0) + ok.length : s.cancN || 0, cancMb: az === 'cancella' ? (s.cancMb || 0) + ok.reduce((a, f) => a + f.mb, 0) : s.cancMb || 0 }); };
     const E = s.esito ? { ...s.esito, on: () => { const x = s.esito; if (x.az === 'annullaSposta') esegui('riporta', x.ids); else if (x.ids.length) { this.state.riprova = true; esegui(x.az, x.ids); } } } : null;
     if (E && E.az === 'annullaSposta' && !E.a) E.a = '';
     // Il resoconto a destra della scelta
     const rigaF = fr => { const k = fr[0].f, tn = AL.tinta(t, k), te = fr.filter(tenuto); return { f: FDn(k), dot: tn.bg, bd: tn.bd || '0', fr: AL.num(te.length) + ' di ' + AL.num(fr.length) + ' frame tenuti', ore: AL.ore(H(te)), di: te.length < fr.length ? 'di ' + AL.ore(H(fr)) : 'di integrazione' }; };
-    const perFiltro = fr => [...new Set(fr.map(f => f.f + '|' + f.posa))].map(c => { const [k, ps] = c.split('|'), sub = fr.filter(f => f.f === k && f.posa === +ps), r = rigaF(sub); if (new Set(fr.filter(f => f.f === k).map(f => f.posa)).size > 1) r.f += ' · ' + ps + ' s'; return r; });
+    const perFiltro = fr => [...new Set(fr.map(f => f.f + '|' + f.posa + '|' + f.gain))].map(c => { const [k, ps, gu] = c.split('|'), sub = fr.filter(f => f.f === k && f.posa === +ps && f.gain === +gu), r = rigaF(sub), del = fr.filter(f => f.f === k); if (new Set(del.map(f => f.posa)).size > 1) r.f += ' · ' + ps + ' s'; if (new Set(del.map(f => f.gain)).size > 1) r.f += ' · guadagno ' + gu; return r; });
     const blocchi = parti === 'notte' || true ? A.GR.filter(g => V.some(f => f.g === g.k)).reduce((acc, g) => { const key = g.o + '|' + g.s; let b = acc.find(x => x.key === key); if (!b) { b = { key, n: g.o + ' · ' + A.SET[g.s].n, fr: [] }; acc.push(b); } b.fr = b.fr.concat(V.filter(f => f.g === g.k)); return acc; }, [])
       : [...new Set(V.map(f => f.s))].map(sk => ({ key: sk, n: A.SET[sk].n, fr: V.filter(f => f.s === sk) }));
     const RS = { az: nessuno ? { l: 'Parti dalle notti', on: e => { no(e); set({ parti: 'notte', ...reset }); } } : null, tit: nessuno ? 'Nessun progetto in corso' : parti === 'progetto' ? P0.n : nnV.length === 1 ? 'Notte del ' + notteDi(nnV[0]).n : nnV.length + ' notti', sub: nessuno ? 'I progetti si creano dal Planner, con «Salva come progetto». Intanto puoi rivedere i frame di una notte.' : parti === 'progetto' ? 'progetto in corso · tutte le notti' : 'tutti gli oggetti · ' + AL.num(V.length) + ' frame',
@@ -491,18 +468,19 @@ class Component extends DCLogic {
         fil: ks.map(k => { const h = H(te.filter(f => f.f === k)); return { l: FDn(k), c: AL.tinta(t, k).bg, w: Math.min(100, h / P0.ob[k] * 100) + '%', fatte: h ? AL.ore(h) : '0 h', ob: AL.ore(P0.ob[k]) }; }),
         via: via ? 'senza ' + (via === 1 ? '1 frame da scartare' : via + ' frame da scartare') + ' · con tutti ' + AL.ore(H(tutti)) : '' }; })() : null;
     // Il grafico: un filtro alla volta
-    const combV = [...new Set(V.map(f => f.f + '|' + f.posa))].sort((a, b) => { const [fa, pa] = a.split('|'), [fb, pb] = b.split('|'); return fa === fb ? pb - pa : fa === 'l' ? -1 : fb === 'l' ? 1 : fa.localeCompare(fb); });
-    const cfK = combV.includes(s.cf) ? s.cf : combV[0], fk = cfK ? cfK.split('|')[0] : undefined, pk = cfK ? +cfK.split('|')[1] : 0, piuPose = k => combV.filter(c => c.split('|')[0] === k).length > 1;
-    const cfO = combV.map(c => { const [k, ps] = c.split('|'), on = c === cfK; return { l: FDn(k) + (piuPose(k) ? ' · ' + ps + ' s' : ''), c: AL.num(V.filter(f => f.f === k && f.posa === +ps).length) + ' frame', sel: on, tinta: k, on: e => { no(e); set({ cf: c, ...reset }); } }; });
+    const combV = [...new Set(V.map(f => f.f + '|' + f.posa + '|' + f.gain))].sort((a, b) => { const [fa, pa] = a.split('|'), [fb, pb] = b.split('|'); return fa === fb ? pb - pa : fa === 'l' ? -1 : fb === 'l' ? 1 : fa.localeCompare(fb); });
+    const cfK = combV.includes(s.cf) ? s.cf : combV[0], fk = cfK ? cfK.split('|')[0] : undefined, pk = cfK ? +cfK.split('|')[1] : 0, gk2 = cfK ? +cfK.split('|')[2] : 0, diFil = k => combV.filter(c => c.split('|')[0] === k), piuPose = k => new Set(diFil(k).map(c => c.split('|')[1])).size > 1, piuGu = k => new Set(diFil(k).map(c => c.split('|')[2])).size > 1;
+    const cfO = combV.map(c => { const [k, ps, gu] = c.split('|'), on = c === cfK; return { l: FDn(k) + (piuPose(k) ? ' · ' + ps + ' s' : '') + (piuGu(k) ? ' · guadagno ' + gu : ''), c: AL.num(V.filter(f => f.f === k && f.posa === +ps && f.gain === +gu).length) + ' frame', sel: on, tinta: k, on: e => { no(e); set({ cf: c, ...reset }); } }; });
     const mis = MK.includes(s.mis) ? s.mis : 'fw', misB = MK.includes(s.misB) && s.misB !== mis ? s.misB : null, lin = s.gv === 'linea', ordV = s.ordG === 'val';
-    const misO = MK.map(k => ({ l: M[k].l, sel: k === mis ? 'true' : 'false', on: e => { no(e); set({ mis: k, hov: null }); } }));
+    const misAltO = MKN.map(k => ({ k, l: M[k].l, sel: k === mis })), misAltV = MKN.includes(mis) ? mis : '', misAltCambia = e => set({ mis: e.target.value || 'fw', hov: null });
+    const misO = MK0.map(k => ({ l: M[k].l, sel: k === mis ? 'true' : 'false', on: e => { no(e); set({ mis: k, hov: null }); } }));
     const misBO = [{ k: '', l: 'nessuna' }].concat(MK.filter(k => k !== mis).map(k => ({ k, l: M[k].l }))).map(o => ({ ...o, sel: o.k === (misB || '') }));
     const gvO = [['barre', 'Barre'], ['linea', 'Linee']].map(([k, l]) => ({ l, sel: (k === 'linea') === lin ? 'true' : 'false', on: e => { no(e); set({ gv: k }); } }));
     // v56.25: vista a due icone, ordine e setup in tendina, il resto in linguette sottili (come Misure dei frame)
     const tSel = arr => { arr = arr || []; const c = arr.find(o => o.sel === true || o.sel === 'true') || arr[0] || {}; return { v: c.l, o: arr.map(o => ({ v: o.l, l: o.l })), on: e => { const o = arr.find(x => x.l === e.target.value); o && o.on({ preventDefault() {}, stopPropagation() {} }); } }; };
     const gvI = gvO.map((o, i) => ({ ...o, d: i ? 'M3 18l5-6 4 4 9-10' : 'M5 20V10M10 20V4M15 20v-7M20 20v-11', fg: o.sel === 'true' ? 'var(--testo)' : 'var(--tenue)', sh: o.sel === 'true' ? 'inset 0 0 0 2px var(--accento)' : 'none' }));
     const ordO = [['ora', 'Per ora'], ['val', 'Per valore']].map(([k, l]) => ({ l, sel: (k === 'val') === ordV ? 'true' : 'false', on: e => { no(e); set({ ordG: k, hov: null, br: null }); } }));
-    let VF = (fk ? V.filter(f => f.f === fk && f.posa === pk) : []).sort((a, b) => a.t - b.t);
+    let VF = (fk ? V.filter(f => f.f === fk && f.posa === pk && f.gain === gk2) : []).sort((a, b) => a.t - b.t);
     if (ordV) VF = VF.filter(f => getM(mis, f) != null).sort((a, b) => getM(mis, a) - getM(mis, b)).concat(VF.filter(f => getM(mis, f) == null));
     // Sul telefono si rivedono i frame dubbi uno alla volta
     const rv = s.rv === 'tutti' ? 'tutti' : 'dubbi';
@@ -512,7 +490,7 @@ class Component extends DCLogic {
     const grS = [...new Set(VF.map(f => f.g))], G1 = grS.length === 1 ? A.GR.find(g => g.k === grS[0]) : null;
     const W = tel ? 360 : 1000, x0 = tel ? 36 : 50, x1 = W - (misB ? x0 : 8), Hc = tel ? 190 : 260, top = 12, bot = Hc - 14, pc = (v, d) => (v / d * 100).toFixed(2) + '%';
     const rng = m => { const a = VF.map(f => getM(m, f)).filter(v => v != null); return a.length ? [Math.min(...a), Math.max(...a)] : null; };
-    const R1 = G1 ? RR(G1.s, G1.f) : null, ths = G1 && SK.includes(mis) && R1[mis].on ? [{ m: mis, r: R1[mis], v: soglia(R1[mis], mis, G1.k) }].filter(x => x.v != null) : [];
+    const R1 = G1 ? RR(G1.k) : null, ths = G1 && SK.includes(mis) && R1[mis].on ? [{ m: mis, r: R1[mis], v: soglia(R1[mis], mis, G1.k) }].filter(x => x.v != null) : [];
     const RA = rng(mis), RB = misB ? rng(misB) : null;
     let lo = RA ? RA[0] : 0, hi = RA ? RA[1] : 1; ths.forEach(x => { lo = Math.min(lo, x.v); hi = Math.max(hi, x.v); }); { const pd = (hi - lo) * .15 || .5; lo -= pd; hi += pd; }
     let loB = RB ? RB[0] : 0, hiB = RB ? RB[1] : 1; { const pd = (hiB - loB) * .15 || .5; loB -= pd; hiB += pd; }
@@ -552,7 +530,7 @@ class Component extends DCLogic {
       win: VFa.length > maxN ? { txt: 'frame ' + (stW + 1) + '–' + (stW + n) + ' di ' + VFa.length, l: pc(stW, VFa.length), w: pc(n, VFa.length), prima: e => { no(e); const st2 = Math.max(0, stW - Math.floor(maxN * .8)); set({ win: st2, cur: VFa[st2].id }); }, dopo: e => { no(e); const st2 = Math.min(VFa.length - maxN, stW + Math.floor(maxN * .8)); set({ win: st2, cur: VFa[st2].id }); },
         vai: e => { const r = e.currentTarget.getBoundingClientRect(), q = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), st2 = Math.max(0, Math.min(VFa.length - maxN, Math.round(q * VFa.length - maxN / 2))); set({ win: st2, cur: VFa[st2 + Math.floor(maxN / 2)].id }); } } : null,
       // v56.26: toccata una barra, la soglia della misura si compila col valore di quel frame (un tocco su «Usa come soglia»)
-      sg: (() => { const fi = VF.findIndex(x => x.id === s.cur), f = VF[fi]; if (!f) return null; const va = getM(mis, f); if (va == null || isNaN(va)) return null; const px = cx(fi) / W, yTop = Math.max(top, Math.min(bot, Y(va))) / Hc, lato = px > .7 ? 'translate(-100%,-100%)' : px < .3 ? 'translate(0,-100%)' : 'translate(-50%,-100%)'; const key = f.s + '|' + f.f, r = (RR(f.s, f.f, true) || {})[mis] || {}, op = r.op || '>', v = +(+va).toFixed(['stelle', 'snr', 'bg', 'alt'].includes(mis) ? 0 : 2), uso = r.tipo === 'abs' && +r.v === v && r.on !== false;
+      sg: (() => { const fi = VF.findIndex(x => x.id === s.cur), f = VF[fi]; if (!f) return null; const va = getM(mis, f); if (va == null || isNaN(va)) return null; const px = cx(fi) / W, yTop = Math.max(top, Math.min(bot, Y(va))) / Hc, lato = px > .7 ? 'translate(-100%,-100%)' : px < .3 ? 'translate(0,-100%)' : 'translate(-50%,-100%)'; const key = f.g, r = (RR(f.g, true) || {})[mis] || {}, op = r.op || '>', v = +(+va).toFixed(['stelle', 'snr', 'bg', 'alt'].includes(mis) ? 0 : 2), uso = r.tipo === 'abs' && +r.v === v && r.on !== false;
         return { left: (px * 100).toFixed(2) + '%', top: 'calc(' + (yTop * 100).toFixed(2) + '% - 8px)', tf: lato, l: M[mis].l + ' ' + op + ' ' + fmtS(mis, v), dove: A.SET[f.s].b + ' · ' + FDn(f.f), uso, nonUso: !uso, ferma: e => e.stopPropagation(), aria: 'Usa ' + M[mis].l + ' ' + op + ' ' + fmtS(mis, v) + ' come soglia per ' + A.SET[f.s].b + ', filtro ' + FDn(f.f), on: e => { no(e); upd(key, mis, { tipo: 'abs', v, on: true }); const t2 = { ...s.sgT }; delete t2[key + mis]; set({ sgT: t2 }); } }; })(),
       xlab: ordV ? { a: 'dal valore più basso', b: 'al più alto, per ' + M[mis].l } : null,
       down: e => { if (e.button || !n) return; this._dr = { i0: idxAt(e), add: e.shiftKey || e.metaKey || e.ctrlKey }; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} },
@@ -569,15 +547,17 @@ class Component extends DCLogic {
         .concat(misB ? [{ l: M[misB].l + ' · scala a destra', d: lin ? 'M0 7h14' : 'M2 7h10', c: lin ? 'seconda al-sel__legenda--seconda-linee' : 'seconda' }] : [])
         .concat(ths.length ? [{ l: 'soglia', d: 'M0 7h14', c: 'soglia' }] : []).concat(VF.some(f => ST[f.id].k === 'nm') ? [{ l: 'non misurato', d: 'M4.5 4.5h5v5h-5z', c: 'non-misurato' }] : []).map(x => ({ l: x.l, d: x.d, cls: 'al-sel__legenda al-sel__legenda--' + x.c })),
       aiuto: (tel ? 'Tocca una barra: il frame va nel riquadro. ' : 'Un clic porta il frame nel riquadro; trascina sulle barre per selezionarne più d\u0027uno. Tastiera: frecce, S scarta, T tiene. ') + (ths.length || !SK.includes(mis) ? '' : G1 ? 'Nessuna soglia accesa su questa misura.' : 'Qui ci sono più oggetti: la soglia cambia per oggetto e si legge nel riquadro.') };
+    if (G1 && SK.includes(mis) && R1[mis].on && R1[mis].tipo === 'rel' && gst(G1.k, mis).n < 10) G.aiuto += ' La soglia rispetto al gruppo tace: il gruppo ha ' + gst(G1.k, mis).n + ' frame misurati, ne servono 10.';
     const hI = VF.findIndex(f => f.id === s.hov);
     if (hI >= 0 && VF[hI].id !== s.cur) { /* v56.29: sulla barra cliccata resta solo «Usa …» */ const f = VF[hI], x = cx(hI), v = getM(mis, f); G.tip = { l: pc(x, W), tx: x > W * .6 ? 'translateX(calc(-100% - 14px))' : 'translateX(14px)', t: f.file, s: A.NOTTI[f.ni].n + ' · ' + hhmm(f.ora) + ' · ' + ST[f.id].l, n: M[mis].l, v: v == null ? '—' : M[mis].fmt(v) }; }
     // Il riquadro del frame: immagine simulata con lo stretch, le misure col giudizio, Tieni / Scarta
     // Il giudizio di una misura: esito, segno e parola per la Pillola (i colori stanno nel foglio)
     const GZ = { dentro: { es: 'buona', s: '✓', t: 'dentro' }, limite: { es: 'avviso', s: '!', t: 'al limite' }, fuori: { es: 'non adatta', s: '✕', t: 'fuori' } };
-    const giudica = (m, f) => { const r = RR(f.s, f.f)[m]; if (!r || !r.on) return null; const v = getM(m, f), th = soglia(r, m, f.g); if (v == null || th == null) return null; if (cmp(v, r.op, th)) return 'fuori';
+    const giudica = (m, f) => { const r = RR(f.g)[m]; if (!r || !r.on) return null; const v = getM(m, f), th = soglia(r, m, f.g); if (v == null || th == null) return null; if (cmp(v, r.op, th)) return 'fuori';
       const q = gst(f.g, m), vic = r.tipo === 'rel' && Math.abs(v - th) <= (q.mad || 0); return vic ? 'limite' : 'dentro'; };
-    if (G.tip && hI >= 0) { const f = VF[hI], g = giudica(mis, f), r = RR(f.s, f.f)[mis], th = r && r.on ? soglia(r, mis, f.g) : null; if (g) G.tip.z = { es: GZ[g].es, zs: GZ[g].s, zt: GZ[g].t + ' · soglia ' + r.op + ' ' + fmtS(mis, th) }; }
+    if (G.tip && hI >= 0) { const f = VF[hI], g = giudica(mis, f), r = RR(f.g)[mis], th = r && r.on ? soglia(r, mis, f.g) : null; if (g) G.tip.z = { es: GZ[g].es, zs: GZ[g].s, zt: GZ[g].t + ' · soglia ' + r.op + ' ' + fmtS(mis, th) }; }
     if (!this._campo) { let sd = 7; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; }; this._campo = Array.from({ length: 48 }, () => ({ x: 8 + rnd() * 284, y: 8 + rnd() * 184, b: Math.pow(rnd(), 1.8) })).sort((a, b) => b.b - a.b); }
+    const noImg = (qs.get('immagine') || p.immagine) === 'non ancora';
     let PV = null;
     if (vistoF) { const f = vistoF, st = ST[f.id], uguale = s.str !== 'frame', mdF = gst(f.g, 'fw').md || f.fw, mdS = gst(f.g, 'stelle').md || f.stelle, mdB = gst(f.g, 'bg').md || f.bg, ms = misurato(f);
       const nVis = Math.max(5, Math.round(48 * Math.min(1.1, f.stelle / mdS))), rB = f.bg / mdB, lum = uguale ? Math.max(6, Math.min(44, 10 + (rB - 1) * 70)) : 10, scala = f.fw / mdF, e2 = Math.sqrt(Math.max(.2, 1 - f.ecc * f.ecc));
@@ -585,8 +565,8 @@ class Component extends DCLogic {
       const i = VFa.indexOf(f), B = (l, fn, cls) => ({ l, cls: 'al-bottone ' + cls, on: e => { no(e); fn(); } });
       const az = st.k === 'scart' ? [B('Riporta indietro', () => esegui('riporta', [f.id]), 'al-bottone--contorno')] : st.k === 'escm' ? [B('Tieni', () => tieni([f.id]), 'al-bottone--pieno')] : st.k === 'escr' ? [B('Tieni comunque', () => tieni([f.id]), 'al-bottone--pieno')]
         : st.k === 'tenm' ? [B('Scarta', () => scarta([f.id]), 'al-bottone--pieno'), B('Torna alle soglie', () => allaRegola([f.id]), 'al-bottone--contorno')] : [B('Scarta', () => scarta([f.id]), 'al-bottone--pieno')];
-      const righe = SK.map(m => { const v = getM(m, f), g = giudica(m, f), z = g ? GZ[g] : null; return { n: M[m].l, v: v == null ? '—' : M[m].fmt(v), es: z ? z.es : 'spenta', zs: z ? z.s : '', zt: z ? z.t : RR(f.s, f.f)[m].on ? '' : 'spenta' }; })
-        .concat(RR(f.s, f.f).fx.on && FXof(RR(f.s, f.f).fx.testo).fn ? [(() => { const x = ms ? FXof(RR(f.s, f.f).fx.testo).fn(f, getF) : null, z = x == null ? null : x ? GZ.fuori : GZ.dentro; return { n: 'Formula', v: x == null ? '—' : x ? 'vera' : 'falsa', es: z ? z.es : 'spenta', zs: z ? z.s : '', zt: z ? z.t : '' }; })()] : []);
+      const righe = SK.map(m => { const v = getM(m, f), g = giudica(m, f), z = g ? GZ[g] : null; return { n: M[m].l, v: v == null ? '—' : M[m].fmt(v), es: z ? z.es : 'spenta', zs: z ? z.s : '', zt: z ? z.t : RR(f.g)[m].on ? '' : 'spenta' }; })
+        .concat(RR(f.g).fx.on && FXof(RR(f.g).fx.testo).fn ? [(() => { const x = ms ? FXof(RR(f.g).fx.testo).fn(f, getF) : null, z = x == null ? null : x ? GZ.fuori : GZ.dentro; return { n: 'Formula', v: x == null ? '—' : x ? 'vera' : 'falsa', es: z ? z.es : 'spenta', zs: z ? z.s : '', zt: z ? z.t : '' }; })()] : []);
       const zm = ['centro', 'angoli'].includes(s.zm) ? s.zm : 'intero';
       PV = { ts: e => { this._tx = e.touches ? e.touches[0].clientX : null; }, te: e => { const x = e.changedTouches ? e.changedTouches[0].clientX : null; if (this._tx != null && x != null && Math.abs(x - this._tx) > 50) vai(x < this._tx ? 1 : -1); this._tx = null; },
         viste: zm === 'intero' ? [{ vb: '0 0 300 200' }] : zm === 'centro' ? [{ vb: '105 67 90 60' }] : [0, 70, 140].flatMap(y => [0, 105, 210].map(x => ({ vb: x + ' ' + y + ' 90 60' }))), vcls: 'al-sel__centro-4' + (zm === 'angoli' ? ' al-sel__centro-4--angoli' : ''),
@@ -595,54 +575,64 @@ class Component extends DCLogic {
         ko: (() => { const p = st.k === 'escm' || st.k === 'escr'; return { p: p ? 'true' : 'false', al: p ? 'Da scartare' : 'Scarta', on: e => { no(e); if (st.k === 'scart' || st.k === 'escm') return; scarta([f.id]); } }; })(),
         ok: (() => { const p = st.k === 'ten' || st.k === 'tenm'; return { p: p ? 'true' : 'false', al: st.k === 'escr' ? 'Tieni comunque' : p ? 'Tenuto' : 'Tieni', on: e => { no(e); if (st.k === 'scart' || st.k === 'ten') return; tieni([f.id]); } }; })(),
         extraD: tel ? null : st.k === 'scart' ? { l: 'Riporta indietro da «scartate»', on: e => { no(e); esegui('riporta', [f.id]); } } : st.k === 'tenm' ? { l: 'Torna alle soglie', on: e => { no(e); allaRegola([f.id]); } } : null,
-        notaD: !tel && st.k === 'escm' ? { v: s.nota[f.id] || '', on: e => set({ nota: { ...s.nota, [f.id]: e.target.value } }) } : null,
-        pos: (i + 1) + ' di ' + VFa.length + ' · ' + FDn(f.f), prima: e => { no(e); vai(-1); }, dopo: e => { no(e); vai(1); }, fondo: 'hsl(222 14% ' + lum.toFixed(1) + '%)', stelle, scia: (s.nota[f.id] || '').indexOf('satellite') >= 0,
+        img: !noImg, noImg,
+        pos: (i + 1) + ' di ' + VFa.length + ' · ' + FDn(f.f), prima: e => { no(e); vai(-1); }, dopo: e => { no(e); vai(1); }, fondo: 'hsl(222 14% ' + lum.toFixed(1) + '%)', stelle, scia: f.scie > 0,
         al: 'Frame simulato ' + f.file + ': ' + nVis + ' stelle visibili, fondo ' + (rB > 1.15 ? 'più chiaro della mediana' : 'come la mediana'),
         strO: [['uguale', 'Stretch uguale per tutti'], ['frame', 'Per frame']].map(([k, l]) => ({ l, sel: (k === 'frame') === !uguale ? 'true' : 'false', on: e => { no(e); set({ str: k }); } })),
         strN: uguale ? 'Lo stesso stretch per tutti i frame, come il Blink: un cielo più chiaro si vede più chiaro.' : 'Ogni frame col suo stretch: si guardano le stelle, il fondo sembra sempre uguale.',
-        file: f.file, sub: A.NOTTI[f.ni].n + ' · ' + hhmm(f.ora) + ' · ' + f.o + ' ' + FDn(f.f) + ' · ' + f.posa + ' s · gain ' + f.gain + ' · ' + A.SET[f.s].b, st: { s: st.s, l: st.l, sub: st.sub, cls: st.cls }, righe, az,
+        file: f.file, sub: A.NOTTI[f.ni].n + ' · ' + hhmm(f.ora) + ' · ' + f.o + ' ' + FDn(f.f) + ' · ' + f.posa + ' s · guadagno ' + f.gain + ' · ' + A.SET[f.s].b, st: { s: st.s, l: st.l, sub: st.sub, cls: st.cls }, righe, az,
         play: e => { no(e); if (this._play) { clearInterval(this._play); this._play = null; set({ playing: false }); } else { this._play = setInterval(() => this._next && this._next(), (this.state.vel || .5) * 1000); set({ playing: true }); } },
         velL: String(s.vel || .5).replace('.', ',') + ' s', velA: 'Un frame ogni ' + String(s.vel || .5).replace('.', ',') + ' s: tocca per cambiare (0,1 · 0,3 · 0,5 · 1 · 2 s)', velGira: e => { no(e); const L5 = [.1, .3, .5, 1, 2], v = L5[(L5.indexOf(s.vel || .5) + 1) % L5.length]; set({ vel: v }); if (this._play) { clearInterval(this._play); this._play = setInterval(() => this._next && this._next(), v * 1000); } },
         playA: s.playing ? 'true' : 'false', playL: s.playing ? 'Ferma' : 'Riproduci', playS: s.playing ? '❚❚' : '▶' }; }
     // Le soglie: la tabella del setup (qui e in Impostazioni)
     // L'interruttore di una soglia (PillolaScelta forma interruttore): una sola opzione
     const swOf = (on, nome, tog, l) => ({ sw: [{ l: l || nome, sel: on, titolo: (on ? 'Spegni ' : 'Accendi ') + nome, on: e => { no(e); tog(); } }] });
+    // L'aiuto della formula: tutte le misure, a gruppi (brief 2.1), coi nomi del SubframeSelector accanto
+    const FXCH = [['Con una soglia', [['FWHM', 'FWHM'], ['HFD', 'HFD'], ['Eccentricità', 'Eccentricità'], ['Stelle', 'Stelle'], ['SNR', 'SNR'], ['Fondo', 'Fondo cielo'], ['Gradiente', 'Gradiente'], ['Altezza', 'Altezza'], ['Peso', 'Peso del segnale · PSFSignalWeight'], ['Scie', 'Scie'], ['SkyRate', 'Fondo al secondo · SkyRate'], ['LunaAltezza', 'Altezza della Luna'], ['LunaDistanza', 'Distanza dalla Luna'], ['LunaIlluminata', 'Luna illuminata']]],
+      ['Stelle e forma', [['PSFResidual', 'Residuo della PSF · PSFResidual'], ['FWHMSigma', 'FWHM, dispersione · FWHMSigma'], ['EccentricitySigma', 'Eccentricità, dispersione · EccentricitySigma'], ['StelleSature', 'Stelle sature']]],
+      ['Segnale', [['PSFFlux', 'Flusso delle stelle · PSFFlux'], ['PSFMeanFlux', 'Flusso medio per stella · PSFMeanFlux'], ['PSFCount', 'Stelle nel fit · PSFCount']]],
+      ['Fondo e pixel', [['Median', 'Mediana dei pixel · Median'], ['Sigma', 'Sigma dei pixel · Sigma'], ['Entropia', 'Entropia'], ['NoiseRatio', 'Rapporto di rumore · NoiseRatio'], ['MStar', 'M*'], ['NStar', 'N*'], ['BandeRighe', 'Bande sulle righe'], ['BandeColonne', 'Bande sulle colonne'], ['LatoChiaro', 'Lato chiaro del gradiente, in gradi']]],
+      ['Cielo, Luna e Sole', [['Azimut', 'Azimut'], ['AngoloOrario', 'Angolo orario, in ore'], ['LatoPilastro', 'Lato del pilastro: 0 est, 1 ovest'], ['PuntoZero', 'Punto zero dello SQM'], ['SoleAltezza', 'Altezza del Sole']]],
+      ['Del gruppo', [['_mediana', '… mediana del gruppo'], ['_dispersione', '… dispersione del gruppo'], ['_min', '… minimo del gruppo'], ['_max', '… massimo del gruppo']]],
+      ['Segni', [['+', '+ più'], ['−', '− meno'], ['×', '× per'], ['÷', '÷ diviso'], ['(', '( apri'], [')', ') chiudi'], ['<', '< minore'], ['>', '> maggiore'], ['≤', '≤ fino a'], ['≥', '≥ da'], ['e', 'e (tutte e due)'], ['o', 'o (una delle due)']]]].map(([g, o]) => ({ g, o: o.map(([l, n]) => ({ l, n })) }));
     const upd = (key, k, o) => { const cur = s.bz[key] || {}; set({ bz: { ...s.bz, [key]: { ...cur, [k]: { ...(cur[k] || {}), ...o } } } }); };
-    const tabella = (sk, fk, fr, gEs) => { const key = sk + '|' + fk, R2 = RR(sk, fk, true), Ra = RR(sk, fk), mis2 = fr.filter(f => f.s === sk && f.f === fk && misurato(f));
+    const tabella = (sk, fk, fr, gEs) => { const key = gEs.k, R2 = RR(key, true), Ra = RR(key), mis2 = fr.filter(f => f.g === key && misurato(f));
       const righe = SK.map(m => { const r = R2[m], tk = key + m, txt = s.sgT[tk], bad = txt != null && isNaN(parseFloat(String(txt).replace(',', '.'))), nC = mis2.filter(f => colpisce(r, m, f)).length, q = gEs ? gst(gEs.k, m) : null, th = gEs ? soglia(r, m, gEs.k) : null;
         // v56.30: la soglia e' cambiata qui rispetto a Impostazioni › Soglie dei setup?
-        const d0 = { ...DEF[sk][m], ...(((DEFF[sk] || {})[fk] || {})[m] || {}) }; if (TIPO[m]) d0.tipo = TIPO[m];
+        const d0 = PART(sk, fk)[m], tace = r.on && r.tipo === 'rel' && q && q.n < 10;
         const qui = ['on', 'op', 'v', 'tipo'].some(z => d0[z] !== undefined && String(d0[z]) !== String(r[z]));
-        return { qui, ripristina: e => { no(e); upd(key, m, { on: d0.on, op: d0.op, v: d0.v, tipo: d0.tipo }); const t2 = { ...s.sgT }; delete t2[tk]; set({ sgT: t2 }); }, ripA: 'Ripristina ' + M[m].l + ' come in Impostazioni', ...swOf(r.on, M[m].l, () => upd(key, m, { on: !r.on })), nome: M[m].l, rcls: 'al-sel__riga-26' + (r.on ? '' : ' al-sel__riga-26--spenta'), opA: 'Confronto per ' + M[m].l,
+        return { qui, tace: tace ? 'tace: ' + q.n + ' frame nel gruppo, ne servono 10' : '', ripristina: e => { no(e); upd(key, m, { on: d0.on, op: d0.op, v: d0.v, tipo: d0.tipo }); const t2 = { ...s.sgT }; delete t2[tk]; set({ sgT: t2 }); }, ripA: 'Ripristina ' + M[m].l + ' come in Impostazioni', ...swOf(r.on, M[m].l, () => upd(key, m, { on: !r.on })), nome: M[m].l, rcls: 'al-sel__riga-26' + (r.on ? '' : ' al-sel__riga-26--spenta'), opA: 'Confronto per ' + M[m].l,
           opO: [['>', 'maggiore di'], ['≥', 'da'], ['<', 'minore di'], ['≤', 'fino a']].map(([o, w]) => ({ l: o, a: w, selA: o === r.op ? 'true' : 'false', on: e => { no(e); upd(key, m, { op: o }); set({ opA: null }); } })), opV: r.op,
           opMenu: s.opA === tk, opE: s.opA === tk ? 'true' : 'false', opT: e => { no(e); set({ opA: s.opA === tk ? null : tk }); }, opChiudi: () => set({ opA: null }), 
           v: txt != null ? txt : String(r.tipo === 'rel' ? (th != null ? +(+th).toFixed(['stelle', 'snr', 'bg', 'alt'].includes(m) ? 0 : 2) : r.v) : r.v).replace('.', ','), // v56.31: solo «valore»; la mediana resta solo come punto di partenza vA: 'Valore per ' + M[m].l, inv: bad ? 'true' : 'false', err: bad ? 'Serve un numero, per esempio 2 o 1,5.' : m === 'fw' && r.tipo === 'abs' && r.on && (r.op === '<' || r.op === '≤' ? false : r.v < ALsoglie.misure.F(A.SET[sk].sc, A.SET[sk].ap)) ? 'sotto il limite del setup (' + P(ALsoglie.misure.F(A.SET[sk].sc, A.SET[sk].ap), 2) + '″): scarterebbe tutto' : '',
           onV: e => { const x = e.target.value, v = parseFloat(x.replace(',', '.')); if (!isNaN(v)) upd(key, m, { v, tipo: 'abs' }); set({ sgT: { ...s.sgT, [tk]: x } }); },
           u: M[m].u, 
-          conta: r.on ? 'scarta ' + nC : 'spenta' }; });
+          conta: !r.on ? 'spenta' : tace ? 'tace' : 'scarta ' + nC }; });
       const fx = R2.fx, c = FXof(fx.testo), nF = c.fn ? mis2.filter(f => c.fn(f, getF) === true).length : 0, fxCamb = fx.testo.trim() !== Ra.fx.testo.trim() || fx.on !== Ra.fx.on;
       const diff = fxCamb || SK.some(m => ['on', 'op', 'v', 'tipo'].some(k => R2[m][k] !== Ra[m][k])), err = fx.on ? c.err : null;
-      const setFx = o => { const cur = s.bz[sk] || {}; set({ bz: { ...s.bz, [sk]: { ...cur, fx: { ...(cur.fx || {}), ...o } } } }); };
+      const setFx = o => { const cur = s.bz[key] || {}; set({ bz: { ...s.bz, [key]: { ...cur, fx: { ...(cur.fx || {}), ...o } } } }); };
       const nQui = righe.filter(x => x.qui).length;
       return { righe, diff, nQui, appL: nQui ? 'Applica · ' + nQui + (nQui === 1 ? ' soglia cambiata' : ' soglie cambiate') : 'Applica', stato: diff ? '! modifiche da applicare' : '', appNo: diff && !err ? 'false' : 'true',
-        applica: e => { no(e); if (!diff || err) return; const sg = { ...s.sg }, bz = { ...s.bz }; [key, sk].forEach(k => { if (bz[k]) { const a = { ...(sg[k] || {}) }; Object.keys(bz[k]).forEach(m => { a[m] = { ...(a[m] || {}), ...bz[k][m] }; }); sg[k] = a; delete bz[k]; } }); const t2 = { ...s.sgT }; Object.keys(t2).forEach(k => { if (k.indexOf(key) === 0) delete t2[k]; }); set({ sg, bz, sgT: t2 }); },
+        applica: e => { no(e); if (!diff || err) return; const sg = { ...s.sg }, bz = { ...s.bz }; [key].forEach(k => { if (bz[k]) { const a = { ...(sg[k] || {}) }; Object.keys(bz[k]).forEach(m => { a[m] = { ...(a[m] || {}), ...bz[k][m] }; }); sg[k] = a; delete bz[k]; } }); const t2 = { ...s.sgT }; Object.keys(t2).forEach(k => { if (k.indexOf(key) === 0) delete t2[k]; }); set({ sg, bz, sgT: t2 }); },
         fx: { ...swOf(fx.on, 'la formula', () => setFx({ on: !fx.on }), 'Formula'), testo: fx.testo, onT: e => setFx({ testo: e.target.value }), inv: c.err ? 'true' : 'false',
         onAdd: e => { const tok = e.target.value; e.target.value = ''; if (!tok) return; const v = fx.testo.replace(/\s+$/, ''); setFx({ testo: tok[0] === '_' ? v + tok : (v ? v + ' ' : '') + tok }); },
         conta: !fx.on ? 'spenta' : c.err ? '—' : 'scarta ' + nF,
         es: c.err ? c.err : fxCamb ? 'Si legge bene. Premi Applica per usarla sui frame.' : fx.on ? 'In uso: scarta i frame per cui è vera.' : 'Pronta: accendila e premi Applica.', esS: c.err ? '✕' : fxCamb ? '!' : '✓',
         esCls: 'al-sel__riga-30' + (c.err ? ' al-sel__riga-30--errore' : ''), esSCls: 'al-segno al-sel__blocco-21 al-segno--' + (c.err ? 'non-adatta' : fxCamb ? 'avviso' : 'buona'),
-        chips: [['FWHM', 'FWHM'], ['HFD', 'HFD'], ['Eccentricità', 'Eccentricità'], ['Stelle', 'Stelle'], ['SNR', 'SNR'], ['Fondo', 'Fondo cielo'], ['Altezza', 'Altezza'], ['_mediana', '… mediana del gruppo'], ['_mad', '… MAD del gruppo'], ['_min', '… minimo del gruppo'], ['_max', '… massimo del gruppo'], ['+', '+ più'], ['−', '− meno'], ['×', '× per'], ['÷', '÷ diviso'], ['(', '( apri'], [')', ') chiudi'], ['<', '< minore'], ['>', '> maggiore'], ['≤', '≤ fino a'], ['≥', '≥ da'], ['e', 'e (tutte e due)'], ['o', 'o (una delle due)']].map(([l, n]) => ({ l, n })) } }; };
+        chips: FXCH } }; };
     const corrV = [...new Set(V.map(f => f.s))], skP = corrV.includes(s.sk) ? s.sk : G1 && corrV.includes(G1.s) ? G1.s : corrV[0] || 'fra';
-    const gP = G1 && G1.s === skP ? G1 : A.GR.find(g => g.s === skP && g.f === fk && g.posa === pk && V.some(f => f.g === g.k)) || A.GR.find(g => g.s === skP && g.f === fk && V.some(f => f.g === g.k)) || A.GR.find(g => g.s === skP && g.f === fk) || A.GR.find(g => g.s === skP);
-    const nTot = V.filter(f => f.s === skP && f.f === fk && f.posa === pk && ST[f.id].k === 'escr').length;
+    const gP = G1 && G1.s === skP ? G1 : A.GR.find(g => g.s === skP && V.some(f => f.g === g.k && f.f === fk && f.posa === pk && f.gain === gk2)) || A.GR.find(g => g.s === skP && g.f === fk && g.posa === pk && V.some(f => f.g === g.k)) || A.GR.find(g => g.s === skP && g.f === fk && V.some(f => f.g === g.k)) || A.GR.find(g => g.s === skP && g.f === fk) || A.GR.find(g => g.s === skP);
+    const nTot = V.filter(f => f.g === gP.k && ST[f.id].k === 'escr').length;
     const TB = { ...tabella(skP, fk || gP.f, V, gP), corredi: corrV.length > 1 ? corrV.map(k => ({ l: A.SET[k].b, sel: k === skP ? 'true' : 'false', on: e => { no(e); set({ sk: k }); } })) : null,
-      cor: '', tot: FDn(fk || gP.f) + (fk && piuPose(fk) ? ' · ' + pk + ' s' : '') + ' · ' + nTot + ' da scartare per le soglie applicate' };
+      cor: '', gruppo: gP.o + ' · ' + A.SET[gP.s].b + ' · ' + FDn(gP.f) + ' · ' + gP.posa + ' s · guadagno ' + (gP.gain != null ? gP.gain : A.SET[gP.s].gain), tot: FDn(fk || gP.f) + (fk && piuPose(fk) ? ' · ' + pk + ' s' : '') + (fk && piuGu(fk) ? ' · guadagno ' + gk2 : '') + ' · ' + nTot + ' da scartare per le soglie applicate' };
     // Da scartare e cosa resta
     const vEsc = V.filter(escluso), vTen = V.filter(tenuto), nMan = vEsc.filter(f => ST[f.id].k === 'escm').length, nNm = V.filter(f => ST[f.id].k === 'nm').length, perF = [...new Set(vEsc.map(f => f.f))].map(k => FDn(k) + ' ' + vEsc.filter(f => f.f === k).length).join(' · ');
     const ES = { n: AL.num(vEsc.length), nL: vEsc.length === 1 ? 'frame' : 'frame', det: vEsc.length ? AL.ore(H(vEsc)) + ' · ' + MB(vEsc.reduce((a, f) => a + f.mb, 0)) + ' · ' + perF + ' · ' + nMan + ' a mano' : 'nessuno',
       resta: AL.num(vTen.length) + ' frame · ' + AL.ore(H(vTen)) + ' di ' + AL.ore(H(V)) + (nNm ? ' · ' + nNm + ' da misurare' : ''), restaS: 'su ' + AL.num(V.length) + ' frame · ' + AL.ore(H(V)) + ' di questa scelta',
       spostaL: 'Sposta in «scartate» · ' + vEsc.length, spostaNo: vEsc.length ? 'false' : 'true', sposta: e => { no(e); if (vEsc.length) set({ fin: 'sposta' }); },
       annulla: s.storia.length ? e => { no(e); const h = s.storia[s.storia.length - 1]; set({ ...h, storia: s.storia.slice(0, -1), esito: null }); } : null };
+    const SPO = STATO === 'spostamento in corso' ? { t: 'Sposto 10 frame in «scartate»…', n: '4 di 10', tot: 10, fatti: 4, w: '40%', x: 'nas/astro risponde piano: lo spostamento continua anche se lasci la pagina. Si può annullare quando è finito.' } : null;
+    if (SPO) Object.assign(ES, { spostaL: 'Spostamento in corso…', spostaNo: 'true', sposta: e => no(e), annulla: null });
     // La barra della selezione
     const selIds = V.filter(f => s.sel[f.id]).map(f => f.id), selSc = selIds.filter(k => s.scart[k]), selAlt = selIds.filter(k => !s.scart[k]), selMan = selAlt.filter(k => s.man[k]);
     const SBb = (l, on, pieno) => ({ l, cls: 'al-bottone al-bottone--piccolo al-sel__sb' + (pieno ? ' al-sel__sb--acceso' : ''), on: e => { no(e); on(); } });
@@ -651,32 +641,20 @@ class Component extends DCLogic {
     // In «scartate»
     const scF = vivi.filter(f => s.scart[f.id] && inV(f)), dirsOf = fr => [...new Set(fr.map(f => f.dir))].map(d => { const x = fr.filter(f => f.dir === d); return { d, fr: x, n: x.length + ' frame · ' + MB(x.reduce((a, f) => a + f.mb, 0)) }; });
     const SC = { on: scF.length > 0, sub: scF.length + ' frame · ' + MB(scF.reduce((a, f) => a + f.mb, 0)) + ' · ' + dirsOf(scF).length + (dirsOf(scF).length === 1 ? ' cartella' : ' cartelle'), tutti: e => { no(e); esegui('riporta', scF.map(f => f.id)); }, cancella: e => { no(e); set({ fin: 'cancella' }); },
-      dir: dirsOf(scF).map(x => ({ p: x.fr[0].radice + '\\scartate\\' + x.fr[0].rel, n: x.n, da: x.d, on: e => { no(e); esegui('riporta', x.fr.map(f => f.id)); } })) };
+      dir: dirsOf(scF).map(x => ({ p: x.fr[0].radice + '/scartate/' + x.fr[0].rel, n: x.n, da: x.d, on: e => { no(e); esegui('riporta', x.fr.map(f => f.id)); } })) };
     const CN = s.cancN ? s.cancN + ' frame eliminati da «scartate» in questa sessione · ' + MB(s.cancMb) + '.' : '';
     let FS = null, FC = null;
     if (s.fin === 'sposta' && vEsc.length) { const dd = dirsOf(vEsc), mbA = MB(vEsc.reduce((a, f) => a + f.mb, 0));
-      FS = { tit: 'Spostare ' + vEsc.length + ' frame in «scartate»?', sub: vEsc.length + ' frame · ' + mbA + ' · ' + dd.length + (dd.length === 1 ? ' cartella' : ' cartelle'), dir: dd.map((x, j) => ({ p: x.d, dove: x.fr[0].radice + '\\scartate\\' + x.fr[0].rel, n: x.n })), okL: 'Sposta ' + vEsc.length + ' frame', ok: e => { no(e); esegui('sposta', vEsc.map(f => f.id)); } }; }
-    if (s.fin === 'cancella' && scF.length) { const dd = dirsOf(scF), mbA = MB(scF.reduce((a, f) => a + f.mb, 0)), senzaC = f => f.radice.indexOf('\\\\') === 0, nNo = scF.filter(senzaC).length, tutti = nNo === scF.length;
+      FS = { tit: 'Spostare ' + vEsc.length + ' frame in «scartate»?', sub: vEsc.length + ' frame · ' + mbA + ' · ' + dd.length + (dd.length === 1 ? ' cartella' : ' cartelle'), dir: dd.map((x, j) => ({ p: x.d, dove: x.fr[0].radice + '/scartate/' + x.fr[0].rel, n: x.n })), okL: 'Sposta ' + vEsc.length + ' frame', ok: e => { no(e); esegui('sposta', vEsc.map(f => f.id)); } }; }
+    if (s.fin === 'cancella' && scF.length) { const dd = dirsOf(scF), mbA = MB(scF.reduce((a, f) => a + f.mb, 0)), senzaC = f => f.radice.indexOf('nas/') === 0, nNo = scF.filter(senzaC).length, tutti = nNo === scF.length;
       FC = { tit: tutti ? 'Eliminare ' + scF.length + ' frame per sempre?' : 'Mettere ' + scF.length + ' frame nel cestino?', segno: tutti || nNo ? '!' : '', sub: scF.length + ' frame · ' + mbA + ' · da ' + dd.length + (dd.length === 1 ? ' cartella in «scartate»' : ' cartelle in «scartate»'),
-        dir: dd.map((x, j) => ({ p: x.fr[0].radice + '\\scartate\\' + x.fr[0].rel, n: x.n + (senzaC(x.fr[0]) ? ' · senza cestino' : ' · nel cestino') })),
-        testo: tutti ? 'Su questa cartella non c\u0027è il cestino: i file si cancellano per sempre. Non si recuperano.' : nNo ? 'I file vanno nel cestino del computer. ' + nNo + ' sono sul NAS, dove il cestino non c\u0027è: quelli si cancellano per sempre e non si recuperano.' : 'I file vanno nel cestino del computer: da lì si possono ancora recuperare.',
+        dir: dd.map((x, j) => ({ p: x.fr[0].radice + '/scartate/' + x.fr[0].rel, n: x.n + (senzaC(x.fr[0]) ? ' · senza cestino' : ' · nel cestino') })),
+        testo: tutti ? 'Su questa cartella non c\u0027è il cestino: i file si cancellano per sempre. Non si recuperano.' : nNo ? 'I file vanno nel cestino del computer. ' + nNo + ' sono su un disco senza cestino: quelli si cancellano per sempre e non si recuperano.' : 'I file vanno nel cestino del computer: da lì si possono ancora recuperare.',
         okL: tutti ? 'Elimina per sempre' : nNo ? 'Elimina · ' + nNo + ' per sempre' : 'Metti nel cestino', okCls: tutti || nNo ? 'al-bottone al-bottone--pericolo' : 'al-bottone al-bottone--pieno', ok: e => { no(e); esegui('cancella', scF.map(f => f.id)); } }; }
-    // Impostazioni › Selezione dei frame: le soglie di ogni setup
-    const SEZ = [['generale', 'Generale'], ['siti', 'Siti'], ['cartelle', 'Cartelle e scansione'], ['meteo', 'Meteo'], ['astap', 'ASTAP'], ['luna', 'Luna'], ['planner', 'Planner'], ['automazione', 'Automazione'], ['selezione', 'Selezione dei frame'], ['servizi', 'Servizi'], ['scansioni', 'Scansioni'], ['diagnostica', 'Diagnostica'], ['backup', 'Backup']];
-    const tabs = SEZ.map(([k, l]) => ({ l, sel: k === 'selezione', href: k === 'selezione' ? undefined : 'Impostazioni.dc.html?sezione=' + k }));
-    const skI = A.SET[s.skI] ? s.skI : 'fra', filI = [...new Set(vivi.filter(f => f.s === skI).map(f => f.f))], fI = filI.includes(s.fI) ? s.fI : filI[0], gI = A.GR.find(g => g.s === skI && g.f === fI), frI = vivi.filter(f => f.s === skI && f.f === fI);
-    const TI = { ...tabella(skI, fI, frI, gI), corredi: Object.values(A.SET).map(x => ({ l: x.b, sel: x.k === skI ? 'true' : 'false', on: e => { no(e); set({ skI: x.k }); } })),
-      filtri: filI.map(k => ({ l: FDn(k), sel: k === fI ? 'true' : 'false', on: e => { no(e); set({ fI: k }); } })),
-      sub: A.SET[skI].n + ' · ' + FDn(fI) + ' · si contano tutti i frame (' + AL.num(frI.length) + '). La formula vale per tutti i filtri del setup.' };
-    const COME = [{ s: '✕', t: 'Una soglia segna il frame da scartare; lo spostamento in «scartate» lo fai tu, e si annulla.' }, { s: '✓', t: 'La scelta a mano vince sempre, anche se poi cambi la soglia.' },
-      { s: '–', t: 'Il gruppo è oggetto, setup, filtro, posa e guadagno, con tutte le notti: le soglie dalla mediana si contano lì, sui frame misurati, e non valgono sotto 10 frame.' },
-      { s: 'M', t: 'MAD: quanto i frame si allontanano dalla mediana. Ogni soglia si conta dalla mediana del gruppo, in MAD, o col valore che scrivi tu. La partenza è 2,5 MAD per FWHM, stelle, SNR e fondo cielo; valore per eccentricità (0,6) e altezza (30°).' },
-      { s: '!', t: 'Al limite: dalla parte buona, entro 1 MAD dalla soglia dalla mediana. Una soglia a valore non ha «al limite».' }, { s: 'ƒ', t: 'Eccentricità e altezza partono spente: accendile col tuo valore. La formula si scrive, si controlla e vale solo dopo Applica.' }, { s: '?', t: 'I frame non ancora misurati restano fuori: le soglie non li toccano.' }];
-    TB.corT = TB.corredi ? tSel(TB.corredi) : null; if (typeof TI !== 'undefined' && TI) TI.corT = tSel(TI.corredi);
-    return { pronto: true, ordT: tSel(ordO), gvI, t, modo, accento, fmt, L, anteprima: qs.get('anteprima') !== 'no', setModo: m => set({ modo: m }), telPag: vista === 'regole' ? 'Impostazioni' : 'Selezione dei frame', etichetta: vista === 'regole' ? 'Impostazioni · Selezione dei frame' : 'Selezione dei frame',
-      V: { pagina: vista === 'pagina', regole: vista === 'regole' }, apriRegole: e => { no(e); set({ vista: 'regole', skI: skP, fI: fk, sel: {} }); if (typeof window !== 'undefined') window.scrollTo(0, 0); }, chiudiRegole: e => { no(e); set({ vista: 'pagina' }); if (typeof window !== 'undefined') window.scrollTo(0, 0); },
+    TB.corT = TB.corredi ? tSel(TB.corredi) : null;
+    return { pronto: true, ordT: tSel(ordO), gvI, t, modo, accento, fmt, L, anteprima: qs.get('anteprima') !== 'no', setModo: m => set({ modo: m }), telPag: 'Selezione dei frame', etichetta: 'Selezione dei frame', V: { pagina: true }, misAltO, misAltV, misAltCambia, SPO,
       partiO, partiSub, DD, CAL, rvO, h2: tel ? 'Da rivedere' : 'Frame per frame', TS: TB.righe.filter(r => r.conta !== 'spenta').map(r => ({ l: r.nome + ' ' + r.opV + ' ' + r.v + ' ' + r.u, c: r.conta })), RS, PC, TB, cfO, misO, misBO, gvO, ordO, misBV: misB || '', misBCambia: e => set({ misB: e.target.value || null, hov: null }), G, PV, PVF: !!(PV && s.fs), ES, E, SB: tel ? { on: false } : SB, SC, CN, FS, FC, chiudiFin: () => set({ fin: null }),
-      tabs, TI, COME };
+    };
   }
 }
 </script>

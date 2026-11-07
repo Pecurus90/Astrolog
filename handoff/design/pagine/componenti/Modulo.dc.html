@@ -35,6 +35,11 @@
 <a href="#" role="button" onClick="{{ m.annulla }}" class="al-bottone al-bottone--contorno">Annulla</a>
 <sc-if value="{{ m.perche }}" hint-placeholder-val="{{ false }}"><span class="al-c-modulo__blocco-7" aria-live="polite">{{ m.perche }}</span></sc-if>
 </div>
+<sc-if value="{{ m.elimina }}" hint-placeholder-val="{{ false }}"><div class="al-c-modulo__elimina">
+<sc-if value="{{ m.elimina.bottone }}" hint-placeholder-val="{{ true }}"><a href="#" role="button" aria-disabled="{{ m.elimina.dis }}" onClick="{{ m.elimina.apri }}" class="{{ m.elimina.cls }}">Elimina</a>
+<sc-if value="{{ m.elimina.perche }}" hint-placeholder-val="{{ false }}"><div class="al-c-modulo__elimina-nota"><span class="al-c-modulo__blocco-7">{{ m.elimina.perche }}</span><sc-if value="{{ m.elimina.haVai }}" hint-placeholder-val="{{ false }}"><a href="#at-unisci" role="button" onClick="{{ m.elimina.vaiUnisci }}" class="al-bottone al-bottone--contorno" style="min-height:{{ m.hit }}">Unisci a</a></sc-if></div></sc-if></sc-if>
+<sc-if value="{{ m.elimina.chiede }}" hint-placeholder-val="{{ false }}"><div class="al-c-modulo__conferma" role="alertdialog" aria-label="{{ m.elimina.domanda }}"><span class="al-c-modulo__conferma-segno" aria-hidden="true">✕</span><span class="al-c-modulo__conferma-testo"><b>{{ m.elimina.domanda }}</b><sc-if value="{{ m.elimina.esce }}" hint-placeholder-val="{{ false }}"><span class="al-c-modulo__conferma-sub">{{ m.elimina.esce }}</span></sc-if></span><span class="al-c-modulo__conferma-azioni"><a href="#" role="button" aria-busy="{{ m.elimina.busy }}" onClick="{{ m.elimina.si }}" class="al-c-modulo__conferma-si" style="min-height:{{ m.hit }}">{{ m.elimina.siL }}</a><a href="#" role="button" onClick="{{ m.elimina.no }}" class="al-bottone al-bottone--contorno" style="min-height:{{ m.hit }}">Annulla</a></span></div></sc-if>
+</div></sc-if>
 </section></sc-if></div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:500},&quot;m&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;t&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}"></script>

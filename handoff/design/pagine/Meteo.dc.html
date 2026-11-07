@@ -12,7 +12,7 @@
 <style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.8}button{font:inherit;color:inherit}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@keyframes alFade{from{opacity:0}}@keyframes alDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes alFadeUp{from{opacity:0;transform:translateY(6px)}}@keyframes alPop{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@keyframes alPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.92)}}@keyframes alHalo{0%{box-shadow:0 0 0 0 var(--h)}100%{box-shadow:0 0 0 10px transparent}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
 </helmet>
 <div class="al-meteo__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
-<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="desktop" pagina="Meteo" etichetta="Meteo" sito="{{ site }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" app="{{ appSt }}" formato="desktop" pagina="Meteo" etichetta="Meteo" sito="{{ site }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
 
 <sc-if value="{{ S.loading }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ SK.desk }}" testo="Caricamento…" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,1500px"></dc-import></sc-if>
 
@@ -83,11 +83,11 @@
 </dc-import></sc-if></sc-if>
 
 </div>
-<footer class="al-meteo__riga-16"><span>Previsione: Weather data by Open-Meteo.com</span><sc-if value="{{ seeCred }}" hint-placeholder-val="{{ true }}"><span>Seeing: meteoblue</span></sc-if><span>Orari in ora locale del sito</span><span class="al-meteo__testo-22">Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information 2026. Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains.</span></footer>
+<footer class="al-meteo__riga-16"><span>Previsione: Weather data by Open-Meteo.com</span><sc-if value="{{ seeCred }}" hint-placeholder-val="{{ true }}"><span>Seeing: meteoblue</span></sc-if><span>Orari in ora locale del sito</span><span class="al-meteo__testo-22">Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information {{ camsY }}. Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains.</span></footer>
 </sc-if>
 </dc-import></sc-if>
 
-<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Telaio" formato="telefono" pagina="Meteo" etichetta="Meteo · telefono" sito="{{ site }}" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Telaio" app="{{ appSt }}" formato="telefono" pagina="Meteo" etichetta="Meteo · telefono" sito="{{ site }}" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
 <sc-if value="{{ S.loading }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ SK.tel }}" testo="Caricamento…" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,1000px"></dc-import></sc-if>
 <sc-if value="{{ S.ready }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-14">
 
@@ -152,12 +152,12 @@
 <sc-if value="{{ camp }}" hint-placeholder-val="{{ false }}"><div class="al-meteo__colonna-27"><span class="al-meteo__testo-23">Campionamento</span><span class="al-meteo__testo-14">col seeing previsto di {{ camp.see }}″</span><sc-for list="{{ camp.righe }}" as="c" hint-placeholder-count="5"><span class="al-meteo__riga-38"><span class="al-meteo__colonna-28"><span class="al-meteo__testo-13">{{ c.n }}</span><span class="al-meteo__testo-32">{{ c.sc }} · {{ c.nota }}</span></span><span class="al-meteo__riga-39"><dc-import name="componenti/Pillola" esito="{{ c.es }}" testo="{{ c.l }}" fondo="carta2" dimensione="piccola" allinea="center" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,22px"></dc-import></span></span></sc-for></div></sc-if>
 </dc-import></sc-if>
 
-<footer class="al-meteo__colonna-29"><span>{{ credT }}</span><span>Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information 2026. Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains.</span></footer>
+<footer class="al-meteo__colonna-29"><span>{{ credT }}</span><span>Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information {{ camsY }}. Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains.</span></footer>
 </div></sc-if>
 </dc-import></sc-if>
 </sc-if></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;obiettivo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Deep sky&quot;,&quot;Sole&quot;],&quot;default&quot;:&quot;Deep sky&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;senza sito&quot;,&quot;sito senza fuso orario&quot;,&quot;prima previsione non arrivata&quot;,&quot;servizio che tace&quot;,&quot;servizio che tace, previsione buona&quot;,&quot;modello senza notti&quot;,&quot;seeing senza chiave&quot;,&quot;seeing, chiave non valida&quot;,&quot;seeing, Meteoblue muto&quot;,&quot;visibilità non disponibile&quot;,&quot;sito con poca storia&quot;,&quot;sole sempre su&quot;,&quot;senza buio&quot;,&quot;nuvole incomplete&quot;,&quot;risposta non valida&quot;,&quot;cambio del modello non riuscito&quot;,&quot;seeing parziale&quot;,&quot;seeing, chiave appena messa&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;obiettivo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Deep sky&quot;,&quot;Sole&quot;],&quot;default&quot;:&quot;Deep sky&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;senza sito&quot;,&quot;sito senza fuso orario&quot;,&quot;prima previsione non arrivata&quot;,&quot;servizio che tace&quot;,&quot;servizio che tace, previsione buona&quot;,&quot;modello senza notti&quot;,&quot;seeing senza chiave&quot;,&quot;seeing, chiave non valida&quot;,&quot;seeing, Meteoblue muto&quot;,&quot;visibilità non disponibile&quot;,&quot;aerosol non disponibile&quot;,&quot;jet stream non disponibile&quot;,&quot;sito con poca storia&quot;,&quot;sole sempre su&quot;,&quot;senza buio&quot;,&quot;nuvole incomplete&quot;,&quot;risposta non valida&quot;,&quot;cambio del modello non riuscito&quot;,&quot;seeing parziale&quot;,&quot;seeing, chiave appena messa&quot;,&quot;errore dell'app&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;}}">
 class Component extends DCLogic {
   state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, menu: null, mmenu: false, night: 0, hover: null, cf: false, metrics: null, obj: null, model: null, open: null };
   componentDidMount() {
@@ -181,7 +181,13 @@ class Component extends DCLogic {
     ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
-  renderVals() {
+  // Stato dell'app (v60): caricamento ed errore li mostra il Telaio
+  renderVals() { const r = this.renderVals0(), st = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stato')) || this.props.stato || '';
+    // Sole (Marco, 6/11): il meteo del Sole arriva col Sistema solare (brief 6.6). Fino ad allora «Sole non disponibile», senza voto e senza pesi.
+    const sole = r.soleNo ? { S: { ...r.S, strip: false, right: false, cards: false, scale: false }, camp: null, chartHint: '', status: null, ripV: null,
+      hv: { ...r.hv, name: 'Il Sole', value: 'Non disponibile', label: '', pill: '? Sole non disponibile', pBg: r.t.card2, pFg: r.t.text, sub: 'Il meteo del Sole arriva col Sistema solare. Fino ad allora qui non c\u0027è un verdetto.', chart: false, fs: '44px', fsTel: '32px' } } : {};
+    return { ...r, ...sole, appSt: st === 'errore dell\u0027app' ? 'errore' : 'normale' }; }
+  renderVals0() {
     const ce = React.createElement, set = o => this.setState(o);
     if (!this.alPronto()) return { pronto: false };
     ALsoglie.usaLuna(this.props.luna);
@@ -200,7 +206,7 @@ class Component extends DCLogic {
     const is = s => stato === s;
     const model = this.state.model || (is('modello senza notti') ? 'ICON' : 'Automatico');
     const X = { loading: is('caricamento'), noSite: is('senza sito'), noTz: is('sito senza fuso orario'), first: is('prima previsione non arrivata'), stale: is('servizio che tace'), staleOk: is('servizio che tace, previsione buona'),
-      noModel: is('modello senza notti') && model === 'ICON', seeKey: is('seeing senza chiave'), seeBad: is('seeing, chiave non valida'), seeMute: is('seeing, Meteoblue muto'), visNA: is('visibilità non disponibile'),
+      noModel: is('modello senza notti') && model === 'ICON', seeKey: is('seeing senza chiave'), seeBad: is('seeing, chiave non valida'), seeMute: is('seeing, Meteoblue muto'), na: id => (id === 'visibilita' && is('visibilità non disponibile')) || (id === 'aerosol' && is('aerosol non disponibile')) || (id === 'jet' && is('jet stream non disponibile')),
       storia: is('sito con poca storia'), soleSu: is('sole sempre su'), senzaBuio: is('senza buio'), nonSiSa: is('nuvole incomplete'), invalid: is('risposta non valida'), modelFail: is('cambio del modello non riuscito'), seePart: is('seeing parziale'), seeNew: is('seeing, chiave appena messa') };
     const site = X.soleSu ? 'Capo Nord' : X.senzaBuio ? 'Oslo' : X.noSite ? null : 'Cima Ekar';
     const signBox = k => k === '!' ? { sign: '!', sBg: t.warn, sFg: t.warnFg, sRing: 'transparent' } : { sign: '?', sBg: t.card2, sFg: t.text, sRing: t.line };
@@ -218,7 +224,7 @@ class Component extends DCLogic {
       : 'Previsione Open-Meteo del 30 settembre, 18:05 (2 ore fa)' + seeArr + ' · ora locale del sito';
     const arAp = !!this.state.arAp, corti = [...arrivo.matchAll(/(Open-Meteo|Meteoblue)[^(]*\(([^)]*)\)/g)].map(m => m[1] + ' ' + m[2]).join(' · ');
     const head = { title: site ? 'Meteo a ' + site : 'Meteo', arrivo, corto: arAp || !corti ? arrivo : corti, exp: arAp ? 'true' : 'false', chev: arAp ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', tocca: e => { e.preventDefault(); this.setState({ arAp: !arAp }); }, model: !X.noSite, agg: !(X.noSite || X.noTz || X.stale || X.staleOk) };
-    const status = X.staleOk ? { t: 'Aggiornamento delle 20:00 non riuscito. Previsione delle 08:05.', a: 'Aggiorna' } : X.invalid ? { t: 'Risposta non valida dal servizio alle 20:00. Previsione delle 18:05.', a: 'Aggiorna' } : X.modelFail ? { t: 'Cambio del modello non riuscito: ICON non risponde. Resta Automatico.', a: 'Riprova' } : null;
+    const status = X.staleOk ? { t: 'Aggiornamento delle 20:00 non riuscito. Previsione delle 08:05.', a: 'Aggiorna' } : X.invalid ? { t: 'Risposta non valida dal servizio alle 20:00. Previsione delle 18:05.', a: 'Aggiorna' } : X.modelFail ? { t: 'Cambio del modello non riuscito: AstroLog non risponde. Resta Automatico.', a: 'Riprova' } : null;
     const MODS = [['Automatico', 'predefinito'], ['ECMWF', 'centro europeo'], ['ICON', 'servizio meteo tedesco'], ['GFS', 'servizio meteo americano']];
     const models = MODS.map(([l, d]) => ({ l, d, sel: l === model, bg: l === model ? t.hPill : 'transparent', fg: l === model ? t.hPillFg : t.text, mbg: l === model ? t.card2 : 'transparent', check: l === model ? '✓' : '',
       on: () => set({ model: l }), onTel: () => set({ model: l, mmenu: false }) }));
@@ -248,14 +254,14 @@ class Component extends DCLogic {
       pioggia: { k: 'Pioggia', u: 'mm', dec: 1, q: SO.esito.pioggia, kind: 'rain', pq: SO.esito.pioggiaProb },
       visibilita: { k: 'Visibilità', u: 'km', dec: 1, q: SO.esito.visibilita, kind: 'vis' },
       vento: { k: 'Vento', u: 'km/h', dec: 0, q: SO.esito.vento, kind: 'fix' },
-      seeing: { k: 'Seeing', u: '″', dec: 1, q: SUN ? SO.esito.seeingGiorno : SO.esito.seeing, kind: 'max' },
+      seeing: { k: 'Seeing', u: '″', dec: 1, q: SO.esito.seeing, kind: 'max' },
       jet: { k: 'Jet stream', u: 'km/h', dec: 0, q: SO.esito.jet, kind: 'max' },
       aerosol: { k: 'Aerosol', u: '', dec: 2, q: SO.esito.aerosol, kind: 'max', good: 'limpido' },
       umidita: { k: 'Umidità', u: '%', dec: 0, q: SO.esito.umidita, kind: 'max' } };
     // Le carte stanno sempre allo stesso posto (contratto, Marco 13/10/2026)
     const ORDER = SUN ? ['nuvole', 'basse', 'pioggia', 'visibilita', 'vento', 'seeing', 'jet', 'aerosol'] : ['nuvole', 'basse', 'condensa', 'pioggia', 'visibilita', 'vento', 'seeing', 'jet', 'aerosol'];
     const lvOf = (id, x) => SO.neutro[id] && SO.neutro[id](x) ? 'neutra' : MS[id].q(x);
-    const nf = (x, dec) => x.toFixed(dec);
+    const nf = (x, dec) => SO.num(x, dec);
     // Interi; pioggia, seeing e visibilita' un decimale, l'aerosol due; il numero resta dal lato della soglia del valore vero
     const fv = (id, x) => { if (x === 0) return '0'; const d = MS[id].dec; return nf(SO.mostra(x, d, v => lvOf(id, v)), d); };
     const withU = (id, x) => { const u = MS[id].u; return fv(id, x) + (u === '%' || u === '″' || !u ? u : ' ' + u); };
@@ -268,13 +274,13 @@ class Component extends DCLogic {
         m: { nuvole: { d: [5,8,10,10,8,6,8,12,16,22,26,40,30,20], v: '16', sotto: 'media nel buio' }, condensa: { d: [6,5,4.5,4,3.6,3.2,3.1,2.8,2,1.5,1,0.8,0.7,1], v: '1', sotto: 'minimo di temperatura meno punto di rugiada' },
           pioggia: { d: Z, p: [0,0,0,0,0,0,0,5,5,5,10,10,5,5], v: '0', sotto: 'totale nel buio' }, visibilita: { d: [15,14,14,13,13,12,12,12,12,12,12,12,13,14], v: '12', sotto: 'minima nel buio' },
           vento: { d: [6,7,9,13,6,5,4,4,4,5,5,4,4,5], v: '5', sotto: 'media nel buio, a 10 m', picco: 'raffiche fino a 13 km/h tra le 21:00 e le 22:00' },
-          seeing: { d: [1.3,1.3,1.4,1.4,1.3,1.3,1.4,1.4,1.5,1.5,1.6,1.8,1.7,1.6], v: '1.4', sotto: 'media nel buio, Meteoblue' }, jet: { d: [90,92,95,97,97,98,96,95,96,97,96,95,94,93], v: '96', sotto: 'media nel buio, 250 hPa' },
-          aerosol: { d: [0.07,0.07,0.07,0.08,0.07,0.07,0.07,0.07,0.06,0.06,0.07,0.07,0.07,0.07], v: '0.07', sotto: 'media nel buio, spessore ottico' } },
+          seeing: { d: [1.3,1.3,1.4,1.4,1.3,1.3,1.4,1.4,1.5,1.5,1.6,1.8,1.7,1.6], v: '1,4', sotto: 'media nel buio, Meteoblue' }, jet: { d: [90,92,95,97,97,98,96,95,96,97,96,95,94,93], v: '96', sotto: 'media nel buio, 250 hPa' },
+          aerosol: { d: [0.07,0.07,0.07,0.08,0.07,0.07,0.07,0.07,0.06,0.06,0.07,0.07,0.07,0.07], v: '0,07', sotto: 'media nel buio, spessore ottico' } },
         extra: [['Temperatura e punto di rugiada', '3', '°C', 'media nel buio · punto di rugiada 2 °C'], ['Polveri', '2', 'µg/m³', 'media nel buio'], ['Vento a 700 hPa', '15', 'km/h', 'meno vento in 2 notti su 10 dell\u0027ultimo anno, in questo sito']] },
       { day: 'gio 1', tag: '', name: 'Notte di giovedì 1', when: 'giovedì 1', s: 2, value: 'Nessuna ora', range: 'coperto', sub: 'coperto dalle 17, pioggia fino alle 05 · 4 modelli d\u0027accordo su 4', buio: '20:46–05:49', luna: [52, '00:10'], moonTr: 8.3,
         layers: { b: [50,65,78,85,88,90,92,90,88,86,84,80,72,66], m: [40,55,70,80,85,88,90,88,85,82,80,75,70,60], a: [30,40,50,60,70,70,72,70,68,65,60,55,50,45], u: [82,86,90,94,96,97,98,98,97,97,96,95,93,90] },
         m: { nuvole: { d: [60,75,85,92,96,98,98,97,95,94,90,85,80,75], v: '94', sotto: 'media nel buio' }, condensa: { d: [3,2,1.5,1,0.5,0.3,0.2,0.1,0.1,0.2,0.3,0.4,0.6,1], v: '0', sotto: 'minimo di temperatura meno punto di rugiada' },
-          pioggia: { d: [0,0.2,0.4,0.6,0.8,0.9,0.5,0.4,0.3,0.2,0.1,0,0,0], p: [40,60,80,90,95,95,90,85,80,70,60,40,30,20], v: '3.8', sotto: 'totale nel buio' }, visibilita: { d: [20,15,10,8,6,5,4,2,1,0.5,0.5,0.5,1,2], v: '0.5', sotto: 'minima nel buio' },
+          pioggia: { d: [0,0.2,0.4,0.6,0.8,0.9,0.5,0.4,0.3,0.2,0.1,0,0,0], p: [40,60,80,90,95,95,90,85,80,70,60,40,30,20], v: '3,8', sotto: 'totale nel buio' }, visibilita: { d: [20,15,10,8,6,5,4,2,1,0.5,0.5,0.5,1,2], v: '0,5', sotto: 'minima nel buio' },
           vento: { d: [18,22,20,14,12,11,10,10,11,12,12,11,10,9], v: '12', sotto: 'media nel buio, a 10 m', picco: 'raffiche fino a 26 km/h tra le 00:00 e le 01:00' },
           seeing: { d: NUL, v: '', sotto: '', nubi: true }, jet: { d: [86,87,88,88,89,89,88,88,87,87,88,88,87,86], v: '88', sotto: 'media nel buio, 250 hPa' }, aerosol: { d: NUL, v: '', sotto: '', nubi: true } },
         extra: [['Temperatura e punto di rugiada', '8', '°C', 'media nel buio · punto di rugiada 8 °C'], ['Polveri', '1', 'µg/m³', 'media nel buio'], ['Vento a 700 hPa', '31', 'km/h', 'meno vento in 5 notti su 10 dell\u0027ultimo anno, in questo sito']] },
@@ -283,13 +289,13 @@ class Component extends DCLogic {
         m: { nuvole: { d: [12,8,6,4,3,3,4,5,6,7,8,10,14,18], v: '6', sotto: 'media nel buio' }, condensa: { d: [9,8,7,6.5,6,5.6,5.2,5,4.8,4.5,4.3,4,4.2,5], v: '4', sotto: 'minimo di temperatura meno punto di rugiada' },
           pioggia: { d: Z, p: [0,0,0,0,0,0,0,0,0,5,5,5,0,0], v: '0', sotto: 'totale nel buio' }, visibilita: { d: [22,24,25,25,25,26,26,25,25,24,24,23,22,22], v: '24', sotto: 'minima nel buio' },
           vento: { d: [10,9,8,9,10,8,7,7,8,8,7,7,8,9], v: '8', sotto: 'media nel buio, a 10 m', picco: 'raffiche fino a 18 km/h tra le 22:00 e le 23:00' },
-          seeing: { d: [1.7,1.6,1.6,1.5,1.5,1.6,1.6,1.6,1.7,1.8,1.9,1.8,1.7,1.7], v: '1.7', sotto: 'media nel buio, Meteoblue' }, jet: { d: [70,70,71,72,73,74,76,78,77,75,72,70,68,66], v: '74', sotto: 'media nel buio, 250 hPa' },
-          aerosol: { d: [0.05,0.05,0.05,0.05,0.04,0.04,0.05,0.05,0.05,0.05,0.06,0.06,0.05,0.05], v: '0.05', sotto: 'media nel buio, spessore ottico' } },
+          seeing: { d: [1.7,1.6,1.6,1.5,1.5,1.6,1.6,1.6,1.7,1.8,1.9,1.8,1.7,1.7], v: '1,7', sotto: 'media nel buio, Meteoblue' }, jet: { d: [70,70,71,72,73,74,76,78,77,75,72,70,68,66], v: '74', sotto: 'media nel buio, 250 hPa' },
+          aerosol: { d: [0.05,0.05,0.05,0.05,0.04,0.04,0.05,0.05,0.05,0.05,0.06,0.06,0.05,0.05], v: '0,05', sotto: 'media nel buio, spessore ottico' } },
         extra: [['Temperatura e punto di rugiada', '9', '°C', 'media nel buio · punto di rugiada 5 °C'], ['Polveri', '3', 'µg/m³', 'media nel buio'], ['Vento a 700 hPa', '12', 'km/h', 'meno vento in 1 notte su 10 dell\u0027ultimo anno, in questo sito']] },
-      { day: 'sab 3', tend: true, name: 'Notte di sabato 3 · tendenza', when: 'sabato 3', s: 1, value: '9 ore', cloud: 38, range: 'nuvole al 38%', sub: 'nuvole al 38% nel buio · 2 modelli d\u0027accordo su 4', buio: '20:43–05:51', luna: [34, '01:30'], moonTr: 9.9 },
-      { day: 'dom 4', tend: true, name: 'Notte di domenica 4 · tendenza', when: 'domenica 4', s: 0, value: '9 ore', cloud: 14, range: 'nuvole al 14%', sub: 'nuvole al 14% nel buio · 3 modelli d\u0027accordo su 4', buio: '20:41–05:52', luna: [25, '02:30'], moonTr: 10.7 },
-      { day: 'lun 5', tend: true, name: 'Notte di lunedì 5 · tendenza', when: 'lunedì 5', s: 0, value: '9 ore', cloud: 9, range: 'nuvole al 9%', sub: 'nuvole al 9% nel buio · 4 modelli d\u0027accordo su 4', buio: '20:40–05:53', luna: [17, '03:35'], moonTr: 11.5 },
-      { day: 'mar 6', tend: true, name: 'Notte di martedì 6 · tendenza', when: 'martedì 6', s: 2, value: '9 ore', cloud: 72, range: 'nuvole al 72%', sub: 'nuvole al 72% nel buio · 3 modelli d\u0027accordo su 4', buio: '20:38–05:54', luna: [10, '04:40'], moonTr: 12.3 } ];
+      { day: 'sab 3', tend: true, name: 'Notte di sabato 3 · tendenza', when: 'sabato 3', s: 1, value: '9 ore', cloud: 38, range: 'Nuvole sparse · 38%', sub: 'Nuvole sparse nel buio, 38% · 2 modelli d\u0027accordo su 4', buio: '20:43–05:51', luna: [34, '01:30'], moonTr: 9.9 },
+      { day: 'dom 4', tend: true, name: 'Notte di domenica 4 · tendenza', when: 'domenica 4', s: 0, value: '9 ore', cloud: 14, range: 'Nuvole sparse · 14%', sub: 'Nuvole sparse nel buio, 14% · 3 modelli d\u0027accordo su 4', buio: '20:41–05:52', luna: [25, '02:30'], moonTr: 10.7 },
+      { day: 'lun 5', tend: true, name: 'Notte di lunedì 5 · tendenza', when: 'lunedì 5', s: 0, value: '9 ore', cloud: 9, range: 'Nuvole sparse · 9%', sub: 'Nuvole sparse nel buio, 9% · 4 modelli d\u0027accordo su 4', buio: '20:40–05:53', luna: [17, '03:35'], moonTr: 11.5 },
+      { day: 'mar 6', tend: true, name: 'Notte di martedì 6 · tendenza', when: 'martedì 6', s: 2, value: '9 ore', cloud: 72, range: 'Nuvoloso · 72%', sub: 'Nuvoloso nel buio, 72% · 3 modelli d\u0027accordo su 4', buio: '20:38–05:54', luna: [10, '04:40'], moonTr: 12.3 } ];
     // I sette giorni, per chi riprende il Sole. Dati simulati; il giorno di oggi è passato.
     const ds = (sotto, d, o) => ({ d, sotto, ...o });
     const DAYS = [
@@ -312,10 +318,10 @@ class Component extends DCLogic {
           vento: ds('media col Sole alto, a 10 m', [5,6,8,10,14,18,22,26,28,24,18,12,8,6], { picco: 'raffiche fino a 41 km/h tra le 14:00 e le 15:00' }), seeing: ds('media col Sole alto, Meteoblue', [2.3,2.1,1.9,2.0,2.4,2.8,3.3,3.6,3.7,3.4,3.0,2.7,2.5,2.4]),
           jet: ds('media col Sole alto, 250 hPa', [125,128,130,132,134,135,133,130,128,126,124,122,120,118]), aerosol: ds('media col Sole alto, spessore ottico', [0.10,0.11,0.12,0.12,0.13,0.13,0.12,0.12,0.11,0.11,0.10,0.10,0.10,0.10]) },
         extra: [['Temperatura', '18', '°C', 'massima, alle 15:00'], ['Polveri', '9', 'µg/m³', 'media col Sole alto'], ['Vento a 700 hPa', '38', 'km/h', 'meno vento in 8 giorni su 10 dell\u0027ultimo anno, in questo sito']] },
-      { day: 'dom 4', tend: true, name: 'Giorno di domenica 4 · tendenza', when: 'domenica 4', s: 0, value: '11 ore', cloud: 12, range: 'nuvole al 12%', sub: 'nuvole al 12% col Sole alto · 3 modelli d\u0027accordo su 4', sun: ['07:30', '19:05', '11 h 35'] },
-      { day: 'lun 5', tend: true, name: 'Giorno di lunedì 5 · tendenza', when: 'lunedì 5', s: 0, value: '11 ore', cloud: 8, range: 'nuvole all\u00278%', sub: 'nuvole all\u00278% col Sole alto · 4 modelli d\u0027accordo su 4', sun: ['07:31', '19:03', '11 h 32'] },
-      { day: 'mar 6', tend: true, name: 'Giorno di martedì 6 · tendenza', when: 'martedì 6', s: 2, value: '11 ore', cloud: 70, range: 'nuvole al 70%', sub: 'nuvole al 70% col Sole alto · 3 modelli d\u0027accordo su 4', sun: ['07:33', '19:01', '11 h 28'] },
-      { day: 'mer 7', tend: true, name: 'Giorno di mercoledì 7 · tendenza', when: 'mercoledì 7', s: 1, value: '11 ore', cloud: 35, range: 'nuvole al 35%', sub: 'nuvole al 35% col Sole alto · 2 modelli d\u0027accordo su 4', sun: ['07:34', '18:59', '11 h 25'] } ];
+      { day: 'dom 4', tend: true, name: 'Giorno di domenica 4 · tendenza', when: 'domenica 4', s: 0, value: '11 ore', cloud: 12, range: 'Nuvole sparse · 12%', sub: 'Nuvole sparse col Sole alto, 12% · 3 modelli d\u0027accordo su 4', sun: ['07:30', '19:05', '11 h 35'] },
+      { day: 'lun 5', tend: true, name: 'Giorno di lunedì 5 · tendenza', when: 'lunedì 5', s: 0, value: '11 ore', cloud: 8, range: 'Nuvole sparse · 8%', sub: 'Nuvole sparse col Sole alto, 8% · 4 modelli d\u0027accordo su 4', sun: ['07:31', '19:03', '11 h 32'] },
+      { day: 'mar 6', tend: true, name: 'Giorno di martedì 6 · tendenza', when: 'martedì 6', s: 2, value: '11 ore', cloud: 70, range: 'Nuvoloso · 70%', sub: 'Nuvoloso col Sole alto, 70% · 3 modelli d\u0027accordo su 4', sun: ['07:33', '19:01', '11 h 28'] },
+      { day: 'mer 7', tend: true, name: 'Giorno di mercoledì 7 · tendenza', when: 'mercoledì 7', s: 1, value: '11 ore', cloud: 35, range: 'Nuvole sparse · 35%', sub: 'Nuvole sparse col Sole alto, 35% · 2 modelli d\u0027accordo su 4', sun: ['07:34', '18:59', '11 h 25'] } ];
     // Valori del giorno calcolati sulle ore col Sole alto
     DAYS.forEach(D => { if (!D.m) return; Object.entries(D.m).forEach(([id, sp]) => { const w = sp.d.filter((x, h) => h >= 2 && h <= 11);
       const v = MS[id].kind === 'rain' ? w.reduce((a, b) => a + b, 0) : MS[id].kind === 'vis' ? Math.min(...w) : w.reduce((a, b) => a + b, 0) / w.length;
@@ -327,41 +333,39 @@ class Component extends DCLogic {
     [...NIGHTS, ...DAYS].forEach(n => { if (!n.m) return; if (n.layers) n.m.basse = { d: n.layers.b };
       if (n.m.vento) n.m.raffiche = { d: n.m.vento.d.map(x => x == null ? null : Math.round(x * 1.8)) }; });
     const LIST = SUN ? DAYS : NIGHTS;
-    // Il verdetto dal punteggio della notte (ADR 0020, Marco 20/10/2026: supera il contratto): ogni ora 0-100 dalla somma dei pesi
-    // di nuvole, seeing, trasparenza, condensa, vento e jet stream (soglie.js); buona da 70, incerta da 40. Ore utili = qualita' da 60, intervallo e conto.
-    const qN = 57, qt0 = SUN ? 6 : 18, qlat = 45.85 * Math.PI / 180, qR = Math.PI / 180, GOOD = SO.utile;
+    // Notte: il verdetto dalla Trasparenza oraria 0-100 (ADR 0034), media sul buio; buona da 70, incerta da 40; il seeing e' fuori. Notte: ore di posa (ADR 0034), trasparenza per ora di buio divisa per banda della Luna.
+    const qN = 57, qt0 = SUN ? 6 : 18, qlat = 45.85 * Math.PI / 180, qR = Math.PI / 180, GOOD = 60;
     const qlerp = (arr, i) => { const a = Math.min(Math.floor(i / 4), 13), b = Math.min(a + 1, 13), f = (i % 4) / 4; if (arr[a] == null) return null; if (f === 0) return arr[a]; if (arr[b] == null) return null; return arr[a] * (1 - f) + arr[b] * f; };
     const qalt = (tr, dec) => Array.from({ length: qN }, (_, i) => { let x = qt0 + i * 0.25 - tr; x = ((x + 36) % 24) - 12; const Hh = x * 15.041 * qR, d = dec * qR; return Math.asin(Math.sin(qlat) * Math.sin(d) + Math.cos(qlat) * Math.cos(d) * Math.cos(Hh)) / qR; });
-    const QS = { nuvole: ['le nuvole', SO.qualita.nuvole], seeing: ['il seeing', SUN ? SO.qualita.seeingGiorno : SO.qualita.seeing], jet: ['il jet stream', SO.qualita.jet], vento: ['il vento', SO.qualita.vento],
-      condensa: ['la condensa', SO.qualita.condensa], aerosol: ['l\u0027aerosol', SO.qualita.aerosol], visibilita: ['la visibilità', SO.qualita.visibilita] };
-    const qOff = (n, id) => !n.m[id] || n.m[id].nubi || (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew)) || (id === 'visibilita' && X.visNA) || (SUN && id === 'condensa');
+    const qOff = (n, id) => !n.m[id] || n.m[id].nubi || (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew)) || X.na(id) || (SUN && id === 'condensa');
     const hOra = h => h > 13 ? (SUN ? '20' : '08') : H[h];
     const iDi = s => { const [h, m] = s.split(':').map(Number); return ((h < 12 ? h + 24 : h) - 18) * 4 + Math.round(m / 15); };
     const fq = k => { const m = (18 * 60 + k * 15) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
     // La Luna pesa per la banda larga solo sopra l'altezza delle Impostazioni, col buio. Anche le notti di tendenza: la Luna si calcola.
     if (!SUN) NIGHTS.forEach((n, i) => { if (!n.luna) return; const a = qalt(n.moonTr, 24 - i * 1.5); n.rip = SO.lunaNotte(n.luna[0], H.map((_, h) => a[h * 4 + 2]), WA, WB, hOra); });
-    const qualOf = (n, alt) => Array.from({ length: qN }, (_, i) => { const cv = qlerp(n.m.nuvole.d, i); if (cv == null) return null; const parts = [[QS.nuvole[0], QS.nuvole[1](cv)]];
-      Object.keys(QS).forEach(id => { if (id === 'nuvole' || qOff(n, id)) return; const x = id === 'seeing' && X.seePart && i >= 32 ? null : qlerp(n.m[id].d, i); if (x == null) return; parts.push([QS[id][0], QS[id][1](x)]); });
-      const pm = n.m.pioggia && n.m.pioggia.d ? qlerp(n.m.pioggia.d, i) : null;
-      if (SUN) parts.push(['il Sole basso', SO.qualita.soleBasso(alt[i])]);
-      const vk = n.m.visibilita && n.m.visibilita.d ? qlerp(n.m.visibilita.d, i) : null;
-      return SO.ora(parts, pm > 0 ? 'pioggia' : cv >= 50 ? 'nuvole' : SO.nebbia(vk) ? 'nebbia' : false); });
-    LIST.forEach((n, i) => { if (n.tend) { n.cm = n.cloud; return; } if (!n.m) return; n.alt = SUN ? qalt(13.3, -3.3 - i * 0.4) : qalt(n.moonTr, 24 - i * 1.5); n.q = qualOf(n, n.alt);
+    // Trasparenza ora per ora (ADR 0034); di giorno nessun voto finche' il Sole non arriva col Sistema solare
+    const qualOf = (n) => Array.from({ length: qN }, (_, i) => { const cv = qlerp(n.m.nuvole.d, i); if (cv == null || SUN) return null;
+      const pm = n.m.pioggia && n.m.pioggia.d ? qlerp(n.m.pioggia.d, i) : null, vk = n.m.visibilita && n.m.visibilita.d && !X.na('visibilita') ? qlerp(n.m.visibilita.d, i) : null, ae = n.m.aerosol && !qOff(n, 'aerosol') ? qlerp(n.m.aerosol.d, i) : null;
+      return SO.notte(pm > 0 || cv >= 50 || SO.nebbia(vk), cv, ae); });
+    LIST.forEach((n, i) => { if (n.tend) { n.cm = n.cloud; return; } if (!n.m) return; n.alt = SUN ? qalt(13.3, -3.3 - i * 0.4) : qalt(n.moonTr, 24 - i * 1.5); n.q = qualOf(n);
       if (n.s === 'ignoto') return;
       const hs = []; for (let h = WA; h <= WB; h++) { const q = n.q[h * 4]; if (q && q.v >= GOOD) hs.push(h); }
+      const stretta = h => n.rip && n.rip.L === 2 && h >= n.rip.su[0] && h < n.rip.su[1];
+      const posa = SUN ? null : SO.posa(Array.from({ length: WB - WA + 1 }, (_, j) => { const h = WA + j, q = n.q[h * 4]; return { h: 1, banda: stretta(h) ? 'stretta' : 'larga', tr: q ? q.v : 0 }; }));
+      n.posa = posa;
       const runs = []; hs.forEach(h => { const r = runs[runs.length - 1]; if (r && r.b === h) r.b = h + 1; else runs.push({ a: h, b: h + 1 }); });
       const cnt = SO.conto(runs), tail = n.sub.split(' · ').filter(x => /modell/.test(x)).join(' · ');
-      const qm = []; for (let k = WA * 4; k <= WB * 4; k++) qm.push(n.q[k] ? n.q[k].v : null); n.qm = SO.media(qm); n.s = n.qm == null ? 'ignoto' : SO.livello(n.qm); n.senzaT = (X.seeKey || X.seeBad || X.seeNew || X.seePart) && SO.senzaRiga(SO.senzaTutte(n.q.slice(WA * 4, WB * 4 + 1)));
-      n.runs = runs; n.value = cnt ? SO.nOre(cnt) : 'Nessuna ora'; if (cnt) n.range = runs.map(r => H[r.a] + '–' + hOra(r.b)).join(' · ');
+      const qm = []; for (let k = WA * 4; k <= WB * 4; k++) qm.push(n.q[k] ? n.q[k].v : null); n.qm = SO.media(qm); n.s = n.qm == null ? 'ignoto' : SO.livello(n.qm); n.senzaT = !SUN && SO.senzaRiga(SO.senzaTutte(n.q.slice(WA * 4, WB * 4 + 1)));
+      n.runs = runs; n.value = SUN ? (cnt ? SO.nOre(cnt) : 'Nessuna ora') : SO.posaOre(posa); if (SUN && cnt) n.range = runs.map(r => H[r.a] + '–' + hOra(r.b)).join(' · '); if (!SUN && SO.divisa(posa)) n.range = SO.posaN(posa.larga) + ' larga · ' + SO.posaN(posa.stretta) + ' stretta';
       n.best = null; if (SUN && n.m.seeing && !qOff(n, 'seeing')) { let bk = -1, bv = 99; hs.forEach(h => { const x = n.m.seeing.d[h]; if (x != null && x < bv) { bv = x; bk = h; } }); if (bk >= 0) n.best = H[bk] + '–' + hOra(bk + 1); }
-      n.sub = (cnt ? SO.intervallo(runs, hOra) : 'nessuna ora utile ' + (SUN ? 'col Sole alto' : 'nel buio')) + (n.best ? ' · seeing migliore ' + n.best : '') + (tail ? ' · ' + tail : ''); });
+      n.sub = (SUN ? (cnt ? SO.intervallo(runs, hOra) : 'nessuna ora buona col Sole alto') : SO.posaBande(posa) || (posa.tot >= 0.05 ? 'tutte in banda larga' : 'nessuna ora di posa nel buio')) + (n.best ? ' · seeing migliore ' + n.best : '') + (tail ? ' · ' + tail : ''); });
     const ni = special ? 0 : Math.min(this.state.night, LIST.length - 1), N0 = LIST[ni];
-    const signs = ['✓', '!', '✕'], words = ['buona', 'incerta', 'non adatta'], wordsM = ['buono', 'incerto', 'non adatto'];
+    const signs = ['✓', '!', '✕'], words = ['buona', 'incerta', 'non adatta'], wordsM = words;  // al femminile come il glossario (brief 6/11, 6.9)
     const pillOf = s => s === 'ignoto' ? [t.card2, t.text] : t.pills[s];
 
     // La parola della notte e' quella dell'ora peggiore, con l'intervallo e il conto delle ore che la portano (judge.py)
     const RK = L => L === 'neutra' ? 0.5 : L;
-    const wordOf = (id, L) => L === 'neutra' ? 'fra 0.1 e 1' : L === 0 && MS[id].good ? MS[id].good : wordsM[L];
+    const wordOf = (id, L) => L === 'neutra' ? 'fra 0,1 e 1' : L === 0 && MS[id].good ? MS[id].good : wordsM[L];
     const signOf = L => L === 'neutra' ? '–' : signs[L];
     const runsOf = hs => { const out = []; hs.forEach(h => { const r = out[out.length - 1]; if (r && r.b === h) r.b = h + 1; else out.push({ a: h, b: h + 1 }); }); return out; };
     const anal = (id, d) => { let worst = null, first = 99; const hs = [];
@@ -382,9 +386,8 @@ class Component extends DCLogic {
       return { v: fv(id, x), sotto: (rain ? 'totale ' : 'media ') + winS + part + src, picco }; };
 
     // Le misure sul grafico: fino a quattro insieme, ognuna col suo colore
-    const MAXM = 99, POOL = dk ? [t.pal[2], t.pal[4], t.pal[1], t.pal[3]] : [t.pal[4], t.pal[3], t.pal[1], t.pal[2]]; // mai l'accento, mai il blu dell'umidità finché c'è
-    const disabled = id => (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew)) || (id === 'visibilita' && X.visNA) || (N0.m && N0.m[id] && N0.m[id].nubi) || (SUN && id === 'condensa');
-    // All'apertura si accendono le misure che peggiorano la qualità nella finestra
+    const POOL = dk ? [t.pal[2], t.pal[4], t.pal[1], t.pal[3]] : [t.pal[4], t.pal[3], t.pal[1], t.pal[2]]; // mai l'accento, mai il blu dell'umidità finché c'è
+    const disabled = id => (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew)) || X.na(id) || (N0.m && N0.m[id] && N0.m[id].nubi) || (SUN && id === 'condensa');
     // All'apertura il grafico disegna solo le nubi; l'umidita' e una misura alla volta si accendono a mano
     const autoM = [];
     const metrics = (this.state.metrics || (this.props.misure ? this.props.misure.split(',').map(x => x.trim()) : autoM)).filter(id => !N0.tend && N0.m && !disabled(id) && (id === 'umidita' ? !!N0.layers : !!N0.m[id]));
@@ -406,10 +409,11 @@ class Component extends DCLogic {
           on: () => set({ hover: h * 4 }), click: e => { e && e.stopPropagation && e.stopPropagation(); pinC(id, h); }, title: hh(h) + ' · ' + (x == null ? 'Non disponibile' : withU(id, x) + ' · ' + wordOf(id, lv(x))) }));
         let avc = null, st = '';
         if (spec.nubi) avc = { ...signBox('?'), sBg: t.card, title: 'Sotto le nuvole non si misura.', text: 'Torna con il cielo sereno.', act: '', short: 'non si misura', stato: 'non si misura' };
-        if (id === 'seeing' && X.seeKey) avc = { ...signBox('?'), sBg: t.card, title: 'Il seeing richiede una chiave Meteoblue.', text: '', act: 'Apri le Impostazioni', short: 'serve una chiave', stato: 'chiave' };
+        const stima = N0.m && N0.m.jet && !X.na('jet') ? SO.seeingStima(+String(N0.m.jet.v).replace(',', '.')) : null;
+        if (id === 'seeing' && X.seeKey) avc = { ...signBox('?'), sBg: t.card, title: stima ? 'Seeing ' + stima + ' · stima dal vento in quota' : 'Il seeing richiede una chiave Meteoblue.', text: stima ? 'Con una chiave Meteoblue, il numero in secondi d\u0027arco.' : '', act: 'Apri le Impostazioni', short: stima ? stima + ' · stima dal vento in quota' : 'serve una chiave', stato: 'chiave' };
         if (id === 'seeing' && X.seeBad) avc = { ...signBox('!'), title: 'Chiave Meteoblue non valida o scaduta.', text: '', act: 'Apri le Impostazioni', short: 'chiave non valida', stato: 'chiave non valida' };
         if (id === 'seeing' && X.seeNew) avc = { ...signBox('?'), sBg: t.card, title: 'Seeing in arrivo da Meteoblue.', text: 'La chiave è salvata: il seeing arriva al prossimo giro.', act: '', short: 'in arrivo', stato: 'in arrivo' };
-        if (id === 'visibilita' && X.visNA) avc = { ...signBox('?'), sBg: t.card, title: 'Non disponibile', text: 'Non tutti i modelli danno la visibilità.', act: '', short: 'non disponibile', stato: 'non disponibile' };
+        if (X.na(id)) avc = { ...signBox('?'), sBg: t.card, title: 'Non disponibile', text: 'Il servizio non ha mandato questa misura per la notte: torna col prossimo aggiornamento.', act: '', short: 'non disponibile', stato: 'non disponibile' };
         if (id === 'seeing' && X.seeMute) st = 'Ultimo aggiornamento del seeing non riuscito: dati precedenti.';
         const atH = hC != null && d[hC] != null, Lh = atH ? lv(d[hC]) : null;
         const pill = atH ? signOf(Lh) + ' ' + wordOf(id, Lh) + ' alle ' + hh(hC) : A.label;
@@ -434,7 +438,7 @@ class Component extends DCLogic {
     // Campionamento dei corredi col seeing previsto (scale simulate: nell'app arrivano gia' calcolate) (regola di Claude Code, 18/10): sotto se la scala supera meta' del seeing, sovra se e' sotto un terzo
     const seeV = !SUN && N0.m && N0.m.seeing && N0.m.seeing.v && !X.seeKey && !X.seeBad ? parseFloat(String(N0.m.seeing.v).replace(',', '.')) : null;
     const camp = seeV ? { see: N0.m.seeing.v, righe: [['103APO · ASI2600MM', 1.11], ['Notte in quota', 1.94], ['103APO · ASI294MC', 1.36], ['Casa leggero', 3.82], ['Planetarie', 0.55]].map(([n, sc]) => { const k = sc > seeV / 2 ? 'sotto' : sc < seeV / 3 ? 'sovra' : 'ok';
-      return { n, sc: sc.toFixed(2) + '″/px', es: k === 'ok' ? 0 : 1, l: k === 'ok' ? 'ottimo' : k === 'sotto' ? 'sottocampionato' : 'sovracampionato', nota: 'ottimo con seeing fra ' + (2 * sc).toFixed(1) + ' e ' + (3 * sc).toFixed(1) + '″' }; }) } : null;
+      return { n, sc: SO.num(sc, 2) + '″/px', es: k === 'ok' ? 0 : 1, l: k === 'ok' ? 'ottimo' : k === 'sotto' ? 'sottocampionato' : 'sovracampionato', nota: 'ottimo con seeing fra ' + SO.num(2 * sc, 1) + ' e ' + SO.num(3 * sc, 1) + '″' }; }) } : null;
     const open = this.state.open;
     const telItems = [];
     cards.forEach((c, i) => { c.open = open === c.id; c.chev = c.open ? '▴' : '▾'; c.tap = () => { const o = { ...cardH }; delete o[c.id]; set({ open: open === c.id ? null : c.id, cardH: o }); }; telItems.push({ card: c });
@@ -442,7 +446,7 @@ class Component extends DCLogic {
 
     // Gli altri fattori (contratto): pesano accanto al verdetto senza cambiarlo. Ordine del backend: da «non adatto» a «buono», a pari parola chi comincia prima.
     let pesa = { when: N0.when, verdict: null, rows: [], empty: '', more: null, altri: null, title: 'Gli altri fattori', lab: '' };
-    if (X.senzaBuio) { pesa.when = 'domenica 21 giugno'; pesa.empty = 'Il cielo non arriva al buio: le ore utili si contano col Sole sotto l\u0027orizzonte.'; }
+    if (X.senzaBuio) { pesa.when = 'domenica 21 giugno'; pesa.empty = 'Il cielo non arriva al buio: le ore di posa si contano col Sole sotto l\u0027orizzonte.'; }
     else if (N0.m && !N0.tend) {
       const FX = cards.filter(c => c.id !== 'nuvole').map(c => c.ok ? { k: c.k, id: c.id, rank: c.A.rank, first: c.A.first, es: c.A.s, pillT: c.A.word, when: c.A.when, t: c.A.when + (c.vS ? ' · ' + c.vS : ''), plot: c.canPlot }
         : { k: c.k, id: c.id, rank: -1, first: 99, es: c.es, pillT: c.av.short, when: '', t: c.av.title, plot: false });
@@ -464,10 +468,10 @@ class Component extends DCLogic {
           const lv = SO.livello, story = [];
         for (let h = WA; h <= WB; h++) { const q = N0.q && N0.q[h * 4], last = story[story.length - 1];
           if (!q) { if (last && last.nul) last.b = h + 1; else story.push({ a: h, b: h + 1, nul: true }); continue; }
-          const L = lv(q.v), why = L === 0 ? '' : q.why;
-          if (last && !last.nul && last.L === L && last.why === why) { last.b = h + 1; if (q.v < last.mv) { last.mv = q.v; last.mw = q.why; } } else story.push({ a: h, b: h + 1, L, why, mv: q.v, mw: q.why }); }
+          const L = lv(q.v);
+          if (last && !last.nul && last.L === L) { last.b = h + 1; if (q.v < last.mv) last.mv = q.v; } else story.push({ a: h, b: h + 1, L, mv: q.v }); }
         story.forEach(r => { if (r.nul) add(iH(r.a), 'Nuvole non disponibili', 'copertura incompleta fino alle ' + hh(r.b), 'esito', { L: 'ignoto', p: 1 });
-          else add(iH(r.a), ['Diventa buona', 'Diventa incerta', 'Diventa non adatta'][r.L], r.L === 0 ? (r.mv >= 85 ? 'nessun limite' : 'qualit\u00e0 da ' + Math.round(r.mv) + ' \u00b7 il primo limite \u00e8 ' + r.mw) : 'limita ' + r.why + ' \u00b7 qualit\u00e0 fino a ' + Math.round(r.mv), 'esito', { L: r.L, p: 1 }); });
+          else add(iH(r.a), ['Diventa buona', 'Diventa incerta', 'Diventa non adatta'][r.L], (r.L === 0 ? 'trasparenza da ' : 'trasparenza fino a ') + Math.round(r.mv), 'esito', { L: r.L, p: 1 }); });
         const nd = N0.m.nuvole.d; let pl = null; for (let h = WA; h <= WB; h++) { const x = nd[h]; if (x == null) continue; const L = SO.esito.nuvole(x);
           if (pl != null && L !== pl) add(iH(h), L > pl ? 'Nuvole oltre il ' + (L === 2 ? 50 : 25) + '%' : 'Nuvole sotto il ' + (pl === 2 ? 50 : 25) + '%', 'al ' + Math.round(x) + '%', 'misura'); pl = L; }
         const pd = N0.m.pioggia && N0.m.pioggia.d; if (pd) { let on = false; for (let h = 0; h < 14; h++) { const r = pd[h] > 0; if (r && !on) add(iH(h), 'Inizia la pioggia', withU('pioggia', pd[h]) + ' nell\u0027ora', 'misura'); if (!r && on) add(iH(h), 'Finisce la pioggia', '', 'misura'); on = r; } }
@@ -501,17 +505,17 @@ class Component extends DCLogic {
     }
     if (pesa.labT == null) pesa.labT = pesa.lab;
     const fixP = r => ({ ...r, es: r.es ?? 'neutra', pillT: r.pillT ?? r.pill }); pesa.rows = pesa.rows.map(fixP); if (pesa.more) pesa.more = pesa.more.map(fixP);
-    const facts = X.senzaBuio ? [{ k: 'Sole sotto l\u0027orizzonte', v: '22:44–03:56', s: 'mai oltre il nautico' }, { k: 'Ore utili', v: '5 ore', s: 'dalle 23:00 alle 04:00' }]
+    const facts = X.senzaBuio ? [{ k: 'Sole sotto l\u0027orizzonte', v: '22:44–03:56', s: 'mai oltre il nautico' }, { k: 'Ore di posa', v: '4,2 ore', s: 'dalle 23:00 alle 04:00, tutte in banda larga' }]
       : SUN ? [{ k: 'Sole sopra l\u0027orizzonte', v: N0.sun[0] + '–' + N0.sun[1], s: N0.sun[2] }]
       : pesa.ev ? []
-      : [{ k: 'Buio', v: N0.buio, s: '9 ore' }].concat(N0.qm != null ? [{ k: 'Qualità della notte', v: Math.round(N0.qm) + '/100', s: 'media nel buio · decide il verdetto' }] : []);
+      : [{ k: 'Buio', v: N0.buio, s: '9 ore' }].concat(N0.qm != null ? [{ k: 'Trasparenza della notte', v: Math.round(N0.qm) + '/100', s: 'media nel buio · decide il verdetto' }] : []);
 
     // Protagonista
     let hv;
     if (X.soleSu) hv = { name: 'Notte di sabato 20 giugno · a Capo Nord', value: 'Nessun buio', label: '', pill: '', sub: 'Il Sole non tramonta: nessuna ora di buio.', chart: false, fs: '44px', fsTel: '32px' };
-    else if (X.senzaBuio) hv = { name: 'Notte di domenica 21 giugno · a Oslo', value: '5 ore', label: 'ore utili col Sole sotto l\u0027orizzonte', pill: '✓ buona', pBg: t.pills[0][0], pFg: t.pills[0][1], sub: 'dalle 23:00 alle 04:00, 5 ore · 3 modelli d\u0027accordo su 4', chart: true, fs: '64px', fsTel: '48px' };
+    else if (X.senzaBuio) hv = { name: 'Notte di domenica 21 giugno · a Oslo', value: '4,2 ore', label: 'ore di posa col Sole sotto l\u0027orizzonte', pill: '✓ buona', pBg: t.pills[0][0], pFg: t.pills[0][1], sub: 'dalle 23:00 alle 04:00, tutte in banda larga · 3 modelli d\u0027accordo su 4', chart: true, fs: '64px', fsTel: '48px' };
     else { const s = N0.s, pb = s === 'ignoto' ? null : t.pills[s]; // v51: esiti coi colori fissi, anche «buona»
-      hv = { name: N0.name, value: N0.value, label: SUN ? (N0.tend ? 'Sole sopra l\u0027orizzonte' : 'ore utili') : N0.tend ? 'buio' : s === 'ignoto' ? '' : 'ore utili', pill: s === 'ignoto' ? '' : signs[s] + ' ' + words[s], pBg: pb && pb[0], pFg: pb && pb[1],
+      hv = { name: N0.name, value: N0.value, label: SUN ? '' : N0.tend ? 'buio' : s === 'ignoto' ? '' : 'ore di posa', pill: s === 'ignoto' ? '' : signs[s] + ' ' + words[s], pBg: pb && pb[0], pFg: pb && pb[1],
         sub: N0.sub + (N0.senzaT ? ' · ' + N0.senzaT : '') + (N0.tend ? (SUN ? '. Dal quarto giorno la previsione è una tendenza, meno affidabile e senza dettaglio orario.' : '. Dalla quarta notte la previsione è una tendenza, meno affidabile e senza dettaglio orario.') : ''), chart: true,
         fs: s === 'ignoto' ? '52px' : '64px', fsTel: s === 'ignoto' ? '36px' : '48px' }; }
     const hvVal = ce('span', { key: 'hv-' + ni + '-' + objK + '-' + stato, style: { display: 'inline-block', animation: 'alFadeUp .45s ease-out both' } }, hv.value);
@@ -555,7 +559,7 @@ class Component extends DCLogic {
       const raw = N0.m[id].d; let vv = raw.filter(x => x != null), mn = Math.min(...vv), mx = Math.max(...vv); if (id === 'pioggia' || id === 'aerosol') mn = 0; if (id === 'visibilita') { mn = 0; mx = 20; } if (mx - mn < 1e-9) { mn -= 1; mx += 1; }
       return { id, n: MS[id].k, vals: Qv(raw), raw, pct: false, mn, mx, lv: x => lvOf(id, x), fmt: v => withU(id, v), c: colOf[id] }; });
     const QUAL = N0.q && !X.senzaBuio && !N0.tend ? N0.q : null;
-    const qName = SUN ? 'Qualità del giorno' : 'Qualità della notte';
+    const qName = 'Trasparenza';
     // La scala di ogni misura arriva col backend (axis_*): la visibilita' da 0 a 20 km con la radice (axis_curve: sqrt)
     const ySer = s => v => s.pct ? yP(v) : s.id === 'visibilita' ? 185 - Math.sqrt(Math.max(0, Math.min(v, 20)) / 20) * 160 : 185 - (v - s.mn) / (s.mx - s.mn) * 160;
     const idx = hov ?? (SUN ? 16 : 20), key = ni + '-' + modo + '-' + stato + '-' + objK;
@@ -594,7 +598,7 @@ class Component extends DCLogic {
         [[sr.mx, 12.5], [sr.mn, 92.5]].forEach(([v, top]) => over.push(ce('span', { key: 'ax' + sk + top, style: { position: 'absolute', right: 0, top: top + '%', transform: 'translate(calc(100% + 4px),-50%)', fontSize: 11, color: t.hMu, whiteSpace: 'nowrap', pointerEvents: 'none' } }, withU(sr.id, v)))); }
       els.push(wipe(sk, 0, gs)); });
     if (N0.tend) { els.push(wipe('tl-' + key, 0.1, ce('line', { x1: SUN ? 102 : 200, x2: SUN ? 942 : 843, y1: yP(N0.cloud), y2: yP(N0.cloud), stroke: t.hFg, strokeWidth: 1.75, strokeDasharray: '6 5', vectorEffect: 'non-scaling-stroke' })));
-      over.push(ce('span', { key: 'tlab' + key, style: { animation: 'alFade .4s ease-out .6s both', position: 'absolute', left: SUN ? '12%' : '21%', top: 'calc(' + (yP(N0.cloud) / 2) + '% - 24px)', fontSize: 12, color: t.hFg } }, 'nuvole al ' + N0.cloud + '% ' + (SUN ? 'col Sole alto' : 'nel buio') + ' · senza dettaglio orario')); }
+      over.push(ce('span', { key: 'tlab' + key, style: { animation: 'alFade .4s ease-out .6s both', position: 'absolute', left: SUN ? '12%' : '21%', top: 'calc(' + (yP(N0.cloud) / 2) + '% - 24px)', fontSize: 12, color: t.hFg } }, SO.cieloT(N0.cloud) + ' ' + (SUN ? 'col Sole alto' : 'nel buio') + ' · senza dettaglio orario')); }
     const svg = ce('svg', { key: key, viewBox: '0 0 1000 200', preserveAspectRatio: 'none', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible' } },
       ce('defs', null, ce('pattern', { id: 'hz-' + modo, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, ce('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: t.hMu, strokeOpacity: 0.5, strokeWidth: 1.5 }))), els);
     const interactive = !!LQ && !N0.tend;
@@ -602,10 +606,10 @@ class Component extends DCLogic {
     const dotOf = (v, yf, c, k) => v == null ? null : ce('span', { key: k, style: { position: 'absolute', left: left + '%', top: (yf(v) / 2) + '%', width: 0, height: 0, pointerEvents: 'none', zIndex: 2, transition: 'left .16s ease-out, top .16s ease-out' } },
       ce('span', { style: { position: 'absolute', left: -11, top: -11, width: 22, height: 22, borderRadius: '50%', background: c, opacity: 0.22 } }), ce('span', { style: { position: 'absolute', left: -5.5, top: -5.5, width: 11, height: 11, borderRadius: '50%', background: 'var(--punto-chiaro)', boxShadow: '0 0 0 2px ' + c } }));
     const tipRows = interactive ? [['Nuvole basse', LQ.b[idx], t.hFg], ['medie', LQ.m[idx], rgba(t.hFg, 0.6)], ['alte', LQ.a[idx], rgba(t.hFg, 0.35)]].map(([n, v, c]) => ({ n, c, v: v == null ? 'Non disponibile' : Math.round(v) + '%' })) : [];
-    if (interactive && QUAL) { const q = QUAL[idx]; tipRows.unshift({ n: 'Qualità', c: t.hBar, v: q == null ? 'Non disponibile' : Math.round(q.v) + (q.v >= 99.5 ? ' · nessun limite' : ' · limita ' + q.why) + (q.v > 0 && (X.seeKey || X.seeBad || X.seeNew || X.seePart) && SO.senzaRiga(q.senza) ? ' · ' + SO.senzaRiga(q.senza) : '') }); }
+    if (interactive && QUAL) { const q = QUAL[idx]; tipRows.unshift({ n: 'Trasparenza', c: t.hBar, v: q == null ? 'Non disponibile' : Math.round(q.v) + (q.v > 0 && SO.senzaRiga(q.senza) ? ' · ' + SO.senzaRiga(q.senza) : '') }); }
     if (interactive && body) tipRows.push({ n: body.n, c: body.c, v: (body.alt[idx] < 0 ? 'sotto l\u0027orizzonte' : Math.round(body.alt[idx]) + '°') + (body.n === 'Luna' && N0.luna ? ' · illuminata ' + AL.al(N0.luna[0]) + N0.luna[0] + '%' + (N0.rip && idx >= N0.rip.i0 && idx < N0.rip.i1 ? ' · ' + SO.nomiRipresa[SO.ripresa(N0.rip.fase, body.alt[idx])] : '') : '') });
     SER.forEach(sr => { const v = sr.vals[idx]; tipRows.push({ n: sr.n, c: sr.pct ? sr.c : t.hFg, v: v == null ? 'Non disponibile' : sr.fmt(v) + (sr.pct ? '' : ' · ' + wordOf(sr.id, sr.lv(v))) }); });
-    if (interactive && !SUN) { const hI = Math.min(13, Math.floor(idx / 4)), x = LAY.b && N0.m.nuvole.d[hI]; tipRows.push({ n: 'Cielo', c: t.hBar, v: !inW(hI) ? 'fuori dal buio' : x == null ? 'Non disponibile' : N0.q && N0.q[hI * 4] && N0.q[hI * 4].v >= GOOD ? 'ora utile' : 'ora non utile' }); }
+    if (interactive && !SUN) { const hI = Math.min(13, Math.floor(idx / 4)), x = LAY.b && N0.m.nuvole.d[hI]; tipRows.push({ n: 'Cielo', c: t.hBar, v: !inW(hI) ? 'fuori dal buio' : x == null ? 'Non disponibile' : N0.q && N0.q[hI * 4] ? SO.posaN(SO.trasparenzaOra(N0.q[hI * 4].v === 0, x, N0.m.aerosol && !qOff(N0, 'aerosol') ? N0.m.aerosol.d[hI] : null) / 100) + ' ore di posa' : 'Non disponibile' }); }
     const tip = ce('div', { className: 'al-riquadro al-riquadro--lista', role: 'tooltip', style: { position: 'absolute', top: tel ? -10 : 4, left: tel ? 0 : left + '%', transform: tel ? 'translateY(-100%)' : flip ? 'translateX(calc(-100% - 14px))' : 'translateX(14px)', zIndex: 3, animation: 'alFade .15s ease-out both', transition: tel ? 'none' : 'left .16s ease-out' } },
       ce('b', { style: { fontWeight: 600, fontSize: 13 } }, 'alle ' + fmtT(idx)),
       tipRows.map((r, k) => ce('span', { key: k, style: { display: 'flex', alignItems: 'center', gap: 8 } }, ce('i', { style: { width: 8, height: 8, borderRadius: '50%', background: r.c } }), ce('span', { style: { flex: 1 } }, r.n), ce('b', { style: { fontWeight: 600, marginLeft: 12 } }, r.v))));
@@ -631,9 +635,9 @@ class Component extends DCLogic {
       .concat(body ? [{ n: body.n, c: 'transparent', b: body.c, note: '' }] : []).concat(QUAL ? [{ n: qName, c: t.hBar, b: t.hBar, note: '' }] : [])
       .concat(SER.map(sr => ({ n: sr.pct ? sr.n + '%' : sr.n, c: sr.pct ? sr.c : ESC0[0], b: sr.pct ? sr.c : t.hMu, note: sr.pct ? '' : 'a destra, col colore del giudizio' })));
     const SC = [['umidita', 'umidità %'], ['condensa', 'condensa'], ['pioggia', 'pioggia'], ['vento', 'vento'], ['seeing', 'seeing'], ['jet', 'jet stream'], ['aerosol', 'aerosol'], ['visibilita', 'visibilità']]
-      .filter(([id]) => !(id === 'visibilita' && X.visNA) && !(SUN && id === 'condensa'));
-    const scaleOpts = SC.map(([id, l]) => { const sel = metrics.includes(id), full = !sel && metrics.length >= MAXM, dis = !!disabled(id) || full;
-      return { l, sel, dis, title: full ? 'Al massimo quattro misure insieme' : disabled(id) ? (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew) ? (X.seeNew ? 'Il seeing arriva da Meteoblue al prossimo giro.' : 'Il seeing richiede una chiave Meteoblue.') : 'Sotto le nuvole non si misura') : (id === 'umidita' ? 'in %, sulla scala di sinistra' : 'una alla volta, sulla scala di destra'),
+      .filter(([id]) => !X.na(id) && !(SUN && id === 'condensa'));
+    const scaleOpts = SC.map(([id, l]) => { const sel = metrics.includes(id), dis = !!disabled(id);
+      return { l, sel, dis, title: disabled(id) ? (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew) ? (X.seeNew ? 'Il seeing arriva da Meteoblue al prossimo giro.' : 'Il seeing richiede una chiave Meteoblue.') : 'Sotto le nuvole non si misura') : (id === 'umidita' ? 'in %, sulla scala di sinistra' : 'una alla volta, sulla scala di destra'),
         op: dis ? 0.45 : 1, cur: dis ? 'not-allowed' : 'pointer', bg: sel ? t.hTrack : 'transparent', ring: sel ? colOf[id] : t.line, dot: sel ? colOf[id] : 'transparent', dotRing: sel ? colOf[id] : t.hMu, on: dis ? null : () => toggleM(id) }; });
     const scaleP = scaleOpts.map(o => ({ l: o.l, sel: o.sel, no: o.dis, titolo: o.title || undefined, colore: o.sel ? o.ring : null, on: o.on }));
     const scaleCount = metrics.length ? '· ' + metrics.length + (metrics.length === 1 ? ' accesa' : ' accese') : '';
@@ -644,7 +648,7 @@ class Component extends DCLogic {
     const chartHint = !interactive ? '' : noMouse ? 'Tocca il grafico o le barrette per vedere un\u0027ora' : 'Passa sul grafico per vedere un\u0027ora · frecce per spostarti, Esc per tornare alla notte';
     const seeCred = !SUN || true ? !(X.seeKey || X.seeBad || X.seeNew) : false;
     const credT = 'Previsione: Weather data by Open-Meteo.com' + (seeCred ? ' · Seeing: meteoblue' : '') + ' · Orari in ora locale del sito';
-    return { pronto: true, chartHint, seeCred, credT, ripV: !SUN && !special && N0.rip ? N0.rip : null, SK,  modo, accento: this.props.accento, setModo: m => set({ modo: m }), site, protCols: X.soleSu ? 12 : 8, F, S, t, head, status, av, models, modelL: model, mmenu: this.state.mmenu, mmenuToggle: () => set({ mmenu: !this.state.mmenu }),
+    return { camsY: String(ALdati.oggi.y), soleNo: SUN && !special && !X.loading && !av, pronto: true, chartHint, seeCred, credT, ripV: !SUN && !special && N0.rip ? N0.rip : null, SK,  modo, accento: this.props.accento, setModo: m => set({ modo: m }), site, protCols: X.soleSu ? 12 : 8, F, S, t, head, status, av, models, modelL: model, mmenu: this.state.mmenu, mmenuToggle: () => set({ mmenu: !this.state.mmenu }),
       tiles, hv, chart, bandKey, legend, scaleOpts, scaleP, pesa, facts, cards, cardsSub, cardsSubTel, extra, camp, telItems, protSpan: X.soleSu ? 'span 12' : 'span 8',
       hvVal, tickHours, tickHoursTel, objOpts, cardsTitle, stripL, scaleCount };
   }

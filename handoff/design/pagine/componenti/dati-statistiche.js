@@ -1,5 +1,5 @@
 // AstroLog · Statistiche, dati simulati (ADR 0024). Nell'app i numeri li manda il backend; qui li inventa un generatore fisso.
-// Oggi e' il 30 settembre 2026. Qualita' della notte 0-100 (ADR 0020): buona da 70. Misure dei frame allo zenit (ADR 0022).
+// Oggi e' il 30 settembre 2026. Trasparenza della notte 0-100 (ADR 0034): buona da 70. Misure dei frame allo zenit (ADR 0022).
 window.ALstat = (function () {
   const OGGI = { y: 2026, m: 9, d: 30 };
   const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
@@ -10,7 +10,7 @@ window.ALstat = (function () {
     newton: { n: 'Newton 200/800 · ASI533MC Pro', scala: 0.97, colori: true, bias: true, tipo: [['galassie', 0.6], ['ammassi', 0.25], ['nebulose', 0.15]] },
     redcat: { n: 'RedCat 51 · ASI294MC Pro', scala: 3.82, colori: true, bias: true, tipo: [['nebulose', 0.8], ['ammassi', 0.1], ['galassie', 0.1]] },
     fra: { n: 'Askar FRA400 · ASI2600MM Pro', scala: 1.94, bias: true, tipo: [['nebulose', 0.6], ['galassie', 0.3], ['ammassi', 0.1]] },
-    fra07: { n: 'Askar FRA400 · ASI2600MM Pro · riduttore 0.7×', scala: 2.77, bias: true, tipo: [['nebulose', 0.85], ['galassie', 0.15]] } };
+    fra07: { n: 'Askar FRA400 · ASI2600MM Pro · riduttore 0,7×', scala: 2.77, bias: true, tipo: [['nebulose', 0.85], ['galassie', 0.15]] } };
   const ORDINE = ['newton', 'redcat', 'fra', 'fra07'];
   const POOL = { nebulose: ['IC 1396', 'NGC 7000', 'NGC 6992', 'NGC 6960', 'IC 5070', 'NGC 7635', 'IC 5146', 'M 42', 'NGC 2237', 'IC 434', 'M 16', 'NGC 6888', 'Sh2-129', 'IC 1805', 'IC 1848', 'M 8'],
     galassie: ['M 31', 'M 33', 'NGC 7331', 'NGC 891', 'M 81', 'M 82', 'M 101', 'M 51', 'NGC 4565', 'M 63', 'M 106', 'NGC 2403'], ammassi: ['M 13', 'M 92', 'M 45', 'M 15', 'M 39', 'NGC 869', 'M 3', 'M 5'] };

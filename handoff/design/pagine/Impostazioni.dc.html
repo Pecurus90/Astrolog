@@ -14,18 +14,26 @@
 <div class="al-imp__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
 <sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
 <input class="al-imp__blocco-2" type="file" accept=".hrz,.txt,text/plain" ref="{{ fileRef }}" onChange="{{ onFile }}" aria-hidden="true" tabindex="-1">
-<sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="desktop" pagina="Impostazioni" etichetta="Impostazioni" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" app="{{ appSt }}" formato="desktop" pagina="Impostazioni" etichetta="Impostazioni" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
 <div class="al-imp__griglia-1">
-<div class="al-imp__riga-1"><span class="al-imp__riga-2"><span class="al-imp__testo-1 al-solo-voce">Impostazioni</span><span class="al-imp__testo-2">{{ tabSub }}</span></span><sc-if value="{{ tab.siti }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-3"><sc-for list="{{ siti }}" as="s" hint-placeholder-count="2"><a class="al-imp__pillola-1" href="#" onClick="{{ s.on }}" aria-pressed="{{ s.sel }}" style="font-weight:{{ s.fw }};background:{{ s.bg }};color:{{ s.fg }};box-shadow:inset 0 0 0 2px {{ s.ring }}">{{ s.l }}</a></sc-for></span></sc-if></div>
+<sc-if value="{{ salvaErr }}" hint-placeholder-val="{{ false }}"><div style="grid-column:1 / -1"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="!" titolo="Impostazione non salvata: AstroLog non risponde, riprova." azione="Riprova" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,44px"></dc-import></div></sc-if>
+<div class="al-imp__riga-1"><span class="al-imp__riga-2"><span class="al-imp__testo-1 al-solo-voce">Impostazioni</span><span class="al-imp__testo-2">{{ tabSub }}</span></span><sc-if value="{{ tab.siti }}" hint-placeholder-val="{{ false }}"><span class="al-imp__siti"><sc-for list="{{ siti }}" as="s" hint-placeholder-count="3"><a class="al-imp__pillola-1" href="#" onClick="{{ s.on }}" aria-pressed="{{ s.sel }}" style="font-weight:{{ s.fw }};background:{{ s.bg }};color:{{ s.fg }};box-shadow:inset 0 0 0 2px {{ s.ring }}">{{ s.l }}</a></sc-for><a href="#" onClick="{{ aggiungi.on }}" aria-pressed="{{ aggiungi.sel }}" class="al-bottone al-bottone--contorno al-imp__aggiungi">+ Aggiungi sito</a></span></sc-if></div>
 <div role="tablist" aria-label="Sezioni" class="al-scelta al-scelta--linguette al-scelta--sottili al-imp__blocco-3"><sc-for list="{{ tabs }}" as="g" hint-placeholder-count="8"><a href="#" role="tab" aria-selected="{{ g.sel }}" onClick="{{ g.on }}" class="al-scelta__voce">{{ g.l }}</a></sc-for></div>
 
 <sc-if value="{{ tab.generale }}" hint-placeholder-val="{{ true }}"><div class="al-imp__griglia-2">
-<dc-import name="componenti/Carta" colonne="4" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Nome utente" hint-size="100%,200px">
+<div class="al-imp__pila">
+<dc-import name="componenti/Carta" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Nome utente" hint-size="100%,200px">
 <span class="al-imp__testo-3">Nome utente</span>
 <span class="al-imp__riga-4"><input value="{{ nome.v }}" onChange="{{ nome.on }}" aria-label="Nome utente" placeholder="Il tuo nome" class="al-campo al-imp__blocco-4"><a class="al-imp__riga-5" href="#" onClick="{{ nome.salva }}" aria-disabled="{{ nome.dis }}" style="background:{{ nome.bg }};color:{{ nome.fg }}">Salva</a></span>
 <sc-if value="{{ nome.fatto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-4">✓ Salvato</span></sc-if>
 <span class="al-imp__testo-5">Usato per intestare le statistiche.</span>
 </dc-import>
+<dc-import name="componenti/Carta" ritardo="30" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Lingua" hint-size="100%,160px">
+<span class="al-imp__testo-3">Lingua</span>
+<span role="radiogroup" aria-label="Lingua" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ lingua }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span>
+<span class="al-imp__testo-5">Le parole dell'app. I nomi letti dai file restano come sono.</span>
+</dc-import>
+</div>
 <dc-import name="componenti/Carta" colonne="8" ritardo="60" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Tema" hint-size="100%,320px">
 <span class="al-imp__riga-6"><span class="al-imp__testo-3">Tema</span><span class="al-imp__testo-5">come si vede l'app</span></span>
 <dc-import name="componenti/SceltaTema" modo="{{ modoSc }}" accento="{{ accento }}" sito="Cima Ekar" formato="desktop" on-modo="{{ setModoSc }}" on-accento="{{ setAccento }}" hint-size="100%,240px"></dc-import>
@@ -33,9 +41,11 @@
 </div></sc-if>
 
 <sc-if value="{{ tab.siti }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
-<dc-import name="componenti/Carta" colonne="5" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il sito" hint-size="100%,420px">
-<span class="al-imp__testo-6">{{ sitoN }}</span>
-<sc-for list="{{ righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__griglia-3"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
+<sc-if value="{{ vSito.sito }}" hint-placeholder-val="{{ true }}">
+<dc-import name="componenti/Carta" formato="desktop" colonne="5" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il sito" hint-size="100%,560px">
+<sc-if value="{{ rin.off }}" hint-placeholder-val="{{ true }}"><div class="al-imp__sito-testa"><span class="al-imp__sito-nome">{{ sitoN }}</span><a href="#" onClick="{{ rin.apri }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Rinomina</a></div></sc-if>
+<sc-if value="{{ rin.on }}" hint-placeholder-val="{{ false }}"><div class="al-imp__sito-rin"><span class="al-imp__riga-4"><input value="{{ rin.v }}" onChange="{{ rin.onV }}" aria-label="Nome del sito" aria-invalid="{{ rin.dis }}" class="al-campo al-imp__blocco-4"><a href="#" onClick="{{ rin.salva }}" aria-disabled="{{ rin.dis }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">Salva</a><a href="#" onClick="{{ rin.annulla }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span><sc-if value="{{ rin.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ rin.err }}</span></sc-if></div></sc-if>
+<sc-for list="{{ righe }}" as="r" hint-placeholder-count="5"><div class="al-imp__griglia-3"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
 <div class="al-imp__griglia-3"><span class="al-imp__testo-2">Predefinito</span><span class="al-imp__colonna-2"><b class="al-imp__testo-7">{{ pred.v }}</b><sc-if value="{{ pred.on }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ pred.on }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Usa come predefinito</a></sc-if><span class="al-imp__testo-8">Il sito dei conti quando una notte non ne ha uno.</span></span></div>
 <div class="al-imp__griglia-4">
 <span class="al-imp__testo-2">Orizzonte</span>
@@ -47,8 +57,26 @@
 <span class="al-imp__testo-11">File dell'orizzonte di N.I.N.A.: azimut e altezza in gradi, una coppia per riga.</span>
 </span>
 </div>
+<div class="al-imp__sito-fondo">
+<sc-if value="{{ del.btn }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ del.apri }}" aria-disabled="{{ del.dis }}" class="al-bottone al-bottone--pericolo al-bottone--piccolo al-imp__elimina">Elimina il sito</a><span class="al-imp__testo-8">{{ del.txt }}</span></sc-if>
+<sc-if value="{{ del.conf }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello" role="alert"><span>{{ del.domanda }}</span><span class="al-imp__sito-gesti"><a href="#" onClick="{{ del.si }}" class="al-bottone al-bottone--pericolo al-bottone--piccolo">Elimina</a><a href="#" onClick="{{ del.annulla }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span></div></sc-if>
+</div>
 </dc-import>
-<dc-import name="componenti/Carta" colonne="7" ritardo="60" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="L'orizzonte a 360°" hint-size="100%,560px">
+<dc-import name="componenti/Carta" formato="desktop" colonne="7" ritardo="60" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il cielo del sito" hint-size="100%,560px">
+<div class="al-imp__riga-9"><span class="al-imp__testo-3">Il cielo del sito</span><span class="al-imp__testo-5">quattro vie, una alla volta</span></div>
+<sc-if value="{{ cielo.prop }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello"><span class="al-imp__sel-come"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" segno="?" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import><span>{{ cielo.prop.t }}</span></span><span class="al-imp__sito-gesti"><sc-for list="{{ cielo.prop.gesti }}" as="g" hint-placeholder-count="2"><a href="#" onClick="{{ g.on }}" class="{{ g.cls }}">{{ g.l }}</a></sc-for></span></div></sc-if>
+<sc-if value="{{ cielo.esito }}" hint-placeholder-val="{{ false }}"><span class="al-imp__cielo-esito" role="status">✓ {{ cielo.esito }}</span></sc-if>
+<div class="al-imp__cielo-riga"><span class="al-imp__testo-2">Ora</span><span class="al-imp__cielo-val">{{ cielo.v }}</span><span class="al-imp__testo-5">{{ cielo.da }}</span></div>
+<div class="al-imp__cielo-riga"><span class="al-imp__testo-2">Da dove viene</span>
+<span class="al-imp__riga-17" role="group" aria-label="Da dove viene il cielo"><sc-for list="{{ cielo.vie }}" as="o" hint-placeholder-count="4"><a class="al-imp__riga-18" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for><sc-if value="{{ cielo.vuota }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ cielo.vuota }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Lascia vuoto</a></sc-if></span>
+<sc-if value="{{ cielo.bp }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17" role="group" aria-label="Classe di Bortle"><sc-for list="{{ cielo.bp }}" as="o" hint-placeholder-count="9"><a class="al-imp__riga-18" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if>
+<sc-if value="{{ cielo.sq }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-12"><input type="text" inputmode="decimal" value="{{ cielo.sq.v }}" onChange="{{ cielo.sq.on }}" placeholder="21,4" aria-label="SQM del sito, in magnitudini per secondo d'arco quadrato" aria-invalid="{{ cielo.sq.inv }}" class="al-campo al-campo--numero al-campo--piccolo al-imp__blocco-19"><span class="al-imp__testo-2">mag/″²</span></span><sc-if value="{{ cielo.sq.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ cielo.sq.err }}</span></sc-if></sc-if>
+<span class="al-imp__testo-11">{{ cielo.nota }}</span>
+<sc-if value="{{ cielo.servizi }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ cielo.servizi }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-10">Apri Servizi</a></sc-if>
+</div>
+<div class="al-imp__cielo-riga"><span class="al-imp__testo-2">Le misure dei frame</span><span class="al-imp__mesi" role="img" aria-label="{{ cielo.mesiA }}"><sc-for list="{{ cielo.mesi }}" as="m" hint-placeholder-count="12"><span class="{{ m.cls }}" title="{{ m.al }}">{{ m.l }}</span></sc-for></span><span class="al-imp__testo-9">{{ cielo.mesiT }}</span><span class="al-imp__testo-11">{{ cielo.regola }}</span></div>
+</dc-import>
+<dc-import name="componenti/Carta" colonne="12" ritardo="120" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="L'orizzonte a 360°" hint-size="100%,560px">
 <div class="al-imp__riga-6"><span class="al-imp__testo-12">L'orizzonte a 360°</span><span class="al-imp__testo-5">visto dall'alto · N in alto, E a destra</span></div>
 <div class="al-imp__griglia-5">
 <div class="al-imp__blocco-5">{{ disegno }}</div>
@@ -59,15 +87,34 @@
 </div>
 </div>
 </dc-import>
+</sc-if>
+<sc-if value="{{ vSito.nuovo }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="desktop" colonne="8" ritardo="0" padding="24px 28px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Nuovo sito" hint-size="100%,460px">
+<div class="al-imp__riga-6"><span class="al-imp__testo-3">Nuovo sito</span><span class="al-imp__testo-5">per nome o per coordinate</span></div>
+<span role="radiogroup" aria-label="Come trovare il sito" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ NV.per }}" as="d" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ d.sel }}" onClick="{{ d.on }}" class="al-scelta__voce">{{ d.l }}</a></sc-for></span>
+<sc-if value="{{ NV.perNome }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-4"><input value="{{ NV.q }}" onChange="{{ NV.onQ }}" aria-label="Nome del luogo" placeholder="per esempio Monte Grappa" class="al-campo al-imp__blocco-9"><a href="#" onClick="{{ NV.cerca }}" class="al-bottone al-bottone--pieno">{{ NV.cercaL }}</a></span>
+<sc-if value="{{ NV.ris }}" hint-placeholder-val="{{ false }}"><div class="al-imp__nas" role="list"><sc-for list="{{ NV.ris }}" as="r" hint-placeholder-count="2"><a href="#" role="listitem" onClick="{{ r.on }}" aria-pressed="{{ r.sel }}" class="al-imp__nas-voce"><span>{{ r.n }}</span><span class="al-imp__testo-4">{{ r.seg }}</span></a></sc-for></div></sc-if>
+<sc-if value="{{ NV.nessuno }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="?" titolo="Nessun luogo con questo nome: prova un altro nome o scrivi le coordinate." testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if></sc-if>
+<sc-if value="{{ NV.perCoord }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-4"><input value="{{ NV.lat }}" onChange="{{ NV.onLat }}" aria-label="Latitudine" placeholder="45,87 N" class="al-campo al-imp__coord"><input value="{{ NV.lon }}" onChange="{{ NV.onLon }}" aria-label="Longitudine" placeholder="11,80 E" class="al-campo al-imp__coord"></span><span class="al-imp__testo-8">Virgola o punto, e la lettera del verso: N, S, E, O.</span></sc-if>
+<sc-if value="{{ NV.pronto }}" hint-placeholder-val="{{ false }}"><div class="al-imp__nuovo-dati">
+<div class="al-imp__griglia-3"><span class="al-imp__testo-2">Nome</span><input value="{{ NV.nome }}" onChange="{{ NV.onNome }}" aria-label="Nome del sito" class="al-campo"></div>
+<sc-for list="{{ NV.anteprima }}" as="r" hint-placeholder-count="2"><div class="al-imp__griglia-3"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
+<div class="al-imp__griglia-3"><span class="al-imp__testo-2">Altitudine</span><span class="al-imp__colonna-1"><span class="al-imp__riga-12"><input type="text" inputmode="numeric" value="{{ NV.alt }}" onChange="{{ NV.onAlt }}" aria-label="Altitudine, in metri" class="al-campo al-campo--numero al-campo--piccolo al-imp__blocco-19"><span class="al-imp__testo-2">m</span></span><span class="al-imp__testo-8">{{ NV.altS }}</span></span></div>
+</div></sc-if>
+<div class="al-imp__sito-gesti al-imp__sito-fondo al-imp__sito-fondo--riga"><a href="#" onClick="{{ NV.salva }}" aria-disabled="{{ NV.dis }}" class="al-bottone al-bottone--pieno al-imp__salva">Salva sito</a><a href="#" onClick="{{ NV.annulla }}" class="al-bottone al-bottone--testo">Annulla</a></div>
+<span class="al-imp__testo-11">Il cielo e l'orizzonte si scelgono dopo, nel sito.</span>
+</dc-import></sc-if>
 </div></sc-if>
 
 <sc-if value="{{ tab.cartelle }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
 <dc-import name="componenti/Carta" colonne="8" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Cartelle" hint-size="100%,420px">
 <span class="al-imp__riga-9"><span class="al-imp__testo-3">Cartelle</span><span class="al-imp__testo-5">{{ car.conto }}</span></span>
-<sc-for list="{{ car.lista }}" as="c" hint-placeholder-count="3"><div class="al-imp__riga-10"><span class="al-imp__tondo-2" aria-hidden="true">✓</span><span class="al-imp__colonna-6"><b class="al-imp__testo-14">{{ c.p }}</b><span class="al-imp__testo-8">{{ c.n }}</span></span><a href="#" onClick="{{ c.togli }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-7">Togli</a></div></sc-for>
+<sc-for list="{{ car.lista }}" as="c" hint-placeholder-count="3"><div class="al-imp__cart"><div class="al-imp__riga-10"><span class="{{ c.tcls }}" aria-hidden="true">{{ c.s }}</span><span class="al-imp__colonna-6"><b class="al-imp__testo-14">{{ c.p }}</b><span class="al-imp__testo-8">{{ c.n }}</span></span><span class="al-imp__sito-gesti"><a href="#" onClick="{{ c.sposta }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Sposta</a><a href="#" onClick="{{ c.togli }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-7">Togli</a></span></div>
+<sc-if value="{{ c.conf }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello al-imp__cart-pannello" role="alert"><span>{{ c.confT }}</span><span class="al-imp__sito-gesti"><a href="#" onClick="{{ c.si }}" class="al-bottone al-bottone--pericolo al-bottone--piccolo">Togli la cartella</a><a href="#" onClick="{{ c.no }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span></div></sc-if>
+<sc-if value="{{ c.sp }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello al-imp__cart-pannello"><span>Il nuovo percorso di {{ c.p }}, se i file si sono spostati: i frame restano.</span><span class="al-imp__riga-4"><input value="{{ c.sp.v }}" onChange="{{ c.sp.on }}" aria-label="Nuovo percorso" placeholder="Dati/Astro/Archivio" class="al-campo al-imp__blocco-9"><a href="#" onClick="{{ c.sp.verifica }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">{{ c.sp.vl }}</a><a href="#" onClick="{{ c.sp.annulla }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span><sc-if value="{{ c.sp.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="desktop" segno="{{ c.sp.esito.s }}" titolo="{{ c.sp.esito.t }}" testo="{{ c.sp.esito.x }}" azione="{{ c.sp.esito.a }}" on-azione="{{ c.sp.esito.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if></div></sc-if></div></sc-for>
 <sc-if value="{{ car.vuota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-8">Nessuna cartella: l'archivio è vuoto.</span></sc-if>
 <div class="al-imp__colonna-7">
 <span class="al-imp__riga-11"><span class="al-imp__testo-15">Aggiungi una cartella</span><span role="radiogroup" aria-label="Dove sono i file" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ car.dove }}" as="d" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ d.sel }}" onClick="{{ d.on }}" class="al-scelta__voce">{{ d.l }}</a></sc-for></span></span>
+<sc-if value="{{ car.nas }}" hint-placeholder-val="{{ false }}"><div class="al-imp__nas"><span class="al-imp__riga-11"><span class="al-imp__testo-5">Cartella corrente: <b class="al-imp__testo-14">{{ car.nas.dir }}</b></span><sc-if value="{{ car.nas.su }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ car.nas.su }}" class="al-bottone al-bottone--testo al-bottone--piccolo">↑ Cartella superiore</a></sc-if></span><sc-for list="{{ car.nas.sub }}" as="d" hint-placeholder-count="3"><a href="#" onClick="{{ d.on }}" class="al-imp__nas-voce"><span>{{ d.n }}</span><span aria-hidden="true">›</span></a></sc-for><sc-if value="{{ car.nas.vuota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-5">Nessuna sottocartella.</span></sc-if><a href="#" onClick="{{ car.nas.sel }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-10">Seleziona questa cartella</a></div></sc-if>
 <span class="al-imp__riga-4"><input value="{{ car.perc }}" onChange="{{ car.onPerc }}" aria-label="Percorso della cartella" placeholder="{{ car.ph }}" class="al-campo al-imp__blocco-9"><a class="al-imp__riga-5" href="#" onClick="{{ car.verifica }}" aria-disabled="{{ car.dis }}" style="background:{{ car.bg }};color:{{ car.fg }}">{{ car.vl }}</a></span>
 <span class="al-imp__testo-8">{{ car.aiuto }}</span>
 <sc-if value="{{ car.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="desktop" segno="{{ car.esito.s }}" titolo="{{ car.esito.t }}" testo="{{ car.esito.x }}" azione="{{ car.esito.a }}" on-azione="{{ car.esito.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if>
@@ -82,27 +129,45 @@
 </div></sc-if>
 
 <sc-if value="{{ tab.meteo }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
-<dc-import name="componenti/Carta" colonne="7" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Seeing (Meteoblue)" hint-size="100%,320px">
-<span class="al-imp__testo-3">Seeing (Meteoblue)</span>
-<span class="al-imp__testo-9">Con una chiave Meteoblue il seeing è disponibile ora per ora, per sette notti. Senza chiave il resto del meteo funziona.</span>
-<dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="{{ key.st.s }}" titolo="{{ key.st.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
-<span class="al-imp__riga-4"><input value="{{ key.v }}" onChange="{{ key.on }}" aria-label="Chiave Meteoblue" placeholder="Chiave Meteoblue" class="al-campo al-imp__blocco-9"><a class="al-imp__riga-5" href="#" onClick="{{ key.verifica }}" aria-disabled="{{ key.dis }}" style="background:{{ key.bg }};color:{{ key.fg }}">{{ key.vl }}</a><sc-if value="{{ key.rimuovi }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ key.rimuovi }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">Rimuovi chiave</a></sc-if></span>
-<sc-if value="{{ key.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="{{ key.esito.s }}" titolo="{{ key.esito.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if>
-<a class="al-imp__blocco-11" href="https://www.meteoblue.com/it/weather-api" target="_blank" rel="noopener">Chiedi una chiave a Meteoblue ↗</a>
-</dc-import>
-<dc-import name="componenti/Carta" colonne="5" ritardo="60" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Previsione" hint-size="100%,220px">
+<dc-import name="componenti/Carta" colonne="6" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Previsione" hint-size="100%,240px">
 <span class="al-imp__testo-3">Previsione</span>
-<span class="al-imp__colonna-8"><span class="al-imp__testo-2">Meteo apre su</span><span role="radiogroup" aria-label="Meteo apre su" class="al-scelta al-scelta--linguette al-scelta--sottili"><sc-for list="{{ obiettivo }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span></span>
+<span class="al-imp__colonna-8"><span class="al-imp__testo-2">Meteo apre su</span><span role="radiogroup" aria-label="Meteo apre su" class="al-scelta al-scelta--linguette al-scelta--sottili"><sc-for list="{{ obiettivo }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" aria-disabled="{{ o.dis }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span><span class="al-imp__testo-8">Sole spento: arriva col Sole, insieme al Sistema solare.</span></span>
 <span class="al-imp__testo-16">Fonti: Open-Meteo per il meteo, Meteoblue per il seeing.</span>
+<span class="al-imp__riga-4 al-imp__allinea"><span class="al-imp__testo-9">La chiave Meteoblue, per il seeing, sta in Servizi.</span><a href="#" onClick="{{ vaiServizi }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Apri Servizi</a></span>
 </dc-import>
 </div></sc-if>
 
 <sc-if value="{{ tab.astap }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
-<dc-import name="componenti/Carta" colonne="12" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="ASTAP" hint-size="100%,360px">
+<dc-import name="componenti/Carta" colonne="12" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="ASTAP" hint-size="100%,420px">
 <span class="al-imp__riga-6"><span class="al-imp__testo-3">ASTAP</span><span class="al-imp__testo-5">il programma che identifica il campo dalle stelle (plate solving)</span></span>
-<div class="al-imp__griglia-6"><span class="al-imp__blocco-12">Percorso del programma</span><span class="al-imp__colonna-9"><span class="al-imp__riga-4"><input value="{{ ast.v }}" onChange="{{ ast.on }}" aria-label="Percorso di ASTAP" placeholder="C:\Program Files\astap\astap_cli.exe" class="al-campo al-imp__blocco-13"><a href="#" onClick="{{ ast.verifica }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">{{ ast.vl }}</a></span><span class="al-imp__testo-8">Il percorso deve terminare con il programma (astap_cli).</span><sc-if value="{{ ast.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="{{ ast.esito.s }}" titolo="{{ ast.esito.t }}" testo="{{ ast.esito.x }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if></span></div>
-<sc-for list="{{ ast.cat }}" as="c" hint-placeholder-count="2"><div class="al-imp__griglia-7"><span class="al-imp__testo-2">{{ c.l }}</span><span class="al-imp__riga-12"><span class="al-imp__riga-13" style="background:{{ c.bg }};color:{{ c.fg }}">{{ c.s }} {{ c.v }}</span></span><span class="al-imp__testo-5">{{ c.d }}</span></div></sc-for>
+<div class="al-imp__griglia-6"><span class="al-imp__blocco-12">Da dove viene</span><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ ast.canale }}</b><span class="al-imp__testo-8">{{ ast.canaleS }}</span></span></div>
+<div class="al-imp__griglia-6"><span class="al-imp__blocco-12">Percorso del programma</span><span class="al-imp__colonna-9"><span class="al-imp__riga-4"><input value="{{ ast.v }}" onChange="{{ ast.on }}" aria-label="Percorso di ASTAP" placeholder="Programmi/astap/astap_cli" class="al-campo al-imp__blocco-13"><a href="#" onClick="{{ ast.verifica }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">{{ ast.vl }}</a><a href="#" onClick="{{ ast.cerca }}" class="al-bottone al-bottone--testo">{{ ast.cercaL }}</a></span><span class="al-imp__testo-8">Il percorso deve terminare con il programma (astap_cli). «Cercalo tu» propone un percorso, non lo scrive.</span><sc-if value="{{ ast.trovato }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="desktop" segno="{{ ast.trovato.s }}" titolo="{{ ast.trovato.t }}" testo="{{ ast.trovato.x }}" azione="{{ ast.trovato.a }}" on-azione="{{ ast.trovato.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if><sc-if value="{{ ast.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="{{ ast.esito.s }}" titolo="{{ ast.esito.t }}" testo="{{ ast.esito.x }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if></span></div>
+<sc-for list="{{ ast.cat }}" as="c" hint-placeholder-count="1"><div class="al-imp__griglia-7"><span class="al-imp__testo-2">{{ c.l }}</span><span class="al-imp__riga-12"><span class="al-imp__riga-13" style="background:{{ c.bg }};color:{{ c.fg }}">{{ c.s }} {{ c.v }}</span></span><span class="al-imp__testo-5">{{ c.d }}</span></div></sc-for>
+<span class="al-imp__testo-16">{{ ast.cons }}</span>
 <a class="al-imp__blocco-14" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">ASTAP e i cataloghi, sul sito di hnsky.org ↗</a>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.selezione }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" formato="desktop" colonne="8" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Selezione dei frame" hint-size="100%,760px">
+<span class="al-imp__riga-9"><span class="al-imp__testo-3">Selezione dei frame</span><span class="al-imp__testo-5">le partenze delle soglie, per setup e filtro</span></span>
+<div class="al-imp__sel-testa"><select key="{{ SEL.sk }}" defaultValue="{{ SEL.sk }}" onChange="{{ SEL.skOn }}" aria-label="Setup" class="al-tendina al-tendina--tondo al-imp__sel-tendina"><sc-for list="{{ SEL.setup }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select><dc-import name="componenti/PillolaScelta" ruolo="radio" classe="al-scelta--sottili" opzioni="{{ SEL.filtri }}" etichetta="Filtro" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,32px"></dc-import></div>
+<span class="al-imp__sel-sotto">{{ SEL.sub }}</span>
+<sc-for list="{{ SEL.righe }}" as="r" hint-placeholder-count="12"><div class="{{ r.rcls }}">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ r.sw }}" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="190px,44px"></dc-import>
+<span class="al-imp__sel-campi"><select key="{{ r.op }}" defaultValue="{{ r.op }}" onChange="{{ r.opOn }}" aria-label="{{ r.opA }}" class="al-tendina al-tendina--piccolo al-imp__sel-op"><sc-for list="{{ r.opO }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><input type="text" inputmode="decimal" value="{{ r.v }}" onChange="{{ r.vOn }}" aria-label="{{ r.vA }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero al-campo--piccolo al-imp__sel-numero"><select key="{{ r.tipo }}" defaultValue="{{ r.tipo }}" onChange="{{ r.tipoOn }}" aria-label="{{ r.tipoA }}" class="al-tendina al-tendina--piccolo al-imp__sel-tipo"><sc-for list="{{ r.tipoO }}" as="o" hint-placeholder-count="2"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><sc-if value="{{ r.camb }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-22">· cambiato</span></sc-if></span>
+<span class="al-imp__sel-fonte">{{ r.fonte }}<sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if></span>
+</div></sc-for>
+<div class="{{ SEL.fx.rcls }}">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ SEL.fx.sw }}" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="190px,44px"></dc-import>
+<span class="al-imp__sel-campi"><input type="text" value="{{ SEL.fx.testo }}" onChange="{{ SEL.fx.onT }}" aria-label="Formula" spellcheck="false" placeholder="per esempio FWHM / SNR &gt; 0,012" class="al-campo al-campo--piccolo al-imp__sel-formula"></span>
+<span class="al-imp__sel-fonte">per tutti i filtri del setup · si controlla nella Selezione, sui frame</span>
+</div>
+<span class="al-imp__riga-21"><span>La Selezione dei frame parte da questi valori. Lì li cambi solo per il gruppo che guardi; qui si salvano per tutti.</span><sc-if value="{{ SEL.rimetti }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ SEL.rimetti }}" class="al-bottone al-bottone--contorno">Rimetti i valori di partenza</a></sc-if></span>
+</dc-import>
+<dc-import name="componenti/Carta" formato="desktop" colonne="4" ritardo="0" padding="24px 28px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Come funzionano" hint-size="100%,420px">
+<span class="al-imp__testo-3">Come funzionano</span>
+<sc-for list="{{ SEL.come }}" as="c" hint-placeholder-count="8"><span class="al-imp__sel-come"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" segno="{{ c.s }}" fondo="carta2" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import><span>{{ c.t }}</span></span></sc-for>
 </dc-import>
 </div></sc-if>
 
@@ -148,8 +213,9 @@
 </div>
 </dc-import></sc-if>
 
-<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Telaio" formato="telefono" pagina="Impostazioni" etichetta="Impostazioni · telefono" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Telaio" app="{{ appSt }}" formato="telefono" pagina="Impostazioni" etichetta="Impostazioni · telefono" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
 <div class="al-imp__colonna-15">
+<sc-if value="{{ salvaErr }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="!" titolo="Impostazione non salvata: AstroLog non risponde, riprova." azione="Riprova" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,44px"></dc-import></sc-if>
 <sc-if value="{{ ind.on }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-16" role="list">
 <sc-for list="{{ ind.voci }}" as="v" hint-placeholder-count="9"><a class="al-imp__riga-26" href="#" role="listitem" onClick="{{ v.on }}" style="border-top:{{ v.bd }}"><span class="al-imp__colonna-6"><b class="al-imp__testo-25">{{ v.l }}</b><span class="al-imp__blocco-24">{{ v.sub }}</span></span><span class="al-imp__blocco-25" aria-hidden="true">↗</span></a></sc-for>
 </div></sc-if>
@@ -165,6 +231,11 @@
 <sc-if value="{{ nome.fatto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-4">✓ Salvato</span></sc-if>
 <span class="al-imp__testo-8">Usato per intestare le statistiche.</span>
 </dc-import>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="30" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Lingua" hint-size="100%,150px">
+<span class="al-imp__testo-27">Lingua</span>
+<span role="radiogroup" aria-label="Lingua" class="al-scelta al-scelta--segmentato al-scelta--sottili al-scelta--riempie"><sc-for list="{{ lingua }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span>
+<span class="al-imp__testo-8">Le parole dell'app. I nomi letti dai file restano come sono.</span>
+</dc-import>
 <dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Tema" hint-size="100%,420px">
 <span class="al-imp__testo-27">Tema</span>
 <dc-import name="componenti/SceltaTema" modo="{{ modoSc }}" accento="{{ accento }}" sito="Cima Ekar" formato="telefono" on-modo="{{ setModoSc }}" on-accento="{{ setAccento }}" hint-size="100%,360px"></dc-import>
@@ -172,18 +243,41 @@
 </div></sc-if>
 
 <sc-if value="{{ tab.siti }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
-<span class="al-imp__riga-3"><sc-for list="{{ siti }}" as="s" hint-placeholder-count="2"><a class="al-imp__riga-30" href="#" onClick="{{ s.on }}" aria-pressed="{{ s.sel }}" style="font-weight:{{ s.fw }};background:{{ s.bg }};color:{{ s.fg }};box-shadow:inset 0 0 0 2px {{ s.ring }}">{{ s.l }}</a></sc-for></span>
-<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il sito" hint-size="100%,300px">
-<span class="al-imp__testo-28">{{ sitoN }}</span>
-<sc-for list="{{ righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__riga-31"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-19"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
-<div class="al-imp__riga-32"><span class="al-imp__testo-2">Predefinito</span><sc-if value="{{ pred.on }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ pred.on }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">Usa come predefinito</a></sc-if><sc-if value="{{ pred.si }}" hint-placeholder-val="{{ true }}"><b class="al-imp__testo-7">sì</b></sc-if></div>
-<div class="al-imp__colonna-20">
-<span class="al-imp__riga-33"><span class="al-imp__testo-2">Orizzonte</span><sc-if value="{{ oz.ok }}" hint-placeholder-val="{{ true }}"><span class="al-imp__colonna-19"><b class="al-imp__testo-7">{{ oz.file }}</b><span class="al-imp__testo-8">{{ oz.sub }}</span></span></sc-if></span>
-<sc-if value="{{ oz.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-17">Nessun orizzonte: conta solo l'altezza minima.</span></sc-if>
-<sc-if value="{{ oz.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-7" role="alert" style="background:{{ errBg }};color:{{ errFg }}"><b class="al-imp__tondo-1" aria-hidden="true">!</b><span>Il file non si legge: servono almeno due righe azimut altezza.</span></span></sc-if>
-<span class="al-imp__riga-34"><sc-for list="{{ oz.azioni }}" as="a" hint-placeholder-count="2"><a class="al-imp__riga-35" href="#" onClick="{{ a.on }}" style="font-weight:{{ a.fw }};background:{{ a.bg }};color:{{ a.fg }};box-shadow:{{ a.sh }}">{{ a.l }}</a></sc-for></span>
-<span class="al-imp__testo-8">File dell'orizzonte di N.I.N.A.: azimut e altezza in gradi, una coppia per riga.</span>
+<span class="al-imp__siti"><sc-for list="{{ siti }}" as="s" hint-placeholder-count="3"><a class="al-imp__riga-30" href="#" onClick="{{ s.on }}" aria-pressed="{{ s.sel }}" style="font-weight:{{ s.fw }};background:{{ s.bg }};color:{{ s.fg }};box-shadow:inset 0 0 0 2px {{ s.ring }}">{{ s.l }}</a></sc-for><a href="#" onClick="{{ aggiungi.on }}" aria-pressed="{{ aggiungi.sel }}" class="al-bottone al-bottone--contorno al-imp__aggiungi">+ Aggiungi sito</a></span>
+<sc-if value="{{ vSito.sito }}" hint-placeholder-val="{{ true }}">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il sito" hint-size="100%,560px">
+<sc-if value="{{ rin.off }}" hint-placeholder-val="{{ true }}"><div class="al-imp__sito-testa"><span class="al-imp__sito-nome">{{ sitoN }}</span><a href="#" onClick="{{ rin.apri }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Rinomina</a></div></sc-if>
+<sc-if value="{{ rin.on }}" hint-placeholder-val="{{ false }}"><div class="al-imp__sito-rin"><span class="al-imp__riga-4"><input value="{{ rin.v }}" onChange="{{ rin.onV }}" aria-label="Nome del sito" aria-invalid="{{ rin.dis }}" class="al-campo al-imp__blocco-4"><a href="#" onClick="{{ rin.salva }}" aria-disabled="{{ rin.dis }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">Salva</a><a href="#" onClick="{{ rin.annulla }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span><sc-if value="{{ rin.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ rin.err }}</span></sc-if></div></sc-if>
+<sc-for list="{{ righe }}" as="r" hint-placeholder-count="5"><div class="al-imp__griglia-3"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
+<div class="al-imp__griglia-3"><span class="al-imp__testo-2">Predefinito</span><span class="al-imp__colonna-2"><b class="al-imp__testo-7">{{ pred.v }}</b><sc-if value="{{ pred.on }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ pred.on }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Usa come predefinito</a></sc-if><span class="al-imp__testo-8">Il sito dei conti quando una notte non ne ha uno.</span></span></div>
+<div class="al-imp__griglia-4">
+<span class="al-imp__testo-2">Orizzonte</span>
+<span class="al-imp__colonna-3">
+<sc-if value="{{ oz.ok }}" hint-placeholder-val="{{ true }}"><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ oz.file }}</b><span class="al-imp__testo-8">{{ oz.sub }}</span></span></sc-if>
+<sc-if value="{{ oz.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-9">Nessun orizzonte: conta solo l'altezza minima.</span></sc-if>
+<sc-if value="{{ oz.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-7" role="alert" style="background:{{ errBg }};color:{{ errFg }}"><b class="al-imp__tondo-1" aria-hidden="true">!</b><span class="al-imp__testo-10">Il file non si legge: servono almeno due righe azimut altezza.</span></span></sc-if>
+<span class="al-imp__riga-4"><sc-for list="{{ oz.azioni }}" as="a" hint-placeholder-count="2"><a class="al-imp__pillola-2" href="#" onClick="{{ a.on }}" style="font-weight:{{ a.fw }};background:{{ a.bg }};color:{{ a.fg }};box-shadow:{{ a.sh }}">{{ a.l }}</a></sc-for></span>
+<span class="al-imp__testo-11">File dell'orizzonte di N.I.N.A.: azimut e altezza in gradi, una coppia per riga.</span>
+</span>
 </div>
+<div class="al-imp__sito-fondo">
+<sc-if value="{{ del.btn }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ del.apri }}" aria-disabled="{{ del.dis }}" class="al-bottone al-bottone--pericolo al-bottone--piccolo al-imp__elimina">Elimina il sito</a><span class="al-imp__testo-8">{{ del.txt }}</span></sc-if>
+<sc-if value="{{ del.conf }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello" role="alert"><span>{{ del.domanda }}</span><span class="al-imp__sito-gesti"><a href="#" onClick="{{ del.si }}" class="al-bottone al-bottone--pericolo al-bottone--piccolo">Elimina</a><a href="#" onClick="{{ del.annulla }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span></div></sc-if>
+</div>
+</dc-import>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il cielo del sito" hint-size="100%,560px">
+<div class="al-imp__riga-9"><span class="al-imp__testo-3">Il cielo del sito</span><span class="al-imp__testo-5">quattro vie, una alla volta</span></div>
+<sc-if value="{{ cielo.prop }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello"><span class="al-imp__sel-come"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" segno="?" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import><span>{{ cielo.prop.t }}</span></span><span class="al-imp__sito-gesti"><sc-for list="{{ cielo.prop.gesti }}" as="g" hint-placeholder-count="2"><a href="#" onClick="{{ g.on }}" class="{{ g.cls }}">{{ g.l }}</a></sc-for></span></div></sc-if>
+<sc-if value="{{ cielo.esito }}" hint-placeholder-val="{{ false }}"><span class="al-imp__cielo-esito" role="status">✓ {{ cielo.esito }}</span></sc-if>
+<div class="al-imp__cielo-riga"><span class="al-imp__testo-2">Ora</span><span class="al-imp__cielo-val">{{ cielo.v }}</span><span class="al-imp__testo-5">{{ cielo.da }}</span></div>
+<div class="al-imp__cielo-riga"><span class="al-imp__testo-2">Da dove viene</span>
+<span class="al-imp__riga-17" role="group" aria-label="Da dove viene il cielo"><sc-for list="{{ cielo.vie }}" as="o" hint-placeholder-count="4"><a class="al-imp__riga-18" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for><sc-if value="{{ cielo.vuota }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ cielo.vuota }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Lascia vuoto</a></sc-if></span>
+<sc-if value="{{ cielo.bp }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17" role="group" aria-label="Classe di Bortle"><sc-for list="{{ cielo.bp }}" as="o" hint-placeholder-count="9"><a class="al-imp__riga-18" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if>
+<sc-if value="{{ cielo.sq }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-12"><input type="text" inputmode="decimal" value="{{ cielo.sq.v }}" onChange="{{ cielo.sq.on }}" placeholder="21,4" aria-label="SQM del sito, in magnitudini per secondo d'arco quadrato" aria-invalid="{{ cielo.sq.inv }}" class="al-campo al-campo--numero al-campo--piccolo al-imp__blocco-19"><span class="al-imp__testo-2">mag/″²</span></span><sc-if value="{{ cielo.sq.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ cielo.sq.err }}</span></sc-if></sc-if>
+<span class="al-imp__testo-11">{{ cielo.nota }}</span>
+<sc-if value="{{ cielo.servizi }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ cielo.servizi }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-10">Apri Servizi</a></sc-if>
+</div>
+<div class="al-imp__cielo-riga"><span class="al-imp__testo-2">Le misure dei frame</span><span class="al-imp__mesi" role="img" aria-label="{{ cielo.mesiA }}"><sc-for list="{{ cielo.mesi }}" as="m" hint-placeholder-count="12"><span class="{{ m.cls }}" title="{{ m.al }}">{{ m.l }}</span></sc-for></span><span class="al-imp__testo-9">{{ cielo.mesiT }}</span><span class="al-imp__testo-11">{{ cielo.regola }}</span></div>
 </dc-import>
 <dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px 12px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="L'orizzonte a 360°" hint-size="100%,520px">
 <span class="al-imp__blocco-27">L'orizzonte a 360°</span>
@@ -192,16 +286,35 @@
 <span class="al-imp__colonna-21"><sc-for list="{{ leg }}" as="l" hint-placeholder-count="3"><span class="al-imp__riga-8"><i class="al-imp__blocco-6" style="background:{{ l.bg }};border-top:{{ l.b }}"></i><span>{{ l.n }}</span></span></sc-for></span>
 <span class="al-imp__blocco-30">Tocca il disegno per leggere ogni direzione. Profilo d'esempio: dati simulati.</span>
 </dc-import>
+</sc-if>
+<sc-if value="{{ vSito.nuovo }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Nuovo sito" hint-size="100%,460px">
+<div class="al-imp__riga-6"><span class="al-imp__testo-3">Nuovo sito</span><span class="al-imp__testo-5">per nome o per coordinate</span></div>
+<span role="radiogroup" aria-label="Come trovare il sito" class="al-scelta al-scelta--segmentato al-scelta--sottili al-scelta--riempie"><sc-for list="{{ NV.per }}" as="d" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ d.sel }}" onClick="{{ d.on }}" class="al-scelta__voce">{{ d.l }}</a></sc-for></span>
+<sc-if value="{{ NV.perNome }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-4"><input value="{{ NV.q }}" onChange="{{ NV.onQ }}" aria-label="Nome del luogo" placeholder="per esempio Monte Grappa" class="al-campo al-imp__blocco-9"><a href="#" onClick="{{ NV.cerca }}" class="al-bottone al-bottone--pieno">{{ NV.cercaL }}</a></span>
+<sc-if value="{{ NV.ris }}" hint-placeholder-val="{{ false }}"><div class="al-imp__nas" role="list"><sc-for list="{{ NV.ris }}" as="r" hint-placeholder-count="2"><a href="#" role="listitem" onClick="{{ r.on }}" aria-pressed="{{ r.sel }}" class="al-imp__nas-voce"><span>{{ r.n }}</span><span class="al-imp__testo-4">{{ r.seg }}</span></a></sc-for></div></sc-if>
+<sc-if value="{{ NV.nessuno }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="?" titolo="Nessun luogo con questo nome: prova un altro nome o scrivi le coordinate." testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if></sc-if>
+<sc-if value="{{ NV.perCoord }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-4"><input value="{{ NV.lat }}" onChange="{{ NV.onLat }}" aria-label="Latitudine" placeholder="45,87 N" class="al-campo al-imp__coord"><input value="{{ NV.lon }}" onChange="{{ NV.onLon }}" aria-label="Longitudine" placeholder="11,80 E" class="al-campo al-imp__coord"></span><span class="al-imp__testo-8">Virgola o punto, e la lettera del verso: N, S, E, O.</span></sc-if>
+<sc-if value="{{ NV.pronto }}" hint-placeholder-val="{{ false }}"><div class="al-imp__nuovo-dati">
+<div class="al-imp__griglia-3"><span class="al-imp__testo-2">Nome</span><input value="{{ NV.nome }}" onChange="{{ NV.onNome }}" aria-label="Nome del sito" class="al-campo"></div>
+<sc-for list="{{ NV.anteprima }}" as="r" hint-placeholder-count="2"><div class="al-imp__griglia-3"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
+<div class="al-imp__griglia-3"><span class="al-imp__testo-2">Altitudine</span><span class="al-imp__colonna-1"><span class="al-imp__riga-12"><input type="text" inputmode="numeric" value="{{ NV.alt }}" onChange="{{ NV.onAlt }}" aria-label="Altitudine, in metri" class="al-campo al-campo--numero al-campo--piccolo al-imp__blocco-19"><span class="al-imp__testo-2">m</span></span><span class="al-imp__testo-8">{{ NV.altS }}</span></span></div>
+</div></sc-if>
+<div class="al-imp__sito-gesti al-imp__sito-fondo al-imp__sito-fondo--riga"><a href="#" onClick="{{ NV.salva }}" aria-disabled="{{ NV.dis }}" class="al-bottone al-bottone--pieno al-imp__salva">Salva sito</a><a href="#" onClick="{{ NV.annulla }}" class="al-bottone al-bottone--testo">Annulla</a></div>
+<span class="al-imp__testo-11">Il cielo e l'orizzonte si scelgono dopo, nel sito.</span>
+</dc-import></sc-if>
 </div></sc-if>
 
 <sc-if value="{{ tab.cartelle }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
 <dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Cartelle" hint-size="100%,420px">
 <span class="al-imp__riga-9"><span class="al-imp__testo-27">Cartelle</span><span class="al-imp__testo-8">{{ car.conto }}</span></span>
-<sc-for list="{{ car.lista }}" as="c" hint-placeholder-count="3"><div class="al-imp__riga-36"><span class="al-imp__colonna-6"><b class="al-imp__testo-14">{{ c.p }}</b><span class="al-imp__testo-8">{{ c.n }}</span></span><a href="#" onClick="{{ c.togli }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra al-imp__blocco-7">Togli</a></div></sc-for>
+<sc-for list="{{ car.lista }}" as="c" hint-placeholder-count="3"><div class="al-imp__cart"><div class="al-imp__riga-10"><span class="{{ c.tcls }}" aria-hidden="true">{{ c.s }}</span><span class="al-imp__colonna-6"><b class="al-imp__testo-14">{{ c.p }}</b><span class="al-imp__testo-8">{{ c.n }}</span></span><span class="al-imp__sito-gesti"><a href="#" onClick="{{ c.sposta }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Sposta</a><a href="#" onClick="{{ c.togli }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-7">Togli</a></span></div>
+<sc-if value="{{ c.conf }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello al-imp__cart-pannello" role="alert"><span>{{ c.confT }}</span><span class="al-imp__sito-gesti"><a href="#" onClick="{{ c.si }}" class="al-bottone al-bottone--pericolo al-bottone--piccolo">Togli la cartella</a><a href="#" onClick="{{ c.no }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span></div></sc-if>
+<sc-if value="{{ c.sp }}" hint-placeholder-val="{{ false }}"><div class="al-imp__pannello al-imp__cart-pannello"><span>Il nuovo percorso di {{ c.p }}, se i file si sono spostati: i frame restano.</span><span class="al-imp__riga-4"><input value="{{ c.sp.v }}" onChange="{{ c.sp.on }}" aria-label="Nuovo percorso" placeholder="Dati/Astro/Archivio" class="al-campo al-imp__blocco-9"><a href="#" onClick="{{ c.sp.verifica }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">{{ c.sp.vl }}</a><a href="#" onClick="{{ c.sp.annulla }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Annulla</a></span><sc-if value="{{ c.sp.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="telefono" segno="{{ c.sp.esito.s }}" titolo="{{ c.sp.esito.t }}" testo="{{ c.sp.esito.x }}" azione="{{ c.sp.esito.a }}" on-azione="{{ c.sp.esito.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if></div></sc-if></div></sc-for>
 <sc-if value="{{ car.vuota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-8">Nessuna cartella: l'archivio è vuoto.</span></sc-if>
 <div class="al-imp__colonna-22">
 <span class="al-imp__testo-23">Aggiungi una cartella</span>
 <span role="radiogroup" aria-label="Dove sono i file" class="al-scelta al-scelta--segmentato al-scelta--sottili al-scelta--riempie"><sc-for list="{{ car.dove }}" as="d" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ d.sel }}" onClick="{{ d.on }}" class="al-scelta__voce">{{ d.l }}</a></sc-for></span>
+<sc-if value="{{ car.nas }}" hint-placeholder-val="{{ false }}"><div class="al-imp__nas"><span class="al-imp__riga-11"><span class="al-imp__testo-5">Cartella corrente: <b class="al-imp__testo-14">{{ car.nas.dir }}</b></span><sc-if value="{{ car.nas.su }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ car.nas.su }}" class="al-bottone al-bottone--testo al-bottone--piccolo">↑ Cartella superiore</a></sc-if></span><sc-for list="{{ car.nas.sub }}" as="d" hint-placeholder-count="3"><a href="#" onClick="{{ d.on }}" class="al-imp__nas-voce"><span>{{ d.n }}</span><span aria-hidden="true">›</span></a></sc-for><sc-if value="{{ car.nas.vuota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-5">Nessuna sottocartella.</span></sc-if><a href="#" onClick="{{ car.nas.sel }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-10">Seleziona questa cartella</a></div></sc-if>
 <input value="{{ car.perc }}" onChange="{{ car.onPerc }}" aria-label="Percorso della cartella" placeholder="{{ car.ph }}" class="al-campo">
 <a class="al-imp__riga-37" href="#" onClick="{{ car.verifica }}" aria-disabled="{{ car.dis }}" style="background:{{ car.bg }};color:{{ car.fg }}">{{ car.vl }}</a>
 <span class="al-imp__testo-8">{{ car.aiuto }}</span>
@@ -217,34 +330,53 @@
 </div></sc-if>
 
 <sc-if value="{{ tab.meteo }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
-<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Seeing (Meteoblue)" hint-size="100%,380px">
-<span class="al-imp__testo-27">Seeing (Meteoblue)</span>
-<span class="al-imp__testo-17">Con una chiave Meteoblue il seeing è disponibile ora per ora, per sette notti. Senza chiave il resto del meteo funziona.</span>
-<dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="{{ key.st.s }}" titolo="{{ key.st.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
-<input value="{{ key.v }}" onChange="{{ key.on }}" aria-label="Chiave Meteoblue" placeholder="Chiave Meteoblue" class="al-campo">
-<a class="al-imp__riga-37" href="#" onClick="{{ key.verifica }}" aria-disabled="{{ key.dis }}" style="background:{{ key.bg }};color:{{ key.fg }}">{{ key.vl }}</a>
-<sc-if value="{{ key.rimuovi }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ key.rimuovi }}" class="al-bottone al-bottone--contorno al-bottone--blocco">Rimuovi chiave</a></sc-if>
-<sc-if value="{{ key.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="{{ key.esito.s }}" titolo="{{ key.esito.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if>
-<a class="al-imp__riga-38" href="https://www.meteoblue.com/it/weather-api" target="_blank" rel="noopener">Chiedi una chiave a Meteoblue ↗</a>
-</dc-import>
-<dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Previsione" hint-size="100%,180px">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Previsione" hint-size="100%,240px">
 <span class="al-imp__testo-27">Previsione</span>
 <span class="al-imp__testo-5">Meteo apre su</span>
-<span role="radiogroup" aria-label="Meteo apre su" class="al-scelta al-scelta--linguette al-scelta--sottili al-scelta--riempie"><sc-for list="{{ obiettivo }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span>
-<span class="al-imp__testo-8">Fonti: Open-Meteo per il meteo, Meteoblue per il seeing.</span>
+<span role="radiogroup" aria-label="Meteo apre su" class="al-scelta al-scelta--linguette al-scelta--sottili al-scelta--riempie"><sc-for list="{{ obiettivo }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" aria-disabled="{{ o.dis }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span>
+<span class="al-imp__testo-8">Sole spento: arriva col Sole, insieme al Sistema solare.</span>
+<span class="al-imp__testo-8">Fonti: Open-Meteo per il meteo, Meteoblue per il seeing. La chiave Meteoblue sta in Servizi.</span>
+<a href="#" onClick="{{ vaiServizi }}" class="al-bottone al-bottone--contorno al-bottone--blocco">Apri Servizi</a>
 </dc-import>
 </div></sc-if>
 
 <sc-if value="{{ tab.astap }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
-<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="ASTAP" hint-size="100%,420px">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="ASTAP" hint-size="100%,520px">
 <span class="al-imp__testo-27">ASTAP</span>
 <span class="al-imp__testo-5">Il programma che identifica il campo dalle stelle (plate solving).</span>
+<span class="al-imp__colonna-1"><span class="al-imp__testo-5">Da dove viene</span><b class="al-imp__testo-7">{{ ast.canale }}</b><span class="al-imp__testo-8">{{ ast.canaleS }}</span></span>
 <span class="al-imp__testo-5">Percorso del programma</span>
-<input value="{{ ast.v }}" onChange="{{ ast.on }}" aria-label="Percorso di ASTAP" placeholder="C:\Program Files\astap\astap_cli.exe" class="al-campo">
+<input value="{{ ast.v }}" onChange="{{ ast.on }}" aria-label="Percorso di ASTAP" placeholder="Programmi/astap/astap_cli" class="al-campo">
 <a href="#" onClick="{{ ast.verifica }}" class="al-bottone al-bottone--contorno al-bottone--blocco">{{ ast.vl }}</a>
+<a href="#" onClick="{{ ast.cerca }}" class="al-bottone al-bottone--testo al-bottone--blocco">{{ ast.cercaL }}</a>
+<sc-if value="{{ ast.trovato }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="telefono" segno="{{ ast.trovato.s }}" titolo="{{ ast.trovato.t }}" testo="{{ ast.trovato.x }}" azione="{{ ast.trovato.a }}" on-azione="{{ ast.trovato.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,110px"></dc-import></sc-if>
 <sc-if value="{{ ast.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="{{ ast.esito.s }}" titolo="{{ ast.esito.t }}" testo="{{ ast.esito.x }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if>
-<sc-for list="{{ ast.cat }}" as="c" hint-placeholder-count="2"><div class="al-imp__colonna-23"><span class="al-imp__riga-39"><span class="al-imp__testo-17">{{ c.l }}</span><span class="al-imp__pillola-3" style="background:{{ c.bg }};color:{{ c.fg }}">{{ c.s }} {{ c.v }}</span></span><span class="al-imp__testo-8">{{ c.d }}</span></div></sc-for>
+<sc-for list="{{ ast.cat }}" as="c" hint-placeholder-count="1"><div class="al-imp__colonna-23"><span class="al-imp__riga-39"><span class="al-imp__testo-17">{{ c.l }}</span><span class="al-imp__pillola-3" style="background:{{ c.bg }};color:{{ c.fg }}">{{ c.s }} {{ c.v }}</span></span><span class="al-imp__testo-8">{{ c.d }}</span></div></sc-for>
+<span class="al-imp__testo-8">{{ ast.cons }}</span>
 <a class="al-imp__riga-38" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">ASTAP e i cataloghi, sul sito di hnsky.org ↗</a>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.selezione }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Selezione dei frame" hint-size="100%,760px">
+<span class="al-imp__riga-9"><span class="al-imp__testo-3">Selezione dei frame</span><span class="al-imp__testo-5">le partenze delle soglie, per setup e filtro</span></span>
+<div class="al-imp__sel-testa"><select key="{{ SEL.sk }}" defaultValue="{{ SEL.sk }}" onChange="{{ SEL.skOn }}" aria-label="Setup" class="al-tendina al-tendina--tondo al-imp__sel-tendina"><sc-for list="{{ SEL.setup }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select><dc-import name="componenti/PillolaScelta" ruolo="radio" classe="al-scelta--sottili" opzioni="{{ SEL.filtri }}" etichetta="Filtro" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,32px"></dc-import></div>
+<span class="al-imp__sel-sotto">{{ SEL.sub }}</span>
+<sc-for list="{{ SEL.righe }}" as="r" hint-placeholder-count="12"><div class="{{ r.rcls }}">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ r.sw }}" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="190px,44px"></dc-import>
+<span class="al-imp__sel-campi"><select key="{{ r.op }}" defaultValue="{{ r.op }}" onChange="{{ r.opOn }}" aria-label="{{ r.opA }}" class="al-tendina al-tendina--piccolo al-imp__sel-op"><sc-for list="{{ r.opO }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><input type="text" inputmode="decimal" value="{{ r.v }}" onChange="{{ r.vOn }}" aria-label="{{ r.vA }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero al-campo--piccolo al-imp__sel-numero"><select key="{{ r.tipo }}" defaultValue="{{ r.tipo }}" onChange="{{ r.tipoOn }}" aria-label="{{ r.tipoA }}" class="al-tendina al-tendina--piccolo al-imp__sel-tipo"><sc-for list="{{ r.tipoO }}" as="o" hint-placeholder-count="2"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><sc-if value="{{ r.camb }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-22">· cambiato</span></sc-if></span>
+<span class="al-imp__sel-fonte">{{ r.fonte }}<sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if></span>
+</div></sc-for>
+<div class="{{ SEL.fx.rcls }}">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ SEL.fx.sw }}" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="190px,44px"></dc-import>
+<span class="al-imp__sel-campi"><input type="text" value="{{ SEL.fx.testo }}" onChange="{{ SEL.fx.onT }}" aria-label="Formula" spellcheck="false" placeholder="per esempio FWHM / SNR &gt; 0,012" class="al-campo al-campo--piccolo al-imp__sel-formula"></span>
+<span class="al-imp__sel-fonte">per tutti i filtri del setup · si controlla nella Selezione, sui frame</span>
+</div>
+<span class="al-imp__riga-21"><span>La Selezione dei frame parte da questi valori. Lì li cambi solo per il gruppo che guardi; qui si salvano per tutti.</span><sc-if value="{{ SEL.rimetti }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ SEL.rimetti }}" class="al-bottone al-bottone--contorno">Rimetti i valori di partenza</a></sc-if></span>
+</dc-import>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Come funzionano" hint-size="100%,420px">
+<span class="al-imp__testo-3">Come funzionano</span>
+<sc-for list="{{ SEL.come }}" as="c" hint-placeholder-count="8"><span class="al-imp__sel-come"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" segno="{{ c.s }}" fondo="carta2" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import><span>{{ c.t }}</span></span></sc-for>
 </dc-import>
 </div></sc-if>
 
@@ -291,11 +423,11 @@
 </dc-import></sc-if>
 </sc-if></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;sezione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Generale&quot;,&quot;Siti&quot;,&quot;Cartelle e scansione&quot;,&quot;Meteo&quot;,&quot;ASTAP&quot;,&quot;Luna&quot;,&quot;Planner&quot;,&quot;Automazione&quot;,&quot;Servizi&quot;,&quot;Scansioni&quot;,&quot;Diagnostica&quot;,&quot;Backup&quot;],&quot;default&quot;:&quot;Generale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;senza chiave&quot;,&quot;rifiutata&quot;,&quot;non raggiungibile&quot;,&quot;nessuna scansione&quot;,&quot;in corso&quot;,&quot;una bloccata&quot;,&quot;molti file non leggibili&quot;,&quot;ASTAP assente&quot;,&quot;errori&quot;,&quot;mai scritto&quot;,&quot;ripristino al primo avvio&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sezioni nuove&quot;},&quot;orizzonte&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;importato&quot;,&quot;nessuno&quot;,&quot;non leggibile&quot;],&quot;default&quot;:&quot;importato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;astap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;installato&quot;,&quot;catalogo mancante&quot;],&quot;default&quot;:&quot;installato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;tempi&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;vuoti&quot;,&quot;d'esempio&quot;],&quot;default&quot;:&quot;vuoti&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;sezione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Generale&quot;,&quot;Siti&quot;,&quot;Cartelle e scansione&quot;,&quot;Meteo&quot;,&quot;ASTAP&quot;,&quot;Luna&quot;,&quot;Planner&quot;,&quot;Automazione&quot;,&quot;Selezione dei frame&quot;,&quot;Servizi&quot;,&quot;Scansioni&quot;,&quot;Diagnostica&quot;,&quot;Backup&quot;],&quot;default&quot;:&quot;Generale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;sito&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Cima Ekar&quot;,&quot;Casa · dati scarsi&quot;,&quot;Passo Coe · senza cielo&quot;,&quot;Cielo · SQM a mano&quot;,&quot;Cielo · dalla mappa&quot;,&quot;Cielo · dalla mappa, senza chiave&quot;,&quot;Rinomina&quot;,&quot;Aggiungi · per nome&quot;,&quot;Aggiungi · per coordinate&quot;,&quot;Aggiungi · nessun luogo&quot;,&quot;Elimina · sito senza notti&quot;],&quot;default&quot;:&quot;Cima Ekar&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Siti&quot;},&quot;cartelle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tutte raggiungibili&quot;,&quot;una non raggiungibile&quot;],&quot;default&quot;:&quot;tutte raggiungibili&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;senza chiave&quot;,&quot;rifiutata&quot;,&quot;non raggiungibile&quot;,&quot;nessuna scansione&quot;,&quot;in corso&quot;,&quot;una bloccata&quot;,&quot;molti file non leggibili&quot;,&quot;ASTAP assente&quot;,&quot;errori&quot;,&quot;mai scritto&quot;,&quot;ripristino al primo avvio&quot;,&quot;caricamento&quot;,&quot;errore dell'app&quot;,&quot;errore di salvataggio&quot;,&quot;file illeggibile&quot;,&quot;ripristino non riuscito&quot;,&quot;servizio del cielo senza chiave&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sezioni nuove&quot;},&quot;orizzonte&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;importato&quot;,&quot;nessuno&quot;,&quot;non leggibile&quot;],&quot;default&quot;:&quot;importato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;astap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;installato&quot;,&quot;più cataloghi&quot;,&quot;catalogo mancante&quot;],&quot;default&quot;:&quot;installato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;tempi&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;vuoti&quot;,&quot;d'esempio&quot;],&quot;default&quot;:&quot;vuoti&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
 class Component extends DCLogic {
-  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, modoSc: null, accento: null, ozBy: {}, az: 90, foc: false, sito: 'Cima Ekar', pred: null, nome: null, nomeOk: false,
-    dove: 'computer', perc: '', verifica: null, vPath: '', cartelle: [{ p: 'D:\\Astro\\2026', n: '1240 file FITS' }, { p: 'E:\\Archivio\\Deep sky', n: 'oltre 5000 file FITS' }, { p: 'E:\\Archivio\\Calibrazione', n: '486 file FITS' }],
-    scan: 'ferma', chiave: '', chiaveSalvata: 'ab12', esitoChiave: null, obiettivo: null, astapPerc: 'C:\\Program Files\\astap\\astap_cli.exe', esitoAstap: null };
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, modoSc: null, accento: null, ozBy: {}, az: 90, foc: false, pred: null, nome: null, nomeOk: false,
+    dove: 'computer', perc: '', verifica: null, vPath: '', cartelle: [{ p: 'Dati/Astro/2026', n: '1240 file FITS' }, { p: 'Esterno/Archivio/Deep sky', n: 'oltre 5000 file FITS' }, { p: 'Esterno/Archivio/Calibrazione', n: '486 file FITS' }],
+    scan: 'ferma', chiave: '', chiaveSalvata: 'ab12', esitoChiave: null, obiettivo: null, astapPerc: 'Programmi/astap/astap_cli', esitoAstap: null };
   componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
   componentWillUnmount() { this._alw && clearInterval(this._alw); (this._t || []).forEach(clearTimeout); window.removeEventListener('resize', this._rs); }
   componentDidUpdate(pp) { if (pp.orizzonte !== this.props.orizzonte) this.setState({ ozBy: {} }); }
@@ -306,7 +438,10 @@ class Component extends DCLogic {
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   fileRef = el => { this._file = el; };
-  renderVals() {
+  // Stato dell'app (v60): caricamento ed errore li mostra il Telaio
+  renderVals() { const r = this.renderVals0(), st = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stato')) || this.props.stato || '';
+    return { ...r, salvaErr: st === 'errore di salvataggio', appSt: st === 'errore dell\u0027app' ? 'errore' : st === 'caricamento' ? 'caricamento' : 'normale' }; }
+  renderVals0() {
     if (!this.alPronto()) return { pronto: false };
     const ce = React.createElement, R = Math.PI / 180;
     const accento = this.state.accento || this.props.accento, modoSc = this.state.modoSc || this.state.modo || this.props.modo || 'scuro', modo = modoSc === 'automatico' ? 'scuro' : modoSc, t = AL.tema(modo, accento);
@@ -317,92 +452,164 @@ class Component extends DCLogic {
     const campo = bad => ({ ring: bad ? t.bad : t.line, rw: bad ? '2px' : '1.5px', inv: bad ? 'true' : 'false' });
 
     // Sezioni a linguette: una alla volta
-    const SEZ = [['generale', 'Generale', 'nome e tema'], ['siti', 'Siti', 'uno per sito: coordinate, Bortle, orizzonte'], ['cartelle', 'Cartelle e scansione', 'dove sono i file'], ['meteo', 'Meteo', 'seeing e previsione'], ['astap', 'ASTAP', 'identificazione degli oggetti'],
-      ['luna', 'Luna', 'la regola della banda larga, in tutta l\u0027app'], ['planner', 'Planner', 'soglie e tempi della notte, con la fonte'], ['automazione', 'Automazione', 'per postazione: tetto, sicurezza, flat'],
-      ['servizi', 'Servizi', 'le chiavi di Meteoblue, AAVSO e TNS'], ['scansioni', 'Scansioni', 'le scansioni passate e cosa è rimasto fuori'], ['diagnostica', 'Diagnostica', 'per una segnalazione, da copiare'], ['backup', 'Backup', 'il file delle risposte']];
+    const SEZ = [['generale', 'Generale', 'nome, lingua e tema'], ['siti', 'Siti', 'coordinate, cielo e orizzonte, uno per sito'], ['cartelle', 'Cartelle e scansione', 'dove sono i file'], ['meteo', 'Meteo', 'la previsione'], ['astap', 'ASTAP', 'identificazione degli oggetti'],
+      ['luna', 'Luna', 'la regola della banda larga, in tutta l\u0027app'], ['planner', 'Planner', 'soglie e tempi della notte, con la fonte'], ['automazione', 'Automazione', 'per postazione, cioè per montatura: tetto, sicurezza, flat'], ['selezione', 'Selezione dei frame', 'le partenze delle soglie, per setup e filtro'],
+      ['servizi', 'Servizi', 'le chiavi dei servizi, in un posto solo'], ['scansioni', 'Scansioni', 'le scansioni passate e cosa è rimasto fuori'], ['diagnostica', 'Diagnostica', 'per una segnalazione, da copiare'], ['backup', 'Backup', 'il file delle risposte']];
     const NOMI = Object.fromEntries(SEZ.map(([k, l]) => [l, k])), Qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
-    const tw = NOMI[this.props.sezione] || Qs.get('sezione') || 'generale';
+    const tw = Qs.get('sezione') || NOMI[this.props.sezione] || 'generale';
     if (this.state.tabK !== tw) { if (this.state.tabK === undefined) Object.assign(this.state, { tabK: tw, sez: tw }); else setTimeout(() => this.setState({ tabK: tw, sez: tw })); }
     const sez = SEZ.some(x => x[0] === this.state.sez) ? this.state.sez : 'generale', TB = Object.fromEntries(SEZ.map(([k]) => [k, sez === k])), tabSub = SEZ.find(x => x[0] === sez)[2];
     const tabs = SEZ.map(([k, l]) => { const on = sez === k; return { l, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, bgT: on ? t.accent : 'transparent', fgT: on ? t.hPillFg : t.text, ring: on ? t.text : t.line, on: e => { prev(e); set({ sez: k }); } }; });
     // Telefono: si parte dall'indice delle sezioni; con ?sezione= o il Tweak si apre la sezione
-    const indOn = tel && (this.state.ind ?? !((this.props.sezione && this.props.sezione !== 'Generale') || Qs.get('sezione')));
-    const RIAS = { generale: nomeV0 => nomeV0 + ' · modo ' + (this.state.modo || this.props.modo || 'scuro'), siti: () => 'Cima Ekar · Bortle 3 · predefinito' };
+    const indOn = tel && (this.state.ind ?? !(Qs.get('sezione') || (this.props.sezione && this.props.sezione !== 'Generale')));
+    const IMPx = ALsoglie.imp, RIAS = { generale: nomeV0 => nomeV0 + ' · modo ' + (this.state.modo || this.props.modo || 'scuro'), siti: () => (this.state.siti || []).length + ' siti · ' + (IMPx.get('siti.predefinito') || 'Cima Ekar') + ' predefinito' };
     const ind = { on: indOn, off: tel && !indOn, tit: (SEZ.find(x => x[0] === sez) || [])[1], sub: tabSub, torna: e => { prev(e); set({ ind: true }); },
-      voci: SEZ.map(([k2, l, d], i) => ({ l, sub: RIAS[k2] ? RIAS[k2](this.state.nome ?? (ALsoglie.imp.get('generale.nome') || 'Marco')) : d, bd: i ? '1px solid ' + t.line : '0', on: e => { prev(e); set({ ind: false, sez: k2 }); } })) };
+      voci: SEZ.map(([k2, l, d], i) => ({ l, sub: RIAS[k2] ? RIAS[k2](this.state.nome ?? (ALsoglie.imp.get('generale.nome') || 'Elena')) : d, bd: i ? '1px solid ' + t.line : '0', on: e => { prev(e); set({ ind: false, sez: k2 }); } })) };
 
     // Generale: nome
-    const IMP = ALsoglie.imp, nomeV = this.state.nome ?? (IMP.get('generale.nome') || 'Marco'), nm = nomeV.trim();
-    const nomeS = IMP.get('generale.nome') || 'Marco', camb = !!nm && nm !== nomeS && !this.state.nomeOk;
+    const IMP = ALsoglie.imp, nomeV = this.state.nome ?? (IMP.get('generale.nome') || 'Elena'), nm = nomeV.trim();
+    const nomeS = IMP.get('generale.nome') || 'Elena', camb = !!nm && nm !== nomeS && !this.state.nomeOk;
     const nome = { cambiato: camb, padR: camb ? '92px' : '14px', v: nomeV, on: e => set({ nome: e.target.value, nomeOk: false }), fatto: this.state.nomeOk, dis: nm ? 'false' : 'true', bg: nm ? t.hPill : t.card2, fg: nm ? t.hPillFg : t.muted,
       salva: e => { prev(e); if (nm) { IMP.set('generale.nome', nm); set({ nomeOk: true }); } } };
 
-    // Siti: orizzonte dai Tweaks, poi dalle azioni (Importa, Sostituisci, Togli)
-    const MIN = 30, p0 = this.props.orizzonte || 'importato';
-    const sitoK = this.state.sito, setOz = v => set({ ozBy: { ...this.state.ozBy, [sitoK]: v } });
-    const oz = this.state.ozBy[sitoK] || (sitoK === 'Casa' ? { k: 'vuoto' } : p0 === 'importato' ? { k: 'ok', file: 'Cima Ekar.hrz', f: ALdati.orizzonte['Cima Ekar'], quando: '19 ottobre 2026' } : p0 === 'non leggibile' ? { k: 'err' } : { k: 'vuoto' });
+    // Siti (v67, brief 9.1): elenco, Aggiungi per nome o coordinate, altitudine e fuso con la provenienza, Rinomina, Elimina (non con notti), le quattro vie del cielo, il Bortle misurato. Dati simulati.
+    // L'orizzonte disegna la soglia d'altezza del Planner (9.7), non 30° fissi.
+    const MIN = IMP.get('planner.alt') ?? 30, p0 = this.props.orizzonte || 'importato', vS = this.props.sito || 'Cima Ekar';
+    if (this.state.vS !== vS) { const st0 = presetSito(vS); if (this.state.vS === undefined) Object.assign(this.state, { vS }, st0); else setTimeout(() => this.setState({ vS, ...st0 })); }
+    const SITI = this.state.siti, sitoK = SITI.some(x => x.k === this.state.sito) ? this.state.sito : SITI[0].k, sito = SITI.find(x => x.k === sitoK);
+    const setSito = (o, extra) => set({ siti: SITI.map(x => x.k === sitoK ? { ...x, ...o } : x), ...(extra || {}) });
+    const setOz = v => set({ ozBy: { ...this.state.ozBy, [sitoK]: v } });
+    const oz = this.state.ozBy[sitoK] || (sitoK !== 'ekar' ? { k: 'vuoto' } : p0 === 'importato' ? { k: 'ok', file: 'Cima Ekar.hrz', f: ALdati.orizzonte['Cima Ekar'], quando: '19 ottobre 2026' } : p0 === 'non leggibile' ? { k: 'err' } : { k: 'vuoto' });
     const hor = oz.k === 'ok' ? oz.f : null;
     const apri = e => { prev(e); this._file && this._file.click(); };
     const onFile = e => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader();
       r.onload = () => { const h = ALdati.leggiOrizzonte(r.result); setOz(h ? { k: 'ok', file: f.name, f: h, quando: 'oggi' } : { k: 'err' }); }; r.readAsText(f); e.target.value = ''; };
     const azioni = oz.k === 'ok' ? [{ l: 'Sostituisci', ...SEC, on: apri }, { l: 'Togli', ...SEC, on: e => { prev(e); setOz({ k: 'vuoto' }); } }] : [{ l: 'Importa file', ...PRIM, on: apri }];
     const ozV = { ok: oz.k === 'ok', vuoto: oz.k === 'vuoto', err: oz.k === 'err', file: oz.file, sub: hor ? hor.punti.length + ' punti · importato ' + (oz.quando === 'oggi' ? 'oggi' : 'il ' + oz.quando) : '', azioni };
-    const siti = ['Cima Ekar', 'Casa'].map(l => pill(l === sitoK, () => set({ sito: l }), l));
-    const righe = sitoK === 'Casa' ? [{ l: 'Coordinate', v: '45.55 N · 11.55 E', s: '40 m' }, { l: 'Bortle', v: 'Bortle 6 – periferia luminosa', s: 'scritto a mano' }]
-      : [{ l: 'Coordinate', v: '45.85 N · 11.57 E', s: '1366 m' }, { l: 'Bortle', v: 'Bortle 3 – cielo di campagna', s: 'scritto a mano' }];
-    const predK = this.state.pred || IMP.get('siti.predefinito'), isPred = predK === sitoK, pred = { v: isPred ? 'sì' : 'no', si: isPred, on: isPred ? null : e => { prev(e); IMP.set('siti.predefinito', sitoK); set({ pred: sitoK }); } };
+    const nv = this.state.nuovo, chiudiS = { nuovo: null, sDel: false, rin: null };
+    const siti = SITI.map(x => pill(!nv && x.k === sitoK, () => set({ sito: x.k, ...chiudiS }), x.nome));
+    const aggiungi = { sel: nv ? 'true' : 'false', on: e => { prev(e); set({ ...chiudiS, nuovo: { per: 'nome', q: '', ris: null, scelto: -1, lat: '', lon: '', nome: '' } }); } };
+    // Il cielo: quattro vie (dalle misure, Bortle a mano, SQM a mano, dalla mappa del servizio del cielo) o vuoto
+    const n0 = x => parseFloat(String(x).replace(',', '.')), bNome = n => 'Bortle ' + n + ' – ' + BN[n - 1];
+    const bDi = q => { const i = SQMB.findIndex(x => q > x); return i < 0 ? 9 : i + 1; };
+    const mis = sito.mis, mm = mis ? mis.mesi : Array(12).fill(0), nM = mm.filter(Boolean).length;
+    const regolaOk = m => { const on = m.map((x, i) => x ? i : -1).filter(i => i >= 0); if (on.length < 4) return false; for (let j = 1; j < on.length; j++) if (on[j] - on[j - 1] - 1 > 3) return false; return on[0] + 12 - on[on.length - 1] - 1 <= 3; };   // in giro sui 12: dicembre tocca gennaio
+    const misOk = !!(mis && regolaOk(mm)), via = sito.via, sq = n0(sito.sqm), sqOk = !isNaN(sq) && sq >= 7 && sq <= 23, mapK = !!this.state.mappaK;
+    const curB = via === 'bortle' ? sito.bortle : via === 'sqm' && sqOk ? bDi(sq) : via === 'mappa' && mapK ? 4 : via === 'misura' && misOk ? mis.b : null;
+    const CV = { misura: misOk ? [bNome(mis.b), 'dalle misure dei frame: SQM ' + mis.sqm + ', ' + mis.notti + ' notti'] : ['nessuno', 'dalle misure: ancora poche'],
+      bortle: [bNome(sito.bortle), 'scritto a mano'], sqm: sqOk ? [bNome(bDi(sq)), 'SQM ' + AL.virg(sq, 2) + ' scritto a mano'] : ['nessuno', 'SQM da scrivere'],
+      mappa: mapK ? [bNome(4), 'SQM 21,3 dalla mappa del servizio del cielo'] : ['nessuno', 'dalla mappa: manca la chiave del servizio del cielo'], vuoto: ['nessuno', 'lasciato vuoto'] }[via];
+    const prop = misOk && via !== 'misura' && !sito.lasciato && curB !== mis.b ? { t: 'Le misure di ' + sito.nome + ' dicono ' + bNome(mis.b) + ' (SQM ' + mis.sqm + ', ' + mis.notti + ' notti in ' + nM + ' mesi). ' + (curB ? 'Nel sito c\u0027è Bortle ' + curB + '.' : 'Il sito non ha un cielo.'),
+      gesti: [{ l: 'Usa Bortle ' + mis.b, cls: 'al-bottone al-bottone--pieno al-bottone--piccolo', on: e => { prev(e); setSito({ via: 'misura', esito: 'Bortle ' + mis.b + ' nel sito, dalle misure.' }); } },
+        curB ? { l: 'Lascia Bortle ' + curB, cls: 'al-bottone al-bottone--contorno al-bottone--piccolo', on: e => { prev(e); setSito({ lasciato: true, esito: 'Resta Bortle ' + curB + '; si propone di nuovo solo se la classe misurata cambia.' }); } }
+          : { l: 'Lascia vuoto', cls: 'al-bottone al-bottone--contorno al-bottone--piccolo', on: e => { prev(e); setSito({ lasciato: true, esito: 'Il sito resta senza cielo; si propone di nuovo solo se la classe misurata cambia.' }); } }] } : null;
+    const cielo = { v: CV[0], da: CV[1], prop, esito: sito.esito || '',
+      vie: [['misura', 'Dalle misure'], ['bortle', 'Bortle a mano'], ['sqm', 'SQM a mano'], ['mappa', 'Dalla mappa']].map(([k, l]) => pill(via === k, () => setSito({ via: k, esito: null, bortle: sito.bortle || 4 }), l)),
+      vuota: via !== 'vuoto' ? e => { prev(e); setSito({ via: 'vuoto', esito: null }); } : null,
+      bp: via === 'bortle' ? BN.map((_, i) => pill(sito.bortle === i + 1, () => setSito({ bortle: i + 1 }), String(i + 1))) : null,
+      sq: via === 'sqm' ? { v: sito.sqm || '', on: e => setSito({ sqm: e.target.value.replace(/[^0-9.,]/g, '').slice(0, 5) }), ...campo(!!sito.sqm && !sqOk), err: sito.sqm && !sqOk ? 'Un numero da 7 a 23.' : '' } : null,
+      nota: { misura: misOk ? 'Segue le misure: quando la classe misurata cambia, lo dice.' : 'Finché le misure non bastano il sito resta senza cielo.', bortle: 'Da 1, cielo buio, a 9, centro città.', sqm: 'Da un misuratore SQM, in magnitudini per secondo d\u0027arco quadrato; la classe si ricava con la tabella di ASTAP.',
+        mappa: mapK ? 'La mappa della luce artificiale dice il cielo senza misure; le misure dei frame, quando bastano, propongono di correggerlo.' : 'Serve la chiave del servizio del cielo, in Servizi.', vuoto: 'Nessun cielo: dove serve, i conti lo dicono. Si sceglie una delle quattro vie.' }[via],
+      servizi: via === 'mappa' && !mapK ? e => { prev(e); set({ sez: 'servizi', ind: false }); } : null,
+      mesi: mm.map((x, i) => ({ l: MESI[i], cls: 'al-imp__mese' + (x ? ' al-imp__mese--fatto' : ''), al: MESIL[i] + (x ? ': misurato' : ': nessuna notte') })), mesiA: nM + ' mesi misurati sugli ultimi 12',
+      mesiT: !mis ? 'Nessuna notte misurata: le misure arrivano con le notti.' : misOk ? 'Misurato su ' + mis.notti + ' notti in ' + nM + ' mesi: SQM ' + mis.sqm + ', ' + bNome(mis.b) + '.' : 'Servono notti in almeno 4 mesi, senza buchi di oltre 3: finora ' + mis.notti + (mis.notti === 1 ? ' notte' : ' notti') + ' in ' + nM + (nM === 1 ? ' mese' : ' mesi') + '.',
+      regola: 'Contano i frame con lo SQM e il bias della camera, Sole sotto −18°, Luna sotto −5°, oggetto sopra 30°: una mediana per notte, poi la mediana delle notti. Almeno 4 mesi senza buchi di oltre 3, sugli ultimi 12 fino all\u0027ultima notte misurata. L\u0027app propone, tu scegli: non lo cambia da sola.' };
+    const righe = [{ l: 'Coordinate', v: sito.coord, s: sito.coordDa }, { l: 'Altitudine', v: sito.alt, s: sito.altDa }, { l: 'Fuso orario', v: sito.fuso, s: sito.fusoDa }, { l: 'Notti', v: sito.notti ? sito.notti + ' notti' : 'nessuna', s: sito.notti ? 'riprese su questo sito' : '' }];
+    const predK = this.state.pred || IMP.get('siti.predefinito') || 'Cima Ekar', isPred = predK === sito.nome, pred = { v: isPred ? 'sì' : 'no', si: isPred, on: isPred ? null : e => { prev(e); IMP.set('siti.predefinito', sito.nome); set({ pred: sito.nome }); } };
+    const rv = this.state.rin, rinT = (rv || '').trim(), rinDup = rv != null && SITI.some(x => x.k !== sitoK && x.nome === rinT), rinOk = rv != null && !!rinT && !rinDup;
+    const rin = { on: rv != null, off: rv == null, v: rv || '', onV: e => set({ rin: e.target.value }), apri: e => { prev(e); set({ rin: sito.nome, sDel: false }); }, annulla: e => { prev(e); set({ rin: null }); }, dis: rinOk ? 'false' : 'true',
+      salva: e => { prev(e); if (rinOk) setSito({ nome: rinT }, { rin: null }); }, err: rinDup ? 'C\u0027è già un sito con questo nome.' : rv != null && !rinT ? 'Scrivi un nome.' : '' };
+    const del = { btn: !this.state.sDel, dis: sito.notti || isPred ? 'true' : 'false', conf: !!this.state.sDel && !sito.notti,
+      txt: sito.notti ? 'Ha ' + sito.notti + ' notti: non si elimina. Le notti restano col loro sito.' : isPred ? 'È il sito predefinito: prima scegline un altro.' : 'Non ha notti: si elimina senza perdere niente.',
+      apri: e => { prev(e); if (!sito.notti && !isPred) set({ sDel: true, rin: null }); }, domanda: 'Eliminare ' + sito.nome + '? Non ha notti.',
+      si: e => { prev(e); const rest = SITI.filter(x => x.k !== sitoK); set({ siti: rest, sito: rest[0].k, sDel: false }); }, annulla: e => { prev(e); set({ sDel: false }); } };
+    // Nuovo sito: per nome (ricerca simulata) o per coordinate; altitudine dal modello del terreno, fuso dalle coordinate
+    let NV = null;
+    if (nv) { const setN = o => set({ nuovo: { ...nv, ...o } }), perNome = nv.per === 'nome', sc = perNome && nv.ris === 'risultati' && nv.scelto >= 0 ? RIS[nv.scelto] : null;
+      const cOk = !perNome && /^\d{1,2}([.,]\d+)?\s*[NS]$/i.test(nv.lat.trim()) && /^\d{1,3}([.,]\d+)?\s*[EO]$/i.test(nv.lon.trim());
+      const pronto = !!(sc || cOk), altP = sc ? sc.alt : '1775', altV = nv.alt ?? altP, nomeV = nv.nome || '', okS = pronto && !!nomeV.trim() && !!altV;
+      NV = { per: [['nome', 'Per nome'], ['coord', 'Per coordinate']].map(([k, l]) => ({ l, sel: nv.per === k ? 'true' : 'false', on: e => { prev(e); setN({ per: k }); } })), perNome, perCoord: !perNome,
+        q: nv.q, onQ: e => setN({ q: e.target.value, ris: null, scelto: -1 }), cercaL: nv.ris === 'in corso' ? 'Cerco…' : 'Cerca',
+        cerca: e => { prev(e); if (!nv.q.trim()) return; setN({ ris: 'in corso' }); this.dopo(700, () => this.setState(s => ({ nuovo: { ...s.nuovo, ris: /grap/i.test(s.nuovo.q) ? 'risultati' : 'nessuno' } }))); },
+        ris: nv.ris === 'risultati' ? RIS.map((r, i) => ({ n: r.n, sel: nv.scelto === i ? 'true' : 'false', seg: nv.scelto === i ? '✓ scelto' : '›', on: e => { prev(e); setN({ scelto: i, nome: r.nome, alt: null }); } })) : null, nessuno: nv.ris === 'nessuno',
+        lat: nv.lat, lon: nv.lon, onLat: e => setN({ lat: e.target.value }), onLon: e => setN({ lon: e.target.value }),
+        pronto, anteprima: pronto ? [{ l: 'Coordinate', v: sc ? sc.coord : nv.lat.trim() + ' · ' + nv.lon.trim(), s: sc ? 'dalla ricerca per nome' : 'scritte a mano' }, { l: 'Fuso orario', v: 'Europe/Rome · UTC+1', s: 'dalle coordinate' }] : [],
+        alt: altV, onAlt: e => setN({ alt: e.target.value.replace(/[^0-9]/g, '').slice(0, 4) }), altS: altV !== altP ? 'scritta a mano · il modello del terreno dice ' + altP + ' m' : 'dal modello del terreno: si cambia',
+        nome: nomeV, onNome: e => setN({ nome: e.target.value }), dis: okS ? 'false' : 'true',
+        salva: e => { prev(e); if (!okS) return; const k = 'n' + Date.now();
+          set({ siti: SITI.concat([{ k, nome: nomeV.trim(), coord: sc ? sc.coord : nv.lat.trim() + ' · ' + nv.lon.trim(), coordDa: sc ? 'dalla ricerca per nome' : 'scritte a mano', alt: altV + ' m', altDa: altV !== altP ? 'scritta a mano' : 'dal modello del terreno', fuso: 'Europe/Rome · UTC+1', fusoDa: 'dalle coordinate', notti: 0, via: 'vuoto', mis: null }]), sito: k, nuovo: null }); },
+        annulla: e => { prev(e); set({ nuovo: null }); } }; }
+    const vSito = { sito: !nv, nuovo: !!nv };
 
-    // Cartelle e scansione (testi del Primo avvio)
+    // Cartelle e scansione (testi del Primo avvio). v67 (brief 9.5): «non raggiungibile», Sposta, Togli con conferma («i frame restano»), il NAS si sfoglia anche qui
+    const vC = this.props.cartelle || 'tutte raggiungibili';
+    if (this.state.vC !== vC) { const cs = CART0.map((c, i) => ({ ...c, irr: vC === 'una non raggiungibile' && i === 1 })); if (this.state.vC === undefined) Object.assign(this.state, { vC, cartelle: cs }); else setTimeout(() => this.setState({ vC, cartelle: cs, carT: null, carS: null })); }
     const nas = this.state.dove === 'nas', ver = this.state.verifica, pend = ['trovati', 'parziale', 'registrata'].includes(ver);
-    const aggiungi = e => { prev(e); this.setState(st => ({ cartelle: st.cartelle.concat([{ p: st.vPath, n: st.verifica === 'parziale' ? 'oltre 5000 file FITS' : '1240 file FITS' }]), verifica: null, perc: '' })); };
-    const EC = { trovati: { s: '✓', t: 'File trovati', x: '1240 file FITS · ' + this.state.vPath, a: 'Aggiungi cartella', on: aggiungi },
-      parziale: { s: '✓', t: 'Conteggio parziale', x: 'Conteggio interrotto a 5000: i file sono di più.', a: 'Aggiungi cartella', on: aggiungi },
+    const aggiungiC = e => { prev(e); this.setState(st => ({ cartelle: st.cartelle.concat([{ p: st.vPath, n: st.verifica === 'parziale' ? 'oltre 5000 file FITS' : '1240 file FITS' }]), verifica: null, perc: '' })); };
+    const EC = { trovati: { s: '✓', t: 'File trovati', x: '1240 file FITS · ' + this.state.vPath, a: 'Aggiungi cartella', on: aggiungiC },
+      parziale: { s: '✓', t: 'Conteggio parziale', x: 'Conteggio interrotto a 5000: i file sono di più.', a: 'Aggiungi cartella', on: aggiungiC },
       irraggiungibile: { s: '!', t: 'Cartella non raggiungibile', x: 'Controlla il percorso o collega il disco, poi riprova.', a: '' },
-      registrata: { s: '!', t: 'Cartella già registrata', x: 'Corrisponde a \\\\nas\\astro\\2026: stessi file. I dati associati vengono mantenuti.', a: 'Usa questo percorso', on: aggiungi } }[ver] || null;
-    const pc = this.state.perc.trim(), nC = this.state.cartelle.length;
-    const car = { lista: this.state.cartelle.map((c, i) => ({ ...c, togli: e => { prev(e); set({ cartelle: this.state.cartelle.filter((_, j) => j !== i) }); } })), vuota: !nC, conto: nC === 1 ? '1 cartella' : nC + ' cartelle',
+      registrata: { s: '!', t: 'Cartella già registrata', x: 'Corrisponde a nas/astro/2026: stessi file. I dati associati vengono mantenuti.', a: 'Usa questo percorso', on: aggiungiC } }[ver] || null;
+    const pc = this.state.perc.trim(), nC = this.state.cartelle.length, cT = this.state.carT, cS = this.state.carS;
+    const verificaC = pth => { if (!pth || ver === 'in corso') return; set({ verifica: 'in corso', vPath: pth, perc: pth }); this.dopo(900, () => this.setState({ verifica: /^f:|riprese/i.test(pth) ? 'irraggiungibile' : /archivio/i.test(pth) ? 'parziale' : /nas|\/data\/astro\/2026$/i.test(pth) ? 'registrata' : 'trovati' })); };
+    const nasDir = this.state.nasDir || '/data/astro', nasSub = NAS[nasDir] || [];
+    const car = { vuota: !nC, conto: nC === 1 ? '1 cartella' : nC + ' cartelle',
+      lista: this.state.cartelle.map((c, i) => { const sp = cS && cS.i === i;
+        return { p: c.p, n: c.irr ? 'non raggiungibile: il disco «Esterno» non risponde · i frame restano in archivio' : c.n, s: c.irr ? '!' : '✓', tcls: c.irr ? 'al-imp__tondo-1' : 'al-imp__tondo-2',
+          togli: e => { prev(e); set({ carT: cT === i ? null : i, carS: null }); }, sposta: e => { prev(e); set({ carS: sp ? null : { i, v: '', esito: null }, carT: null }); },
+          conf: cT === i, confT: 'Togliere ' + c.p + '? I frame restano nell\u0027archivio; la cartella non entra più nelle scansioni.',
+          si: e => { prev(e); set({ cartelle: this.state.cartelle.filter((_, j) => j !== i), carT: null }); }, no: e => { prev(e); set({ carT: null }); },
+          sp: sp ? { v: cS.v, on: e => set({ carS: { ...cS, v: e.target.value, esito: null } }), vl: cS.esito === 'in corso' ? 'Verifica…' : 'Verifica',
+            verifica: e => { prev(e); const v = cS.v.trim(); if (!v) return; set({ carS: { ...cS, esito: 'in corso' } }); this.dopo(800, () => this.setState(s => ({ carS: { ...s.carS, esito: 'ok' } }))); },
+            esito: cS.esito === 'ok' ? { s: '✓', t: 'Stessi file in ' + cS.v.trim(), x: 'Cambia solo il percorso: i frame, le notti e le risposte restano.', a: 'Usa questo percorso',
+              on: e => { prev(e); set({ cartelle: this.state.cartelle.map((x, j) => j === i ? { ...x, p: cS.v.trim(), irr: false } : x), carS: null }); } } : null,
+            annulla: e => { prev(e); set({ carS: null }); } } : null }; }),
       dove: [['computer', 'Su questo computer'], ['nas', 'Sul NAS']].map(([k, l]) => { const on = this.state.dove === k; return { l, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, on: e => { prev(e); set({ dove: k, verifica: null }); } }; }),
-      perc: this.state.perc, onPerc: e => set({ perc: e.target.value, verifica: null }), ph: nas ? '/data/astro/2026' : 'D:\\Astro\\2026',
-      aiuto: nas ? 'Percorso interno al container, non quello del computer.' : 'Vengono lette anche le sottocartelle.',
+      perc: this.state.perc, onPerc: e => set({ perc: e.target.value, verifica: null }), ph: nas ? '/data/astro/2026' : 'Dati/Astro/2026',
+      aiuto: nas ? 'Percorso interno al container, non quello del computer: scegli dall\u0027elenco o scrivilo.' : 'Vengono lette anche le sottocartelle.',
       vl: ver === 'in corso' ? 'Verifica…' : 'Verifica', dis: pc ? 'false' : 'true', bg: pc && !pend ? t.hPill : t.card2, fg: pc && !pend ? t.hPillFg : t.muted, esito: EC,
-      verifica: e => { prev(e); if (!pc || ver === 'in corso') return; set({ verifica: 'in corso', vPath: pc }); this.dopo(900, () => this.setState({ verifica: /^f:|riprese/i.test(pc) ? 'irraggiungibile' : /archivio/i.test(pc) ? 'parziale' : /nas/i.test(pc) ? 'registrata' : 'trovati' })); } };
-    const sc = this.state.scan, scan = sc === 'in corso' ? { t: 'Scansione in corso', s: 'file letti 3412 su 18 430 · ancora circa 1 h 20', b: 'Interrompi', on: e => { prev(e); set({ scan: 'ferma' }); } }
+      verifica: e => { prev(e); verificaC(pc); },
+      nas: nas ? { dir: nasDir, vuota: !nasSub.length, sub: nasSub.map(n => ({ n, on: e => { prev(e); set({ nasDir: nasDir + '/' + n }); } })),
+        su: nasDir !== '/data' ? e => { prev(e); set({ nasDir: nasDir.replace(/\/[^/]+$/, '') || '/data' }); } : null, sel: e => { prev(e); verificaC(nasDir); } } : null };
+    const scc = this.state.scan, scan = scc === 'in corso' ? { t: 'Scansione in corso', s: 'file letti 3412 su 18 430 · ancora circa 1 h 20', b: 'Interrompi', on: e => { prev(e); set({ scan: 'ferma' }); } }
       : { t: 'Ultima scansione oggi, 07:12', s: '214 file nuovi, nessun problema', b: 'Scansiona', on: e => { prev(e); set({ scan: 'in corso' }); } };
 
-    // Meteo: chiave Meteoblue (testi del Primo avvio), previsione di partenza
-    const EK = { valida: ['✓', 'Chiave valida: seeing attivo.'], rimossa: ['?', 'Chiave rimossa: seeing non disponibile.'], rifiutata: ['!', 'Chiave non riconosciuta da Meteoblue: non salvata.'] }[this.state.esitoChiave];
-    const kk = this.state.chiave.trim(), ks = this.state.chiaveSalvata;
-    const key = { st: ks ? { s: '✓', t: 'Chiave salvata (termina con ' + ks + ').' } : { s: '?', t: 'Nessuna chiave: seeing non disponibile.' }, esito: EK ? { s: EK[0], t: EK[1] } : null,
-      v: this.state.chiave, on: e => set({ chiave: e.target.value }), vl: this.state.esitoChiave === 'in corso' ? 'Verifica…' : 'Verifica e salva', dis: kk ? 'false' : 'true', bg: kk ? t.hPill : t.card2, fg: kk ? t.hPillFg : t.muted,
-      verifica: e => { prev(e); if (!kk) return; set({ esitoChiave: 'in corso' }); this.dopo(900, () => this.setState(kk.length >= 12 ? { esitoChiave: 'valida', chiaveSalvata: kk.slice(-4), chiave: '' } : { esitoChiave: 'rifiutata' })); },
-      rimuovi: ks ? e => { prev(e); set({ chiaveSalvata: null, esitoChiave: 'rimossa' }); } : null };
-    const obK = this.state.obiettivo || IMP.get('meteo.obiettivo'), obiettivo = ['Deep sky', 'Sole'].map(l => pill(obK === l, () => { IMP.set('meteo.obiettivo', l); set({ obiettivo: l }); }, l));
+    // Meteo (v67, brief 9.3 e 9.8): la chiave Meteoblue sta solo in Servizi; «Meteo apre su: Sole» spenta finché arriva il Sole
+    const obiettivo = [{ l: 'Deep sky', sel: 'true', dis: 'false', on: prev }, { l: 'Sole', sel: 'false', dis: 'true', on: prev }];
+    const vaiServizi = e => { prev(e); set({ sez: 'servizi', ind: false }); };
+    // Lingua (v67, brief 9.4)
+    const lingua = ['Italiano', 'English'].map(l => ({ l, sel: (this.state.lingua || 'Italiano') === l ? 'true' : 'false', on: e => { prev(e); set({ lingua: l }); } }));
 
-    // ASTAP (testi del Primo avvio); catalogo D80
+    // ASTAP (v67, brief 9.2): da dove viene, «Cercalo tu» (propone, non scrive), cataloghi dai nomi trovati; consigliato D50 (ADR 0036), D80 per i campi molto stretti
     const ap = this.props.astap || 'installato', EA = { trovato: ['✓', 'ASTAP trovato', 'Gli oggetti ripresi verranno identificati.'], sbagliato: ['!', 'ASTAP non trovato in questo percorso.', 'Il percorso deve terminare con il programma (astap_cli).'] }[this.state.esitoAstap];
-    const OK = { s: '✓', bg: t.pillOkBg, fg: t.pillOkFg }, NO = { s: '?', bg: t.card2, fg: t.text };
+    const OK = { s: '✓', bg: t.pillOkBg, fg: t.pillOkFg }, NO = { s: '?', bg: t.card2, fg: t.text }, CAT = ap === 'catalogo mancante' ? [] : ap === 'più cataloghi' ? ['D05', 'D50', 'D80'] : ['D50'];
+    const CD = { D05: 'piccolo, per i campi larghi', D50: 'consigliato: va bene per quasi tutti i campi', D80: 'per i campi molto stretti' }, cer = this.state.astCerca;
     const ast = { v: this.state.astapPerc, on: e => set({ astapPerc: e.target.value, esitoAstap: null }), vl: this.state.esitoAstap === 'in corso' ? 'Verifica…' : 'Verifica percorso', esito: EA ? { s: EA[0], t: EA[1], x: EA[2] } : null,
       verifica: e => { prev(e); set({ esitoAstap: 'in corso' }); this.dopo(900, () => this.setState({ esitoAstap: /astap_cli(\.exe)?$/i.test(this.state.astapPerc.trim()) ? 'trovato' : 'sbagliato' })); },
-      cat: [{ l: 'Catalogo D80', ...(ap === 'catalogo mancante' ? { ...NO, v: 'non trovato' } : { ...OK, v: 'trovato' }), d: 'Per identificare gli oggetti. Circa 1.25 GB, nella cartella di ASTAP.' }] };
+      cercaL: cer === 'in corso' ? 'Cerco…' : 'Cercalo tu', cerca: e => { prev(e); set({ astCerca: 'in corso' }); this.dopo(900, () => this.setState({ astCerca: 'trovato' })); },
+      trovato: cer === 'trovato' ? { s: '?', t: 'Trovato in Programmi/astap/astap_cli', x: 'Il percorso non cambia finché non lo scegli.', a: 'Usa questo percorso', on: e => { prev(e); set({ astapPerc: 'Programmi/astap/astap_cli', astCerca: null, esitoAstap: 'trovato' }); } } : null,
+      canale: 'installato a parte, da hnsky.org', canaleS: 'ASTAP non è nel pacchetto di AstroLog: si installa e si aggiorna da solo.',
+      cat: CAT.length ? CAT.map(n => ({ l: 'Catalogo ' + n, ...OK, v: 'trovato', d: CD[n] })) : [{ l: 'Cataloghi', ...NO, v: 'nessun catalogo', d: 'Senza catalogo gli oggetti non vengono identificati.' }],
+      cons: 'Consigliato D50, nella cartella di ASTAP; D80 per i campi molto stretti. I cataloghi si riconoscono dal nome dei file.' };
 
     // Luna (v26): tre righe, lette da tutte le pagine. La seconda percentuale non sta sotto la prima.
     const SO = ALsoglie, lunaK = this.props.luna || 'dalle Impostazioni';
     if (this.state.lunaK !== lunaK) { const r0 = SO.usaLuna(lunaK), v = { buona: String(r0.buona), limite: String(r0.limite), alt: r0.alt };
       if (this.state.lunaK === undefined) Object.assign(this.state, { lunaK, lv: v }); else setTimeout(() => this.setState({ lunaK, lv: v })); }
-    const lv = this.state.lv || { buona: '25', limite: '50', alt: 0 }, nb = parseInt(lv.buona, 10), nl = parseInt(lv.limite, 10);
+    const lv = this.state.lv || { buona: '25', limite: '65', alt: 0 }, nb = parseInt(lv.buona, 10), nl = parseInt(lv.limite, 10);
     const okB = !isNaN(nb) && nb >= 0 && nb <= 100, okL = !isNaN(nl) && nl <= 100 && (!okB || nl >= nb);
     const errL = isNaN(nl) || nl > 100 ? 'Un numero da 0 a 100.' : okB && nl < nb ? 'Deve essere almeno ' + nb + '%.' : '';
     const cambiaL = (k, val) => { const nv = { ...lv, [k]: val }, b = parseInt(nv.buona, 10), l = parseInt(nv.limite, 10); set({ lv: nv });
       if (!isNaN(b) && !isNaN(l) && b >= 0 && l <= 100 && l >= b) SO.salvaLuna({ buona: b, limite: l, alt: nv.alt }); };
     const lunaR = [
-      { l: 'Banda larga buona fino a', num: true, v: lv.buona, u: '%', ph: '25', aria: 'Banda larga buona fino a, in percento', ...campo(!okB), err: okB ? '' : 'Un numero da 0 a 100.', s: 'regola diffusa fra chi riprende', on: e => cambiaL('buona', e.target.value.replace(/[^0-9]/g, '').slice(0, 3)) },
-      { l: 'Banda larga al limite fino a', num: true, v: lv.limite, u: '%', ph: '50', aria: 'Banda larga al limite fino a, in percento', ...campo(!okL), err: errL, s: 'nessuna convenzione: scegli tu', on: e => cambiaL('limite', e.target.value.replace(/[^0-9]/g, '').slice(0, 3)) },
-      { l: 'La Luna conta sopra', num: false, scelta: true, s: lv.alt === -5 ? 'rete TESS: sotto −5° il cielo non sente la Luna' : lv.alt === 0 ? 'Nautical Almanac: Luna sorta' : 'nessuna convenzione: scegli tu', err: '', pills: [-5, 0, 5, 10].map(a => pill(lv.alt === a, () => cambiaL('alt', a), a ? SO.gradi(a) : 'l\u0027orizzonte')) }];
+      { l: 'Banda larga buona fino a', num: true, v: lv.buona, u: '%', ph: '25', aria: 'Banda larga buona fino a, in percento', ...campo(!okB), err: okB ? '' : 'Un numero da 0 a 100.', s: 'regola di ING: buio sotto 0,25', on: e => cambiaL('buona', e.target.value.replace(/[^0-9]/g, '').slice(0, 3)) },
+      { l: 'Banda larga al limite fino a', num: true, v: lv.limite, u: '%', ph: '65', aria: 'Banda larga al limite fino a, in percento', ...campo(!okL), err: errL, s: 'regola di ING: grigio fino a 0,65', on: e => cambiaL('limite', e.target.value.replace(/[^0-9]/g, '').slice(0, 3)) },
+      { l: 'La Luna conta sopra', num: false, scelta: true, s: lv.alt === -5 ? 'rete TESS: sotto −5° il cielo non sente la Luna' : lv.alt === 0 ? 'dall\u0027orizzonte, quando sorge' : 'nessuna convenzione: scegli tu', err: '', pills: [-5, 0, 5, 10].map(a => pill(lv.alt === a, () => cambiaL('alt', a), a ? SO.gradi(a) : 'l\u0027orizzonte')) }];
     const rr = SO.sogliaRipresa, lunaOra = 'Ora: buona fino al ' + rr.buona + '%, al limite fino al ' + rr.limite + '%, conta ' + SO.sopraT() + '.';
 
     // Planner (ADR 0023): le soglie si scrivono, con la partenza e la fonte accanto. Si salvano sul computer.
     const SG = [['alt', 'Altezza minima, deep sky', '30', '°', 'massa d\u0027aria 2', 0, 90], ['dur', 'Durata minima sopra l\u0027altezza', '1', 'h', 'nessuna convenzione: scegli tu', 0.25, 12],
-      ['stagione', 'Stagione: quota delle ore del mese migliore', '67', '%', 'nessuna convenzione: scegli tu (due terzi)', 10, 100], ['mese', 'Stagione: ore utili almeno, il 15 del mese', '3', 'h', 'nessuna convenzione: scegli tu', 0, 12], ['altS', 'Altezza minima di pianeti, Luna e Sole', '30', '°', 'massa d\u0027aria 2', 0, 90], ['adc', 'ADC sotto', '35', '°', 'BAA', 0, 90],
+      ['stagione', 'Mesi buoni: quota delle ore del mese migliore', '67', '%', 'nessuna convenzione: scegli tu (due terzi)', 10, 100], ['mese', 'Mesi buoni: ore visibili almeno, il 15 del mese', '3', 'h', 'nessuna convenzione: scegli tu', 0, 12], ['oreNuovo', 'Progetto nuovo: ore in tutto, divise fra i filtri', '10', 'h', 'nessuna convenzione: scegli tu', 0.5, 100], ['posaL', 'Progetto nuovo: posa in banda larga', '120', 's', 'nessuna convenzione: dipende da cielo e camera', 1, 1800], ['posaS', 'Progetto nuovo: posa in banda stretta', '300', 's', 'nessuna convenzione: dipende da cielo e camera', 1, 1800], ['altS', 'Altezza minima di pianeti, Luna e Sole', '30', '°', 'massa d\u0027aria 2', 0, 90], ['adc', 'ADC sotto', '35', '°', 'BAA', 0, 90],
       ['grs', 'Macchia Rossa, longitudine (Sistema II)', '91', '°', 'Sky & Telescope, da JUPOS', 0, 360], ['grsD', 'Macchia Rossa, data della misura', '1/6/2026', '', 'Sky & Telescope, da JUPOS', null, null], ['grsV', 'Macchia Rossa, deriva', '1.75', '° al mese', 'Sky & Telescope, da JUPOS', -10, 10]];
     // Chiavi del registro: planner.alt, planner.dur, … (soglie.js, ALsoglie.imp)
     if (!this.state.sg) this.state.sg = Object.fromEntries(SG.map(r => [r[0], String(IMP.get('planner.' + r[0]))]));
@@ -423,7 +630,7 @@ class Component extends DCLogic {
     const lbR = LB.righe.map(r => { const v = lbS[r.k], a = pv('lb' + r.k + 0, v[0]), b = pv('lb' + r.k + 1, v[1]);
       return { l: r.l, campi: [cF('lb' + r.k + 0, a, { u: '° a Luna piena', aria: r.l + ', gradi a Luna piena', bad: num(a) == null, salva: () => {} }), cF('lb' + r.k + 1, b, { pre: 'metà a', u: 'giorni', aria: r.l + ', giorni per la metà', bad: num(b) == null, salva: () => {} })].map((c, i) => ({ ...c, on: e => lbSalva(r.k, i, e.target.value.slice(0, 5)) })),
         err: num(a) == null || num(b) == null ? 'Un numero.' : '', s: 'partenza ' + lb0[r.k][0] + '° · metà a ' + lb0[r.k][1] + ' giorni · ' + r.fonte }; });
-    // Curva lungo il mese lunare: x = eta' della Luna (0 nuova, 14.8 piena, 29.5 nuova); y = distanza richiesta (0-130°)
+    // Curva lungo il mese lunare: x = eta' della Luna (0 nuova, 14,8 piena, 29,5 nuova); y = distanza richiesta (0-130°)
     const LC = [[t.text, ''], [t.text, '6 4'], [t.muted, '']], linea = k => { let d = ''; for (let i = 0; i <= 60; i++) { const age = i / 60 * 29.53, gd = Math.abs(age - 14.765), r = lbS[k], req = r[0] / (1 + Math.pow(gd / r[1], 2)); d += (i ? 'L' : 'M') + (i * 5).toFixed(1) + ' ' + (100 - Math.min(130, req) / 130 * 100).toFixed(1); } return d; };
     const serveT = LB.righe.map(r => SO.serveLuna(r.k, PCT, lbS) + '°'), xS = ((14.765 + d0) / 29.53 * 300).toFixed(1);
     const curvaLB = { aria: 'Distanza richiesta lungo il mese lunare; stanotte servono ' + serveT.join(', '), testo: 'stanotte servono ' + serveT.join(' · '), x: xS, asse: 'Luna nuova · piena · nuova; tratteggio: stanotte, Luna al ' + PCT + '% (dati simulati)',
@@ -439,18 +646,18 @@ class Component extends DCLogic {
       { l: 'Pausa prima del meridiano', campi: [cF('pausa', pz0, { u: 'min', ph: 'vuota', aria: 'Pausa prima del meridiano, in minuti', bad: !!errO(pz0, 0, 120), salva: x => opt('pausa', 'planner.pausa', x, 0, 120) })], err: errO(pz0, 0, 120), s: 'Solo se la usi nel programma di ripresa.' }];
     // Ricerca (v30): chiavi e soglia delle supernove
     const kA = pv('aavso', IMP.get('ricerca.aavso')), kT = pv('tns', IMP.get('ricerca.tns')), snM = pv('sn', IMP.get('ricerca.sn'));
-    const ricR = [{ l: 'Chiave AAVSO', campi: [cF('aavso', kA, { wd: '260px', im: 'text', al: 'left', ph: 'dal tuo profilo AAVSO', aria: 'Chiave AAVSO', max: 64, salva: x => IMP.set('ricerca.aavso', x.trim()) })], s: 'campagne dal Target Tool' },
-      { l: 'Chiave TNS', campi: [cF('tns', kT, { wd: '260px', im: 'text', al: 'left', ph: 'dal Transient Name Server', aria: 'Chiave TNS', max: 64, salva: x => IMP.set('ricerca.tns', x.trim()) })], s: 'supernove dal Transient Name Server' },
+    // v67 (brief 9.3): le chiavi AAVSO e TNS stanno solo in Servizi
+    const ricR = [{ l: 'Chiavi AAVSO e TNS', fisso: 'in Impostazioni › Servizi', s: 'una casa sola per le chiavi dei servizi' },
       { l: 'Supernove più brillanti di', campi: [cF('sn', snM, { pre: 'mag', aria: 'Supernove più brillanti di, magnitudine', bad: num(snM) == null, salva: x => { const y = num(x); if (y != null) IMP.set('ricerca.sn', y); } })], err: num(snM) == null ? 'Un numero.' : '', s: 'partenza mag 17 · la lista di Rochester' }];
     const plCarte = [{ tit: 'Luna per oggetto', sub: 'per la banda del filtro · al posto della distanza fissa', righe: lbR, curva: curvaLB, nota: 'Più la Luna è piena, più l\u0027oggetto deve stare lontano. Sotto −5° la Luna non conta.' },
       { tit: 'La notte del piano', sub: 'crepuscolo, altezza massima, meridiano', righe: notteR, curva: null, nota: '' },
-      { tit: 'Ricerca', sub: 'chiavi dei servizi e soglia delle supernove', righe: ricR, curva: null, nota: '' }];
+      { tit: 'Ricerca', sub: 'soglia delle supernove', righe: ricR, curva: null, nota: '' }];
     // Tempi della notte (v27): tre gruppi, uguali per tutta l'app, vuoti di partenza. Chiave planner.tempi (soglie.js).
     const IMPt = ALsoglie.imp, TD = IMPt.schema['planner.tempi'].righe, tK = this.props.tempi || 'vuoti';
     if (this.state.tK !== tK) { const sv = IMPt.get('planner.tempi') || {}, v = Object.fromEntries(TD.map(r => [r.k, tK === 'd\u0027esempio' ? String(r.es) : sv[r.k] != null ? String(sv[r.k]) : '']));
       if (this.state.tK === undefined) Object.assign(this.state, { tK, tv: v }); else setTimeout(() => this.setState({ tK, tv: v })); }
     const tv = this.state.tv || {}, auDi = k => this.state['au' + k] || IMPt.get('automazione.' + k) || {}, conTetto = ['a', 'b'].some(k => auDi(k).tetto);
-    const UG = { 'Avvio e chiusura': 'minuti', 'Per oggetto': 'minuti', 'Durante le pose': 'secondi, frame, ore' };
+    const UG = { 'Avvio e chiusura': 'minuti', 'Per oggetto': 'minuti', 'Durante i frame': 'secondi, frame, ore' };
     const tempiG = Object.keys(UG).map(g => ({ t: g, u: UG[g], righe: TD.filter(r => r.g === g && (!r.tetto || conTetto)).map(r => { const v = tv[r.k] ?? '', n = parseFloat(String(v).replace(',', '.')), bad = v !== '' && (isNaN(n) || n < 0);
       return { l: r.l, v, u: r.u, ph: '—', aria: r.l + ', in ' + r.u, ...campo(bad), s: 'nessuna convenzione: scegli tu',
         on: e => { const nv = { ...tv, [r.k]: e.target.value.replace(/[^0-9.,]/g, '').slice(0, 5) }; set({ tv: nv }); IMPt.set('planner.tempi', Object.fromEntries(TD.map(x => { const y = parseFloat(String(nv[x.k] ?? '').replace(',', '.')); return [x.k, isNaN(y) ? null : y]; }))); } }; }) }));
@@ -463,7 +670,8 @@ class Component extends DCLogic {
         .concat(cielo ? [{ l: 'Finestra dei flat di cielo', fisso: 'Sole da −2° a −7°', s: 'nessuna convenzione: scegli tu' }] : []); };
     // Automazione (v27): per postazione, solo Sì / No. La ruota portafiltri viene dal setup in Attrezzatura.
     const AUT = [['tetto', 'Tetto o cupola motorizzati', 'Avvio: apre il tetto prima dell\u0027unpark · Chiusura: park, poi chiude il tetto'], ['sensore', 'Sensore di sicurezza', 'Avvio: aspetta che sia sicuro prima di aprire'], ['flat', 'Pannello per i flat', 'Avvio apre il coperchio, Chiusura lo chiude, flat a fine notte'], ['cielo', 'Flat di cielo', 'solo senza pannello: flat al crepuscolo, Sole fra −2° e −7°']];
-    const autoP = [['a', 'ZWO AM5 · Askar FRA400 · ASI2600MM Pro', 'mono · ruota 7 filtri'], ['b', 'Sky-Watcher EQ6-R Pro · Askar 103APO · ASI2600MM Pro', 'mono · ruota 7 filtri']].map(([k, n, sub]) => { const cur = auDi(k);
+    // v67 (brief 9.9): la postazione e' la montatura; il setup non la contiene. Si sceglie cosa c'e' alla postazione, vale per ogni setup montato li'.
+    const autoP = [['a', 'ZWO AM5', 'postazione · ci monti Askar FRA400 · ASI2600MM Pro. Scegli cosa c\u0027è alla postazione: vale per ogni setup su questa montatura.'], ['b', 'Sky-Watcher EQ6-R Pro', 'postazione · ci monti Askar 103APO · ASI2600MM Pro. Scegli cosa c\u0027è alla postazione: vale per ogni setup su questa montatura.']].map(([k, n, sub]) => { const cur = auDi(k);
       return { n, sub, flat: !!(cur.flat || cur.cielo), flatR: flatR(!!cur.flat && false || (!cur.flat && !!cur.cielo)), righe: AUT.filter(([f]) => f !== 'cielo' || !cur.flat).map(([f, l, sx]) => ({ l, s: sx, op: [['Sì', true], ['No', false]].map(([ol, ov]) => { const on = !!cur[f] === ov; return { l: ol, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text,
         on: e => { prev(e); const nv = { ...cur, [f]: ov }; IMPt.set('automazione.' + k, nv); set({ ['au' + k]: nv }); } }; }) })) }; });
 
@@ -490,15 +698,58 @@ class Component extends DCLogic {
       sag ? ce('path', { key: 'sag' + oz.file, d: sag, fillRule: 'evenodd', fill: t.muted, fillOpacity: t.dk ? 0.42 : 0.32, stroke: t.text, strokeOpacity: 0.55, strokeWidth: 1, style: { animation: 'alFade .5s ease-out both' } }) : null,
       ce('circle', { cx: c, cy: c, r: rad(MIN), fill: 'none', stroke: t.text, strokeWidth: 1.5, strokeDasharray: '6 4', strokeOpacity: 0.85 }),
       sopra ? ce('path', { d: sopra, fill: 'none', stroke: t.text, strokeWidth: 3.5, strokeLinecap: 'round', strokeLinejoin: 'round' }) : null,
-      [['30°', MIN], ['60°', 60]].map(([l, a]) => ce('text', { key: l, x: c + 5, y: c - rad(a) - 4, fill: t.muted, fontSize: 11 }, l)),
+      [[MIN + '°', MIN], ['60°', 60]].filter((x, i) => !i || Math.abs(MIN - 60) > 8).map(([l, a]) => ce('text', { key: l, x: c + 5, y: c - rad(a) - 4, fill: t.muted, fontSize: 11 }, l)),
       [['N', 0], ['E', 90], ['S', 180], ['O', 270]].map(([l, a]) => ce('text', { key: l, x: c + (RR + 18) * Math.sin(a * R), y: c - (RR + 18) * Math.cos(a * R) + 4.5, fill: t.text, fontSize: 13, fontWeight: 600, textAnchor: 'middle' }, l)),
       ce('line', { x1: ex, y1: ey, x2: c, y2: c, stroke: t.accent, strokeWidth: 1.5, strokeDasharray: '3 3' }),
       ce('circle', { cx: px, cy: py, r: 6, style: { fill: 'var(--su-immagine)' }, stroke: t.accent, strokeWidth: 2.5 })));
-    const leg = [hor ? { n: 'sagoma degli ostacoli', bg: AL.rgba(t.muted, t.dk ? 0.42 : 0.32), b: '0' } : null, { n: 'altezza minima, deep sky: ' + MIN + '°', bg: 'transparent', b: '2px dashed ' + t.text }, hor ? { n: 'tratto spesso = la sagoma supera la linea: conta la sagoma', bg: 'transparent', b: '3.5px solid ' + t.text } : null].filter(Boolean);
-    return { pronto: true, t, errBg: t.pills[1][0], errFg: t.pills[1][1], F: { tel, desk: !tel }, modo, modoSc, accento, setModo: m => set({ modo: m, modoSc: m }), setModoSc: m => set({ modoSc: m }), setAccento: a => set({ accento: a }),
-      tabs, tab: indOn ? {} : TB, nuova: !indOn && ['servizi', 'scansioni', 'diagnostica', 'backup'].includes(sez), nuovaK: sez, statoN: this.props.stato || 'normale', ind, tabSub, nome, fileRef: this.fileRef, onFile, oz: ozV, siti, sitoN: sitoK, righe, pred, car, scan, key, obiettivo, ast, lunaR, lunaOra, sogR, sogRip, plCarte, tempiG, autoP, disegno, lettura, leg };
+    const leg = [hor ? { n: 'sagoma degli ostacoli', bg: AL.rgba(t.muted, t.dk ? 0.42 : 0.32), b: '0' } : null, { n: 'altezza minima, deep sky: ' + MIN + '° · dal Planner', bg: 'transparent', b: '2px dashed ' + t.text }, hor ? { n: 'tratto spesso = la sagoma supera la linea: conta la sagoma', bg: 'transparent', b: '3.5px solid ' + t.text } : null].filter(Boolean);
+    // Selezione dei frame (v63, brief 2.9): le partenze si salvano solo qui (ALsoglie.selezione); la Selezione le cambia solo per un gruppo
+    const SLZ = ALsoglie.selezione, slSk = SLZ.setup.some(x => x.k === this.state.slSk) ? this.state.slSk : SLZ.setup[0].k, slS = SLZ.setup.find(x => x.k === slSk), slFk = slS.filtri.includes(this.state.slFk) ? this.state.slFk : slS.filtri[0], slR = SLZ.get(slSk, slFk), slT = this.state.slT || {};
+    const slSalva = (k, v) => { SLZ.set(slSk, slFk, k, v); set({ slV: (this.state.slV || 0) + 1 }); }, vir = x => String(x).replace('.', ','), fdn = k => (AL.FD[k] || AL.FD.ignoto)[0];
+    const SEL = { setup: SLZ.setup.map(x => ({ v: x.k, l: x.b })), sk: slSk, skOn: e => set({ slSk: e.target.value, slT: {} }),
+      filtri: slS.filtri.map(k => ({ l: fdn(k), sel: k === slFk, tinta: k, on: () => set({ slFk: k, slT: {} }) })),
+      sub: slS.n + ' · ' + fdn(slFk) + ' · valgono per ogni gruppo di questo setup e filtro (oggetto, tempo di posa e guadagno), finché nella Selezione non le cambi per un gruppo.',
+      righe: SLZ.misure.map(([k, l, u, fonte]) => { const r = slR[k], d0 = SLZ.partenza[k], txt = slT[k], bad = txt != null && isNaN(parseFloat(String(txt).replace(',', '.'))), camb = ['on', 'op', 'tipo', 'v'].some(z => String(r[z]) !== String(d0[z])), rel = k === 'ecc' ? 'rispetto al setup' : 'rispetto al gruppo';
+        return { sw: [{ l, sel: r.on, titolo: (r.on ? 'Spegni ' : 'Accendi ') + l, on: e => { e && e.preventDefault && e.preventDefault(); slSalva(k, { on: !r.on }); } }],
+          op: r.op, opO: [['>', 'maggiore di'], ['≥', 'da'], ['<', 'minore di'], ['≤', 'fino a']].map(([o, w]) => ({ v: o, l: o + ' ' + w })), opOn: e => slSalva(k, { op: e.target.value }), opA: 'Confronto per ' + l,
+          v: txt != null ? txt : vir(r.v), vOn: e => { const x = e.target.value, n = parseFloat(x.replace(',', '.')); set({ slT: { ...slT, [k]: x } }); if (!isNaN(n)) slSalva(k, { v: n }); }, vA: 'Valore per ' + l, inv: bad ? 'true' : 'false', err: bad ? 'Serve un numero, per esempio 2 o 1,5.' : '',
+          tipo: r.tipo, tipoO: [{ v: 'rel', l: rel }, { v: 'abs', l: u ? 'valore, in ' + u : 'valore' }], tipoOn: e => slSalva(k, { tipo: e.target.value }), tipoA: 'Come si conta ' + l,
+          fonte: 'partenza ' + d0.op + ' ' + vir(d0.v) + (d0.tipo === 'rel' ? ' ' + rel : (u ? ' ' + u : '')) + (d0.on ? '' : ', spenta') + ' · ' + fonte, camb, rcls: 'al-imp__sel-riga' + (r.on ? '' : ' al-imp__sel-riga--spenta') }; }),
+      fx: { sw: [{ l: 'Formula', sel: slR.fx.on, titolo: (slR.fx.on ? 'Spegni' : 'Accendi') + ' la formula', on: e => { e && e.preventDefault && e.preventDefault(); slSalva('fx', { on: !slR.fx.on }); } }], testo: slR.fx.testo, onT: e => slSalva('fx', { testo: e.target.value }), rcls: 'al-imp__sel-riga' + (slR.fx.on ? '' : ' al-imp__sel-riga--spenta') },
+      rimetti: SLZ.cambiate(slSk) ? e => { e.preventDefault(); SLZ.rimetti(slSk); set({ slT: {}, slV: (this.state.slV || 0) + 1 }); } : null,
+      come: [['✕', 'Una soglia segna il frame da scartare; lo spostamento in «scartate» lo fai tu, e si annulla.'], ['✓', 'La scelta a mano vince sempre, anche se poi cambi la soglia.'],
+        ['–', 'Il gruppo è oggetto, setup, filtro, tempo di posa e guadagno, con tutte le notti. Le soglie rispetto al gruppo si contano lì, sui frame misurati; sotto 10 frame tacciono e lo dicono.'],
+        ['↔', 'Rispetto al gruppo: quanto un frame si allontana dalla mediana, in dispersioni del gruppo; la partenza è 2,5. L\u0027eccentricità si conta sul setup e solo verso l\u0027alto: le stelle le allunga il setup.'],
+        ['!', 'Al limite: dalla parte buona, entro una dispersione dalla soglia. Una soglia a valore non ha «al limite».'],
+        ['=', 'Qui si salvano le partenze, per tutti i gruppi. Nella Selezione dei frame le cambi solo per il gruppo che guardi: lì restano «cambiata per questo gruppo», con Ripristina.'],
+        ['ƒ', 'La formula legge tutte le misure dei frame, anche quelle senza soglia: l\u0027elenco «Aggiungi…» della Selezione le mostra.'], ['?', 'I frame non ancora misurati restano fuori: le soglie non li toccano.']].map(([s, t]) => ({ s, t })) };
+    return { SEL, pronto: true, t, errBg: t.pills[1][0], errFg: t.pills[1][1], F: { tel, desk: !tel }, modo, modoSc, accento, setModo: m => set({ modo: m, modoSc: m }), setModoSc: m => set({ modoSc: m }), setAccento: a => set({ accento: a }),
+      tabs, tab: indOn ? {} : TB, nuova: !indOn && ['servizi', 'scansioni', 'diagnostica', 'backup'].includes(sez), nuovaK: sez, statoN: this.props.stato || 'normale', ind, tabSub, nome, fileRef: this.fileRef, onFile, oz: ozV, siti, sitoN: sito.nome, righe, pred, car, scan, obiettivo, ast, aggiungi, cielo, rin, del, NV, vSito, lingua, vaiServizi, lunaR, lunaOra, sogR, sogRip, plCarte, tempiG, autoP, disegno, lettura, leg };
   }
 }
+// v67: siti d'esempio (dati simulati). mesi: gli ultimi 12 fino all'ultima notte misurata (novembre 2025 – ottobre 2026), 1 = mese con notti misurate
+const SITI0 = [{ k: 'ekar', nome: 'Cima Ekar', coord: '45,85 N · 11,57 E', coordDa: 'dalla ricerca per nome', alt: '1366 m', altDa: 'dal modello del terreno', fuso: 'Europe/Rome · UTC+1', fusoDa: 'dalle coordinate', notti: 112, via: 'bortle', bortle: 3, mis: { b: 4, sqm: '21,4', notti: 38, mesi: [1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1] } },
+  { k: 'casa', nome: 'Casa', coord: '45,55 N · 11,55 E', coordDa: 'scritte a mano', alt: '40 m', altDa: 'scritta a mano', fuso: 'Europe/Rome · UTC+1', fusoDa: 'dalle coordinate', notti: 24, via: 'bortle', bortle: 6, mis: { b: 6, sqm: '18,9', notti: 5, mesi: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1] } },
+  { k: 'coe', nome: 'Passo Coe', coord: '45,87 N · 11,25 E', coordDa: 'dalle coordinate nei frame', alt: '1610 m', altDa: 'dal modello del terreno', fuso: 'Europe/Rome · UTC+1', fusoDa: 'dalle coordinate', notti: 18, via: 'vuoto', mis: { b: 4, sqm: '21,3', notti: 14, mesi: [0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0] } }];
+const BN = ['cielo eccellente, buio pieno', 'cielo buio vero', 'cielo di campagna', 'campagna più chiara', 'cielo di periferia', 'periferia luminosa', 'fra periferia e città', 'cielo di città', 'centro città'];
+const SQMB = [21.99, 21.89, 21.69, 21.25, 19.50, 18.94, 18.38, 17.80]; // tabella di ASTAP (unit_sqm.pas), come bortleDi
+const MESI = ['N', 'D', 'G', 'F', 'M', 'A', 'M', 'G', 'L', 'A', 'S', 'O'], MESIL = ['novembre 2025', 'dicembre 2025', 'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre 2026'];
+const RIS = [{ n: 'Monte Grappa, Pieve del Grappa (TV), Italia', nome: 'Monte Grappa', coord: '45,87 N · 11,80 E', alt: '1775' }, { n: 'Rifugio Bassano, Monte Grappa (VI), Italia', nome: 'Rifugio Bassano', coord: '45,87 N · 11,79 E', alt: '1745' }];
+const CART0 = [{ p: 'Dati/Astro/2026', n: '1240 file FITS' }, { p: 'Esterno/Archivio/Deep sky', n: 'oltre 5000 file FITS' }, { p: 'Esterno/Archivio/Calibrazione', n: '486 file FITS' }];
+const NAS = { '/data': ['astro', 'backup'], '/data/astro': ['2025', '2026', 'Calibrazione'], '/data/astro/2026': ['Cima Ekar', 'Casa'], '/data/astro/2025': ['Cima Ekar'] };
+const presetSito = v => { const siti = JSON.parse(JSON.stringify(SITI0)), o = { siti, sito: 'ekar', nuovo: null, sDel: false, rin: null, mappaK: false };
+  const N0 = { per: 'nome', q: '', ris: null, scelto: -1, lat: '', lon: '', nome: '' };
+  if (v === 'Casa · dati scarsi') o.sito = 'casa';
+  if (v === 'Passo Coe · senza cielo') o.sito = 'coe';
+  if (v === 'Cielo · SQM a mano') Object.assign(siti[0], { via: 'sqm', sqm: '21,6' });
+  if (v === 'Cielo · dalla mappa') { siti[0].via = 'mappa'; o.mappaK = true; }
+  if (v === 'Cielo · dalla mappa, senza chiave') siti[0].via = 'mappa';
+  if (v === 'Rinomina') o.rin = 'Cima Ekar';
+  if (v === 'Aggiungi · per nome') o.nuovo = { ...N0, q: 'Monte Grappa', ris: 'risultati', scelto: 0, nome: 'Monte Grappa' };
+  if (v === 'Aggiungi · per coordinate') o.nuovo = { ...N0, per: 'coord', lat: '45,87 N', lon: '11,80 E', nome: 'Monte Grappa' };
+  if (v === 'Aggiungi · nessun luogo') o.nuovo = { ...N0, q: 'Monte Grapa', ris: 'nessuno' };
+  if (v === 'Elimina · sito senza notti') { siti.push({ k: 'n1', nome: 'Monte Grappa', coord: '45,87 N · 11,80 E', coordDa: 'dalla ricerca per nome', alt: '1775 m', altDa: 'dal modello del terreno', fuso: 'Europe/Rome · UTC+1', fusoDa: 'dalle coordinate', notti: 0, via: 'vuoto', mis: null }); o.sito = 'n1'; o.sDel = true; }
+  return o; };
 </script>
 </body>
 </html>
