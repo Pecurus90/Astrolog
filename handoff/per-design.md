@@ -13,7 +13,32 @@ Consegna controllata: v75 (7/11), in `handoff/design/` al posto della v58.6.
 
 ## Da dare
 
-Nessuna.
+Dal secondo controllo della v75 (7/11), file e righe di `handoff/design/pagine/`:
+- [da dare] Selezione dei frame: il Gradiente e' ancora in % (370, criteri 378, 476, formula 591):
+  in unita' di rumore come nelle Misure (`grad/100*bg/rum`, MisureFrame 192).
+- [da dare] Virgola decimale, i residui: Statistiche assi SQM (446, 449), Eccentricita' (393,
+  412), ore con passo 2,5 (358, 365, 375, 525); Progetti 254-255 (eccentricita', SQM); Piano
+  della notte 616, 649 (mag); Attrezzatura 427 («1.25″»). Migliaia con lo spazio sottile: Planner
+  785 «22 080 oggetti», non «22.080» (glossario).
+- [da dare] Dashboard 603: la pillola «sale fino a 64° alle 05:30» non torna con la curva della
+  Luna della stessa carta (356, circa 57° a quell'ora): il numero della pillola dalla curva.
+- [da dare] Meteo 334, 385: raffiche derivate «fino a 25 km/h» accanto al Vento «buona»; sotto 25
+  o il giudizio coerente.
+- [da dare] Impostazioni, via «Dalla mappa» senza chiave: SezioneServizi 84 dice che «resta
+  spenta», Impostazioni 501, 507 la lascia scegliere. Una delle due.
+- [da dare] Attrezzatura, «Unisci a» (188): l'unione sposta frame e il giro riparte
+  (`docs/domini/attrezzatura.md` 112): anche qui l'avviso «frame da rielaborare».
+- [da dare] Misure dei frame, tessera Curvatura (358): il testo nomina la regola, «HFD oltre il
+  75% verso gli angoli meno HFD al centro».
+- [da dare] Percorso di ASTAP d'esempio: placeholder `/opt/astap/astap_cli` (Primo avvio 86) e
+  predefinito `Programmi/astap/astap_cli` (Primo avvio 138, Impostazioni 349, 430, 590,
+  SezioneServizi 103): uno solo, non legato a Windows italiano.
+- [da dare] Selezione dei frame: la cartella d'esempio `nas/astro` (275, 444, 455, 634) e «nas/astro
+  risponde piano»: un nome generico.
+- [da dare] Cerca (componenti/Cerca 84): «Carta del cielo» e' una pagina senza indirizzo; vive nel
+  Planner, va tolta dalla ricerca.
+- [da dare] Foglio: `alHalo` e `alPulse` (Telaio 126-127) solo nell'helmet del Telaio: nel foglio,
+  come `skPulse`.
 
 ## Date, da controllare alla consegna
 
