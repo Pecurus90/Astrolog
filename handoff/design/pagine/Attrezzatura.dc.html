@@ -185,7 +185,7 @@ class Component extends DCLogic {
       else if (ap.tipo === 'Filtro') { D.filtri.push({ id: 'n' + Date.now(), nome: v.Nome.trim(), marca, modello: v.Modello || '', man: 1, bande: bandeV(v).map(([b, nm]) => [b, pos(nm) || null]), s: specV(v, 'Filtro'), ore: 'file' }); sel = { k: 'g', n: 'Filtri' }; }
       else { D.comp.push({ id: 'n' + Date.now(), tipo: ap.tipo, nome: v.Nome.trim(), marca, modello: v.Modello || '', note: v.Note || '', man: 1, s: specV(v, ap.tipo), ore: 'file' }); sel = { k: 'g', n: gruppoDi({ tipo: ap.tipo }) }; } }
     if (ap.k === 'mod') { const lista = D.filtri.some(c => c.id === ap.id) ? D.filtri : D.comp, i = lista.findIndex(c => c.id === ap.id), c = lista[i];
-      if (v.unisci && v.unisci !== '--') lista.splice(i, 1);
+      if (v.unisci && v.unisci !== '--') { if (c.frame) rielab = c.frame; lista.splice(i, 1); }   // l'unione sposta i frame: il giro riparte
       else { const vecchio = c.nome, nuovo = v.Nome.trim();
         Object.assign(c, { nome: nuovo, marca, modello: v.Modello || '' });
         if (c.bande) { c.bande = bandeV(v).map(([b, nm]) => [b, pos(nm) || null]); c.s = { ...c.s, ...specV(v, 'Filtro') }; }
@@ -275,6 +275,7 @@ class Component extends DCLogic {
         if (!unito) blocchi = [blocco('chi', 'nome e modello', chi, scritti(chiN, chiK.length)), blocco('dati', 'dati tecnici', tec, tecR)];
         if (comp) { const altri = (isF ? D.filtri : D.comp.filter(c => c.tipo === tipo)).filter(c => c.id !== comp.id).map(c => c.nome);
           if (altri.length) blocchi.push(blocco('u', '', [F('unisci', { lab: 'Unisci a', orig: '', x: { tendina: true, opts: ['--', ...altri], v: v.unisci || '--', on: e => setV({ unisci: e.target.value }) } })])); }
+        if (unito && comp.frame) righe.push({ s: '↻', l: num(comp.frame) + ' frame da rielaborare: passano a ' + v.unisci, bg: 'transparent', fg: t.text, bd: '1.5px solid ' + t.accent });
         if (unito) righe.push({ s: '!', l: 'L\u0027unione non è reversibile.', bg: t.warn, fg: t.warnFg, bd: '0' });
         else if (!(v.Nome || '').trim()) { ok = false; perche = 'Per salvare serve il nome.'; }
         else if (isF && !bandeV(v).length) { ok = false; perche = 'Per salvare serve almeno una banda.'; } }
@@ -424,7 +425,7 @@ const ICT = { ottica: 'ottica', camera: 'camera', montatura: 'montatura', ridutt
 const TIPI = ['ottica', 'camera', 'montatura', 'riduttore', 'ruota portafiltri', 'ottica di guida', 'guida fuori asse', 'camera di guida', 'focheggiatore', 'distanziale', 'Filtro', 'Setup'];
 const GRUPPI = [['Telescopi e obiettivi', 'ottica'], ['Camere', 'camera'], ['Montature', 'montatura'], ['Riduttori e spianatori', 'riduttore'], ['Ruote portafiltri', 'ruota portafiltri'], ['Guide', 'ottica di guida'], ['Guide fuori asse', 'guida fuori asse'], ['Camere di guida', 'camera di guida'], ['Focheggiatori', 'focheggiatore'], ['Distanziali', 'distanziale'], ['Filtri', 'Filtro']];
 const PARTI = ['ottica', 'camera', 'riduttore', 'ruota portafiltri', 'distanziali', 'montatura', 'focheggiatore', 'guida', 'camera di guida', 'programma di ripresa'];
-const MISURE = ['1.25″', '31 mm', '36 mm', '2″', '50 mm quadrato'];
+const MISURE = ['1,25″', '31 mm', '36 mm', '2″', '50 mm quadrato'];
 const BANDE = ['L', 'R', 'G', 'B', 'HA', 'HB', 'OIII', 'SII'];
 const BK = { L: 'l', R: 'r', G: 'g', B: 'b', HA: 'ha', HB: 'hb', OIII: 'oiii', SII: 'sii' };
 const PROGRAMMI = ['N.I.N.A.', 'ASIAIR'];

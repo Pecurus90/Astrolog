@@ -355,14 +355,14 @@ class Component extends DCLogic {
     let vb;
     if (!tutto) { const out = A.out, mx = Math.max(4, ...out.map(g => g.ore)), tk = ticks(0, mx, 4), s = scala(wB, VH, 0, tk.hi), bw = Math.max(2, (wB - PL - PR) / 366 * 0.8);
       const mk = Object.entries(primaVolta).filter(([k, g]) => g !== primoSetup && g.y === Y && (setup === 'tutti' || setup === k)).map(([k, g], i) => { const x = s.X(g.doy / 366), dx = tel ? x > wB / 2 : x > wB - 230; return { lx: fx(x), y1: PT, y2: VH - PB, x: fx(x + (dx ? -5 : 5)), y: PT + i * 14, tf: dx ? '-100%,0' : '0,0', c: t.text, l: tel ? String(SN(k)).split(' · ')[0] : SN(k) }; }); // v53: sul telefono il nome corto e il lato che c'e'
-      vb = { w: wB, h: VH, gy: gridY(wB, s, tk, v => v + ' h'), gx: gxMesi(s, VH, tel ? 2 : 1), mk, tit: 'ore integrate, notte per notte',
+      vb = { w: wB, h: VH, gy: gridY(wB, s, tk, v => String(v).replace('.', ',') + ' h'), gx: gxMesi(s, VH, tel ? 2 : 1), mk, tit: 'ore integrate, notte per notte',
         b: out.map(g => { const x = s.X(g.doy / 366), y = s.Y(g.ore); return { x: fx(x - bw / 2), y: fx(y), w: fx(bw), h: fx(s.Y(0) - y), c: t.accent, dl: (0.1 + x / wB * 0.7).toFixed(2) + 's', hx: fx(x - 5), hy: PT, hw: 10, hh: VH - PT - PB, on: tipOn('vb', clampX(x, wB, 150), y, dl(g), [RW('ore', fh(g.ore))].concat(usati.length > 1 ? [RW('setup', SN(g.setup))] : [])) }; }),
         aria: 'Ore integrate notte per notte nel ' + Y + ': ' + out.length + ' notti, ' + h0(A.ore) };
     } else { const N = (2026 - anni[0]) * 12 + 9, mesi = Array.from({ length: N }, (_, i) => ({ i, y: anni[0] + Math.floor(i / 12), m: i % 12, h: 0 }));
       A.out.forEach(g => { mesi[(g.y - anni[0]) * 12 + g.m - 1].h += g.ore; });
       const tk = ticks(0, Math.max(4, ...mesi.map(m => m.h)), 4), s = scala(wB, VH, 0, tk.hi), bw = Math.max(2, (wB - PL - PR) / N * 0.7);
       const mk = Object.entries(primaVolta).filter(([k, g]) => g !== primoSetup && (setup === 'tutti' || setup === k)).map(([k, g], i) => { const x = s.X(((g.y - anni[0]) * 12 + g.m - 0.5) / N), dx = x > wB - 230; return { lx: fx(x), y1: PT, y2: VH - PB, x: fx(x + (dx ? -5 : 5)), y: PT + i * 14, tf: dx ? '-100%,0' : '0,0', c: t.text, l: SN(k) }; });
-      vb = { w: wB, h: VH, gy: gridY(wB, s, tk, v => v + ' h'), gx: anni.map(y => gxL(s.X(((y - anni[0]) * 12 + 6) / N), VH, String(y))), mk, tit: 'ore integrate, mese per mese',
+      vb = { w: wB, h: VH, gy: gridY(wB, s, tk, v => String(v).replace('.', ',') + ' h'), gx: anni.map(y => gxL(s.X(((y - anni[0]) * 12 + 6) / N), VH, String(y))), mk, tit: 'ore integrate, mese per mese',
         b: mesi.filter(m => m.h > 0).map(m => { const x = s.X((m.i + 0.5) / N), y = s.Y(m.h); return { x: fx(x - bw / 2), y: fx(y), w: fx(bw), h: fx(s.Y(0) - y), c: t.accent, dl: (0.1 + x / wB * 0.7).toFixed(2) + 's', hx: fx(x - bw / 2 - 1), hy: PT, hw: fx(bw + 2), hh: VH - PT - PB, on: tipOn('vb', clampX(x, wB, 70), y, cap1(MESI[m.m]) + ' ' + m.y, [RW('ore', fh(m.h))]) }; }),
         aria: 'Ore integrate mese per mese, ' + periodo };
     }
@@ -372,7 +372,7 @@ class Component extends DCLogic {
     if (!tutto) { const cY = cum(Y, endOf(Y)), cC = C != null ? cum(C, endOf(C)) : null, mx = Math.max(10, cY[cY.length - 1], cC ? cC[cC.length - 1] : 0), tk = ticks(0, mx, 4), s = scala(wC, VH, 0, tk.hi);
       const path = a => a.map((v, i) => (i ? 'L' : 'M') + fx(s.X(i / 366)) + ' ' + fx(s.Y(v))).join('');
       const vY = cY[Math.min(OD, cY.length - 1)], vC = cC ? cC[Math.min(OD, cC.length - 1)] : null;
-      vc = { w: wC, h: VH, gy: gridY(wC, s, tk, v => v + ' h'), gx: gxMesi(s, VH, 2), py: path(cY), pc: cC ? path(cC) : '', ox: fx(s.X(OD / 366)), oy1: PT, oy2: VH - PB, yy: fx(s.Y(vY)), cy: vC != null ? fx(s.Y(vC)) : null,
+      vc = { w: wC, h: VH, gy: gridY(wC, s, tk, v => String(v).replace('.', ',') + ' h'), gx: gxMesi(s, VH, 2), py: path(cY), pc: cC ? path(cC) : '', ox: fx(s.X(OD / 366)), oy1: PT, oy2: VH - PB, yy: fx(s.Y(vY)), cy: vC != null ? fx(s.Y(vC)) : null,
         tit: 'cumulato, sul giorno dell\u0027anno', oggi: 'al 30 set: ' + h0(vY) + (vC != null ? ' · ' + cl + ' ' + h0(vC) : ''),
         leg: [{ l: String(Y), st: 'solid', c: t.accent }].concat(C != null ? [{ l: String(C), st: 'dashed', c: t.muted }] : []), aria: 'Ore cumulate nel ' + Y + (C != null ? ' e nel ' + C : '') };
     } else { const gg = G.giorni.filter(g => !g.futuro), s0 = []; let c = 0; gg.forEach(g => { if (uscita(g)) c += g.ore; s0.push([fT(g), c]); });
@@ -390,7 +390,7 @@ class Component extends DCLogic {
       : 'M' + fx(x - r) + ' ' + fx(y) + 'a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0a' + r + ' ' + r + ' 0 1 0 ' + -2 * r + ' 0';
     const MIS = { fwhm: { l: 'FWHM allo zenit', px: true }, hfd: { l: 'HFD allo zenit', px: true }, ecc: { l: 'Eccentricità', px: false } };
     const mis = st.mis || 'fwhm', MI = MIS[mis];
-    const val = (v, k) => MI.px ? v.toFixed(1).replace('.', ',') + '″ · ' + (v / SD.SETUP[k].scala).toFixed(1).replace('.', ',') + ' px' : v.toFixed(2);
+    const val = (v, k) => MI.px ? AL.virg(v, 1) + '″ · ' + AL.virg(v / SD.SETUP[k].scala, 1) + ' px' : AL.virg(v, 2);
     const HC = tel ? 220 : 300, wK = cw('cap');
     // Confronta setup (v31.7): due setup scelti nello stesso periodo, in ″; la tendina in testa qui non conta
     const inP = g => !g.futuro && g.out && (tutto || g.y === Y), oreP = k => G.giorni.reduce((a, g) => a + (inP(g) && g.setup === k ? g.ore : 0), 0);
@@ -409,7 +409,7 @@ class Component extends DCLogic {
         const d = seg.filter(sg => sg.length > 1).map(sg => sg.map((q, i) => { const w = sg.slice(Math.max(0, i - 3), i + 4).map(z => z.m.med); return (i ? 'L' : 'M') + fx(s.X(q.x)) + ' ' + fx(s.Y(med(w))); }).join('')).join('');
         if (d) tr.push({ d, c: COL[k], da: si ? '5 4' : 'none' }); }));
       const ord = pts.slice().sort((a, b) => b.si - a.si);
-      capV = { ok: true, w: wK, h: HC, gy: gridY(wK, s, tk, v => MI.px ? v.toFixed(1).replace('.', ',') + '″' : v.toFixed(2)), gx: tutto ? gxAnni(s, HC) : gxMesi(s, HC, tel ? 2 : 1), tr,
+      capV = { ok: true, w: wK, h: HC, gy: gridY(wK, s, tk, v => MI.px ? AL.virg(v, 1) + '″' : AL.virg(v, 2)), gx: tutto ? gxAnni(s, HC) : gxMesi(s, HC, tel ? 2 : 1), tr,
         wh: ord.filter(q => q.m.n >= 4).map(q => ({ x: fx(s.X(q.x)), y1: fx(s.Y(q.m.q1)), y2: fx(s.Y(q.m.q3)), c: COL[q.k], o: q.si ? 0.3 : 0.45 })),
         pt: ord.map(q => { const x = s.X(q.x), y = s.Y(q.m.med);
           return { x: fx(x), y: fx(y), d: forma(q.k, x, y, 3.2), c: COL[q.k], f: q.si ? t.card : COL[q.k],
@@ -443,10 +443,10 @@ class Component extends DCLogic {
         const rCm = i => [RW('Luna sotto −5°', mG[i] == null ? '–' : AL.virg(mG[i], 2)), RW('Luna su', mS[i] == null ? '–' : AL.virg(mS[i], 2)), RW('notti', Math.max(nG[i], nS[i]))];
         const pt = []; mG.forEach((v, i) => v != null && pt.push({ x: fx(X(i)), y: fx(s.Y(v)), c: t.accent, on: tipOn('cm', clampX(X(i), wM, 80), s.Y(v), cap1(MESI[i]), rCm(i), 'm' + i) }));
         mS.forEach((v, i) => v != null && pt.push({ x: fx(X(i)), y: fx(s.Y(v)), c: LC, on: tipOn('cm', clampX(X(i), wM, 80), s.Y(v), cap1(MESI[i]), rCm(i), 'm' + i) }));
-        cm = { w: wM, h: HS, gy: gridY(wM, s, tk, v => v.toFixed(1)), gx: M3.map((l, i) => gxL(X(i), HS, l[0])), pg: path(mG), ps: path(mS), pt, aria: 'SQM mese per mese, con la Luna sotto −5° e con la Luna su' };
+        cm = { w: wM, h: HS, gy: gridY(wM, s, tk, v => AL.virg(v, 1)), gx: M3.map((l, i) => gxL(X(i), HS, l[0])), pg: path(mG), ps: path(mS), pt, aria: 'SQM mese per mese, con la Luna sotto −5° e con la Luna su' };
         const oo = cN.filter(g => g.ore9), oreM = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => oo.length ? oo.reduce((a, g) => a + g.ore9[i], 0) / oo.length : null), HL = ['21', '22', '23', '00', '01', '02', '03', '04', '05'];
         const wO = cw('co'), tk2 = ticks(Math.min(...oreM), Math.max(...oreM), 3), s2 = scala(wO, HS, tk2.lo, tk2.hi), X2 = i => s2.X(i / 8);
-        co = { w: wO, h: HS, gy: gridY(wO, s2, tk2, v => v.toFixed(1)), gx: HL.map((l, i) => gxL(X2(i), HS, l)).filter((_, i) => !tel || i % 2 === 0), p: oreM.map((v, i) => (i ? 'L' : 'M') + fx(X2(i)) + ' ' + fx(s2.Y(v))).join(''),
+        co = { w: wO, h: HS, gy: gridY(wO, s2, tk2, v => AL.virg(v, 1)), gx: HL.map((l, i) => gxL(X2(i), HS, l)).filter((_, i) => !tel || i % 2 === 0), p: oreM.map((v, i) => (i ? 'L' : 'M') + fx(X2(i)) + ' ' + fx(s2.Y(v))).join(''),
           pt: oreM.map((v, i) => ({ x: fx(X2(i)), y: fx(s2.Y(v)), on: tipOn('co', clampX(X2(i), wO, 60), s2.Y(v), 'alle ' + HL[i], [RW('SQM', AL.virg(v, 2))]) })), aria: 'SQM medio dalle 21 alle 05' };
         // v67 (brief 11.1): almeno 4 mesi senza buchi di oltre 3, sugli ultimi 12 fino all'ultima notte misurata
         const sg0 = G.giorni.filter(g => g.sqmGiu != null && g.t <= tO && SD.SETUP[g.setup].bias), mU = sg0.length ? Math.max(...sg0.map(g => g.y * 12 + g.m)) : 0,
@@ -522,7 +522,7 @@ class Component extends DCLogic {
     const wS = cw('stl'), HSt = tel ? 200 : 240, valsL = grid.flatMap(r => r.c.map(c => c.v)).concat(primo ? [] : medie.map(c => c.v)).filter(v => v != null);
     let stl = {};
     if (linee && valsL.length) { const tk = ticks(Math.min(...valsL), Math.max(...valsL), 4), s = scala(wS, HSt, tk.lo, tk.hi), X = i => s.X((i + 0.5) / 12);
-      const fT2 = v => misS === 'ore' ? v + ' h' : misS === 'notti' || misS === 'qual' ? String(Math.round(v * 10) / 10) : misS === 'ecc' ? AL.virg(v, 2) : misS === 'sqm' ? AL.virg(v, 1) : AL.virg(v, 1) + '″';
+      const fT2 = v => misS === 'ore' ? String(v).replace('.', ',') + ' h' : misS === 'notti' || misS === 'qual' ? String(Math.round(v * 10) / 10).replace('.', ',') : misS === 'ecc' ? AL.virg(v, 2) : misS === 'sqm' ? AL.virg(v, 1) : AL.virg(v, 1) + '″';
       const path = cc => { let d = '', on = false; cc.forEach((c, i) => { if (c.v == null) { on = false; return; } d += (on ? 'L' : 'M') + fx(X(i)) + ' ' + fx(s.Y(c.v)); on = true; }); return d; };
       const hr = grid.find(r => r.y === telY), lastI = hr.c.map(c => c.v != null).lastIndexOf(true), cw2 = (wS - PL - PR) / 12;
       const fine = []; if (lastI >= 0) fine.push({ x: fx(X(lastI) + 8), y: fx(s.Y(hr.c[lastI].v)), tf: '0,-50%', c: t.text, fs: '12px', fw: 600, l: String(telY) });

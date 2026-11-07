@@ -1,5 +1,14 @@
 # AstroLog — cronologia
 
+## v76 — Secondo controllo, 11 voci — 7/11/2026
+
+- Selezione: gradiente in unità di rumore; cartella d'esempio Condivisa/Astro.
+- Virgola e spazio sottile negli ultimi numeri (Statistiche, Progetti, Piano della notte, Attrezzatura, Planner).
+- Dashboard: pillola della Luna dalla curva. Meteo: raffiche × 1,5.
+- Servizi: «Dalla mappa» senza chiave si sceglie ma non dà cielo. Attrezzatura: Unisci a con frame da rielaborare.
+- Curvatura con la regola del 75%; ASTAP /opt/astap/astap_cli ovunque; Cerca senza Carta del cielo; alPulse e alHalo nel foglio.
+- Pacchetto `consegna/astrolog-v76.zip`.
+
 ## v75 — Le 15 voci del controllo della v73 — 7/11/2026
 
 - Foglio: i movimenti (skPulse e gli altri sette) definiti in `astrolog.css`; Archivio con `data-formato` e le misure del formato in classi.

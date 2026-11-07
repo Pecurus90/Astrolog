@@ -613,7 +613,7 @@ class Component extends DCLogic {
       // Le comete stanno nel deep sky (pose lunghe), per sigla
       const comV = buioNo ? [] : COMx.map(x => { let a0 = null, a1 = null, mx = -90, mxT = null; if (hasW) for (let m = W0; m < W1; m += 5) { const h = altO(x, m); if (h > mx) { mx = h; mxT = m; } if (ok(x, m)) { if (a0 == null) a0 = m; a1 = m + 5; } } return { x, a0, a1, mx, mxT }; });
       prop = prop.concat(comV.map(({ x, a0, a1, mx, mxT }) => ({ id: x.id, n: x.n, set: POS.set, ic: IC.cometa, col: t.tipi.cometa, lock: false, puo: a0 != null, man: null, nota: '', nel: nelDi(x.id),
-        righe: [{ s: 'mag ' + x.mag.toFixed(1) + ' · ' + Math.round(mx) + '° alle ' + F(mxT) + ' · dati simulati', fg: t.text, fw: 400 }, { s: 'posizione ricalcolata per ogni blocco', fg: t.muted, fw: 400 }],
+        righe: [{ s: 'mag ' + x.mag.toFixed(1).replace('.', ',') + ' · ' + Math.round(mx) + '° alle ' + F(mxT) + ' · dati simulati', fg: t.text, fw: 400 }, { s: 'posizione ricalcolata per ogni blocco', fg: t.muted, fw: 400 }],
         pills: [PL('', 'Cometa', null), lunaPill({ ...x, man: [['l', 1]] })], ore: a0 != null ? 'sopra ' + AMIN + '° ' + F(a0) + '–' + F(a1) : 'sotto ' + AMIN + '° stanotte', ...dsH(x, { x, fix: false, d: x.d }) })));
       flex = flex.concat(comV.filter(r => r.a0 != null).map(r => ({ x: r.x, need: r.x.d })));
       const sig = this.state.campoT.trim();
@@ -646,7 +646,7 @@ class Component extends DCLogic {
         const sov = r.fix && !nel ? items.find(o => o.a < r.e && r.a < o.end) : null, righe = [];
         if (x.cat === 'neo') righe.push({ s: 'posizione dal Minor Planet Center, serve la rete', fg: t.muted, fw: 400 });
         if (x.cat === 'aavso') righe.push({ s: 'filtro ' + x.fil + ' · ' + x.cad + ' · priorità ' + x.pri, fg: t.text, fw: 400 }, { s: 'ultima: ' + x.ult + ' · dal Target Tool', fg: t.muted, fw: 400 });
-        if (x.cat === 'sn') righe.push({ s: 'mag ' + x.mag.toFixed(1) + ' · in ' + x.ospite + ' · ' + x.giorni + ' giorni dalla scoperta', fg: t.text, fw: 400 }, { s: 'dal Transient Name Server', fg: t.muted, fw: 400 }); if (x.sim) righe.push({ s: 'dati simulati per la tavola', fg: t.muted, fw: 400 });
+        if (x.cat === 'sn') righe.push({ s: 'mag ' + x.mag.toFixed(1).replace('.', ',') + ' · in ' + x.ospite + ' · ' + x.giorni + ' giorni dalla scoperta', fg: t.text, fw: 400 }, { s: 'dal Transient Name Server', fg: t.muted, fw: 400 }); if (x.sim) righe.push({ s: 'dati simulati per la tavola', fg: t.muted, fw: 400 });
         if (sov) righe.push({ s: '✕ Si sovrappone a ' + sov.n + ': escluso.', fg: t.text, fw: 600 });
         const ore = x.cat === 'exo' ? 'transito ' + F(x.t1) + '–' + F(x.t2) + ' · base 1 h prima e dopo' : x.ecl ? 'minimo ' + F(x.min) + ' · binaria a eclisse' : r.a0 != null ? 'sopra ' + AMIN + '° ' + F(r.a0) + '–' + F(r.a1) + ' · ' + mn(x.d) : mn(x.d);
         return { id: x.id, n: x.n, set: POS.set, ic: IC[x.cat], col: colDi(x), lock: r.fix, puo: !(r.fix && nel), ore, pills: [PL('', TIPO[x.cat] + (r.fix ? ' · ora fissa' : ''), null)], man: null, nota: '', righe: righe.length ? righe : null, nel, link: x.cat === 'aavso' ? { l: 'Alert ↗', h: 'https://www.aavso.org/aavso-alert-notices' } : null, ...dsH(x, q) }; });

@@ -251,8 +251,8 @@ class Component extends DCLogic {
       // Le misure come nel riepilogo dell'Archivio: mediane del progetto, un giudizio dove c'e' una soglia (dati simulati dalle tre mediane)
       const mis = x.mis ? (() => { const [fw, ecc, sqm, n] = x.mis, nonG = MS.nonGiudicabile(F), gz = g => g ? { s: g.s, t: g.t, bg: g.e === 'neutra' ? t.card : t.pills[g.e][0], fg: g.e === 'neutra' ? t.text : t.pills[g.e][1] } : null, k = (fw * 10) % 7;
         return [{ l: 'FWHM', v: fw.toFixed(1).replace('.', ',') + '″ · ' + (fw / scala).toFixed(1).replace('.', ',') + ' px', s: nonG ? 'non giudicabile su questo setup' : MS.camp(fw / scala), gz: nonG ? null : gz(MS.fwhm(fw, F)) },
-          { l: 'Eccentricità', v: ecc.toFixed(2), s: '', gz: gz(MS.ecc(ecc)) },
-          { l: 'Luminosità del cielo', v: 'SQM ' + sqm.toFixed(1), s: 'Bortle ' + BORTLE[c[6]] + ' a ' + c[6], gz: gz(MS.cielo(sqm, BORTLE[c[6]])) }]; })() : [];
+          { l: 'Eccentricità', v: ecc.toFixed(2).replace('.', ','), s: '', gz: gz(MS.ecc(ecc)) },
+          { l: 'Luminosità del cielo', v: 'SQM ' + sqm.toFixed(1).replace('.', ','), s: 'Bortle ' + BORTLE[c[6]] + ' a ' + c[6], gz: gz(MS.cielo(sqm, BORTLE[c[6]])) }]; })() : [];
       const notti = x.sol ? [{ l: 'Nel piano', v: x.nelPiano ? x.nelPiano : 'non in un piano', s: x.nelPiano ? 'Sistema solare · notte' : '', link: x.nelPiano ? { l: 'Apri il piano ↗', href: 'Piano della notte.dc.html' } : null }, { l: 'Ultima volta nel piano', v: x.ult, s: '' }].map(n => ({ ...n, bd: '1px solid ' + t.line })) : [
         ...(x.gr === 'corso' ? [{ l: 'Stanotte', v: PIANO[x.id] ? 'nel piano · ' + PIANO[x.id] : 'non nel piano', s: '', link: { l: PIANO[x.id] ? 'Apri il piano ↗' : 'Aggiungi al piano ↗', href: 'Piano della notte.dc.html' } }] : []),
         { l: 'Ultima notte', v: x.ultima || 'nessuna, ancora', s: '' },

@@ -331,7 +331,7 @@ class Component extends DCLogic {
         m: { ...n0.m, nuvole: { ...n0.m.nuvole, d: cut(n0.m.nuvole.d), v: '?', sotto: 'copertura incompleta dalle 01:00' } } }; }
     // Nuvole basse dagli strati; raffiche (simulate dal vento medio)
     [...NIGHTS, ...DAYS].forEach(n => { if (!n.m) return; if (n.layers) n.m.basse = { d: n.layers.b };
-      if (n.m.vento) n.m.raffiche = { d: n.m.vento.d.map(x => x == null ? null : Math.round(x * 1.8)) }; });
+      if (n.m.vento) n.m.raffiche = { d: n.m.vento.d.map(x => x == null ? null : Math.round(x * 1.5)) }; });
     const LIST = SUN ? DAYS : NIGHTS;
     // Notte: il verdetto dalla Trasparenza oraria 0-100 (ADR 0034), media sul buio; buona da 70, incerta da 40; il seeing e' fuori. Notte: ore di posa (ADR 0034), trasparenza per ora di buio divisa per banda della Luna.
     const qN = 57, qt0 = SUN ? 6 : 18, qlat = 45.85 * Math.PI / 180, qR = Math.PI / 180, GOOD = 60;

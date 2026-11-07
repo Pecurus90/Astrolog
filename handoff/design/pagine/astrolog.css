@@ -550,6 +550,8 @@
 @keyframes alGrowX { from { transform: scaleX(0); } }
 @keyframes alFade { from { opacity: 0; } }
 @keyframes alPop { from { opacity: 0; transform: scale(.6); } }
+@keyframes alPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.92); } }
+@keyframes alHalo { 0% { box-shadow: 0 0 0 0 var(--h); } 100% { box-shadow: 0 0 0 10px transparent; } }
 @keyframes alWipe { from { clip-path: inset(-12px 100% -12px -12px); } to { clip-path: inset(-12px -12px -12px -12px); } }
 
 /* Campo e tendina (v32): un campo solo per testo, numeri e tendine. 44 di altezza (36 --piccolo sul desktop, sempre 44 sul telefono), angoli 12,

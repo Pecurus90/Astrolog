@@ -782,7 +782,7 @@ class Component extends DCLogic {
       : { tipi: cs.CLASSI_P.map((l, i) => ({ l, c: cs.COLORI[i] })), tipiTel: cs.CLASSI_P.map((l, i) => ({ l, c: cs.COLORI[i] })), calore: null };
     // Telefono (v51): la legenda si apre da un tondo sul cielo, non sta piu' sotto la carta
     leg.telOn = !!this.state.legOn; leg.telCambia = () => this.setState({ legOn: !this.state.legOn }); leg.telAria = leg.telOn ? 'Chiudi la legenda' : 'Apri la legenda';
-    const credito = { cielo: 'Nell\u0027app: stelle fino a mag 6,5 e i 22.080 oggetti di OpenNGC (Sh2 compreso), nel pacchetto; qui un catalogo ridotto · Via Lattea: d3-celestial' + (!this.rete() ? ' · senza rete: restano le stelle disegnate' : ' · immagini di Aladin dal proxy dell\u0027app'),
+    const credito = { cielo: 'Nell\u0027app: stelle fino a mag 6,5 e i 22\u202F080 oggetti di OpenNGC (Sh2 compreso), nel pacchetto; qui un catalogo ridotto · Via Lattea: d3-celestial' + (!this.rete() ? ' · senza rete: restano le stelle disegnate' : ' · immagini di Aladin dal proxy dell\u0027app'),
       aladin: s.aladin ? aladinL : s.img === 'carica' ? 'Aladin · carico l\u0027immagine…' : s.img === 'errore' ? 'Aladin non risponde: resta il cielo disegnato' : '' };
     const stato = { carica: !s.motore, testo: s.errore || 'Preparo il cielo: 15 544 stelle e 13 889 oggetti…' };
 

@@ -1,4 +1,4 @@
-# Per Claude Code · porting (v75, 7/11/2026)
+# Per Claude Code · porting (v76, 7/11/2026)
 
 Da Claude Design. Versione finale dopo il brief del 6/11 (v60–v73): sostituisce in `handoff/design/` la consegna v58.6. La tavola e' la specifica, aspetto e funzioni (regola del 27/10); controlla ogni pagina con la lista di /porta-tavola prima di portarla. Sostituisce `docs/archivio/per-claude-code-porting-v32.md` (resta valido per tutto cio' che qui non e' detto).
 
@@ -94,6 +94,20 @@ Il brief intero e' in `docs/archivio/brief-porting-v59.md`; ogni punto ha la sua
 **Restano disegnati, arrivano dopo**: esportazioni N.I.N.A. e SharpCap, ricerche online (JPL, MPC, VizieR, AAVSO, TNS), eventi dall'orbita vera, la mappa del transito, la carta Sole del Meteo, Diagnostica e «Ultimo tentativo» dei servizi.
 
 **Stato**: v60–v73 da approvare da Marco sulla tavola, parole comprese.
+
+## v76 (7/11): le 11 voci del secondo controllo
+
+1. **Selezione dei frame, Gradiente**: «Gradiente del fondo» in unità di rumore, come le Misure (grad / 100 × fondo / rumore; rumore simulato √fondo × 1,6). Criteri e formula («Gradiente del fondo · in unità di rumore»).
+2. **Virgola**: Statistiche (assi SQM, eccentricità, ore con passo 2,5, legenda), Progetti (eccentricità, SQM), Piano della notte (mag), Attrezzatura «1,25″». Planner «22 080 oggetti» con lo spazio sottile.
+3. **Dashboard**: la pillola della Luna prende altezza e ora dal massimo della curva della stessa carta.
+4. **Meteo**: raffiche derivate = vento × 1,5 (prima 1,8): con la notte d'esempio restano sotto 25 km/h accanto al Vento «buona».
+5. **Dalla mappa senza chiave**: si può scegliere (come Impostazioni); SezioneServizi ora dice «si può scegliere ma non dà un cielo finché non la aggiungi».
+6. **Attrezzatura, Unisci a**: nel modulo «{n} frame da rielaborare: passano a {nome}»; al salvataggio parte l'avviso dei frame da rielaborare.
+7. **Curvatura**: «HFD oltre il 75% verso gli angoli meno HFD al centro».
+8. **ASTAP**: un solo percorso d'esempio, `/opt/astap/astap_cli` (placeholder e predefinito, Primo avvio, Impostazioni, SezioneServizi).
+9. **Cartella d'esempio**: `Condivisa/Astro` al posto di nas/astro.
+10. **Cerca**: tolta «Carta del cielo».
+11. **Foglio**: `alPulse` e `alHalo` in `astrolog.css`.
 
 ## v75 (7/11): le 15 voci del controllo della v73
 

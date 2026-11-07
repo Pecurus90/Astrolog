@@ -81,7 +81,7 @@ class Component extends DCLogic {
       return { nome, serve, link, aria: 'Chiave di ' + nome, chiave: vuota ? '' : '…' + fine, vuota, esito: vuota ? 'mancante' : e[0], esitoT: vuota ? 'senza chiave' : e[1], quando: vuota ? '' : e[2], dopo: vuota ? dopo : st === 'rifiutata' ? 'Controlla la chiave sul sito del servizio e incollala di nuovo.' : '', cambia: no, togli: no, verifica: no }; };
     const mb = { normale: 'attiva', 'senza chiave': 'senza chiave', attiva: 'attiva', rifiutata: 'rifiutata', 'non raggiungibile': 'non raggiungibile' }[stato] || 'attiva';
     const servizi = [svc('Meteoblue', 'Il seeing della notte in secondi d\u0027arco, nel Meteo.', 'https://www.meteoblue.com/it/weather-api', mb, 'a3f9', 'Senza la chiave il seeing è solo una stima dal vento in quota, quando è forte: «scarso».'),
-      svc('Servizio del cielo · lightpollutionmap.info', 'Il cielo di un sito dal World Atlas della luce artificiale, senza misure: una delle quattro vie del cielo, in Siti. La chiave è gratuita: si chiede con una email all\u0027autore del sito; vale 500 richieste al giorno.', 'https://www.lightpollutionmap.info/', 'senza chiave', '', 'Senza la chiave, in Siti la via «Dalla mappa» resta spenta; le altre tre funzionano.'),
+      svc('Servizio del cielo · lightpollutionmap.info', 'Il cielo di un sito dal World Atlas della luce artificiale, senza misure: una delle quattro vie del cielo, in Siti. La chiave è gratuita: si chiede con una email all\u0027autore del sito; vale 500 richieste al giorno.', 'https://www.lightpollutionmap.info/', 'senza chiave', '', 'Senza la chiave, in Siti la via «Dalla mappa» si può scegliere ma non dà un cielo finché non la aggiungi; le altre tre funzionano.'),
       svc('AAVSO', 'Le campagne di osservazione, nel Piano della notte › Ricerca.', 'https://www.aavso.org/', 'attiva', '7c21', ''),
       svc('TNS', 'Le supernove recenti, nel Piano della notte › Ricerca.', 'https://www.wis-tns.org/', 'senza chiave', '', 'Senza la chiave la Ricerca non mostra le supernove.')];
     // Scansioni
@@ -100,7 +100,7 @@ class Component extends DCLogic {
     // Diagnostica
     const astapNo = stato === 'ASTAP assente';
     const righe = [{ l: 'Versione', v: ['AstroLog 0.9 (dati simulati)'] }, { l: 'Sistema', v: ['Windows 11 · 64 bit'] },
-      { l: 'Percorsi', v: ['dati: Dati/AstroLog', 'database: Dati/AstroLog/astrolog.db', 'ASTAP: ' + (astapNo ? 'non indicato' : 'Programmi/astap/astap_cli')], cls: 'al-imp-percorso' },
+      { l: 'Percorsi', v: ['dati: Dati/AstroLog', 'database: Dati/AstroLog/astrolog.db', 'ASTAP: ' + (astapNo ? 'non indicato' : '/opt/astap/astap_cli')], cls: 'al-imp-percorso' },
       { l: 'ASTAP', esito: astapNo ? 'mancante' : 0, esitoT: astapNo ? 'non trovato' : 'trovato', v: [] }, { l: 'Cataloghi', esito: astapNo ? 'mancante' : 0, esitoT: astapNo ? 'nessun catalogo' : 'D50', v: [] },
       { l: 'Frame non lavorati', v: astapNo ? ['Identificazione: 1204 frame, ASTAP non c\u0027è', 'Misure: 0'] : ['Identificazione: 12 frame, campo non risolto', 'Misure: 3 frame, stelle troppo poche'] },
       { l: 'Ultimi errori del diario', v: stato === 'errori' ? ['oggi 09:52 · lettura: il disco «Dati» non risponde', 'oggi 07:13 · meteo: Meteoblue non raggiungibile', 'ieri 22:41 · identificazione: tempo scaduto su L_0042.fits'] : ['nessun errore negli ultimi 7 giorni'], cls: 'al-imp-nota' }];

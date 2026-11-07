@@ -13,6 +13,15 @@ Le decisioni del vecchio sistema (fino alla v38) stanno in
 4. Carta «È stagione» nella Dashboard (progetti salvati, per priorita').
 5. Poi si cancellano le tavole di prova: `Planner proposte`, `Telefono comandi`, `Telaio vivo` (restano `Planner telefono` e `Planner desktop` come riferimento finche' il porting non e' fatto).
 
+## v76 — Il secondo controllo, 11 voci (7/11/2026, da Claude Code; da approvare)
+
+- Voce per voce in `docs/per-claude-code-porting.md`, sezione v76.
+- **Dalla mappa senza chiave**: resta sceglibile, senza cielo; il testo dei Servizi si allinea (non la pillola spenta).
+- **Raffiche simulate**: fattore 1,5 sul vento medio.
+- **Esempi neutri**: ASTAP `/opt/astap/astap_cli`, cartella `Condivisa/Astro`.
+- **Unisci a** conta come modifica che sposta frame: avviso «da rielaborare».
+- Pacchetto: `consegna/astrolog-v76.zip` al posto della v75.
+
 ## v75 — Le 15 voci del controllo della v73 (7/11/2026, da Claude Code via Marco; da approvare)
 
 - Fonte: `handoff/per-design.md` del repo, «Da dare». Le correzioni, voce per voce, sono in `docs/per-claude-code-porting.md`, sezione v75.

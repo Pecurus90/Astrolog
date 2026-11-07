@@ -135,7 +135,7 @@ class Component extends DCLogic {
     const SITO = () => Object.assign(s, { q: 'Cima Ekar', ricerca: 'risultati', scelto: 0, sNome: 'Cima Ekar', lat: '45.8486 N', lon: '11.5689 E', bortle: 3 });
     const PC = (perc, verifica) => Object.assign(s, { perc, vPath: perc, verifica });
     const KEY = (esitoChiave, chiave) => Object.assign(s, { esitoChiave, chiave: chiave || '' });
-    const AST = (esitoAstap, astapPerc) => Object.assign(s, { esitoAstap, astapPerc: astapPerc || 'Programmi/astap/astap_cli' });
+    const AST = (esitoAstap, astapPerc) => Object.assign(s, { esitoAstap, astapPerc: astapPerc || '/opt/astap/astap_cli' });
     ({
       'nome: scritto': () => { s.nome = 'Elena'; },
       'nome: salvataggio non riuscito': () => { s.nome = 'Elena'; s.salvaErr = 'nome'; },

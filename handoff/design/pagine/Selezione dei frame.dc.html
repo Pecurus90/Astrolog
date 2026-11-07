@@ -272,7 +272,7 @@ class Component extends DCLogic {
   // Archivio simulato: sei gruppi (oggetto + setup + filtro + tempo di posa + guadagno) in tre notti
   archivio(st) { if (this._A && this._Ast === st) return this._A; this._Ast = st;
     const SET = { fra: { k: 'fra', n: 'Askar FRA400 + ZWO ASI2600MM Pro', b: 'FRA400 + 2600MM', sc: 1.94, ap: 72, mb: 52, gain: 100 }, a103: { k: 'a103', n: 'Askar 103 + ZWO ATR2600M', b: 'Askar 103 + ATR2600M', sc: 1.385, ap: 103, mb: 52, gain: 100 } };
-    const NOTTI = [{ k: 'n05', n: '5 ottobre', c: '5/10', d: '2026-10-05', disco: 'Dati/Astro' }, { k: 'n12', n: '12 ottobre', c: '12/10', d: '2026-10-12', disco: 'nas/astro' }, { k: 'n18', n: '18 ottobre', c: '18/10', d: '2026-10-18', disco: 'Esterno/Astro' }];
+    const NOTTI = [{ k: 'n05', n: '5 ottobre', c: '5/10', d: '2026-10-05', disco: 'Dati/Astro' }, { k: 'n12', n: '12 ottobre', c: '12/10', d: '2026-10-12', disco: 'Condivisa/Astro' }, { k: 'n18', n: '18 ottobre', c: '18/10', d: '2026-10-18', disco: 'Esterno/Astro' }];
     const GR = [
       { k: 'm31L', o: 'M 31', s: 'fra', f: 'l', posa: 300, cul: 85, tr: 23.8, b: { hfd: 5.6, snr: 380, st: 2300, ecc: .37, bg: 780, sqm: 19.62 }, parti: [['n05', 40, 20.67], ['n12', 40, 21.0], ['n18', 40, 22.25]] },
       { k: 'm31L180', o: 'M 31', s: 'fra', f: 'l', posa: 180, cul: 85, tr: 23.8, b: { hfd: 5.5, snr: 290, st: 2150, ecc: .37, bg: 470, sqm: 19.62 }, parti: [['n18', 20, 20.4]] },
@@ -301,7 +301,7 @@ class Component extends DCLogic {
             psfres: .02 + .006 * (1 + Math.sin(ph * 2.1)) + (hfd - g.b.hfd) * .004, fwsig: (.15 + .03 * Math.sin(ph)) * hfd / 5.6, eccsig: .05 + .02 * Math.sin(ph * 1.4), sat: Math.round(st * .012), flux: st * snr * .8, mflux: snr * .8, cnt: Math.round(st * .93),
             med: bg + 8, sig: bg * .025 + 2, ent: 3.2 + bg / 1000, nr: .85 + .05 * Math.sin(ph), mst: bg / 65535, nst: (bg * .025 + 2) / 65535, bandr: .1 + .1 * (1 + Math.sin(ph * 3)), bandc: .08 + .08 * (1 + Math.sin(ph * 2.3)),
             gdir: 80 + 20 * Math.sin(ph * .3), az: (180 + (ora - g.tr) * 15 + 360) % 360, ha: ora - g.tr, pier: ora < g.tr ? 0 : 1, salt: -18 - 25 * Math.sin(Math.min(1, Math.max(0, (ora - 19) / 10)) * Math.PI), zp: sqm != null ? 20.9 - (X - 1) * .15 : null,
-            hfd, fw: hfd / 1.36, stelle: Math.round(st), ecc, snr, bg, grad, X, sqm };
+            hfd, fw: hfd / 1.36, stelle: Math.round(st), ecc, snr, bg, grad, rum: Math.sqrt(bg) * 1.6, X, sqm };
           list.push(f); idx[f.id] = f; } }); });
     return (this._A = { SET, NOTTI, GR, list, idx }); }
   inizio(st) { const man = {}, scart = {}, id = (n, i) => 'm31L-' + n + '-' + i;
@@ -367,7 +367,7 @@ class Component extends DCLogic {
     const M = { fw: { l: 'FWHM', u: uA, get: f => noScala ? f.fw / f.sc : f.fw, fmt: v => P(v, 2) + uA }, hfd: { l: 'HFD', u: uA, get: f => noScala ? f.hfd / f.sc : f.hfd, fmt: v => P(v, 2) + uA },
       ecc: { l: 'Eccentricità', u: '', get: f => f.ecc, fmt: v => P(v, 2) }, stelle: { l: 'Stelle', u: '', get: f => f.stelle, fmt: v => AL.num(Math.round(v)) },
       snr: { l: 'SNR', u: '', get: f => f.snr, fmt: v => AL.num(Math.round(v)) }, bg: { l: 'Fondo cielo', u: 'ADU', get: f => f.bg, fmt: v => AL.num(Math.round(v)) + ' ADU' },
-      grad: { l: 'Gradiente', u: '%', get: f => f.grad, fmt: v => P(v, 1) + '%' }, X: { l: 'Massa d\u0027aria', u: '', get: f => f.X, fmt: v => P(v, 2) },
+      grad: { l: 'Gradiente del fondo', u: '× rumore', get: f => f.grad / 100 * f.bg / f.rum, fmt: v => P(v, 1) + ' × rumore' }   /* come MisureFrame: dislivello in unità di rumore */, X: { l: 'Massa d\u0027aria', u: '', get: f => f.X, fmt: v => P(v, 2) },
       sqm: { l: 'Luminosità del cielo', u: '', get: f => f.sqm, fmt: v => 'SQM ' + P(v, 2) }, alt: { l: 'Altezza', u: '°', get: f => Math.asin(1 / f.X) * 180 / Math.PI, fmt: v => Math.round(v) + '°' },
       // v63, criteri in piu' (brief 2.1)
       psw: { l: 'Peso del segnale', u: '', get: f => f.psw, fmt: v => P(v, 2) }, scie: { l: 'Scie', u: '', get: f => f.scie, fmt: v => String(Math.round(v)) }, skyr: { l: 'Fondo al secondo', u: 'ADU/s', get: f => f.skyr, fmt: v => P(v, 2) + ' ADU/s' },
@@ -441,7 +441,7 @@ class Component extends DCLogic {
     const allaRegola = ids => { const m = { ...s.man }; ids.forEach(k => { delete m[k]; }); fai({ man: m }); };
     // Le azioni sui file, con gli errori simulati (Tweaks «errore»)
     const ERR = s.riprova ? 'nessuno' : (qs.get('errore') || p.errore || 'nessuno');
-    const falli = f => ERR.indexOf('sola lettura') >= 0 ? f.dir.indexOf('nas/') === 0 : ERR.indexOf('disco') === 0 ? f.dir.indexOf('Esterno/') === 0 : ERR.indexOf('file') === 0 ? f.id === 'm31L-n18-14' : false;
+    const falli = f => ERR.indexOf('sola lettura') >= 0 ? f.dir.indexOf('Condivisa/') === 0 : ERR.indexOf('disco') === 0 ? f.dir.indexOf('Esterno/') === 0 : ERR.indexOf('file') === 0 ? f.id === 'm31L-n18-14' : false;
     const perche = fl => { const d = [...new Set(fl.map(f => f.dir))];
       return ERR.indexOf('sola lettura') >= 0 ? (d.length === 1 ? 'La cartella ' + d[0] : 'Le cartelle ' + d.join(', ')) + ' è in sola lettura. Dai il permesso di scrittura, poi riprova.'
         : ERR.indexOf('disco') === 0 ? 'Il disco «Esterno» non risponde: è staccato. Ricollegalo, poi riprova.' : fl[0].file + ' è aperto in un altro programma. Chiudilo, poi riprova.'; };
@@ -452,7 +452,7 @@ class Component extends DCLogic {
       const esito = ko.length ? { s: '!', t: v[0] + ' ' + ok.length + ' di ' + fr.length + ' frame', x: ko.length + (ko.length === 1 ? ' non ' + v[2] + '. ' : ' non ' + v[1] + '. ') + perche(ko), a: 'Riprova ' + (ko.length === 1 ? 'il frame' : 'i ' + ko.length), az, ids: ko.map(f => f.id) }
         : az === 'sposta' ? { s: '✓', t: ok.length + ' frame in «scartate» · ' + mb + ' · ' + dirs + (dirs === 1 ? ' cartella' : ' cartelle'), x: 'Lo stacking non li vede più.', a: 'Riporta indietro', az: 'annullaSposta', ids: ok.map(f => f.id) }
         : az === 'riporta' ? { s: '✓', t: ok.length + ' frame riportati alla cartella di prima', x: 'Restano da scartare finché non li tieni.', a: '', ids: [] }
-        : (n => ({ s: '✓', t: ok.length + ' frame eliminati · ' + mb, x: n === ok.length ? 'Erano su un disco senza cestino: cancellati per sempre.' : n ? (ok.length - n) + ' nel cestino, ' + n + ' cancellati per sempre (disco senza cestino).' : 'Sono nel cestino del computer.', a: '', ids: [] }))(ok.filter(f => f.radice.indexOf('nas/') === 0).length);
+        : (n => ({ s: '✓', t: ok.length + ' frame eliminati · ' + mb, x: n === ok.length ? 'Erano su un disco senza cestino: cancellati per sempre.' : n ? (ok.length - n) + ' nel cestino, ' + n + ' cancellati per sempre (disco senza cestino).' : 'Sono nel cestino del computer.', a: '', ids: [] }))(ok.filter(f => f.radice.indexOf('Condivisa/') === 0).length);
       set({ scart: sc, canc: cn, man: m, esito, fin: null, sel: {}, cancN: az === 'cancella' ? (s.cancN || 0) + ok.length : s.cancN || 0, cancMb: az === 'cancella' ? (s.cancMb || 0) + ok.reduce((a, f) => a + f.mb, 0) : s.cancMb || 0 }); };
     const E = s.esito ? { ...s.esito, on: () => { const x = s.esito; if (x.az === 'annullaSposta') esegui('riporta', x.ids); else if (x.ids.length) { this.state.riprova = true; esegui(x.az, x.ids); } } } : null;
     if (E && E.az === 'annullaSposta' && !E.a) E.a = '';
@@ -588,7 +588,7 @@ class Component extends DCLogic {
     // L'interruttore di una soglia (PillolaScelta forma interruttore): una sola opzione
     const swOf = (on, nome, tog, l) => ({ sw: [{ l: l || nome, sel: on, titolo: (on ? 'Spegni ' : 'Accendi ') + nome, on: e => { no(e); tog(); } }] });
     // L'aiuto della formula: tutte le misure, a gruppi (brief 2.1), coi nomi del SubframeSelector accanto
-    const FXCH = [['Con una soglia', [['FWHM', 'FWHM'], ['HFD', 'HFD'], ['Eccentricità', 'Eccentricità'], ['Stelle', 'Stelle'], ['SNR', 'SNR'], ['Fondo', 'Fondo cielo'], ['Gradiente', 'Gradiente'], ['Altezza', 'Altezza'], ['Peso', 'Peso del segnale · PSFSignalWeight'], ['Scie', 'Scie'], ['SkyRate', 'Fondo al secondo · SkyRate'], ['LunaAltezza', 'Altezza della Luna'], ['LunaDistanza', 'Distanza dalla Luna'], ['LunaIlluminata', 'Luna illuminata']]],
+    const FXCH = [['Con una soglia', [['FWHM', 'FWHM'], ['HFD', 'HFD'], ['Eccentricità', 'Eccentricità'], ['Stelle', 'Stelle'], ['SNR', 'SNR'], ['Fondo', 'Fondo cielo'], ['Gradiente', 'Gradiente del fondo · in unità di rumore'], ['Altezza', 'Altezza'], ['Peso', 'Peso del segnale · PSFSignalWeight'], ['Scie', 'Scie'], ['SkyRate', 'Fondo al secondo · SkyRate'], ['LunaAltezza', 'Altezza della Luna'], ['LunaDistanza', 'Distanza dalla Luna'], ['LunaIlluminata', 'Luna illuminata']]],
       ['Stelle e forma', [['PSFResidual', 'Residuo della PSF · PSFResidual'], ['FWHMSigma', 'FWHM, dispersione · FWHMSigma'], ['EccentricitySigma', 'Eccentricità, dispersione · EccentricitySigma'], ['StelleSature', 'Stelle sature']]],
       ['Segnale', [['PSFFlux', 'Flusso delle stelle · PSFFlux'], ['PSFMeanFlux', 'Flusso medio per stella · PSFMeanFlux'], ['PSFCount', 'Stelle nel fit · PSFCount']]],
       ['Fondo e pixel', [['Median', 'Mediana dei pixel · Median'], ['Sigma', 'Sigma dei pixel · Sigma'], ['Entropia', 'Entropia'], ['NoiseRatio', 'Rapporto di rumore · NoiseRatio'], ['MStar', 'M*'], ['NStar', 'N*'], ['BandeRighe', 'Bande sulle righe'], ['BandeColonne', 'Bande sulle colonne'], ['LatoChiaro', 'Lato chiaro del gradiente, in gradi']]],
@@ -631,7 +631,7 @@ class Component extends DCLogic {
       resta: AL.num(vTen.length) + ' frame · ' + AL.ore(H(vTen)) + ' di ' + AL.ore(H(V)) + (nNm ? ' · ' + nNm + ' da misurare' : ''), restaS: 'su ' + AL.num(V.length) + ' frame · ' + AL.ore(H(V)) + ' di questa scelta',
       spostaL: 'Sposta in «scartate» · ' + vEsc.length, spostaNo: vEsc.length ? 'false' : 'true', sposta: e => { no(e); if (vEsc.length) set({ fin: 'sposta' }); },
       annulla: s.storia.length ? e => { no(e); const h = s.storia[s.storia.length - 1]; set({ ...h, storia: s.storia.slice(0, -1), esito: null }); } : null };
-    const SPO = STATO === 'spostamento in corso' ? { t: 'Sposto 10 frame in «scartate»…', n: '4 di 10', tot: 10, fatti: 4, w: '40%', x: 'nas/astro risponde piano: lo spostamento continua anche se lasci la pagina. Si può annullare quando è finito.' } : null;
+    const SPO = STATO === 'spostamento in corso' ? { t: 'Sposto 10 frame in «scartate»…', n: '4 di 10', tot: 10, fatti: 4, w: '40%', x: 'Condivisa/Astro risponde piano: lo spostamento continua anche se lasci la pagina. Si può annullare quando è finito.' } : null;
     if (SPO) Object.assign(ES, { spostaL: 'Spostamento in corso…', spostaNo: 'true', sposta: e => no(e), annulla: null });
     // La barra della selezione
     const selIds = V.filter(f => s.sel[f.id]).map(f => f.id), selSc = selIds.filter(k => s.scart[k]), selAlt = selIds.filter(k => !s.scart[k]), selMan = selAlt.filter(k => s.man[k]);
@@ -646,7 +646,7 @@ class Component extends DCLogic {
     let FS = null, FC = null;
     if (s.fin === 'sposta' && vEsc.length) { const dd = dirsOf(vEsc), mbA = MB(vEsc.reduce((a, f) => a + f.mb, 0));
       FS = { tit: 'Spostare ' + vEsc.length + ' frame in «scartate»?', sub: vEsc.length + ' frame · ' + mbA + ' · ' + dd.length + (dd.length === 1 ? ' cartella' : ' cartelle'), dir: dd.map((x, j) => ({ p: x.d, dove: x.fr[0].radice + '/scartate/' + x.fr[0].rel, n: x.n })), okL: 'Sposta ' + vEsc.length + ' frame', ok: e => { no(e); esegui('sposta', vEsc.map(f => f.id)); } }; }
-    if (s.fin === 'cancella' && scF.length) { const dd = dirsOf(scF), mbA = MB(scF.reduce((a, f) => a + f.mb, 0)), senzaC = f => f.radice.indexOf('nas/') === 0, nNo = scF.filter(senzaC).length, tutti = nNo === scF.length;
+    if (s.fin === 'cancella' && scF.length) { const dd = dirsOf(scF), mbA = MB(scF.reduce((a, f) => a + f.mb, 0)), senzaC = f => f.radice.indexOf('Condivisa/') === 0, nNo = scF.filter(senzaC).length, tutti = nNo === scF.length;
       FC = { tit: tutti ? 'Eliminare ' + scF.length + ' frame per sempre?' : 'Mettere ' + scF.length + ' frame nel cestino?', segno: tutti || nNo ? '!' : '', sub: scF.length + ' frame · ' + mbA + ' · da ' + dd.length + (dd.length === 1 ? ' cartella in «scartate»' : ' cartelle in «scartate»'),
         dir: dd.map((x, j) => ({ p: x.fr[0].radice + '/scartate/' + x.fr[0].rel, n: x.n + (senzaC(x.fr[0]) ? ' · senza cestino' : ' · nel cestino') })),
         testo: tutti ? 'Su questa cartella non c\u0027è il cestino: i file si cancellano per sempre. Non si recuperano.' : nNo ? 'I file vanno nel cestino del computer. ' + nNo + ' sono su un disco senza cestino: quelli si cancellano per sempre e non si recuperano.' : 'I file vanno nel cestino del computer: da lì si possono ancora recuperare.',
