@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 
 import { Avviso, type SegnoAvviso } from "./componenti/Avviso"
@@ -18,6 +18,7 @@ import { api } from "./api/client"
 import { costellazione } from "./costellazioni"
 import { type Chiave, maiuscola, meseEAnno, numero, t } from "./i18n"
 import { AConfronto, Protagonista, TuttoLArchivio, type VoceFuori } from "./NottiCarte"
+import { TuttoDellaNotte } from "./TuttoDellaNotte"
 import {
   type Elenco,
   type Mese,
@@ -122,6 +123,7 @@ export function Notti() {
   const [criteriAperti, setCriteriAperti] = useState(false)
   const [calAperto, setCalAperto] = useState(false)
   const [righeAperte, setRigheAperte] = useState(false)
+  const [aperta, setAperta] = useState(false)
 
   const criteri = { ...scelte, ...(q.trim() ? { q: q.trim() } : {}) }
   const lista = useInfiniteQuery({
@@ -176,6 +178,7 @@ export function Notti() {
   }
 
   let corpo
+  let finestra: ReactNode = null
   if (storta || (una !== null && prima && righe.length === 0)) {
     corpo = (
       <>
@@ -235,8 +238,18 @@ export function Notti() {
         sola={solaNotte}
         onPrima={prev ? () => scegli(prev.id) : undefined}
         onDopo={next ? () => scegli(next.id) : undefined}
+        onApri={() => setAperta(true)}
       />
       )
+    )
+    finestra = aperta && protagonista && (
+      <TuttoDellaNotte
+        id={protagonista.id}
+        formato={formato}
+        onChiudi={() => setAperta(false)}
+        onPrima={prev ? () => scegli(prev.id) : undefined}
+        onDopo={next ? () => scegli(next.id) : undefined}
+      />
     )
     const cal = calendario.data && (
       <CalendarioDelMese
@@ -399,6 +412,7 @@ export function Notti() {
   return (
     <div className="as-pagina">
       <Pagina formato={formato}>{corpo}</Pagina>
+      {finestra}
     </div>
   )
 }

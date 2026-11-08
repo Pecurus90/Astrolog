@@ -106,6 +106,7 @@ def test_an_object_in_the_catalog_says_what_it_is_and_how_big(conn, db_path, wor
     assert body["objects"] == [
         {
             "key": "ngc-6992",
+            "common_name": "Veil",
             "type_code": "SUPERNOVA_REMNANT",
             "constellation": "Cyg",
             "distance": {"value": 2400.0, "unit": "ly"},
@@ -130,6 +131,7 @@ def test_an_object_outside_the_catalog_has_no_facts(conn, db_path, world) -> Non
     fact = _get(db_path, world.night).json()["objects"][0]
     assert fact == {
         "key": "Cometa",
+        "common_name": None,
         "type_code": None,
         "constellation": None,
         "distance": None,

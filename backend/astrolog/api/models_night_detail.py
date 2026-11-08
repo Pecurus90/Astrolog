@@ -35,6 +35,7 @@ class ObjectFacts(BaseModel):
     """What the catalog says of an object of the night; all null outside the catalog."""
 
     key: str = Field(description="The stable key, the same as the night's objects.")
+    common_name: str | None = Field(description="The catalog's common name, as the search's.")
     type_code: str | None
     constellation: str | None = Field(description="Three-letter IAU code.")
     distance: Distance | None

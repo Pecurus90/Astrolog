@@ -29,7 +29,8 @@ GROUP BY f.rig_id
 """  # noqa: S608 - constant fragments of the spine
 
 _OBJECTS = f"""
-SELECT o.id, o.catalog_slug, {obj.NAME_COLUMNS}, e.type_code, e.constellation, e.distance_ly,
+SELECT o.id, o.catalog_slug, {obj.NAME_COLUMNS}, e.common_name, e.type_code, e.constellation,
+       e.distance_ly,
        e.extent_ly, {counts.AGGREGATE}
 FROM frames f JOIN objects o ON o.id = f.object_id
 LEFT JOIN catalog_entries e ON e.slug = o.catalog_slug
@@ -72,6 +73,7 @@ def _rigs(conn: sqlite3.Connection, night_id: int) -> list[dict[str, Any]]:
 def _facts(r: sqlite3.Row) -> dict[str, Any]:
     return {
         "key": obj.stable_key(r),
+        "common_name": r["common_name"],
         "type_code": r["type_code"],
         "constellation": r["constellation"],
         "distance": distance(r["distance_ly"]),

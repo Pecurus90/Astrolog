@@ -118,6 +118,66 @@ def test_a_measure_carries_its_trend(conn, db_path, world) -> None:
     assert (len(hfd["trend"]), hfd["trend"][0], hfd["trend"][-1]) == (24, 1.0, 4.0)
 
 
+def _set_measures(conn, spine: int, **values: float | str) -> None:
+    sets = ", ".join(f"{k} = ?" for k in values)
+    conn.execute(
+        f"UPDATE pipeline_measures SET {sets} WHERE frame_id ="  # noqa: S608 - test keys
+        " (SELECT pipeline_frame_id FROM night_measure_frames WHERE frame_id = ?)",
+        (*values.values(), spine),
+    )
+
+
+def test_a_measure_carries_its_lowest_and_highest_for_one_scale(conn, db_path, world) -> None:
+    """*A confronto* draws every row on the same scale: the set's extremes, not computed on
+    screen (MisureFrame:325)."""
+    for hfd in (2.0, 5.0, 3.0):
+        world.shot(hfd)
+    night_measures.rebuild(conn)
+    conn.commit()
+    whole = _get(db_path, world.night).json()["sets"][0]
+    hfd = next(m for m in whole["measures"] if m["key"] == "hfd_px")
+    assert (hfd["low"], hfd["high"]) == (2.0, 5.0)
+    fwhm = next(m for m in whole["measures"] if m["key"] == "fwhm_px")
+    assert (fwhm["low"], fwhm["high"]) == (None, None)
+
+
+def test_the_median_tilt_and_fwhm_carry_their_verdict(conn, db_path, world) -> None:
+    """The same rules the pipeline gives one frame (ASTAP 10/20 %, sampling in px), on the set's
+    median; the other measures have none."""
+    frames = [world.shot(3.0) for _ in range(3)]
+    night_measures.rebuild(conn)
+    for spine, tilt, fwhm in zip(frames, (8.0, 15.0, 30.0), (1.2, 2.5, 4.0), strict=True):
+        _set_measures(
+            conn,
+            spine,
+            hfd_tilt_pct=tilt,
+            tilt_level="go",  # a frame's own: the set's verdict comes from the median alone
+            fwhm_px=fwhm,
+            sampling_class="over",
+            eccentricity=0.3,
+            shape="fitted",
+            shape_stars=50,
+        )
+    night_measures.rebuild(conn)
+    conn.commit()
+    whole = _get(db_path, world.night).json()["sets"][0]
+    verdicts = {m["key"]: m["verdict"] for m in whole["measures"]}
+    assert (verdicts["hfd_tilt_pct"], verdicts["fwhm_px"]) == ("marginal", "ideal")
+    assert verdicts["hfd_px"] is None
+
+
+def test_a_frame_says_which_way_its_stars_stretch(conn, db_path, world) -> None:
+    spine = world.shot(3.0)
+    night_measures.rebuild(conn)
+    conn.execute(
+        "INSERT INTO pipeline_sky (frame_id, solved, angle_pa_deg, angle_axis, computed_at)"
+        " SELECT pipeline_frame_id, 1, 90, 'ra', ? FROM night_measure_frames WHERE frame_id = ?",
+        ("2026-10-13T10:00:00+00:00", spine),
+    )
+    conn.commit()
+    assert _get(db_path, world.night).json()["series"][0]["angle_axis"] == "ra"
+
+
 def test_a_night_not_rebuilt_yet_has_no_sets(conn, db_path, world) -> None:
     """Grouped but the measures not written yet: no sets, not an error."""
     world.frame()

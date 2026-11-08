@@ -52,7 +52,7 @@ def inspect(hfd: np.ndarray, x: np.ndarray, y: np.ndarray, shape: tuple[int, ...
         return Inspection(None, None, off_axis)
     corners = [float(np.median(cells[(i, j)])) for i in (0, 2) for j in (0, 2)]
     tilt = 100 * (max(corners) - min(corners)) / float(np.median(hfd))
-    return Inspection(tilt, _level(tilt), off_axis)
+    return Inspection(tilt, tilt_level(tilt), off_axis)
 
 
 def sampling_class(fwhm_px: float | None) -> SamplingClass | None:
@@ -75,7 +75,7 @@ def _third(position: np.ndarray, size: int) -> np.ndarray:
     return which
 
 
-def _level(tilt_pct: float) -> Verdict:
+def tilt_level(tilt_pct: float) -> Verdict:
     if tilt_pct <= TILT_GOOD_PCT:
         return Verdict.GO
     return Verdict.MARGINAL if tilt_pct < TILT_PROBLEM_PCT else Verdict.NOGO

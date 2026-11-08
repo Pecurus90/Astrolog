@@ -8,6 +8,9 @@ from pydantic import BaseModel, Field
 from ..measure_list import Group, Unit
 
 FrameState = Literal["measured", "estimated", "too_few_stars", "pending"]
+TiltLevel = Literal["go", "marginal", "nogo"]
+Sampling = Literal["severe_under", "under", "ideal", "over"]
+MedianVerdict = Literal[TiltLevel, Sampling]
 
 
 class MeasureStat(BaseModel):
@@ -20,9 +23,15 @@ class MeasureStat(BaseModel):
     median: float | None
     q1: float | None = Field(description="First quartile, type 7 (Hyndman & Fan 1996).")
     q3: float | None
+    low: float | None = Field(description="The lowest value: one scale for every row.")
+    high: float | None
     trend: list[float] | None = Field(
         description="24 medians along the night in shooting order, each over its stretch of "
         "frames; null under 4 values."
+    )
+    verdict: MedianVerdict | None = Field(
+        description="The median judged by the frame's own rule: `hfd_tilt_pct` the tilt (ADR "
+        "0044), `fwhm_px` the sampling (ADR 0022); null for the others."
     )
     silent: Literal["measuring", "no_value"] | None = Field(
         description="Why `median` is null: frames still to be measured, or none of the measured "
@@ -71,11 +80,14 @@ class MeasuredFrame(BaseModel):
         "A frame never to be measured (a program not read, a rewritten, broken or compressed "
         "file) is not here: it counts only in `frames` (Marco, 8/11)."
     )
-    tilt_level: Literal["go", "marginal", "nogo"] | None = Field(
+    tilt_level: TiltLevel | None = Field(
         description="The tilt's verdict, from `hfd_tilt_pct` (ADR 0044); null without it."
     )
-    sampling: Literal["severe_under", "under", "ideal", "over"] | None = Field(
+    sampling: Sampling | None = Field(
         description="The sampling from the FWHM in px; null without it."
+    )
+    angle_axis: Literal["ra", "dec"] | None = Field(
+        description="The stars' long axis on the sky; null: round stars or not solved."
     )
     values: dict[str, float] = Field(
         description="Measure -> value, only those it has; why one is missing: the frame's measures."

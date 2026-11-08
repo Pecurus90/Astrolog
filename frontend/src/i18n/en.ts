@@ -12,6 +12,7 @@ import { enGuscio } from "./en-guscio"
 import { enImpostazioni } from "./en-impostazioni"
 import { enLetture } from "./en-letture"
 import { enMeteo } from "./en-meteo"
+import { enMisure } from "./en-misure"
 import { enNotti } from "./en-notti"
 import { enSito } from "./en-sito"
 import { enSolver } from "./en-solver"
@@ -25,6 +26,7 @@ export const en = {
   ...enImpostazioni,
   ...enLetture,
   ...enNotti,
+  ...enMisure,
   ...enAttrezzatura,
   ...enArchivio,
   ...enGuscio,

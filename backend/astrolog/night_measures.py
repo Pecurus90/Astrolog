@@ -1,16 +1,17 @@
-"""A night's measures per object and filter, written once; until step 40 each spine frame takes
-those of its own file, same folder and path (ADR 0045). SQL on both worlds, imports neither."""
+"""A night's measures per object and filter; until step 40 each spine frame takes its own file's,
+same folder and path (ADR 0045). SQL on both worlds; of the pipeline only the verdict rules."""
 
 import json
 import os
 import sqlite3
 from collections import defaultdict
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
 
 from .db.replace_table import replace_rows
 from .db.transaction import transaction
 from .measure_list import MEASURES, Table
+from .pipeline.inspection import sampling_class, tilt_level
 from .units import quantile
 
 TREND = 24  # points of the line under each tile [D tavola v76, MisureFrame:226]
@@ -50,8 +51,13 @@ ORDER BY c.start_utc IS NULL, c.start_utc, f.id
 
 _MEASURE_COLUMNS = (
     "night_id", "object_id", "filter_id", "key", "frames", "measured", "median", "q1", "q3",
-    "trend",
+    "low", "high", "trend", "verdict",
 )  # fmt: skip
+# The median judged by the frame's own rule, the same function the pipeline calls.
+_VERDICTS: dict[str, Callable[[float], str | None]] = {
+    "hfd_tilt_pct": tilt_level,
+    "fwhm_px": sampling_class,
+}
 _GROUP_COLUMNS = ("night_id", "object_id", "filter_id", "frames", "pending", "differs")
 _SETUP = ("camera", "gain", "exposure")  # the same three, or background and noise do not compare
 
@@ -127,12 +133,13 @@ def _measure_rows(groups: dict[GroupKey, _Group]) -> Iterator[tuple[object, ...]
         for key in _KEYS:
             in_time = group.values.get(key, [])
             if not in_time:
-                yield night, obj, flt, key, group.frames, 0, None, None, None, None
+                yield night, obj, flt, key, group.frames, 0, *(None,) * 7
                 continue
             values = sorted(in_time)
             q1, median, q3 = (quantile(values, p) for p in (0.25, 0.5, 0.75))
-            trend = _trend(in_time)
-            yield night, obj, flt, key, group.frames, len(values), median, q1, q3, trend
+            verdict = _VERDICTS[key](median) if key in _VERDICTS else None
+            yield (night, obj, flt, key, group.frames, len(values), median, q1, q3,
+                   values[0], values[-1], _trend(in_time), verdict)  # fmt: skip
 
 
 def _trend(in_time: list[float]) -> str | None:

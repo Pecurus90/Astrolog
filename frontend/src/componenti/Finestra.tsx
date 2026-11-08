@@ -17,7 +17,7 @@ const DENTRO =
   "a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex='-1'])"
 
 /** Tab turns among the window's controls and never slips behind the veil. */
-function trattieni(e: KeyboardEvent<HTMLDivElement>): void {
+export function trattieni(e: KeyboardEvent<HTMLDivElement>): void {
   if (e.key !== "Tab") return
   const voci = [...e.currentTarget.querySelectorAll<HTMLElement>(DENTRO)]
   const primo = voci[0]

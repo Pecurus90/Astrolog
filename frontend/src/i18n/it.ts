@@ -9,6 +9,7 @@ import { itGuscio } from "./it-guscio"
 import { itImpostazioni } from "./it-impostazioni"
 import { itLetture } from "./it-letture"
 import { itMeteo } from "./it-meteo"
+import { itMisure } from "./it-misure"
 import { itNotti } from "./it-notti"
 import { itSito } from "./it-sito"
 import { itSolver } from "./it-solver"
@@ -22,6 +23,7 @@ export const it = {
   ...itImpostazioni,
   ...itLetture,
   ...itNotti,
+  ...itMisure,
   ...itMeteo,
   ...itAttrezzatura,
   ...itArchivio,

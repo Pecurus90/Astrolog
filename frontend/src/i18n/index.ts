@@ -190,9 +190,15 @@ export function oreEMinuti(secondi: number): string {
   return minuti ? `${numero(intere)} h ${String(minuti).padStart(2, "0")}` : `${numero(intere)} h`
 }
 
+/** Un numero con `d` decimali fissi, all'italiana: `0,45`. Le misure dei frame (tavola v76,
+ *  `ALsoglie.num`). */
+export function decimali(n: number, d: number): string {
+  return formatta(n, { minimumFractionDigits: d, maximumFractionDigits: d })
+}
+
 /** Un numero con un decimale fisso, all'italiana: `4,0`. Le ore di posa (tavola v76, `posaN`). */
 export function unDecimale(n: number): string {
-  return formatta(n, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+  return decimali(n, 1)
 }
 
 /** Quanto e' durata una cosa, come si legge: `4 s`, `2 min 14 s`, `1 h 12 min`.

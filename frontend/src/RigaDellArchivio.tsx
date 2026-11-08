@@ -44,7 +44,7 @@ const TIPI: Record<string, Chiave> = {
 }
 
 /** La parola per un tipo di catalogo, o niente se il codice non lo conosciamo. */
-export function tipoDi(riga: Riga) {
+export function tipoDi(riga: { type_code: string | null }) {
   return riga.type_code ? TIPI[riga.type_code] : undefined
 }
 

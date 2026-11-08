@@ -1375,10 +1375,16 @@ CREATE TABLE night_measures (
   median    REAL,  -- NULL: nessun valore
   q1        REAL,  -- quartili di tipo 7 (units.quantile)
   q3        REAL,
+  low       REAL,  -- il valore piu' basso e il piu' alto: una scala per tutte le righe
+  high      REAL,
   -- 24 mediane in ordine di ripresa, ognuna sul suo tratto di frame; NULL sotto 4 valori
   trend     TEXT CHECK (trend IS NULL OR (json_valid(trend) AND json_type(trend) = 'array')),
+  -- il giudizio della mediana con la regola del frame: tilt (ADR 0044), campionamento (ADR 0022)
+  verdict   TEXT CHECK (verdict IN ('go', 'marginal', 'nogo',
+    'severe_under', 'under', 'ideal', 'over')),
   CHECK ((median IS NULL) = (measured = 0) AND (median IS NULL) = (q1 IS NULL)
-    AND (q1 IS NULL) = (q3 IS NULL))
+    AND (q1 IS NULL) = (q3 IS NULL) AND (q1 IS NULL) = (low IS NULL)
+    AND (low IS NULL) = (high IS NULL) AND (median IS NOT NULL OR verdict IS NULL))
 ) STRICT;
 CREATE UNIQUE INDEX night_measures_key ON night_measures
   (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1), key);

@@ -2961,10 +2961,22 @@ export interface components {
             /** Q3 */
             q3: number | null;
             /**
+             * Low
+             * @description The lowest value: one scale for every row.
+             */
+            low: number | null;
+            /** High */
+            high: number | null;
+            /**
              * Trend
              * @description 24 medians along the night in shooting order, each over its stretch of frames; null under 4 values.
              */
             trend: number[] | null;
+            /**
+             * Verdict
+             * @description The median judged by the frame's own rule: `hfd_tilt_pct` the tilt (ADR 0044), `fwhm_px` the sampling (ADR 0022); null for the others.
+             */
+            verdict: ("go" | "marginal" | "nogo" | "severe_under" | "under" | "ideal" | "over") | null;
             /**
              * Silent
              * @description Why `median` is null: frames still to be measured, or none of the measured has it (each frame's reason is in its own measures). Null with a median.
@@ -3012,6 +3024,11 @@ export interface components {
              * @description The sampling from the FWHM in px; null without it.
              */
             sampling: ("severe_under" | "under" | "ideal" | "over") | null;
+            /**
+             * Angle Axis
+             * @description The stars' long axis on the sky; null: round stars or not solved.
+             */
+            angle_axis: ("ra" | "dec") | null;
             /**
              * Values
              * @description Measure -> value, only those it has; why one is missing: the frame's measures.
@@ -3753,6 +3770,11 @@ export interface components {
              * @description The stable key, the same as the night's objects.
              */
             key: string;
+            /**
+             * Common Name
+             * @description The catalog's common name, as the search's.
+             */
+            common_name: string | null;
             /** Type Code */
             type_code: string | null;
             /**

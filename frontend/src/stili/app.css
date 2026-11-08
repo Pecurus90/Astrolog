@@ -39,8 +39,9 @@ body {
 }
 
 /* Every board's head resets links (`a{color:inherit;text-decoration:none}`); the app has no
-   head per page, so the frame carries it. */
-.app-cornice a {
+   head per page, so the frame carries it, and the window of the night that lies over it. */
+.app-cornice a,
+.al-c-finestra-riepilogo__blocco-2 a {
   color: inherit;
   text-decoration: none;
 }

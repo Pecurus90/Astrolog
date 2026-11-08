@@ -85,7 +85,12 @@ const conRouter = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>
 function protagonista(
   notte: Notte,
   formato: Formato,
-  extra: Partial<{ sola: boolean; onPrima: () => void; onDopo: () => void }> = {},
+  extra: Partial<{
+    sola: boolean
+    onPrima: () => void
+    onDopo: () => void
+    onApri: () => void
+  }> = {},
 ) {
   conRouter(
     <Protagonista
@@ -94,6 +99,7 @@ function protagonista(
       sola={extra.sola ?? false}
       onPrima={extra.onPrima}
       onDopo={extra.onDopo}
+      onApri={extra.onApri ?? (() => {})}
     />,
   )
   return screen.getByRole("region", { name: "La notte" })
@@ -228,7 +234,7 @@ describe("la protagonista sul desktop", () => {
   it("una notte senza meteo ha la pillola mancante e niente link al sito", () => {
     const carta = protagonista({ ...PIENA, weather: { ...METEO, verdict: null } }, "desktop")
     expect(una(carta, ".al-pillola").className).toContain("al-pillola--mancante")
-    expect(within(carta).queryByRole("link")).toBeNull()
+    expect(carta.querySelector('a[href="/impostazioni/sito"]')).toBeNull()
   })
 })
 

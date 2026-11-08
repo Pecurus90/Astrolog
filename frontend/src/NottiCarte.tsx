@@ -91,14 +91,29 @@ export function Protagonista({
   sola,
   onPrima,
   onDopo,
+  onApri,
 }: {
   notte: Notte
   formato: Formato
   sola: boolean
   onPrima?: (() => void) | undefined
   onDopo?: (() => void) | undefined
+  /** La freccia di Tutto della notte: la finestra col riepilogo. */
+  onApri: () => void
 }) {
   const tel = formato === "telefono"
+  const apri = (
+    <a
+      className="al-notti__tondo-1"
+      href="#"
+      onClick={gesto(onApri)}
+      aria-haspopup="dialog"
+      aria-label={t("window.night")}
+      title={t("window.night")}
+    >
+      {"\u2197"}
+    </a>
+  )
   const c = cielo(notte)
   const r = ripresa(notte)
   const l = luna(notte)
@@ -199,6 +214,7 @@ export function Protagonista({
               </a>
             </span>
           )}
+          {apri}
         </div>
         <div className="al-notti__riga-29">
           <span className="al-notti__testo-25" data-an="big">
@@ -253,6 +269,7 @@ export function Protagonista({
           <b className="al-notti__testo-3">{titoloDi(notte)}</b>
           <Sito notte={notte} telefono={false} />
         </span>
+        {apri}
       </div>
       <div className="al-notti__riga-6">
         <span className="al-notti__testo-4" data-an="big">

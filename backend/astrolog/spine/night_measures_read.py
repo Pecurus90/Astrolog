@@ -15,6 +15,7 @@ _NIGHT = "SELECT s.timezone FROM nights n JOIN sites s ON s.id = n.site_id WHERE
 
 _SERIES = f"""
 SELECT f.id, f.object_id, f.filter_id, m.outcome, m.shape, m.tilt_level, m.sampling_class,
+       k.angle_axis,
        (SELECT c.start_utc FROM pipeline_files pf JOIN pipeline_cards c ON c.file_id = pf.id
          WHERE pf.frame_id = b.pipeline_frame_id AND pf.state = 'present'
          ORDER BY pf.id LIMIT 1) AS start_utc, {VALUES}
@@ -110,11 +111,12 @@ def _stat(entry: Entry, row: sqlite3.Row | None, measuring: bool) -> dict[str, A
     if row is None or row["median"] is None:
         silent = "measuring" if measuring else "no_value"
         measured = 0 if row is None else row["measured"]
-        return out | {"measured": measured, "median": None, "q1": None, "q3": None,
-                      "trend": None, "silent": silent}  # fmt: skip
+        return out | {"measured": measured, "median": None, "q1": None, "q3": None, "low": None,
+                      "high": None, "trend": None, "verdict": None, "silent": silent}  # fmt: skip
     trend = json.loads(row["trend"]) if row["trend"] else None
     return out | {"measured": row["measured"], "median": row["median"], "q1": row["q1"],
-                  "q3": row["q3"], "trend": trend, "silent": None}  # fmt: skip
+                  "q3": row["q3"], "low": row["low"], "high": row["high"], "trend": trend,
+                  "verdict": row["verdict"], "silent": None}  # fmt: skip
 
 
 def _frame(
@@ -132,5 +134,6 @@ def _frame(
         "state": state,
         "tilt_level": r["tilt_level"],
         "sampling": r["sampling_class"],
+        "angle_axis": r["angle_axis"],
         "values": {e.key: float(r[e.key]) for e in MEASURES if r[e.key] is not None},
     }
