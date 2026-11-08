@@ -430,13 +430,28 @@ Appena installata, l'Archivio e' vuoto e **te lo dice**, insieme a cosa fare per
 
 ## Notti
 
-**Quando hai ripreso.** L'Archivio racconta gli oggetti; qui ci sono le **notti**, una carta
-ciascuna e dalla piu' recente, in cinque colonne che si confrontano dall'alto in basso: che
-**giorno** era -- con il giorno della settimana, perche' una notte ce la si ricorda come *"quel
-sabato"* -- e da quale **sito**; quante **ore** e quanti **frame**; cosa hai **ripreso**, i primi
-tre oggetti ognuno con una barra lunga quanto le sue ore e gli altri contati; con quali **filtri**,
-in una barra divisa per ore e sotto il nome, i frame e le ore di ognuno; e **che cielo** c'era.
-Sul telefono la carta si impila, senza perdere niente.
+**Quando hai ripreso.** L'Archivio racconta gli oggetti; qui ci sono le **notti**.
+
+In testa c'e' **una notte grande**, all'inizio la piu' recente: che **giorno** era -- con il
+giorno della settimana, perche' una notte ce la si ricorda come *"quel sabato"* -- da quale
+**sito** e come l'app lo sa (dalle coordinate dei frame, dal tuo sito di casa, o dalla tua
+risposta in *Da confermare*); quante **ore** e quanti **frame**; cosa hai **ripreso**, i primi tre
+oggetti ognuno con una barra lunga quanto le sue ore e gli altri contati; con quali **filtri**, in
+una barra divisa per ore; che **Luna** c'era e quale **ripresa** lasciava; e **che cielo** c'era.
+
+Accanto ci sono le **ultime sette notti** in una striscia e il **calendario del mese**, con un
+segno per ogni notte e, sotto, le ore del mese e quante notti erano buone. Tocchi una notte -- nella
+striscia, nel calendario o nell'elenco -- e diventa lei quella grande.
+
+Sotto, **a confronto**, l'elenco di tutte le notti diviso per mese, venti alla volta con *Carica
+altre*; ogni mese dice quante notti e quante ore ha. Sopra l'elenco scegli i **criteri**: un
+oggetto per nome, l'anno, il sito, il setup, i filtri (anche *Filtro non indicato*), la
+costellazione e il cielo. Ogni scelta ti dice gia' **quante notti** darebbe con le altre scelte che
+hai fatto; dentro un criterio basta una scelta qualsiasi, fra criteri diversi valgono tutti. Una
+scelta che darebbe zero notti resta al suo posto, spenta, invece di sparire sotto il dito.
+
+Sul telefono la pagina ha le sue linguette, il mese e i criteri, e con le frecce passi da una notte
+all'altra senza perdere niente.
 I filtri stanno sempre nello stesso ordine, in tutta l'app: L, R, G, B, Ha, OIII, SII, poi quelli
 a colori, poi gli altri filtri che l'app riconosce, quelli che non riconosce e per ultimo "senza
 filtro". Cosi' ogni filtro lo ritrovi sempre allo stesso posto.
@@ -445,8 +460,9 @@ Una notte e' una **data piu' un luogo**: se nella stessa sera hai ripreso da due
 due notti, e la riga dice da dove. Una notte con due oggetti resta **una carta sola**: le sue ore
 sono le ore di quella notte, e gli oggetti stanno dentro.
 
-In cima leggi quante notti, quanti frame e quante ore hai **in tutto** -- tutte le tue notti, non
-solo quelle che stai guardando -- e cio' che spiega un elenco piu' corto del previsto:
+In fondo, in **Tutto l'archivio**, leggi quante notti, quanti frame e quante ore hai **in tutto**
+-- tutte le tue notti, non solo quelle che stai guardando -- e cio' che spiega un elenco piu' corto
+del previsto:
 
 - i frame che **aspettano una tua risposta** non stanno in nessuna notte: te li conta, e ti dice
   **dove** si risponde, che non e' sempre lo stesso posto -- in *Da confermare* per le domande su
@@ -461,14 +477,19 @@ non hai ancora frame (si parte dalla scansione), non hai detto **da dove osservi
 notti non nasceranno mai, finche' non lo dici), i tuoi frame aspettano una risposta in *Da
 confermare*, oppure l'app non ci e' ancora arrivata.
 
-Su ogni riga c'e' anche **che luna c'era** quella notte e quanto era illuminata -- e' quello che
-spiega perche' una serata e' andata come e' andata. Si calcola ogni volta, quindi non invecchia; e
-se di un sito non si riconosce il fuso orario la Luna non si sa, e la riga **tace** invece di
-mettere un trattino che sembra un dato.
+Ogni notte dice **che luna c'era** e quanto era illuminata -- e' quello che spiega perche' una
+serata e' andata come e' andata -- e quale **ripresa** lasciava: tutta banda larga con la Luna
+sotto l'orizzonte o poco illuminata, solo banda stretta se restava alta e piena per tutto il buio,
+oppure una notte mista con le ore di banda larga accanto. Se di un sito non si riconosce il fuso
+orario la Luna non si sa, e la notte **tace** invece di mettere un trattino che sembra un dato.
 
-Su ogni riga c'e' anche **com'era il cielo** quella notte, dal sito dove hai ripreso: poco,
-parzialmente o molto nuvoloso -- le stesse tre classi del verdetto del Meteo -- con le nuvole nelle
-ore di buio e le **ore utili**. Arriva **da solo**
+Ogni notte dice anche **com'era il cielo**, dal sito dove hai ripreso. Il verdetto -- buona,
+incerta, non adatta -- viene dalla **trasparenza**: quanto cielo lasciavano le nuvole e,
+quando si sa, la foschia dell'aria, ora per ora, pesando ogni ora per quanto era buia. Da 70 su 100 la notte e'
+buona, da 40 incerta. Accanto leggi le **ore di posa** su quelle di buio, per esempio *8 ore di
+posa su 9 di buio*, con una tacca per ogni ora di buio, e le nuvole a parole. L'archivio meteo delle
+notti passate non ha la foschia: il conto si fa con le sole nuvole, e la notte lo dice con *senza
+aerosol*. Arriva **da solo**
 dopo la scansione, senza che tu chieda niente, dall'archivio meteo di Open-Meteo. Arriva quando
 il mattino di quella notte ha cinque giorni: prima, l'archivio ha solo una previsione e non ancora
 la ricostruzione definitiva, e leggi **il giorno in cui arriva**. Se un archivio di anni e' appena

@@ -25,8 +25,9 @@ Dal porting delle Notti (passo 33, 7/11):
   confermare: «· dalla tua risposta in Da confermare» (Marco, 7/11). Oggi la tavola decide la fonte
   dal nome del sito (`/casa/i`): la fonte la manda l'app, tre valori.
 - [da dare] Notti, cielo (205, `SZ`): lo storico del meteo non ha l'aerosol, quindi ogni notte
-  passata dice «· senza aerosol» accanto alle ore di posa, nella carta e nelle righe (ADR 0034,
-  DECISIONI v60). Nella tavola `SZ` e' vuoto: mostrarlo.
+  passata dice «· senza aerosol» accanto alle ore di posa (ADR 0034, DECISIONI v60). Nella tavola `SZ`
+  e' vuoto: mostrarlo. L'app oggi lo scrive solo nella protagonista: nelle righe di «A confronto»
+  la riga del cielo si sovrapponeva; dire se e dove ci sta nelle righe.
 
 ## Date, da controllare alla consegna
 
