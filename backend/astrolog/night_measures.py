@@ -1,5 +1,5 @@
 """A night's measures per object and filter; until step 40 each spine frame takes its own file's,
-same folder and path (ADR 0045). SQL on both worlds; of the pipeline only the verdict rules."""
+same folder and path (ADR 0045). SQL on both worlds, imports neither."""
 
 import json
 import os
@@ -10,8 +10,8 @@ from dataclasses import dataclass, field
 
 from .db.replace_table import replace_rows
 from .db.transaction import transaction
+from .levels import sampling_class, tilt_level
 from .measure_list import MEASURES, Table
-from .pipeline.inspection import sampling_class, tilt_level
 from .units import quantile
 
 TREND = 24  # points of the line under each tile [D tavola v76, MisureFrame:226]

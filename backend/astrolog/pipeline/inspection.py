@@ -2,29 +2,17 @@
 sampling class of the FWHM (ADR 0022, ADR 0044, docs/domini/misure.md). Pure. software-ok"""
 
 from dataclasses import dataclass
-from enum import StrEnum
 
 import numpy as np
 
-from ..levels import Verdict
+from ..levels import SamplingClass, Verdict, sampling_class, tilt_level
+
+__all__ = ["SamplingClass", "sampling_class", "tilt_level"]  # the rules live in levels.py
 
 # The frame in thirds, nine areas; centre the middle one, corners the four outer ones.
 THIRDS = 3  # [C ASTAP unit_inspector_plot.pas CCDinspector: the nine areas; software-ok]
 # Outer ring: "75% or more distance from centre. (100% is the distance to a corner.)"
 OUTER_SHARE = 0.75  # [C ASTAP manual, hnsky.org/astap.htm, Image inspection; software-ok]
-TILT_GOOD_PCT = 10.0  # [C ASTAP manual: "equal or less than 10% ... good"; software-ok]
-TILT_PROBLEM_PCT = 20.0  # [C ASTAP manual: "equal or more than 20% ... tilt problem"; software-ok]
-# FWHM in pixels: under 1.5 badly undersampled, 2-3 ideal, past 3 oversampled
-SEVERE_UNDER_PX = 1.5  # [C Howell et al. 1996, PASP 108:1074]
-IDEAL_LOW_PX = 2.0  # [C AAVSO CCD Photometry Guide; Diffraction Limited]
-IDEAL_HIGH_PX = 3.0  # [C AAVSO CCD Photometry Guide; Diffraction Limited]
-
-
-class SamplingClass(StrEnum):
-    SEVERE_UNDER = "severe_under"
-    UNDER = "under"
-    IDEAL = "ideal"
-    OVER = "over"
 
 
 @dataclass(frozen=True)
@@ -55,16 +43,6 @@ def inspect(hfd: np.ndarray, x: np.ndarray, y: np.ndarray, shape: tuple[int, ...
     return Inspection(tilt, tilt_level(tilt), off_axis)
 
 
-def sampling_class(fwhm_px: float | None) -> SamplingClass | None:
-    if fwhm_px is None:
-        return None
-    if fwhm_px < SEVERE_UNDER_PX:
-        return SamplingClass.SEVERE_UNDER
-    if fwhm_px < IDEAL_LOW_PX:
-        return SamplingClass.UNDER
-    return SamplingClass.IDEAL if fwhm_px <= IDEAL_HIGH_PX else SamplingClass.OVER
-
-
 def _third(position: np.ndarray, size: int) -> np.ndarray:
     """0, 1, 2 for each third; -1 on a border, which ASTAP's strict tests leave out."""
     low, high = size / THIRDS, size * 2 / THIRDS
@@ -73,9 +51,3 @@ def _third(position: np.ndarray, size: int) -> np.ndarray:
     which[(position > low) & (position < high)] = 1
     which[position > high] = 2
     return which
-
-
-def tilt_level(tilt_pct: float) -> Verdict:
-    if tilt_pct <= TILT_GOOD_PCT:
-        return Verdict.GO
-    return Verdict.MARGINAL if tilt_pct < TILT_PROBLEM_PCT else Verdict.NOGO

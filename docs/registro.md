@@ -193,6 +193,16 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 28; M misura: 22; P decisione: 40; T
 | SF_DATALESS | `0x40000000` | C Apple TN3150; xnu sys/stat.h |
 | LONG_PATH_THRESHOLD | `240` | T |
 
+### levels.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| TILT_GOOD_PCT | `10.0` | C ASTAP manual: "equal or less than 10% ... good"; software-ok |
+| TILT_PROBLEM_PCT | `20.0` | C ASTAP manual: "equal or more than 20% ... tilt problem"; software-ok |
+| SEVERE_UNDER_PX | `1.5` | C Howell et al. 1996, PASP 108:1074 |
+| IDEAL_LOW_PX | `2.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
+| IDEAL_HIGH_PX | `3.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
+
 ### measure_list.py
 
 | simbolo | valore | fonte |
@@ -344,11 +354,6 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 28; M misura: 22; P decisione: 40; T
 |---|---|---|
 | THIRDS | `3` | C ASTAP unit_inspector_plot.pas CCDinspector: the nine areas; software-ok |
 | OUTER_SHARE | `0.75` | C ASTAP manual, hnsky.org/astap.htm, Image inspection; software-ok |
-| TILT_GOOD_PCT | `10.0` | C ASTAP manual: "equal or less than 10% ... good"; software-ok |
-| TILT_PROBLEM_PCT | `20.0` | C ASTAP manual: "equal or more than 20% ... tilt problem"; software-ok |
-| SEVERE_UNDER_PX | `1.5` | C Howell et al. 1996, PASP 108:1074 |
-| IDEAL_LOW_PX | `2.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
-| IDEAL_HIGH_PX | `3.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
 
 ### pipeline/mmt.py
 
