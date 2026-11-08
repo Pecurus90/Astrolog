@@ -29,6 +29,22 @@ Dal porting delle Notti (passo 33, 7/11):
   e' vuoto: mostrarlo. L'app oggi lo scrive solo nella protagonista: nelle righe di «A confronto»
   la riga del cielo si sovrapponeva; dire se e dove ci sta nelle righe.
 
+Dal porting di «Tutto della notte» (passo 33, 8/11), `componenti/`:
+- [da dare] Riepilogo (97-98, tabella `L`) e FinestraRiepilogo (36, `D`): le misure del formato
+  (titolo 44/30, ore 64/48, padding 28/20, gap 16/12, bersagli 34/44, velo e pannello) sono
+  inline. Come l'Archivio alla v75: radice con `data-formato`, le misure in classi del foglio;
+  inline solo i dati.
+- [da dare] Riepilogo, frecce ‹ › spente (149): solo opacita' .35. Dire lo stato anche col
+  segno (`aria-disabled`, cursore, nessuna azione), come «Carica altre» nelle Notti.
+- [da dare] MisureFrame: il frame che non si misura (altro programma, riscritto, rotto, `.fz`)
+  non compare ne' nei grafici ne' nel frame, senza parole; conta solo in «su 112 di 120» (Marco,
+  8/11). Testo «Senza scala del cielo» diverso fra MisureFrame 361 e Misure dei frame 162: uno.
+- [da dare] MisureFrame, giudizi che l'app non da' (principio 1, ADR 0039): pillole della FWHM
+  (3/4/5″, «consenso dei forum»: nessuna convenzione pubblica), eccentricita' 0,45/0,71, oggetto
+  basso a massa d'aria 2. Restano i numeri; i giudizi relativi al gruppo e al setup (SNR basso,
+  fuoco, HFD alta, «stelle allungate» del Setup) arrivano al passo 40. Togliere dalla tavola o
+  segnarli «dopo».
+
 ## Date, da controllare alla consegna
 
 Nessuna.
