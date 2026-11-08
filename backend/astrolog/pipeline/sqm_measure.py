@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .. import night_measures
 from ..db.transaction import transaction
 from ..sqm_shots import SQM_SHOTS
 from .pixels import Pixels, read_pixels
@@ -111,6 +112,7 @@ def declare_bias(
                 (bias_adu, _brightness(shot, bias_adu), shot["frame_id"]),
             )
         rebuild(conn, now)
+    night_measures.rebuild(conn)  # its own transaction: after this one
 
 
 def _measured(

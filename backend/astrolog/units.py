@@ -3,7 +3,7 @@ the comparable number already."""
 
 import math
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 # The digits a float32 can really assert: `4.29` read back in double precision becomes
@@ -43,6 +43,15 @@ def physical_pixel_um(pixel_um: float | None, binning: int | None) -> float | No
 def hundredths(value: float | None) -> float | None:
     """Beyond the second decimal the page would show digits nobody reads as a measure."""
     return None if value is None else round(value, 2)
+
+
+def quantile(ordered: Sequence[float], p: float) -> float:
+    """`ordered` sorted, not empty; p in 0..1. Between the two neighbours, type 7 of
+    Hyndman & Fan 1996, numpy's and R's default. [C Am. Stat. 50:361, 1996]"""
+    pos = (len(ordered) - 1) * p
+    low = int(pos)
+    high = min(low + 1, len(ordered) - 1)
+    return ordered[low] + (ordered[high] - ordered[low]) * (pos - low)
 
 
 def median(values: Iterable[float | None]) -> float | None:

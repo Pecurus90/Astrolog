@@ -3,6 +3,7 @@ bias della camera a quell'offset (ADR 0022 punto 8, ADR 0021)."""
 
 import pytest
 
+from astrolog.pipeline import sqm_measure
 from astrolog.pipeline.filters import Band, answer
 from astrolog.pipeline.measure import measure_root
 from astrolog.pipeline.sky_measure import sky_root
@@ -82,6 +83,14 @@ def test_a_bias_declared_after_rewrites_the_shots_of_that_camera_and_offset(conn
     after = _row(conn)
     assert after is not None and before is not None
     assert after["bias_adu"] == 500.0 and after["sqm"] > before["sqm"]
+
+
+def test_a_bias_declared_writes_the_measures_of_the_nights_again(conn, monkeypatch):
+    """Its shots' sky brightness changed: the nights' medians with it (night_measures.py)."""
+    rebuilt = []
+    monkeypatch.setattr(sqm_measure.night_measures, "rebuild", rebuilt.append)
+    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 500.0, LATER)
+    assert rebuilt == [conn]
 
 
 def test_a_bias_over_the_sky_leaves_no_brightness(conn, tmp_path):

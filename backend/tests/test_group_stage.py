@@ -47,6 +47,16 @@ def test_the_night_runs_from_noon_to_noon(archivio):
     assert notte_di(archivio, mattino)["night_date"] == "2024-05-17"
 
 
+def test_the_measures_of_the_nights_are_written_again_after_grouping(archivio, monkeypatch):
+    """A frame moved to another night takes its measures there (night_measures.py)."""
+    rebuilt = []
+    monkeypatch.setattr(group.night_measures, "rebuild", rebuilt.append)
+    luogo(archivio, ROMA)
+    posa(archivio, quando="2024-05-17T23:30:00Z", hash_="a")
+    corri(archivio)
+    assert rebuilt == [archivio]
+
+
 def test_group_night_in_site_tz(conn):
     """**La regola che il vecchio aveva sbagliato**, ed e' questo il caso che la prova: il
     taglio e' a mezzogiorno **del fuso del sito**, non in UTC.

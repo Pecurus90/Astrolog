@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
 
+from .. import night_measures
 from ..clock import night_date, now_iso
 from ..db.transaction import transaction
 from ..site_of import Site, Sites, known_sites, site_at
@@ -49,6 +50,7 @@ def group_frames(conn: sqlite3.Connection) -> Iterator[Event]:
     def at_end() -> None:
         if seen:  # each piece's nights, only if some frame was worked
             gear_usage.write(conn)
+            night_measures.rebuild(conn)
 
     with watched(StageName.GROUP, counts, at_end):
         frame_ids = ready(conn, StageName.GROUP)

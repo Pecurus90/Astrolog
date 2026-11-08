@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 350; senza fonte: 1.
-Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 40; T tecnico: 84.
+Valori: 351; senza fonte: 1.
+Fonti: C norma: 179; U usanza: 3; D metodo: 25; M misura: 22; P decisione: 40; T tecnico: 84.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -205,6 +205,12 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 40; T
 |---|---|---|
 | TIMEOUT_S | `15` | P ADR 0038 |
 | _REFUSALS | `frozenset({400, 401, 403, 429})` | C RFC 9110 15.5.1-15.5.4; RFC 6585 4 |
+
+### night_measures.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| BINS | `24` | D tavola v76, MisureFrame:227 |
 
 ### pipeline/airmass.py
 
@@ -878,3 +884,4 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 40; T
 | 0042 | Le misure del frame sono quelle di Image Analysis | accettata, 30/10/2026 (Marco). Supera ADR 0022 punto 4 (FWHM ed eccentricita' dalla |  |
 | 0043 | I cicli caldi delle misure compilati con numba; i Mac Intel escono dai bersagli | accettata, 4/11/2026 (Marco). Passo 26.57. |  |
 | 0044 | Il tilt e l'aberrazione fuori asse di ASTAP tornano accanto a Image Analysis <!-- software-ok --> | accettata, 7/11/2026 (Marco: scelte del 6/11 al passo 32.1 e del 7/11 al passo 32.2). |  |
+| 0045 | Le misure delle notti passano per il file, fino al passo 40 | accettata, 8/11/2026 (Marco, passo 33: "ponte per file, ora"). Anticipa una parte del |  |

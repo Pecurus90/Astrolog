@@ -30,6 +30,20 @@ def test_each_folder_is_scanned_and_solved_and_a_missing_one_is_skipped(conn, tm
     assert "gone" in caplog.text
 
 
+def test_the_measures_of_the_nights_are_written_at_the_end_even_if_one_fails(
+    conn, tmp_path, monkeypatch, caplog
+):
+    """At the end of the round, like the sky of the sites; a failure behind is only logged."""
+
+    def broken(conn_):
+        raise RuntimeError("x")
+
+    monkeypatch.setattr(run_module.night_measures, "rebuild", broken)
+    events = list(run_roots(conn, [], NOW, _solver(tmp_path), (tmp_path / "work", None)))
+    assert events == [{"done": True, "total": 0}]
+    assert "misure delle notti non riscritte" in caplog.text
+
+
 def _behind(db_path, tmp_path):
     return Behind(db_path, tmp_path / "work", lambda conn: None)  # no ASTAP: reads, then stops
 

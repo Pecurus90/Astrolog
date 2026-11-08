@@ -39,6 +39,7 @@ from . import (
     gear,
     gear_write,
     measures,
+    night_measures,
     nights,
     page,
     pipeline,
@@ -305,7 +306,8 @@ def create_app(  # noqa: PLR0913
             catalog_version=catalog_load.loaded_version(conn),
         )
 
-    for routes in (archive, backup, camera_bias, gear, gear_write, measures, nights, folders, scan,
+    for routes in (archive, backup, camera_bias, gear, gear_write, measures, night_measures, nights,
+                   folders, scan,
                    search, pipeline, review, sites, settings, tonight, vocab, weather,
                    year):  # fmt: skip
         app.include_router(routes.router)

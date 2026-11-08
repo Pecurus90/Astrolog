@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
-from .. import astap
+from .. import astap, night_measures
 from ..clock import now_iso
 from ..db.connect import connect
 from ..db.transaction import transaction
@@ -48,7 +48,15 @@ def run_roots(
             log.warning("pipeline nuova: cartella saltata %s", path, exc_info=True)
         yield {"current": number, "total": len(paths)}
     _sky_of_sites(conn, now)
+    _measures_of_nights(conn)
     yield {"done": True, "total": len(paths)}
+
+
+def _measures_of_nights(conn: sqlite3.Connection) -> None:
+    try:
+        night_measures.rebuild(conn)
+    except Exception:  # behind the scenes, as a folder
+        log.warning("pipeline nuova: misure delle notti non riscritte", exc_info=True)
 
 
 def _sky_of_sites(conn: sqlite3.Connection, now: str) -> None:

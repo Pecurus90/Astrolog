@@ -11,6 +11,7 @@ from typing import Any, cast
 from .. import net
 from ..clock import iso_z
 from ..site_of import Site
+from ..units import quantile
 from . import fetches, nights, openmeteo, verdict
 from .fetches import Source
 from .forecast import Outcome, Status
@@ -51,13 +52,7 @@ def _due(conn: sqlite3.Connection, site: Site, now: datetime) -> bool:
 def _percentiles(values: Sequence[float]) -> list[float]:
     """The 101 percentiles, interpolated between the two neighbours."""
     xs = sorted(values)
-    out = []
-    for p in range(101):
-        pos = (len(xs) - 1) * p / 100
-        low = int(pos)
-        high = min(low + 1, len(xs) - 1)
-        out.append(round(xs[low] + (xs[high] - xs[low]) * (pos - low), 2))
-    return out
+    return [round(quantile(xs, p / 100), 2) for p in range(101)]
 
 
 def _night_means(

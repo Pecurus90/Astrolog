@@ -1350,6 +1350,50 @@ CREATE TABLE site_sky_measures (
   CHECK (first_night <= last_night)
 ) STRICT;
 
+-- RICAVATO. Ponte fino al passo 40 (ADR 0045): frame della spina e della nuova, per cartella e
+-- percorso del file. Riscritto intero a fine giro della nuova e a fine `group`.
+CREATE TABLE night_measure_frames (
+  frame_id          INTEGER PRIMARY KEY REFERENCES frames (id) ON DELETE CASCADE,
+  pipeline_frame_id INTEGER REFERENCES pipeline_frames (id) ON DELETE CASCADE,
+  -- la nuova ha letto il file e non lo misurera' mai (programma, riscritto, rotto): non e' attesa
+  skip_reason       TEXT CHECK (skip_reason IN ('not_supported', 'rewritten', 'broken')),
+  CHECK ((pipeline_frame_id IS NULL) = (skip_reason IS NOT NULL))
+) STRICT;
+CREATE INDEX night_measure_frames_pipeline ON night_measure_frames (pipeline_frame_id);
+
+-- RICAVATO. Le misure di una notte, per oggetto e filtro (NULL: tutti), contate come la pagina
+-- Notti conta i frame (`copy_of IS NULL`). Riscritta intera con `night_measure_frames`.
+CREATE TABLE night_measures (
+  night_id  INTEGER NOT NULL REFERENCES nights (id) ON DELETE CASCADE,
+  object_id INTEGER REFERENCES objects (id) ON DELETE CASCADE,
+  filter_id INTEGER REFERENCES filters (id) ON DELETE CASCADE,
+  key       TEXT NOT NULL,  -- la colonna della misura (measure_list.MEASURES)
+  frames    INTEGER NOT NULL CHECK (frames > 0),  -- i frame del gruppo, quelli della pagina
+  measured  INTEGER NOT NULL CHECK (measured BETWEEN 0 AND frames),  -- quelli col valore
+  median    REAL,  -- NULL: nessun valore
+  q1        REAL,  -- quartili di tipo 7 (units.quantile)
+  q3        REAL,
+  -- 24 conteggi fra il minimo e il massimo; NULL sotto due valori diversi
+  bins      TEXT CHECK (bins IS NULL OR (json_valid(bins) AND json_type(bins) = 'array')),
+  CHECK ((median IS NULL) = (measured = 0) AND (median IS NULL) = (q1 IS NULL)
+    AND (q1 IS NULL) = (q3 IS NULL))
+) STRICT;
+CREATE UNIQUE INDEX night_measures_key ON night_measures
+  (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1), key);
+
+-- RICAVATO. Lo stato di ogni gruppo di `night_measures`, scritto con lei.
+CREATE TABLE night_measure_groups (
+  night_id   INTEGER NOT NULL REFERENCES nights (id) ON DELETE CASCADE,
+  object_id  INTEGER REFERENCES objects (id) ON DELETE CASCADE,
+  filter_id  INTEGER REFERENCES filters (id) ON DELETE CASCADE,
+  frames     INTEGER NOT NULL CHECK (frames > 0),
+  pending    INTEGER NOT NULL CHECK (pending BETWEEN 0 AND frames),  -- senza misura, ancora
+  -- 1: una sola terna camera, guadagno, posa fra i misurati: fondo e rumore si confrontano
+  comparable INTEGER NOT NULL CHECK (comparable IN (0, 1))
+) STRICT;
+CREATE UNIQUE INDEX night_measure_groups_key ON night_measure_groups
+  (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1));
+
 -- DICHIARATO. «Lascia»: la classe misurata che l'utente non ha voluto; si ripropone solo se cambia.
 CREATE TABLE site_sky_dismissed (
   site_id INTEGER PRIMARY KEY REFERENCES sites (id) ON DELETE CASCADE,

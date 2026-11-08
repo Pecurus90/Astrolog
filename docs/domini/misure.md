@@ -351,6 +351,7 @@ guadagno e posa (ADR 0022). Le misure scritte negli header da altri programmi no
 **L'elenco** ha una casa (`backend/astrolog/measure_list.py`, sotto pipeline e app, ADR 0030):
 colonna, unita', gruppo, codice del perche' manca; i ″ senza i px prendono il codice dei px.
 `GET /api/v1/pipeline/frames/{id}/measures` lo legge senza calcolare. Tilt di ASTAP: ADR 0044.
+Per notte, oggetto e filtro, dal file di ogni frame: ADR 0045, `GET /api/v1/nights/{id}/measures`.
 
 ## I testi a schermo
 

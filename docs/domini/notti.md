@@ -46,7 +46,7 @@ Le prove del backend stanno in `backend/tests/test_api_nights.py` e nei file acc
 | Di una notte di pochi giorni fa so il giorno in cui arriva il meteo; se il servizio non ha risposto, lo dice | `test_a_young_night_says_the_day_its_weather_arrives`, `test_the_day_the_weather_arrives_is_counted_in_the_site_time_zone`; *una notte giovane dice il giorno in cui arriva il meteo* |
 | Una notte senza buio (estate al nord) dice le ore col Sole sotto l'orizzonte | `test_a_night_without_dark_is_judged_with_the_sun_down` |
 | Dalla ricerca apro una notte precisa (`/notti?notte=<id>`), anche vecchia, e torno a tutte; una notte che non c'e' piu' lo dice | `test_a_night_is_asked_by_its_id_wherever_it_falls_in_the_list`, `test_a_night_that_does_not_exist_is_an_empty_list_not_an_error`; *con ?notte= chiede quella notte sola*; *una notte che non c'e' piu' lo dice* |
-| Vedo com'erano i miei frame quella notte | nasce con le misure dei frame nelle Notti (passo 33) |
+| Vedo com'erano i miei frame quella notte | `test_a_night_with_its_objects_filters_sets_and_frames`, `test_the_night_counts_its_frames_as_the_nights_page` (backend); a schermo con la finestra (passo 33) |
 | Apro una notte e vedo tutto (↗ "Tutto della notte") | nasce con il modale, che e' lo stesso dell'oggetto e della libreria (passo 33) |
 
 ## La pagina
@@ -162,8 +162,9 @@ nel fuso del sito, esiti, conteggi dei criteri -- e il layout non porta logica.
 
 ## Cosa non fa ancora, e con cosa arrivera'
 
-- **Le misure dei frame** nella notte: col pezzo che le porta nelle Notti (passo 33; stati e
-  testi in [`misure.md`](misure.md), *I testi a schermo*).
+- **Le misure dei frame** nella notte: scritte e servite (`GET /api/v1/nights/{id}/measures`,
+  ADR 0045, [`misure.md`](misure.md)); a schermo con la finestra "Tutto della notte" (passo 33;
+  stati e testi in `misure.md`, *I testi a schermo*).
 - **"Tutto della notte"** (↗, il Riepilogo in finestra): col modale, lo stesso per notte,
   oggetto e libreria (passo 33). Fino ad allora il ↗ non c'e'.
 - Restano fuori per scelta: **anteprime**, **note scritte a mano** e il **voto** della notte --

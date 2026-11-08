@@ -450,6 +450,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/nights/{night_id}/measures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Measures Of Night
+         * @description The night's frames measured, as the Nights page counts them: per set (the night, each
+         *     object, each filter, each object in a filter) every measure's median and quartiles over the
+         *     frames that have it, and the frames one by one in shooting order with their values.
+         *
+         *     Written after each scan (`night_measures.py`): before, `sets` is empty and every frame is
+         *     still to be measured. Not paged: the frames of one night do not grow with the archive
+         *     (ADR 0011). 404 `night_not_found`: no such night.
+         */
+        get: operations["measures_of_night"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/nights": {
         parameters: {
             query?: never;
@@ -2841,6 +2867,126 @@ export interface components {
             /** @description Why `value` is null; null with a value. */
             silent: components["schemas"]["Silent"] | null;
         };
+        /**
+         * MeasureSet
+         * @description The night, an object, a filter, or an object in a filter: null is all of them.
+         */
+        MeasureSet: {
+            /** Object Key */
+            object_key: string | null;
+            /** Filter */
+            filter: string | null;
+            /**
+             * Frames
+             * @description The set's frames, counted as the Nights page counts them.
+             */
+            frames: number;
+            /**
+             * Pending
+             * @description Of those, still without measures.
+             */
+            pending: number;
+            /**
+             * Comparable
+             * @description One camera, gain and exposure among the measured: background and noise compare. False: they do not.
+             */
+            comparable: boolean;
+            /**
+             * Measures
+             * @description Every measure, in the catalogue's order.
+             */
+            measures: components["schemas"]["MeasureStat"][];
+        };
+        /**
+         * MeasureStat
+         * @description One measure over a set of frames.
+         */
+        MeasureStat: {
+            /**
+             * Key
+             * @description The measure's name, as in a frame's measures.
+             */
+            key: string;
+            unit: components["schemas"]["Unit"];
+            group: components["schemas"]["Group"];
+            /**
+             * Measured
+             * @description Frames with a value: the median is over these.
+             */
+            measured: number;
+            /** Median */
+            median: number | null;
+            /**
+             * Q1
+             * @description First quartile, type 7 (Hyndman & Fan 1996).
+             */
+            q1: number | null;
+            /** Q3 */
+            q3: number | null;
+            /**
+             * Bins
+             * @description 24 counts from the least to the most value; null under two different values.
+             */
+            bins: number[] | null;
+            /**
+             * Silent
+             * @description Why `median` is null: frames still to be measured, or none of the measured has it (each frame's reason is in its own measures). Null with a median.
+             */
+            silent: ("measuring" | "no_value") | null;
+        };
+        /** MeasuredFilter */
+        MeasuredFilter: {
+            /** Name */
+            name: string;
+            /** Passband */
+            passband: string;
+            /** Frames */
+            frames: number;
+        };
+        /**
+         * MeasuredFrame
+         * @description One frame of the night, in shooting order.
+         */
+        MeasuredFrame: {
+            /** Frame Id */
+            frame_id: number;
+            /**
+             * Start
+             * @description Start of the exposure, UTC with its offset; null: not read yet or not written by the file.
+             */
+            start: string | null;
+            /** Object Key */
+            object_key: string | null;
+            /** Filter */
+            filter: string | null;
+            /**
+             * State
+             * @description `measured`, `estimated` (shape from the moments: the fit failed), `too_few_stars`, the file's own failure, `not_supported`/`rewritten`/`broken` (never measured: a program the new pipeline does not read, a rewritten or broken file), or `pending`: not measured yet.
+             * @enum {string}
+             */
+            state: "measured" | "estimated" | "too_few_stars" | "unreadable" | "not_supported" | "fz_unsupported" | "rewritten" | "broken" | "pending";
+            /**
+             * Values
+             * @description Measure -> value, only those it has; why one is missing: the frame's measures.
+             */
+            values: {
+                [key: string]: number;
+            };
+        };
+        /** MeasuredObject */
+        MeasuredObject: {
+            /**
+             * Key
+             * @description The stable key, the same as the Nights'.
+             */
+            key: string;
+            /** Name */
+            name: string | null;
+            /** Frames */
+            frames: number;
+            /** Pending */
+            pending: number;
+        };
         /** MeteoblueKeyIn */
         MeteoblueKeyIn: {
             /** Key */
@@ -3222,6 +3368,34 @@ export interface components {
              * @description How far that work has gone, 0-99, rounded down; null when nothing is left.
              */
             reading_done_pct: number | null;
+        };
+        /** NightMeasures */
+        NightMeasures: {
+            /** Night Id */
+            night_id: number;
+            /**
+             * Timezone
+             * @description The site's zone: the times read in it.
+             */
+            timezone: string | null;
+            /** Frames */
+            frames: number;
+            /** Pending */
+            pending: number;
+            /** Objects */
+            objects: components["schemas"]["MeasuredObject"][];
+            /**
+             * Filters
+             * @description In the app's one filter order.
+             */
+            filters: components["schemas"]["MeasuredFilter"][];
+            /**
+             * Sets
+             * @description Empty until the measures of the nights are written after a scan.
+             */
+            sets: components["schemas"]["MeasureSet"][];
+            /** Series */
+            series: components["schemas"]["MeasuredFrame"][];
         };
         /**
          * NightMonth
@@ -5679,6 +5853,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FrameMeasuresOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    measures_of_night: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                night_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NightMeasures"];
                 };
             };
             /** @description Validation Error */
