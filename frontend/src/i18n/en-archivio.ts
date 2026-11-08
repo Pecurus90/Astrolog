@@ -86,7 +86,7 @@ export const enArchivio = {
   "archive.nothing": "No results",
   "archive.nothing.why":
     "Change the search or remove the filters.",
-  "archive.nothing.clear": "Remove filters",
+  "archive.nothing.clear": "Remove criteria",
   "archive.more": "Load more",
   "archive.type.galaxy": "galaxy",
   "archive.type.galaxyCluster": "galaxy cluster",
