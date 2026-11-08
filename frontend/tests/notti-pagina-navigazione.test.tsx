@@ -686,4 +686,22 @@ describe("sul telefono", () => {
     expect(screen.queryByRole("link", { name: "Calendario del mese" })).toBeNull()
     expect(screen.queryByRole("region", { name: "Tutto l’archivio" })).toBeNull()
   })
+
+  it("un giorno del calendario fuori dalle notti caricate tiene il mese mentre la notte arriva", async () => {
+    await apri(rotte(TRE), TEL)
+    const mese = await screen.findByRole("link", { name: "Calendario del mese" })
+    fireEvent.click(mese)
+    fireEvent.click(await giorno(/^23 maggio/))
+    await waitFor(() => expect(chieste("night=96&limit=1").length).toBe(1))
+    expect(mese.querySelector(".al-notti__blocco-10")?.textContent).toBe("Maggio 2024")
+  })
+
+  it("senza protagonista ne' mese il bottone dice solo Calendario del mese", async () => {
+    await apri(
+      rotte(pagina([]), { "limit=7": { stato: 200, corpo: pagina([]), attesa: mai } }),
+      TEL,
+    )
+    const mese = await screen.findByRole("link", { name: "Calendario del mese" })
+    expect(mese.querySelector(".al-notti__blocco-10")?.textContent).toBe("Calendario del mese")
+  })
 })

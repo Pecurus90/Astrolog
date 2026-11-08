@@ -172,7 +172,7 @@ export function Notti() {
   // dal calendario il mese resta quello sfogliato; dalla striscia e dall'elenco segue la notte
   const scegli = (id: number, tieniMese = false) => {
     setSel(id)
-    if (!tieniMese) setMese(null)
+    setMese(tieniMese ? (meseVisto ?? null) : null)
   }
 
   let corpo
@@ -275,7 +275,7 @@ export function Notti() {
           <div className="al-notti__colonna-12">
             <div className="al-notti__riga-22">
               <a className="al-notti__riga-23" href="#" onClick={gesto(() => { setCalAperto(!calAperto); setCriteriAperti(false); setMese(null) })} aria-expanded={calAperto ? "true" : "false"} aria-label={t("nights.month.phone.label")} style={{ background: calAperto ? "var(--accento)" : "var(--carta-2)", color: calAperto ? "var(--scelta-testo)" : "var(--testo)" }}>
-                <span className="al-notti__blocco-10">{calAperto ? maiuscola(meseEAnno(meseVisto ?? "")) : t("nights.month.phone", { mese: maiuscola(meseEAnno(meseVisto ?? "")) })}</span>
+                <span className="al-notti__blocco-10">{meseVisto === undefined ? t("nights.month.phone.label") : calAperto ? maiuscola(meseEAnno(meseVisto)) : t("nights.month.phone", { mese: maiuscola(meseEAnno(meseVisto)) })}</span>
                 <span className="al-notti__testo-20" aria-hidden="true">{calAperto ? "\u25B4" : "\u25BE"}</span>
               </a>
               <Filtri parte="bottone" attivi={attivi} aperto={criteriAperti} onApri={() => { setCriteriAperti(!criteriAperti); setCalAperto(false) }} formato="telefono" />
