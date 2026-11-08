@@ -6,14 +6,14 @@
  * `GET /api/v1/nights/{id}`, le misure da `GET /api/v1/nights/{id}/measures`.
  */
 import { useQuery } from "@tanstack/react-query"
-import { type MouseEvent, useEffect, useRef, useState } from "react"
+import { type MouseEvent, useState } from "react"
 import { Link } from "react-router"
 
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { Avviso } from "./componenti/Avviso"
 import { Carta } from "./componenti/Carta"
-import { trattieni } from "./componenti/Finestra"
+import { trattieni, useApertura } from "./componenti/Finestra"
 import { gesto } from "./componenti/gesto"
 import { Pillola } from "./componenti/Pillola"
 import { type CartaScheletro, Scheletro } from "./componenti/Scheletro"
@@ -80,23 +80,7 @@ export function TuttoDellaNotte({
 }) {
   const { modo, accento } = useTema()
   const tel = formato === "telefono"
-  const pannello = useRef<HTMLDivElement>(null)
-  const chiusura = useRef(onChiudi)
-  useEffect(() => {
-    chiusura.current = onChiudi
-  }, [onChiudi])
-  useEffect(() => {
-    const prima = document.activeElement
-    pannello.current?.focus({ preventScroll: true })
-    const esc = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") chiusura.current()
-    }
-    document.addEventListener("keydown", esc)
-    return () => {
-      document.removeEventListener("keydown", esc)
-      if (prima instanceof HTMLElement) prima.focus()
-    }
-  }, [])
+  const pannello = useApertura(onChiudi)
 
   const notte = useQuery({
     queryKey: ["nights", "detail", id],

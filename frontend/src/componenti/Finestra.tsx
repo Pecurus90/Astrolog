@@ -1,4 +1,11 @@
-import { type KeyboardEvent, type MouseEvent, type ReactNode, useEffect, useRef } from "react"
+import {
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useRef,
+} from "react"
 
 import { t } from "../i18n"
 import { type Formato, useTema } from "./Tema"
@@ -36,6 +43,30 @@ export function trattieni(e: KeyboardEvent<HTMLDivElement>): void {
   }
 }
 
+/** A window's panel: the focus goes in on opening and back on closing; Esc closes it. */
+export function useApertura(onChiudi: () => void): RefObject<HTMLDivElement | null> {
+  const pannello = useRef<HTMLDivElement>(null)
+  // a new onChiudi each render must not pull the focus back to the panel
+  const chiusura = useRef(onChiudi)
+  useEffect(() => {
+    chiusura.current = onChiudi
+  }, [onChiudi])
+
+  useEffect(() => {
+    const prima = document.activeElement
+    pannello.current?.focus({ preventScroll: true })
+    const esc = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") chiusura.current()
+    }
+    document.addEventListener("keydown", esc)
+    return () => {
+      document.removeEventListener("keydown", esc)
+      if (prima instanceof HTMLElement) prima.focus()
+    }
+  }, [])
+  return pannello
+}
+
 /**
  * A window above the page (v58 `Finestra`): title, x, body, actions in `al-finestra__gesti`. Esc,
  * the x or a click on the veil close it; the focus goes in on opening, turns inside, and goes
@@ -67,25 +98,7 @@ export function Finestra({
   children: ReactNode
 }) {
   const { modo, accento } = useTema()
-  const pannello = useRef<HTMLDivElement>(null)
-  // a new onChiudi each render must not pull the focus back to the panel
-  const chiusura = useRef(onChiudi)
-  useEffect(() => {
-    chiusura.current = onChiudi
-  }, [onChiudi])
-
-  useEffect(() => {
-    const prima = document.activeElement
-    pannello.current?.focus({ preventScroll: true })
-    const esc = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") chiusura.current()
-    }
-    document.addEventListener("keydown", esc)
-    return () => {
-      document.removeEventListener("keydown", esc)
-      if (prima instanceof HTMLElement) prima.focus()
-    }
-  }, [])
+  const pannello = useApertura(onChiudi)
 
   const chiudi = (e: MouseEvent) => {
     e.preventDefault()
