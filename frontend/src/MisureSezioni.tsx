@@ -233,7 +233,7 @@ export function IlFrame({
             <div key={x.k} className="al-c-misure-frame__colonna-8">
               <span className="al-c-misure-frame__testo-2">{x.k}</span>
               <span
-                className={`al-c-misure-frame__testo-13${x.grande ? " al-c-misure-frame__testo-13--grande" : ""}`}
+                className={`al-c-misure-frame__testo-13 ${x.grande ? "al-c-misure-frame__testo-13--grande" : ""}`}
               >
                 {x.v}
               </span>

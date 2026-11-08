@@ -4,7 +4,7 @@
  * (`GET /api/v1/nights/{id}/measures`); qui si scrivono e basta.
  */
 import type { components } from "./api/schema"
-import { VARIANTE } from "./FiltriUsati"
+import { varianteDi } from "./FiltriUsati"
 import { type Chiave, decimali, numero, t } from "./i18n"
 
 export type Misure = components["schemas"]["NightMeasures"]
@@ -237,7 +237,7 @@ export function filtriDi(m: Misure, oggetto: string | null): Misure["filters"] {
 
 /** Il colore del filtro, dal token della sua banda. */
 export function tintaDi(passband: string | undefined): { fondo: string } {
-  const variante = (VARIANTE[passband ?? ""] ?? "as-filtro--ignoto").split("--")[1] ?? "ignoto"
+  const variante = varianteDi(passband).split("--")[1] ?? "ignoto"
   return { fondo: `var(--filtro-${variante})` }
 }
 

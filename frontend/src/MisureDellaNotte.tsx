@@ -282,10 +282,15 @@ function UnaTessera({
   const tag = x.id === "fwhm" && fwhmPx ? t(`measures.sampling.${fwhmPx as "ideal"}`) : ""
   const tilt = x.id === "tilt" ? s?.verdict : null
   const d = perFiltro ? "" : linea(s?.trend)
-  const classe = `al-c-misure-frame__colonna-3${posto === 0 ? " al-c-misure-frame__colonna-3--prima" : posto === 1 ? " al-c-misure-frame__colonna-3--seconda" : ""}`
+  const scelta =
+    posto === 0
+      ? "al-c-misure-frame__colonna-3--prima"
+      : posto === 1
+        ? "al-c-misure-frame__colonna-3--seconda"
+        : ""
   return (
     <a
-      className={classe}
+      className={`al-c-misure-frame__colonna-3 ${scelta}`}
       href="#"
       role="button"
       aria-pressed={posto >= 0 ? "true" : "false"}
@@ -317,7 +322,7 @@ function UnaTessera({
           preserveAspectRatio="none"
         >
           <path
-            className={`al-c-misure-frame__spark${posto === 0 ? " al-c-misure-frame__spark--prima" : ""}`}
+            className={`al-c-misure-frame__spark ${posto === 0 ? "al-c-misure-frame__spark--prima" : ""}`}
             d={d}
             fill="none"
             strokeWidth="1.5"

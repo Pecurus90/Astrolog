@@ -18,7 +18,7 @@ export function Quartili({
     <div className="al-c-quartili__blocco-1">
       <div
         aria-hidden="true"
-        className={`al-quartili${misura === "piccola" ? " al-quartili--piccolo" : ""}`}
+        className={`al-quartili ${misura === "piccola" ? "al-quartili--piccolo" : ""}`}
       >
         <div className="al-quartili__traccia" />
         <div className="al-quartili__banda" style={{ left: q1, width: qw }} />

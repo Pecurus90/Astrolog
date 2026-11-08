@@ -18,7 +18,7 @@ import { gesto } from "./componenti/gesto"
 import { Pillola } from "./componenti/Pillola"
 import { type CartaScheletro, Scheletro } from "./componenti/Scheletro"
 import { type Formato, useTema } from "./componenti/Tema"
-import { VARIANTE } from "./FiltriUsati"
+import { varianteDi } from "./FiltriUsati"
 import { type Chiave, dataLunga, decimali, numero, oraDelSito, oreEMinuti, t } from "./i18n"
 import { MisureDellaNotte } from "./MisureDellaNotte"
 import { insieme, scritto, statistica } from "./MisureDati"
@@ -210,16 +210,14 @@ function Tondo({
   etichetta,
   segno,
   on,
-  classe = "al-c-riepilogo__tondo-1",
 }: {
   etichetta: string
   segno: string
   on: (() => void) | undefined
-  classe?: string
 }) {
   return (
     <a
-      className={classe}
+      className="al-c-riepilogo__tondo-1"
       href="#"
       onClick={gesto(on)}
       aria-label={etichetta}
@@ -282,7 +280,7 @@ function Testa({
   )
   const filtri = n.filters.map((f) => (
     <span key={f.name} className="al-c-riepilogo__riga-7">
-      <i className={`al-c-riepilogo__tondo-3 ${VARIANTE[f.passband] ?? "as-filtro--ignoto"}`} />
+      <i className={`al-c-riepilogo__tondo-3 ${varianteDi(f.passband)}`} />
       <b className="al-c-riepilogo__testo-9">{f.name}</b>
       <span className="al-c-riepilogo__testo-3">{numero(f.frames)}</span>
     </span>

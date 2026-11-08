@@ -46,6 +46,11 @@ export const VARIANTE: Record<string, string> = {
   UNKNOWN: "as-filtro--ignoto",
 }
 
+/** La classe del colore di una banda; una banda che non conosciamo e' tratteggiata. */
+export function varianteDi(passband: string | undefined): string {
+  return VARIANTE[passband ?? ""] ?? "as-filtro--ignoto"
+}
+
 /** Cosa dice un filtro nella legenda: frame, e ore se i frame le dicono. */
 function quanto(f: Filtro): string {
   const frame = numero(f.frames)
@@ -76,7 +81,10 @@ export function BarraDeiFiltri({ filtri, perFrame }: { filtri: Filtro[]; perFram
       <ul className="as-filtri__legenda">
         {filtri.map((f) => (
           <li key={f.name} className="as-filtri__voce">
-            <i className={`as-filtri__pallino ${VARIANTE[f.passband] ?? "as-filtro--ignoto"}`} aria-hidden="true" />
+            <i
+              className={`as-filtri__pallino ${VARIANTE[f.passband] ?? "as-filtro--ignoto"}`}
+              aria-hidden="true"
+            />
             <b>{f.name}</b>
             <span>{quanto(f)}</span>
           </li>
