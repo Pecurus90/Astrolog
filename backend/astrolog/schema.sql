@@ -1202,6 +1202,13 @@ CREATE TABLE pipeline_measures (
   hfd_tilt_pct   REAL CHECK (hfd_tilt_pct >= 0),
   tilt_level     TEXT CHECK (tilt_level IN ('go', 'marginal', 'nogo')),
   off_axis_px    REAL,  -- con segno: + stelle piu' grandi al bordo; NULL: centro o anello vuoti
+  -- HFD mediana di ogni angolo, ai pixel (1,1) (W,1) (W,H) (1,H) come footprint.py, e dell'area
+  -- di mezzo: il disegno del sensore (MisureFrame 335); col tilt
+  hfd_corner_1_px REAL CHECK (hfd_corner_1_px > 0),
+  hfd_corner_2_px REAL CHECK (hfd_corner_2_px > 0),
+  hfd_corner_3_px REAL CHECK (hfd_corner_3_px > 0),
+  hfd_corner_4_px REAL CHECK (hfd_corner_4_px > 0),
+  hfd_centre_px   REAL CHECK (hfd_centre_px > 0),
   -- campionamento della FWHM (ADR 0022): sotto 1,5 px grave, 2-3 ideale
   sampling_class TEXT CHECK (sampling_class IN ('severe_under', 'under', 'ideal', 'over')),
   elongation_angle_deg REAL CHECK (elongation_angle_deg >= 0 AND elongation_angle_deg < 180),  -- antiorario da +x
@@ -1249,6 +1256,11 @@ CREATE TABLE pipeline_measures (
   CHECK ((fwhm_tilt IS NULL) = (fwhm_curvature IS NULL) AND (fwhm_tilt IS NULL OR stars >= 32)),
   CHECK ((hfd_tilt_pct IS NULL) = (tilt_level IS NULL)
     AND (coalesce(hfd_tilt_pct, off_axis_px) IS NULL OR outcome = 'measured')),
+  CHECK ((hfd_tilt_pct IS NULL) = (hfd_corner_1_px IS NULL)
+    AND (hfd_tilt_pct IS NULL) = (hfd_corner_2_px IS NULL)
+    AND (hfd_tilt_pct IS NULL) = (hfd_corner_3_px IS NULL)
+    AND (hfd_tilt_pct IS NULL) = (hfd_corner_4_px IS NULL)
+    AND (hfd_tilt_pct IS NULL) = (hfd_centre_px IS NULL)),
   CHECK ((sampling_class IS NULL) = (fwhm_px IS NULL)),
   CHECK ((elongation_angle_deg IS NULL) = (elongation_coherence IS NULL)
     AND (elongation_angle_deg IS NULL OR stars IS NOT NULL)),
@@ -1382,6 +1394,8 @@ CREATE TABLE night_measures (
   -- il giudizio della mediana con la regola del frame: tilt (ADR 0044), campionamento (ADR 0022)
   verdict   TEXT CHECK (verdict IN ('go', 'marginal', 'nogo',
     'severe_under', 'under', 'ideal', 'over')),
+  -- 1: fondo, rumore, SQM con valori da piu' filtri: si confrontano solo per filtro (MisureFrame 236)
+  per_filter INTEGER NOT NULL CHECK (per_filter IN (0, 1)),
   CHECK ((median IS NULL) = (measured = 0) AND (median IS NULL) = (q1 IS NULL)
     AND (q1 IS NULL) = (q3 IS NULL) AND (q1 IS NULL) = (low IS NULL)
     AND (low IS NULL) = (high IS NULL) AND (median IS NOT NULL OR verdict IS NULL))

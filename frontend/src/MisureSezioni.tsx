@@ -7,6 +7,7 @@ import { Pillola } from "./componenti/Pillola"
 import { Quartili } from "./componenti/Quartili"
 import { gesto } from "./componenti/gesto"
 import { numero, oraDelSito, t } from "./i18n"
+import { MISURATO, frameMostrato } from "./FramePerFrameDati"
 import {
   ESITO,
   type FrameMisurato,
@@ -21,8 +22,6 @@ import {
   scritto,
   statistica,
 } from "./MisureDati"
-
-const MISURATO = new Set(["measured", "estimated"])
 
 function campionamento(s: string | null | undefined): string {
   return s ? t(`measures.sampling.${s as "ideal"}`) : ""
@@ -146,13 +145,7 @@ export function IlFrame({
   onSel: (id: number) => void
 }) {
   const nomi = new Map(misure.objects.map((o) => [o.key, o.name ?? o.key]))
-  const vista = misure.series.filter(
-    (f) =>
-      (scelta.oggetto === null || f.object_key === scelta.oggetto) &&
-      (scelta.filtro === null || f.filter === scelta.filtro),
-  )
-  const f =
-    vista.find((x) => x.frame_id === sel) ?? vista.find((x) => MISURATO.has(x.state)) ?? vista[0]
+  const { vista, f } = frameMostrato(misure, scelta, sel)
   const i = f ? vista.indexOf(f) : -1
   const vai = (d: number) => () => {
     const n = vista[(i + d + vista.length) % vista.length]

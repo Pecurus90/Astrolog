@@ -1,8 +1,8 @@
 /**
  * Le misure dei frame di una notte (tavola v76, `componenti/MisureFrame.dc.html`, tipo
- * `notte`): le tessere con mediane e quartili, le altre misure, il frame scelto, gli oggetti a
- * confronto e la tabella per filtro. I grafici frame per frame e tilt e curvatura arrivano col
- * secondo commit del passo 33. Il componente sceglie e scrive: i conti sono dell'API.
+ * `notte`): le tessere con mediane e quartili, le altre misure, frame per frame, il frame
+ * scelto, gli oggetti a confronto, la tabella per filtro, tilt e curvatura. Il componente
+ * sceglie e scrive: i conti sono dell'API.
  */
 import { type ChangeEvent, useState } from "react"
 
@@ -30,7 +30,9 @@ import {
   scritto,
   statistica,
 } from "./MisureDati"
+import { FramePerFrame } from "./FramePerFrame"
 import { AConfronto, IlFrame, PerFiltro } from "./MisureSezioni"
+import { TiltCurvatura } from "./TiltCurvatura"
 
 const RICORDA = "astrolog.misure.altra"
 
@@ -107,9 +109,6 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
   const isolato = scelta.oggetto
     ? (misure.objects.find((o) => o.key === scelta.oggetto)?.name ?? scelta.oggetto)
     : null
-  const nFiltriSqm = filtri.filter(
-    (f) => (statistica(insieme(misure, scelta.oggetto, f.name), "sqm")?.measured ?? 0) > 0,
-  ).length
   const tessere = [
     ...TESSERE,
     ...(altra ? [{ id: altra, nome: "measures.other" as const, chiave: altra }] : []),
@@ -157,12 +156,7 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
                 tessera={x}
                 set={set}
                 altra={x.id === altra}
-                perFiltro={
-                  scelta.filtro === null &&
-                  (DAL_SETUP.has(x.chiave)
-                    ? filtri.length > 1
-                    : x.chiave === "sqm" && nFiltriSqm > 1)
-                }
+                perFiltro={statistica(set, x.chiave)?.per_filter === true}
                 posto={met.indexOf(x.id)}
                 onTocca={() => tocca(x.id)}
               />
@@ -191,6 +185,14 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
           </div>
           <span className="al-c-misure-frame__testo-7">{t("measures.how")}</span>
         </section>
+        <FramePerFrame
+          misure={misure}
+          scelta={scelta}
+          met={met}
+          sel={sel}
+          onSel={setSel}
+          formato={formato}
+        />
         <IlFrame misure={misure} scelta={scelta} sel={sel} onSel={setSel} />
         <AConfronto
           misure={misure}
@@ -204,6 +206,7 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
           }}
         />
         <PerFiltro misure={misure} scelta={scelta} altra={altra} onFiltro={scegliFiltro} />
+        <TiltCurvatura misure={misure} scelta={scelta} />
       </div>
     </div>
   )

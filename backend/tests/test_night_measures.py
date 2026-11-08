@@ -271,6 +271,20 @@ def test_what_differs_among_the_measured_frames(conn, world) -> None:
     assert json.loads(_group(conn, world.night)["differs"]) == ["exposure"]
 
 
+def test_background_and_sky_brightness_compare_per_filter(conn, world) -> None:
+    """Across two filters background, noise and SQM say "per filter" (MisureFrame:190-195,
+    `perF`, 236); one filter, or another measure, gives its median."""
+    lum, red = world.filter("L"), world.filter("R")
+    world.shot(2.0, flt=lum)
+    world.shot(3.0, flt=red)
+    night_measures.rebuild(conn)
+    assert _row(conn, world.night, "background_adu")["per_filter"] == 1
+    assert _row(conn, world.night, "noise_adu")["per_filter"] == 1
+    assert _row(conn, world.night, "hfd_px")["per_filter"] == 0
+    assert _row(conn, world.night, "background_adu", flt=lum)["per_filter"] == 0
+    assert _row(conn, world.night, "sqm")["per_filter"] == 0  # no filter has it
+
+
 def test_a_rebuild_forgets_what_is_no_longer_there(conn, world) -> None:
     spine = world.shot(2.0)
     night_measures.rebuild(conn)

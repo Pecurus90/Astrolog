@@ -2982,6 +2982,11 @@ export interface components {
              * @description Why `median` is null: frames still to be measured, or none of the measured has it (each frame's reason is in its own measures). Null with a median.
              */
             silent: ("measuring" | "no_value") | null;
+            /**
+             * Per Filter
+             * @description Background, noise or sky brightness from more than one filter: each filter has its own scale, so the set's median does not compare; show it per filter.
+             */
+            per_filter: boolean;
         };
         /** MeasuredFilter */
         MeasuredFilter: {

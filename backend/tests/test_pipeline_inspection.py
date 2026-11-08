@@ -34,6 +34,18 @@ def test_tilt_is_worst_less_best_corner_over_the_frame_median() -> None:
     assert found.tilt_level is Verdict.MARGINAL
 
 
+def test_the_four_corners_and_the_centre_keep_their_medians() -> None:
+    """The sensor's drawing (MisureFrame:335): corners in footprint.py's order, pixel (1,1) (W,1)
+    (W,H) (1,H), then the middle area."""
+    x, y = _grid()
+    hfd = np.full(len(x), 3.0)
+    for k, (right, top) in enumerate(((False, False), (True, False), (True, True), (False, True))):
+        hfd[_corner(x, y, right=right, top=top)] = 3.1 + k / 10
+    found = inspect(hfd, x, y, (_ROWS, _COLS))
+    assert found.corners_px == pytest.approx((3.1, 3.2, 3.3, 3.4))
+    assert found.centre_px == pytest.approx(3.0)
+
+
 def test_off_axis_is_the_outer_ring_less_the_centre() -> None:
     """Outer ring: past 75% of the way from the centre to a corner; centre: the middle third."""
     x, y = _grid()
@@ -77,6 +89,7 @@ def test_an_empty_edge_cell_silences_the_tilt_not_the_off_axis() -> None:
     found = inspect(np.full(len(x), 3.0), x, y, (_ROWS, _COLS))
     assert found.tilt_pct is None
     assert found.tilt_level is None
+    assert (found.corners_px, found.centre_px) == (None, None)
     assert found.off_axis_px == pytest.approx(0.0)
 
 

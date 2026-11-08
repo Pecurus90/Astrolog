@@ -154,6 +154,10 @@ MEASURES: tuple[Entry, ...] = (
     Entry("gradient_pa_deg", _K, Unit.DEG, _FIELD, Silent.FLAT_SKY, solved_only=True),
     Entry("trails", _M, Unit.COUNT, _FIELD, _NONE),
     Entry("hfd_tilt_pct", _M, Unit.PCT, _FIELD, Silent.AN_AREA_WITHOUT_STARS),
+    *(
+        Entry(f"hfd_{area}_px", _M, Unit.PX, _FIELD, Silent.AN_AREA_WITHOUT_STARS)
+        for area in ("corner_1", "corner_2", "corner_3", "corner_4", "centre")
+    ),
     Entry("off_axis_px", _M, Unit.PX, _FIELD, Silent.CENTRE_OR_RING_EMPTY),
     Entry(
         "off_axis_arcsec", _K, Unit.ARCSEC, _FIELD, Silent.CENTRE_OR_RING_EMPTY, solved_only=True

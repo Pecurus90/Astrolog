@@ -20,11 +20,14 @@ class Inspection:
     tilt_pct: float | None  # 100 (worst - best corner median) / median of every star
     tilt_level: Verdict | None
     off_axis_px: float | None  # outer ring median less the centre's; + wider at the edge
+    # corner medians at pixel (1,1) (W,1) (W,H) (1,H), as footprint.py; with the tilt only
+    corners_px: tuple[float, float, float, float] | None = None
+    centre_px: float | None = None  # the middle area's median, with the corners
 
 
 def inspect(hfd: np.ndarray, x: np.ndarray, y: np.ndarray, shape: tuple[int, ...]) -> Inspection:
-    """`hfd` px at `x` `y` px. Tilt needs a star in each of the nine areas, the off-axis
-    aberration one in the centre and one in the ring; else None, as ASTAP."""
+    """`hfd` px at `x` `y` px (0-based, y the row). Tilt needs a star in each of the nine areas,
+    the off-axis aberration one in the centre and one in the ring; else None, as ASTAP."""
     rows, cols = shape
     across = _third(x, cols)
     along = _third(y, rows)
@@ -38,9 +41,9 @@ def inspect(hfd: np.ndarray, x: np.ndarray, y: np.ndarray, shape: tuple[int, ...
         off_axis = float(np.median(ring) - np.median(centre))
     if not all(len(c) for c in cells.values()):
         return Inspection(None, None, off_axis)
-    corners = [float(np.median(cells[(i, j)])) for i in (0, 2) for j in (0, 2)]
-    tilt = 100 * (max(corners) - min(corners)) / float(np.median(hfd))
-    return Inspection(tilt, tilt_level(tilt), off_axis)
+    c1, c2, c3, c4 = (float(np.median(cells[at])) for at in ((0, 0), (2, 0), (2, 2), (0, 2)))
+    tilt = 100 * (max(c1, c2, c3, c4) - min(c1, c2, c3, c4)) / float(np.median(hfd))
+    return Inspection(tilt, tilt_level(tilt), off_axis, (c1, c2, c3, c4), float(np.median(centre)))
 
 
 def _third(position: np.ndarray, size: int) -> np.ndarray:

@@ -47,7 +47,7 @@ def test_a_night_with_its_objects_filters_sets_and_frames(conn, db_path, world) 
     assert (hfd["measured"], hfd["median"], hfd["q1"], hfd["q3"], hfd["silent"]) == (
         2, 3.0, 2.5, 3.5, None,
     )  # fmt: skip
-    assert hfd["unit"] == "px"
+    assert (hfd["unit"], hfd["per_filter"]) == ("px", False)
     both = {(s["object_key"], s["filter"]) for s in body["sets"]}
     assert both == {(None, None), ("M 31", None), (None, "L"), ("M 31", "L")}
     # in shooting order, the frame without measures last with its state
@@ -152,6 +152,8 @@ def test_the_median_tilt_and_fwhm_carry_their_verdict(conn, db_path, world) -> N
             spine,
             hfd_tilt_pct=tilt,
             tilt_level="go",  # a frame's own: the set's verdict comes from the median alone
+            **{f"hfd_corner_{i}_px": 3.0 for i in (1, 2, 3, 4)},
+            hfd_centre_px=3.0,
             fwhm_px=fwhm,
             sampling_class="over",
             eccentricity=0.3,

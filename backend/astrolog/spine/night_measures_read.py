@@ -112,11 +112,13 @@ def _stat(entry: Entry, row: sqlite3.Row | None, measuring: bool) -> dict[str, A
         silent = "measuring" if measuring else "no_value"
         measured = 0 if row is None else row["measured"]
         return out | {"measured": measured, "median": None, "q1": None, "q3": None, "low": None,
-                      "high": None, "trend": None, "verdict": None, "silent": silent}  # fmt: skip
+                      "high": None, "trend": None, "verdict": None, "silent": silent,
+                      "per_filter": False}  # fmt: skip
     trend = json.loads(row["trend"]) if row["trend"] else None
     return out | {"measured": row["measured"], "median": row["median"], "q1": row["q1"],
                   "q3": row["q3"], "low": row["low"], "high": row["high"], "trend": trend,
-                  "verdict": row["verdict"], "silent": None}  # fmt: skip
+                  "verdict": row["verdict"], "silent": None,
+                  "per_filter": bool(row["per_filter"])}  # fmt: skip
 
 
 def _frame(

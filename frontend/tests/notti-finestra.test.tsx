@@ -252,4 +252,85 @@ describe("le misure della notte", () => {
     expect(riga.getAttribute("aria-pressed")).toBe("true")
     expect(within(d).getByRole("radio", { name: /Ha/ }).getAttribute("aria-checked")).toBe("true")
   })
+
+  it("fondo di piu' filtri dice «per filtro» quando lo dice l'API", async () => {
+    const misure = MISURE_TUTTE.map((s) =>
+      s.key === "background_adu" ? { ...s, per_filter: true } : s,
+    )
+    const corpo = { ...MISURE, sets: MISURE.sets.map((s) => ({ ...s, measures: misure })) }
+    const d = await finestra({ ...FINESTRA, "/api/v1/nights/7/measures": { stato: 200, corpo } })
+    const fondo = (await within(d).findAllByRole("button", { name: /^Fondo cielo/ }))[0]
+    expect(fondo?.textContent).toContain("si confronta per filtro")
+  })
+})
+
+const ANGOLI = [
+  stat("hfd_corner_1_px", "px", val(3.1, 3.0, 3.2)),
+  stat("hfd_corner_2_px", "px", val(3.2, 3.1, 3.3)),
+  stat("hfd_corner_3_px", "px", val(3.3, 3.2, 3.4)),
+  stat("hfd_corner_4_px", "px", val(3.4, 3.3, 3.5)),
+  stat("hfd_centre_px", "px", val(3.0, 2.9, 3.1)),
+  stat("off_axis_px", "px", val(0.25, 0.2, 0.3)),
+]
+
+function conMisure(misure: unknown[], series: unknown[] = MISURE.series): Record<string, Voce> {
+  const corpo = { ...MISURE, series, sets: MISURE.sets.map((s) => ({ ...s, measures: misure })) }
+  return { ...FINESTRA, "/api/v1/nights/7/measures": { stato: 200, corpo } }
+}
+
+describe("frame per frame e tilt e curvatura", () => {
+  it("un grafico per filtro con le due misure scelte, e i segni dei frame senza misura", async () => {
+    const d = await finestra()
+    const grafici = await within(d).findByRole("region", { name: "I grafici" })
+    expect(
+      within(grafici).getByRole("img", { name: "Ha: FWHM e Eccentricità di 2 frame" }),
+    ).toBeTruthy()
+    expect(within(grafici).getAllByText("troppo poche stelle").length).toBeGreaterThan(0)
+    // senza altezza della Luna e senza zenit, i loro comandi non ci sono
+    expect(within(grafici).queryByRole("switch")).toBeNull()
+    expect(within(grafici).queryByRole("combobox", { name: "Valore" })).toBeNull()
+  })
+
+  it("con la Luna e lo zenit nei dati compaiono i loro comandi", async () => {
+    const zenit = stat("fwhm_zenith_arcsec", "arcsec", val(2.0, 1.9, 2.1))
+    const series = MISURE.series.map((f) => ({
+      ...f,
+      values: { ...f.values, moon_altitude_deg: 20 },
+    }))
+    const d = await finestra(conMisure([...MISURE_TUTTE, zenit], series))
+    const grafici = await within(d).findByRole("region", { name: "I grafici" })
+    expect(
+      within(grafici).getByRole("switch", { name: "Accendi la Luna nei grafici" }),
+    ).toBeTruthy()
+    expect(within(grafici).getByRole("combobox", { name: "Valore" })).toBeTruthy()
+  })
+
+  it("oltre le barre che ci stanno, la finestra dei frame", async () => {
+    const molti = Array.from({ length: 200 }, (_, i) => ({
+      ...MISURE.series[0],
+      frame_id: i + 1,
+    })) as typeof MISURE.series
+    const d = await finestra(conMisure(MISURE_TUTTE, molti))
+    const grafici = await within(d).findByRole("region", { name: "I grafici" })
+    const slider = within(grafici).getByRole("slider", { name: "Tratto dei frame in vista" })
+    expect(slider.getAttribute("aria-valuetext")).toBe("frame 1–182 di 200")
+  })
+
+  it("il sensore dalle mediane degli angoli e del centro, col giudizio del tilt", async () => {
+    const d = await finestra(conMisure([...MISURE_TUTTE, ...ANGOLI]))
+    const sezione = await within(d).findByRole("region", { name: "Tilt e curvatura di campo" })
+    const sensore = within(sezione).getByRole("img")
+    expect(sensore.getAttribute("aria-label")).toBe(
+      "HFD agli angoli 3,1 px / 3,2 px / 3,3 px / 3,4 px, al centro 3,0 px: tilt 14%, curvatura +0,25 px",
+    )
+    expect(sezione.textContent).toContain("incerto")
+    expect(within(sezione).getByText("tilt 14% · curvatura +0,25 px")).toBeTruthy()
+  })
+
+  it("senza le HFD degli angoli il sensore dice che non c'e'", async () => {
+    const d = await finestra()
+    const sezione = await within(d).findByRole("region", { name: "Tilt e curvatura di campo" })
+    expect(within(sezione).queryByRole("img")).toBeNull()
+    expect(within(sezione).getByText("non c’è per questi frame")).toBeTruthy()
+  })
 })

@@ -51,8 +51,11 @@ ORDER BY c.start_utc IS NULL, c.start_utc, f.id
 
 _MEASURE_COLUMNS = (
     "night_id", "object_id", "filter_id", "key", "frames", "measured", "median", "q1", "q3",
-    "low", "high", "trend", "verdict",
+    "low", "high", "trend", "verdict", "per_filter",
 )  # fmt: skip
+# Each filter its own scale: across filters these compare only per filter [D tavola v76, MisureFrame
+# 190-195 `perF`, 236]
+PER_FILTER = frozenset({"background_adu", "noise_adu", "sqm"})
 # The median judged by the frame's own rule, the same function the pipeline calls.
 _VERDICTS: dict[str, Callable[[float], str | None]] = {
     "hfd_tilt_pct": tilt_level,
@@ -70,6 +73,7 @@ class _Group:
     pending: int = 0
     setups: set[tuple[object, object, object]] = field(default_factory=set)
     values: dict[str, list[float]] = field(default_factory=lambda: defaultdict(list))  # in time
+    filters: dict[str, set[int | None]] = field(default_factory=lambda: defaultdict(set))  # with it
 
 
 def rebuild(conn: sqlite3.Connection) -> None:
@@ -126,6 +130,7 @@ def _add(group: _Group, row: sqlite3.Row) -> None:
     for key in _KEYS:
         if (value := row[key]) is not None:
             group.values[key].append(float(value))
+            group.filters[key].add(row["filter_id"])
 
 
 def _measure_rows(groups: dict[GroupKey, _Group]) -> Iterator[tuple[object, ...]]:
@@ -133,13 +138,14 @@ def _measure_rows(groups: dict[GroupKey, _Group]) -> Iterator[tuple[object, ...]
         for key in _KEYS:
             in_time = group.values.get(key, [])
             if not in_time:
-                yield night, obj, flt, key, group.frames, 0, *(None,) * 7
+                yield night, obj, flt, key, group.frames, 0, *(None,) * 7, 0
                 continue
             values = sorted(in_time)
             q1, median, q3 = (quantile(values, p) for p in (0.25, 0.5, 0.75))
             verdict = _VERDICTS[key](median) if key in _VERDICTS else None
+            per_filter = key in PER_FILTER and len(group.filters[key]) > 1
             yield (night, obj, flt, key, group.frames, len(values), median, q1, q3,
-                   values[0], values[-1], _trend(in_time), verdict)  # fmt: skip
+                   values[0], values[-1], _trend(in_time), verdict, int(per_filter))  # fmt: skip
 
 
 def _trend(in_time: list[float]) -> str | None:

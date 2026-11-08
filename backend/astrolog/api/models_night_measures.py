@@ -37,6 +37,10 @@ class MeasureStat(BaseModel):
         description="Why `median` is null: frames still to be measured, or none of the measured "
         "has it (each frame's reason is in its own measures). Null with a median."
     )
+    per_filter: bool = Field(
+        description="Background, noise or sky brightness from more than one filter: each filter "
+        "has its own scale, so the set's median does not compare; show it per filter."
+    )
 
 
 class MeasureSet(BaseModel):

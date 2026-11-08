@@ -42,5 +42,30 @@ Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nell
   Perche': il sesto e' una scelta della dimostrazione.
 - **Misure della finestra per formato.** Tavola: inline (Riepilogo 97-98, FinestraRiepilogo 36).
   App: inline uguali. Brief a Design per passarle al foglio.
-- **Fuori fino al commit C.** Frame per frame (grafici, Luna, zenit, finestra dei frame) e Tilt e
-  curvatura. Il frame si sceglie con ‹ ›, non dal grafico.
+
+## Notti -- Tutto della notte, Frame per frame e Tilt e curvatura (passo 33, commit C, 8/11)
+
+- **Ordine «per ora».** Tavola: gli oggetti uno dopo l'altro (MisureFrame 275, `u.g - w.g`). App:
+  l'ordine di ripresa, un separatore a ogni cambio di oggetto. Perche': la didascalia della tavola
+  dice «nell'ordine di ripresa»; con oggetti alternati nella notte i due ordini divergono.
+- **Seleziona i frame ↗.** Tavola: il tondo accanto a «Frame per frame» (36). App: assente.
+  Perche': Selezione dei frame non e' ancora portata.
+- **Nota della luminosita' del cielo nel grafico.** Tavola: «c'e' solo con L, nessun filtro e a
+  colori» o «serve il bias della camera» (310). App: «non c'e' per questi frame». Perche': l'API
+  non manda il motivo per l'insieme, solo per frame.
+- **Fondo e rumore non confrontabili nel grafico.** Tavola: cita i valori («tempo di posa (300 s e
+  180 s)», 311). App: «frame con tempo di posa diversi». Perche': l'API dice cosa cambia, non i
+  valori.
+- **Tilt e curvatura del sensore.** Tavola: ricalcolati dalle mediane di angoli e centro (339).
+  App: la mediana del tilt dei frame (ASTAP, col giudizio) e quella dell'aberrazione fuori asse,
+  in px e in ″. Perche': una lettura non calcola; sono le stesse misure delle tessere (ADR 0044).
+- **Verso del sensore.** Tavola: non lo dice. App: la riga 1 del file in basso, come lo standard
+  FITS; gli angoli sono ai pixel (1,1) (W,1) (W,H) (1,H).
+- **«Stelle troppo piccole per una camera a colori».** Tavola: tilt e curvatura tacciono sotto 1,2
+  superpixel (233, 358). App: assente; senza tilt la tessera dice «non c'e' per questi frame».
+  Perche': la pipeline non ha questa regola (ADR 0044 dice solo le nove aree).
+- **Nome dell'oggetto sotto il grafico, telefono.** Tavola: toglie la prima parola («1396» per IC
+  1396, 282). App: il nome intero. Perche': tagliare un nome che non conosciamo puo' lasciarne
+  solo un numero ambiguo (principio 1); quello che non ci sta salta, come sul desktop.
+- **Bottoni degli oggetti sotto la finestra dei frame.** Tavola: uno per gruppo anche se il gruppo
+  e' uno (302). App: solo con piu' di un oggetto. Perche': un bottone solo porta dove si e' gia'.

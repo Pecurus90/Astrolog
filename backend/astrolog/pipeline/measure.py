@@ -45,7 +45,8 @@ _SHAPE = (
     "eccentricity_sigma", "psf_residual", "psf_residual_sigma",
 )  # fmt: skip
 _LADDER = {start: f"ladder_{start}_dex" for start in STARTS}
-_INSPECTION = ("hfd_tilt_pct", "tilt_level", "off_axis_px")  # Measured only
+_CORNERS = ("hfd_corner_1_px", "hfd_corner_2_px", "hfd_corner_3_px", "hfd_corner_4_px")
+_INSPECTION = ("hfd_tilt_pct", "tilt_level", "off_axis_px", *_CORNERS, "hfd_centre_px")  # Measured
 _WRITTEN = ("file_id", "outcome", *_NUMBERS, *_SHAPE, "sampling_class", *_INSPECTION,
             *_LADDER.values(), "sky_rate_adu_s", "duration_s", "measured_at")  # fmt: skip
 # Only an unreadable row is written over: the others stay (misure.md).
@@ -102,8 +103,9 @@ def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -
             values |= _shape_values(found.shape)
         if isinstance(found, Measured):
             seen = found.inspection
-            values |= dict(zip(_INSPECTION, (seen.tilt_pct, seen.tilt_level, seen.off_axis_px),
-                               strict=True))  # fmt: skip
+            corners = seen.corners_px or (None,) * len(_CORNERS)
+            values |= dict(zip(_INSPECTION, (seen.tilt_pct, seen.tilt_level, seen.off_axis_px,
+                                             *corners, seen.centre_px), strict=True))  # fmt: skip
     else:
         outcome = read.why.value
     values |= {

@@ -69,6 +69,8 @@ def test_a_light_is_measured_once_and_written(conn, tmp_path):
     assert row["fwhm_tilt"] < 0.05 and row["fwhm_curvature"] is not None
     assert (row["tilt_level"], row["sampling_class"]) == ("go", "over")  # FWHM 5.6 px
     assert row["hfd_tilt_pct"] < 5 and abs(row["off_axis_px"]) < 0.1
+    areas = [row[f"hfd_corner_{i}_px"] for i in (1, 2, 3, 4)] + [row["hfd_centre_px"]]
+    assert all(c == pytest.approx(row["hfd_px"], rel=0.05) for c in areas)
     assert 0 <= row["elongation_coherence"] <= 1
     assert result.measured == 1
     again = measure_root(conn, root, "2026-01-01T00:00:00+00:00")
