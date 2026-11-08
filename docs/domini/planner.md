@@ -112,7 +112,7 @@ stesso selettore: **Deep sky · Sistema solare · Eventi**; il setup scelto rest
   (proposta: «Cielo fotografico non disponibile senza rete»). Nessuno spinner sulla carta intera.
 - Sopra la carta, nostri: rettangolo del campo (poligono coi vertici dal backend), mirino
   dell'oggetto (non un'ellisse), griglia dei pannelli, orizzonte del sito. Trascinare sposta
-  l'inquadratura; centro in RA/Dec col punto («RA 10.68 Dec 41.27»). La carta occupa la maggior
+  l'inquadratura; centro in RA/Dec con la virgola come ogni decimale («RA 10,68 Dec 41,27»; glossario, Marco 6/11/2026). La carta occupa la maggior
   parte della pagina (Marco).
 
 ### La rotazione

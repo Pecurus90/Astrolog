@@ -11,8 +11,9 @@
  *   ne' sul nome della chiave: chi legge vede l'italiano invece di un buco, e la guardia delle
  *   traduzioni e' l'unica a dover accorgersi del vuoto. Un `t()` che mostra `review.failed` a
  *   schermo e' un difetto che si scopre da un utente, non da una macchina.
- * - **Decimali col punto in ogni lingua**, migliaia con lo spazio sottile solo da 10 000 in su
- *   (glossario, regola SI del BIPM): `formatta()` e' la sola casa di questa regola.
+ * - **In italiano la virgola decimale e il meno vero** (Marco, 6/11; BIPM: il segno decimale segue
+ *   la lingua), migliaia con lo spazio sottile solo da 10 000 in su (glossario): `formatta()` e' la
+ *   sola casa di questa regola.
  */
 import { en } from "./en"
 import { it } from "./it"
@@ -57,7 +58,7 @@ function singolare(chiave: string, valori?: Record<string, string | number>): st
   return DIZIONARI[lingua][una] ?? it[una as Chiave]
 }
 
-/** Un punto del cielo come si legge accanto a un gruppo: `RA 98 Dec 4.9`, al decimo di grado. Dove
+/** Un punto del cielo come si legge accanto a un gruppo: `RA 98 Dec 4,9`, al decimo di grado. Dove
  *  puntava la montatura, o il centro di un mosaico, si riconosce a colpo d'occhio: non si misura. */
 export function cielo(ra: number, dec: number): string {
   // `+ 0` perche' -0.04 al decimo e' -0, che si scriverebbe col segno
@@ -68,16 +69,29 @@ export function cielo(ra: number, dec: number): string {
 
 // Spazio sottile non separabile (U+202F): la cifra non va a capo a meta'.
 const SPAZIO_SOTTILE = "\u202F"
+// Il meno vero (U+2212), come la tavola (`AL.virg`): il trattino e' piu' corto della cifra.
+const MENO = "\u2212"
 
-/** Un numero per lo schermo. In italiano punto decimale e migliaia staccate solo da 10 000 in su:
- *  1366, 10 000 (glossario, regola SI del BIPM). L'inglese resta come lo scrive `Intl`. */
+/** Un numero per lo schermo. In italiano virgola decimale, meno vero e migliaia staccate solo da
+ *  10 000 in su: 1,8 \u00B7 1366 \u00B7 10 000 (glossario). L'inglese resta come lo scrive `Intl`. */
 function formatta(n: number, opzioni: Intl.NumberFormatOptions = {}): string {
-  if (lingua !== "it") return new Intl.NumberFormat(lingua, opzioni).format(n)
+  // -0.04 a un decimale e' zero, e uno zero non ha segno
+  const senzaMenoZero = (s: string) => s.replace(/^-(?=0(?:[.,]0+)?$)/, "")
+  if (lingua !== "it") return senzaMenoZero(new Intl.NumberFormat(lingua, opzioni).format(n))
   // La soglia guarda l'intero gia' arrotondato: 9999.96 a un decimale e' 10 000.
-  const scritto = new Intl.NumberFormat("en", { ...opzioni, useGrouping: false }).format(n)
-  return scritto.replace(/^(-?)(\d{5,})/, (_, segno: string, intero: string) =>
-    segno + intero.replace(/\B(?=(\d{3})+$)/g, SPAZIO_SOTTILE),
-  )
+  const scritto = senzaMenoZero(new Intl.NumberFormat("en", { ...opzioni, useGrouping: false }).format(n))
+  return scritto
+    .replace(/^(-?)(\d+)(?:\.(\d+))?$/, (_, segno: string, intero: string, decimi?: string) => {
+      const staccato = intero.length < 5 ? intero : intero.replace(/\B(?=(\d{3})+$)/g, SPAZIO_SOTTILE)
+      return (segno ? MENO : "") + staccato + (decimi ? `,${decimi}` : "")
+    })
+}
+
+/** Un numero dentro un campo da correggere: tutte le cifre, la virgola in italiano, il trattino
+ *  che la tastiera scrive. `numero()` arrotonderebbe a tre decimali, e salvare toglierebbe cifre. */
+export function numeroNelCampo(n: number): string {
+  const scritto = String(n)
+  return lingua === "it" ? scritto.replace(".", ",") : scritto
 }
 
 /** Un conteggio come lo scrive la lingua di adesso (le migliaia, soprattutto). */
@@ -91,10 +105,10 @@ export function valoreEUnita(valore: string, unita: string): string {
   return unita === "%" ? `${valore}${unita}` : `${valore} ${unita}`
 }
 
-/** Le coordinate di un posto, come si leggono accanto al suo nome: `46.4843 N - 12.0561 E`.
+/** Le coordinate di un posto, come si leggono accanto al suo nome: `46,4843 N - 12,0561 E`.
  *
  * Il verso si scrive con la lettera e non col segno meno: una latitudine negativa e' l'emisfero
- * sud, e "-33.86" chiede a chi legge di saperlo. Quattro decimali, che a queste latitudini sono
+ * sud, e "-33,86" chiede a chi legge di saperlo. Quattro decimali, che a queste latitudini sono
  * una decina di metri: piu' di cosi' finge una precisione che il posto non ha, e meno non
  * distingue due siti di osservazione vicini.
  *
@@ -125,16 +139,16 @@ export type Asse = keyof typeof VERSI
 
 /** Una coordinata **scritta a mano**, riletta come numero: l'inverso di `coordinate`.
  *
- * Esiste perche' `Number("46,4843")` e' `NaN`, e un italiano scrive la virgola per abitudine
- * anche se l'app propone il punto: senza questa trova il tasto spento e nessun motivo. Accetta
- * anche la lettera del verso -- `46.4843 N`, come il disegno la mostra e come `coordinate` la
- * scrive -- cosi' cio' che si legge a schermo si puo' riscrivere nel campo senza tradurlo.
+ * Esiste perche' `Number("46,4843")` e' `NaN`, e l'app scrive la virgola mentre chi copia da un
+ * catalogo scrive il punto: accetta tutti e due, e il meno vero come il trattino. Accetta anche la
+ * lettera del verso -- `46,4843 N`, come il disegno la mostra e come `coordinate` la scrive --
+ * cosi' cio' che si legge a schermo si puo' riscrivere nel campo senza tradurlo.
  *
  * **La lettera comanda sul segno**: "45 S" e' sud, e "-45 S" pure, perche' due modi di dire la
  * stessa cosa non fanno un nord. Cio' che non e' un numero resta `NaN`, compreso il campo vuoto:
  * `Number("")` fa zero, e zero-zero e' un punto nel Golfo di Guinea. */
 export function coordinataDa(scritto: string, asse: Asse): number {
-  const pulito = scritto.trim().replace(",", ".")
+  const pulito = scritto.trim().replace(",", ".").replace(MENO, "-")
   const ultima = pulito.slice(-1).toLowerCase()
   const verso = (VERSI[asse] as Record<string, number | undefined>)[ultima]
   // Una lettera che non e' di questo asse non si ignora: `"45 W"` in latitudine non e' 45, e'
@@ -151,12 +165,12 @@ export function coordinataDa(scritto: string, asse: Asse): number {
  * Il backend manda `integration_s` e dichiara che "a schermo si legge in ore": qui si cambia
  * unita' e si formatta, che e' il mestiere di questo lato. Sta in una casa sola perche' la stessa
  * conversione la vorranno le altre sezioni, e un `/ 3600` ricopiato in tre componenti e' lo stesso
- * fatto in tre posti. Un decimale: il secondo non si legge, e "2.73 h" finge una precisione che
+ * fatto in tre posti. Un decimale: il secondo non si legge, e "2,73 h" finge una precisione che
  * la somma di tempi di posa arrotondati non ha.
  *
  * Ma un tempo **vero** sotto quel decimale non si scrive zero: un frame da un minuto diventerebbe
  * "0 h", che a schermo vuol dire "qui non c'e' tempo". Sotto la soglia in cui l'arrotondamento lo
- * azzererebbe si scrive "< 0.1". Lo zero vero resta zero. */
+ * azzererebbe si scrive "< 0,1". Lo zero vero resta zero. */
 export function ore(secondi: number): string {
   const unDecimale = { maximumFractionDigits: 1 }
   // 0.05 h e' il punto sotto cui un decimale arrotonda a zero

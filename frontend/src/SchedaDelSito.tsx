@@ -6,7 +6,7 @@ import { Dialogo } from "./Dialogo"
 import type { ClasseDiCielo } from "./ScalaDelCielo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { numero, t } from "./i18n"
+import { numero, numeroNelCampo, t } from "./i18n"
 import { CampiDelSito, CercaIlPosto, SceltaDelCielo, useCampiDelSito } from "./sito"
 
 type Sito = components["schemas"]["SiteOut"]
@@ -39,8 +39,8 @@ export function SchedaDelSito({
   const campi = useCampiDelSito(
     sito && {
       nome: sito.name,
-      lat: String(sito.latitude),
-      lon: String(sito.longitude),
+      lat: numeroNelCampo(sito.latitude),
+      lon: numeroNelCampo(sito.longitude),
       ...(sito.bortle === null ? {} : { cielo: sito.bortle as ClasseDiCielo }),
     },
   )

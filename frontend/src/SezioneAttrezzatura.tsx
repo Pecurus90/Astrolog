@@ -7,7 +7,9 @@ import { Sezione } from "./Sezione"
 import { provaDeiSoggetti } from "./Soggetti"
 import { TendinaDiScelta } from "./TendinaDiScelta"
 import type { components } from "./api/schema"
-import { type Chiave, numero, t } from "./i18n"
+import { type Chiave, numero, numeroNelCampo, t } from "./i18n"
+
+const campoDa = (n: number | null | undefined) => (n == null ? "" : numeroNelCampo(n))
 
 type Scheda = components["schemas"]["GearSignature"]
 type Risposta = components["schemas"]["GearEdit"]
@@ -101,7 +103,7 @@ function partenza(scheda: Scheda, risposta: Risposta | undefined, corredi: Corre
   return {
     camera: risposta?.rig_id ? `${risposta.rig_id}` : risposta?.camera ? ALTRA : salvato ? `${salvato.id}` : data?.camera ? ALTRA : null,
     nome: risposta?.camera ?? (salvato ? "" : (data?.camera ?? "")),
-    focale: `${risposta?.focal_mm ?? data?.focal_mm ?? scheda.focal_mm ?? scheda.focal_suggested ?? ""}`,
+    focale: campoDa(risposta?.focal_mm ?? data?.focal_mm ?? scheda.focal_mm ?? scheda.focal_suggested),
     // una camera scritta in mano porta la sua ottica, anche vuota
     conOttica: scheda.asks_camera && risposta?.camera ? (risposta.optics ?? "") : (data?.optics ?? scheda.optics ?? ""),
     ottica: null,

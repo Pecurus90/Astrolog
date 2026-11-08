@@ -319,7 +319,7 @@ describe("il posto da cui osservi", () => {
     const motivo = document.getElementById(lat.getAttribute("aria-describedby") as string)
     // il testo intero, non solo il numero: `toContain("90")` restava verde anche su un tetto
     // scritto a mano al posto di quello dell'asse
-    expect(motivo?.textContent).toBe("Valore fra -90 e 90")
+    expect(motivo?.textContent).toBe("Valore fra −90 e 90")
 
     // e la longitudine ha **il suo** tetto, che e' il doppio: senza questa riga, portarlo a 90
     // avrebbe reso irricevibile Sydney (151 gradi est) senza che niente cadesse
@@ -329,7 +329,7 @@ describe("il posto da cui osservi", () => {
     fireEvent.change(lon, { target: { value: "181" } })
     expect(
       document.getElementById(lon.getAttribute("aria-describedby") as string)?.textContent,
-    ).toBe("Valore fra -180 e 180")
+    ).toBe("Valore fra −180 e 180")
 
     // e il tasto che salva resta spento finche' un campo dice che c'e' qualcosa che non va:
     // acceso, manderebbe una scrittura che il backend rifiuta col motivo scritto a due
@@ -471,6 +471,6 @@ describe("il posto da cui osservi", () => {
 
     expect(screen.getAllByText(/^selezionato$/i)).toHaveLength(1)
     // e quella salvata e' la prima, non la seconda
-    expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("45.44")
+    expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("45,44")
   })
 })

@@ -412,3 +412,4 @@ una notte dice che luna c'era, con quanto era illuminata - step 33, sheet v76 re
 una notte il cui meteo non e' ancora arrivato lo dice - step 33, sheet v76 replaces the v29 register; covered by the silent sky in NottiDati.cielo and the backend test test_a_young_night_says_the_day_its_weather_arrives
 una notte porta il giorno, il sito, gli oggetti, le ore e i frame - step 33, sheet v76 replaces the v29 register; now la notte piu' recente e' la protagonista
 una notte ripresa dice com'era il cielo, e quante ore sono state serene - step 33, ADR 0034: exposure hours replace clear hours; renamed una notte ripresa dice com'era il cielo
+i decimali si scrivono col punto, mai con la virgola - step 33, Marco 6/11/2026: decimal comma across the Italian app; renamed i decimali si scrivono con la virgola, mai col punto

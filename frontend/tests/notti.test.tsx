@@ -170,7 +170,7 @@ describe("le Notti", () => {
     await apriNotti()
     const carta = await protagonista()
     expect(within(carta).getByText("Nuvole sparse, in media 8%")).toBeTruthy()
-    expect(within(carta).getByText("7.9 ore di posa su 9 di buio \u00B7 senza aerosol")).toBeTruthy()
+    expect(within(carta).getByText("7,9 ore di posa su 9 di buio \u00B7 senza aerosol")).toBeTruthy()
     expect(within(carta).getByText(/una tacca per ora di buio/)).toBeTruthy()
   })
 
@@ -269,7 +269,7 @@ describe("le Notti", () => {
     notti(pagina([DICIOTTO]))
     await apriNotti()
     const carta = await screen.findByRole("region", { name: "Tutto l\u2019archivio" })
-    expect(within(carta).getByText("3 oggetti \u00B7 4 frame \u00B7 3.2 ore")).toBeTruthy()
+    expect(within(carta).getByText("3 oggetti \u00B7 4 frame \u00B7 3,2 ore")).toBeTruthy()
     expect(within(carta).getByText("Le copie calibrate non sono contate.")).toBeTruthy()
   })
 

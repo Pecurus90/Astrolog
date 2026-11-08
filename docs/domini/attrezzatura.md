@@ -236,7 +236,7 @@ e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono 
 "altra…" propone quelle gia' scritte.
 
 **Testi approvati** (Marco, 11/10, 17/10 e 18/10/2026; parola per parola, *setup* al posto di
-"corredo", decimali col punto come in [`glossario.md`](glossario.md)):
+"corredo", decimali con la virgola come in [`glossario.md`](glossario.md), Marco 6/11/2026):
 
 - uso: solo le ore (sopra); i frame restano accanto alle parti del setup, i filtri del setup in
   proporzione, senza cifre;

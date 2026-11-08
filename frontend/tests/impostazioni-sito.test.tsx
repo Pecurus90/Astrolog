@@ -94,11 +94,11 @@ describe("Impostazioni / Siti", () => {
     const righe = await screen.findAllByRole("listitem")
     const cortina = righe.find((r) => r.textContent?.startsWith("Cortina"))!
     // Le coordinate ci sono, formattate: senza, due siti vicini sono due nomi e basta.
-    expect(cortina.textContent).toMatch(/46\.5405/)
-    expect(cortina.textContent).toMatch(/12\.1357/)
+    expect(cortina.textContent).toMatch(/46,5405/)
+    expect(cortina.textContent).toMatch(/12,1357/)
     // La classe **e la misura**: qui la misura e' la regola, il piede della barra e' l'eccezione.
     expect(cortina.textContent).toMatch(/3/)
-    expect(cortina.textContent).toMatch(/21\.3/)
+    expect(cortina.textContent).toMatch(/21,3/)
     expect(within(cortina).getByText(/^predefinito$/i)).toBeTruthy()
     // E solo uno lo e': "predefinito" su due righe vorrebbe dire due fusi per la stessa notte.
     expect(screen.getAllByText(/^predefinito$/i)).toHaveLength(1)
@@ -123,7 +123,7 @@ describe("Impostazioni / Siti", () => {
 
     const nome = (await screen.findByLabelText(/nome del sito/i)) as HTMLInputElement
     expect(nome.value).toBe("Cortina")
-    expect((screen.getByLabelText(/latitudine/i) as HTMLInputElement).value).toBe("46.5405")
+    expect((screen.getByLabelText(/latitudine/i) as HTMLInputElement).value).toBe("46,5405")
     // E la classe che ha e' gia' quella scelta: ripartire da nessuna la cancellerebbe salvando.
     expect((screen.getByRole("radio", { checked: true }) as HTMLInputElement).value).toBe("3")
   })

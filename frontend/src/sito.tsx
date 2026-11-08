@@ -6,7 +6,7 @@ import { Campo } from "./Campo"
 import { type ClasseDiCielo, ScalaDelCielo } from "./ScalaDelCielo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { type Asse, coordinataDa, coordinate, numero, t } from "./i18n"
+import { type Asse, coordinataDa, coordinate, numero, numeroNelCampo, t } from "./i18n"
 
 type Posto = components["schemas"]["PlaceOut"]
 
@@ -20,8 +20,8 @@ type Posto = components["schemas"]["PlaceOut"]
  * - **La strada manuale e' sempre aperta**, non solo quando la ricerca fallisce: un sito buio
  *   puo' non avere rete, ed e' proprio dove si osserva. Per questo il **nome e' un campo suo**:
  *   prenderlo dalla casella di ricerca lascerebbe senza nome proprio chi non cerca.
- * - **Una coordinata scritta a mano la rilegge `coordinataDa`**, non `Number`: un italiano scrive
- *   la virgola per abitudine, e `Number("46,4843")` e' `NaN`. Li' vive anche il campo vuoto,
+ * - **Una coordinata scritta a mano la rilegge `coordinataDa`**, non `Number`: il campo propone la
+ *   virgola, e `Number("46,4843")` e' `NaN`. Li' vive anche il campo vuoto,
  *   che non e' una coordinata: `Number("")` fa zero, e zero-zero e' un punto nel Golfo di Guinea.
  * - **Il motivo sta sotto il campo, e solo quando c'e' qualcosa da dire**: un campo ancora vuoto
  *   non e' sbagliato, e' solo vuoto. Spegnere il tasto e basta e' il difetto che questa schermata
@@ -94,8 +94,8 @@ export function useCampiDelSito(iniziale?: {
     }),
     prendiDa: (p: Posto) => {
       setNome(p.name)
-      setLat(String(p.latitude))
-      setLon(String(p.longitude))
+      setLat(numeroNelCampo(p.latitude))
+      setLon(numeroNelCampo(p.longitude))
     },
     /** Dopo un salvataggio riuscito, dove il modulo non si smonta: coi campi pieni lo stesso
      *  sito si offrirebbe di nuovo, e il nome e' unico. */

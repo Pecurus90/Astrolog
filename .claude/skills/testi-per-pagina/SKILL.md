@@ -57,12 +57,14 @@ dizionari si caricano a richiesta.
 
 Mai una stringa-tipo presa da una fonte esterna usata come testo a schermo.
 
-## I numeri scientifici NON si localizzano
+## I numeri seguono la lingua
 
-RA/Dec, magnitudine, FWHM, dimensione apparente, scala in arcsec/px: identita' universale,
-col **punto** decimale in ogni lingua, come in ogni catalogo e software di acquisizione.
-Si localizzano **conteggi, migliaia, durate e date**, via l'helper a fonte unica del
-frontend.
+Ogni numero a schermo, scientifici compresi (RA/Dec, magnitudine, FWHM, arcsec/px), passa
+dall'helper a fonte unica del frontend (`formatta()` in `frontend/src/i18n/index.ts`): in
+italiano **virgola decimale** e meno vero, migliaia con lo spazio sottile da 10 000 (glossario;
+Marco, 6/11/2026; BIPM: il segno decimale segue la lingua). Mai `toFixed` o `String(n)` a
+schermo. Un campo da correggere parte da `numeroNelCampo()`; chi rilegge accetta punto e virgola.
+Restano col punto i numeri di versione e i nomi letti dai file.
 
 ```tsx
 // NO

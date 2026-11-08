@@ -19,6 +19,7 @@ import {
   numero,
   orario,
   ore,
+  unDecimale,
   valoreEUnita,
 } from "../src/i18n"
 import { it as testiIt } from "../src/i18n/it"
@@ -30,13 +31,24 @@ afterEach(() => {
 })
 
 describe("decimali e migliaia (glossario, regola SI)", () => {
-  // Il decimale e' il punto in ogni lingua; le migliaia si staccano con lo spazio sottile solo da
-  // 10 000 in su, perche' 1366 si legge da solo e 1.366 sembrerebbe un decimale.
+  // In italiano il decimale e' la virgola (Marco, 6/11; BIPM: il segno segue la lingua); le
+  // migliaia si staccano con lo spazio sottile solo da 10 000 in su, perche' 1366 si legge da solo.
   const SOTTILE = "\u202F"
+  const MENO = "\u2212"
 
-  it("i decimali si scrivono col punto, mai con la virgola", () => {
-    expect(numero(1.8)).toBe("1.8")
-    expect(ore(9720)).toBe("2.7")
+  it("i decimali si scrivono con la virgola, mai col punto", () => {
+    expect(numero(1.8)).toBe("1,8")
+    expect(ore(9720)).toBe("2,7")
+    expect(numero(9999.96)).toBe(`9999,96`)
+  })
+
+  it("il meno e' il segno vero, non il trattino (tavola, AL.virg)", () => {
+    expect(numero(-5.4)).toBe(`${MENO}5,4`)
+  })
+
+  it("cio' che arrotonda a zero non porta il meno", () => {
+    expect(numero(-0.0001)).toBe("0")
+    expect(unDecimale(-0.04)).toBe("0,0")
   })
 
   it("sotto 10 000 le cifre restano attaccate", () => {
@@ -47,13 +59,15 @@ describe("decimali e migliaia (glossario, regola SI)", () => {
   it("da 10 000 in su le migliaia si staccano con lo spazio sottile", () => {
     expect(numero(10000)).toBe(`10${SOTTILE}000`)
     expect(numero(396200)).toBe(`396${SOTTILE}200`)
-    expect(numero(-18430)).toBe(`-18${SOTTILE}430`)
+    expect(numero(-18430)).toBe(`${MENO}18${SOTTILE}430`)
+    expect(numero(12345.6)).toBe(`12${SOTTILE}345,6`)
   })
 })
 
 describe("un punto del cielo", () => {
   it("si legge al decimo di grado, e l'ascensione retta non arriva mai a 360", () => {
-    expect(cielo(98.04, 4.93)).toBe("RA 98 Dec 4.9")
+    expect(cielo(98.04, 4.93)).toBe("RA 98 Dec 4,9")
+    expect(cielo(83.8, -5.4)).toBe("RA 83,8 Dec −5,4")
     expect(cielo(359.99, 10)).toBe("RA 0 Dec 10")
     expect(cielo(98, -0.04)).toBe("RA 98 Dec 0")
   })
@@ -62,13 +76,13 @@ describe("un punto del cielo", () => {
 describe("le ore", () => {
   it("si scrivono con un decimale", () => {
     expect(ore(43200)).toBe("12")
-    expect(ore(9000)).toBe("2.5")
+    expect(ore(9000)).toBe("2,5")
   })
 
   it("un tempo vero ma piccolo non diventa zero", () => {
     // Arrotondato, un frame da un minuto sarebbe "0 h". Zero ore vuol dire "non c'e' tempo", e
     // li' il tempo c'e'.
-    expect(ore(60)).toBe("< 0.1")
+    expect(ore(60)).toBe("< 0,1")
   })
 
   it("zero vero resta zero", () => {
@@ -111,20 +125,20 @@ describe("quanto e' durata una lettura", () => {
 
 describe("le coordinate di un posto", () => {
   it("dicono il verso con la lettera, non col segno meno", () => {
-    // "-33.86" chiede a chi legge di sapere che il meno e' l'emisfero sud. La lettera lo dice.
-    expect(coordinate(-33.8688, 151.2093)).toBe("33.8688 S - 151.2093 E")
-    expect(coordinate(46.4843, -12.0561)).toBe("46.4843 N - 12.0561 O")
+    // "-33,86" chiede a chi legge di sapere che il meno e' l'emisfero sud. La lettera lo dice.
+    expect(coordinate(-33.8688, 151.2093)).toBe("33,8688 S - 151,2093 E")
+    expect(coordinate(46.4843, -12.0561)).toBe("46,4843 N - 12,0561 O")
   })
 
   it("le lettere passano dal dizionario, o l'inglese legge 'O' per ovest", () => {
     // Scritte dentro il formattatore resterebbero italiane in ogni lingua -- un inglese leggerebbe
-    // `12.0561 O` -- e la guardia delle traduzioni non se ne accorgerebbe, perche' quelle lettere
+    // `12,0561 O` -- e la guardia delle traduzioni non se ne accorgerebbe, perche' quelle lettere
     // non passerebbero da `t()`. Qui si cambia la parola nel dizionario e si guarda se cambia a
     // valle: scritta a mano nel formattatore, non cambierebbe.
     const salva = DIZIONARI.it["coord.w"]!
     try {
       DIZIONARI.it["coord.w"] = "ZZ"
-      expect(coordinate(1, -1)).toBe("1.0000 N - 1.0000 ZZ")
+      expect(coordinate(1, -1)).toBe("1,0000 N - 1,0000 ZZ")
     } finally {
       DIZIONARI.it["coord.w"] = salva
     }
@@ -133,17 +147,21 @@ describe("le coordinate di un posto", () => {
 
   it("quattro decimali, ne' uno di piu' ne' uno di meno", () => {
     // Piu' fingono una precisione che il posto non ha; meno non distinguono due siti vicini.
-    expect(coordinate(46.5, 12)).toBe("46.5000 N - 12.0000 E")
-    expect(coordinate(46.48439999, 12)).toBe("46.4844 N - 12.0000 E")
+    expect(coordinate(46.5, 12)).toBe("46,5000 N - 12,0000 E")
+    expect(coordinate(46.48439999, 12)).toBe("46,4844 N - 12,0000 E")
   })
 })
 
 describe("una coordinata riscritta a mano", () => {
   it("accetta la virgola come il punto, comunque l'utente scriva", () => {
-    // L'app propone il punto, ma un italiano scrive 46,48 per abitudine: con `Number` otteneva
-    // NaN, il tasto spento e nessun motivo.
+    // L'app propone la virgola, ma chi viene da un catalogo scrive 46.48: con `Number` la virgola
+    // dava NaN, il tasto spento e nessun motivo.
     expect(coordinataDa("46,4843", "lat")).toBe(46.4843)
     expect(coordinataDa("46.4843", "lat")).toBe(46.4843)
+  })
+
+  it("accetta il meno vero che lo schermo scrive, come il trattino", () => {
+    expect(coordinataDa("−33,8688", "lat")).toBe(-33.8688)
   })
 
   it("accetta la lettera del verso, in tutte e due le lingue", () => {

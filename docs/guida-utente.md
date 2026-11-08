@@ -30,8 +30,8 @@ alto e i comandi restano sempre in vista in fondo allo schermo.
    ricava **il fuso orario e l'altitudine** senza chiedertele. Se preferisci, o se sei senza
    rete, **scrivi tu nome e coordinate**: la strada manuale e' sempre aperta, e non e' un
    ripiego -- e' li' fin dall'inizio, perche' i siti bui dove si osserva spesso la rete non ce
-   l'hanno. Le coordinate le puoi scrivere come le scrivi di solito -- `46.4843` o `46,4843`, e
-   anche `46.4843 N` -- e se una e' fuori scala te lo dice **sotto il campo**, prima che tu prema.
+   l'hanno. Le coordinate le puoi scrivere come le scrivi di solito -- `46,4843` o `46.4843`, e
+   anche `46,4843 N` -- e se una e' fuori scala te lo dice **sotto il campo**, prima che tu prema.
    Poi ti chiede il **Bortle**, da 1 a 9: non scegli un numero al buio,
    scegli guardando **cosa ci si vede** -- se la Via Lattea proietta ombre o se di notte si legge
    il giornale -- e la misura del cielo la ricava l'app da quella. Puoi **non rispondere**: il
@@ -422,7 +422,7 @@ Le ore sono quelle vere:
   dice a parte (*3 senza durata*), come in *Da confermare*;
 - se **nessun** frame di un oggetto dice la durata, non leggi "0 h": le ore non compaiono, e
   restano solo i frame senza durata;
-- un tempo piccolo ma vero non diventa zero: leggi **< 0.1 h**, qui e in *Da confermare*.
+- un tempo piccolo ma vero non diventa zero: leggi **< 0,1 h**, qui e in *Da confermare*.
 
 Se hai molti oggetti, in fondo trovi **Carica altri**.
 
@@ -713,7 +713,7 @@ di una scheda si legge solo in quella su cui stai lavorando.
 Nella domanda aperta, sotto il nome, una tabellina raccoglie **i dati che aiutano a rispondere**:
 a sinistra la parola (*Oggetti*, *Altri frame*, *Distanza*, *Notti*, *Durata*, *Posizione*, *Simile
 a*), a destra il dato. In un mosaico i pannelli stanno accanto ai frame. Le notti sono raggruppate per mese, e le coordinate di un posto sono scritte come si
-leggono (*46.1000 N - 12.0000 E*).
+leggono (*46,1000 N - 12,0000 E*).
 
 In cima leggi **quante domande aspettano**. A sinistra c'e' l'**indice** delle schede: accanto a
 ognuna quante domande sono ancora senza risposta, o una spunta quando le hai risposte tutte; un
