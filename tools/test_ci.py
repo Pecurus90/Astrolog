@@ -1,13 +1,81 @@
 """La CI decide quando un lavoro e' chiuso (ADR 0040, regole 2 e 3): con la CI di main rossa non si
 chiude, salvo una Issue `bloccato` che nomina il run; dopo un push si segue la CI fino all'esito."""
 
+import io
 import os
+import shutil
+import subprocess
 import sys
+import tarfile
+
+import pytest
+import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, ".claude", "hooks"))
 
 import ci  # noqa: E402
+
+# A curl that fails on the release page with GitHub's 504 and answers from the API (Issue #52).
+FAKE_CURL = """#!/bin/sh
+out=""; url=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o) out="$2"; shift ;;
+    http*) url="$1" ;;
+  esac
+  shift
+done
+case "$url" in
+  https://api.github.com/*)
+    if [ -n "$out" ]; then cp "$FAKE_TGZ" "$out"; else cat "$FAKE_TGZ"; fi ;;
+  *) echo "curl: (22) The requested URL returned error: 504" >&2; exit 22 ;;
+esac
+"""
+
+
+def _bash() -> str | None:
+    found = shutil.which("bash")
+    # System32's bash is WSL: another filesystem, our paths would not reach it
+    return None if found is None or "system32" in found.lower() else found
+
+
+def _download_lines() -> str:
+    with open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8") as f:
+        steps = yaml.safe_load(f)["jobs"]["falle"]["steps"]
+    step = next(s for s in steps if s.get("name", "").startswith("Segreti"))
+    lines = step["run"].splitlines()
+    last = next(i for i, line in enumerate(lines) if "tar " in line)
+    return "\n".join(lines[: last + 1])
+
+
+@pytest.mark.skipif(_bash() is None, reason="needs a POSIX bash")
+def test_gitleaks_arrives_even_when_the_release_page_answers_504(tmp_path):
+    tgz = io.BytesIO()
+    with tarfile.open(fileobj=tgz, mode="w:gz") as archive:
+        body = b"#!/bin/sh\n"
+        entry = tarfile.TarInfo("gitleaks")
+        entry.size = len(body)
+        archive.addfile(entry, io.BytesIO(body))
+    (tmp_path / "gitleaks.tar.gz").write_bytes(tgz.getvalue())
+    shims = tmp_path / "shims"
+    shims.mkdir()
+    (shims / "curl").write_text(FAKE_CURL, newline="\n")
+    (shims / "curl").chmod(0o755)
+    work = tmp_path / "work"
+    work.mkdir()
+    (work / "step.sh").write_text(_download_lines(), newline="\n")
+    env = {**os.environ, "FAKE_TGZ": "../gitleaks.tar.gz"}
+    # GitHub runs a step as `bash -e`, without pipefail
+    script = 'export PATH="$(pwd)/../shims:$PATH"; . ./step.sh'
+    bash = _bash()
+    assert bash is not None
+    done = subprocess.run(
+        [bash, "-e", "-c", script], cwd=work, env=env, capture_output=True, text=True
+    )
+    assert done.returncode == 0, done.stderr
+    assert (work / "gitleaks").exists()
+
 
 RED = {"databaseId": 123, "status": "completed", "conclusion": "failure", "url": "https://x/123"}
 
