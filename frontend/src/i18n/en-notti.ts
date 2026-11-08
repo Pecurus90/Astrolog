@@ -123,7 +123,7 @@ export const enNotti = {
   "nights.list.sky": "sky",
   "nights.list.moon": "Moon",
   "nights.list.empty": "No nights with these criteria",
-  "nights.list.empty.why": "Remove one, or all with \u201CRemove filters\u201D.",
+  "nights.list.empty.why": "Remove one, or all with \u201CRemove criteria\u201D.",
   "nights.list.empty.phone": "Remove one, or all.",
   "nights.list.recent": "newest first",
   "nights.more": "Load more",
