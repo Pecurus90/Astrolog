@@ -5,6 +5,7 @@ import json
 import sqlite3
 from typing import Any
 
+from ..clock import local_iso
 from ..measure_list import MEASURES, Entry
 from ..night_measures import JOINS, VALUES
 from . import filters_used
@@ -13,12 +14,13 @@ from . import objects as obj
 _NIGHT = "SELECT s.timezone FROM nights n JOIN sites s ON s.id = n.site_id WHERE n.id = ?"
 
 _SERIES = f"""
-SELECT f.id, f.object_id, f.filter_id, b.skip_reason, m.outcome, m.shape,
+SELECT f.id, f.object_id, f.filter_id, m.outcome, m.shape, m.tilt_level, m.sampling_class,
        (SELECT c.start_utc FROM pipeline_files pf JOIN pipeline_cards c ON c.file_id = pf.id
          WHERE pf.frame_id = b.pipeline_frame_id AND pf.state = 'present'
          ORDER BY pf.id LIMIT 1) AS start_utc, {VALUES}
 FROM frames f{JOINS}
-WHERE f.night_id = ? AND f.copy_of IS NULL
+WHERE f.night_id = ? AND f.copy_of IS NULL AND b.skip_reason IS NULL
+  AND m.outcome IS NOT 'not_supported' AND m.outcome IS NOT 'fz_unsupported'
 ORDER BY start_utc IS NULL, start_utc, f.id
 """  # noqa: S608 - our columns
 
@@ -38,7 +40,7 @@ ORDER BY {filters_used.order_by("x")}
 
 _GROUPS = "SELECT * FROM night_measure_groups WHERE night_id = ?"
 _MEASURES = "SELECT * FROM night_measures WHERE night_id = ?"
-_STATES = {"measured", "too_few_stars", "unreadable", "not_supported", "fz_unsupported"}
+_STATES = {"measured", "too_few_stars"}
 
 
 def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | None:
@@ -50,7 +52,8 @@ def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | 
     filters = {r["id"]: r for r in conn.execute(_FILTERS, (night_id,))}
     keys = {i: obj.stable_key(r) for i, r in objects.items()}
     names = {i: r["name"] for i, r in filters.items()}
-    series = [_frame(r, keys, names) for r in conn.execute(_SERIES, (night_id,))]
+    zone = night["timezone"]
+    series = [_frame(r, keys, names, zone) for r in conn.execute(_SERIES, (night_id,))]
     groups = conn.execute(_GROUPS, (night_id,)).fetchall()
     whole = next((g for g in groups if g["object_id"] is None and g["filter_id"] is None), None)
     return {
@@ -96,7 +99,7 @@ def _sets(
             "filter": names.get(at[1]) if at[1] is not None else None,
             "frames": g["frames"],
             "pending": g["pending"],
-            "comparable": bool(g["comparable"]),
+            "differs": json.loads(g["differs"]),
             "measures": [_stat(e, rows.get((*at, e.key)), measuring) for e in MEASURES],
         })  # fmt: skip
     return out
@@ -108,26 +111,26 @@ def _stat(entry: Entry, row: sqlite3.Row | None, measuring: bool) -> dict[str, A
         silent = "measuring" if measuring else "no_value"
         measured = 0 if row is None else row["measured"]
         return out | {"measured": measured, "median": None, "q1": None, "q3": None,
-                      "bins": None, "silent": silent}  # fmt: skip
-    bins = json.loads(row["bins"]) if row["bins"] else None
+                      "trend": None, "silent": silent}  # fmt: skip
+    trend = json.loads(row["trend"]) if row["trend"] else None
     return out | {"measured": row["measured"], "median": row["median"], "q1": row["q1"],
-                  "q3": row["q3"], "bins": bins, "silent": None}  # fmt: skip
+                  "q3": row["q3"], "trend": trend, "silent": None}  # fmt: skip
 
 
-def _frame(r: sqlite3.Row, keys: dict[int, str], names: dict[int, str]) -> dict[str, Any]:
-    if r["skip_reason"] is not None:  # a file the new pipeline will never measure
-        state = r["skip_reason"]
-    elif r["outcome"] is None:
-        state = "pending"
-    elif r["outcome"] == "measured" and r["shape"] == "estimated":
+def _frame(
+    r: sqlite3.Row, keys: dict[int, str], names: dict[int, str], zone: str | None
+) -> dict[str, Any]:
+    if r["outcome"] == "measured" and r["shape"] == "estimated":
         state = "estimated"
-    else:
+    else:  # a file unreadable now, or not measured yet, waits alike
         state = r["outcome"] if r["outcome"] in _STATES else "pending"
     return {
         "frame_id": r["id"],
-        "start": r["start_utc"],
+        "start": local_iso(r["start_utc"], zone),
         "object_key": keys.get(r["object_id"]),
         "filter": names.get(r["filter_id"]),
         "state": state,
+        "tilt_level": r["tilt_level"],
+        "sampling": r["sampling_class"],
         "values": {e.key: float(r[e.key]) for e in MEASURES if r[e.key] is not None},
     }

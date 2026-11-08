@@ -865,6 +865,8 @@ CREATE TABLE catalog_entries (
   distance_ly        REAL,
   opacity            REAL,                      -- solo le nebulose oscure: la loro "luminosita'"
   src_json           TEXT,                      -- da dove viene ogni valore
+  -- quanto e' grande davvero: distanza per dimensione maggiore, due cifre (catalog/load.py)
+  extent_ly          REAL CHECK (extent_ly > 0),
   CHECK ((magnitude IS NULL) = (magnitude_band IS NULL))
 ) STRICT;
 -- La ricerca per cono: si filtra il riquadro sui tre assi, poi si misura davvero.
@@ -1373,8 +1375,8 @@ CREATE TABLE night_measures (
   median    REAL,  -- NULL: nessun valore
   q1        REAL,  -- quartili di tipo 7 (units.quantile)
   q3        REAL,
-  -- 24 conteggi fra il minimo e il massimo; NULL sotto due valori diversi
-  bins      TEXT CHECK (bins IS NULL OR (json_valid(bins) AND json_type(bins) = 'array')),
+  -- 24 mediane in ordine di ripresa, ognuna sul suo tratto di frame; NULL sotto 4 valori
+  trend     TEXT CHECK (trend IS NULL OR (json_valid(trend) AND json_type(trend) = 'array')),
   CHECK ((median IS NULL) = (measured = 0) AND (median IS NULL) = (q1 IS NULL)
     AND (q1 IS NULL) = (q3 IS NULL))
 ) STRICT;
@@ -1388,8 +1390,8 @@ CREATE TABLE night_measure_groups (
   filter_id  INTEGER REFERENCES filters (id) ON DELETE CASCADE,
   frames     INTEGER NOT NULL CHECK (frames > 0),
   pending    INTEGER NOT NULL CHECK (pending BETWEEN 0 AND frames),  -- senza misura, ancora
-  -- 1: una sola terna camera, guadagno, posa fra i misurati: fondo e rumore si confrontano
-  comparable INTEGER NOT NULL CHECK (comparable IN (0, 1))
+  -- cosa cambia fra i misurati (camera, gain, exposure); vuoto: fondo e rumore si confrontano
+  differs    TEXT NOT NULL CHECK (json_valid(differs) AND json_type(differs) = 'array')
 ) STRICT;
 CREATE UNIQUE INDEX night_measure_groups_key ON night_measure_groups
   (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1));

@@ -6,6 +6,10 @@ Si punta alle cartelle dei FITS; l'app legge gli header, **risolve ogni frame su
 ricostruisce una cronologia osservativa interrogabile. Backend Python, frontend React, SQLite,
 nessun login.
 
+**Programmi letti**: N.I.N.A. e ASIAIR (ADR 0029, 0033); SharpCap solo per il Sistema solare. <!-- software-ok -->
+I frame di altri programmi, quelli riscritti da un programma di elaborazione e i `.fz` compressi
+entrano nelle notti ma non si misurano.
+
 **Stato: ricostruzione dalla radice (settembre 2026).** La spina dell'app --
 scansiona, normalizza, risolvi, identifica, raggruppa, misura -- si rifa' partendo da un
 disegno. Il progetto precedente, `old/`, e' tenuto solo in locale (non e' in questo

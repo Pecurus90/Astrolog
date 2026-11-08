@@ -1,6 +1,10 @@
 # Tests removed on purpose, one per line: name - reason. Checked by tools/guardia_test.py.
 test_vng_is_pixinsights_pixel_for_pixel - ADR 0022 point 6, Marco 3/11/2026: VNG no longer from the PCL source; replaced by test_vng_is_the_published_formulas_pixel_for_pixel
 test_the_pattern_is_read_as_pixinsights_auto - renamed test_the_pattern_is_read_from_the_header, same cases
+test_a_frame_of_a_program_not_read_says_so_and_is_not_measuring - step 33, Marco 8/11/2026: a frame never measured has no word; replaced by test_a_frame_never_measured_is_counted_and_not_shown
+test_frames_of_another_exposure_are_not_comparable - step 33, comparable becomes differs; replaced by test_what_differs_among_the_measured_frames
+test_one_value_has_no_spread - step 33, bins become the trend of MisureFrame:226; replaced by test_under_four_values_there_is_no_trend
+test_the_spread_has_24_bins_from_the_least_to_the_most - step 33, bins become the trend of MisureFrame:226; replaced by test_the_trend_follows_the_shooting_order_not_the_values
 test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one - step 26.56, Marco 30/10 emulate Image Analysis: colour PSF SNR from the channels' mid-range; replaced by test_a_colour_frame_says_each_estimate_as_the_mid_range_of_its_channels
 test_a_colour_frame_is_measured_on_its_superpixel_in_sensor_pixels -step 24.06, ADR 0022 point 6: superpixel replaced by VNG; replaced by test_a_colour_frame_is_measured_after_vng_in_sensor_pixels
 test_a_colour_camera_is_measured_on_its_superpixel - step 24.06, ADR 0022 point 6: superpixel replaced by VNG; replaced by test_a_colour_camera_is_measured_after_its_debayer

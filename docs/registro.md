@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 351; senza fonte: 1.
-Fonti: C norma: 179; U usanza: 3; D metodo: 25; M misura: 22; P decisione: 40; T tecnico: 84.
+Valori: 354; senza fonte: 1.
+Fonti: C norma: 179; U usanza: 3; D metodo: 28; M misura: 22; P decisione: 40; T tecnico: 84.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -210,7 +210,8 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 25; M misura: 22; P decisione: 40; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| BINS | `24` | D tavola v76, MisureFrame:227 |
+| TREND | `24` | D tavola v76, MisureFrame:226 |
+| TREND_MIN | `4` | D tavola v76, MisureFrame:226 |
 
 ### pipeline/airmass.py
 
@@ -680,6 +681,13 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 25; M misura: 22; P decisione: 40; T
 | simbolo | valore | fonte |
 |---|---|---|
 | MIN_SHARE | `0.25` | P docs/domini/mosaico.md |
+
+### spine/night_detail.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| MILLION | `1_000_000` | D tavola v76, Riepilogo:130 |
+| WHOLE_MILLIONS | `10_000_000` | D tavola v76, Riepilogo:130 |
 
 ### spine/nights.py
 

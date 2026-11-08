@@ -527,6 +527,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/nights/{night_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Night Detail
+         * @description One night for its window: the Nights page's row, when it was shot from the first start to
+         *     the last end in the site's zone, the setups that took it with that night's frames, and what
+         *     the catalog says of each object (type, constellation, distance, true size).
+         *
+         *     404 `night_not_found`: no such night.
+         */
+        get: operations["night_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/folders/path-info": {
         parameters: {
             query?: never;
@@ -1894,6 +1918,19 @@ export interface components {
              */
             verdict: ("go" | "marginal" | "nogo") | null;
         };
+        /** Distance */
+        Distance: {
+            /**
+             * Value
+             * @description Whole light years, or millions with one decimal under ten.
+             */
+            value: number;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "ly" | "million_ly";
+        };
         /** FileNotRead */
         FileNotRead: {
             /**
@@ -2887,10 +2924,10 @@ export interface components {
              */
             pending: number;
             /**
-             * Comparable
-             * @description One camera, gain and exposure among the measured: background and noise compare. False: they do not.
+             * Differs
+             * @description What changes among the measured frames: background and noise compare only when it is empty; the background per second also across exposures.
              */
-            comparable: boolean;
+            differs: ("camera" | "gain" | "exposure")[];
             /**
              * Measures
              * @description Every measure, in the catalogue's order.
@@ -2924,10 +2961,10 @@ export interface components {
             /** Q3 */
             q3: number | null;
             /**
-             * Bins
-             * @description 24 counts from the least to the most value; null under two different values.
+             * Trend
+             * @description 24 medians along the night in shooting order, each over its stretch of frames; null under 4 values.
              */
-            bins: number[] | null;
+            trend: number[] | null;
             /**
              * Silent
              * @description Why `median` is null: frames still to be measured, or none of the measured has it (each frame's reason is in its own measures). Null with a median.
@@ -2952,7 +2989,7 @@ export interface components {
             frame_id: number;
             /**
              * Start
-             * @description Start of the exposure, UTC with its offset; null: not read yet or not written by the file.
+             * @description Start of the exposure in the site's zone, with its offset; null: not read yet or not written by the file.
              */
             start: string | null;
             /** Object Key */
@@ -2961,10 +2998,20 @@ export interface components {
             filter: string | null;
             /**
              * State
-             * @description `measured`, `estimated` (shape from the moments: the fit failed), `too_few_stars`, the file's own failure, `not_supported`/`rewritten`/`broken` (never measured: a program the new pipeline does not read, a rewritten or broken file), or `pending`: not measured yet.
+             * @description `measured`, `estimated` (shape from the moments: the fit failed), `too_few_stars`, or `pending`: not measured yet, or unreadable now and tried again. A frame never to be measured (a program not read, a rewritten, broken or compressed file) is not here: it counts only in `frames` (Marco, 8/11).
              * @enum {string}
              */
-            state: "measured" | "estimated" | "too_few_stars" | "unreadable" | "not_supported" | "fz_unsupported" | "rewritten" | "broken" | "pending";
+            state: "measured" | "estimated" | "too_few_stars" | "pending";
+            /**
+             * Tilt Level
+             * @description The tilt's verdict, from `hfd_tilt_pct` (ADR 0044); null without it.
+             */
+            tilt_level: ("go" | "marginal" | "nogo") | null;
+            /**
+             * Sampling
+             * @description The sampling from the FWHM in px; null without it.
+             */
+            sampling: ("severe_under" | "under" | "ideal" | "over") | null;
             /**
              * Values
              * @description Measure -> value, only those it has; why one is missing: the frame's measures.
@@ -3324,6 +3371,30 @@ export interface components {
             moon: components["schemas"]["MoonThatNight"] | null;
             weather: components["schemas"]["NightWeather"];
         };
+        /** NightDetail */
+        NightDetail: {
+            night: components["schemas"]["Night"];
+            /**
+             * First Start
+             * @description The first frame's start, in the site's zone with its offset; null when no frame says when.
+             */
+            first_start: string | null;
+            /**
+             * Last End
+             * @description The last frame's end: its start plus its exposure.
+             */
+            last_end: string | null;
+            /**
+             * Rigs
+             * @description Most time first; frames with no known rig are out.
+             */
+            rigs: components["schemas"]["NightRig"][];
+            /**
+             * Objects
+             * @description In the order of the night's objects.
+             */
+            objects: components["schemas"]["ObjectFacts"][];
+        };
         /** NightList */
         NightList: {
             /** Items */
@@ -3465,6 +3536,48 @@ export interface components {
              * @description Its hours as a share of the night's longest object, 0-100; at least 2 when it has any time, so a bar never vanishes; 0 without time.
              */
             bar_pct: number;
+        };
+        /**
+         * NightRig
+         * @description A setup that took the night: as the Gear page names it, with that night's frames.
+         */
+        NightRig: {
+            /** Id */
+            id: number;
+            /**
+             * Name
+             * @description The name you gave it, if you gave it one.
+             */
+            name: string | null;
+            /** Optics */
+            optics: string | null;
+            /** Camera */
+            camera: string | null;
+            /** Focal Mm */
+            focal_mm: number | null;
+            /**
+             * Scale Arcsec Px
+             * @description Measured on its solved frames, median.
+             */
+            scale_arcsec_px: number | null;
+            /** Width Deg */
+            width_deg: number | null;
+            /** Height Deg */
+            height_deg: number | null;
+            /**
+             * Parts
+             * @description As in the Gear page, in the card's order.
+             */
+            parts: components["schemas"]["RigPart"][];
+            /**
+             * Frames
+             * @description Its frames that night.
+             */
+            frames: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
         };
         /**
          * NightWeather
@@ -3629,6 +3742,30 @@ export interface components {
              * @default false
              */
             not_an_object: boolean;
+        };
+        /**
+         * ObjectFacts
+         * @description What the catalog says of an object of the night; all null outside the catalog.
+         */
+        ObjectFacts: {
+            /**
+             * Key
+             * @description The stable key, the same as the night's objects.
+             */
+            key: string;
+            /** Type Code */
+            type_code: string | null;
+            /**
+             * Constellation
+             * @description Three-letter IAU code.
+             */
+            constellation: string | null;
+            distance: components["schemas"]["Distance"] | null;
+            /**
+             * Extent Ly
+             * @description How big it really is, two figures: distance times its larger size.
+             */
+            extent_ly: number | null;
         };
         /** PathInfo */
         PathInfo: {
@@ -5955,6 +6092,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NightMonth"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    night_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                night_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NightDetail"];
                 };
             };
             /** @description Validation Error */

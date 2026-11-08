@@ -7,10 +7,7 @@ from pydantic import BaseModel, Field
 
 from ..measure_list import Group, Unit
 
-FrameState = Literal[
-    "measured", "estimated", "too_few_stars", "unreadable", "not_supported", "fz_unsupported",
-    "rewritten", "broken", "pending",
-]  # fmt: skip
+FrameState = Literal["measured", "estimated", "too_few_stars", "pending"]
 
 
 class MeasureStat(BaseModel):
@@ -23,8 +20,9 @@ class MeasureStat(BaseModel):
     median: float | None
     q1: float | None = Field(description="First quartile, type 7 (Hyndman & Fan 1996).")
     q3: float | None
-    bins: list[int] | None = Field(
-        description="24 counts from the least to the most value; null under two different values."
+    trend: list[float] | None = Field(
+        description="24 medians along the night in shooting order, each over its stretch of "
+        "frames; null under 4 values."
     )
     silent: Literal["measuring", "no_value"] | None = Field(
         description="Why `median` is null: frames still to be measured, or none of the measured "
@@ -39,9 +37,9 @@ class MeasureSet(BaseModel):
     filter: str | None
     frames: int = Field(description="The set's frames, counted as the Nights page counts them.")
     pending: int = Field(description="Of those, still without measures.")
-    comparable: bool = Field(
-        description="One camera, gain and exposure among the measured: background and noise "
-        "compare. False: they do not."
+    differs: list[Literal["camera", "gain", "exposure"]] = Field(
+        description="What changes among the measured frames: background and noise compare only "
+        "when it is empty; the background per second also across exposures."
     )
     measures: list[MeasureStat] = Field(description="Every measure, in the catalogue's order.")
 
@@ -63,15 +61,21 @@ class MeasuredFrame(BaseModel):
     """One frame of the night, in shooting order."""
 
     frame_id: int
-    start: str | None = Field(description="Start of the exposure, UTC with its offset; null: "
-                              "not read yet or not written by the file.")  # fmt: skip
+    start: str | None = Field(description="Start of the exposure in the site's zone, with its "
+                              "offset; null: not read yet or not written by the file.")  # fmt: skip
     object_key: str | None
     filter: str | None
     state: FrameState = Field(
         description="`measured`, `estimated` (shape from the moments: the fit failed), "
-        "`too_few_stars`, the file's own failure, `not_supported`/`rewritten`/`broken` (never "
-        "measured: a program the new pipeline does not read, a rewritten or broken file), or "
-        "`pending`: not measured yet."
+        "`too_few_stars`, or `pending`: not measured yet, or unreadable now and tried again. "
+        "A frame never to be measured (a program not read, a rewritten, broken or compressed "
+        "file) is not here: it counts only in `frames` (Marco, 8/11)."
+    )
+    tilt_level: Literal["go", "marginal", "nogo"] | None = Field(
+        description="The tilt's verdict, from `hfd_tilt_pct` (ADR 0044); null without it."
+    )
+    sampling: Literal["severe_under", "under", "ideal", "over"] | None = Field(
+        description="The sampling from the FWHM in px; null without it."
     )
     values: dict[str, float] = Field(
         description="Measure -> value, only those it has; why one is missing: the frame's measures."

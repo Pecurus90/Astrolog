@@ -5,14 +5,16 @@ import datetime as dt
 import sqlite3
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..db.config import read as read_settings
 from ..site_of import home_tonight
 from ..spine import night_calendar, nights
+from ..spine import night_detail as night_detail_read
 from ..spine.night_criteria import Chosen, Key, select
 from ..weather import history
 from .deps import get_db
+from .models_night_detail import NightDetail
 from .models_nights import NightList, NightMonth
 
 router = APIRouter(prefix="/api/v1", tags=["nights"])
@@ -103,3 +105,23 @@ def night_month(
     return NightMonth.model_validate(
         night_calendar.month(conn, first_day, history.KIND, home_tonight(conn))
     )
+
+
+# After `/nights/calendar`: the first route that matches wins.
+@router.get("/nights/{night_id}", response_model=NightDetail)
+def night_detail(night_id: int, conn: sqlite3.Connection = Depends(get_db)) -> NightDetail:
+    """One night for its window: the Nights page's row, when it was shot from the first start to
+    the last end in the site's zone, the setups that took it with that night's frames, and what
+    the catalog says of each object (type, constellation, distance, true size).
+
+    404 `night_not_found`: no such night."""
+    found = night_detail_read.detail(conn, night_id)
+    if found is None:
+        raise HTTPException(status_code=404, detail="night_not_found")
+    row = nights.page(
+        conn,
+        ids=[night_id],
+        weather=nights.Observed(history.KIND, history.arrives_on),
+        max_pct=read_settings(conn).moon_broadband_max_pct,
+    )
+    return NightDetail.model_validate({"night": row[0], **found})

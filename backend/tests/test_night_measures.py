@@ -228,31 +228,47 @@ def test_medians_and_quartiles_per_object_per_filter_and_for_the_night(conn, wor
     assert _group(conn, world.night, obj=m33)["pending"] == 1
 
 
-def test_the_spread_has_24_bins_from_the_least_to_the_most(conn, world) -> None:
-    for hfd in (1.0, 1.0, 3.0, 25.0):
+def _at(hour: int) -> str:
+    return f"2026-10-12T{hour:02d}:00:00.000000+00:00"
+
+
+def test_the_trend_follows_the_shooting_order_not_the_values(conn, world) -> None:
+    """24 medians along the night, each over its stretch of frames (MisureFrame:226)."""
+    for hour, hfd in ((23, 9.0), (20, 1.0), (22, 5.0), (21, 3.0)):
+        world.shot(hfd, start=_at(hour))
+    world.shot(7.0)  # no time: after the timed ones
+    night_measures.rebuild(conn)
+    trend = json.loads(_row(conn, world.night)["trend"])
+    assert len(trend) == night_measures.TREND == 24
+    assert (trend[0], trend[-1]) == (1.0, 7.0)
+    assert trend == sorted(trend[:20]) + trend[20:]  # 1, 3, 5, 9 then 7: time, not value
+
+
+def test_a_long_night_takes_the_median_of_each_stretch(conn, world) -> None:
+    for i in range(48):
+        world.shot(float(i + 1), start=f"2026-10-12T20:{i:02d}:00.000000+00:00")
+    night_measures.rebuild(conn)
+    trend = json.loads(_row(conn, world.night)["trend"])
+    assert (trend[0], trend[1], trend[-1]) == (1.5, 3.5, 47.5)
+
+
+def test_under_four_values_there_is_no_trend(conn, world) -> None:
+    for hfd in (1.0, 2.0, 3.0):
         world.shot(hfd)
     night_measures.rebuild(conn)
-    bins = json.loads(_row(conn, world.night)["bins"])
-    assert len(bins) == night_measures.BINS == 24
-    assert (bins[0], bins[-1], sum(bins)) == (2, 1, 4)
+    assert _row(conn, world.night)["trend"] is None
 
 
-def test_one_value_has_no_spread(conn, world) -> None:
-    world.shot(3.0)
-    night_measures.rebuild(conn)
-    assert _row(conn, world.night)["bins"] is None
-
-
-def test_frames_of_another_exposure_are_not_comparable(conn, world) -> None:
+def test_what_differs_among_the_measured_frames(conn, world) -> None:
     """Background and noise compare only with the same camera, gain and exposure (MisureFrame)."""
     world.shot(2.0)
     night_measures.rebuild(conn)
-    assert _group(conn, world.night)["comparable"] == 1
+    assert json.loads(_group(conn, world.night)["differs"]) == []
     spine = world.frame()
     rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
     world.file(rel, measured=2.0, exp=120.0)
     night_measures.rebuild(conn)
-    assert _group(conn, world.night)["comparable"] == 0
+    assert json.loads(_group(conn, world.night)["differs"]) == ["exposure"]
 
 
 def test_a_rebuild_forgets_what_is_no_longer_there(conn, world) -> None:

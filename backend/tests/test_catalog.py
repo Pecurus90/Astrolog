@@ -56,6 +56,20 @@ def catalogo(conn, tmp_path):
 # --- che oggetto e' questa sigla? -----------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    ("distance", "size", "extent"),
+    [
+        (2400.0, 60.0, 42.0),
+        (2_540_000.0, 178.0, 130_000.0),
+        (None, 60.0, None),
+        (2400.0, None, None),
+    ],
+)
+def test_how_big_an_object_really_is_in_two_figures(distance, size, extent):
+    """Small angle: distance times the size in radians (60' at 2400 ly is 41.9)."""
+    assert load.extent_ly(distance, size) == extent
+
+
 def test_a_designation_finds_its_object(catalogo):
     voce = lookup.by_designation(catalogo, "M 31")
     assert voce.slug == "m-31" and voce.common_name == "Andromeda Galaxy"

@@ -367,7 +367,8 @@ questa notte" quando manca; una camera a colori senza bias non ha SQM e dice "se
 della camera", col rimando a "Bias (ADU)" in Attrezzatura. Parole del campionamento ancora da
 approvare sulla tavola: "sottocampionata (grave)", "sottocampionata", "ideale",
 "sovracampionata". Dove si vedono: Notti, Archivio, Statistiche, Selezione dei frame; la scheda
-dell'oggetto no.
+dell'oggetto no. Un frame non misurabile (altro programma, riscritto, rotto, `.fz`) conta in "su
+112 di 120", senza parole ne' segno (Marco, 8/11/2026: i programmi letti li dice il README).
 
 ## Le regole fra frame (ADR 0039)
 
@@ -396,5 +397,4 @@ una scala su milioni di pixel, come il SubframeSelector la confronta.
   26/10/2026) chiedono le stesse misure; quattro scarti vanno al censimento (passo 24.1):
   eccentricita' a soglie fisse 0,45/0,71 (ADR 0039 le ha tolte), soglia relativa con la MAD
   invece di Qn, "oggetto basso" solo sotto 30 gradi (ADR 0039: 30 estesi, 45 stelle), SQM per ora
-  in Statistiche.
-- `.fz` compressi, cubi e immagini in estensione non si misurano.
+  in Statistiche. `.fz`, cubi e immagini in estensione non si misurano.

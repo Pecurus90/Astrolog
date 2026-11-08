@@ -31,9 +31,15 @@ per lo stesso frame.
 - **Si scrive, non si legge calcolando**: `night_measures.py`, fuori da spina e nuova (SQL sulle
   loro tabelle, nessun import), riscrive a fine giro della nuova, a fine `group` e dopo il bias
   dichiarato di una camera (che riscrive lo SQM) il ponte
-  (`night_measure_frames`), per notte, oggetto e filtro mediana, quartili di tipo 7 e 24 classi
-  di ogni misura (`night_measures`), e per gruppo frame, in attesa e confrontabilita' di fondo e
-  rumore (`night_measure_groups`). Sul tuo archivio di prova: 0,6 s per 12 000 frame.
+  (`night_measure_frames`), per notte, oggetto e filtro mediana, quartili di tipo 7 e andamento
+  (24 mediane in ordine di ripresa, la riga sotto ogni tessera; prima 24 classi, 8/11) di ogni
+  misura (`night_measures`), e per gruppo frame, in attesa e cosa cambia fra i misurati
+  (camera, guadagno, posa: fondo e rumore si confrontano solo se niente) (`night_measure_groups`).
+  Sul tuo archivio di prova: 0,6 s per 12 000 frame.
+- **Un frame che non si misura** (programma non letto, file riscritto o rotto; un `.fz` finche'
+  i compressi non si leggono) conta nei frame della notte e non compare altrove, senza un
+  perche' a schermo: i programmi letti li dice il README (Marco, 8/11). Uno illeggibile ora si
+  riprova: aspetta, e conta fra quelli in attesa.
 - **Le tessere della tavola**: Tilt = `hfd_tilt_pct`, Curvatura = `off_axis_px` (ADR 0044);
   quartili di tipo 7 (Hyndman & Fan 1996, `units.quantile`), sui soli frame col valore.
 - **I giudizi di gruppo o setup restano al passo 40** (fuoco, SNR basso, FWHM col limite del

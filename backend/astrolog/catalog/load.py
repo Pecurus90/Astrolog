@@ -52,7 +52,16 @@ def _entry_row(entry: dict[str, Any]) -> tuple[Any, ...]:
         entry.get("position_angle_deg"), entry.get("magnitude"), entry.get("magnitude_band"),
         entry.get("surface_brightness"), entry.get("distance_ly"), entry.get("opacity"),
         json.dumps(entry["src"]) if entry.get("src") else None,
+        extent_ly(entry.get("distance_ly"), entry.get("size_major_arcmin")),
     )  # fmt: skip
+
+
+def extent_ly(distance_ly: float | None, size_arcmin: float | None) -> float | None:
+    """How big it really is, small angle, two figures: the catalog's numbers are not finer."""
+    if not distance_ly or not size_arcmin:
+        return None
+    exact = distance_ly * math.radians(size_arcmin / 60)
+    return round(exact, 1 - math.floor(math.log10(exact)))
 
 
 def _name_rows(entries: list[dict[str, Any]]) -> list[tuple[Any, ...]]:
@@ -101,8 +110,8 @@ def load_catalog(conn: sqlite3.Connection, file: str | Path | None = None) -> in
             "INSERT INTO catalog_entries(slug, name, common_name, ra_deg, dec_deg, x, y, z,"
             " constellation, type_code, kinds_json, size_major_arcmin, size_minor_arcmin,"
             " position_angle_deg, magnitude, magnitude_band, surface_brightness, distance_ly,"
-            " opacity, src_json) VALUES("
-            + ",".join("?" * 20)  # segnaposto-ok: twenty columns, not one per entry
+            " opacity, src_json, extent_ly) VALUES("
+            + ",".join("?" * 21)  # segnaposto-ok: twenty-one columns, not one per entry
             + ")",
             [_entry_row(e) for e in entries],
         )

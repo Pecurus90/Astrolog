@@ -13,7 +13,8 @@ from .db.transaction import transaction
 from .measure_list import MEASURES, Table
 from .units import quantile
 
-BINS = 24  # the spread under each tile [D tavola v76, MisureFrame:227]
+TREND = 24  # points of the line under each tile [D tavola v76, MisureFrame:226]
+TREND_MIN = 4  # fewer values draw no line [D tavola v76, MisureFrame:226]
 
 _ALIAS = {Table.MEASURES: "m", Table.SKY: "k", Table.SQM: "q"}
 _KEYS = tuple(e.key for e in MEASURES)
@@ -44,12 +45,15 @@ SELECT f.night_id, f.object_id, f.filter_id, b.skip_reason, m.outcome,
 FROM frames f{JOINS}
 LEFT JOIN pipeline_cards c ON c.file_id = m.file_id
 WHERE f.night_id IS NOT NULL AND f.copy_of IS NULL
+ORDER BY c.start_utc IS NULL, c.start_utc, f.id
 """  # noqa: S608 - our columns
 
 _MEASURE_COLUMNS = (
-    "night_id", "object_id", "filter_id", "key", "frames", "measured", "median", "q1", "q3", "bins",
+    "night_id", "object_id", "filter_id", "key", "frames", "measured", "median", "q1", "q3",
+    "trend",
 )  # fmt: skip
-_GROUP_COLUMNS = ("night_id", "object_id", "filter_id", "frames", "pending", "comparable")
+_GROUP_COLUMNS = ("night_id", "object_id", "filter_id", "frames", "pending", "differs")
+_SETUP = ("camera", "gain", "exposure")  # the same three, or background and noise do not compare
 
 type GroupKey = tuple[int, int | None, int | None]
 
@@ -59,7 +63,7 @@ class _Group:
     frames: int = 0
     pending: int = 0
     setups: set[tuple[object, object, object]] = field(default_factory=set)
-    values: dict[str, list[float]] = field(default_factory=lambda: defaultdict(list))
+    values: dict[str, list[float]] = field(default_factory=lambda: defaultdict(list))  # in time
 
 
 def rebuild(conn: sqlite3.Connection) -> None:
@@ -108,7 +112,7 @@ def _keys_of(night: int, obj: int | None, flt: int | None) -> Iterator[GroupKey]
 
 def _add(group: _Group, row: sqlite3.Row) -> None:
     group.frames += 1
-    if row["outcome"] is None:
+    if row["outcome"] in (None, "unreadable"):  # unreadable now is tried again: it waits
         group.pending += row["skip_reason"] is None
         return
     if row["outcome"] == "measured":  # a file read badly has no setup to compare
@@ -121,27 +125,35 @@ def _add(group: _Group, row: sqlite3.Row) -> None:
 def _measure_rows(groups: dict[GroupKey, _Group]) -> Iterator[tuple[object, ...]]:
     for (night, obj, flt), group in groups.items():
         for key in _KEYS:
-            values = sorted(group.values.get(key, ()))
-            if not values:
+            in_time = group.values.get(key, [])
+            if not in_time:
                 yield night, obj, flt, key, group.frames, 0, None, None, None, None
                 continue
+            values = sorted(in_time)
             q1, median, q3 = (quantile(values, p) for p in (0.25, 0.5, 0.75))
-            bins = _bins(values)
-            yield night, obj, flt, key, group.frames, len(values), median, q1, q3, bins
+            trend = _trend(in_time)
+            yield night, obj, flt, key, group.frames, len(values), median, q1, q3, trend
 
 
-def _bins(ordered: list[float]) -> str | None:
-    low, high = ordered[0], ordered[-1]
-    if high == low:
+def _trend(in_time: list[float]) -> str | None:
+    """Stretch i: values n*i/24 to n*(i+1)/24, at least one; under 24 values, points repeat."""
+    n = len(in_time)
+    if n < TREND_MIN:
         return None
-    counts = [0] * BINS
-    for value in ordered:
-        counts[min(int((value - low) / (high - low) * BINS), BINS - 1)] += 1
-    return json.dumps(counts)
+    points = []
+    for i in range(TREND):
+        start = i * n // TREND
+        stretch = sorted(in_time[start : max(start + 1, (i + 1) * n // TREND)])
+        points.append(quantile(stretch, 0.5))
+    return json.dumps(points)
+
+
+def _differs(setups: set[tuple[object, object, object]]) -> list[str]:
+    return [name for i, name in enumerate(_SETUP) if len({s[i] for s in setups}) > 1]
 
 
 def _group_rows(groups: dict[GroupKey, _Group]) -> Iterable[tuple[object, ...]]:
     return [
-        (night, obj, flt, g.frames, g.pending, int(len(g.setups) <= 1))
+        (night, obj, flt, g.frames, g.pending, json.dumps(_differs(g.setups)))
         for (night, obj, flt), g in groups.items()
     ]
