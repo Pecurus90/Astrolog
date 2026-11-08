@@ -63,6 +63,9 @@ consigliata e' la piu' corretta": nessuna macchina li vede.
 
 ## Congelamento e misura
 
+Eccezione decisa da Marco l'8/11: le differenze fra tavola e app in
+`handoff/differenze-dalle-tavole.md` a ogni lavoro chiuso (`/porta-tavola`, collaudo di `costruisci`).
+
 Fino a sabato 21/11/2026 il metodo non cambia; quel giorno si leggono cinque numeri, calcolati da
 script, e si decide cosa togliere (non aggiungere):
 

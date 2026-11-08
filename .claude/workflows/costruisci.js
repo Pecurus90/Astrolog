@@ -131,7 +131,8 @@ if (args.surface) {
   questions.push(
     'collaudo: la superficie toccata funziona nel browser ed e uguale alla sua tavola? Criteri ' +
       'del collaudatore, app isolata (ASTROLOG_PORT libera, ASTROLOG_DATA_DIR temporanea), mai ' +
-      'i dati veri di Marco; spegnila.',
+      'i dati veri di Marco; spegnila. Ogni differenza che resta fra tavola e app e scritta in ' +
+      'handoff/differenze-dalle-tavole.md (Marco, 8/11)? Una che il file non dice e bloccante.',
   )
 }
 const audits = []

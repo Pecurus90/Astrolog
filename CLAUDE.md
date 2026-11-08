@@ -79,9 +79,9 @@ fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
 - **Un numero o un "sempre/nessuno" si conta** prima di scriverlo; un fatto corretto si corregge
   in tutte le sue case.
 - **Una superficie si collauda nel browser** (skill `collaudo-dal-vivo`).
-- **Prima la risposta, poi il lavoro.** Un testo o una frase nuovi si concordano prima del codice.
-  Un'idea di Marco "per dopo" resta in `docs/idee.md` finche' non dice di farla. Ogni richiesta
-  per Design entra subito in `handoff/per-design.md`, mai solo in chat, e viene prima.
+- **Prima la risposta, poi il lavoro.** Testo nuovo concordato prima del codice; idea "per dopo"
+  in `docs/idee.md`; richiesta per Design subito in `handoff/per-design.md`. Ogni differenza fra
+  tavola e app, a lavoro chiuso, in `handoff/differenze-dalle-tavole.md`, nello stesso commit.
 - **La memoria non e' una casa**: cio' che vale sta nel repo; la memoria tiene il rimando.
 - Quando compatti, conserva il passo del piano, i file toccati e i comandi di test.
 

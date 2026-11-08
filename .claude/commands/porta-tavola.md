@@ -67,6 +67,9 @@ Passi:
 7. **Collaudo** pagina contro tavola, desktop e telefono, ogni stato: agente `collaudatore`
    (dentro il workflow, coi suoi criteri e le catture di `tools/cattura.py`); le differenze le
    ripara chi ha scritto, una verifica.
-8. **Riassunto** come in `/costruisci`; poi **Marco guarda a schermo**.
-9. **Traduzione** (`traduttore`) a pagina finita, guida utente, commit e push come in
+8. **Differenze** (Marco, 8/11): ogni esito *fuori*, *contratto da riscrivere*, *a Design* e ogni
+   scelta diversa dalla tavola va in `handoff/differenze-dalle-tavole.md`, sezione della pagina:
+   cosa dice la tavola, cosa fa l'app, perche'. Nello stesso commit.
+9. **Riassunto** come in `/costruisci`, con le differenze nuove; poi **Marco guarda a schermo**.
+10. **Traduzione** (`traduttore`) a pagina finita, guida utente, commit e push come in
    `/costruisci`. Fatto quando la CI su GitHub e' verde.
