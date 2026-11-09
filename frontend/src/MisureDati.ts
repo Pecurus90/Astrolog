@@ -278,7 +278,8 @@ export function tintaDi(passband: string | undefined): { fondo: string; bordo?: 
   if (variante === "senza") {
     return { fondo: "none", bordo: "var(--segno-filo) solid var(--linea-significato)" }
   }
-  return { fondo: `var(--filtro-${variante})` }
+  // the delivered sheet names the OSC stripes `a-colori`; it is not ours to rename
+  return { fondo: `var(--filtro-${variante === "colori" ? "a-colori" : variante})` }
 }
 
 /** Lo stile di un pallino di filtro: fondo e, per ignoto e senza, il filo. */
