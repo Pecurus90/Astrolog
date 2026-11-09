@@ -244,8 +244,13 @@ prima e ultima notte, siti, i setup con gli strumenti, il catalogo (tipo, costel
 distanza in anni luce e parsec, estensione, dimensione in primi accanto alla Luna piena, scritti
 al caricamento del catalogo). Con piu' produzioni, **una alla volta**: linguette in testa, la
 prima scelta; `?production=ottica:camera` restringe tutto, `none` per un pezzo che i frame non
-dicono. Le notti portano alla loro pagina (`/notti?notte=id`). Cosa fa diverso dalla tavola sta
-in `handoff/differenze-dalle-tavole.md`.
+dicono. Un **mosaico** ha le linguette dei pannelli al posto delle produzioni (Riepilogo.dc.html
+116-118): «Riepilogo generale» e «Pannello N», nell'ordine di `panel_list`; `?panel=id` restringe
+tutto, misure comprese (scritte anche per pannello, di tutte le produzioni), e il catalogo e'
+dell'oggetto del pannello se ne ha uno solo in catalogo, se no del mosaico. Le notti di un
+mosaico sono quelle dei suoi frame; l'oggetto di un suo pannello tiene solo le notti in cui e'
+stato ripreso da solo. Le notti portano alla loro pagina (`/notti?notte=id`). Cosa fa diverso
+dalla tavola sta in `handoff/differenze-dalle-tavole.md`.
 
 ## Cosa NON fa
 

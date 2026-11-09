@@ -10,6 +10,7 @@ from .models_page import Page
 class ArchivePanel(BaseModel):
     """A panel of a mosaic: the framing, what you shot in it and how much."""
 
+    id: int = Field(description="To narrow the mosaic's window to this panel (`?panel=`).")
     object: str | None = Field(
         description="The object (or objects) of its frames; null if the sky knows of none."
     )

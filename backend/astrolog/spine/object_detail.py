@@ -44,20 +44,31 @@ def detail(conn: sqlite3.Connection, row: dict[str, Any], scope: counts.Scope) -
         "last_night": taken[-1]["night_date"] if taken else None,
         "sites": list(dict.fromkeys(t["site"] for t in taken)),
         "rigs": rigs_with(conn, rigs),
-        "facts": facts(conn, row),
+        "facts": facts(conn, row, _panel_slug(conn, scope.panel) if scope.panel else None),
     }
+
+
+def _panel_slug(conn: sqlite3.Connection, panel: int) -> str | None:
+    """The catalog of a panel's object, if one only; else None, and the mosaic's speaks."""
+    slugs = conn.execute(
+        "SELECT DISTINCT o.catalog_slug FROM frames f JOIN objects o ON o.id = f.object_id"
+        " JOIN catalog_entries e ON e.slug = o.catalog_slug"
+        " WHERE f.panel_id = ? AND f.copy_of IS NULL",
+        (panel,),
+    ).fetchall()
+    return slugs[0][0] if len(slugs) == 1 else None
 
 
 def _counted(t: sqlite3.Row) -> dict[str, Any]:
     return {"frames": t["frames"], "integration_s": t["integration_s"], "untimed": t["untimed"]}
 
 
-def facts(conn: sqlite3.Connection, row: dict[str, Any]) -> dict[str, Any]:
-    """As `catalog/load.py` wrote them; all null outside the catalog."""
+def facts(conn: sqlite3.Connection, row: dict[str, Any], slug: str | None = None) -> dict[str, Any]:
+    """As `catalog/load.py` wrote them, of `slug` or the row's; all null outside the catalog."""
     entry = conn.execute(
         "SELECT common_name, type_code, constellation, distance_ly, extent_ly, distance_pc,"
         " size_major_arcmin, moon_compare, moon_count FROM catalog_entries WHERE slug = ?",
-        (row["catalog_slug"],),
+        (slug or row["catalog_slug"],),
     ).fetchone()
     if entry is None:
         return {"key": row["key"], **dict.fromkeys(_FACTS)}

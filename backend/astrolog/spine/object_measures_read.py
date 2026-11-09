@@ -9,14 +9,13 @@ from . import counts, filters_used
 from .night_measures_read import SERIES, SERIES_ORDER, SERIES_WHERE, filters, frame, sets
 from .object_detail import frames_of
 
-type Production = tuple[int | None, int | None]
-
 
 def object_measures(
-    conn: sqlite3.Connection, row: dict[str, Any], production: Production | None
+    conn: sqlite3.Connection, row: dict[str, Any], scope: counts.Scope
 ) -> dict[str, Any]:
-    """`row` is `archive.page`'s; `production` one of its productions, None: all of them."""
-    on_g, values = _where(row, production)
+    """`row` is `archive.page`'s; `scope` one of its productions or of its panels, or all."""
+    production = scope.production
+    on_g, values = _where(row, scope)
     groups = conn.execute(f"SELECT * FROM object_measure_groups g WHERE {on_g}", values).fetchall()  # noqa: S608 - ours
     rows = conn.execute(f"SELECT * FROM object_measures g WHERE {on_g}", values).fetchall()  # noqa: S608 - ours
     nights = conn.execute(
@@ -33,7 +32,7 @@ def object_measures(
         values,
     ).fetchall()
     names = {r["id"]: r["name"] for r in found if not r["unfiltered"]}
-    series = _series(conn, row, production, names)
+    series = _series(conn, row, scope, names)
     whole = next(
         (g for g in groups if g["night_id"] is None and g["filter_id"] is None
          and not g["unfiltered"]),
@@ -69,10 +68,11 @@ def _owner(row: dict[str, Any]) -> tuple[int | None, str | None]:
     return (None, row["mosaic_key"]) if row["mosaic_key"] else (row["id"], None)
 
 
-def _where(row: dict[str, Any], production: Production | None) -> tuple[str, list[Any]]:
+def _where(row: dict[str, Any], scope: counts.Scope) -> tuple[str, list[Any]]:
     """On `object_measures` or its groups, as `g`."""
-    where = "g.object_id IS ? AND g.mosaic_key IS ? AND g.every_production = ?"
-    values: list[Any] = [*_owner(row), int(production is None)]
+    production = scope.production
+    where = "g.object_id IS ? AND g.mosaic_key IS ? AND g.panel_id IS ? AND g.every_production = ?"
+    values: list[Any] = [*_owner(row), scope.panel, int(production is None)]
     if production is not None:
         where += " AND g.optics_id IS ? AND g.camera_id IS ?"
         values += list(production)
@@ -82,7 +82,8 @@ def _where(row: dict[str, Any], production: Production | None) -> tuple[str, lis
 def _productions(conn: sqlite3.Connection, row: dict[str, Any]) -> int:
     return conn.execute(
         "SELECT COUNT(*) FROM object_measure_groups WHERE object_id IS ? AND mosaic_key IS ?"
-        " AND every_production = 0 AND night_id IS NULL AND filter_id IS NULL AND unfiltered = 0",
+        " AND panel_id IS NULL AND every_production = 0 AND night_id IS NULL AND filter_id IS NULL"
+        " AND unfiltered = 0",
         _owner(row),
     ).fetchone()[0]
 
@@ -90,10 +91,10 @@ def _productions(conn: sqlite3.Connection, row: dict[str, Any]) -> int:
 def _series(
     conn: sqlite3.Connection,
     row: dict[str, Any],
-    production: Production | None,
+    scope: counts.Scope,
     names: dict[int, str],
 ) -> list[dict[str, Any]]:
-    narrowed, values = frames_of(row, counts.Scope(production=production))
+    narrowed, values = frames_of(row, scope)
     found = conn.execute(
         f"{SERIES}, s.timezone FROM frames f{JOINS}"
         " JOIN nights n ON n.id = f.night_id JOIN sites s ON s.id = n.site_id"

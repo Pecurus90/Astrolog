@@ -319,6 +319,7 @@ def panels(
         keys,
         "mosaic_key",
         lambda r: {
+            "id": r["panel_id"],
             "object": together(names.get(r["panel_id"], [])) or None,
             "ra_deg": r["ra_deg"],
             "dec_deg": r["dec_deg"],

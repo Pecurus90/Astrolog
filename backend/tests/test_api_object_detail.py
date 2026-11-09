@@ -10,6 +10,7 @@ from astrolog.catalog.load import parsecs
 from conftest import LATER
 from test_api_night_detail import _catalog, _rig, _timed
 from test_night_measures import _World
+from test_spine_archive_mosaic import CHIAVE, mosaico
 
 
 @pytest.fixture
@@ -179,6 +180,68 @@ def test_a_far_galaxy_has_no_parsecs(conn, db_path, world) -> None:
     conn.commit()
     facts = _get(db_path, "ngc-6992").json()["facts"]
     assert (facts["distance_pc"], facts["size_arcmin"], facts["moon"]) == (None, None, None)
+
+
+def test_a_mosaic_has_the_nights_of_its_panels_and_not_of_its_objects_alone(
+    conn, db_path, world
+) -> None:
+    ic405, lbn796 = world.object("IC 405"), world.object("LBN 796")
+    later, alone = _second_night(conn), _second_night(conn, "2026-10-25", "Asiago")
+    inside = [world.frame(obj=ic405), world.frame(obj=lbn796, night=later)]
+    _timed(conn, inside[0], "2026-10-12T19:00:00", 300.0)
+    _timed(conn, inside[1], "2026-10-20T19:00:00", 300.0)
+    _timed(conn, world.frame(obj=ic405, night=alone), "2026-10-25T19:00:00", 600.0)
+    mosaico(conn, inside)
+    conn.commit()
+    body = _get(db_path, CHIAVE).json()
+    assert body["row"]["key"] == CHIAVE
+    panels = [(p["frames"], p["integration_s"]) for p in body["row"]["panel_list"]]
+    assert panels == [(1, 300.0), (1, 300.0)]
+    taken = [(n["night"]["id"], n["frames"]) for n in body["nights"]]
+    assert taken == [(world.night, 1), (later, 1)]
+    assert (body["first_night"], body["sites"]) == ("2026-10-12", ["Casa", "Cima Ekar"])
+    # IC 405 by itself keeps only the night it was taken alone
+    own = _get(db_path, "IC 405").json()
+    assert [n["night"]["id"] for n in own["nights"]] == [alone]
+
+
+def _panel_of(db_path, name: str) -> int:
+    listed = _get(db_path, CHIAVE).json()["row"]["panel_list"]
+    return next(p["id"] for p in listed if p["object"] == name)
+
+
+def test_a_panel_narrows_the_window_to_its_frames_and_its_catalog(conn, db_path, world) -> None:
+    """Riepilogo.dc.html 116-118, 160: a panel is a tab of its own; its catalog tiles are its
+    object's, the mosaic's when its object is not in the catalog."""
+    veil, dark = world.object("NGC 6992"), world.object("LDN 1516")
+    _catalog(conn, veil, distance_ly=2400.0, size_arcmin=60.0)
+    later = _second_night(conn)
+    inside = [world.frame(obj=veil), world.frame(obj=dark, night=later)]
+    _timed(conn, inside[0], "2026-10-12T19:00:00", 300.0)
+    _timed(conn, inside[1], "2026-10-20T19:00:00", 600.0)
+    mosaico(conn, inside)
+    conn.commit()
+    lit = _get(db_path, CHIAVE, panel=_panel_of(db_path, "NGC 6992")).json()
+    assert [n["night"]["id"] for n in lit["nights"]] == [world.night]
+    assert (lit["row"]["frames"], lit["row"]["integration_s"]) == (1, 300.0)
+    assert (lit["facts"]["key"], lit["facts"]["common_name"]) == (CHIAVE, "Veil")
+    unlit = _get(db_path, CHIAVE, panel=_panel_of(db_path, "LDN 1516")).json()
+    assert [n["night"]["id"] for n in unlit["nights"]] == [later]
+    assert (unlit["sites"], unlit["facts"]["common_name"]) == (["Cima Ekar"], None)
+
+
+def test_a_panel_that_is_not_a_number_is_a_422(db_path) -> None:
+    assert _get(db_path, CHIAVE, panel="uno").status_code == 422
+
+
+@pytest.mark.parametrize("path", ["", "/measures"])
+def test_a_panel_and_a_production_together_are_a_422(db_path, path) -> None:
+    """A panel's tab is of all productions: its measures are written only so."""
+    with TestClient(create_app(db_path), base_url="http://localhost") as client:
+        answer = client.get(
+            f"/api/v1/objects/{CHIAVE}{path}", params={"panel": 1, "production": "1:2"}
+        )
+    assert (answer.status_code, answer.json()["detail"]) == (422, "panel_with_production")
 
 
 def test_an_object_outside_the_catalog_has_no_facts(conn, db_path, world) -> None:

@@ -41,7 +41,7 @@ HAVING MIN(pf.frame_id) IS NOT NULL OR never IS NOT NULL
 
 # The frames the Nights page counts (spine/counts.py), with their measures if bridged.
 _FRAMES = f"""
-SELECT f.night_id, f.object_id, f.filter_id, f.mosaic_key, g.optics_id, g.camera_id,
+SELECT f.night_id, f.object_id, f.filter_id, f.mosaic_key, f.panel_id, g.optics_id, g.camera_id,
        b.skip_reason, m.outcome, c.camera, c.gain, c.exposure_s, {VALUES}
 FROM frames f{JOINS}
 LEFT JOIN pipeline_cards c ON c.file_id = m.file_id
@@ -55,9 +55,9 @@ _STATS = (
     "per_filter",
 )  # fmt: skip
 _NIGHT_KEY = ("night_id", "object_id", "filter_id", "unfiltered")
-# An Archive row (object outside mosaics, or mosaic), its production or all, night or all, filter
+# An Archive row (object outside mosaics, mosaic, or panel), its production or all, night, filter
 _OBJECT_KEY = (
-    "object_id", "mosaic_key", "every_production", "optics_id", "camera_id", "night_id",
+    "object_id", "mosaic_key", "panel_id", "every_production", "optics_id", "camera_id", "night_id",
     "filter_id", "unfiltered",
 )  # fmt: skip
 # Each filter its own scale: across filters these compare only per filter [D tavola v76, MisureFrame
@@ -136,17 +136,21 @@ def _keys_of(night: int, obj: int | None, flt: int | None) -> Iterator[GroupKey]
 
 
 def _row_keys_of(row: sqlite3.Row) -> Iterator[GroupKey]:
-    """The Archive's row of the frame (`spine/counts.py`: a mosaic its frames, an object those
-    outside mosaics), its production and all, the night and all, the filter and all."""
+    """Archive row of the frame (mosaic, else object), its production and all, night and all,
+    filter and all; a mosaic's panel too, of all productions (`spine/counts.py`)."""
     mosaic = row["mosaic_key"]
     if mosaic is None and row["object_id"] is None:
         return
-    owner = (None, mosaic) if mosaic is not None else (row["object_id"], None)
+    owner = (None, mosaic, None) if mosaic is not None else (row["object_id"], None, None)
     flt = row["filter_id"]
-    for production in ((0, row["optics_id"], row["camera_id"]), (1, None, None)):
+    every = (1, None, None)
+    asked = [(owner, (0, row["optics_id"], row["camera_id"])), (owner, every)]
+    if mosaic is not None and row["panel_id"] is not None:
+        asked.append(((None, mosaic, row["panel_id"]), every))
+    for target, production in asked:
         for night in (row["night_id"], None):
             for filtered in ((None, 0), (flt, int(flt is None))):
-                yield *owner, *production, night, *filtered
+                yield *target, *production, night, *filtered
 
 
 def _add(group: _Group, row: sqlite3.Row) -> None:

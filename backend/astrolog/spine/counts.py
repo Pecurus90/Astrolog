@@ -131,6 +131,7 @@ class Scope:
     camera: int | None = None
     # One production, null pieces too: (optics, camera) of its rig, (None, None) without a rig.
     production: tuple[int | None, int | None] | None = None
+    panel: int | None = None  # one panel of a mosaic: its window's tab
 
     @property
     def sql(self) -> tuple[str, list[Any]]:
@@ -169,6 +170,9 @@ class Scope:
                 " AND (SELECT g.camera_id FROM rigs g WHERE g.id = f.rig_id) IS ?"
             )
             values += list(self.production)
+        if self.panel is not None:
+            parts.append("f.panel_id = ?")
+            values.append(self.panel)
         return "".join(f" AND {p}" for p in parts), values
 
 

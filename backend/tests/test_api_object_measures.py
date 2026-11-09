@@ -7,9 +7,11 @@ from fastapi.testclient import TestClient
 from astrolog import night_measures
 from astrolog.api.app import create_app
 from astrolog.measure_list import MEASURES
+from test_api_object_detail import _get as _detail
 from test_api_object_detail import _second_night
 from test_night_measures import _World
 from test_object_measures import _rig
+from test_spine_archive_mosaic import CHIAVE, mosaico
 
 T1 = "2026-10-12T21:00:00.000000+00:00"
 T2 = "2026-10-20T20:00:00.000000+00:00"
@@ -113,3 +115,27 @@ def test_a_mosaic_has_its_own_measures(conn, db_path, world) -> None:
     conn.commit()
     assert _get(db_path, "NGC 6992").json()["frames"] == 1
     assert _get(db_path, "velo-mosaico").json()["frames"] == 1
+
+
+def test_a_panel_has_the_measures_of_its_frames_only(conn, db_path, world) -> None:
+    veil, dark = world.object("NGC 6992"), world.object("LDN 1516")
+    later = _second_night(conn)
+    inside = [world.shot(2.0, start=T1, obj=veil), world.shot(8.0, start=T2, obj=dark, night=later)]
+    mosaico(conn, inside)
+    night_measures.rebuild(conn)
+    conn.commit()
+    listed = _detail(db_path, CHIAVE).json()["row"]["panel_list"]
+    panel = next(p["id"] for p in listed if p["object"] == "LDN 1516")
+    body = _get(db_path, CHIAVE, panel=panel).json()
+    assert (body["frames"], [g["key"] for g in body["groups"]]) == (1, [str(later)])
+    hfd = next(
+        m
+        for s in body["sets"]
+        if s["group"] is None and s["filter"] is None
+        for m in s["measures"]
+        if m["key"] == "hfd_px"
+    )
+    assert hfd["median"] == 8.0
+    assert [f["frame_id"] for f in body["series"]] == [inside[1]]
+    # the whole mosaic still has both
+    assert _get(db_path, CHIAVE).json()["frames"] == 2

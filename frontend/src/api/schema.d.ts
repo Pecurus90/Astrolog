@@ -562,10 +562,11 @@ export interface paths {
          * Object Measures
          * @description An Archive row's frame measures for its window: what `night_measures.py` wrote for it
          *     after each scan, its nights as the groups (in shooting order), its frames one by one.
-         *     `production` as in the window; without it, all of the row's productions together, and
-         *     `one_production` says whether the SNR and the FWHM in pixels compare across them.
+         *     `production` and `panel` as in the window; without a production, all of the row's together,
+         *     and `one_production` says whether the SNR and the FWHM in pixels compare across them.
          *
-         *     404 `object_not_found`: no row with that key.
+         *     404 `object_not_found`: no row with that key, or no frame of it in that panel.
+         *     422 `panel_with_production`: a panel is of all productions.
          */
         get: operations["object_measures"];
         put?: never;
@@ -591,9 +592,11 @@ export interface paths {
          *     what the catalog says of it, with its size beside the full Moon.
          *
          *     `production` narrows everything to one of the row's productions: `optics_id:camera_id` as
-         *     the row gives them, `none` for a piece the frames do not say.
+         *     the row gives them, `none` for a piece the frames do not say. `panel` narrows a mosaic to
+         *     one of its panels, and the catalog is then its object's when it has one in the catalog.
          *
-         *     404 `object_not_found`: no row with that key.
+         *     404 `object_not_found`: no row with that key, or no frame of it in that panel.
+         *     422 `panel_with_production`: a panel is of all productions.
          */
         get: operations["object_detail"];
         put?: never;
@@ -1626,6 +1629,11 @@ export interface components {
          * @description A panel of a mosaic: the framing, what you shot in it and how much.
          */
         ArchivePanel: {
+            /**
+             * Id
+             * @description To narrow the mosaic's window to this panel (`?panel=`).
+             */
+            id: number;
             /**
              * Object
              * @description The object (or objects) of its frames; null if the sky knows of none.
@@ -6383,6 +6391,8 @@ export interface operations {
         parameters: {
             query?: {
                 production?: string | null;
+                /** @description A panel of the mosaic, as `panel_list` gives its `id`. */
+                panel?: number | null;
             };
             header?: never;
             path: {
@@ -6416,6 +6426,8 @@ export interface operations {
         parameters: {
             query?: {
                 production?: string | null;
+                /** @description A panel of the mosaic, as `panel_list` gives its `id`. */
+                panel?: number | null;
             };
             header?: never;
             path: {
