@@ -351,6 +351,76 @@ export function Setups({ setups, formato }: { setups: Setup[]; formato: Formato 
   )
 }
 
+/** I numeri della testa: ore (o frame), mediane, cielo della notte se c'e', filtri. Il telefono li
+ *  mette in griglia, il desktop in riga. */
+export function NumeriInTesta({
+  formato,
+  grande,
+  sotto,
+  conOre,
+  kpi,
+  esito,
+  filtri,
+}: {
+  formato: Formato
+  grande: string
+  sotto: string
+  conOre: boolean
+  kpi: { v: string; l: string }[]
+  esito?: ReactNode
+  filtri: ReactNode
+}) {
+  const L = MISURE[formato]
+  if (formato === "telefono")
+    return (
+      <div className="al-c-riepilogo__colonna-3">
+        <div className="al-c-riepilogo__griglia-1">
+          <span className="al-c-riepilogo__colonna-4">
+            <span className="al-c-riepilogo__testo-7">{grande}</span>
+            <span className="al-c-riepilogo__blocco-3">{sotto}</span>
+          </span>
+          {kpi.map((k) => (
+            <span key={k.l} className="al-c-riepilogo__colonna-5">
+              <span className="al-c-riepilogo__testo-7">{k.v}</span>
+              <span className="al-c-riepilogo__blocco-3">{k.l}</span>
+            </span>
+          ))}
+        </div>
+        <div className="al-c-riepilogo__riga-4">
+          {esito && <span className="al-c-riepilogo__testo-8">{t("window.sky.phone")}</span>}
+          {esito}
+          {filtri}
+        </div>
+      </div>
+    )
+  return (
+    <div className="al-c-riepilogo__riga-8">
+      <span className="al-c-riepilogo__testo-10" style={{ fontSize: L.bfs }}>
+        {grande}
+      </span>
+      <span className="al-c-riepilogo__colonna-6">
+        <span className="al-c-riepilogo__testo-11">{conOre ? t("window.integration") : ""}</span>
+        <span className="al-c-riepilogo__testo-12">{sotto}</span>
+      </span>
+      {kpi.map((k) => (
+        <span key={k.l} className="al-c-riepilogo__colonna-7">
+          <span className="al-c-riepilogo__testo-13">{k.v}</span>
+          <span className="al-c-riepilogo__testo-8">{k.l}</span>
+        </span>
+      ))}
+      {esito && (
+        <span className="al-c-riepilogo__colonna-8">
+          {esito}
+          <span className="al-c-riepilogo__testo-8">{t("window.sky")}</span>
+        </span>
+      )}
+      <span className="al-c-riepilogo__riga-9" style={{ marginLeft: "auto" }}>
+        {filtri}
+      </span>
+    </div>
+  )
+}
+
 /** Il catalogo sa dire qualcosa dell'oggetto: per la notte e per l'oggetto, una regola. */
 export function inCatalogo(f: components["schemas"]["ObjectFacts"]): boolean {
   return f.type_code !== null || f.constellation !== null || f.distance !== null

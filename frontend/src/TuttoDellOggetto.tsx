@@ -32,6 +32,7 @@ import { cielo, luna, segnoDi } from "./NottiDati"
 import {
   FiltriInTesta,
   FinestraRiepilogo,
+  NumeriInTesta,
   inCatalogo,
   MISURE,
   RigaDiTesta,
@@ -292,32 +293,14 @@ function Testa({
           })}
         </div>
       )}
-      {tel ? (
-        <div className="al-c-riepilogo__colonna-3">
-          <div className="al-c-riepilogo__griglia-1">
-            <span className="al-c-riepilogo__colonna-4">
-              <span className="al-c-riepilogo__testo-7">{grande}</span>
-              <span className="al-c-riepilogo__blocco-3">{sotto}</span>
-            </span>
-          </div>
-          <div className="al-c-riepilogo__riga-4">{filtri}</div>
-        </div>
-      ) : (
-        <div className="al-c-riepilogo__riga-8">
-          <span className="al-c-riepilogo__testo-10" style={{ fontSize: L.bfs }}>
-            {grande}
-          </span>
-          <span className="al-c-riepilogo__colonna-6">
-            <span className="al-c-riepilogo__testo-11">
-              {conOre ? t("window.integration") : ""}
-            </span>
-            <span className="al-c-riepilogo__testo-12">{sotto}</span>
-          </span>
-          <span className="al-c-riepilogo__riga-9" style={{ marginLeft: "auto" }}>
-            {filtri}
-          </span>
-        </div>
-      )}
+      <NumeriInTesta
+        formato={formato}
+        grande={grande}
+        sotto={sotto}
+        conOre={conOre}
+        kpi={[]}
+        filtri={filtri}
+      />
     </Carta>
   )
 }

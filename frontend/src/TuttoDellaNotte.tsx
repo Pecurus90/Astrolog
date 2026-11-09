@@ -22,6 +22,7 @@ import { cielo, segnoDi } from "./NottiDati"
 import {
   FiltriInTesta,
   FinestraRiepilogo,
+  NumeriInTesta,
   inCatalogo,
   MISURE,
   RigaDiTesta,
@@ -169,7 +170,6 @@ function Testa({
   onPrima?: (() => void) | undefined
   onDopo?: (() => void) | undefined
 }) {
-  const tel = formato === "telefono"
   const n = d.night
   const L = MISURE[formato]
   const conOre = n.integration_s > 0
@@ -231,52 +231,15 @@ function Testa({
         </span>
         <span className="al-c-riepilogo__testo-4">{periodo}</span>
       </div>
-      {tel ? (
-        <div className="al-c-riepilogo__colonna-3">
-          <div className="al-c-riepilogo__griglia-1">
-            <span className="al-c-riepilogo__colonna-4">
-              <span className="al-c-riepilogo__testo-7">{grande}</span>
-              <span className="al-c-riepilogo__blocco-3">{sotto}</span>
-            </span>
-            {kpi.map((k) => (
-              <span key={k.l} className="al-c-riepilogo__colonna-5">
-                <span className="al-c-riepilogo__testo-7">{k.v}</span>
-                <span className="al-c-riepilogo__blocco-3">{k.l}</span>
-              </span>
-            ))}
-          </div>
-          <div className="al-c-riepilogo__riga-4">
-            <span className="al-c-riepilogo__testo-8">{t("window.sky.phone")}</span>
-            {esito}
-            {filtri}
-          </div>
-        </div>
-      ) : (
-        <div className="al-c-riepilogo__riga-8">
-          <span className="al-c-riepilogo__testo-10" style={{ fontSize: L.bfs }}>
-            {grande}
-          </span>
-          <span className="al-c-riepilogo__colonna-6">
-            <span className="al-c-riepilogo__testo-11">
-              {conOre ? t("window.integration") : ""}
-            </span>
-            <span className="al-c-riepilogo__testo-12">{sotto}</span>
-          </span>
-          {kpi.map((k) => (
-            <span key={k.l} className="al-c-riepilogo__colonna-7">
-              <span className="al-c-riepilogo__testo-13">{k.v}</span>
-              <span className="al-c-riepilogo__testo-8">{k.l}</span>
-            </span>
-          ))}
-          <span className="al-c-riepilogo__colonna-8">
-            {esito}
-            <span className="al-c-riepilogo__testo-8">{t("window.sky")}</span>
-          </span>
-          <span className="al-c-riepilogo__riga-9" style={{ marginLeft: "auto" }}>
-            {filtri}
-          </span>
-        </div>
-      )}
+      <NumeriInTesta
+        formato={formato}
+        grande={grande}
+        sotto={sotto}
+        conOre={conOre}
+        kpi={kpi}
+        esito={esito}
+        filtri={filtri}
+      />
     </Carta>
   )
 }
