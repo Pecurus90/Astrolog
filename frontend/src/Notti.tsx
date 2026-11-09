@@ -13,7 +13,8 @@ import { Striscia, type NotteStriscia } from "./componenti/Striscia"
 import { Pagina } from "./componenti/Pagina"
 import type { Formato } from "./componenti/Tema"
 import { paginaDopo } from "./Elenco"
-import { SENZA_FILTRO, VARIANTE, nomeDelFiltro } from "./FiltriUsati"
+import { SENZA_FILTRO, nomeDelFiltro } from "./FiltriUsati"
+import { tintaDi } from "./MisureDati"
 import { api } from "./api/client"
 import { costellazione } from "./costellazioni"
 import { type Chiave, maiuscola, meseEAnno, numero, t } from "./i18n"
@@ -216,7 +217,7 @@ export function Notti() {
         c: numero(o.nights),
         sel: o.chosen,
         // the dot takes the band's token, the one its bar class paints with
-        ...(c.key === "filter" && o.passband && VARIANTE[o.passband] ? { tinta: { fondo: `var(--filtro-${(VARIANTE[o.passband] ?? "").split("--")[1] ?? ""})` } } : {}),
+        ...(c.key === "filter" ? { tinta: tintaDi(o.passband ?? undefined) } : {}),
         no: o.nights === 0 && !o.chosen,
         on: () => {
           const ora = new Set(scelte[c.key] ?? [])

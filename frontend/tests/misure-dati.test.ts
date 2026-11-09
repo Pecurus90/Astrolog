@@ -2,7 +2,11 @@
  * Le misure dei frame in parole e in geometria (`src/MisureDati.ts`, `src/FramePerFrameDati.ts`):
  * ogni formato, ogni scala e ogni barra di *Frame per frame* al decimale, come la tavola v76.
  */
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { describe, expect, it } from "vitest"
+
+import { VARIANTE } from "../src/FiltriUsati"
 
 import {
   type Richiesta,
@@ -224,7 +228,25 @@ describe("nomi, chiavi e insiemi", () => {
 
   it("il colore del filtro dal token della sua banda, ignoto senza banda", () => {
     expect(tintaDi("HA").fondo).toBe("var(--filtro-ha)")
-    expect(tintaDi(undefined).fondo).toBe("var(--filtro-ignoto)")
+    // l'ignoto e' il tratteggio della barra, vuoto dentro: un token che non c'e' non dipinge
+    expect(tintaDi(undefined)).toEqual({
+      fondo: "none",
+      bordo: "var(--segno-filo) dashed var(--ignoto-tratteggio)",
+    })
+  })
+
+  it("una palette sola: ogni banda dipinge coi token del foglio, come la barra delle Notti", () => {
+    const foglio = readFileSync(resolve(process.cwd(), "src", "stili", "astrolog.css"), "utf-8")
+    for (const [banda, classe] of Object.entries(VARIANTE)) {
+      const regola = new RegExp(`\\.${classe}\\s*\\{([^}]*)\\}`).exec(foglio)?.[1] ?? ""
+      const t = tintaDi(banda)
+      // la classe della barra e il pallino delle misure dicono lo stesso colore
+      expect(regola, banda).toContain(`background: ${t.fondo}`)
+      if (t.bordo) expect(regola, banda).toContain(`border: ${t.bordo}`)
+      for (const token of `${t.fondo} ${t.bordo ?? ""}`.matchAll(/var\((--[\w-]+)\)/g)) {
+        expect(foglio, `${banda}: ${token[1]}`).toContain(`${token[1]}:`)
+      }
+    }
   })
 
   it("cosa cambia fra i frame, a parole", () => {

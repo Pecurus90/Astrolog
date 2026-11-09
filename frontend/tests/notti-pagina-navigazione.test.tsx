@@ -275,8 +275,11 @@ describe("i criteri sul desktop", () => {
     expect(
       opzione("Filtri", "OIII").querySelector<HTMLElement>(".al-scelta__tinta")?.style.background,
     ).toBe("var(--filtro-oiii)")
-    expect(opzione("Filtri", "Strano").querySelector(".al-scelta__tinta")).toBeNull()
-    expect(opzione("Filtri", "Filtro non indicato").querySelector(".al-scelta__tinta")).toBeNull()
+    // la tavola da' un pallino a ogni filtro: l'ignoto e' il tratteggio della barra (tema.js FD)
+    for (const nome of ["Strano", "Filtro non indicato"]) {
+      const tinta = opzione("Filtri", nome).querySelector<HTMLElement>(".al-scelta__tinta")
+      expect(tinta?.style.border, nome).toContain("dashed")
+    }
     expect(opzione("Sito", "Casa").querySelector(".al-scelta__tinta")).toBeNull()
   })
 

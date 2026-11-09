@@ -269,10 +269,22 @@ export function filtriDi(m: Misure, gruppo: string | null): Misure["filters"] {
   return m.filters.filter((f) => insieme(m, gruppo, f.name))
 }
 
-/** Il colore del filtro, dal token della sua banda. */
-export function tintaDi(passband: string | undefined): { fondo: string } {
+/** Il colore del filtro, dai token della barra delle Notti: ignoto e senza filtro sono un filo. */
+export function tintaDi(passband: string | undefined): { fondo: string; bordo?: string } {
   const variante = varianteDi(passband).split("--")[1] ?? "ignoto"
+  if (variante === "ignoto") {
+    return { fondo: "none", bordo: "var(--segno-filo) dashed var(--ignoto-tratteggio)" }
+  }
+  if (variante === "senza") {
+    return { fondo: "none", bordo: "var(--segno-filo) solid var(--linea-significato)" }
+  }
   return { fondo: `var(--filtro-${variante})` }
+}
+
+/** Lo stile di un pallino di filtro: fondo e, per ignoto e senza, il filo. */
+export function pallinoDi(passband: string | undefined): { background: string; border?: string } {
+  const t = tintaDi(passband)
+  return t.bordo ? { background: t.fondo, border: t.bordo } : { background: t.fondo }
 }
 
 /** Cosa cambia fra i frame, a parole: "camera e guadagno". */

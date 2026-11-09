@@ -35,6 +35,7 @@ import {
   nomeDi,
   scritto,
   statistica,
+  pallinoDi,
   tintaDi,
 } from "./MisureDati"
 
@@ -355,7 +356,7 @@ function UnGrafico({
           <span
             className="al-c-misure-frame__tondo-1"
             aria-hidden="true"
-            style={{ background: tintaDi(passband).fondo }}
+            style={pallinoDi(passband)}
           />
           {nomeDelFiltro(filtro)}
         </span>

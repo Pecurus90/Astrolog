@@ -16,7 +16,7 @@ import {
   nomeDi,
   scritto,
   statistica,
-  tintaDi,
+  pallinoDi,
 } from "./MisureDati"
 
 // Angoli ai pixel (1,1) (W,1) (W,H) (1,H), come li scrive la pipeline; il sensore si disegna
@@ -224,7 +224,7 @@ export function TiltCurvatura({ misure, scelta }: { misure: Misure; scelta: Scel
                     <span
                       className="al-c-misure-frame__tondo-1"
                       aria-hidden="true"
-                      style={{ background: tintaDi(f.passband).fondo }}
+                      style={pallinoDi(f.passband)}
                     />
                     {nomeDelFiltro(f.name)}
                   </span>

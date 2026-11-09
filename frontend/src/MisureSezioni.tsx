@@ -18,7 +18,7 @@ import {
   type Tipo,
   chiaveIn,
   filtriDi,
-  tintaDi,
+  pallinoDi,
   insieme,
   nomeDelGruppo,
   nomeDi,
@@ -333,7 +333,7 @@ export function AConfronto({
                       key={f.name}
                       className="al-c-misure-frame__tondo-10"
                       aria-hidden="true"
-                      style={{ background: tintaDi(passband.get(f.name)).fondo }}
+                      style={pallinoDi(passband.get(f.name))}
                     />
                   ))}
                   {t("measures.of", { m: numero(s?.measured ?? 0), n: numero(set?.frames ?? 0) })}
@@ -445,7 +445,7 @@ export function PerFiltro({
                       <span
                         className="al-c-misure-frame__tondo-1"
                         aria-hidden="true"
-                        style={{ background: tintaDi(f.passband).fondo }}
+                        style={pallinoDi(f.passband)}
                       />
                       {nomeDelFiltro(f.name)}
                     </span>
