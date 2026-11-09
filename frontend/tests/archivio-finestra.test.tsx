@@ -8,6 +8,7 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
+import { t } from "../src/i18n"
 import { type Voce, chiamate, pulisci, rispondi } from "./banco"
 import { IGNOTO, M31, apriArchivio, conArchivio, vaiAll, voceArchivio } from "./archivio-banco"
 import { DICIASSETTE, DICIOTTO } from "./notti-banco"
@@ -330,5 +331,127 @@ describe("le misure dell'oggetto", () => {
     const testa = etichetta.closest("section") as HTMLElement
     expect(within(testa).queryByText("SNR mediano")).toBeNull()
     expect(within(testa).queryByText("1,3 px")).toBeNull()
+  })
+})
+
+describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
+  async function apriM31(corpo: unknown, mis?: unknown) {
+    await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo } }, mis as never)
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    return finestra()
+  }
+
+  it("una notte sola in un sito: la sua data, senza i siti", async () => {
+    const f = await apriM31(
+      scheda(M31, {
+        nights: [{ night: DICIOTTO, frames: 100, integration_s: 36000, untimed: 0 }],
+        first_night: "2024-05-18",
+        last_night: "2024-05-18",
+        sites: ["Cima Ekar"],
+      }),
+    )
+    expect(
+      await within(f).findByText(t("object.period.one", { data: "18 maggio 2024" })),
+    ).toBeDefined()
+  })
+
+  it("senza notti nessun periodo", async () => {
+    const f = await apriM31(scheda(M31, { nights: [], first_night: null, last_night: null }))
+    const testa = await within(f).findByRole("region", { name: t("window.summary") })
+    expect(testa.querySelector(".al-c-riepilogo__testo-4")?.textContent).toBe("")
+  })
+
+  it("pose senza durata: le ore e quanti frame non le dicono; senza ore, solo i frame", async () => {
+    const parte = { ...M31, untimed: 12 }
+    const f = await apriM31(scheda(parte))
+    expect(
+      await within(f).findByText(t("object.untimed", { frame: "120 frame", n: "12" })),
+    ).toBeDefined()
+    pulisci()
+    const nessuna = { ...M31, integration_s: 0, untimed: 120 }
+    const g = await apriM31(scheda(nessuna))
+    const testa = await within(g).findByRole("region", { name: t("window.summary") })
+    expect(within(testa).getByText("120 frame")).toBeDefined()
+    expect(within(testa).getByText(t("window.untimed"))).toBeDefined()
+  })
+
+  it("nel catalogo senza tipo ne' costellazione: le lineette; poco piu' piccolo della Luna", async () => {
+    const facts = {
+      ...FATTI,
+      common_name: null,
+      type_code: null,
+      constellation: null,
+      size_arcmin: 7.25,
+      moon: { compare: "less", moons: null },
+    }
+    const f = await apriM31(scheda(M31, { facts }))
+    const cielo = await within(f).findByRole("region", { name: t("object.sky") })
+    expect(within(cielo).getAllByText("—")).toHaveLength(2)
+    expect(
+      within(cielo).getByText(t("object.size", { n: "7,3", luna: t("object.moon.less") })),
+    ).toBeDefined()
+    // nel catalogo e senza nome comune: niente "fuori catalogo"
+    expect(within(f).queryByText(t("object.outside"))).toBeNull()
+  })
+
+  it("grande come la Luna piena, in primi interi; senza Luna nessun confronto", async () => {
+    const come = { ...FATTI, size_arcmin: 31.4, moon: { compare: "like", moons: 1 } }
+    const f = await apriM31(scheda(M31, { facts: come }))
+    const cielo = await within(f).findByRole("region", { name: t("object.sky") })
+    expect(
+      within(cielo).getByText(t("object.size", { n: "31", luna: t("object.moon.like") })),
+    ).toBeDefined()
+    pulisci()
+    const senza = { ...FATTI, moon: null, distance_pc: null }
+    const g = await apriM31(scheda(M31, { facts: senza }))
+    const altro = await within(g).findByRole("region", { name: t("object.sky") })
+    expect(altro.textContent).not.toContain("in cielo,")
+    expect(altro.textContent).not.toContain("parsec")
+  })
+
+  it("le misure che non arrivano lo dicono, col bottone per riprovare", async () => {
+    await apriCon([M31], {
+      "/api/v1/objects/m-31/measures": { stato: 500, corpo: { detail: "boom" } },
+      "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) },
+    })
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    const f = await finestra()
+    expect(await within(f).findByText(t("window.failed"))).toBeDefined()
+    expect(within(f).getByRole("button", { name: t("window.retry") })).toBeDefined()
+  })
+
+  it("una produzione senza ore e senza camera lo dice nella sua linguetta", async () => {
+    const due = {
+      ...M31,
+      productions: [
+        { ...M31.productions[0], optics_id: 2, camera_id: 1 },
+        {
+          ...M31.productions[0],
+          camera: null,
+          camera_id: null,
+          optics_id: 3,
+          integration_s: 0,
+          frames: 7,
+        },
+      ],
+    }
+    await apriCon([due], {
+      "/api/v1/objects/m-31?production=2%3A1": { stato: 200, corpo: scheda(due) },
+      "/api/v1/objects/m-31": { stato: 200, corpo: scheda(due) },
+    })
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    const schede = await within(await finestra()).findAllByRole("tab")
+    expect(schede[1]?.textContent).toBe(
+      `Rifrattore${t("object.production.sub", { camera: t("gear.rig.noCamera"), ore: "7 frame" })}`,
+    )
+    expect(
+      within(await finestra()).getByRole("tablist", { name: t("object.productions") }),
+    ).toBeDefined()
+  })
+
+  it("le notti dell'oggetto col suo nome", async () => {
+    const f = await apriM31(scheda(M31))
+    const notti = await within(f).findByRole("region", { name: t("object.nights") })
+    expect(within(notti).getByText(t("object.nights.sub", { nome: "M 31" }))).toBeDefined()
   })
 })

@@ -235,41 +235,64 @@ def test_a_better_score_asks_for_the_reference_to_rise(tmp_path, capsys):
     assert "raise the reference to 0.5000" in capsys.readouterr().err
 
 
-def write_reports(tmp_path, *files):
-    """One Stryker report per frontend shard; the files past those given hold one Killed each."""
-    paths = []
+def write_reports(tmp_path, *files, stale=None):
+    """One Stryker report per frontend shard, written in reverse so no order is assumed; the files
+    past those given hold one Killed each. Returns the paths and the parts that own the files."""
+    stale = stale or {}
+    table = []
     for k in range(FRONTEND_SHARDS):
         mutants = files[k] if k < len(files) else {f"src/k{k}.ts": [{"status": "Killed"}]}
+        table.append(list(mutants))
+    paths = []
+    for k in reversed(range(FRONTEND_SHARDS)):
+        mutants = {**(files[k] if k < len(files) else {table[k][0]: [{"status": "Killed"}]})}
+        mutants.update(stale.get(k, {}))
         report = {"files": {name: {"mutants": m} for name, m in mutants.items()}}
         path = tmp_path / f"stryker-{k}.json"
         path.write_text(json.dumps(report), encoding="utf-8")
         paths.append(str(path))
-    return paths
+    return paths, table
 
 
 def test_the_frontend_score_adds_up_the_stryker_report_of_every_shard(tmp_path, capsys):
     first = {"src/a.ts": [{"status": "Killed"}, {"status": "Survived"}]}
     second = {"src/b.ts": [{"status": "Timeout"}, {"status": "NoCoverage"}, {"status": "Ignored"}]}
-    paths = write_reports(tmp_path, first, second)
+    paths, table = write_reports(tmp_path, first, second)
     detected = 2 + FRONTEND_SHARDS - 2
     checked = 4 + FRONTEND_SHARDS - 2
     reference = write_reference(tmp_path, frontend=round(detected / checked, 4))
-    assert main(["mutation_shards.py", "frontend", "--filter", *paths], reference=reference) == 0
+    argv = ["mutation_shards.py", "frontend", "--filter", *paths]
+    assert main(argv, reference=reference, parts=table) == 0
     expected = f"shard frontend: score {detected / checked:.4f} ({detected} of {checked} detected"
     assert expected in capsys.readouterr().err
 
 
+def test_a_frontend_report_counts_only_the_files_of_its_part(tmp_path, capsys):
+    """The incremental cache keeps files of an older split, deleted ones too: counted, they are
+    stale and twice. Only the files the part mutates tonight count."""
+    first = {"src/a.ts": [{"status": "Killed"}]}
+    old = {"src/a.ts": [{"status": "Survived"}], "src/gone.ts": [{"status": "Survived"}] * 5}
+    paths, table = write_reports(tmp_path, first, stale={1: old})
+    reference = write_reference(tmp_path, frontend=1.0)
+    argv = ["mutation_shards.py", "frontend", "--filter", *paths]
+    assert main(argv, reference=reference, parts=table) == 0
+    err = capsys.readouterr().err
+    assert f"score 1.0000 ({FRONTEND_SHARDS} of {FRONTEND_SHARDS} detected" in err
+    assert "6 mutants of files outside their part left out" in err
+
+
 def test_a_frontend_shard_without_its_report_fails_the_night(tmp_path, capsys):
     """A part lost with its runner leaves no report: never a score of the parts left."""
-    paths = write_reports(tmp_path)[:-1]
-    assert main(["mutation_shards.py", "frontend", "--filter", *paths]) == 1
+    paths, table = write_reports(tmp_path)
+    assert main(["mutation_shards.py", "frontend", "--filter", *paths[1:]], parts=table) == 1
     assert f"{FRONTEND_SHARDS - 1} of {FRONTEND_SHARDS} shard reports" in capsys.readouterr().err
 
 
 def test_a_frontend_report_without_mutants_is_refused(tmp_path, capsys):
-    paths = write_reports(tmp_path, *[{"src/a.ts": []}] * FRONTEND_SHARDS)
+    paths, table = write_reports(tmp_path, *[{f"src/{k}.ts": []} for k in range(FRONTEND_SHARDS)])
     reference = write_reference(tmp_path)
-    assert main(["mutation_shards.py", "frontend", "--filter", *paths], reference=reference) == 1
+    argv = ["mutation_shards.py", "frontend", "--filter", *paths]
+    assert main(argv, reference=reference, parts=table) == 1
     assert "the reports hold no mutant" in capsys.readouterr().err
 
 

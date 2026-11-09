@@ -7,6 +7,8 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
+import { t } from "../src/i18n"
+import { distanza, estensione } from "../src/TuttoDellaNotte"
 import { type Voce, pulisci } from "./banco"
 import { DICIOTTO, apri, notte, pagina, rotte } from "./notti-banco"
 
@@ -399,5 +401,103 @@ describe("frame per frame e tilt e curvatura", () => {
     const sezione = await within(d).findByRole("region", { name: "Tilt e curvatura di campo" })
     expect(within(sezione).queryByRole("img")).toBeNull()
     expect(within(sezione).getByText("non c’è per questi frame")).toBeTruthy()
+  })
+})
+
+describe("la testa e gli oggetti, quando i dati mancano", () => {
+  const conDettaglio = (corpo: unknown): Record<string, Voce> => ({
+    ...FINESTRA,
+    "/api/v1/nights/7": { stato: 200, corpo },
+  })
+
+  it("una notte senza ore dice i frame e che i file non hanno l'ora", async () => {
+    const night = { ...DICIOTTO, integration_s: 0, frames: 4 }
+    const corpo = { ...DETTAGLIO, night, first_start: null, last_end: null }
+    const d = await finestra(conDettaglio(corpo))
+    const testa = await within(d).findByRole("region", { name: "Riepilogo" })
+    expect(within(testa).getByText(t("window.span.untimed", { sito: "Cima Ekar" }))).toBeTruthy()
+    expect(within(testa).getByText(t("window.frames", { n: "4" }))).toBeTruthy()
+    expect(within(testa).getByText(t("window.untimed"))).toBeTruthy()
+  })
+
+  it("con le ore, sotto le ore i frame e gli oggetti", async () => {
+    const d = await finestra()
+    const testa = await within(d).findByRole("region", { name: "Riepilogo" })
+    expect(
+      within(testa).getByText(
+        `${t("window.frames", { n: "3" })} · ${t("window.objects", { n: 1 })}`,
+      ),
+    ).toBeTruthy()
+  })
+
+  it("un oggetto fuori catalogo lo dice e non ha dati; senza ore, i suoi frame", async () => {
+    const night = {
+      ...DICIOTTO,
+      objects: [
+        { key: "ngc-x", name: null, frames: 5, integration_s: 0, untimed: 5, bar_pct: 100 },
+      ],
+    }
+    const d = await finestra(conDettaglio({ ...DETTAGLIO, night }))
+    const ogg = await within(d).findByRole("region", { name: "Gli oggetti" })
+    expect(within(ogg).getByText("ngc-x")).toBeTruthy()
+    expect(within(ogg).getByText(t("window.objects.outside"))).toBeTruthy()
+    expect(within(ogg).getByText(t("window.frames", { n: "5" }))).toBeTruthy()
+    expect(within(ogg).queryByText(t("window.fact.type"))).toBeNull()
+  })
+
+  it("nel catalogo con la sola distanza: in anni luce, il resto non noto", async () => {
+    const objects = [
+      {
+        key: "m-51",
+        common_name: null,
+        type_code: null,
+        constellation: null,
+        distance: { value: 900, unit: "ly" },
+        extent_ly: null,
+      },
+    ]
+    const d = await finestra(conDettaglio({ ...DETTAGLIO, objects }))
+    const ogg = await within(d).findByRole("region", { name: "Gli oggetti" })
+    expect(within(ogg).getByText(t("window.fact.ly", { n: "900" }))).toBeTruthy()
+    expect(within(ogg).getByText(t("window.fact.extent.none"))).toBeTruthy()
+    expect(within(ogg).getAllByText("—")).toHaveLength(2)
+    expect(within(ogg).queryByText(t("window.objects.outside"))).toBeNull()
+  })
+
+  it("le misure che non arrivano lo dicono, col bottone per riprovare", async () => {
+    const d = await finestra({
+      ...FINESTRA,
+      "/api/v1/nights/7/measures": { stato: 500, corpo: { detail: "boom" } },
+    })
+    expect(await within(d).findByText(t("window.failed"))).toBeTruthy()
+    expect(within(d).getByRole("button", { name: t("window.retry") })).toBeTruthy()
+  })
+
+  it("la x la chiude, e cosi' un tocco fuori dal pannello", async () => {
+    const d = await finestra()
+    fireEvent.click(await within(d).findByRole("link", { name: t("ui.close") }))
+    expect(screen.queryByRole("dialog")).toBeNull()
+    const ancora = await finestra()
+    fireEvent.click(await within(ancora).findByRole("region", { name: "Riepilogo" }))
+    expect(screen.queryByRole("dialog")).toBeTruthy()
+    fireEvent.click(ancora)
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+})
+
+describe("distanza ed estensione", () => {
+  const fatti = (extra: Record<string, unknown>) =>
+    ({ key: "x", distance: null, extent_ly: null, ...extra }) as never
+
+  it("in anni luce o in milioni, o non nota", () => {
+    expect(distanza(fatti({ distance: { value: 900, unit: "ly" } }))).toBe(
+      t("window.fact.ly", { n: "900" }),
+    )
+    expect(distanza(fatti({ distance: { value: 23, unit: "million_ly" } }))).toBe(
+      t("window.fact.mly", { n: "23" }),
+    )
+    expect(distanza(fatti({}))).toBe(t("window.fact.distance.none"))
+    expect(estensione(fatti({ extent_ly: 0 }))).toBe(t("window.fact.extent.value", { n: "0" }))
+    expect(estensione(fatti({}))).toBe(t("window.fact.extent.none"))
   })
 })

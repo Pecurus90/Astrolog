@@ -139,16 +139,27 @@ def frontend_shards(frontend: Path = FRONTEND_DIR) -> list[list[str]]:
     return table
 
 
-def stryker_statuses(paths: list[str]) -> Counter[str]:
-    """Statuses of every mutant in Stryker JSON reports (mutation-testing-report-schema)."""
+def stryker_statuses(paths: list[str], parts: list[list[str]]) -> Counter[str]:
+    """Statuses of the mutants in Stryker JSON reports (mutation-testing-report-schema), only of
+    the files `stryker-<part>.json` mutates: the incremental cache keeps an older split's files."""
     statuses: Counter[str] = Counter()
+    left_out = 0
     for path in paths:
-        files = json.loads(Path(path).read_text(encoding="utf-8"))["files"].values()
-        statuses.update(m["status"] for f in files for m in f["mutants"])
+        part = re.fullmatch(r"stryker-(\d+)\.json", Path(path).name)
+        if part is None:
+            raise ValueError(f"{path}: not a stryker-<part>.json report")
+        own = set(parts[int(part[1])])
+        files = json.loads(Path(path).read_text(encoding="utf-8"))["files"].items()
+        for name, f in files:
+            if name in own:
+                statuses.update(m["status"] for m in f["mutants"])
+            else:
+                left_out += len(f["mutants"])
+    sys.stderr.write(f"shard {FRONTEND}: {left_out} mutants of files outside their part left out\n")
     return statuses
 
 
-def frontend(argv: list[str], reference: Path) -> int:
+def frontend(argv: list[str], reference: Path, parts: list[list[str]] | None = None) -> int:
     """`frontend <part>` prints its files for `--mutate`; `frontend --filter <report>...` scores
     every part together, so a file moving between parts never moves the score."""
     if argv[:1] == [FILTER]:
@@ -156,13 +167,12 @@ def frontend(argv: list[str], reference: Path) -> int:
         if len(paths) != FRONTEND_SHARDS:
             sys.stderr.write(f"shard {FRONTEND}: {len(paths)} of {FRONTEND_SHARDS} shard reports\n")
             return 1
-        statuses = stryker_statuses(paths)
+        statuses = stryker_statuses(paths, parts or frontend_shards())
         if not statuses.total():
             sys.stderr.write(f"shard {FRONTEND}: the reports hold no mutant\n")
             return 1
         return 1 if below_reference(FRONTEND, statuses, reference) else 0
-    parts = [str(k) for k in range(FRONTEND_SHARDS)]
-    if len(argv) != 1 or argv[0] not in parts:
+    if len(argv) != 1 or argv[0] not in [str(k) for k in range(FRONTEND_SHARDS)]:
         sys.stderr.write(f"usage: mutation_shards.py {FRONTEND} {{0..{FRONTEND_SHARDS - 1}}}\n")
         return 2
     sys.stdout.write(",".join(frontend_shards()[int(argv[0])]) + "\n")
@@ -202,9 +212,14 @@ def drop_broken(mutants: Path) -> int:
     return 0
 
 
-def main(argv: list[str], stdin: TextIO = sys.stdin, reference: Path = REFERENCE) -> int:
+def main(
+    argv: list[str],
+    stdin: TextIO = sys.stdin,
+    reference: Path = REFERENCE,
+    parts: list[list[str]] | None = None,
+) -> int:
     if argv[1:2] == [FRONTEND]:
-        return frontend(argv[2:], reference)
+        return frontend(argv[2:], reference, parts)
     if argv[1:2] == [DROP_BROKEN] and len(argv) == 3:
         return drop_broken(Path(argv[2]))
     names = [*FIXED, REST]
