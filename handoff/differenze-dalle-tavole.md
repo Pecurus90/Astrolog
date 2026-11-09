@@ -34,8 +34,8 @@ Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nell
   calibrazione dello SQM, angoli della forma) i nomi vanno concordati con Marco.
 - **Lato del pilastro, Trasparenza, Nuvole, SNR dei pixel.** Tavola: fra le Altre misure. App:
   assenti. Perche': la pipeline non le misura per frame.
-- **Setup, titolo.** Tavola: «Setup» o «Due setup». App: anche «3 setup» e oltre. Perche': la
-  tavola non dice il caso; testo provvisorio da confermare.
+- **Setup, titolo.** Tavola: «Setup» o «Due setup». App: anche «Tre setup»... «Nove setup», poi
+  «10 setup». Perche': la tavola non dice il caso; in lettere fino a nove, Marco 9/11.
 - **Setup, link a Progetti e «simulato».** Tavola: ↗ Progetti accanto all'oggetto, «simulato»
   accanto al titolo. App: assenti. Perche': Progetti non e' ancora portata; niente e' simulato.
 - **Frame scelto all'apertura.** Tavola: il sesto misurato (368). App: il primo misurato.

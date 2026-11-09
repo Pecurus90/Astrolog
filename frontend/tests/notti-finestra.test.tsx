@@ -170,6 +170,22 @@ describe("la finestra della notte", () => {
     expect(within(setup).getByText("Distanziale 10 mm")).toBeTruthy()
   })
 
+  it("piu' setup: in lettere fino a nove, poi in cifre", async () => {
+    const rig = DETTAGLIO.rigs[0]
+    for (const [n, nome] of [
+      [3, "Tre setup"],
+      [9, "Nove setup"],
+      [10, "10 setup"],
+    ] as const) {
+      const rigs = Array.from({ length: n }, (_, i) => ({ ...rig, id: i + 1 }))
+      const corpo = { ...DETTAGLIO, rigs }
+      const d = await finestra({ ...FINESTRA, "/api/v1/nights/7": { stato: 200, corpo } })
+      const setup = await within(d).findByRole("region", { name: "Setup" })
+      expect(within(setup).getByText(nome)).toBeTruthy()
+      pulisci()
+    }
+  })
+
   it("gli oggetti dicono tipo, costellazione, distanza ed estensione dal catalogo", async () => {
     const d = await finestra()
     const ogg = await within(d).findByRole("region", { name: "Gli oggetti" })

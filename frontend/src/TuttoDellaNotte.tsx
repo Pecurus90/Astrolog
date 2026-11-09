@@ -449,15 +449,24 @@ function righe(s: Setup): RigaSetup[] {
   return r
 }
 
+// Spelled out up to nine, like the board's "Due setup".
+const SETUP_IN_LETTERE: Chiave[] = [
+  "window.rig",
+  "window.rigs.two",
+  "window.rigs.three",
+  "window.rigs.four",
+  "window.rigs.five",
+  "window.rigs.six",
+  "window.rigs.seven",
+  "window.rigs.eight",
+  "window.rigs.nine",
+]
+
 function Setups({ setups, formato }: { setups: Setup[]; formato: Formato }) {
   const [aperti, setAperti] = useState<Record<number, boolean>>({})
   if (!setups.length) return null
-  const titolo =
-    setups.length === 1
-      ? t("window.rig")
-      : setups.length === 2
-        ? t("window.rigs.two")
-        : t("window.rigs", { n: setups.length })
+  const lettere = SETUP_IN_LETTERE[setups.length - 1]
+  const titolo = lettere ? t(lettere) : t("window.rigs", { n: setups.length })
   return (
     <Carta
       formato={formato}

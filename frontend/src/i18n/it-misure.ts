@@ -30,6 +30,13 @@ export const itMisure = {
   // Il setup della notte.
   "window.rig": "Setup",
   "window.rigs.two": "Due setup",
+  "window.rigs.three": "Tre setup",
+  "window.rigs.four": "Quattro setup",
+  "window.rigs.five": "Cinque setup",
+  "window.rigs.six": "Sei setup",
+  "window.rigs.seven": "Sette setup",
+  "window.rigs.eight": "Otto setup",
+  "window.rigs.nine": "Nove setup",
   "window.rigs": "{n} setup",
   "window.rig.gear": "Apri in Attrezzatura",
   "window.rig.gear.title": "Attrezzatura",

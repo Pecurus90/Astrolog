@@ -27,6 +27,13 @@ export const enMisure = {
 
   "window.rig": "Setup",
   "window.rigs.two": "Two setups",
+  "window.rigs.three": "Three setups",
+  "window.rigs.four": "Four setups",
+  "window.rigs.five": "Five setups",
+  "window.rigs.six": "Six setups",
+  "window.rigs.seven": "Seven setups",
+  "window.rigs.eight": "Eight setups",
+  "window.rigs.nine": "Nine setups",
   "window.rigs": "{n} setups",
   "window.rig.gear": "Open in Equipment",
   "window.rig.gear.title": "Equipment",
