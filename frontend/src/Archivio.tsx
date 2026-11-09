@@ -1,5 +1,5 @@
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query"
-import { useCallback, useRef } from "react"
+import { useCallback, useRef, useState } from "react"
 import { Link, useSearchParams } from "react-router"
 
 import { Avviso } from "./Avviso"
@@ -16,6 +16,9 @@ import {
 import { CarteDellArchivio } from "./CarteDellArchivio"
 import { Altre, paginaDopo } from "./Elenco"
 import { ElencoDellArchivio } from "./ElencoDellArchivio"
+import { nomeDi } from "./RigaDellArchivio"
+import { TuttoDellOggetto } from "./TuttoDellOggetto"
+import { useFormato } from "./componenti/formato"
 import { AzioniDelVuoto, Vuoto } from "./Vuoto"
 import { api } from "./api/client"
 import { numero, t } from "./i18n"
@@ -81,6 +84,8 @@ const APERTURE: Record<string, string> = { vista: APERTURA, sort: APERTURA_ORDIN
  * righe arrivano, non come si mostrano: questa pagina non si rifa'.
  */
 export function Archivio() {
+  const formato = useFormato()
+  const [aperta, setAperta] = useState<string | null>(null)
   const [indirizzo, cambiaIndirizzo] = useSearchParams()
   const chiesta = indirizzo.get("vista")
   const vista: Vista = VISTE.includes(chiesta as Vista) ? (chiesta as Vista) : APERTURA
@@ -191,8 +196,27 @@ export function Archivio() {
   const sparito = chiave !== "" && elenco.isSuccess && !elenco.isPlaceholderData && righe.length === 0
   const pannelli = elenco.isSuccess && !sparito && (righe.length > 0 || stringi)
 
+  // La finestra dell'oggetto: le frecce vanno all'oggetto prima e dopo nell'ordine della pagina.
+  const qui = aperta === null ? -1 : righe.findIndex((r) => r.key === aperta)
+  const vicina = (d: number) => {
+    const r = qui < 0 ? undefined : righe[qui + d]
+    return r ? () => setAperta(r.key) : undefined
+  }
+  const finestra = aperta !== null && (
+    <TuttoDellOggetto
+      key={aperta}
+      chiave={aperta}
+      nome={righe[qui] ? nomeDi(righe[qui]) : aperta}
+      formato={formato}
+      onChiudi={() => setAperta(null)}
+      onPrima={vicina(-1)}
+      onDopo={vicina(1)}
+    />
+  )
+
   return (
     <div className="as-pagina">
+     {finestra}
      <div className="as-archivio">
       {elenco.isPending && <InLettura />}
       {elenco.error && (
@@ -273,7 +297,7 @@ export function Archivio() {
             hidden={vista !== "carte"}
           >
             {vista === "carte" &&
-              (righe.length > 0 ? <CarteDellArchivio righe={righe} /> : <NonTrovato onTogli={cambia} />)}
+              (righe.length > 0 ? <CarteDellArchivio righe={righe} onApri={setAperta} /> : <NonTrovato onTogli={cambia} />)}
           </section>
           <section
             role="tabpanel"
@@ -282,7 +306,7 @@ export function Archivio() {
             hidden={vista !== "elenco"}
           >
             {vista === "elenco" &&
-              (righe.length > 0 ? <ElencoDellArchivio righe={righe} /> : <NonTrovato onTogli={cambia} />)}
+              (righe.length > 0 ? <ElencoDellArchivio righe={righe} onApri={setAperta} /> : <NonTrovato onTogli={cambia} />)}
           </section>
         </>
       )}

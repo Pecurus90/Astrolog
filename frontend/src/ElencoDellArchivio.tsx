@@ -1,5 +1,6 @@
 import { Costellazione, Filtri, Mosaico, Nome, NonSiSa, Tipo, oreDi, senzaTempo } from "./RigaDellArchivio"
 import type { components } from "./api/schema"
+import { gesto } from "./componenti/gesto"
 import { numero, t } from "./i18n"
 
 type Riga = components["schemas"]["ArchiveObject"]
@@ -14,7 +15,7 @@ type Riga = components["schemas"]["ArchiveObject"]
  * - **I numeri stanno in `as-tabella__num`**, incolonnati a destra: due righe si confrontano a
  *   occhio solo se le cifre stanno una sopra l'altra.
  */
-export function ElencoDellArchivio({ righe }: { righe: Riga[] }) {
+export function ElencoDellArchivio({ righe, onApri }: { righe: Riga[]; onApri: (key: string) => void }) {
   return (
     <div className="as-archivio__guscio">
       <table className="as-tabella as-archivio__tabella">
@@ -36,7 +37,7 @@ export function ElencoDellArchivio({ righe }: { righe: Riga[] }) {
         </thead>
         <tbody>
           {righe.map((riga) => (
-            <UnaRiga key={riga.key} riga={riga} />
+            <UnaRiga key={riga.key} riga={riga} onApri={onApri} />
           ))}
         </tbody>
       </table>
@@ -44,12 +45,15 @@ export function ElencoDellArchivio({ righe }: { righe: Riga[] }) {
   )
 }
 
-function UnaRiga({ riga }: { riga: Riga }) {
+function UnaRiga({ riga, onApri }: { riga: Riga; onApri: (key: string) => void }) {
   const ore = oreDi(riga.integration_s)
   return (
     <tr>
       <td>
-        <Nome riga={riga} inRiga />
+        {/* Il tocco sul nome apre la finestra dell'oggetto (tavola v76). */}
+        <a href="#" aria-haspopup="dialog" onClick={gesto(() => onApri(riga.key))}>
+          <Nome riga={riga} inRiga />
+        </a>
         {/* Una sola e' la regola e non si scrive: il segno dice quando sono di piu'. */}
         {riga.productions.length > 1 && (
           <span className="as-archivio__produzioni">

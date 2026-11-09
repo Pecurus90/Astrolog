@@ -76,3 +76,33 @@ Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nell
   solo un numero ambiguo (principio 1); quello che non ci sta salta, come sul desktop.
 - **Bottoni degli oggetti sotto la finestra dei frame.** Tavola: uno per gruppo anche se il gruppo
   e' uno (302). App: solo con piu' di un oggetto. Perche': un bottone solo porta dove si e' gia'.
+
+## Archivio -- La finestra dell'oggetto (passo 33, commit B, 9/11)
+
+- **Misure dei frame, FWHM e SNR in testa.** Tavola: MisureFrame tipo oggetto, gruppi le notti, e
+  le mediane in testa (Riepilogo 58, 165). App: assenti. Perche': arrivano col commit C (misure
+  per oggetto scritte da chi scrive, come quelle della notte).
+- **Mosaico, Riepilogo generale e Pannello N.** Tavola: linguette «mosaico» (116-118). App: nessuna
+  linguetta per un mosaico. Perche': l'API non restringe ancora a un pannello.
+- **Linguette delle produzioni.** Tavola: «2026 · Rifrattore 80/480 · Cima Ekar» (dati.js,
+  simulate una per anno). App: l'ottica, sotto camera e ore. Perche': una produzione e' ottica e
+  camera (`archivio.md`); anno e sito non la definiscono.
+- **In cielo, le righe sotto tipo e costellazione.** Tavola: «idrogeno ionizzato da stelle
+  giovani», «alta d'estate e d'autunno» (156). App: vuote. Perche': testi simulati, il catalogo
+  non li ha.
+- **Fuori catalogo, la costellazione.** Tavola: «si muove nel cielo» (157). App: niente sotto.
+  Perche': un oggetto fuori catalogo non per forza si muove (principio 1).
+- **Setup, «simulato» e l'avviso dell'eccentricita'.** Tavola: 35, 173. App: assenti, come nelle
+  Notti (sopra).
+- **Le notti, riga senza Luna.** Tavola: sempre la Luna (121, simulata). App: la cella vuota quando
+  la notte non sa la sua Luna; il cielo e' la frase corta delle Notti.
+- **Pagina intera con «← Archivio».** Tavola: `contenitore="pagina"` (Riepilogo.dc.html). App:
+  solo la finestra; sul telefono la finestra e' gia' a pagina intera.
+- **Elenco, cosa si tocca.** Tavola: la riga (DECISIONI 1634). App: il nome. Perche': la tabella
+  non ha la classe che stende il comando sulla riga; brief a Design.
+- **Dalla ricerca.** Tavola: la ricerca apre l'oggetto. App: porta ancora all'Archivio ristretto a
+  quella riga, senza aprire la finestra.
+- **↗ Progetti.** Assente: Progetti non e' ancora portata.
+- **Una Luna piena e mezza.** Tavola: «più di 1 Lune piene» da 1,5 a 2 Lune (132). App: «più di
+  una Luna piena». Lo stesso giorno da due siti: tavola non lo dice; app «il 18 maggio 2024 · 2
+  notti».

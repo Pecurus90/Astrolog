@@ -356,6 +356,28 @@ export function dataLunga(data: string): string {
   return maiuscola(scritta)
 }
 
+/** Il giorno col mese e l'anno: *27 settembre 2026*. */
+export function giornoMeseAnno(data: string): string {
+  return new Intl.DateTimeFormat(lingua, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(mezzanotteUtc(data))
+}
+
+/** Due notti diverse come estremi, il comune detto una volta: *16* e *27 settembre 2026*,
+ *  *30 aprile* e *2 maggio 2024*. Le parti a mano: l'ICU scrive *02 maggio* in un intervallo. */
+export function estremi(da: string, a: string): { da: string; a: string } {
+  const stessoAnno = da.slice(0, 4) === a.slice(0, 4)
+  const inizio = !stessoAnno
+    ? giornoMeseAnno(da)
+    : da.slice(0, 7) === a.slice(0, 7)
+      ? String(Number(da.slice(8, 10)))
+      : giornoDelMese(da)
+  return { da: inizio, a: giornoMeseAnno(a) }
+}
+
 /** Un mese col suo anno, da `YYYY-MM`: *settembre 2026*. */
 export function meseEAnno(mese: string): string {
   return new Intl.DateTimeFormat(lingua, { month: "long", year: "numeric", timeZone: "UTC" }).format(mezzanotteUtc(`${mese}-01`))

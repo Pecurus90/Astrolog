@@ -13,6 +13,7 @@ import {
   coordinataDa,
   coordinate,
   durata,
+  estremi,
   giorno,
   giornoDellaSettimana,
   notte,
@@ -266,5 +267,16 @@ describe("un valore con la sua unita'", () => {
   it("il percento sta attaccato al numero, le altre unita' staccate", () => {
     expect(valoreEUnita("40", "%")).toBe("40%")
     expect(valoreEUnita("12", "km/h")).toBe("12 km/h")
+  })
+})
+
+describe("due notti come estremi", () => {
+  it("il comune si dice una volta, e il giorno non prende lo zero davanti", () => {
+    expect(estremi("2026-09-16", "2026-09-27")).toEqual({ da: "16", a: "27 settembre 2026" })
+    expect(estremi("2024-04-30", "2024-05-02")).toEqual({ da: "30 aprile", a: "2 maggio 2024" })
+    expect(estremi("2023-12-30", "2024-01-02")).toEqual({
+      da: "30 dicembre 2023",
+      a: "2 gennaio 2024",
+    })
   })
 })

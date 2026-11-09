@@ -44,6 +44,13 @@ Dal porting di «Tutto della notte» (passo 33, 8/11), `componenti/`:
   basso a massa d'aria 2. Restano i numeri; i giudizi relativi al gruppo e al setup (SNR basso,
   fuoco, HFD alta, «stelle allungate» del Setup) arrivano al passo 40. Togliere dalla tavola o
   segnarli «dopo».
+- [da dare] Archivio, elenco (DECISIONI 1634): il tocco sulla riga apre la finestra dell'oggetto,
+  ma la tabella non ha una classe che stenda il comando sulla riga, come `as-carta-oggetto__apri`
+  sulla carta; oggi apre il nome. Fuori catalogo (Riepilogo 157): «si muove nel cielo» non vale
+  per ogni oggetto senza catalogo, toglierlo. Produzioni (dati.js): la linguetta e' ottica,
+  camera e ore, non anno e sito. Riepilogo, stati caricamento, errore e non trovato: nessuna x,
+  e sul telefono la finestra e' a pagina intera; testa del telefono con due siti dai nomi lunghi:
+  pillole e x vanno a capo.
 
 ## Date, da controllare alla consegna
 

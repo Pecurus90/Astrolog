@@ -417,3 +417,8 @@ una notte il cui meteo non e' ancora arrivato lo dice - step 33, sheet v76 repla
 una notte porta il giorno, il sito, gli oggetti, le ore e i frame - step 33, sheet v76 replaces the v29 register; now la notte piu' recente e' la protagonista
 una notte ripresa dice com'era il cielo, e quante ore sono state serene - step 33, ADR 0034: exposure hours replace clear hours; renamed una notte ripresa dice com'era il cielo
 i decimali si scrivono col punto, mai con la virgola - step 33, Marco 6/11/2026: decimal comma across the Italian app; renamed i decimali si scrivono con la virgola, mai col punto
+con piu' produzioni il nome apre il loro riepilogo: setup, ore, frame e filtri di ognuna - step 33, sheet v76: the card opens the object window, productions one at a time; replaced by con piu' produzioni le mostra una alla volta, e la scelta la chiede all'API
+una produzione sola non apre niente: il nome non e' un comando - step 33, sheet v76: every card opens the object window; replaced by il tocco sulla carta la apre
+il riepilogo si chiude con Esc, ricliccando il nome e toccando fuori - step 33, sheet v76: the productions panel is gone; the window closes with Esc in le frecce vanno all'oggetto prima e dopo
+sotto una carta dell'ultima colonna il riepilogo si allinea a destra, e non esce dalla pagina - step 33, sheet v76: the productions panel under the card is gone
+una produzione senza setup lo dice, invece di restare senza nome - step 33, sheet v76: replaced by the tab saying ottica non indicata in con piu' produzioni le mostra una alla volta

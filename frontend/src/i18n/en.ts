@@ -14,6 +14,7 @@ import { enLetture } from "./en-letture"
 import { enMeteo } from "./en-meteo"
 import { enMisure } from "./en-misure"
 import { enNotti } from "./en-notti"
+import { enOggetto } from "./en-oggetto"
 import { enSito } from "./en-sito"
 import { enSolver } from "./en-solver"
 import { enStanotte } from "./en-stanotte"
@@ -29,6 +30,7 @@ export const en = {
   ...enMisure,
   ...enAttrezzatura,
   ...enArchivio,
+  ...enOggetto,
   ...enGuscio,
   ...enSito,
   ...enSolver,

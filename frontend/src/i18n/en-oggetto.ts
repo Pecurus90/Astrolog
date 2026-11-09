@@ -1,0 +1,34 @@
+/**
+ * The texts of the **object window** (Archive): a translation, not a source. It is written in
+ * `it-oggetto.ts` and brought here, with the same keys and the same placeholders.
+ */
+export const enOggetto = {
+  "object.window": "Summary: {nome}",
+  "object.above": "object",
+  "object.outside": "not in the catalog",
+  "object.prev": "Previous object",
+  "object.next": "Next object",
+  "object.gone": "Object not found",
+  "object.gone.text":
+    "It is no longer in the archive: it may have been merged into another object.",
+  "object.period": "from {da} to {a} \u00B7 {n} nights",
+  "object.period.one": "on {data} \u00B7 one night",
+  "object.period.day": "on {data} \u00B7 {n} nights",
+  "object.period.sites": "{periodo}, {n} sites",
+  "object.untimed": "{frame} \u00B7 {n} without duration",
+  "object.productions": "productions",
+  "object.production.sub": "{camera} \u00B7 {ore}",
+  "object.sky": "In the sky",
+  "object.parsec": "about {n} parsecs",
+  "object.size": "{n}\u2032 across the sky, {luna}",
+  "object.moon.more": "more than {n} full Moons",
+  "object.moon.more.one": "more than one full Moon",
+  "object.moon.like": "like the full Moon",
+  "object.moon.less": "less than the full Moon",
+  "object.type.none": "Type not available",
+  "object.type.none.sub": "not in the catalog: a comet, for example",
+  "object.constellation.none": "Constellation not available",
+  "object.nights": "The nights",
+  "object.nights.sub": "the nights with {nome}",
+  "object.night.open": "Open the night of {data}",
+}

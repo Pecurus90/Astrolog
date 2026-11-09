@@ -1,24 +1,12 @@
-import { type ReactNode, useId, useLayoutEffect, useRef, useState } from "react"
+import type { ReactNode } from "react"
 
-import { BarraDeiFiltri } from "./FiltriUsati"
 import { PannelliDelMosaico } from "./PannelliDelMosaico"
-import { useRiquadro } from "./riquadro"
-import {
-  Costellazione,
-  Filtri,
-  Mosaico,
-  Nome,
-  NonSiSa,
-  Tipo,
-  nomeDi,
-  oreDi,
-  senzaTempo,
-} from "./RigaDellArchivio"
+import { Costellazione, Filtri, Mosaico, Nome, NonSiSa, Tipo, nomeDi, oreDi, senzaTempo } from "./RigaDellArchivio"
 import type { components } from "./api/schema"
+import { gesto } from "./componenti/gesto"
 import { numero, t } from "./i18n"
 
 type Riga = components["schemas"]["ArchiveObject"]
-type Produzione = components["schemas"]["ArchiveProduction"]
 
 /**
  * L'Archivio **a carte** (disegno v31, la carta "Di lato"): il caso "guardo cosa ho".
@@ -27,125 +15,30 @@ type Produzione = components["schemas"]["ArchiveProduction"]
  *   suo stato, non un guasto, e chi ascolta non lo sente. Una produzione e' la riga ripresa con
  *   un'ottica e una camera (`docs/domini/archivio.md`), e le manda la rotta.
  * - **La griglia la fa il foglio**, non questa pagina.
- * - **Con piu' produzioni il nome apre il loro riepilogo**, sotto la carta: corredo, ore, frame e
- *   filtri di ognuna. Le voci non portano da nessuna parte finche' il modale non c'e': e' una
- *   regione da leggere, non un menu. Una produzione sola non apre niente.
+ * - **Il tocco sulla carta apre la finestra dell'oggetto** (tavola v76), con le produzioni una
+ *   alla volta: il nome e' il comando, e il foglio ne stende l'area su tutta la carta.
  */
-export function CarteDellArchivio({ righe }: { righe: Riga[] }) {
+export function CarteDellArchivio({ righe, onApri }: { righe: Riga[]; onApri: (key: string) => void }) {
   return (
     <ul className="as-archivio__carte" aria-label={t("archive.title")}>
       {righe.map((riga) => (
-        <PostoDellaCarta key={riga.key} riga={riga} />
+        <li key={riga.key}>
+          <UnaCarta
+            riga={riga}
+            nome={
+              <a
+                className="as-carta-oggetto__apri"
+                href="#"
+                aria-haspopup="dialog"
+                onClick={gesto(() => onApri(riga.key))}
+              >
+                <Nome riga={riga} />
+              </a>
+            }
+          />
+        </li>
       ))}
     </ul>
-  )
-}
-
-/** La carta e, se aperto, il riepilogo delle sue produzioni: il foglio lo appende al `li`. */
-function PostoDellaCarta({ riga }: { riga: Riga }) {
-  const [aperto, setAperto] = useState(false)
-  const posto = useRef<HTMLLIElement>(null)
-  const comando = useRef<HTMLAnchorElement>(null)
-  const riepilogo = useRef<HTMLDivElement>(null)
-  const [aDestra, setADestra] = useState(false)
-  const id = useId()
-  const apribile = riga.productions.length > 1
-
-  useRiquadro(aperto, [posto], (esc) => {
-    setAperto(false)
-    if (esc) comando.current?.focus()
-  })
-
-  // Il riepilogo e' piu' largo della carta: se esce dalla pagina si allinea al bordo destro.
-  useLayoutEffect(() => {
-    const el = riepilogo.current
-    if (!aperto || !el) return
-    const pagina = el.closest(".as-telaio__corpo") ?? document.documentElement
-    const dove = el.getBoundingClientRect()
-    const limite = pagina.getBoundingClientRect()
-    // Il bordo utile, non quello esterno: sotto la barra di scorrimento e' gia' fuori.
-    setADestra(dove.right > limite.left + pagina.clientLeft + pagina.clientWidth)
-    // Scorre solo il corpo della pagina: `scrollIntoView` muoverebbe anche il telaio.
-    if (dove.bottom > limite.bottom) pagina.scrollBy?.({ top: dove.bottom - limite.bottom })
-    return () => setADestra(false)
-  }, [aperto])
-
-  return (
-    <li ref={posto}>
-      <UnaCarta
-        riga={riga}
-        nome={
-          apribile ? (
-            // Un comando, non un collegamento: il foglio veste questa classe su un'ancora.
-            <a
-              ref={comando}
-              className="as-carta-oggetto__apri"
-              href="#"
-              role="button"
-              aria-expanded={aperto}
-              aria-controls={aperto ? id : undefined}
-              onClick={(e) => {
-                e.preventDefault()
-                setAperto(!aperto)
-              }}
-              onKeyDown={(e) => {
-                if (e.key !== " ") return
-                e.preventDefault()
-                setAperto(!aperto)
-              }}
-            >
-              <Nome riga={riga} />
-            </a>
-          ) : (
-            <Nome riga={riga} />
-          )
-        }
-      />
-      {apribile && aperto && (
-        <div
-          ref={riepilogo}
-          className="as-produzioni"
-          style={aDestra ? { left: "auto", right: 0 } : undefined}
-          id={id}
-          role="region"
-          aria-label={t("archive.productions.of", { nome: nomeDi(riga) })}
-        >
-          <p className="as-produzioni__capo">{t("archive.productions", { n: numero(riga.productions.length) })}</p>
-          <ul className="as-produzioni__voci">
-            {riga.productions.map((p, i) => (
-              <li key={i}>
-                <UnaProduzione produzione={p} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </li>
-  )
-}
-
-/** Una produzione nel riepilogo: il corredo, quanto, e con che filtri. Cio' che manca lo dice. */
-function UnaProduzione({ produzione: p }: { produzione: Produzione }) {
-  const ore = oreDi(p.integration_s)
-  return (
-    <div className="as-produzioni__voce">
-      <span className="as-produzioni__corredo">
-        <b>{p.optics ?? t("gear.rig.noOptics")}</b>
-        <span>{p.camera ?? t("gear.rig.noCamera")}</span>
-      </span>
-      <span className="as-produzioni__cifre">
-        <b>{ore ?? senzaTempo(p.untimed)}</b>
-        <span>{t("archive.frames", { n: numero(p.frames) })}</span>
-        {ore !== null && p.untimed > 0 && <span>{senzaTempo(p.untimed)}</span>}
-      </span>
-      <div className="as-produzioni__filtri">
-        {p.filters.length > 0 ? (
-          <BarraDeiFiltri filtri={p.filters} perFrame={p.integration_s === 0} />
-        ) : (
-          <NonSiSa>{t("archive.unknown.filters")}</NonSiSa>
-        )}
-      </div>
-    </div>
   )
 }
 
@@ -191,11 +84,11 @@ function UnaCarta({ riga, nome }: { riga: Riga; nome: ReactNode }) {
         <p className="as-carta-oggetto__ore">
           <span className="as-carta-oggetto__pezzo">
             <b>{ore ?? senzaTempo(riga.untimed)}</b>
-            {"\u00a0\u00b7"}
+            {"\u00A0\u00B7"}
           </span>{" "}
           <span className="as-carta-oggetto__pezzo">
             {t("archive.frames", { n: numero(riga.frames) })}
-            {ore !== null && riga.untimed > 0 && "\u00a0\u00b7"}
+            {ore !== null && riga.untimed > 0 && "\u00A0\u00B7"}
           </span>
           {ore !== null && riga.untimed > 0 && (
             <>

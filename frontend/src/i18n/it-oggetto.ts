@@ -1,0 +1,34 @@
+/**
+ * I testi della **finestra dell'oggetto**, dalla tavola v76 (`componenti/Riepilogo.dc.html`, tipo
+ * `oggetto`). I pezzi comuni con la notte (setup, tessere del catalogo) stanno in `it-misure.ts`.
+ */
+export const itOggetto = {
+  "object.window": "Riepilogo: {nome}",
+  "object.above": "oggetto",
+  "object.outside": "fuori catalogo",
+  "object.prev": "L\u2019oggetto prima",
+  "object.next": "L\u2019oggetto dopo",
+  "object.gone": "Oggetto non trovato",
+  "object.gone.text":
+    "Nell\u2019archivio non c\u2019\u00E8 pi\u00F9: forse \u00E8 stato unito a un altro oggetto.",
+  "object.period": "dal {da} al {a} \u00B7 {n} notti",
+  "object.period.one": "il {data} \u00B7 una notte",
+  "object.period.day": "il {data} \u00B7 {n} notti",
+  "object.period.sites": "{periodo}, {n} siti",
+  "object.untimed": "{frame} \u00B7 {n} senza durata",
+  "object.productions": "produzioni",
+  "object.production.sub": "{camera} \u00B7 {ore}",
+  "object.sky": "In cielo",
+  "object.parsec": "circa {n} parsec",
+  "object.size": "{n}\u2032 in cielo, {luna}",
+  "object.moon.more": "pi\u00F9 di {n} Lune piene",
+  "object.moon.more.one": "pi\u00F9 di una Luna piena",
+  "object.moon.like": "come la Luna piena",
+  "object.moon.less": "meno della Luna piena",
+  "object.type.none": "Tipo non disponibile",
+  "object.type.none.sub": "fuori catalogo: per esempio una cometa",
+  "object.constellation.none": "Costellazione non disponibile",
+  "object.nights": "Le notti",
+  "object.nights.sub": "le notti con {nome}",
+  "object.night.open": "Apri la notte di {data}",
+}

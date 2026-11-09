@@ -11,6 +11,7 @@ import { itLetture } from "./it-letture"
 import { itMeteo } from "./it-meteo"
 import { itMisure } from "./it-misure"
 import { itNotti } from "./it-notti"
+import { itOggetto } from "./it-oggetto"
 import { itSito } from "./it-sito"
 import { itSolver } from "./it-solver"
 import { itStanotte } from "./it-stanotte"
@@ -24,6 +25,7 @@ export const it = {
   ...itLetture,
   ...itNotti,
   ...itMisure,
+  ...itOggetto,
   ...itMeteo,
   ...itAttrezzatura,
   ...itArchivio,
