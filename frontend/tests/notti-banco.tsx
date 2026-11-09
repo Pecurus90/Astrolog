@@ -216,14 +216,18 @@ export async function apri(mappa: Record<string, Voce>, indirizzo = "/notti") {
   rispondi(mappa)
   vi.resetModules()
   const { Notti } = await import("../src/Notti")
+  const { FinestraDellOggetto } = await import("../src/FinestraDellOggetto")
   const dati = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={dati}>
       <MemoryRouter initialEntries={[indirizzo]}>
-        <Routes>
-          <Route path="/notti" element={<Notti />} />
-          <Route path="*" element={<Altrove />} />
-        </Routes>
+        {/* the shell holds the object window: the Nights open it from their objects */}
+        <FinestraDellOggetto>
+          <Routes>
+            <Route path="/notti" element={<Notti />} />
+            <Route path="*" element={<Altrove />} />
+          </Routes>
+        </FinestraDellOggetto>
       </MemoryRouter>
     </QueryClientProvider>,
   )

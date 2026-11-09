@@ -422,3 +422,4 @@ una produzione sola non apre niente: il nome non e' un comando - step 33, sheet 
 il riepilogo si chiude con Esc, ricliccando il nome e toccando fuori - step 33, sheet v76: the productions panel is gone; the window closes with Esc in le frecce vanno all'oggetto prima e dopo
 sotto una carta dell'ultima colonna il riepilogo si allinea a destra, e non esce dalla pagina - step 33, sheet v76: the productions panel under the card is gone
 una produzione senza setup lo dice, invece di restare senza nome - step 33, sheet v76: replaced by the tab saying ottica non indicata in con piu' produzioni le mostra una alla volta
+le frecce scelgono e Invio apre: un oggetto apre l'Archivio ristretto a lui - step 33, Marco 9/11: the search opens the object window over the page; replaced by le frecce scelgono e Invio apre: un oggetto apre la sua finestra sulla pagina dove sei

@@ -7,7 +7,9 @@
  */
 import { useQuery } from "@tanstack/react-query"
 
+import { useApriOggetto } from "./apriOggetto"
 import { api } from "./api/client"
+import { gesto } from "./componenti/gesto"
 import type { components } from "./api/schema"
 import { Avviso } from "./componenti/Avviso"
 import { Carta } from "./componenti/Carta"
@@ -131,7 +133,7 @@ export function TuttoDellaNotte({
           onDopo={onDopo}
         />
         <Setups setups={d.rigs} formato={formato} />
-        <Oggetti d={d} formato={formato} />
+        <Oggetti d={d} formato={formato} onChiudi={onChiudi} />
         <div className="al-c-riepilogo__blocco-4">
           {mis.data && <MisureDeiFrame key={id} misure={mis.data} formato={formato} />}
           {mis.isError && !mis.data && (
@@ -246,8 +248,17 @@ export function estensione(f: components["schemas"]["ObjectFacts"]): string {
     : t("window.fact.extent.none")
 }
 
-function Oggetti({ d, formato }: { d: Dettaglio; formato: Formato }) {
+function Oggetti({
+  d,
+  formato,
+  onChiudi,
+}: {
+  d: Dettaglio
+  formato: Formato
+  onChiudi: () => void
+}) {
   const fatti = new Map(d.objects.map((f) => [f.key, f]))
+  const apriOggetto = useApriOggetto()
   return (
     <Carta
       formato={formato}
@@ -283,7 +294,21 @@ function Oggetti({ d, formato }: { d: Dettaglio; formato: Formato }) {
             <span key={o.key} className="al-c-riepilogo__colonna-10">
               <span className="al-c-riepilogo__riga-11">
                 <span className="al-c-riepilogo__colonna-11">
-                  <b className="al-c-riepilogo__testo-17">{o.name ?? o.key}</b>
+                  {apriOggetto ? (
+                    // one window at a time: two would close together on the same Esc
+                    <a
+                      href="#"
+                      aria-haspopup="dialog"
+                      onClick={gesto(() => {
+                        onChiudi()
+                        apriOggetto(o.key, o.name ?? o.key)
+                      })}
+                    >
+                      <b className="al-c-riepilogo__testo-17">{o.name ?? o.key}</b>
+                    </a>
+                  ) : (
+                    <b className="al-c-riepilogo__testo-17">{o.name ?? o.key}</b>
+                  )}
                   {nome && <span className="al-c-riepilogo__testo-12">{nome}</span>}
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>

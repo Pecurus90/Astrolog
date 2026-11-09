@@ -98,8 +98,9 @@ pagina non ripete il suo titolo (disegno v18).
   comuni -- mesi in italiano e inglese, `5/6` letto nei due versi, perche' la rotta non sa dove
   hai imparato a scrivere le date -- o per l'oggetto ripreso, pezzi e siti per nome. Una voce
   dice **chi e'** (chiave, id, genere), non l'indirizzo: le pagine e i loro parametri stanno nel
-  frontend, e una seconda casa diverge. Un oggetto apre l'Archivio con `?key=`: con `?q=M 1`
-  uscirebbero anche M 10 e M 101. Il campo c'e' (`Ricerca.tsx`, disegno v31): chiede dopo 250 ms
+  frontend, e una seconda casa diverge. Un oggetto apre la sua **finestra** sopra la pagina dove
+  sei (`archivio.md`, «La finestra dell'oggetto»); l'Archivio ristretto a lui con `?key=` resta
+  l'indirizzo che lo mostra (con `?q=M 1` uscirebbero anche M 10 e M 101). Il campo c'e' (`Ricerca.tsx`, disegno v31): chiede dopo 250 ms
   dall'ultima lettera, mostra solo le voci del testo che c'e' scritto (nell'attesa dice "cerco":
   le voci di prima aprirebbero un'altra ricerca), e il fuoco resta nel campo
   (le frecce spostano `aria-activedescendant`). `combobox` sta sull'input e non sull'involucro

@@ -249,7 +249,12 @@ dicono. Un **mosaico** ha le linguette dei pannelli al posto delle produzioni (R
 tutto, misure comprese (scritte anche per pannello, di tutte le produzioni), e il catalogo e'
 dell'oggetto del pannello se ne ha uno solo in catalogo, se no del mosaico. Le notti di un
 mosaico sono quelle dei suoi frame; l'oggetto di un suo pannello tiene solo le notti in cui e'
-stato ripreso da solo. Le notti portano alla loro pagina (`/notti?notte=id`). Cosa fa diverso
+stato ripreso da solo. Le notti portano alla loro pagina (`/notti?notte=id`). La stessa finestra
+si apre, **senza rotta d'oggetto** (Marco, 9/11/2026), anche dalla **Ricerca** e dal nome di un
+oggetto in «Gli oggetti» della finestra della notte, sopra la pagina dove sei
+(`FinestraDellOggetto.tsx`, tenuta dal telaio); dalla notte prende il posto della sua finestra,
+perche' due finestre insieme si chiuderebbero insieme con lo stesso Esc. Le frecce ci sono spente:
+l'ordine e' quello di una pagina dell'Archivio. Cambiare pagina la chiude. Cosa fa diverso
 dalla tavola sta in `handoff/differenze-dalle-tavole.md`.
 
 ## Cosa NON fa

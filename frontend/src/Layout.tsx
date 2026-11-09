@@ -2,6 +2,7 @@ import { type KeyboardEvent, type ReactNode, type UIEvent, useEffect, useRef, us
 import { Link, useLocation } from "react-router"
 
 import { Bottone } from "./Bottone"
+import { FinestraDellOggetto } from "./FinestraDellOggetto"
 import { Icon, IconSprite } from "./Icons"
 import { Ricerca } from "./Ricerca"
 import { AvvisiDellaScansione, Scansiona, ScansioneNelFoglio } from "./Scansiona"
@@ -75,6 +76,8 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="as-telaio-misura">
       <IconSprite />
+      {/* object window outside the frame: its Esc must not close Stanotte too */}
+      <FinestraDellOggetto>
       {/* Esc vale solo col fuoco dentro il telaio, come nella tavola. */}
       <div
         className="as-telaio"
@@ -191,6 +194,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <p className="as-foglio__piede">{t("app.title")}</p>
         </div>
       </div>
+      </FinestraDellOggetto>
     </div>
   )
 }

@@ -115,8 +115,9 @@ Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nell
   solo la finestra; sul telefono la finestra e' gia' a pagina intera.
 - **Elenco, cosa si tocca.** Tavola: la riga (DECISIONI 1634). App: il nome. Perche': la tabella
   non ha la classe che stende il comando sulla riga; brief a Design.
-- **Dalla ricerca.** Tavola: la ricerca apre l'oggetto. App: porta ancora all'Archivio ristretto a
-  quella riga, senza aprire la finestra.
+- **Dalla notte.** Tavola: gli oggetti della notte non aprono niente (Riepilogo.dc.html 53). App:
+  il nome apre la finestra dell'oggetto al posto di quella della notte. Perche': lista fissa di
+  Marco, 9/11 (si apre da Archivio, Gli oggetti delle Notti, Ricerca).
 - **↗ Progetti.** Assente: Progetti non e' ancora portata.
 - **Una Luna piena e mezza.** Tavola: «più di 1 Lune piene» da 1,5 a 2 Lune (132). App: «più di
   una Luna piena». Lo stesso giorno da due siti: tavola non lo dice; app «il 18 maggio 2024 · 2

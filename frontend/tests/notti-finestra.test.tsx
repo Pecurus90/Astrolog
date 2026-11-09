@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { t } from "../src/i18n"
 import { distanza, estensione } from "../src/TuttoDellaNotte"
 import { type Voce, pulisci } from "./banco"
-import { DICIOTTO, apri, notte, pagina, rotte } from "./notti-banco"
+import { DICIOTTO, apri, chieste, notte, pagina, rotte } from "./notti-banco"
 
 afterEach(pulisci)
 
@@ -205,6 +205,16 @@ describe("la finestra della notte", () => {
     const confronto = await within(d).findByRole("region", { name: "Gli oggetti a confronto" })
     fireEvent.click(within(confronto).getByText("M 51"))
     expect(within(d).getByRole("button", { name: "solo M 51 ×" })).toBeTruthy()
+  })
+
+  it("il nome di un oggetto apre la sua finestra al posto di quella della notte", async () => {
+    const d = await finestra()
+    const ogg = await within(d).findByRole("region", { name: "Gli oggetti" })
+    fireEvent.click(within(ogg).getByRole("link", { name: "M 51" }))
+    expect(await screen.findByRole("dialog", { name: "Riepilogo: M 51" })).toBeTruthy()
+    // una finestra sola: due insieme chiuderebbero insieme con lo stesso Esc
+    expect(screen.queryByRole("dialog", { name: "Tutto della notte" })).toBeNull()
+    expect(chieste("/api/v1/objects/m-51").length).toBeGreaterThan(0)
   })
 
   it("Esc la chiude", async () => {

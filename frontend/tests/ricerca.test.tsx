@@ -118,9 +118,10 @@ describe("la ricerca nella barra", () => {
     expect(screen.queryByRole("listbox")).toBeNull()
   })
 
-  it("le frecce scelgono e Invio apre: un oggetto apre l'Archivio ristretto a lui", async () => {
+  it("le frecce scelgono e Invio apre: un oggetto apre la sua finestra sulla pagina dove sei", async () => {
     conRicerca(TROVATI)
     const campo = await cerca("m31")
+    const qui = window.location.pathname + window.location.search
     const menu = await screen.findByRole("listbox")
     const voci = within(menu).getAllByRole("option")
     // la prima voce e' gia' scelta: Invio subito apre il primo trovato
@@ -135,9 +136,25 @@ describe("la ricerca nella barra", () => {
     expect(voci[voci.length - 1]?.getAttribute("aria-selected")).toBe("true")
     fireEvent.keyDown(campo, { key: "ArrowDown" })
     fireEvent.keyDown(campo, { key: "Enter" })
-    await waitFor(() => expect(window.location.pathname + window.location.search).toBe("/archivio?key=m-31"))
+    const finestra = await screen.findByRole("dialog", { name: "Riepilogo: M 31" })
+    // nessuna rotta d'oggetto: la pagina resta quella di prima
+    expect(window.location.pathname + window.location.search).toBe(qui)
     // aperta la voce, la ricerca si chiude
     expect(screen.queryByRole("combobox", { name: /cerca nell'archivio/i })).toBeNull()
+    expect(chiamate().some((u) => u.includes("/api/v1/objects/m-31"))).toBe(true)
+    // Esc chiude la finestra
+    fireEvent.keyDown(finestra, { key: "Escape" })
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("cambiata la pagina, la finestra dell'oggetto si chiude", async () => {
+    conRicerca(TROVATI)
+    await cerca("m31")
+    fireEvent.click(await screen.findByRole("option", { name: /Velo intero/ }))
+    expect(await screen.findByRole("dialog", { name: "Riepilogo: Velo intero" })).toBeTruthy()
+    // la pagina cambia sotto la finestra: una finestra rimasta aperta coprirebbe la pagina chiesta
+    fireEvent.click(await screen.findByRole("link", { name: /^archivio$/i }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 
   it.each([

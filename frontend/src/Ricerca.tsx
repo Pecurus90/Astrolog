@@ -5,6 +5,7 @@ import { useNavigate } from "react-router"
 import { Bottone } from "./Bottone"
 import { CampoDiRicerca, Cerco } from "./CampoDiRicerca"
 import { Icon } from "./Icons"
+import { useApriOggetto } from "./apriOggetto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { type Chiave, notte, numero, ore, t } from "./i18n"
@@ -12,8 +13,15 @@ import { type Chiave, notte, numero, ore, t } from "./i18n"
 type Trovati = components["schemas"]["SearchResult"]
 type Pezzo = components["schemas"]["FoundPiece"]
 
-/** Una voce del menu, gia' pronta: cosa dice e quale pagina apre. */
-type Voce = { a: string; nome: ReactNode; accanto: string | null; dice: string; non?: boolean }
+/** Una voce del menu, gia' pronta: cosa dice e quale pagina apre; un oggetto apre la sua finestra. */
+type Voce = {
+  a: string
+  nome: ReactNode
+  accanto: string | null
+  dice: string
+  non?: boolean
+  oggetto?: { chiave: string; nome: string }
+}
 type Gruppo = { titolo: Chiave; voci: Voce[]; totale: number }
 
 /** Quanto si aspetta dopo l'ultima lettera prima di chiedere: una richiesta per parola, non per tasto. */
@@ -34,6 +42,7 @@ const MENU = "trova"
  */
 export function Ricerca({ aperta, onAperta }: { aperta: boolean; onAperta: (aperta: boolean) => void }) {
   const vai = useNavigate()
+  const apriOggetto = useApriOggetto()
   const [testo, setTesto] = useState("")
   const [chiesto, setChiesto] = useState("")
   const [scelta, setScelta] = useState(0)
@@ -83,7 +92,8 @@ export function Ricerca({ aperta, onAperta }: { aperta: boolean; onAperta: (aper
   }
   function apri(voce: Voce) {
     chiudi(false)
-    void vai(voce.a)
+    if (voce.oggetto && apriOggetto) apriOggetto(voce.oggetto.chiave, voce.oggetto.nome)
+    else void vai(voce.a)
   }
 
   if (!aperta) {
@@ -237,7 +247,9 @@ function gruppiDi(trovati: Trovati): Gruppo[] {
       titolo: "search.group.objects",
       totale: trovati.objects.total,
       voci: trovati.objects.items.map((o) => ({
+        // outside the frame, no window: the Archive narrowed to it
         a: `/archivio?key=${encodeURIComponent(o.key)}`,
+        oggetto: { chiave: o.key, nome: o.name ?? o.key },
         // un mosaico porta il nome che gli hai dato tu: non e' una sigla di catalogo
         nome: o.panels === null ? <span className="as-nome-oggetto">{o.name ?? o.key}</span> : <b>{o.name ?? o.key}</b>,
         accanto: o.common_name,
