@@ -14,6 +14,7 @@ parole in [`glossario.md`](glossario.md).
 |---|---|
 | Ogni mio light viene misurato una volta, da uno dei suoi file, e la misura resta | `test_a_light_is_measured_once_and_written`, `test_only_lights_are_measured`, `test_the_plain_file_is_read_before_its_fpack_copy` (`backend/tests/test_pipeline_measure.py`) |
 | L'HFD e' il diametro che contiene meta' della luce della stella, anche con le ali di una stella vera | `test_the_hfd_of_gaussian_stars_is_the_diameter_holding_half_the_flux`, `test_the_hfd_of_moffat_stars_holds_their_wings`, `test_the_truth_is_the_analytic_hfd_once_the_pixel_is_small` (`backend/tests/test_pipeline_stars.py`) |
+| Ogni misura si chiama col nome tecnico inglese dei programmi (PixInsight, Siril, ASTAP, N.I.N.A.), uguale in ogni lingua: niente traduzioni, anche la documentazione italiana di Siril le lascia in inglese (Marco, 9/11/2026) <!-- software-ok --> | `le altre misure hanno il nome tecnico dei programmi, anche quelle che la tavola non nomina` (`frontend/tests/notti-finestra.test.tsx`) |
 | Fondo cielo e rumore sono quelli del cielo, non delle stelle | `test_background_and_noise_are_the_sky_and_its_spread` |
 | Le stelle si contano una volta; i pixel caldi di un light non calibrato non sono stelle | `test_every_star_is_counted_once`, `test_hot_pixels_are_not_stars` |
 | Le stelle sono quelle che conta Image Analysis: una stella debole, una macchia di nebulosa larga, una sorgente multipla o un nodo su una nebulosa non contano (Marco, 27/10 e 30/10/2026) <!-- software-ok --> | `test_two_peaks_in_one_structure_are_no_star`, `test_a_maximum_is_one_over_the_whole_5x5_not_only_its_structure`, `test_a_saturated_star_with_a_ragged_top_is_one_star`, `test_the_dispersion_that_counts_is_the_local_one`, `test_a_knot_on_a_nebula_is_measured_over_the_nebula`, `test_a_wide_faint_star_is_one_star_not_a_cluster_of_noise_peaks`, `test_a_star_with_no_free_sky_around_falls_back_on_the_frame_noise`, `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
@@ -168,8 +169,7 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
     eccentricita' tacciono (le righe vere arrivano qui di rado: il rilevatore le scarta).
   - **Direzione** solo da eccentricita' 0,4 e se le stelle sono d'accordo: media assiale degli
     angoli (raddoppiati sul cerchio, Mardia 1972), se Rayleigh rifiuta l'uniforme al 5% (Zar,
-    cap. 27; prima lunghezza 0,5, nostra); coma e tilt allungano in raggiera: la direzione tace. Si scrive sui pixel e girata col cielo (sotto,
-    **Col cielo**).
+    cap. 27; prima lunghezza 0,5, nostra); coma e tilt allungano in raggiera: la direzione tace. Si scrive sui pixel e girata col cielo (sotto, **Col cielo**).
   - **Colori**: sull'intensita' dopo VNG, come WBPP; VNG allarga le stelle piccole, come le
     vede Image Analysis dopo il Debayer: FWHM 3,5 px +4%, 1,8 px +28% (l'HFD +4%).
 - **PSF SNR** (`pipeline/field.py`, ADR 0022 punto 5): ImageWeighting di PixInsight, eq. 7 e <!-- software-ok -->

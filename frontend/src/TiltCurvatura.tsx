@@ -13,6 +13,7 @@ import {
   type Scelta,
   filtriDi,
   insieme,
+  nomeDi,
   scritto,
   statistica,
   tintaDi,
@@ -198,14 +199,14 @@ export function TiltCurvatura({ misure, scelta }: { misure: Misure; scelta: Scel
             <Disegno s={grande} W={300} H={200} grande />
             <div className="al-c-misure-frame__griglia-1">
               <div className="al-c-misure-frame__colonna-17">
-                <span className="al-c-misure-frame__testo-9">{t("sensor.tilt")}</span>
+                <span className="al-c-misure-frame__testo-9">{nomeDi("tilt")}</span>
                 <span className="al-c-misure-frame__testo-19">{grande.tilt}</span>
                 <span className="al-c-misure-frame__riga-37">
                   <Giudizio g={grande.giudizio} />
                 </span>
               </div>
               <div className="al-c-misure-frame__colonna-17">
-                <span className="al-c-misure-frame__testo-9">{t("sensor.curvature")}</span>
+                <span className="al-c-misure-frame__testo-9">{nomeDi("curvature")}</span>
                 <span className="al-c-misure-frame__testo-19">{grande.curvatura}</span>
               </div>
             </div>
@@ -229,7 +230,7 @@ export function TiltCurvatura({ misure, scelta }: { misure: Misure; scelta: Scel
                   </span>
                   <Disegno s={s} W={150} H={100} grande={false} />
                   <span className="al-c-misure-frame__testo-20">
-                    {t("sensor.small", { t: s.tilt, k: s.curvatura })}
+                    {`${nomeDi("tilt")} ${s.tilt} \u00B7 ${nomeDi("curvature")} ${s.curvatura}`}
                   </span>
                   <span className="al-c-misure-frame__riga-37">
                     <Giudizio g={s.giudizio} />

@@ -27,6 +27,17 @@ const FORMATI: Record<string, (v: number) => string> = {
   saturated: intero,
   snr: intero,
   psf_count: intero,
+  kept: intero,
+  shape_stars: intero,
+  trails: intero,
+  calibration_stars: intero,
+  psf_snr: intero,
+  psf_residual_sigma: (v) => decimali(v, 3),
+  ceiling_adu: (v) => `${intero(v)} ADU`,
+  sky_adu: (v) => `${intero(v)} ADU`,
+  angle_deg: gradi,
+  angle_pa_deg: gradi,
+  gradient_angle_deg: gradi,
   eccentricity: (v) => decimali(v, 2),
   eccentricity_sigma: (v) => decimali(v, 2),
   elongation_coherence: (v) => decimali(v, 2),
@@ -75,99 +86,106 @@ export function scritto(chiave: string, v: number | null | undefined): string {
 /** Una tessera: il suo nome, la misura che la regge e quella in pixel quando c'e' la scala. */
 export interface Tessera {
   id: string
-  nome: Chiave
+  nome: string
   chiave: string
   px?: string
 }
 
-// Le dodici tessere, nell'ordine della tavola (`MET`); la curvatura dice anche i secondi d'arco.
+// Names: the reference programs' technical terms, untranslated (misure.md).
 export const TESSERE: Tessera[] = [
-  { id: "fwhm", nome: "measure.fwhm", chiave: "fwhm_arcsec", px: "fwhm_px" },
-  { id: "hfd", nome: "measure.hfd", chiave: "hfd_arcsec", px: "hfd_px" },
-  { id: "stars", nome: "measure.stars", chiave: "stars" },
-  { id: "eccentricity", nome: "measure.eccentricity", chiave: "eccentricity" },
-  { id: "snr", nome: "measure.snr", chiave: "snr" },
-  { id: "background", nome: "measure.background", chiave: "background_adu" },
-  { id: "noise", nome: "measure.noise", chiave: "noise_adu" },
-  { id: "gradient", nome: "measure.gradient", chiave: "gradient_noise" },
-  { id: "tilt", nome: "measure.tilt", chiave: "hfd_tilt_pct" },
-  { id: "curvature", nome: "measure.curvature", chiave: "off_axis_px" },
-  { id: "sqm", nome: "measure.sqm", chiave: "sqm" },
-  { id: "airmass", nome: "measure.airmass", chiave: "airmass" },
+  { id: "fwhm", nome: "FWHM", chiave: "fwhm_arcsec", px: "fwhm_px" },
+  { id: "hfd", nome: "HFD", chiave: "hfd_arcsec", px: "hfd_px" },
+  { id: "stars", nome: "Stars", chiave: "stars" },
+  { id: "eccentricity", nome: "Eccentricity", chiave: "eccentricity" },
+  { id: "snr", nome: "SNR", chiave: "snr" },
+  { id: "background", nome: "Background", chiave: "background_adu" },
+  { id: "noise", nome: "Noise", chiave: "noise_adu" },
+  { id: "gradient", nome: "Gradient", chiave: "gradient_noise" },
+  { id: "tilt", nome: "Tilt", chiave: "hfd_tilt_pct" },
+  { id: "curvature", nome: "Curvature", chiave: "off_axis_px" },
+  { id: "sqm", nome: "SQM", chiave: "sqm" },
+  { id: "airmass", nome: "Airmass", chiave: "airmass" },
 ]
 
 // Le misure che dipendono da camera, guadagno e posa (tavola, `perF`, `mixPo`).
 export const DAL_SETUP = new Set(["background_adu", "noise_adu"])
 
-/** Le altre misure, a gruppi come la tavola (`AMG`); accanto il nome che la tavola cita dal
- *  programma di riferimento, nome proprio che non si traduce. */
-export const ALTRE: { gruppo: Chiave; voci: { chiave: string; nome: Chiave; pi?: string }[] }[] = [
+/** Le altre misure, a gruppi come la tavola (`AMG`), coi nomi tecnici come le tessere. */
+export const ALTRE: { gruppo: Chiave; voci: { chiave: string; nome: string }[] }[] = [
   {
     gruppo: "measure.group.stars_shape",
     voci: [
-      { chiave: "psf_residual", nome: "measure.psf_residual", pi: "PSFResidual" },
-      { chiave: "fwhm_sigma_px", nome: "measure.fwhm_sigma", pi: "FWHM Sigma" },
-      {
-        chiave: "eccentricity_sigma",
-        nome: "measure.eccentricity_sigma",
-        pi: "Eccentricity Sigma",
-      },
-      { chiave: "elongation_angle_deg", nome: "measure.elongation_angle" },
-      { chiave: "elongation_coherence", nome: "measure.elongation_coherence" },
-      { chiave: "saturated", nome: "measure.saturated" },
+      { chiave: "kept", nome: "HFD Stars" },
+      { chiave: "shape_stars", nome: "Shape Stars" },
+      { chiave: "psf_residual", nome: "PSF Residual" },
+      { chiave: "psf_residual_sigma", nome: "PSF Residual Sigma" },
+      { chiave: "fwhm_sigma_px", nome: "FWHM Sigma" },
+      { chiave: "eccentricity_sigma", nome: "Eccentricity Sigma" },
+      { chiave: "angle_deg", nome: "Angle" },
+      { chiave: "angle_pa_deg", nome: "Angle PA" },
+      { chiave: "elongation_angle_deg", nome: "Elongation Angle" },
+      { chiave: "elongation_coherence", nome: "Elongation Coherence" },
+      { chiave: "saturated", nome: "Saturated" },
     ],
   },
   {
     gruppo: "measure.group.signal",
     voci: [
-      { chiave: "psf_signal_weight", nome: "measure.psf_signal_weight", pi: "PSF Signal Weight" },
-      { chiave: "psf_flux_adu", nome: "measure.psf_flux", pi: "PSF Flux" },
-      { chiave: "psf_mean_flux_adu", nome: "measure.psf_mean_flux", pi: "PSF Mean Flux" },
-      { chiave: "psf_count", nome: "measure.psf_count", pi: "PSF Count" },
+      { chiave: "psf_snr", nome: "PSF SNR" },
+      { chiave: "psf_signal_weight", nome: "PSF Signal Weight" },
+      { chiave: "psf_flux_adu", nome: "PSF Flux" },
+      { chiave: "psf_mean_flux_adu", nome: "PSF Mean Flux" },
+      { chiave: "psf_count", nome: "PSF Count" },
     ],
   },
   {
     gruppo: "measure.group.background",
     voci: [
-      { chiave: "sky_rate_adu_s", nome: "measure.sky_rate", pi: "SkyRate" },
-      { chiave: "median_adu", nome: "measure.median", pi: "Median" },
-      { chiave: "sigma_adu", nome: "measure.sigma", pi: "Sigma" },
-      { chiave: "entropy_bits", nome: "measure.entropy" },
-      { chiave: "noise_ratio", nome: "measure.noise_ratio", pi: "NoiseRatio" },
-      { chiave: "mstar_adu", nome: "measure.mstar" },
-      { chiave: "nstar_adu", nome: "measure.nstar" },
-      { chiave: "row_banding", nome: "measure.row_banding" },
-      { chiave: "column_banding", nome: "measure.column_banding" },
-      { chiave: "gradient_pa_deg", nome: "measure.gradient_side" },
+      { chiave: "sky_rate_adu_s", nome: "Sky Rate" },
+      { chiave: "median_adu", nome: "Median" },
+      { chiave: "sigma_adu", nome: "Sigma" },
+      { chiave: "entropy_bits", nome: "Entropy" },
+      { chiave: "noise_ratio", nome: "Noise Ratio" },
+      { chiave: "mstar_adu", nome: "M*" },
+      { chiave: "nstar_adu", nome: "N*" },
+      { chiave: "ceiling_adu", nome: "Saturation Level" },
+      { chiave: "row_banding", nome: "Row Banding" },
+      { chiave: "column_banding", nome: "Column Banding" },
+      { chiave: "gradient_angle_deg", nome: "Gradient Angle" },
+      { chiave: "gradient_pa_deg", nome: "Gradient PA" },
+      { chiave: "trails", nome: "Trails" },
     ],
   },
   {
     gruppo: "measure.group.sky",
     voci: [
-      { chiave: "azimuth_deg", nome: "measure.azimuth" },
-      { chiave: "hour_angle_h", nome: "measure.hour_angle" },
-      { chiave: "zero_point_mag", nome: "measure.zero_point" },
+      { chiave: "altitude_deg", nome: "Altitude" },
+      { chiave: "azimuth_deg", nome: "Azimuth" },
+      { chiave: "hour_angle_h", nome: "Hour Angle" },
+      { chiave: "zero_point_mag", nome: "Zero Point" },
+      { chiave: "calibration_stars", nome: "Calibration Stars" },
+      { chiave: "sky_adu", nome: "Sky ADU" },
     ],
   },
   {
     gruppo: "measure.group.moon_sun",
     voci: [
-      { chiave: "moon_altitude_deg", nome: "measure.moon_altitude" },
-      { chiave: "moon_separation_deg", nome: "measure.moon_separation" },
-      { chiave: "moon_illumination", nome: "measure.moon_illumination" },
-      { chiave: "sun_altitude_deg", nome: "measure.sun_altitude" },
+      { chiave: "moon_altitude_deg", nome: "Moon Altitude" },
+      { chiave: "moon_separation_deg", nome: "Moon Separation" },
+      { chiave: "moon_illumination", nome: "Moon Illumination" },
+      { chiave: "sun_altitude_deg", nome: "Sun Altitude" },
     ],
   },
 ]
 
-const NOMI_ALTRE = new Map(ALTRE.flatMap((g) => g.voci.map((v) => [v.chiave, v.nome] as const)))
+const NOMI = new Map([
+  ...TESSERE.map((x) => [x.id, x.nome] as const),
+  ...ALTRE.flatMap((g) => g.voci.map((v) => [v.chiave, v.nome] as const)),
+])
 
 /** Il nome di una misura, tessera o altra. */
 export function nomeDi(id: string): string {
-  const tessera = TESSERE.find((x) => x.id === id)
-  if (tessera) return t(tessera.nome)
-  const altra = NOMI_ALTRE.get(id)
-  return altra ? t(altra) : id
+  return NOMI.get(id) ?? id
 }
 
 /** La chiave della misura dietro una tessera o un'altra misura. */

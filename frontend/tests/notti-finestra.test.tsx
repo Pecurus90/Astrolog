@@ -230,7 +230,7 @@ describe("le misure della notte", () => {
 
   it("una tessera senza valore dice perche', dall'API", async () => {
     const d = await finestra()
-    const ecc = (await within(d).findAllByRole("button", { name: /^Eccentricità/ }))[0]
+    const ecc = (await within(d).findAllByRole("button", { name: /^Eccentricity/ }))[0]
     expect(ecc?.textContent).toContain("non c’è per questi frame")
   })
 
@@ -275,8 +275,19 @@ describe("le misure della notte", () => {
     )
     const corpo = { ...MISURE, sets: MISURE.sets.map((s) => ({ ...s, measures: misure })) }
     const d = await finestra({ ...FINESTRA, "/api/v1/nights/7/measures": { stato: 200, corpo } })
-    const fondo = (await within(d).findAllByRole("button", { name: /^Fondo cielo/ }))[0]
+    const fondo = (await within(d).findAllByRole("button", { name: /^Background/ }))[0]
     expect(fondo?.textContent).toContain("si confronta per filtro")
+  })
+
+  it("le altre misure hanno il nome tecnico dei programmi, anche quelle che la tavola non nomina", async () => {
+    const d = await finestra()
+    const menu = await within(d).findByRole("combobox", { name: "Altre misure" })
+    const voci = within(menu)
+      .getAllByRole("option")
+      .map((o) => o.textContent)
+    for (const nome of ["PSF Signal Weight", "PSF SNR", "Trails", "HFD Stars", "Altitude"])
+      expect(voci).toContain(nome)
+    expect(voci).not.toContain("Peso del segnale · PSF Signal Weight")
   })
 })
 
@@ -299,7 +310,7 @@ describe("frame per frame e tilt e curvatura", () => {
     const d = await finestra()
     const grafici = await within(d).findByRole("region", { name: "I grafici" })
     expect(
-      within(grafici).getByRole("img", { name: "Ha: FWHM e Eccentricità di 2 frame" }),
+      within(grafici).getByRole("img", { name: "Ha: FWHM e Eccentricity di 2 frame" }),
     ).toBeTruthy()
     expect(within(grafici).getAllByText("troppo poche stelle").length).toBeGreaterThan(0)
     // senza altezza della Luna e senza zenit, i loro comandi non ci sono
@@ -326,7 +337,7 @@ describe("frame per frame e tilt e curvatura", () => {
     const grafici = within(d).getByRole("region", { name: "I grafici" })
     expect(
       within(grafici).getByRole("img", {
-        name: "Filtro non indicato: FWHM e Eccentricità di 2 frame",
+        name: "Filtro non indicato: FWHM e Eccentricity di 2 frame",
       }),
     ).toBeTruthy()
     expect(within(d).queryByText("__no_filter__")).toBeNull()
@@ -380,7 +391,7 @@ describe("frame per frame e tilt e curvatura", () => {
       "HFD agli angoli 3,1 px / 3,2 px / 3,3 px / 3,4 px, al centro 3,0 px: tilt 14%, curvatura +0,25 px",
     )
     expect(sezione.textContent).toContain("incerto")
-    expect(within(sezione).getByText("tilt 14% · curvatura +0,25 px")).toBeTruthy()
+    expect(within(sezione).getByText("Tilt 14% · Curvature +0,25 px")).toBeTruthy()
   })
 
   it("senza le HFD degli angoli il sensore dice che non c'e'", async () => {

@@ -112,7 +112,7 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
     : null
   const tessere = [
     ...TESSERE,
-    ...(altra ? [{ id: altra, nome: "measures.other" as const, chiave: altra }] : []),
+    ...(altra ? [{ id: altra, nome: nomeDi(altra), chiave: altra }] : []),
   ]
 
   return (
@@ -156,7 +156,6 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
                 key={x.id}
                 tessera={x}
                 set={set}
-                altra={x.id === altra}
                 perFiltro={statistica(set, x.chiave)?.per_filter === true}
                 posto={met.indexOf(x.id)}
                 onTocca={() => tocca(x.id)}
@@ -176,7 +175,7 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
                   <optgroup key={g.gruppo} label={t(g.gruppo)}>
                     {g.voci.map((v) => (
                       <option key={v.chiave} value={v.chiave}>
-                        {v.pi ? `${t(v.nome)} \u00B7 ${v.pi}` : t(v.nome)}
+                        {v.nome}
                       </option>
                     ))}
                   </optgroup>
@@ -256,14 +255,12 @@ function sotto(x: Tessera, set: Insieme | undefined, chiave: string): string {
 function UnaTessera({
   tessera: x,
   set,
-  altra,
   perFiltro,
   posto,
   onTocca,
 }: {
   tessera: Tessera
   set: Insieme | undefined
-  altra: boolean
   perFiltro: boolean
   posto: number
   onTocca: () => void
@@ -301,7 +298,7 @@ function UnaTessera({
       onClick={gesto(onTocca)}
     >
       <span className="al-c-misure-frame__riga-7">
-        <span className="al-c-misure-frame__blocco-2">{altra ? nomeDi(x.id) : t(x.nome)}</span>
+        <span className="al-c-misure-frame__blocco-2">{nomeDi(x.id)}</span>
       </span>
       <span className="al-c-misure-frame__testo-5">{v}</span>
       {sub && <span className="al-c-misure-frame__testo-6">{sub}</span>}

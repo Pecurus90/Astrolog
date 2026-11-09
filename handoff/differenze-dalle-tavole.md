@@ -29,9 +29,16 @@ Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nell
   fuoco, SNR e HFD relativi, «stelle allungate» del Setup, SQM col Bortle. App: solo i numeri.
   Perche': nessuna convenzione pubblica per la FWHM (principio 1, ADR 0039); i giudizi di gruppo e
   setup al passo 40. Brief in `per-design.md`.
-- **Altre misure.** Tavola: tutte le colonne (passo 32.1, Marco 6/11). App: solo quelle che la
-  tavola nomina. Perche': per le altre (stelle usate, scie, tetto, scala di luminosita',
-  calibrazione dello SQM, angoli della forma) i nomi vanno concordati con Marco.
+- **Nomi delle misure.** Tavola: in italiano («Fondo cielo», «Massa d'aria», «Gradiente del
+  fondo», «Peso del segnale · PSF Signal Weight»). App: il nome tecnico inglese dei programmi,
+  uguale in ogni lingua («Background», «Airmass», «Gradient», «PSF Signal Weight»). Perche':
+  Marco 9/11, nessun riferimento italiano (la documentazione italiana di Siril le lascia in <!-- software-ok -->
+  inglese); contratto `misure.md`.
+- **Altre misure.** Tavola: tutte le colonne (passo 32.1, Marco 6/11). App: anche stelle usate,
+  scie, tetto, angoli della forma, PSF SNR, altezza, calibrazione dello SQM. Restano fuori il bias
+  (della camera, non del frame), la scala di luminosita' (serve la trasparenza di serie, passo
+  40) e zenit, angoli, centro, tilt e curvatura dalla FWHM, curvatura in ″ (gia' in Frame per frame,
+  Il frame e Tilt e curvatura).
 - **Lato del pilastro, Trasparenza, Nuvole, SNR dei pixel.** Tavola: fra le Altre misure. App:
   assenti. Perche': la pipeline non le misura per frame.
 - **Setup, titolo.** Tavola: «Setup» o «Due setup». App: anche «Tre setup»... «Nove setup», poi

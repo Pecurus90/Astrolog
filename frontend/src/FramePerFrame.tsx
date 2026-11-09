@@ -663,11 +663,11 @@ function Riquadro({
       }))
     : [{ n: t(f.state === "too_few_stars" ? "shot.few" : "measures.pending"), v: "" }]
   if (MISURATO.has(f.state) && f.values.airmass !== undefined && !chiavi.includes("airmass"))
-    righe.push({ n: t("chart.airmass"), v: scritto("airmass", f.values.airmass) })
+    righe.push({ n: nomeDi("airmass"), v: scritto("airmass", f.values.airmass) })
   const lu = f.values.moon_altitude_deg
   if (MISURATO.has(f.state) && luna && lu !== undefined)
     righe.push({
-      n: t("chart.moon.altitude"),
+      n: nomeDi("moon_altitude_deg"),
       v: lu < 0 ? t("chart.moon.below") : scritto("moon_altitude_deg", lu),
     })
   const x = g.x0 + d.slot * (i + 0.5)

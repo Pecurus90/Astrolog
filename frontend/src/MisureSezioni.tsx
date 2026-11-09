@@ -50,14 +50,14 @@ function riquadri(f: FrameMisurato): Riquadro[] {
   const stimata = f.state === "estimated"
   const r: Riquadro[] = [
     {
-      k: t("measure.fwhm"),
+      k: nomeDi("fwhm"),
       v: due(f, "fwhm_arcsec", "fwhm_px"),
       tag: stimata ? t("shot.estimated") : campionamento(f.sampling),
       grande: true,
     },
-    { k: t("measure.hfd"), v: due(f, "hfd_arcsec", "hfd_px") },
+    { k: nomeDi("hfd"), v: due(f, "hfd_arcsec", "hfd_px") },
     {
-      k: t("measure.stars"),
+      k: nomeDi("stars"),
       v: scritto("stars", v.stars),
       ...(v.saturated !== undefined
         ? { sub: t("measures.saturated", { n: numero(v.saturated) }) }
@@ -66,16 +66,16 @@ function riquadri(f: FrameMisurato): Riquadro[] {
   ]
   if (v.eccentricity !== undefined) {
     r.push({
-      k: t("measure.eccentricity"),
+      k: nomeDi("eccentricity"),
       v: scritto("eccentricity", v.eccentricity),
       ...(f.angle_axis ? { sub: t(`measures.axis.${f.angle_axis}`) } : {}),
       ...(stimata ? { tag: t("shot.estimated") } : {}),
     })
   }
   if (v.snr !== undefined)
-    r.push({ k: t("measure.snr"), v: scritto("snr", v.snr), sub: t("shot.snr.sub") })
+    r.push({ k: nomeDi("snr"), v: scritto("snr", v.snr), sub: t("shot.snr.sub") })
   r.push({
-    k: t("measure.background"),
+    k: nomeDi("background"),
     v: scritto("background_adu", v.background_adu),
     ...(v.noise_adu !== undefined
       ? { sub: t("shot.noise", { n: numero(Math.round(v.noise_adu)) }) }
@@ -83,17 +83,17 @@ function riquadri(f: FrameMisurato): Riquadro[] {
   })
   if (v.airmass !== undefined)
     r.push({
-      k: t("measure.airmass"),
+      k: nomeDi("airmass"),
       v: scritto("airmass", v.airmass),
       ...(v.altitude_deg !== undefined
-        ? { sub: t("shot.altitude", { n: numero(Math.round(v.altitude_deg)) }) }
+        ? { sub: `${nomeDi("altitude_deg")} ${scritto("altitude_deg", v.altitude_deg)}` }
         : {}),
     })
   if (v.gradient_noise !== undefined)
-    r.push({ k: t("measure.gradient"), v: scritto("gradient_noise", v.gradient_noise) })
+    r.push({ k: nomeDi("gradient"), v: scritto("gradient_noise", v.gradient_noise) })
   if (v.hfd_tilt_pct !== undefined)
     r.push({
-      k: t("measure.tilt"),
+      k: nomeDi("tilt"),
       v: scritto("hfd_tilt_pct", v.hfd_tilt_pct),
       sub: t("shot.tilt.sub"),
       tilt: f.tilt_level,
@@ -104,20 +104,20 @@ function riquadri(f: FrameMisurato): Riquadro[] {
         ? ""
         : ` \u00B7 ${scritto("off_axis_arcsec", v.off_axis_arcsec)}`
     r.push({
-      k: t("measure.curvature"),
+      k: nomeDi("curvature"),
       v: `${scritto("off_axis_px", v.off_axis_px)}${arc}`,
       sub: t("shot.curvature.sub"),
     })
   }
   if (v.fwhm_tilt !== undefined && v.fwhm_curvature !== undefined) {
     r.push({
-      k: t("shot.fwhm.field"),
+      k: `${nomeDi("tilt")} \u00B7 ${nomeDi("curvature")} (FWHM)`,
       v: `${scritto("fwhm_tilt", v.fwhm_tilt)} \u00B7 ${scritto("fwhm_curvature", v.fwhm_curvature)}`,
       sub: t("shot.fwhm.field.sub"),
     })
   }
   if (v.sqm !== undefined)
-    r.push({ k: t("measure.sqm"), v: scritto("sqm", v.sqm), sub: t("measures.sqm.unit") })
+    r.push({ k: nomeDi("sqm"), v: scritto("sqm", v.sqm), sub: t("measures.sqm.unit") })
   return r
 }
 
@@ -157,10 +157,10 @@ export function IlFrame({
         f.object_key ? (nomi.get(f.object_key) ?? f.object_key) : null,
         f.start ? oraDelSito(f.start) : null,
         f.values.altitude_deg !== undefined
-          ? t("shot.altitude", { n: numero(Math.round(f.values.altitude_deg)) })
+          ? `${nomeDi("altitude_deg")} ${scritto("altitude_deg", f.values.altitude_deg)}`
           : null,
         f.values.airmass !== undefined
-          ? t("shot.airmass", { n: scritto("airmass", f.values.airmass) })
+          ? `${nomeDi("airmass")} ${scritto("airmass", f.values.airmass)}`
           : null,
       ].filter(Boolean)
     : []
@@ -349,16 +349,7 @@ export function AConfronto({
 }
 
 // Le colonne della tabella, come la tavola (`PFK`).
-const COLONNE = [
-  { id: "fwhm", testa: "measure.fwhm" },
-  { id: "hfd", testa: "measure.hfd" },
-  { id: "eccentricity", testa: "measure.eccentricity" },
-  { id: "snr", testa: "measure.snr" },
-  { id: "background", testa: "perfilter.head.background" },
-  { id: "tilt", testa: "measure.tilt" },
-  { id: "curvature", testa: "measure.curvature" },
-  { id: "sqm", testa: "perfilter.head.sqm" },
-] as const
+const COLONNE = ["fwhm", "hfd", "eccentricity", "snr", "background", "tilt", "curvature", "sqm"]
 
 export function PerFiltro({
   misure,
@@ -372,7 +363,7 @@ export function PerFiltro({
   onFiltro: (f: string | null) => void
 }) {
   const colonne = [
-    ...COLONNE.map((c) => ({ id: c.id as string, testa: t(c.testa) })),
+    ...COLONNE.map((id) => ({ id, testa: nomeDi(id) })),
     ...(altra ? [{ id: altra, testa: nomeDi(altra) }] : []),
   ]
   const griglia = `minmax(92px,1.1fr) ${colonne.map((c) => (c.id === "sqm" || c.id === "fwhm" ? "minmax(84px,1.3fr)" : "minmax(64px,1fr)")).join(" ")}`
