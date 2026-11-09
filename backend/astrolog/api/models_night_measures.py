@@ -47,7 +47,10 @@ class MeasureSet(BaseModel):
     """The night, an object, a filter, or an object in a filter: null is all of them."""
 
     object_key: str | None
-    filter: str | None
+    filter: str | None = Field(
+        description="The filter's name, `__no_filter__` for the frames naming none (the Nights' "
+        "key), null: all of them."
+    )
     frames: int = Field(description="The set's frames, counted as the Nights page counts them.")
     pending: int = Field(description="Of those, still without measures.")
     differs: list[Literal["camera", "gain", "exposure"]] = Field(
@@ -77,7 +80,7 @@ class MeasuredFrame(BaseModel):
     start: str | None = Field(description="Start of the exposure in the site's zone, with its "
                               "offset; null: not read yet or not written by the file.")  # fmt: skip
     object_key: str | None
-    filter: str | None
+    filter: str = Field(description="The filter's name, `__no_filter__`: the header names none.")
     state: FrameState = Field(
         description="`measured`, `estimated` (shape from the moments: the fit failed), "
         "`too_few_stars`, or `pending`: not measured yet, or unreadable now and tried again. "
@@ -104,7 +107,9 @@ class NightMeasures(BaseModel):
     frames: int
     pending: int
     objects: list[MeasuredObject]
-    filters: list[MeasuredFilter] = Field(description="In the app's one filter order.")
+    filters: list[MeasuredFilter] = Field(
+        description="In the app's one filter order; `__no_filter__` last, band `UNKNOWN`."
+    )
     sets: list[MeasureSet] = Field(
         description="Empty until the measures of the nights are written after a scan."
     )

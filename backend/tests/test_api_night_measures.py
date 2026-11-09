@@ -60,6 +60,31 @@ def test_a_night_with_its_objects_filters_sets_and_frames(conn, db_path, world) 
     assert body["series"][2]["state"] == "pending"
 
 
+def test_frames_naming_no_filter_have_their_own_key(conn, db_path, world) -> None:
+    """The Nights' `__no_filter__`, last among the filters, in the sets and on each frame."""
+    m31 = world.object("M 31")
+    lum = world.filter("L")
+    world.shot(2.0, start=T1, obj=m31, flt=lum)
+    world.shot(4.0, start=T2, obj=m31)
+    night_measures.rebuild(conn)
+    conn.commit()
+    body = _get(db_path, world.night).json()
+    assert body["filters"] == [
+        {"name": "L", "passband": "L", "frames": 1},
+        {"name": "__no_filter__", "passband": "UNKNOWN", "frames": 1},
+    ]
+    both = {(s["object_key"], s["filter"]) for s in body["sets"]}
+    assert both == {
+        (None, None), ("M 31", None), (None, "L"), ("M 31", "L"),
+        (None, "__no_filter__"), ("M 31", "__no_filter__"),
+    }  # fmt: skip
+    sets = {(s["object_key"], s["filter"]): s for s in body["sets"]}
+    none = sets[None, "__no_filter__"]
+    hfd = next(m for m in none["measures"] if m["key"] == "hfd_px")
+    assert (none["frames"], hfd["median"]) == (1, 4.0)
+    assert [f["filter"] for f in body["series"]] == ["L", "__no_filter__"]
+
+
 def test_a_measure_nobody_has_says_why(conn, db_path, world) -> None:
     world.frame()  # not measured yet
     world.shot(3.0)

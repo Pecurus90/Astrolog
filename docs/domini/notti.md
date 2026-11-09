@@ -48,6 +48,7 @@ Le prove del backend stanno in `backend/tests/test_api_nights.py` e nei file acc
 | Dalla ricerca apro una notte precisa (`/notti?notte=<id>`), anche vecchia, e torno a tutte; una notte che non c'e' piu' lo dice | `test_a_night_is_asked_by_its_id_wherever_it_falls_in_the_list`, `test_a_night_that_does_not_exist_is_an_empty_list_not_an_error`; *con ?notte= chiede quella notte sola*; *una notte che non c'e' piu' lo dice* |
 | Vedo com'erano i miei frame quella notte | `test_a_night_with_its_objects_filters_sets_and_frames`, `test_the_night_counts_its_frames_as_the_nights_page` (backend); a schermo con la finestra (passo 33) |
 | Fondo, rumore e luminosita' del cielo di piu' filtri dicono "per filtro": ogni filtro ha la sua scala (tavola v76, MisureFrame 236) | `test_background_and_sky_brightness_compare_per_filter` |
+| I frame che non dicono il filtro hanno il loro insieme, *Filtro non indicato*, ultimo: pillola, Per filtro e grafici, non solo il totale | `test_frames_naming_no_filter_are_a_set_of_their_own`, `test_frames_naming_no_filter_have_their_own_key`; *i frame senza filtro hanno pillola, riga per filtro e grafico col loro nome* |
 | Apro una notte e vedo tutto (↗ "Tutto della notte"): quando ho ripreso nel fuso del sito, i setup, cosa dice il catalogo degli oggetti | `test_the_shooting_from_the_first_start_to_the_last_end_in_the_sites_zone`, `test_the_setups_of_the_night_with_what_they_took_that_night`, `test_an_object_in_the_catalog_says_what_it_is_and_how_big` (`GET /api/v1/nights/{id}`); a schermo col modale (passo 33) |
 
 ## La pagina

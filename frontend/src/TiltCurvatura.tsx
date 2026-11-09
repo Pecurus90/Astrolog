@@ -4,6 +4,7 @@
  * filtro. Mediane, tilt, curvatura e giudizio dall'API; qui il disegno.
  */
 import { Pillola } from "./componenti/Pillola"
+import { nomeDelFiltro } from "./FiltriUsati"
 import { numero, t } from "./i18n"
 import {
   ESITO,
@@ -192,7 +193,7 @@ export function TiltCurvatura({ misure, scelta }: { misure: Misure; scelta: Scel
         {grande ? (
           <div className="al-c-misure-frame__colonna-16">
             <span className="al-c-misure-frame__testo-9">
-              {`${scelta.filtro ?? t("sensor.all")} \u00B7 ${t("measures.of", { m: numero(misurati), n: numero(set?.frames ?? 0) })}`}
+              {`${scelta.filtro ? nomeDelFiltro(scelta.filtro) : t("sensor.all")} \u00B7 ${t("measures.of", { m: numero(misurati), n: numero(set?.frames ?? 0) })}`}
             </span>
             <Disegno s={grande} W={300} H={200} grande />
             <div className="al-c-misure-frame__griglia-1">
@@ -224,7 +225,7 @@ export function TiltCurvatura({ misure, scelta }: { misure: Misure; scelta: Scel
                       aria-hidden="true"
                       style={{ background: tintaDi(f.passband).fondo }}
                     />
-                    {f.name}
+                    {nomeDelFiltro(f.name)}
                   </span>
                   <Disegno s={s} W={150} H={100} grande={false} />
                   <span className="al-c-misure-frame__testo-20">

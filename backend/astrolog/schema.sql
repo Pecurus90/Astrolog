@@ -1381,6 +1381,8 @@ CREATE TABLE night_measures (
   night_id  INTEGER NOT NULL REFERENCES nights (id) ON DELETE CASCADE,
   object_id INTEGER REFERENCES objects (id) ON DELETE CASCADE,
   filter_id INTEGER REFERENCES filters (id) ON DELETE CASCADE,
+  -- 1: i frame che non nominano un filtro, un insieme loro (filter_id NULL)
+  unfiltered INTEGER NOT NULL CHECK (unfiltered IN (0, 1) AND (unfiltered = 0 OR filter_id IS NULL)),
   key       TEXT NOT NULL,  -- la colonna della misura (measure_list.MEASURES)
   frames    INTEGER NOT NULL CHECK (frames > 0),  -- i frame del gruppo, quelli della pagina
   measured  INTEGER NOT NULL CHECK (measured BETWEEN 0 AND frames),  -- quelli col valore
@@ -1401,20 +1403,21 @@ CREATE TABLE night_measures (
     AND (low IS NULL) = (high IS NULL) AND (median IS NOT NULL OR verdict IS NULL))
 ) STRICT;
 CREATE UNIQUE INDEX night_measures_key ON night_measures
-  (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1), key);
+  (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1), unfiltered, key);
 
 -- RICAVATO. Lo stato di ogni gruppo di `night_measures`, scritto con lei.
 CREATE TABLE night_measure_groups (
   night_id   INTEGER NOT NULL REFERENCES nights (id) ON DELETE CASCADE,
   object_id  INTEGER REFERENCES objects (id) ON DELETE CASCADE,
   filter_id  INTEGER REFERENCES filters (id) ON DELETE CASCADE,
+  unfiltered INTEGER NOT NULL CHECK (unfiltered IN (0, 1) AND (unfiltered = 0 OR filter_id IS NULL)),
   frames     INTEGER NOT NULL CHECK (frames > 0),
   pending    INTEGER NOT NULL CHECK (pending BETWEEN 0 AND frames),  -- senza misura, ancora
   -- cosa cambia fra i misurati (camera, gain, exposure); vuoto: fondo e rumore si confrontano
   differs    TEXT NOT NULL CHECK (json_valid(differs) AND json_type(differs) = 'array')
 ) STRICT;
 CREATE UNIQUE INDEX night_measure_groups_key ON night_measure_groups
-  (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1));
+  (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1), unfiltered);
 
 -- DICHIARATO. «Lascia»: la classe misurata che l'utente non ha voluto; si ripropone solo se cambia.
 CREATE TABLE site_sky_dismissed (

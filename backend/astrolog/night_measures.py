@@ -50,8 +50,8 @@ ORDER BY c.start_utc IS NULL, c.start_utc, f.id
 """  # noqa: S608 - our columns
 
 _MEASURE_COLUMNS = (
-    "night_id", "object_id", "filter_id", "key", "frames", "measured", "median", "q1", "q3",
-    "low", "high", "trend", "verdict", "per_filter",
+    "night_id", "object_id", "filter_id", "unfiltered", "key", "frames", "measured", "median",
+    "q1", "q3", "low", "high", "trend", "verdict", "per_filter",
 )  # fmt: skip
 # Each filter its own scale: across filters these compare only per filter [D tavola v76, MisureFrame
 # 190-195 `perF`, 236]
@@ -61,10 +61,13 @@ _VERDICTS: dict[str, Callable[[float], str | None]] = {
     "hfd_tilt_pct": tilt_level,
     "fwhm_px": sampling_class,
 }
-_GROUP_COLUMNS = ("night_id", "object_id", "filter_id", "frames", "pending", "differs")
+_GROUP_COLUMNS = (
+    "night_id", "object_id", "filter_id", "unfiltered", "frames", "pending", "differs",
+)  # fmt: skip
 _SETUP = ("camera", "gain", "exposure")  # the same three, or background and noise do not compare
 
-type GroupKey = tuple[int, int | None, int | None]
+# night, object, filter (None: all), and 1 for the frames naming no filter
+type GroupKey = tuple[int, int | None, int | None, int]
 
 
 @dataclass(slots=True)
@@ -110,14 +113,14 @@ def _same(path: str) -> str:
 
 
 def _keys_of(night: int, obj: int | None, flt: int | None) -> Iterator[GroupKey]:
-    """The night whole, per object, per filter, per object and filter; NULL: all of them."""
-    yield night, None, None
+    """The night whole, per object, per filter, per object and filter; NULL: all of them. A frame
+    naming no filter goes in the set of those, not only in the whole."""
+    yield night, None, None, 0
     if obj is not None:
-        yield night, obj, None
-    if flt is not None:
-        yield night, None, flt
-    if obj is not None and flt is not None:
-        yield night, obj, flt
+        yield night, obj, None, 0
+    yield night, None, flt, int(flt is None)
+    if obj is not None:
+        yield night, obj, flt, int(flt is None)
 
 
 def _add(group: _Group, row: sqlite3.Row) -> None:
@@ -134,17 +137,17 @@ def _add(group: _Group, row: sqlite3.Row) -> None:
 
 
 def _measure_rows(groups: dict[GroupKey, _Group]) -> Iterator[tuple[object, ...]]:
-    for (night, obj, flt), group in groups.items():
+    for (night, obj, flt, unfiltered), group in groups.items():
         for key in _KEYS:
             in_time = group.values.get(key, [])
             if not in_time:
-                yield night, obj, flt, key, group.frames, 0, *(None,) * 7, 0
+                yield night, obj, flt, unfiltered, key, group.frames, 0, *(None,) * 7, 0
                 continue
             values = sorted(in_time)
             q1, median, q3 = (quantile(values, p) for p in (0.25, 0.5, 0.75))
             verdict = _VERDICTS[key](median) if key in _VERDICTS else None
             per_filter = key in PER_FILTER and len(group.filters[key]) > 1
-            yield (night, obj, flt, key, group.frames, len(values), median, q1, q3,
+            yield (night, obj, flt, unfiltered, key, group.frames, len(values), median, q1, q3,
                    values[0], values[-1], _trend(in_time), verdict, int(per_filter))  # fmt: skip
 
 
@@ -167,6 +170,6 @@ def _differs(setups: set[tuple[object, object, object]]) -> list[str]:
 
 def _group_rows(groups: dict[GroupKey, _Group]) -> Iterable[tuple[object, ...]]:
     return [
-        (night, obj, flt, g.frames, g.pending, json.dumps(_differs(g.setups)))
-        for (night, obj, flt), g in groups.items()
+        (night, obj, flt, unfiltered, g.frames, g.pending, json.dumps(_differs(g.setups)))
+        for (night, obj, flt, unfiltered), g in groups.items()
     ]

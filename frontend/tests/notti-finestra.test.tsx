@@ -291,6 +291,31 @@ describe("frame per frame e tilt e curvatura", () => {
     expect(within(grafici).queryByRole("combobox", { name: "Valore" })).toBeNull()
   })
 
+  it("i frame senza filtro hanno pillola, riga per filtro e grafico col loro nome", async () => {
+    const corpo = {
+      ...MISURE,
+      filters: [{ name: "__no_filter__", passband: "UNKNOWN", frames: 2 }],
+      sets: [
+        insieme(null, null),
+        insieme("m-51", null),
+        insieme(null, "__no_filter__"),
+        insieme("m-51", "__no_filter__"),
+      ],
+      series: MISURE.series.map((f) => ({ ...f, filter: "__no_filter__" })),
+    }
+    const d = await finestra({ ...FINESTRA, "/api/v1/nights/7/measures": { stato: 200, corpo } })
+    expect(await within(d).findByRole("radio", { name: /Filtro non indicato/ })).toBeTruthy()
+    const tabella = within(d).getByRole("table", { name: "Mediane per filtro" })
+    expect(within(tabella).getByText("Filtro non indicato")).toBeTruthy()
+    const grafici = within(d).getByRole("region", { name: "I grafici" })
+    expect(
+      within(grafici).getByRole("img", {
+        name: "Filtro non indicato: FWHM e Eccentricità di 2 frame",
+      }),
+    ).toBeTruthy()
+    expect(within(d).queryByText("__no_filter__")).toBeNull()
+  })
+
   it("con la Luna e lo zenit nei dati compaiono i loro comandi", async () => {
     const zenit = stat("fwhm_zenith_arcsec", "arcsec", val(2.0, 1.9, 2.1))
     const series = MISURE.series.map((f) => ({

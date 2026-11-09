@@ -10,6 +10,7 @@ import { Pillola } from "./componenti/Pillola"
 import { PillolaScelta, type OpzioneScelta } from "./componenti/PillolaScelta"
 import { gesto } from "./componenti/gesto"
 import type { Formato } from "./componenti/Tema"
+import { nomeDelFiltro } from "./FiltriUsati"
 import { numero, t } from "./i18n"
 import {
   ALTRE,
@@ -77,7 +78,7 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
       on: () => scegliFiltro(null),
     },
     ...filtri.map((f) => ({
-      l: f.name,
+      l: nomeDelFiltro(f.name),
       c: numero(insieme(misure, scelta.oggetto, f.name)?.frames ?? 0),
       sel: scelta.filtro === f.name,
       tinta: tintaDi(f.passband),

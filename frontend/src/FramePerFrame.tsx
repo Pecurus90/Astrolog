@@ -8,6 +8,7 @@ import { type MouseEvent, type PointerEvent, type TouchEvent, useState } from "r
 import { PillolaScelta } from "./componenti/PillolaScelta"
 import { gesto } from "./componenti/gesto"
 import type { Formato } from "./componenti/Tema"
+import { nomeDelFiltro } from "./FiltriUsati"
 import { numero, oraDelSito, t } from "./i18n"
 import {
   type Disegno,
@@ -88,7 +89,7 @@ export function FramePerFrame({
   const opzioniFiltri = filtri.map((f) => {
     const on = scelti.includes(f.name)
     return {
-      l: f.name,
+      l: nomeDelFiltro(f.name),
       sel: on,
       tinta: tintaDi(f.passband),
       on: () =>
@@ -355,7 +356,7 @@ function UnGrafico({
             aria-hidden="true"
             style={{ background: tintaDi(passband).fondo }}
           />
-          {filtro}
+          {nomeDelFiltro(filtro)}
         </span>
         {nota(set, chiavi) && (
           <span className="al-c-misure-frame__testo-2">{nota(set, chiavi)}</span>
@@ -409,7 +410,7 @@ function UnGrafico({
           g={g}
           linee={vista.linee}
           label={t("chart.label", {
-            f: filtro,
+            f: nomeDelFiltro(filtro),
             m: met.map(nomeDi).join(t("chart.and")),
             n: numero(frames.length),
           })}
@@ -680,7 +681,11 @@ function Riquadro({
       }}
     >
       <b className="al-riquadro__titolo">
-        {t("shot.title", { i: numero(frames.indexOf(f) + 1), n: numero(frames.length), f: filtro })}
+        {t("shot.title", {
+          i: numero(frames.indexOf(f) + 1),
+          n: numero(frames.length),
+          f: nomeDelFiltro(filtro),
+        })}
       </b>
       <span className="al-riquadro__sotto">
         {[nome, f.start ? oraDelSito(f.start) : null].filter(Boolean).join(" \u00B7 ")}

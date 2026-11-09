@@ -228,6 +228,31 @@ def test_medians_and_quartiles_per_object_per_filter_and_for_the_night(conn, wor
     assert _group(conn, world.night, obj=m33)["pending"] == 1
 
 
+def test_frames_naming_no_filter_are_a_set_of_their_own(conn, world) -> None:
+    """Not left out of the per-filter view: their own set, per night and per object."""
+    m31 = world.object()
+    lum = world.filter("L")
+    world.shot(2.0, obj=m31, flt=lum)
+    world.shot(4.0, obj=m31)
+    world.shot(6.0, obj=m31)
+    night_measures.rebuild(conn)
+    none = conn.execute(
+        "SELECT * FROM night_measures WHERE night_id = ? AND key = ? AND unfiltered = 1"
+        " AND object_id IS NULL",
+        (world.night, KEY),
+    ).fetchone()
+    assert (none["frames"], none["median"], none["filter_id"]) == (2, 5.0, None)
+    per_object = conn.execute(
+        "SELECT frames FROM night_measure_groups WHERE night_id = ? AND unfiltered = 1"
+        " AND object_id = ?",
+        (world.night, m31),
+    ).fetchone()
+    assert per_object["frames"] == 2
+    whole = _row(conn, world.night)
+    assert (whole["frames"], whole["unfiltered"], whole["per_filter"]) == (3, 0, 0)
+    assert _row(conn, world.night, "background_adu")["per_filter"] == 1  # L and none
+
+
 def _at(hour: int) -> str:
     return f"2026-10-12T{hour:02d}:00:00.000000+00:00"
 

@@ -13,7 +13,7 @@ import { Striscia, type NotteStriscia } from "./componenti/Striscia"
 import { Pagina } from "./componenti/Pagina"
 import type { Formato } from "./componenti/Tema"
 import { paginaDopo } from "./Elenco"
-import { VARIANTE } from "./FiltriUsati"
+import { SENZA_FILTRO, VARIANTE, nomeDelFiltro } from "./FiltriUsati"
 import { api } from "./api/client"
 import { costellazione } from "./costellazioni"
 import { type Chiave, maiuscola, meseEAnno, numero, t } from "./i18n"
@@ -92,7 +92,7 @@ function nomeDellaScelta(chiave: Criterio["key"], o: Criterio["options"][number]
   if (chiave === "constellation") return costellazione(o.value)
   if (chiave === "sky") return CIELO[o.value] ? t(CIELO[o.value] as Chiave) : o.value
   if (chiave === "setup") return o.name ?? ([o.optics, o.camera].filter(Boolean).join(" + ") || o.value)
-  if (chiave === "filter" && o.value === "__no_filter__") return t("filters.none")
+  if (chiave === "filter" && o.value === SENZA_FILTRO) return nomeDelFiltro(o.value)
   return o.name ?? o.value
 }
 

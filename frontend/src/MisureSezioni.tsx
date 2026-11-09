@@ -6,6 +6,7 @@
 import { Pillola } from "./componenti/Pillola"
 import { Quartili } from "./componenti/Quartili"
 import { gesto } from "./componenti/gesto"
+import { nomeDelFiltro } from "./FiltriUsati"
 import { numero, oraDelSito, t } from "./i18n"
 import { MISURATO, frameMostrato } from "./FramePerFrameDati"
 import {
@@ -173,7 +174,7 @@ export function IlFrame({
               ? t("shot.title", {
                   i: numero(i + 1),
                   n: numero(vista.length),
-                  f: f.filter ?? t("filters.none"),
+                  f: nomeDelFiltro(f.filter),
                 })
               : t("shot.none")}
           </h2>
@@ -431,7 +432,7 @@ export function PerFiltro({
                         aria-hidden="true"
                         style={{ background: tintaDi(f.passband).fondo }}
                       />
-                      {f.name}
+                      {nomeDelFiltro(f.name)}
                     </span>
                     <span className="al-c-misure-frame__testo-17">
                       {t("perfilter.frames", {

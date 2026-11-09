@@ -51,6 +51,14 @@ export function varianteDi(passband: string | undefined): string {
   return VARIANTE[passband ?? ""] ?? "as-filtro--ignoto"
 }
 
+/** La chiave dell'API per i frame che non nominano un filtro (Notti e misure della notte). */
+export const SENZA_FILTRO = "__no_filter__"
+
+/** Il nome di un filtro a schermo: la chiave dei frame senza filtro diventa parole. */
+export function nomeDelFiltro(nome: string): string {
+  return nome === SENZA_FILTRO ? t("filters.none") : nome
+}
+
 /** Cosa dice un filtro nella legenda: frame, e ore se i frame le dicono. */
 function quanto(f: Filtro): string {
   const frame = numero(f.frames)

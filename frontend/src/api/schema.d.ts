@@ -2911,7 +2911,10 @@ export interface components {
         MeasureSet: {
             /** Object Key */
             object_key: string | null;
-            /** Filter */
+            /**
+             * Filter
+             * @description The filter's name, `__no_filter__` for the frames naming none (the Nights' key), null: all of them.
+             */
             filter: string | null;
             /**
              * Frames
@@ -3011,8 +3014,11 @@ export interface components {
             start: string | null;
             /** Object Key */
             object_key: string | null;
-            /** Filter */
-            filter: string | null;
+            /**
+             * Filter
+             * @description The filter's name, `__no_filter__`: the header names none.
+             */
+            filter: string;
             /**
              * State
              * @description `measured`, `estimated` (shape from the moments: the fit failed), `too_few_stars`, or `pending`: not measured yet, or unreadable now and tried again. A frame never to be measured (a program not read, a rewritten, broken or compressed file) is not here: it counts only in `frames` (Marco, 8/11).
@@ -3479,7 +3485,7 @@ export interface components {
             objects: components["schemas"]["MeasuredObject"][];
             /**
              * Filters
-             * @description In the app's one filter order.
+             * @description In the app's one filter order; `__no_filter__` last, band `UNKNOWN`.
              */
             filters: components["schemas"]["MeasuredFilter"][];
             /**

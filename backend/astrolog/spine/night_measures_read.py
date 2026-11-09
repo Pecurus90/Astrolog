@@ -8,8 +8,10 @@ from typing import Any
 from ..clock import local_iso
 from ..measure_list import MEASURES, Entry
 from ..night_measures import JOINS, VALUES
+from ..vocab.filters import Passband
 from . import filters_used
 from . import objects as obj
+from .night_criteria import NO_FILTER
 
 _NIGHT = "SELECT s.timezone FROM nights n JOIN sites s ON s.id = n.site_id WHERE n.id = ?"
 
@@ -28,7 +30,7 @@ ORDER BY start_utc IS NULL, start_utc, f.id
 _OBJECTS = f"""
 SELECT g.frames, g.pending, o.id, o.catalog_slug, {obj.NAME_COLUMNS}
 FROM night_measure_groups g JOIN objects o ON o.id = g.object_id
-WHERE g.night_id = ? AND g.filter_id IS NULL
+WHERE g.night_id = ? AND g.filter_id IS NULL AND g.unfiltered = 0
 ORDER BY g.frames DESC, o.id
 """  # noqa: S608 - constant fragments of the spine
 
@@ -56,7 +58,16 @@ def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | 
     zone = night["timezone"]
     series = [_frame(r, keys, names, zone) for r in conn.execute(_SERIES, (night_id,))]
     groups = conn.execute(_GROUPS, (night_id,)).fetchall()
-    whole = next((g for g in groups if g["object_id"] is None and g["filter_id"] is None), None)
+    by_key = {(g["object_id"], g["filter_id"], g["unfiltered"]): g for g in groups}
+    whole = by_key.get((None, None, 0))
+    listed = [
+        {"name": r["name"], "passband": r["passband"], "frames": r["frames"]}
+        for r in filters.values()
+    ]
+    if (unfiltered := by_key.get((None, None, 1))) is not None:  # last, as in the Nights
+        listed.append(
+            {"name": NO_FILTER, "passband": Passband.UNKNOWN, "frames": unfiltered["frames"]}
+        )
     return {
         "night_id": night_id,
         "timezone": night["timezone"],
@@ -72,10 +83,7 @@ def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | 
             }
             for i, r in objects.items()
         ],  # fmt: skip
-        "filters": [
-            {"name": r["name"], "passband": r["passband"], "frames": r["frames"]}
-            for r in filters.values()
-        ],
+        "filters": listed,
         "sets": _sets(conn, night_id, groups, keys, names),
         "series": series,
     }
@@ -89,15 +97,16 @@ def _sets(
     names: dict[int, str],
 ) -> list[dict[str, Any]]:
     rows = {
-        (r["object_id"], r["filter_id"], r["key"]): r for r in conn.execute(_MEASURES, (night_id,))
+        (r["object_id"], r["filter_id"], r["unfiltered"], r["key"]): r
+        for r in conn.execute(_MEASURES, (night_id,))
     }
     out = []
     for g in groups:
-        at = (g["object_id"], g["filter_id"])
+        at = (g["object_id"], g["filter_id"], g["unfiltered"])
         measuring = g["pending"] == g["frames"]
         out.append({
             "object_key": keys.get(at[0]) if at[0] is not None else None,
-            "filter": names.get(at[1]) if at[1] is not None else None,
+            "filter": NO_FILTER if at[2] else names.get(at[1]) if at[1] is not None else None,
             "frames": g["frames"],
             "pending": g["pending"],
             "differs": json.loads(g["differs"]),
@@ -132,7 +141,7 @@ def _frame(
         "frame_id": r["id"],
         "start": local_iso(r["start_utc"], zone),
         "object_key": keys.get(r["object_id"]),
-        "filter": names.get(r["filter_id"]),
+        "filter": names.get(r["filter_id"]) if r["filter_id"] is not None else NO_FILTER,
         "state": state,
         "tilt_level": r["tilt_level"],
         "sampling": r["sampling_class"],
