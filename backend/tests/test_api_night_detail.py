@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
-from astrolog.catalog.load import extent_ly
+from astrolog.catalog.load import beside_the_moon, extent_ly, parsecs
 from conftest import LATER
 from test_night_measures import _World
 
@@ -47,10 +47,17 @@ def _rig(conn) -> int:
 def _catalog(conn, obj: int, *, distance_ly: float | None, size_arcmin: float | None) -> None:
     conn.execute(
         "INSERT INTO catalog_entries (slug, name, common_name, ra_deg, dec_deg, x, y, z,"
-        " constellation, type_code, distance_ly, size_major_arcmin, extent_ly)"
+        " constellation, type_code, distance_ly, size_major_arcmin, extent_ly, distance_pc,"
+        " moon_compare, moon_count)"
         " VALUES ('ngc-6992', 'NGC 6992', 'Veil', 314, 31, 0.1, 0.2, 0.3, 'Cyg',"
-        " 'SUPERNOVA_REMNANT', ?, ?, ?)",
-        (distance_ly, size_arcmin, extent_ly(distance_ly, size_arcmin)),
+        " 'SUPERNOVA_REMNANT', ?, ?, ?, ?, ?, ?)",
+        (
+            distance_ly,
+            size_arcmin,
+            extent_ly(distance_ly, size_arcmin),
+            parsecs(distance_ly),
+            *beside_the_moon(size_arcmin),
+        ),
     )
     conn.execute("UPDATE objects SET catalog_slug = 'ngc-6992' WHERE id = ?", (obj,))
 

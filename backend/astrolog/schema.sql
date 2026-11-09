@@ -867,6 +867,12 @@ CREATE TABLE catalog_entries (
   src_json           TEXT,                      -- da dove viene ogni valore
   -- quanto e' grande davvero: distanza per dimensione maggiore, due cifre (catalog/load.py)
   extent_ly          REAL CHECK (extent_ly > 0),
+  -- la distanza in parsec alla decina, vuota da un milione di anni luce (catalog/load.py)
+  distance_pc        REAL,
+  -- la dimensione maggiore contro la Luna piena: piu' grande (con le Lune intere), come, meno
+  moon_compare       TEXT CHECK (moon_compare IN ('more', 'like', 'less')),
+  moon_count         INTEGER CHECK (moon_count >= 1),
+  CHECK ((moon_count IS NOT NULL) = (moon_compare IS 'more')),
   CHECK ((magnitude IS NULL) = (magnitude_band IS NULL))
 ) STRICT;
 -- La ricerca per cono: si filtra il riquadro sui tre assi, poi si misura davvero.

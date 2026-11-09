@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 354; senza fonte: 1.
-Fonti: C norma: 179; U usanza: 3; D metodo: 28; M misura: 22; P decisione: 40; T tecnico: 84.
+Valori: 360; senza fonte: 1.
+Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 84.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -134,6 +134,17 @@ Fonti: C norma: 179; U usanza: 3; D metodo: 28; M misura: 22; P decisione: 40; T
 | BLIND_RADIUS_DEG | `180` | C ASTAP default radius_search1; N.I.N.A. forces 180 without coordinates |
 | _POLE_DEG | `90.0` | T |
 | FZ_SINCE | `(2026, 7, 17)` | C ASTAP source: RICE_1 in astap_cli from 2026.07.17 |
+
+### catalog/load.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| PARSEC_LY | `3.2616` | C IAU 2015 Resolution B2: 1 pc = 648000/pi au = 3.26156 ly |
+| MOON_ARCMIN | `31` | C NASA Moon Fact Sheet: 3474.8 km at 384,400 km, 31.07' |
+| MORE_MOONS | `1.5` | D tavola v76, Riepilogo:132 |
+| LIKE_THE_MOON | `0.9` | D tavola v76, Riepilogo:132 |
+| PARSEC_STEP | `10` | D tavola v76, Riepilogo:156 |
+| NO_PARSECS | `1_000_000` | D tavola v76, Riepilogo:156 |
 
 ### clock.py
 

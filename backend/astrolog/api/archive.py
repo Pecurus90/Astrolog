@@ -3,7 +3,7 @@ only those. The user's sort too, for the reason in `api/nights`."""
 
 import sqlite3
 from datetime import date
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from fastapi import APIRouter, Depends, Query
 
@@ -76,8 +76,21 @@ def archive_page(  # noqa: PLR0913
     rows, count = archive.page(
         conn, limit=limit, offset=offset, sort=cast(archive.Order, sort), **criteria
     )
-    # One query per kind of row for the whole page; an object row carries only its frames outside
-    # mosaics, like its hours.
+    return ArchiveList(
+        items=items_of(conn, rows, scope),
+        total=count,
+        found=ArchiveFound(**archive.found(conn, **criteria)),
+        limit=limit,
+        offset=offset,
+        choices=ArchiveChoices(**archive.choices(conn)),
+    )
+
+
+def items_of(
+    conn: sqlite3.Connection, rows: list[dict[str, Any]], scope: Scope
+) -> list[ArchiveObject]:
+    """One query per kind of row for the whole page; an object row carries only its frames outside
+    mosaics, like its hours."""
     object_ids = [r["id"] for r in rows if r["mosaic_key"] is None]
     filters_by_key = filters_used.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
     mosaic_keys = [r["mosaic_key"] for r in rows if r["mosaic_key"]]
@@ -85,29 +98,22 @@ def archive_page(  # noqa: PLR0913
     made_by_key = productions.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
     made_by_key |= productions.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
     panels_by_key = archive.panels(conn, mosaic_keys, scope)
-    return ArchiveList(
-        items=[
-            ArchiveObject(
-                key=r["key"],
-                name=objects.display_name(r),
-                slug=r["catalog_slug"],
-                frames=r["frames"],
-                integration_s=r["integration_s"],
-                untimed=r["untimed"],
-                constellation=r["constellation"],
-                type_code=r["type_code"],
-                filters=filters_by_key.get(r["mosaic_key"] or r["id"], []),
-                productions=[
-                    ArchiveProduction(**p) for p in made_by_key.get(r["mosaic_key"] or r["id"], [])
-                ],
-                panels=r["panels"],
-                panel_list=[ArchivePanel(**p) for p in panels_by_key.get(r["mosaic_key"], [])],
-            )
-            for r in rows
-        ],
-        total=count,
-        found=ArchiveFound(**archive.found(conn, **criteria)),
-        limit=limit,
-        offset=offset,
-        choices=ArchiveChoices(**archive.choices(conn)),
-    )
+    return [
+        ArchiveObject(
+            key=r["key"],
+            name=objects.display_name(r),
+            slug=r["catalog_slug"],
+            frames=r["frames"],
+            integration_s=r["integration_s"],
+            untimed=r["untimed"],
+            constellation=r["constellation"],
+            type_code=r["type_code"],
+            filters=filters_by_key.get(r["mosaic_key"] or r["id"], []),
+            productions=[
+                ArchiveProduction(**p) for p in made_by_key.get(r["mosaic_key"] or r["id"], [])
+            ],
+            panels=r["panels"],
+            panel_list=[ArchivePanel(**p) for p in panels_by_key.get(r["mosaic_key"], [])],
+        )
+        for r in rows
+    ]

@@ -55,7 +55,7 @@ def of(
     for owner, rows in out.items():
         theirs = filters.get(owner, [])
         for row in rows:
-            rig = (row.pop("optics_id"), row.pop("camera_id"))
+            rig = (row["optics_id"], row["camera_id"])
             del row["owner"]
             row["filters"] = [
                 {k: f[k] for k in ("name", "passband", "frames", "integration_s")}

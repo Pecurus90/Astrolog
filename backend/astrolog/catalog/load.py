@@ -13,6 +13,14 @@ from . import bundle, designation
 
 log = logging.getLogger(__name__)
 
+PARSEC_LY = 3.2616  # [C IAU 2015 Resolution B2: 1 pc = 648000/pi au = 3.26156 ly]
+# Full Moon's diameter at mean distance [C NASA Moon Fact Sheet: 3474.8 km at 384,400 km, 31.07']
+MOON_ARCMIN = 31
+MORE_MOONS = 1.5  # from here "more than N Moons" [D tavola v76, Riepilogo:132]
+LIKE_THE_MOON = 0.9  # from here "like the full Moon" [D tavola v76, Riepilogo:132]
+PARSEC_STEP = 10  # parsecs to the ten [D tavola v76, Riepilogo:156]
+NO_PARSECS = 1_000_000  # from here only light years [D tavola v76, Riepilogo:156]
+
 
 def unit_vector(ra_deg: float, dec_deg: float) -> tuple[float, float, float]:
     """On the unit sphere a cone search is a box on three indexed axes, and the right ascension
@@ -53,7 +61,26 @@ def _entry_row(entry: dict[str, Any]) -> tuple[Any, ...]:
         entry.get("surface_brightness"), entry.get("distance_ly"), entry.get("opacity"),
         json.dumps(entry["src"]) if entry.get("src") else None,
         extent_ly(entry.get("distance_ly"), entry.get("size_major_arcmin")),
+        parsecs(entry.get("distance_ly")),
+        *beside_the_moon(entry.get("size_major_arcmin")),
     )  # fmt: skip
+
+
+def parsecs(distance_ly: float | None) -> float | None:
+    """To the ten, half up as the board; none for the far ones, read in light years."""
+    if distance_ly is None or distance_ly >= NO_PARSECS:
+        return None
+    return float(math.floor(distance_ly / PARSEC_LY / PARSEC_STEP + 0.5) * PARSEC_STEP)
+
+
+def beside_the_moon(size_arcmin: float | None) -> tuple[str | None, int | None]:
+    """`(more|like|less, whole Moons with more)` against the full Moon."""
+    if not size_arcmin:
+        return None, None
+    moons = size_arcmin / MOON_ARCMIN
+    if moons >= MORE_MOONS:
+        return "more", math.floor(moons)
+    return ("like" if moons >= LIKE_THE_MOON else "less"), None
 
 
 def extent_ly(distance_ly: float | None, size_arcmin: float | None) -> float | None:
@@ -110,8 +137,8 @@ def load_catalog(conn: sqlite3.Connection, file: str | Path | None = None) -> in
             "INSERT INTO catalog_entries(slug, name, common_name, ra_deg, dec_deg, x, y, z,"
             " constellation, type_code, kinds_json, size_major_arcmin, size_minor_arcmin,"
             " position_angle_deg, magnitude, magnitude_band, surface_brightness, distance_ly,"
-            " opacity, src_json, extent_ly) VALUES("
-            + ",".join("?" * 21)  # segnaposto-ok: twenty-one columns, not one per entry
+            " opacity, src_json, extent_ly, distance_pc, moon_compare, moon_count) VALUES("
+            + ",".join("?" * 24)  # segnaposto-ok: twenty-four columns, not one per entry
             + ")",
             [_entry_row(e) for e in entries],
         )

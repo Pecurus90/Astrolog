@@ -551,6 +551,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/objects/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Object Detail
+         * @description One Archive row -- an object or a mosaic, by its `key` -- for its window: the row as the
+         *     Archive gives it, the nights that took it (each the Nights page's row, with the frames and
+         *     hours the row took in it), its first and last night, its sites, the setups that took it and
+         *     what the catalog says of it, with its size beside the full Moon.
+         *
+         *     `production` narrows everything to one of the row's productions: `optics_id:camera_id` as
+         *     the row gives them, `none` for a piece the frames do not say.
+         *
+         *     404 `object_not_found`: no row with that key.
+         */
+        get: operations["object_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/folders/path-info": {
         parameters: {
             query?: never;
@@ -1618,6 +1646,13 @@ export interface components {
              */
             camera: string | null;
             /**
+             * Optics Id
+             * @description To narrow the object's window to this production.
+             */
+            optics_id: number | null;
+            /** Camera Id */
+            camera_id: number | null;
+            /**
              * Frames
              * @description Its frames, rewritten copies excluded.
              */
@@ -1733,6 +1768,23 @@ export interface components {
              * @description Optional: a light-pollution filter does not declare it.
              */
             width_nm: number | null;
+        };
+        /**
+         * BesideTheMoon
+         * @description Its larger size against the full Moon's 31'.
+         */
+        BesideTheMoon: {
+            /**
+             * Compare
+             * @description `more` from 1.5 Moons, `like` from 0.9, `less` below.
+             * @enum {string}
+             */
+            compare: "more" | "like" | "less";
+            /**
+             * Moons
+             * @description Whole Moons with `more`, null otherwise.
+             */
+            moons: number | null;
         };
         /** BrowseOut */
         BrowseOut: {
@@ -3750,6 +3802,34 @@ export interface components {
             /** @description An answered card stays on the page, so one can change one's mind. */
             answer: components["schemas"]["ObjectAnswer"] | null;
         };
+        /** ObjectDetail */
+        ObjectDetail: {
+            /** @description The Archive's row, narrowed as asked. */
+            row: components["schemas"]["ArchiveObject"];
+            /**
+             * Nights
+             * @description In shooting order, the first night first.
+             */
+            nights: components["schemas"]["ObjectNight"][];
+            /**
+             * First Night
+             * @description `YYYY-MM-DD`, the site's night; null: no night.
+             */
+            first_night: string | null;
+            /** Last Night */
+            last_night: string | null;
+            /**
+             * Sites
+             * @description The sites' names, in the order of their first night.
+             */
+            sites: string[];
+            /**
+             * Rigs
+             * @description Most time first, with the row's frames; frames with no known rig are out.
+             */
+            rigs: components["schemas"]["NightRig"][];
+            facts: components["schemas"]["ObjectWindowFacts"];
+        };
         /**
          * ObjectEdit
          * @description The answer on an object card: a catalog slug (usually a clicked candidate), a hand-written
@@ -3799,6 +3879,59 @@ export interface components {
              * @description How big it really is, two figures: distance times its larger size.
              */
             extent_ly: number | null;
+        };
+        /**
+         * ObjectNight
+         * @description A night that took the row: the Nights page's row, and what the row took in it.
+         */
+        ObjectNight: {
+            night: components["schemas"]["Night"];
+            /** Frames */
+            frames: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
+        };
+        /**
+         * ObjectWindowFacts
+         * @description What the catalog says of the row, with its size on the sky; all null outside the catalog.
+         */
+        ObjectWindowFacts: {
+            /**
+             * Key
+             * @description The stable key, the same as the night's objects.
+             */
+            key: string;
+            /**
+             * Common Name
+             * @description The catalog's common name, as the search's.
+             */
+            common_name: string | null;
+            /** Type Code */
+            type_code: string | null;
+            /**
+             * Constellation
+             * @description Three-letter IAU code.
+             */
+            constellation: string | null;
+            distance: components["schemas"]["Distance"] | null;
+            /**
+             * Extent Ly
+             * @description How big it really is, two figures: distance times its larger size.
+             */
+            extent_ly: number | null;
+            /**
+             * Distance Pc
+             * @description Parsecs to the ten; null from a million light years.
+             */
+            distance_pc: number | null;
+            /**
+             * Size Arcmin
+             * @description Its larger size on the sky, arcminutes.
+             */
+            size_arcmin: number | null;
+            moon: components["schemas"]["BesideTheMoon"] | null;
         };
         /** PathInfo */
         PathInfo: {
@@ -6156,6 +6289,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NightDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    object_detail: {
+        parameters: {
+            query?: {
+                production?: string | null;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectDetail"];
                 };
             };
             /** @description Validation Error */

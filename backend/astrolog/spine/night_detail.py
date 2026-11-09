@@ -2,6 +2,7 @@
 says of its objects. The night itself is `nights.page`'s row; nothing is recomputed here."""
 
 import sqlite3
+from collections.abc import Iterable
 from typing import Any
 
 from ..clock import local_iso
@@ -55,8 +56,13 @@ def detail(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | None:
 
 
 def _rigs(conn: sqlite3.Connection, night_id: int) -> list[dict[str, Any]]:
-    """The rig as the Gear page reads it, with what it took that night."""
-    used = {r["rig_id"]: r for r in conn.execute(_RIGS, (night_id,))}
+    return rigs_with(conn, conn.execute(_RIGS, (night_id,)))
+
+
+def rigs_with(conn: sqlite3.Connection, taken: Iterable[sqlite3.Row]) -> list[dict[str, Any]]:
+    """The rig as the Gear page reads it, with what it took: rows of `rig_id`, `counts.AGGREGATE`
+    and `counts.UNTIMED`, in the order to show."""
+    used = {r["rig_id"]: r for r in taken}
     whole = {r["id"]: r for r in inventory.rigs(conn) if r["id"] in used}
     return [
         {

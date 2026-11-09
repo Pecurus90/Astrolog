@@ -27,6 +27,8 @@ class ArchiveProduction(BaseModel):
 
     optics: str | None = Field(description="The optics' name; null if the frames do not say it.")
     camera: str | None = Field(description="The camera's name; null if the frames do not say it.")
+    optics_id: int | None = Field(description="To narrow the object's window to this production.")
+    camera_id: int | None
     frames: int = Field(description="Its frames, rewritten copies excluded.")
     integration_s: float = Field(description="The sum of its frames' time, in seconds.")
     untimed: int = Field(description="How many of its frames do not say how long they lasted.")

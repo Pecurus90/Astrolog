@@ -129,6 +129,8 @@ class Scope:
     site: int | None = None
     optics: int | None = None
     camera: int | None = None
+    # One production, null pieces too: (optics, camera) of its rig, (None, None) without a rig.
+    production: tuple[int | None, int | None] | None = None
 
     @property
     def sql(self) -> tuple[str, list[Any]]:
@@ -160,7 +162,14 @@ class Scope:
                 + " AND ".join(c for c, _ in rigs)
                 + ")"
             )
-        return "".join(f" AND {p}" for p in parts), [v for _, v in nights + rigs]
+        values = [v for _, v in nights + rigs]
+        if self.production is not None:
+            parts.append(
+                "(SELECT g.optics_id FROM rigs g WHERE g.id = f.rig_id) IS ?"
+                " AND (SELECT g.camera_id FROM rigs g WHERE g.id = f.rig_id) IS ?"
+            )
+            values += list(self.production)
+        return "".join(f" AND {p}" for p in parts), values
 
 
 def counts_on(subject: Subject, narrowed: str = "") -> str:
