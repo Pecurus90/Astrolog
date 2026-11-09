@@ -47,15 +47,15 @@ def test_normalize_vocab_corpus(conn, archive):
     # Voyager scrive "Ha 3nm": la larghezza si spoglia e resta la banda
     voyager = frame_by_file(conn, "ha_001.fits")
     assert one(conn, "SELECT passband FROM filters WHERE id = ?", (voyager["filter_id"],)) == "HA"
-    assert bands["H"] == "UNKNOWN"  # una lettera sola non e' una banda: non si indovina
-    assert bands["O"] == "UNKNOWN"
+    assert bands["N"] == "UNKNOWN"  # una lettera fuori dalla lista: non si indovina
+    assert bands["X"] == "UNKNOWN"
 
 
 def test_normalize_never_guesses_a_letter(conn, archive):
-    """`H` resta `H` con banda sconosciuta: e' una domanda, e la risposta la da' chi ha ripreso."""
-    f = frame_by_file(conn, "H_001.fits")
+    """`N` resta `N` con banda sconosciuta: e' una domanda, e la risposta la da' chi ha ripreso."""
+    f = frame_by_file(conn, "N_001.fits")
     assert one(conn, "SELECT passband FROM filters WHERE id = ?", (f["filter_id"],)) == "UNKNOWN"
-    assert f["filter_raw"] == "H"  # il grezzo si conserva sempre
+    assert f["filter_raw"] == "N"  # il grezzo si conserva sempre
 
 
 def test_normalize_bayer_decides_when_filter_is_none(conn, archive):
@@ -102,15 +102,15 @@ def test_normalize_alias_learned(conn, tmp_path):
 
 
 def test_normalize_applies_a_filter_rule(conn, tmp_path):
-    """La risposta "H e' il mio Ha 3nm" vale per tutte le pose di quel filtro."""
-    write_light(tmp_path / "a.fits", filt="H")
-    write_light(tmp_path / "b.fits", filt="H", date="2024-05-17T22:00:00")
+    """La risposta "N e' il mio Ha 3nm" vale per tutte le pose di quel filtro."""
+    write_light(tmp_path / "a.fits", filt="N")
+    write_light(tmp_path / "b.fits", filt="N", date="2024-05-17T22:00:00")
     conn.execute(
         "INSERT INTO filters(name, passband, created_at) VALUES('Antlia Pro Ha 3nm', 'HA', 'ora')"
     )
     conn.execute(
         "INSERT INTO header_aliases(kind, header_value, target_key, created_at)"
-        " VALUES('filter', 'h', 'Antlia Pro Ha 3nm', 'ora')"
+        " VALUES('filter', 'n', 'Antlia Pro Ha 3nm', 'ora')"
     )
     scan(conn, tmp_path)
     run_normalize(conn)
@@ -415,9 +415,9 @@ def test_normalize_the_raw_arriving_after_its_copy_still_wins(conn, tmp_path):
 
 
 def test_normalize_counts_what_is_left_to_confirm(conn, archive):
-    """Il numero da confermare dice il vero: un filtro con banda sconosciuta (`H`) e un frame
+    """Il numero da confermare dice il vero: un filtro con banda sconosciuta (`N`) e un frame
     senza filtro contano, un filtro riconosciuto no."""
-    assert archive["to_review"] == 3  # le due lettere H e O, piu' il mono che dice "none"
+    assert archive["to_review"] == 3  # le due lettere N e X, piu' il mono che dice "none"
     # tredici pezzi: tre ottiche, cinque camere, DUE montature -- l'ASIAIR del banco ne scrive due
     # nomi diversi in TELESCOP -- piu' i TRE che gli altri programmi nominano sulla singola posa:
     # la ruota e il focheggiatore di N.I.N.A., la camera di guida dell'ASIAIR

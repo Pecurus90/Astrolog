@@ -461,7 +461,7 @@ def test_a_mixed_answer_runs_both_stages(client):
     dichiarare (le pose sono `INSERT` diretti, `rigs` e' vuota), quindi la risposta non era mai
     davvero mista e questa guardia e' rimasta verde per un giro intero col ramo scoperto."""
     page = review(client)
-    h = by_name(page["filters"], "H")
+    h = by_name(page["filters"], "N")
     primo = page["objects"][0]
     with mock.patch.object(client.app.state.worker, "start") as start:
         apply(
@@ -480,7 +480,7 @@ def test_an_answer_on_a_filter_alone_also_redoes_the_names_and_the_nights(client
     `stages.DEPENDS` e, per una coppia sola, in `run`. Ora chi tira dietro chi lo dice il
     grafo, e basta."""
     page = review(client)
-    h = by_name(page["filters"], "H")
+    h = by_name(page["filters"], "N")
     with mock.patch.object(client.app.state.worker, "start") as start:
         apply(
             client,

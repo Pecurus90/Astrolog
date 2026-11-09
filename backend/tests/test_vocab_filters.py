@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from astrolog.pipeline.filters import FORMS, StandardFilter
 from astrolog.vocab import filters
 from astrolog.vocab.filters import (
     BANDS,
@@ -60,17 +61,33 @@ def test_spellings_to_canonical(raw, expected):
     assert normalize_filter(raw, bayer=False) == expected
 
 
-REMOVED = ["h", "o", "s", "n", "656", "656nm", "500nm", "650nm", "486nm", "ir", "ir 685", "uv",
+REMOVED = ["n", "656", "656nm", "500nm", "650nm", "486nm", "ir", "ir 685", "uv",
            "nb", "narrowband", "nii", "n2"]  # fmt: skip
 
 
 @pytest.mark.parametrize("raw", REMOVED)
 def test_removed_spellings_are_no_longer_guessed(raw):
-    """Le voci tolte con Marco: una lettera sola, una lunghezza d'onda, un filtro planetario,
-    un generico "banda stretta", l'NII. Non si indovinano: restano un nome libero (o None se
-    sono spazzatura), e Da confermare chiede."""
+    """Le voci tolte con Marco: N (H, O, S tornano con l'ADR 0031), una lunghezza d'onda, un
+    filtro planetario, un generico "banda stretta", l'NII. Non si indovinano: restano un nome
+    libero (o None se sono spazzatura), e Da confermare chiede."""
     out = normalize_filter(raw, bayer=False)
     assert out not in {"Hα", "OIII", "SII", "NII", "Hβ", "R", "G", "B", "IR", "UV", "NB"}
+
+
+# The bands both lists name alike; UV/IR-cut is read later by the camera in the pipeline.
+_SAME_BAND = {
+    StandardFilter.L: Passband.L, StandardFilter.R: Passband.R, StandardFilter.G: Passband.G,
+    StandardFilter.B: Passband.B, StandardFilter.HA: Passband.HA,
+    StandardFilter.OIII: Passband.OIII, StandardFilter.SII: Passband.SII,
+    StandardFilter.HB: Passband.HB, StandardFilter.NONE: Passband.NO_FILTER,
+}  # fmt: skip
+
+
+@pytest.mark.parametrize("written, standard", [(k, v) for k, v in FORMS.items() if v in _SAME_BAND])
+def test_every_form_of_the_pipeline_has_the_same_band_here(written, standard):
+    """ADR 0031 (Marco, 22/10/2026): H, O, S e le forme della lista valgono anche qui, o lo
+    stesso filtro avrebbe colore nella pipeline e grigio nelle pagine (Issue #55)."""
+    assert passband_of(normalize_filter(written, bayer=False)) == _SAME_BAND[standard]
 
 
 def test_none_no_filter_open_are_not_a_band():

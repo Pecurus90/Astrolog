@@ -61,11 +61,11 @@ REWRITTEN = {"PROGRAM": "Elaborazione 1.9"}
 # (file, profilo, filtro, oggetto, esposizione, data, cambi al profilo). Il commento sopra
 # ogni gruppo dice quale assunzione quel gruppo rompe.
 FRAMES = [
-    # N.I.N.A. mono: le lettere sole della ruota, banda nota (L R) e ignota (H O)
+    # N.I.N.A. mono: lettere sole della ruota, banda nota (L R) e ignota (N X, fuori ADR 0031)
     ("nina/L_001.fits", NINA, "L", "M 31", 120.0, "2024-10-31T21:00:00.100", {"FOCALLEN": 561.0}),
     ("nina/R_001.fits", NINA, "R", "M 31", 120.0, "2024-10-31T21:02:00.100", {}),
-    ("nina/H_001.fits", NINA, "H", "NGC 6888", 300.0, "2024-07-14T22:10:00.000", {}),
-    ("nina/O_001.fits", NINA, "O", "NGC 6888", 300.0, "2024-07-14T22:15:00.000", {}),
+    ("nina/N_001.fits", NINA, "N", "NGC 6888", 300.0, "2024-07-14T22:10:00.000", {}),
+    ("nina/X_001.fits", NINA, "X", "NGC 6888", 300.0, "2024-07-14T22:15:00.000", {}),
     # la stessa camera scritta senza il suffisso della porta: un pezzo solo, due grafie
     (
         "nina/L_002.fits",

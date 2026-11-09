@@ -108,7 +108,7 @@ def test_review_lists_what_was_found(client):
     ]
 
     assert _filtro(page, "Lum")["passband"] == "L"
-    assert _filtro(page, "H")["passband"] == "UNKNOWN"
+    assert _filtro(page, "N")["passband"] == "UNKNOWN"
     assert _filtro(page, "OSC")["passband"] == "OSC"
 
     oggetti = {o["name"]: o["frames"] for o in page["objects"]}
@@ -176,7 +176,7 @@ def test_review_declares_a_filter_with_its_bands(client):
     """Un duo-banda si dichiara con le sue due larghezze, e la banda canonica si ricava da
     quelle: un fatto, una casa."""
     page = review(client)
-    h = by_name(page["filters"], "H")
+    h = by_name(page["filters"], "N")
     out = apply(
         client,
         filters=[
@@ -193,7 +193,7 @@ def test_review_declares_a_filter_with_its_bands(client):
 
     # risposto, non e' piu' una domanda: sta fra i tuoi filtri
     dopo = review(client)
-    assert "H" not in [f["name"] for f in dopo["filters"]]
+    assert "N" not in [f["name"] for f in dopo["filters"]]
     assert by_name(dopo["filter_choices"], "Optolong L-Ultimate")["passband"] == "DUO_HAOIII"
     with db(client) as conn:
         riga = conn.execute("SELECT brand FROM filters WHERE id = ?", (h["id"],)).fetchone()
@@ -206,7 +206,7 @@ def test_a_model_from_the_catalog_answers_the_question(client):
     """Scegliere un modello in commercio e' una risposta intera: la banda e' quella del modello, la
     domanda si chiude e i frame tornano in lavorazione. Il modello porta la banda, non le bande
     fisiche: senza, la riga restava UNKNOWN e la domanda aperta con la risposta data."""
-    h = _filtro(review(client), "H")
+    h = _filtro(review(client), "N")
     out = apply(client, filters=[{"id": h["id"], "catalog_id": "optolong-l-extreme",
                                   "brand": "Optolong", "model": "L-eXtreme",
                                   "name": "Optolong L-eXtreme"}])  # fmt: skip
@@ -222,7 +222,7 @@ def test_one_of_mine_is_one_of_the_choices(client, verso):
     "nessun filtro" insegnerebbe una regola che risponde per ogni camera, e unirla a un altro
     filtro sconosciuto lascerebbe la domanda aperta con una risposta data."""
     page = review(client)
-    h = _filtro(page, "H")
+    h = _filtro(page, "N")
     with db(client) as conn:
         if verso == "nessun filtro":
             conn.execute(
@@ -284,31 +284,31 @@ def test_review_merges_two_filters(client):
     """Anche due grafie di filtro si uniscono: la regola resta, le pose passano all'altro."""
     page = review(client)
     tenuto = _filtro(page, "Lum")
-    assorbito = _filtro(page, "H")
+    assorbito = _filtro(page, "N")
     out = apply(client, filters=[{"id": assorbito["id"], "merge_into": tenuto["id"]}])
     assert out["requeued"] == assorbito["frames"]
     dopo = review(client)
-    assert "H" not in [f["name"] for f in dopo["filters"]]
+    assert "N" not in [f["name"] for f in dopo["filters"]]
     with db(client) as conn:
         regola = conn.execute(
-            "SELECT target_key FROM header_aliases WHERE kind = 'filter' AND header_value = 'h'"
+            "SELECT target_key FROM header_aliases WHERE kind = 'filter' AND header_value = 'n'"
         ).fetchone()
         assert regola["target_key"] == "Lum"
 
 
 def test_renaming_a_filter_carries_the_spelling_it_absorbed(client):
     """La catena vale anche per i filtri, perche' la regola la scrive la **stessa** casa: unisci
-    `H` in `Lum`, poi rinomini `Lum`, e la regola su `h` deve seguire. Ferma da sola, portava a un
-    filtro che non esiste piu', e la prossima posa con `H` ne faceva rinascere uno."""
+    `N` in `Lum`, poi rinomini `Lum`, e la regola su `n` deve seguire. Ferma da sola, portava a un
+    filtro che non esiste piu', e la prossima posa con `N` ne faceva rinascere uno."""
     page = review(client)
-    tenuto, assorbito = _filtro(page, "Lum"), _filtro(page, "H")
+    tenuto, assorbito = _filtro(page, "Lum"), _filtro(page, "N")
     apply(client, filters=[{"id": assorbito["id"], "merge_into": tenuto["id"]}])
 
     apply(client, filters=[{"id": tenuto["id"], "name": "Luminanza"}])
 
     with db(client) as conn:
         regola = conn.execute(
-            "SELECT target_key FROM header_aliases WHERE kind = 'filter' AND header_value = 'h'"
+            "SELECT target_key FROM header_aliases WHERE kind = 'filter' AND header_value = 'n'"
         ).fetchone()
         assert regola["target_key"] == "Luminanza"
 
@@ -317,31 +317,31 @@ def test_review_says_when_a_name_is_taken(client):
     """Dare a un filtro il nome di un altro non e' un errore di sistema: e' una risposta con
     il suo perche', e non scrive niente."""
     page = review(client)
-    h = by_name(page["filters"], "H")
+    h = by_name(page["filters"], "N")
     r = client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], "name": "Lum"}]})
     assert r.status_code == 409 and r.json()["detail"]["code"] == "name_taken"
-    assert by_name(review(client)["filters"], "H")["name"] == "H"
+    assert by_name(review(client)["filters"], "N")["name"] == "N"
 
 
 def test_a_second_no_filter_row_is_refused_with_its_code(client):
     """One "no filter" row only: a second is the 409 the contract names, and nothing is written."""
     page = review(client)
-    osc, h = _filtro(page, "OSC"), by_name(page["filters"], "H")
+    osc, h = _filtro(page, "OSC"), by_name(page["filters"], "N")
     apply(client, filters=[{"id": osc["id"], "name": "Nessun filtro", "is_none": True}])
     r = client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], "is_none": True}]})
     assert (r.status_code, r.json()["detail"]["code"]) == (409, "none_filter_exists")
-    assert by_name(review(client)["filters"], "H")["is_none"] is False
+    assert by_name(review(client)["filters"], "N")["is_none"] is False
 
 
 def test_apply_writes_every_answer_or_none(client):
     """A body with a valid answer and a refused one writes neither: the contract's all or none."""
     with db(client) as conn:
         before = conn.execute("SELECT COUNT(*) FROM declarations").fetchone()[0]
-    h = by_name(review(client)["filters"], "H")
+    h = by_name(review(client)["filters"], "N")
     body = {"filters": [{"id": h["id"], "brand": "Baader"}, {"id": 99999, "brand": "Baader"}]}
     r = client.post("/api/v1/review/apply", json=body)
     assert (r.status_code, r.json()["detail"]["code"]) == (404, "not_found")
-    assert by_name(review(client)["filters"], "H")["brand"] is None
+    assert by_name(review(client)["filters"], "N")["brand"] is None
     with db(client) as conn:
         assert conn.execute("SELECT COUNT(*) FROM declarations").fetchone()[0] == before
 

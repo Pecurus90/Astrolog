@@ -72,9 +72,10 @@ Una risposta su una parola che il vocabolario non conosce resta la tua
 
 **Da confermare chiede solo i filtri che l'app non riconosce** (Marco, 25/9/2026: *"scritto e
 riconosciuto si associa; scritto e sconosciuto, una domanda: che filtro e' H? per sempre"*). Uno
-che il vocabolario riconosce non e' una domanda: non si elenca, non si conta, non si conferma. Una
-lettera sola (`H`, `O`, `S`, `G`: lo fanno N.I.N.A. e ASIAIR) normalize non la indovina, ed e'
-una domanda. Si risponde in tre modi: **e' uno dei miei**, scelto fra i filtri con la banda nota
+che il vocabolario riconosce non e' una domanda: non si elenca, non si conta, non si conferma. Le
+lettere sole della ruota (`L`, `R`, `G`, `B`, e `H`, `O`, `S` per decisione di Marco, ADR 0031:
+lo fanno N.I.N.A. e ASIAIR) sono nella lista, la stessa della pipeline (un test le tiene uguali);
+una lettera fuori dalla lista (`N`) normalize non la indovina, ed e' una domanda. Si risponde in tre modi: **e' uno dei miei**, scelto fra i filtri con la banda nota
 (e' l'unione: la grafia dell'header diventa per sempre quel filtro); un **modello in commercio**
 dalla tendina (solo pipeline vecchia: muore col porting, ADR 0031); o **nome e banda** scritti -- per un duo o
 tri-banda le bande che passa, e l'app ne ricava la banda canonica. Non nel wizard: al primo avvio

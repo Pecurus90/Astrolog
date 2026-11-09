@@ -98,7 +98,7 @@ def test_a_filter_is_never_merged_into_or_from_no_filter(client):
 def test_a_filter_is_merged_only_into_one_with_a_known_band(client):
     """La stessa regola della tendina di *Da confermare*: un filtro di cui non si sa la banda non
     dice cosa c'era davanti, e l'Attrezzatura non lo offre come destinazione."""
-    lum, h = _filtro(client, "Lum"), _filtro(client, "H")
+    lum, h = _filtro(client, "Lum"), _filtro(client, "N")
     assert h["id"] not in lum["mergeable_into"]
     r = client.patch(f"/api/v1/gear/filters/{lum['id']}", json={"merge_into": h["id"]})
     assert (r.status_code, r.json()["detail"]["code"]) == (422, "merge_refused")
@@ -131,7 +131,7 @@ def test_two_pieces_are_merged_from_the_gear_page_too(client):
 def test_a_model_and_bands_that_contradict_it_are_refused(client):
     """Un modello porta la sua banda: scriverlo insieme a bande diverse dava un filtro che dice
     "Antlia ALP-T" e conta come Ha. Le due risposte d'accordo invece passano."""
-    h = _filtro(client, "H")
+    h = _filtro(client, "N")
 
     def applica(**risposta):
         return client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], **risposta}]})
@@ -149,7 +149,7 @@ def test_a_model_and_bands_that_contradict_it_are_refused(client):
 def test_taking_back_no_filter_finds_again_the_band_it_had(client, prima, banda_attesa):
     """Le bande e il modello restano salvati sotto "nessun filtro": ritirato, il filtro torna a
     dire la banda che dicevano, non "sconosciuta"."""
-    h = _filtro(client, "H")
+    h = _filtro(client, "N")
     for risposta in (prima, {"is_none": True}, {"is_none": False}):
         r = client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], **risposta}]})
         assert r.status_code == 200, r.text
@@ -162,7 +162,7 @@ def test_taking_back_no_filter_finds_again_the_band_it_had(client, prima, banda_
 def test_taking_back_no_filter_redoes_its_frames(client):
     """Detto per sbaglio "nessun filtro" e poi ritirato: i frame tornavano a contare sotto la banda
     "nessun filtro", perche' la banda restava quella e niente ripartiva."""
-    h = _filtro(client, "H")
+    h = _filtro(client, "N")
 
     def risponde(is_none):
         r = client.post(
@@ -208,7 +208,7 @@ def test_a_merge_the_spine_refuses_is_said(client):
 def test_a_filter_answer_counts_only_when_it_writes_something(client, risposta, scritte):
     """La ricevuta dell'Applica conta le risposte che hanno scritto qualcosa: una scheda vuota no,
     la banda, "nessun filtro", un campo o un'unione si'."""
-    h = next(f for f in client.get("/api/v1/review").json()["filters"] if f["name"] == "H")
+    h = next(f for f in client.get("/api/v1/review").json()["filters"] if f["name"] == "N")
     if "merge_into" in risposta:
         risposta = {"merge_into": _filtro(client, "Lum")["id"]}
     r = client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], **risposta}]})
