@@ -60,7 +60,7 @@ fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
 - **Controlli** in `.pre-commit-config.yaml`: veloci al commit, completi al push e in CI.
 - **Limiti sulle funzioni** (ruff `C901`, `PLR0912/0913/0915`), file sotto 1000 righe.
 - **Nomi e commenti in inglese** (i nomi del backend: `tools/nomi_inglesi.py`); italiano in
-  documenti, testi dell'app e chat. Commenti caveman, al massimo 2 righe (`tools/commenti.py`). Prosa
+  documenti, testi dell'app e chat (**sempre**, anche se agente o hook scrivono in inglese). Commenti caveman, al massimo 2 righe (`tools/commenti.py`). Prosa
   compressa nei documenti di lavoro; `docs/guida-utente.md` in italiano pieno.
 - **Tipi**: funzione toccata esce annotata; `StrEnum` per insiemi chiusi, `dataclass` per righe.
 - **Un fatto, una casa.** Derivazioni in Python; il frontend formatta e basta; tipi TS
