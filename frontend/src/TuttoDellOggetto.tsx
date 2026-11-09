@@ -47,21 +47,25 @@ import { distanza, estensione } from "./TuttoDellaNotte"
 
 type Dettaglio = components["schemas"]["ObjectDetail"]
 type Produzione = components["schemas"]["ArchiveProduction"]
+type Domanda = { production?: string; panel?: number }
+
+/** Una linguetta in testa: una produzione, o in un mosaico il tutto e i suoi pannelli. */
+type Linguetta = { chiave: string; domanda: Domanda; titolo: string; sotto: string }
 
 class NonTrovato extends Error {}
 
-async function dettaglio(key: string, production: string | null): Promise<Dettaglio> {
+async function dettaglio(key: string, query: Domanda): Promise<Dettaglio> {
   const { data, error, response } = await api.GET("/api/v1/objects/{key}", {
-    params: { path: { key }, query: production ? { production } : {} },
+    params: { path: { key }, query },
   })
   if (response.status === 404) throw new NonTrovato()
   if (error) throw new Error(t("window.failed"))
   return data
 }
 
-async function misure(key: string, production: string | null) {
+async function misure(key: string, query: Domanda) {
   const { data, error } = await api.GET("/api/v1/objects/{key}/measures", {
-    params: { path: { key }, query: production ? { production } : {} },
+    params: { path: { key }, query },
   })
   if (error) throw new Error(t("window.failed"))
   return data
@@ -70,6 +74,50 @@ async function misure(key: string, production: string | null) {
 /** La produzione come la chiede la rotta: `ottica:camera`, `none` per un pezzo che non si sa. */
 function chiaveDi(p: Produzione): string {
   return `${p.optics_id ?? "none"}:${p.camera_id ?? "none"}`
+}
+
+/** Le linguette della riga intera: i pannelli di un mosaico (tavola 116), o le produzioni se
+ *  piu' d'una; null: nessuna. */
+function lingueDi(r: Dettaglio["row"]): Linguetta[] | null {
+  if (r.panels && r.panel_list.length) {
+    const tutto = {
+      chiave: "",
+      domanda: {},
+      titolo: t("object.mosaic.all"),
+      sotto: t("object.mosaic.panels", { n: numero(r.panel_list.length) }),
+    }
+    return [
+      tutto,
+      ...r.panel_list.map((p, i) => ({
+        chiave: `p${p.id}`,
+        domanda: { panel: p.id },
+        titolo: t("object.panel", { n: numero(i + 1) }),
+        sotto: p.object ?? t("object.panel.none"),
+      })),
+    ]
+  }
+  if (r.productions.length < 2) return null
+  return r.productions.map((p) => ({
+    chiave: chiaveDi(p),
+    domanda: { production: chiaveDi(p) },
+    titolo: p.optics ?? t("gear.rig.noOptics"),
+    sotto: t("object.production.sub", {
+      camera: p.camera ?? t("gear.rig.noCamera"),
+      ore:
+        p.integration_s > 0
+          ? oreEMinuti(p.integration_s)
+          : t("window.frames", { n: numero(p.frames) }),
+    }),
+  }))
+}
+
+/** Sotto il nome di un mosaico, col pannello scelto: quale, e il suo oggetto (tavola 141).
+ *  La riga e' gia' ristretta: la sua panel_list porta il solo pannello scelto. */
+function nomeDelPannello(r: Dettaglio["row"], i: number): string {
+  const oggetto = r.panel_list[0]?.object
+  return oggetto
+    ? t("object.panel.of", { n: numero(i), oggetto })
+    : t("object.panel.empty", { n: numero(i) })
 }
 
 export function TuttoDellOggetto({
@@ -89,30 +137,29 @@ export function TuttoDellOggetto({
 }) {
   const [scelta, setScelta] = useState(0)
   const intera = useQuery({
-    queryKey: ["objects", "detail", chiave, null],
-    queryFn: () => dettaglio(chiave, null),
+    queryKey: ["objects", "detail", chiave, ""],
+    queryFn: () => dettaglio(chiave, {}),
     retry: (n, e) => !(e instanceof NonTrovato) && n < 2,
   })
-  // Un mosaico non ha ancora i pannelli dall'API: niente linguette (differenze-dalle-tavole.md).
-  const produzioni =
-    intera.data && !intera.data.row.panels && intera.data.row.productions.length > 1
-      ? intera.data.row.productions
-      : null
-  const scelta1 = produzioni ? produzioni[Math.min(scelta, produzioni.length - 1)] : undefined
+  // Le linguette vengono dalla riga intera: una ristretta ne avrebbe una sola.
+  const lingue = intera.data ? lingueDi(intera.data.row) : null
+  const indice = lingue ? Math.min(scelta, lingue.length - 1) : 0
+  const scelta1 = lingue?.[indice]
+  const quale = scelta1?.chiave ?? ""
   const una = useQuery({
-    queryKey: ["objects", "detail", chiave, scelta1 ? chiaveDi(scelta1) : null],
-    queryFn: () => dettaglio(chiave, scelta1 ? chiaveDi(scelta1) : null),
-    enabled: !!scelta1,
+    queryKey: ["objects", "detail", chiave, quale],
+    queryFn: () => dettaglio(chiave, scelta1?.domanda ?? {}),
+    enabled: quale !== "",
   })
-  const dati = scelta1 ? una : intera
-  const quale = scelta1 ? chiaveDi(scelta1) : null
+  const dati = quale !== "" ? una : intera
   // Aspetta l'intera: con piu' produzioni le misure sono di una sola, mai di tutte insieme.
   const mis = useQuery({
     queryKey: ["objects", "measures", chiave, quale],
-    queryFn: () => misure(chiave, quale),
-    enabled: !!intera.data && (!produzioni || !!scelta1),
+    queryFn: () => misure(chiave, scelta1?.domanda ?? {}),
+    enabled: !!intera.data,
     refetchInterval: (q) => ((q.state.data?.pending ?? 0) > 0 ? MENTRE_LEGGE_MS : false),
   })
+  const mosaico = !!intera.data?.row.panels
   const L = MISURE[formato]
   const tel = formato === "telefono"
 
@@ -163,8 +210,9 @@ export function TuttoDellOggetto({
           d={d}
           misure={mis.data}
           formato={formato}
-          produzioni={produzioni}
-          scelta={scelta1}
+          lingue={lingue}
+          scelta={indice}
+          mosaico={mosaico}
           onScegli={setScelta}
           onChiudi={onChiudi}
           onPrima={onPrima}
@@ -175,7 +223,7 @@ export function TuttoDellOggetto({
         <div className="al-c-riepilogo__blocco-4">
           {mis.data && (
             <MisureDeiFrame
-              key={`${chiave}|${quale ?? ""}`}
+              key={`${chiave}|${quale}`}
               misure={mis.data}
               formato={formato}
               tipo="oggetto"
@@ -241,8 +289,9 @@ function Testa({
   d,
   misure: m,
   formato,
-  produzioni,
+  lingue,
   scelta,
+  mosaico,
   onScegli,
   onChiudi,
   onPrima,
@@ -251,8 +300,9 @@ function Testa({
   d: Dettaglio
   misure: Misure | undefined
   formato: Formato
-  produzioni: Produzione[] | null
-  scelta: Produzione | undefined
+  lingue: Linguetta[] | null
+  scelta: number
+  mosaico: boolean
   onScegli: (i: number) => void
   onChiudi: () => void
   onPrima?: (() => void) | undefined
@@ -269,7 +319,11 @@ function Testa({
     : r.untimed > 0
       ? t("object.untimed", { frame, n: numero(r.untimed) })
       : frame
-  const nome = d.facts.common_name ?? (inCatalogo(d.facts) ? "" : t("object.outside"))
+  const nome =
+    mosaico && scelta > 0
+      ? nomeDelPannello(r, scelta)
+      : (d.facts.common_name ?? (inCatalogo(d.facts) ? "" : t("object.outside")))
+  const gruppo = t(mosaico ? "object.mosaic" : "object.productions")
   const filtri = r.filters.length ? (
     <FiltriInTesta filtri={r.filters} />
   ) : (
@@ -307,19 +361,19 @@ function Testa({
         </span>
         <span className="al-c-riepilogo__testo-4">{periodo(d)}</span>
       </div>
-      {produzioni && (
+      {lingue && (
         <div
           className="al-c-riepilogo__riga-6"
           role="tablist"
-          aria-label={t("object.productions")}
+          aria-label={gruppo}
           style={{ flexWrap: tel ? "nowrap" : "wrap", overflowX: tel ? "auto" : "visible" }}
         >
-          <span className="al-c-riepilogo__blocco-2">{t("object.productions")}</span>
-          {produzioni.map((p, i) => {
-            const sel = p === scelta
+          <span className="al-c-riepilogo__blocco-2">{gruppo}</span>
+          {lingue.map((p, i) => {
+            const sel = i === scelta
             return (
               <a
-                key={chiaveDi(p)}
+                key={p.chiave || "tutto"}
                 className="al-c-riepilogo__colonna-2"
                 href="#"
                 role="tab"
@@ -333,15 +387,9 @@ function Testa({
                   borderRadius: 0,
                 }}
               >
-                <b className="al-c-riepilogo__testo-5">{p.optics ?? t("gear.rig.noOptics")}</b>
+                <b className="al-c-riepilogo__testo-5">{p.titolo}</b>
                 <span className="al-c-riepilogo__testo-6" style={{ color: "var(--tenue)" }}>
-                  {t("object.production.sub", {
-                    camera: p.camera ?? t("gear.rig.noCamera"),
-                    ore:
-                      p.integration_s > 0
-                        ? oreEMinuti(p.integration_s)
-                        : t("window.frames", { n: numero(p.frames) }),
-                  })}
+                  {p.sotto}
                 </span>
               </a>
             )

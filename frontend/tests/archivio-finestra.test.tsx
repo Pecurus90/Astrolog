@@ -10,7 +10,15 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import { t } from "../src/i18n"
 import { type Voce, chiamate, pulisci, rispondi } from "./banco"
-import { IGNOTO, M31, apriArchivio, conArchivio, vaiAll, voceArchivio } from "./archivio-banco"
+import {
+  IGNOTO,
+  M31,
+  MOSAICO,
+  apriArchivio,
+  conArchivio,
+  vaiAll,
+  voceArchivio,
+} from "./archivio-banco"
 import { DICIASSETTE, DICIOTTO } from "./notti-banco"
 
 afterEach(pulisci)
@@ -225,6 +233,50 @@ describe("la finestra dell'oggetto", () => {
 
     fireEvent.click(schede[1] as HTMLElement)
     expect(chiamate().some((u) => u.includes("production=none%3A5"))).toBe(true)
+  })
+
+  it("un mosaico ha le linguette dei pannelli, e il pannello scelto lo chiede all'API", async () => {
+    const chiave = encodeURIComponent(MOSAICO.key)
+    const pannello = { ...MOSAICO, frames: 20, panel_list: [MOSAICO.panel_list[3]] }
+    await apriCon([MOSAICO], {
+      [`/api/v1/objects/${chiave}?panel=14`]: {
+        stato: 200,
+        corpo: scheda(pannello, { facts: FUORI }),
+      },
+      // l'API restringe panel_list al solo pannello chiesto
+      [`/api/v1/objects/${chiave}?panel=12`]: {
+        stato: 200,
+        corpo: scheda({ ...MOSAICO, panel_list: [MOSAICO.panel_list[1]] }),
+      },
+      [`/api/v1/objects/${chiave}`]: { stato: 200, corpo: scheda(MOSAICO) },
+    })
+    fireEvent.click(
+      within(await screen.findByRole("article")).getByRole("link", { name: "IC 405" }),
+    )
+
+    const f = await finestra()
+    const gruppo = await within(f).findByRole("tablist", { name: "mosaico" })
+    const schede = within(gruppo).getAllByRole("tab")
+    expect(schede.map((s) => s.textContent)).toEqual([
+      "Riepilogo generale4 pannelli",
+      "Pannello 1IC 405",
+      "Pannello 2LBN 796, Sh2 230",
+      "Pannello 3LDN 1516",
+      "Pannello 4nessun oggetto",
+    ])
+    expect(schede[0]?.getAttribute("aria-selected")).toBe("true")
+    expect(chiamate().some((u) => u.includes("panel="))).toBe(false)
+
+    fireEvent.click(schede[4] as HTMLElement)
+    expect(await within(f).findByText("pannello 4, senza oggetti in catalogo")).toBeDefined()
+    expect(chiamate().some((u) => u.includes("objects/") && u.includes("measures?panel=14"))).toBe(
+      true,
+    )
+    // le linguette restano tutte: vengono dal mosaico intero, non dal pannello
+    expect(within(f).getAllByRole("tab")).toHaveLength(5)
+
+    fireEvent.click(within(f).getAllByRole("tab")[2] as HTMLElement)
+    expect(await within(f).findByText("pannello 2: LBN 796, Sh2 230")).toBeDefined()
   })
 
   it("una produzione sola non ha linguette", async () => {

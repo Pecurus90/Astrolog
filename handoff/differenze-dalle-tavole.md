@@ -92,8 +92,13 @@ Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nell
     camere non si confrontano (ADR 0022), come l'SNR.
   - **«misura in corso»** e lo stato «misure in calcolo»: gli stessi della notte, dall'API
     (`pending`), non simulati.
-- **Mosaico, Riepilogo generale e Pannello N.** Tavola: linguette «mosaico» (116-118). App: nessuna
-  linguetta per un mosaico. Perche': l'API non restringe ancora a un pannello.
+- **Mosaico, l'ordine dei pannelli.** Tavola: Pannello 1..N nell'ordine dei dati (116). App:
+  l'ordine della carta, dal pannello con piu' ore; un pannello con piu' oggetti li dice tutti
+  («LBN 796, Sh2 230»). Perche': lo stesso pannello porta lo stesso numero nella carta e nella
+  finestra.
+- **Mosaico con piu' produzioni.** Tavola: non lo mostra. App: solo le linguette dei pannelli, ogni
+  pannello di tutte le produzioni (`?panel` con `?production` e' un 422). Perche': le misure di un
+  pannello sono scritte solo cosi'; due righe di linguette non stanno nella testa.
 - **Linguette delle produzioni.** Tavola: «2026 · Rifrattore 80/480 · Cima Ekar» (dati.js,
   simulate una per anno). App: l'ottica, sotto camera e ore. Perche': una produzione e' ottica e
   camera (`archivio.md`); anno e sito non la definiscono.

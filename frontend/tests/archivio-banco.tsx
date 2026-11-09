@@ -74,10 +74,10 @@ export const MOSAICO = {
   type_code: "EMISSION_NEBULA",
   panels: 4,
   panel_list: [
-    { object: "IC 405", ra_deg: 79.07, dec_deg: 34.25, frames: 40, integration_s: 14400, untimed: 0 },
-    { object: "LBN 796, Sh2 230", ra_deg: 80.5, dec_deg: 34.9, frames: 30, integration_s: 10800, untimed: 0 },
-    { object: "LDN 1516", ra_deg: 81.2, dec_deg: 33.6, frames: 30, integration_s: 10800, untimed: 0 },
-    { object: null, ra_deg: 79.9, dec_deg: 33.1, frames: 20, integration_s: 7200, untimed: 2 },
+    { id: 11, object: "IC 405", ra_deg: 79.07, dec_deg: 34.25, frames: 40, integration_s: 14400, untimed: 0 },
+    { id: 12, object: "LBN 796, Sh2 230", ra_deg: 80.5, dec_deg: 34.9, frames: 30, integration_s: 10800, untimed: 0 },
+    { id: 13, object: "LDN 1516", ra_deg: 81.2, dec_deg: 33.6, frames: 30, integration_s: 10800, untimed: 0 },
+    { id: 14, object: null, ra_deg: 79.9, dec_deg: 33.1, frames: 20, integration_s: 7200, untimed: 2 },
   ],
 }
 
