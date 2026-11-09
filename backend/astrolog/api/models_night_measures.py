@@ -44,9 +44,9 @@ class MeasureStat(BaseModel):
 
 
 class MeasureSet(BaseModel):
-    """The night, an object, a filter, or an object in a filter: null is all of them."""
+    """All the frames, a group, a filter, or a group in a filter: null is all of them."""
 
-    object_key: str | None
+    group: str | None = Field(description="The group's key (`groups`); null: all of them.")
     filter: str | None = Field(
         description="The filter's name, `__no_filter__` for the frames naming none (the Nights' "
         "key), null: all of them."
@@ -60,9 +60,14 @@ class MeasureSet(BaseModel):
     measures: list[MeasureStat] = Field(description="Every measure, in the catalogue's order.")
 
 
-class MeasuredObject(BaseModel):
-    key: str = Field(description="The stable key, the same as the Nights'.")
-    name: str | None
+class MeasuredGroup(BaseModel):
+    """What the measures are compared by: a night's objects, an object's nights."""
+
+    key: str = Field(description="An object's stable key, the same as the Nights'; a night's id.")
+    name: str | None = Field(description="The object's name; null for a night.")
+    night_date: str | None = Field(
+        description="The night's date, YYYY-MM-DD in the site's zone; null for an object."
+    )
     frames: int
     pending: int
 
@@ -74,12 +79,12 @@ class MeasuredFilter(BaseModel):
 
 
 class MeasuredFrame(BaseModel):
-    """One frame of the night, in shooting order."""
+    """One frame, in shooting order."""
 
     frame_id: int
     start: str | None = Field(description="Start of the exposure in the site's zone, with its "
                               "offset; null: not read yet or not written by the file.")  # fmt: skip
-    object_key: str | None
+    group: str | None = Field(description="Its group's key; null: a night's frame of no object.")
     filter: str = Field(description="The filter's name, `__no_filter__`: the header names none.")
     state: FrameState = Field(
         description="`measured`, `estimated` (shape from the moments: the fit failed), "
@@ -101,16 +106,33 @@ class MeasuredFrame(BaseModel):
     )
 
 
-class NightMeasures(BaseModel):
-    night_id: int
-    timezone: str | None = Field(description="The site's zone: the times read in it.")
+class Measures(BaseModel):
+    """The measures of a set of frames, in groups: what the window of a night and of an object
+    share (MisureFrame, `tipo`)."""
+
     frames: int
     pending: int
-    objects: list[MeasuredObject]
+    groups: list[MeasuredGroup]
     filters: list[MeasuredFilter] = Field(
         description="In the app's one filter order; `__no_filter__` last, band `UNKNOWN`."
     )
-    sets: list[MeasureSet] = Field(
-        description="Empty until the measures of the nights are written after a scan."
-    )
+    sets: list[MeasureSet] = Field(description="Empty until the measures are written after a scan.")
     series: list[MeasuredFrame]
+
+
+class NightMeasures(Measures):
+    """The groups are the night's objects, most frames first."""
+
+    night_id: int
+    timezone: str | None = Field(description="The site's zone: the times read in it.")
+
+
+class ObjectMeasures(Measures):
+    """The groups are the row's nights, in shooting order; each frame's start in its own site's
+    zone."""
+
+    key: str
+    one_production: bool = Field(
+        description="The frames are of one production (optics and camera): the SNR and the FWHM "
+        "in pixels compare across them (ADR 0022: never across setups and cameras)."
+    )

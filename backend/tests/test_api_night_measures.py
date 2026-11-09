@@ -38,9 +38,11 @@ def test_a_night_with_its_objects_filters_sets_and_frames(conn, db_path, world) 
     conn.commit()
     body = _get(db_path, world.night).json()
     assert (body["frames"], body["pending"], body["timezone"]) == (3, 1, "Europe/Rome")
-    assert body["objects"] == [{"key": "M 31", "name": "M 31", "frames": 3, "pending": 1}]
+    assert body["groups"] == [
+        {"key": "M 31", "name": "M 31", "night_date": None, "frames": 3, "pending": 1}
+    ]
     assert body["filters"] == [{"name": "L", "passband": "L", "frames": 3}]
-    whole = next(s for s in body["sets"] if s["object_key"] is None and s["filter"] is None)
+    whole = next(s for s in body["sets"] if s["group"] is None and s["filter"] is None)
     assert (whole["frames"], whole["pending"], whole["differs"]) == (3, 1, [])
     assert [m["key"] for m in whole["measures"]] == [e.key for e in MEASURES]
     hfd = next(m for m in whole["measures"] if m["key"] == "hfd_px")
@@ -48,7 +50,7 @@ def test_a_night_with_its_objects_filters_sets_and_frames(conn, db_path, world) 
         2, 3.0, 2.5, 3.5, None,
     )  # fmt: skip
     assert (hfd["unit"], hfd["per_filter"]) == ("px", False)
-    both = {(s["object_key"], s["filter"]) for s in body["sets"]}
+    both = {(s["group"], s["filter"]) for s in body["sets"]}
     assert both == {(None, None), ("M 31", None), (None, "L"), ("M 31", "L")}
     # in shooting order, the frame without measures last with its state
     assert [f["frame_id"] for f in body["series"]] == [early, late, waiting]
@@ -56,7 +58,7 @@ def test_a_night_with_its_objects_filters_sets_and_frames(conn, db_path, world) 
     # in the site's zone: 21:00 UTC is 23:00 in Rome in October
     assert (first["start"], first["state"]) == ("2026-10-12T23:00:00+02:00", "measured")
     assert (first["values"]["hfd_px"], first["tilt_level"], first["sampling"]) == (2.0, None, None)
-    assert (first["object_key"], first["filter"]) == ("M 31", "L")
+    assert (first["group"], first["filter"]) == ("M 31", "L")
     assert body["series"][2]["state"] == "pending"
 
 
@@ -73,12 +75,12 @@ def test_frames_naming_no_filter_have_their_own_key(conn, db_path, world) -> Non
         {"name": "L", "passband": "L", "frames": 1},
         {"name": "__no_filter__", "passband": "UNKNOWN", "frames": 1},
     ]
-    both = {(s["object_key"], s["filter"]) for s in body["sets"]}
+    both = {(s["group"], s["filter"]) for s in body["sets"]}
     assert both == {
         (None, None), ("M 31", None), (None, "L"), ("M 31", "L"),
         (None, "__no_filter__"), ("M 31", "__no_filter__"),
     }  # fmt: skip
-    sets = {(s["object_key"], s["filter"]): s for s in body["sets"]}
+    sets = {(s["group"], s["filter"]): s for s in body["sets"]}
     none = sets[None, "__no_filter__"]
     hfd = next(m for m in none["measures"] if m["key"] == "hfd_px")
     assert (none["frames"], hfd["median"]) == (1, 4.0)

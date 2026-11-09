@@ -48,8 +48,8 @@ const MISURE_TUTTE = [
   stat("eccentricity", "ratio"),
 ]
 
-const insieme = (object_key: string | null, filter: string | null, frames = 2) => ({
-  object_key,
+const insieme = (group: string | null, filter: string | null, frames = 2) => ({
+  group,
   filter,
   frames,
   pending: 0,
@@ -62,14 +62,14 @@ const MISURE = {
   timezone: "Europe/Rome",
   frames: 2,
   pending: 0,
-  objects: [{ key: "m-51", name: "M 51", frames: 2, pending: 0 }],
+  groups: [{ key: "m-51", name: "M 51", night_date: null, frames: 2, pending: 0 }],
   filters: [{ name: "Ha", passband: "HA", frames: 2 }],
   sets: [insieme(null, null), insieme("m-51", null), insieme(null, "Ha"), insieme("m-51", "Ha")],
   series: [
     {
       frame_id: 1,
       start: "2024-05-18T23:00:00+02:00",
-      object_key: "m-51",
+      group: "m-51",
       filter: "Ha",
       state: "measured",
       tilt_level: "go",
@@ -88,7 +88,7 @@ const MISURE = {
     {
       frame_id: 2,
       start: "2024-05-18T23:05:00+02:00",
-      object_key: "m-51",
+      group: "m-51",
       filter: "Ha",
       state: "too_few_stars",
       tilt_level: null,
@@ -372,7 +372,7 @@ describe("frame per frame e tilt e curvatura", () => {
     const molti = Array.from({ length: 200 }, (_, i) => ({
       ...MISURE.series[0],
       frame_id: i + 1,
-      object_key: i < 100 ? "m-51" : null,
+      group: i < 100 ? "m-51" : null,
     })) as unknown as typeof MISURE.series
     const d = await finestra(conMisure(MISURE_TUTTE, molti))
     const grafici = await within(d).findByRole("region", { name: "I grafici" })

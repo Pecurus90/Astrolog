@@ -31,6 +31,7 @@ import {
   diversi,
   filtriDi,
   insieme,
+  nomeDelGruppo,
   nomeDi,
   scritto,
   statistica,
@@ -74,12 +75,12 @@ export function FramePerFrame({
     luna: false,
   })
   const [gf, setGf] = useState<string[] | null>(null)
-  const filtri = filtriDi(misure, scelta.oggetto)
+  const filtri = filtriDi(misure, scelta.gruppo)
   const nomi = filtri.map((f) => f.name)
   const scelti = (gf ?? [scelta.filtro ?? nomi[0] ?? ""]).filter((k) => nomi.includes(k))
   if (!scelti.length && nomi[0]) scelti.push(nomi[0])
   const due = met.slice(0, 2)
-  const tutta = insieme(misure, scelta.oggetto, null)
+  const tutta = insieme(misure, scelta.gruppo, null)
   const conZenit = due.some((id) => haZenit(id, tutta))
   const zenit = vista.zenit && conZenit
   const conLuna =
@@ -278,7 +279,7 @@ function framesDi(
   perValore: boolean,
 ) {
   const fr = misure.series.filter(
-    (f) => f.filter === filtro && (scelta.oggetto === null || f.object_key === scelta.oggetto),
+    (f) => f.filter === filtro && (scelta.gruppo === null || f.group === scelta.gruppo),
   )
   if (!perValore) return fr
   return fr
@@ -311,8 +312,8 @@ function UnGrafico({
 }) {
   const [inizio, setInizio] = useState(0)
   const [sopra, setSopra] = useState<number | null>(null)
-  const set = insieme(misure, scelta.oggetto, filtro)
-  const insiemi = scelti.map((k) => insieme(misure, scelta.oggetto, k))
+  const set = insieme(misure, scelta.gruppo, filtro)
+  const insiemi = scelti.map((k) => insieme(misure, scelta.gruppo, k))
   const chiavi = met.map((id) => chiaveGrafico(id, set, vista.zenit))
   const scale = chiavi.map((k) => scala(insiemi, k))
   const frames = framesDi(misure, scelta, filtro, chiavi[0] ?? "", vista.perValore)
@@ -655,7 +656,8 @@ function Riquadro({
   const i = d.vis.findIndex((f) => f.frame_id === id)
   const f = d.vis[i]
   if (!f) return null
-  const nome = misure.objects.find((o) => o.key === f.object_key)?.name ?? f.object_key
+  const gruppo = misure.groups.find((o) => o.key === f.group)
+  const nome = gruppo ? nomeDelGruppo(gruppo) : null
   const righe: { n: string; v: string }[] = MISURATO.has(f.state)
     ? met.map((m, j) => ({
         n: nomeMisura(m),
@@ -702,12 +704,12 @@ function Riquadro({
 
 /** I nomi degli oggetti sotto l'asse, dove ne comincia uno; uno che non ci sta salta. */
 function Oggetti({ misure, d, g }: { misure: Misure; d: Disegno; g: Geometria }) {
-  const nomi = new Map(misure.objects.map((o) => [o.key, o.name ?? o.key]))
+  const nomi = new Map(misure.groups.map((o) => [o.key, nomeDelGruppo(o)]))
   const gl: { x: number; l: string }[] = []
   d.vis.forEach((f, i) => {
-    if (i && d.vis[i - 1]?.object_key === f.object_key) return
+    if (i && d.vis[i - 1]?.group === f.group) return
     const x = g.x0 + d.slot * i
-    const l = (f.object_key && nomi.get(f.object_key)) ?? ""
+    const l = (f.group && nomi.get(f.group)) ?? ""
     const prima = gl.at(-1)
     if (l && (!prima || x - prima.x > prima.l.length * 6.2 + 8)) gl.push({ x, l })
   })
@@ -761,8 +763,8 @@ function Finestra({
     const r = e.currentTarget.getBoundingClientRect()
     vai(Math.round(((e.clientX - r.left) / r.width) * n - quanti / 2))
   }
-  const oggetti = perOra ? [...new Set(frames.map((f) => f.object_key))] : []
-  const nomi = new Map(misure.objects.map((o) => [o.key, o.name ?? o.key]))
+  const oggetti = perOra ? [...new Set(frames.map((f) => f.group))] : []
+  const nomi = new Map(misure.groups.map((o) => [o.key, nomeDelGruppo(o)]))
   const margini = { marginLeft: pc(g.x0, g.W), marginRight: pc(g.W - g.x1, g.W) }
   return (
     <>
@@ -823,7 +825,7 @@ function Finestra({
               key={k ?? ""}
               type="button"
               className="al-bottone al-bottone--tenue al-bottone--piccolo"
-              onClick={gesto(() => vai(frames.findIndex((f) => f.object_key === k)))}
+              onClick={gesto(() => vai(frames.findIndex((f) => f.group === k)))}
             >
               {(k && nomi.get(k)) ?? t("archive.panel.noObject")}
             </button>
@@ -835,9 +837,7 @@ function Finestra({
 
 /** Sotto i grafici: come si leggono, e i segni che ci sono (tavola 312-313). */
 function Legenda({ misure, scelta, linee }: { misure: Misure; scelta: Scelta; linee: boolean }) {
-  const vis = misure.series.filter(
-    (f) => scelta.oggetto === null || f.object_key === scelta.oggetto,
-  )
+  const vis = misure.series.filter((f) => scelta.gruppo === null || f.group === scelta.gruppo)
   const segni = [
     vis.some((f) => f.state === "estimated") && {
       n: t("chart.estimated"),

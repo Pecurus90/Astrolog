@@ -1,8 +1,9 @@
-"""A night's measures, read: the sets `night_measures.py` wrote and the frames one by one as the
-pipeline wrote them, by SQL through the bridge (ADR 0045). Nothing computed here."""
+"""A night's measures as `night_measures.py` wrote them, its objects the groups, and its frames
+one by one through the bridge (ADR 0045); `object_measures_read.py` reads an object's."""
 
 import json
 import sqlite3
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from ..clock import local_iso
@@ -15,17 +16,23 @@ from .night_criteria import NO_FILTER
 
 _NIGHT = "SELECT s.timezone FROM nights n JOIN sites s ON s.id = n.site_id WHERE n.id = ?"
 
-_SERIES = f"""
-SELECT f.id, f.object_id, f.filter_id, m.outcome, m.shape, m.tilt_level, m.sampling_class,
-       k.angle_axis,
+# The columns of a frame of the series, `f` through the bridge; the caller adds FROM and WHERE.
+SERIES = f"""
+SELECT f.id, f.object_id, f.night_id, f.filter_id, m.outcome, m.shape, m.tilt_level,
+       m.sampling_class, k.angle_axis,
        (SELECT c.start_utc FROM pipeline_files pf JOIN pipeline_cards c ON c.file_id = pf.id
          WHERE pf.frame_id = b.pipeline_frame_id AND pf.state = 'present'
-         ORDER BY pf.id LIMIT 1) AS start_utc, {VALUES}
+         ORDER BY pf.id LIMIT 1) AS start_utc, {VALUES}"""  # noqa: S608 - our columns
+# Never measured (a program not read, a compressed file): not in the series.
+SERIES_WHERE = """f.copy_of IS NULL AND b.skip_reason IS NULL
+  AND m.outcome IS NOT 'not_supported' AND m.outcome IS NOT 'fz_unsupported'"""
+SERIES_ORDER = "ORDER BY start_utc IS NULL, start_utc, f.id"
+
+_SERIES = f"""{SERIES}
 FROM frames f{JOINS}
-WHERE f.night_id = ? AND f.copy_of IS NULL AND b.skip_reason IS NULL
-  AND m.outcome IS NOT 'not_supported' AND m.outcome IS NOT 'fz_unsupported'
-ORDER BY start_utc IS NULL, start_utc, f.id
-"""  # noqa: S608 - our columns
+WHERE f.night_id = ? AND {SERIES_WHERE}
+{SERIES_ORDER}
+"""
 
 _OBJECTS = f"""
 SELECT g.frames, g.pending, o.id, o.catalog_slug, {obj.NAME_COLUMNS}
@@ -35,10 +42,10 @@ ORDER BY g.frames DESC, o.id
 """  # noqa: S608 - constant fragments of the spine
 
 _FILTERS = f"""
-SELECT g.frames, x.id, x.name, x.passband
-FROM night_measure_groups g JOIN filters x ON x.id = g.filter_id
-WHERE g.night_id = ? AND g.object_id IS NULL
-ORDER BY {filters_used.order_by("x")}
+SELECT g.frames, g.unfiltered, x.id, x.name, x.passband
+FROM night_measure_groups g LEFT JOIN filters x ON x.id = g.filter_id
+WHERE g.night_id = ? AND g.object_id IS NULL AND (g.filter_id IS NOT NULL OR g.unfiltered = 1)
+ORDER BY g.unfiltered, {filters_used.order_by("x")}
 """  # noqa: S608 - constant fragments of the spine
 
 _GROUPS = "SELECT * FROM night_measure_groups WHERE night_id = ?"
@@ -52,65 +59,78 @@ def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | 
     if night is None:
         return None
     objects = {r["id"]: r for r in conn.execute(_OBJECTS, (night_id,))}
-    filters = {r["id"]: r for r in conn.execute(_FILTERS, (night_id,))}
     keys = {i: obj.stable_key(r) for i, r in objects.items()}
-    names = {i: r["name"] for i, r in filters.items()}
+    found = conn.execute(_FILTERS, (night_id,)).fetchall()
+    names = {r["id"]: r["name"] for r in found if not r["unfiltered"]}
     zone = night["timezone"]
-    series = [_frame(r, keys, names, zone) for r in conn.execute(_SERIES, (night_id,))]
-    groups = conn.execute(_GROUPS, (night_id,)).fetchall()
-    by_key = {(g["object_id"], g["filter_id"], g["unfiltered"]): g for g in groups}
-    whole = by_key.get((None, None, 0))
-    listed = [
-        {"name": r["name"], "passband": r["passband"], "frames": r["frames"]}
-        for r in filters.values()
+    series = [
+        frame(r, keys.get(r["object_id"]), names, zone) for r in conn.execute(_SERIES, (night_id,))
     ]
-    if (unfiltered := by_key.get((None, None, 1))) is not None:  # last, as in the Nights
-        listed.append(
-            {"name": NO_FILTER, "passband": Passband.UNKNOWN, "frames": unfiltered["frames"]}
-        )
+    groups = conn.execute(_GROUPS, (night_id,)).fetchall()
+    rows = conn.execute(_MEASURES, (night_id,)).fetchall()
+    whole = next((g for g in groups if _whole(g)), None)
     return {
         "night_id": night_id,
-        "timezone": night["timezone"],
+        "timezone": zone,
         # not written yet (a scan still running): every frame is still to be measured
         "frames": whole["frames"] if whole else len(series),
         "pending": whole["pending"] if whole else len(series),
-        "objects": [
+        "groups": [
             {
                 "key": keys[i],
                 "name": obj.display_name(r),
+                "night_date": None,
                 "frames": r["frames"],
                 "pending": r["pending"],
             }
             for i, r in objects.items()
         ],  # fmt: skip
-        "filters": listed,
-        "sets": _sets(conn, night_id, groups, keys, names),
+        "filters": filters(found),
+        "sets": sets(groups, rows, "object_id", lambda g: keys.get(g["object_id"]), names),
         "series": series,
     }
 
 
-def _sets(
-    conn: sqlite3.Connection,
-    night_id: int,
+def _whole(g: sqlite3.Row) -> bool:
+    return g["object_id"] is None and g["filter_id"] is None and g["unfiltered"] == 0
+
+
+def filters(found: Iterable[sqlite3.Row]) -> list[dict[str, Any]]:
+    """In the app's one filter order; the frames naming none last, as in the Nights."""
+    return [
+        {"name": NO_FILTER, "passband": Passband.UNKNOWN, "frames": r["frames"]}
+        if r["unfiltered"]
+        else {"name": r["name"], "passband": r["passband"], "frames": r["frames"]}
+        for r in found
+    ]
+
+
+def sets(
     groups: list[sqlite3.Row],
-    keys: dict[int, str],
+    rows: list[sqlite3.Row],
+    column: str,
+    group_of: Callable[[sqlite3.Row], str | None],
     names: dict[int, str],
 ) -> list[dict[str, Any]]:
-    rows = {
-        (r["object_id"], r["filter_id"], r["unfiltered"], r["key"]): r
-        for r in conn.execute(_MEASURES, (night_id,))
-    }
+    """Every written group with its measures. `column` is the group's own (object or night): with
+    the filter it tells a group's rows among the ones the caller read."""
+
+    def at_of(r: sqlite3.Row) -> tuple[Any, ...]:
+        return r[column], r["filter_id"], r["unfiltered"]
+
+    by_at = {(*at_of(r), r["key"]): r for r in rows}
     out = []
     for g in groups:
-        at = (g["object_id"], g["filter_id"], g["unfiltered"])
+        at = at_of(g)
         measuring = g["pending"] == g["frames"]
+        flt = g["filter_id"]
         out.append({
-            "object_key": keys.get(at[0]) if at[0] is not None else None,
-            "filter": NO_FILTER if at[2] else names.get(at[1]) if at[1] is not None else None,
+            "group": group_of(g),
+            "filter": NO_FILTER if g["unfiltered"] else names.get(flt) if flt is not None else None,
             "frames": g["frames"],
             "pending": g["pending"],
             "differs": json.loads(g["differs"]),
-            "measures": [_stat(e, rows.get((*at, e.key)), measuring) for e in MEASURES],
+            "measures": [_stat(e, by_at.get((*at, e.key)), measuring) for e in MEASURES],
         })  # fmt: skip
     return out
 
@@ -130,9 +150,10 @@ def _stat(entry: Entry, row: sqlite3.Row | None, measuring: bool) -> dict[str, A
                   "per_filter": bool(row["per_filter"])}  # fmt: skip
 
 
-def _frame(
-    r: sqlite3.Row, keys: dict[int, str], names: dict[int, str], zone: str | None
+def frame(
+    r: sqlite3.Row, group: str | None, names: dict[int, str], zone: str | None
 ) -> dict[str, Any]:
+    """One frame of the series, in its group, its start in the site's zone."""
     if r["outcome"] == "measured" and r["shape"] == "estimated":
         state = "estimated"
     else:  # a file unreadable now, or not measured yet, waits alike
@@ -140,8 +161,8 @@ def _frame(
     return {
         "frame_id": r["id"],
         "start": local_iso(r["start_utc"], zone),
-        "object_key": keys.get(r["object_id"]),
-        "filter": names.get(r["filter_id"]) if r["filter_id"] is not None else NO_FILTER,
+        "group": group,
+        "filter": names.get(r["filter_id"], NO_FILTER) if r["filter_id"] is not None else NO_FILTER,
         "state": state,
         "tilt_level": r["tilt_level"],
         "sampling": r["sampling_class"],

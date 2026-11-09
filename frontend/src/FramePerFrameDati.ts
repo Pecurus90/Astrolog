@@ -25,7 +25,7 @@ export function frameMostrato(
 ): { vista: FrameMisurato[]; f: FrameMisurato | undefined } {
   const vista = misure.series.filter(
     (f) =>
-      (scelta.oggetto === null || f.object_key === scelta.oggetto) &&
+      (scelta.gruppo === null || f.group === scelta.gruppo) &&
       (scelta.filtro === null || f.filter === scelta.filtro),
   )
   const f =
@@ -184,7 +184,7 @@ export function disegno(q: Richiesta): Disegno {
   let lunaPrima = false
   vis.forEach((f, i) => {
     const x = g.x0 + slot * (i + 0.5)
-    if (i && vis[i - 1]?.object_key !== f.object_key) out.sep.push(n1(g.x0 + slot * i))
+    if (i && vis[i - 1]?.group !== f.group) out.sep.push(n1(g.x0 + slot * i))
     const lu = f.values.moon_altitude_deg
     // sotto l'orizzonte sull'asse, come la tavola (157); senza altezza la linea si interrompe
     if (q.luna && lu !== undefined) {

@@ -1,16 +1,27 @@
 /**
  * Le misure dei frame per lo schermo (tavola v76, `componenti/MisureFrame.dc.html`, `MET` e
  * `AMG`): nome e forma di ogni misura. Mediane, quartili, estremi e giudizi arrivano dall'API
- * (`GET /api/v1/nights/{id}/measures`); qui si scrivono e basta.
+ * (`GET /api/v1/nights/{id}/measures`, `GET /api/v1/objects/{key}/measures`); qui si scrivono e basta.
  */
 import type { components } from "./api/schema"
+import type { Esito } from "./componenti/Pillola"
 import { varianteDi } from "./FiltriUsati"
-import { type Chiave, decimali, numero, t } from "./i18n"
+import { type Chiave, decimali, giornoEMese, maiuscola, numero, t } from "./i18n"
 
-export type Misure = components["schemas"]["NightMeasures"]
+export type Misure =
+  components["schemas"]["NightMeasures"] | components["schemas"]["ObjectMeasures"]
 export type Insieme = components["schemas"]["MeasureSet"]
 export type Statistica = components["schemas"]["MeasureStat"]
 export type FrameMisurato = components["schemas"]["MeasuredFrame"]
+export type Gruppo = components["schemas"]["MeasuredGroup"]
+/** L'esito di un gruppo accanto alla sua riga (tavola, MisureFrame 333): la notte dell'oggetto. */
+export interface EsitoDelGruppo {
+  esito: Esito
+  testo: string
+  segno: string
+}
+/** Cosa si confronta (MisureFrame `tipo`): gli oggetti di una notte, le notti di un oggetto. */
+export type Tipo = "notte" | "oggetto"
 
 const intero = (v: number) => numero(Math.round(v))
 const gradi = (v: number) => `${intero(v)}\u00B0`
@@ -200,13 +211,18 @@ export function chiaveIn(id: string, s: Insieme | undefined): string {
   return chiaveDi(id)
 }
 
-/** L'insieme della notte per oggetto e filtro, `null` = tutti. */
+/** L'insieme per gruppo e filtro, `null` = tutti. */
 export function insieme(
   m: Misure,
-  oggetto: string | null,
+  gruppo: string | null,
   filtro: string | null,
 ): Insieme | undefined {
-  return m.sets.find((s) => s.object_key === oggetto && s.filter === filtro)
+  return m.sets.find((s) => s.group === gruppo && s.filter === filtro)
+}
+
+/** Il nome di un gruppo: l'oggetto della notte, la notte dell'oggetto (*Mercoledi' 16 settembre*, Riepilogo 121). */
+export function nomeDelGruppo(g: Gruppo): string {
+  return g.name ?? (g.night_date ? maiuscola(giornoEMese(g.night_date)) : g.key)
 }
 
 export function statistica(s: Insieme | undefined, chiave: string): Statistica | undefined {
@@ -242,15 +258,15 @@ export function posizione(v: number, basso: number, alto: number): string {
 /** L'esito di un giudizio del tilt nella pillola. */
 export const ESITO: Record<string, 0 | 1 | 2> = { go: 0, marginal: 1, nogo: 2 }
 
-/** L'oggetto e il filtro scelti; `null`: tutti. */
+/** Il gruppo (oggetto della notte, notte dell'oggetto) e il filtro scelti; `null`: tutti. */
 export interface Scelta {
-  oggetto: string | null
+  gruppo: string | null
   filtro: string | null
 }
 
-/** I filtri che hanno frame nella scelta di oggetto, nell'ordine dell'app. */
-export function filtriDi(m: Misure, oggetto: string | null): Misure["filters"] {
-  return m.filters.filter((f) => insieme(m, oggetto, f.name))
+/** I filtri che hanno frame nel gruppo scelto, nell'ordine dell'app. */
+export function filtriDi(m: Misure, gruppo: string | null): Misure["filters"] {
+  return m.filters.filter((f) => insieme(m, gruppo, f.name))
 }
 
 /** Il colore del filtro, dal token della sua banda. */
@@ -264,4 +280,27 @@ export function diversi(differs: Insieme["differs"]): string {
   const parole = differs.map((d) => t(`measures.differs.${d}`))
   if (parole.length < 2) return parole[0] ?? ""
   return t("measures.differs.and", { a: parole.slice(0, -1).join(", "), b: parole.at(-1) ?? "" })
+}
+
+/**
+ * FWHM e SNR mediani in testa alla finestra (tavola, Riepilogo 165): la FWHM in secondi d'arco,
+ * in pixel solo senza scala; con piu' produzioni insieme ne' l'SNR ne' i pixel (ADR 0022).
+ */
+export function medianeInTesta(m: Misure | undefined): { v: string; l: string }[] {
+  if (!m)
+    return [
+      { v: "\u2026", l: t("window.fwhm") },
+      { v: "\u2026", l: t("window.snr") },
+    ]
+  const una = !("one_production" in m) || m.one_production
+  const tutta = insieme(m, null, null)
+  const arc = statistica(tutta, "fwhm_arcsec")?.median
+  const fwhm =
+    arc != null || !una
+      ? scritto("fwhm_arcsec", arc)
+      : scritto("fwhm_px", statistica(tutta, "fwhm_px")?.median)
+  const kpi = [{ v: fwhm, l: t("window.fwhm") }]
+  return una
+    ? [...kpi, { v: scritto("snr", statistica(tutta, "snr")?.median), l: t("window.snr") }]
+    : kpi
 }

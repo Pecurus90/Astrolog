@@ -117,6 +117,7 @@ export const itMisure = {
   "shot.no.site": "Senza sito: niente FWHM allo zenit.",
   "shot.noise": "\u00B1 {n} di rumore",
   "shot.snr.sub": "si confronta nella notte",
+  "shot.snr.sub.object": "si confronta nella notte e nell'oggetto",
   "shot.tilt.sub": "HFD fra gli angoli",
   "shot.curvature.sub": "HFD oltre il 75% verso gli angoli meno HFD al centro",
   "shot.fwhm.field.sub": "numeri puri: fra gli angoli \u00B7 angoli e centro",
@@ -166,6 +167,7 @@ export const itMisure = {
 
   // A confronto e per filtro.
   "compare.objects": "Gli oggetti a confronto",
+  "compare.nights": "Le notti a confronto",
   "compare.measure": "Misura",
   "compare.scale": "stessa scala per tutte le righe \u00B7 toccata una riga, resta solo quella",
   "perfilter.title": "Per filtro",

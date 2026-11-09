@@ -1425,6 +1425,60 @@ CREATE TABLE night_measure_groups (
 CREATE UNIQUE INDEX night_measure_groups_key ON night_measure_groups
   (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1), unfiltered);
 
+-- RICAVATO. Le misure di una riga dell'Archivio (oggetto fuori dai mosaici, o mosaico), per
+-- produzione o tutte, notte (NULL: tutte) e filtro; scritte con `night_measures`.
+CREATE TABLE object_measures (
+  object_id   INTEGER REFERENCES objects (id) ON DELETE CASCADE,
+  mosaic_key  TEXT,
+  -- 1: tutte le produzioni della riga (ottica e camera NULL); 0: quella di ottica e camera
+  every_production INTEGER NOT NULL CHECK (every_production IN (0, 1)),
+  optics_id   INTEGER REFERENCES instruments (id) ON DELETE CASCADE,
+  camera_id   INTEGER REFERENCES instruments (id) ON DELETE CASCADE,
+  night_id    INTEGER REFERENCES nights (id) ON DELETE CASCADE,
+  filter_id   INTEGER REFERENCES filters (id) ON DELETE CASCADE,
+  unfiltered  INTEGER NOT NULL CHECK (unfiltered IN (0, 1) AND (unfiltered = 0 OR filter_id IS NULL)),
+  key         TEXT NOT NULL,
+  frames      INTEGER NOT NULL CHECK (frames > 0),
+  measured    INTEGER NOT NULL CHECK (measured BETWEEN 0 AND frames),
+  median      REAL,
+  q1          REAL,
+  q3          REAL,
+  low         REAL,
+  high        REAL,
+  trend       TEXT CHECK (trend IS NULL OR (json_valid(trend) AND json_type(trend) = 'array')),
+  verdict     TEXT CHECK (verdict IN ('go', 'marginal', 'nogo',
+    'severe_under', 'under', 'ideal', 'over')),
+  per_filter  INTEGER NOT NULL CHECK (per_filter IN (0, 1)),
+  CHECK ((object_id IS NULL) <> (mosaic_key IS NULL)),
+  CHECK (every_production = 0 OR (optics_id IS NULL AND camera_id IS NULL)),
+  CHECK ((median IS NULL) = (measured = 0) AND (median IS NULL) = (q1 IS NULL)
+    AND (q1 IS NULL) = (q3 IS NULL) AND (q1 IS NULL) = (low IS NULL)
+    AND (low IS NULL) = (high IS NULL) AND (median IS NOT NULL OR verdict IS NULL))
+) STRICT;
+CREATE UNIQUE INDEX object_measures_key ON object_measures
+  (COALESCE(object_id, -1), COALESCE(mosaic_key, ''), every_production, COALESCE(optics_id, -1),
+   COALESCE(camera_id, -1), COALESCE(night_id, -1), COALESCE(filter_id, -1), unfiltered, key);
+
+-- RICAVATO. Lo stato di ogni gruppo di `object_measures`, scritto con lei.
+CREATE TABLE object_measure_groups (
+  object_id   INTEGER REFERENCES objects (id) ON DELETE CASCADE,
+  mosaic_key  TEXT,
+  every_production INTEGER NOT NULL CHECK (every_production IN (0, 1)),
+  optics_id   INTEGER REFERENCES instruments (id) ON DELETE CASCADE,
+  camera_id   INTEGER REFERENCES instruments (id) ON DELETE CASCADE,
+  night_id    INTEGER REFERENCES nights (id) ON DELETE CASCADE,
+  filter_id   INTEGER REFERENCES filters (id) ON DELETE CASCADE,
+  unfiltered  INTEGER NOT NULL CHECK (unfiltered IN (0, 1) AND (unfiltered = 0 OR filter_id IS NULL)),
+  frames      INTEGER NOT NULL CHECK (frames > 0),
+  pending     INTEGER NOT NULL CHECK (pending BETWEEN 0 AND frames),
+  differs     TEXT NOT NULL CHECK (json_valid(differs) AND json_type(differs) = 'array'),
+  CHECK ((object_id IS NULL) <> (mosaic_key IS NULL)),
+  CHECK (every_production = 0 OR (optics_id IS NULL AND camera_id IS NULL))
+) STRICT;
+CREATE UNIQUE INDEX object_measure_groups_key ON object_measure_groups
+  (COALESCE(object_id, -1), COALESCE(mosaic_key, ''), every_production, COALESCE(optics_id, -1),
+   COALESCE(camera_id, -1), COALESCE(night_id, -1), COALESCE(filter_id, -1), unfiltered);
+
 -- DICHIARATO. «Lascia»: la classe misurata che l'utente non ha voluto; si ripropone solo se cambia.
 CREATE TABLE site_sky_dismissed (
   site_id INTEGER PRIMARY KEY REFERENCES sites (id) ON DELETE CASCADE,

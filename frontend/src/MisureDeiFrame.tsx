@@ -1,8 +1,8 @@
 /**
- * Le misure dei frame di una notte (tavola v76, `componenti/MisureFrame.dc.html`, tipo
- * `notte`): le tessere con mediane e quartili, le altre misure, frame per frame, il frame
- * scelto, gli oggetti a confronto, la tabella per filtro, tilt e curvatura. Il componente
- * sceglie e scrive: i conti sono dell'API.
+ * Le misure dei frame (tavola v76, `componenti/MisureFrame.dc.html`): di una notte coi suoi
+ * oggetti a gruppi, di un oggetto con le sue notti (`tipo`). Le tessere con mediane e quartili,
+ * le altre misure, frame per frame, il frame scelto, i gruppi a confronto, la tabella per filtro,
+ * tilt e curvatura. Il componente sceglie e scrive: i conti sono dell'API.
  */
 import { type ChangeEvent, useState } from "react"
 
@@ -16,16 +16,19 @@ import {
   ALTRE,
   DAL_SETUP,
   ESITO,
+  type EsitoDelGruppo,
   type Insieme,
   type Misure,
   type Scelta,
   TESSERE,
   type Tessera,
+  type Tipo,
   diversi,
   filtriDi,
   insieme,
   tintaDi,
   linea,
+  nomeDelGruppo,
   nomeDi,
   quartili,
   scritto,
@@ -54,17 +57,31 @@ function ricorda(v: string | null): void {
   }
 }
 
-export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato: Formato }) {
+export function MisureDeiFrame({
+  misure,
+  formato,
+  tipo = "notte",
+  esiti,
+}: {
+  misure: Misure
+  formato: Formato
+  tipo?: Tipo
+  /** L'esito di ogni gruppo accanto alla sua riga in *A confronto*: le notti dell'oggetto. */
+  esiti?: ReadonlyMap<string, EsitoDelGruppo>
+}) {
   const tel = formato === "telefono"
-  const [scelta, setScelta] = useState<Scelta>({ oggetto: null, filtro: null })
+  const [scelta, setScelta] = useState<Scelta>({ gruppo: null, filtro: null })
   const [altra, setAltra] = useState<string | null>(letta)
-  const [met, setMet] = useState<string[]>(() => ["fwhm", "eccentricity"])
+  // le due tessere di partenza (tavola, MisureFrame 211)
+  const [met, setMet] = useState<string[]>(() =>
+    tipo === "oggetto" ? ["fwhm", "snr"] : ["fwhm", "eccentricity"],
+  )
   const [cmp, setCmp] = useState<string | null>(null)
   const [sel, setSel] = useState<number | null>(null)
 
-  const set = insieme(misure, scelta.oggetto, scelta.filtro)
-  const tutti = insieme(misure, scelta.oggetto, null)
-  const filtri = filtriDi(misure, scelta.oggetto)
+  const set = insieme(misure, scelta.gruppo, scelta.filtro)
+  const tutti = insieme(misure, scelta.gruppo, null)
+  const filtri = filtriDi(misure, scelta.gruppo)
   const misurati = statistica(set, "hfd_px")?.measured ?? 0
   const scegliFiltro = (f: string | null) => {
     setScelta({ ...scelta, filtro: f })
@@ -79,7 +96,7 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
     },
     ...filtri.map((f) => ({
       l: nomeDelFiltro(f.name),
-      c: numero(insieme(misure, scelta.oggetto, f.name)?.frames ?? 0),
+      c: numero(insieme(misure, scelta.gruppo, f.name)?.frames ?? 0),
       sel: scelta.filtro === f.name,
       tinta: tintaDi(f.passband),
       on: () => scegliFiltro(f.name),
@@ -107,9 +124,8 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
     setAltra(v)
     setMet(ora.length ? ora : ["fwhm"])
   }
-  const isolato = scelta.oggetto
-    ? (misure.objects.find((o) => o.key === scelta.oggetto)?.name ?? scelta.oggetto)
-    : null
+  const solo = misure.groups.find((o) => o.key === scelta.gruppo)
+  const isolato = solo ? nomeDelGruppo(solo) : null
   const tessere = [
     ...TESSERE,
     ...(altra ? [{ id: altra, nome: nomeDi(altra), chiave: altra }] : []),
@@ -144,7 +160,7 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
               <button
                 type="button"
                 className="al-bottone al-c-misure-frame__riga-6"
-                onClick={() => setScelta({ ...scelta, oggetto: null })}
+                onClick={() => setScelta({ ...scelta, gruppo: null })}
               >
                 {t("measures.only", { n: isolato })}
               </button>
@@ -193,15 +209,17 @@ export function MisureDellaNotte({ misure, formato }: { misure: Misure; formato:
           onSel={setSel}
           formato={formato}
         />
-        <IlFrame misure={misure} scelta={scelta} sel={sel} onSel={setSel} />
+        <IlFrame misure={misure} scelta={scelta} sel={sel} onSel={setSel} tipo={tipo} />
         <AConfronto
           misure={misure}
           scelta={scelta}
           misura={cmp !== null && met.includes(cmp) ? cmp : (met[0] ?? "fwhm")}
           scelte={met}
           onMisura={setCmp}
+          tipo={tipo}
+          esiti={esiti}
           onOggetto={(o) => {
-            setScelta({ ...scelta, oggetto: o })
+            setScelta({ ...scelta, gruppo: o })
             setSel(null)
           }}
         />

@@ -56,8 +56,56 @@ function scheda(row: unknown, extra: Record<string, unknown> = {}) {
   }
 }
 
-async function apriCon(righe: unknown[], oggetti: Record<string, Voce>) {
-  rispondi({ ...oggetti, ...conArchivio(voceArchivio(righe)) })
+const stat = (key: string, median: number | null) => ({
+  key,
+  unit: "px",
+  group: "stars_shape",
+  measured: median === null ? 0 : 2,
+  median,
+  q1: median === null ? null : median - 0.2,
+  q3: median === null ? null : median + 0.2,
+  low: median === null ? null : median - 0.5,
+  high: median === null ? null : median + 0.5,
+  trend: null,
+  verdict: null,
+  silent: median === null ? "no_value" : null,
+  per_filter: false,
+})
+
+const insieme = (group: string | null, fwhm: number, snr = 40) => ({
+  group,
+  filter: null,
+  frames: 2,
+  pending: 0,
+  differs: [],
+  measures: [stat("fwhm_arcsec", fwhm), stat("fwhm_px", fwhm / 2), stat("snr", snr)],
+})
+
+/** Le misure dell'oggetto: i gruppi sono le sue due notti. */
+function misure(extra: Record<string, unknown> = {}) {
+  return {
+    key: "m-31",
+    frames: 4,
+    pending: 0,
+    one_production: true,
+    groups: [
+      { key: "6", name: null, night_date: "2024-05-17", frames: 2, pending: 0 },
+      { key: "7", name: null, night_date: "2024-05-18", frames: 2, pending: 0 },
+    ],
+    filters: [],
+    sets: [insieme(null, 2.5), insieme("6", 2.2, 30), insieme("7", 2.8, 50)],
+    series: [],
+    ...extra,
+  }
+}
+
+// Il banco risponde per pezzo d'indirizzo: le misure prima, o `/objects/m-31` le prenderebbe.
+async function apriCon(righe: unknown[], oggetti: Record<string, Voce>, mis = misure()) {
+  const percorsi = new Set(Object.keys(oggetti).map((r) => r.split("?")[0] ?? r))
+  const delleMisure = Object.fromEntries(
+    [...percorsi].map((p) => [`${p}/measures`, { stato: 200, corpo: mis }]),
+  )
+  rispondi({ ...delleMisure, ...oggetti, ...conArchivio(voceArchivio(righe)) })
   await apriArchivio()
 }
 
@@ -219,5 +267,68 @@ describe("la finestra dell'oggetto", () => {
     await vaiAll(/elenco/i)
     fireEvent.click(await screen.findByRole("link", { name: "M 31" }))
     expect((await finestra()).getAttribute("aria-label")).toBe("Riepilogo: M 31")
+  })
+})
+
+describe("le misure dell'oggetto", () => {
+  it("il frame scelto dice la sua notte, e l'SNR si confronta anche nell'oggetto", async () => {
+    const frame = {
+      frame_id: 1,
+      start: "2024-05-17T23:00:00+02:00",
+      group: "6",
+      filter: "__no_filter__",
+      state: "measured",
+      tilt_level: null,
+      sampling: null,
+      angle_axis: null,
+      values: { fwhm_px: 1.2, hfd_px: 1.6, stars: 900, snr: 33 },
+    }
+    await apriCon(
+      [M31],
+      { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } },
+      misure({ series: [frame] }),
+    )
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+
+    const f = await finestra()
+    const scelto = await within(f).findByRole("region", { name: "Il frame" })
+    expect(scelto.textContent).toMatch(/Venerdì 17 maggio/)
+    expect(within(scelto).getByText("si confronta nella notte e nell'oggetto")).toBeDefined()
+  })
+
+  it("i gruppi sono le notti, con l'esito accanto; FWHM e SNR in testa", async () => {
+    await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } })
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+
+    const f = await finestra()
+    const confronto = await within(f).findByRole("region", { name: "Le notti a confronto" })
+    const righe = within(confronto).getAllByRole("link")
+    expect(righe.map((r) => r.querySelector(".al-c-misure-frame__testo-15")?.textContent)).toEqual([
+      "Venerdì 17 maggio",
+      "Sabato 18 maggio",
+    ])
+    expect(righe[0]?.querySelector(".al-pillola")).not.toBeNull()
+    expect(within(f).getByText("2,5″")).toBeDefined()
+    expect(within(f).getByText("SNR mediano")).toBeDefined()
+  })
+
+  it("con piu' produzioni insieme ne' SNR ne' pixel in testa (ADR 0022)", async () => {
+    const senzaScala = {
+      ...misure({ one_production: false }),
+      sets: [
+        {
+          ...insieme(null, 2.5),
+          measures: [stat("fwhm_arcsec", null), stat("fwhm_px", 1.3), stat("snr", 40)],
+        },
+      ],
+    }
+    await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } }, senzaScala)
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+
+    const f = await finestra()
+    const etichetta = await within(f).findByText("FWHM mediana")
+    const testa = etichetta.closest("section") as HTMLElement
+    expect(within(testa).queryByText("SNR mediano")).toBeNull()
+    expect(within(testa).queryByText("1,3 px")).toBeNull()
   })
 })

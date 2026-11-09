@@ -15,8 +15,8 @@ import { Pillola } from "./componenti/Pillola"
 import { Scheletro } from "./componenti/Scheletro"
 import type { Formato } from "./componenti/Tema"
 import { dataLunga, numero, oraDelSito, oreEMinuti, t } from "./i18n"
-import { MisureDellaNotte } from "./MisureDellaNotte"
-import { insieme, scritto, statistica } from "./MisureDati"
+import { MisureDeiFrame } from "./MisureDeiFrame"
+import { medianeInTesta } from "./MisureDati"
 import { MENTRE_LEGGE_MS } from "./Notti"
 import { cielo, segnoDi } from "./NottiDati"
 import {
@@ -133,7 +133,7 @@ export function TuttoDellaNotte({
         <Setups setups={d.rigs} formato={formato} />
         <Oggetti d={d} formato={formato} />
         <div className="al-c-riepilogo__blocco-4">
-          {mis.data && <MisureDellaNotte key={id} misure={mis.data} formato={formato} />}
+          {mis.data && <MisureDeiFrame key={id} misure={mis.data} formato={formato} />}
           {mis.isError && !mis.data && (
             <Avviso
               formato={formato}
@@ -181,18 +181,7 @@ function Testa({
   const sotto = conOre
     ? `${t("window.frames", { n: numero(n.frames) })} \u00B7 ${t("window.objects", { n: n.objects.length })}`
     : t("window.untimed")
-  const tutta = m && insieme(m, null, null)
-  const arc = statistica(tutta, "fwhm_arcsec")?.median
-  const fwhm = !m
-    ? "\u2026"
-    : arc != null
-      ? scritto("fwhm_arcsec", arc)
-      : scritto("fwhm_px", statistica(tutta, "fwhm_px")?.median)
-  const snr = !m ? "\u2026" : scritto("snr", statistica(tutta, "snr")?.median)
-  const kpi = [
-    { v: fwhm, l: t("window.fwhm") },
-    { v: snr, l: t("window.snr") },
-  ]
+  const kpi = medianeInTesta(m)
   const c = cielo(n)
   const esito = (
     <Pillola

@@ -79,9 +79,19 @@ Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nell
 
 ## Archivio -- La finestra dell'oggetto (passo 33, commit B, 9/11)
 
-- **Misure dei frame, FWHM e SNR in testa.** Tavola: MisureFrame tipo oggetto, gruppi le notti, e
-  le mediane in testa (Riepilogo 58, 165). App: assenti. Perche': arrivano col commit C (misure
-  per oggetto scritte da chi scrive, come quelle della notte).
+- **Misure dei frame (commit C, 9/11).** Portate: MisureFrame tipo oggetto, gruppi le notti
+  (*Mercoledì 16 settembre*, Riepilogo 121), «Le notti a confronto» con l'esito della notte accanto, tessere FWHM e SNR, le
+  mediane in testa (Riepilogo 58, 165; MisureFrame 211, 326, 333). Differenze:
+  - **Riga del seeing** «seeing previsto … · FWHM allo zenit …» (MisureFrame 332). App: assente.
+    Perche': serve la previsione Meteoblue tenuta per le notti passate; arriva in un passo suo.
+  - **Pillole «HFD alta / SNR basso per l'oggetto»** nel frame scelto (354, 356). App: assenti.
+    Perche': soglie senza convenzione pubblica, come i giudizi tolti nelle Notti (sopra).
+  - **Tessera della luminosita' del cielo** senza frame L o a colori (229): come nelle Notti, resta.
+  - **FWHM in testa con piu' produzioni insieme** (un mosaico). Tavola: la FWHM sempre, l'SNR no
+    (165). App: anche la FWHM solo in secondi d'arco; senza scala «—». Perche': i pixel di due
+    camere non si confrontano (ADR 0022), come l'SNR.
+  - **«misura in corso»** e lo stato «misure in calcolo»: gli stessi della notte, dall'API
+    (`pending`), non simulati.
 - **Mosaico, Riepilogo generale e Pannello N.** Tavola: linguette «mosaico» (116-118). App: nessuna
   linguetta per un mosaico. Perche': l'API non restringe ancora a un pannello.
 - **Linguette delle produzioni.** Tavola: «2026 · Rifrattore 80/480 · Cima Ekar» (dati.js,

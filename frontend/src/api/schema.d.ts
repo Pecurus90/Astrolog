@@ -551,6 +551,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/objects/{key}/measures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Object Measures
+         * @description An Archive row's frame measures for its window: what `night_measures.py` wrote for it
+         *     after each scan, its nights as the groups (in shooting order), its frames one by one.
+         *     `production` as in the window; without it, all of the row's productions together, and
+         *     `one_production` says whether the SNR and the FWHM in pixels compare across them.
+         *
+         *     404 `object_not_found`: no row with that key.
+         */
+        get: operations["object_measures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/objects/{key}": {
         parameters: {
             query?: never;
@@ -2958,11 +2983,14 @@ export interface components {
         };
         /**
          * MeasureSet
-         * @description The night, an object, a filter, or an object in a filter: null is all of them.
+         * @description All the frames, a group, a filter, or a group in a filter: null is all of them.
          */
         MeasureSet: {
-            /** Object Key */
-            object_key: string | null;
+            /**
+             * Group
+             * @description The group's key (`groups`); null: all of them.
+             */
+            group: string | null;
             /**
              * Filter
              * @description The filter's name, `__no_filter__` for the frames naming none (the Nights' key), null: all of them.
@@ -3054,7 +3082,7 @@ export interface components {
         };
         /**
          * MeasuredFrame
-         * @description One frame of the night, in shooting order.
+         * @description One frame, in shooting order.
          */
         MeasuredFrame: {
             /** Frame Id */
@@ -3064,8 +3092,11 @@ export interface components {
              * @description Start of the exposure in the site's zone, with its offset; null: not read yet or not written by the file.
              */
             start: string | null;
-            /** Object Key */
-            object_key: string | null;
+            /**
+             * Group
+             * @description Its group's key; null: a night's frame of no object.
+             */
+            group: string | null;
             /**
              * Filter
              * @description The filter's name, `__no_filter__`: the header names none.
@@ -3100,15 +3131,26 @@ export interface components {
                 [key: string]: number;
             };
         };
-        /** MeasuredObject */
-        MeasuredObject: {
+        /**
+         * MeasuredGroup
+         * @description What the measures are compared by: a night's objects, an object's nights.
+         */
+        MeasuredGroup: {
             /**
              * Key
-             * @description The stable key, the same as the Nights'.
+             * @description An object's stable key, the same as the Nights'; a night's id.
              */
             key: string;
-            /** Name */
+            /**
+             * Name
+             * @description The object's name; null for a night.
+             */
             name: string | null;
+            /**
+             * Night Date
+             * @description The night's date, YYYY-MM-DD in the site's zone; null for an object.
+             */
+            night_date: string | null;
             /** Frames */
             frames: number;
             /** Pending */
@@ -3520,21 +3562,17 @@ export interface components {
              */
             reading_done_pct: number | null;
         };
-        /** NightMeasures */
+        /**
+         * NightMeasures
+         * @description The groups are the night's objects, most frames first.
+         */
         NightMeasures: {
-            /** Night Id */
-            night_id: number;
-            /**
-             * Timezone
-             * @description The site's zone: the times read in it.
-             */
-            timezone: string | null;
             /** Frames */
             frames: number;
             /** Pending */
             pending: number;
-            /** Objects */
-            objects: components["schemas"]["MeasuredObject"][];
+            /** Groups */
+            groups: components["schemas"]["MeasuredGroup"][];
             /**
              * Filters
              * @description In the app's one filter order; `__no_filter__` last, band `UNKNOWN`.
@@ -3542,11 +3580,18 @@ export interface components {
             filters: components["schemas"]["MeasuredFilter"][];
             /**
              * Sets
-             * @description Empty until the measures of the nights are written after a scan.
+             * @description Empty until the measures are written after a scan.
              */
             sets: components["schemas"]["MeasureSet"][];
             /** Series */
             series: components["schemas"]["MeasuredFrame"][];
+            /** Night Id */
+            night_id: number;
+            /**
+             * Timezone
+             * @description The site's zone: the times read in it.
+             */
+            timezone: string | null;
         };
         /**
          * NightMonth
@@ -3879,6 +3924,38 @@ export interface components {
              * @description How big it really is, two figures: distance times its larger size.
              */
             extent_ly: number | null;
+        };
+        /**
+         * ObjectMeasures
+         * @description The groups are the row's nights, in shooting order; each frame's start in its own site's
+         *     zone.
+         */
+        ObjectMeasures: {
+            /** Frames */
+            frames: number;
+            /** Pending */
+            pending: number;
+            /** Groups */
+            groups: components["schemas"]["MeasuredGroup"][];
+            /**
+             * Filters
+             * @description In the app's one filter order; `__no_filter__` last, band `UNKNOWN`.
+             */
+            filters: components["schemas"]["MeasuredFilter"][];
+            /**
+             * Sets
+             * @description Empty until the measures are written after a scan.
+             */
+            sets: components["schemas"]["MeasureSet"][];
+            /** Series */
+            series: components["schemas"]["MeasuredFrame"][];
+            /** Key */
+            key: string;
+            /**
+             * One Production
+             * @description The frames are of one production (optics and camera): the SNR and the FWHM in pixels compare across them (ADR 0022: never across setups and cameras).
+             */
+            one_production: boolean;
         };
         /**
          * ObjectNight
@@ -6289,6 +6366,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NightDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    object_measures: {
+        parameters: {
+            query?: {
+                production?: string | null;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectMeasures"];
                 };
             };
             /** @description Validation Error */

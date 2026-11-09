@@ -28,6 +28,9 @@ import {
   oreEMinuti,
   t,
 } from "./i18n"
+import { MisureDeiFrame } from "./MisureDeiFrame"
+import { MENTRE_LEGGE_MS } from "./Notti"
+import { type EsitoDelGruppo, type Misure, medianeInTesta } from "./MisureDati"
 import { cielo, luna, segnoDi } from "./NottiDati"
 import {
   FiltriInTesta,
@@ -52,6 +55,14 @@ async function dettaglio(key: string, production: string | null): Promise<Dettag
     params: { path: { key }, query: production ? { production } : {} },
   })
   if (response.status === 404) throw new NonTrovato()
+  if (error) throw new Error(t("window.failed"))
+  return data
+}
+
+async function misure(key: string, production: string | null) {
+  const { data, error } = await api.GET("/api/v1/objects/{key}/measures", {
+    params: { path: { key }, query: production ? { production } : {} },
+  })
   if (error) throw new Error(t("window.failed"))
   return data
 }
@@ -94,6 +105,14 @@ export function TuttoDellOggetto({
     enabled: !!scelta1,
   })
   const dati = scelta1 ? una : intera
+  const quale = scelta1 ? chiaveDi(scelta1) : null
+  // Aspetta l'intera: con piu' produzioni le misure sono di una sola, mai di tutte insieme.
+  const mis = useQuery({
+    queryKey: ["objects", "measures", chiave, quale],
+    queryFn: () => misure(chiave, quale),
+    enabled: !!intera.data && (!produzioni || !!scelta1),
+    refetchInterval: (q) => ((q.state.data?.pending ?? 0) > 0 ? MENTRE_LEGGE_MS : false),
+  })
   const L = MISURE[formato]
   const tel = formato === "telefono"
 
@@ -142,6 +161,7 @@ export function TuttoDellOggetto({
       >
         <Testa
           d={d}
+          misure={mis.data}
           formato={formato}
           produzioni={produzioni}
           scelta={scelta1}
@@ -152,6 +172,26 @@ export function TuttoDellOggetto({
         />
         <Setups setups={d.rigs} formato={formato} />
         <InCielo f={d.facts} formato={formato} />
+        <div className="al-c-riepilogo__blocco-4">
+          {mis.data && (
+            <MisureDeiFrame
+              key={`${chiave}|${quale ?? ""}`}
+              misure={mis.data}
+              formato={formato}
+              tipo="oggetto"
+              esiti={esitiDelleNotti(d)}
+            />
+          )}
+          {mis.isError && !mis.data && (
+            <Avviso
+              formato={formato}
+              segno="!"
+              titolo={t("window.failed")}
+              azione={t("window.retry")}
+              onAzione={() => void mis.refetch()}
+            />
+          )}
+        </div>
         <div
           className="al-c-riepilogo__colonna-12"
           style={{ gridColumn: tel ? "auto" : "span 8", gap: L.gap }}
@@ -166,6 +206,19 @@ export function TuttoDellOggetto({
     <FinestraRiepilogo aria={t("object.window", { nome })} formato={formato} onChiudi={onChiudi}>
       {corpo}
     </FinestraRiepilogo>
+  )
+}
+
+/** L'esito di ogni notte, lo stesso di *Le notti*, accanto alla sua riga in *Le notti a confronto*. */
+function esitiDelleNotti(d: Dettaglio): Map<string, EsitoDelGruppo> {
+  return new Map(
+    d.nights.map(({ night: n }) => {
+      const c = cielo(n)
+      return [
+        String(n.id),
+        { esito: c.esito === -1 ? "mancante" : c.esito, testo: c.pillola, segno: segnoDi(c.esito) },
+      ]
+    }),
   )
 }
 
@@ -186,6 +239,7 @@ function periodo(d: Dettaglio): string {
 
 function Testa({
   d,
+  misure: m,
   formato,
   produzioni,
   scelta,
@@ -195,6 +249,7 @@ function Testa({
   onDopo,
 }: {
   d: Dettaglio
+  misure: Misure | undefined
   formato: Formato
   produzioni: Produzione[] | null
   scelta: Produzione | undefined
@@ -298,7 +353,7 @@ function Testa({
         grande={grande}
         sotto={sotto}
         conOre={conOre}
-        kpi={[]}
+        kpi={medianeInTesta(m)}
         filtri={filtri}
       />
     </Carta>

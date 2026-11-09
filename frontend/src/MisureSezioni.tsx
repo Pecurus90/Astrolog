@@ -11,13 +11,16 @@ import { numero, oraDelSito, t } from "./i18n"
 import { MISURATO, frameMostrato } from "./FramePerFrameDati"
 import {
   ESITO,
+  type EsitoDelGruppo,
   type FrameMisurato,
   type Misure,
   type Scelta,
+  type Tipo,
   chiaveIn,
   filtriDi,
   tintaDi,
   insieme,
+  nomeDelGruppo,
   nomeDi,
   posizione,
   scritto,
@@ -45,7 +48,7 @@ interface Riquadro {
 }
 
 /** Le tessere di un frame misurato, quelle che il frame ha (tavola, `FX.tiles`). */
-function riquadri(f: FrameMisurato): Riquadro[] {
+function riquadri(f: FrameMisurato, tipo: Tipo): Riquadro[] {
   const v = f.values
   const stimata = f.state === "estimated"
   const r: Riquadro[] = [
@@ -73,7 +76,11 @@ function riquadri(f: FrameMisurato): Riquadro[] {
     })
   }
   if (v.snr !== undefined)
-    r.push({ k: nomeDi("snr"), v: scritto("snr", v.snr), sub: t("shot.snr.sub") })
+    r.push({
+      k: nomeDi("snr"),
+      v: scritto("snr", v.snr),
+      sub: t(tipo === "oggetto" ? "shot.snr.sub.object" : "shot.snr.sub"),
+    })
   r.push({
     k: nomeDi("background"),
     v: scritto("background_adu", v.background_adu),
@@ -139,13 +146,15 @@ export function IlFrame({
   scelta,
   sel,
   onSel,
+  tipo,
 }: {
   misure: Misure
   scelta: Scelta
   sel: number | null
   onSel: (id: number) => void
+  tipo: Tipo
 }) {
-  const nomi = new Map(misure.objects.map((o) => [o.key, o.name ?? o.key]))
+  const nomi = new Map(misure.groups.map((o) => [o.key, nomeDelGruppo(o)]))
   const { vista, f } = frameMostrato(misure, scelta, sel)
   const i = f ? vista.indexOf(f) : -1
   const vai = (d: number) => () => {
@@ -154,7 +163,7 @@ export function IlFrame({
   }
   const dove = f
     ? [
-        f.object_key ? (nomi.get(f.object_key) ?? f.object_key) : null,
+        f.group ? (nomi.get(f.group) ?? f.group) : null,
         f.start ? oraDelSito(f.start) : null,
         f.values.altitude_deg !== undefined
           ? `${nomeDi("altitude_deg")} ${scritto("altitude_deg", f.values.altitude_deg)}`
@@ -223,7 +232,7 @@ export function IlFrame({
       )}
       {f && MISURATO.has(f.state) && (
         <div className="al-c-misure-frame__centro-1 al-c-misure-frame__centro-1--frame">
-          {riquadri(f).map((x) => (
+          {riquadri(f, tipo).map((x) => (
             <div key={x.k} className="al-c-misure-frame__colonna-8">
               <span className="al-c-misure-frame__testo-2">{x.k}</span>
               <span
@@ -258,6 +267,8 @@ export function AConfronto({
   scelte,
   onMisura,
   onOggetto,
+  tipo,
+  esiti,
 }: {
   misure: Misure
   scelta: Scelta
@@ -265,7 +276,10 @@ export function AConfronto({
   scelte: string[]
   onMisura: (id: string) => void
   onOggetto: (o: string | null) => void
+  tipo: Tipo
+  esiti?: ReadonlyMap<string, EsitoDelGruppo> | undefined
 }) {
+  const titolo = t(tipo === "oggetto" ? "compare.nights" : "compare.objects")
   const tutta = insieme(misure, null, scelta.filtro)
   const chiave = chiaveIn(misura, tutta)
   const scala = statistica(tutta, chiave)
@@ -273,9 +287,9 @@ export function AConfronto({
   const alto = scala?.high ?? 1
   const passband = new Map(misure.filters.map((f) => [f.name, f.passband]))
   return (
-    <section className="al-c-misure-frame__colonna-9" aria-label={t("compare.objects")}>
+    <section className="al-c-misure-frame__colonna-9" aria-label={titolo}>
       <div className="al-c-misure-frame__riga-9">
-        <h2 className="al-c-misure-frame__blocco-4">{t("compare.objects")}</h2>
+        <h2 className="al-c-misure-frame__blocco-4">{titolo}</h2>
         <select
           key={misura}
           defaultValue={misura}
@@ -297,11 +311,12 @@ export function AConfronto({
         </select>
       </div>
       <div className="al-c-misure-frame__colonna-10">
-        {misure.objects.map((o) => {
+        {misure.groups.map((o) => {
           const set = insieme(misure, o.key, scelta.filtro)
           const s = statistica(set, chiave)
-          const acceso = scelta.oggetto === o.key
+          const acceso = scelta.gruppo === o.key
           const ha = s?.median != null && s.q1 != null && s.q3 != null
+          const es = esiti?.get(o.key)
           return (
             <a
               key={o.key}
@@ -311,7 +326,7 @@ export function AConfronto({
               aria-pressed={acceso ? "true" : "false"}
             >
               <span className="al-c-misure-frame__colonna-11">
-                <span className="al-c-misure-frame__testo-15">{o.name ?? o.key}</span>
+                <span className="al-c-misure-frame__testo-15">{nomeDelGruppo(o)}</span>
                 <span className="al-c-misure-frame__riga-34">
                   {filtriDi(misure, o.key).map((f) => (
                     <span
@@ -334,6 +349,15 @@ export function AConfronto({
               </span>
               <span className="al-c-misure-frame__colonna-13">
                 <span className="al-c-misure-frame__testo-16">{scritto(chiave, s?.median)}</span>
+                {es && (
+                  <Pillola
+                    esito={es.esito}
+                    testo={es.testo}
+                    segno={es.segno}
+                    dimensione="micro"
+                    fondo="carta"
+                  />
+                )}
               </span>
             </a>
           )
@@ -396,8 +420,8 @@ export function PerFiltro({
               </span>
             ))}
           </div>
-          {filtriDi(misure, scelta.oggetto).map((f) => {
-            const set = insieme(misure, scelta.oggetto, f.name)
+          {filtriDi(misure, scelta.gruppo).map((f) => {
+            const set = insieme(misure, scelta.gruppo, f.name)
             const acceso = scelta.filtro === f.name
             return (
               <a

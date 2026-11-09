@@ -181,11 +181,11 @@ function Giudizio({ g }: { g: string | null }) {
 }
 
 export function TiltCurvatura({ misure, scelta }: { misure: Misure; scelta: Scelta }) {
-  const set = insieme(misure, scelta.oggetto, scelta.filtro)
+  const set = insieme(misure, scelta.gruppo, scelta.filtro)
   const grande = sensore(set, 300, 200, true)
   const misurati = statistica(set, "hfd_px")?.measured ?? 0
-  const piccoli = filtriDi(misure, scelta.oggetto)
-    .map((f) => ({ f, s: sensore(insieme(misure, scelta.oggetto, f.name), 150, 100, false) }))
+  const piccoli = filtriDi(misure, scelta.gruppo)
+    .map((f) => ({ f, s: sensore(insieme(misure, scelta.gruppo, f.name), 150, 100, false) }))
     .filter((x) => x.s !== null)
   return (
     <section className="al-c-misure-frame__colonna-4" aria-label={t("sensor.title")}>

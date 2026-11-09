@@ -110,6 +110,7 @@ export const enMisure = {
   "shot.no.site": "No site: no FWHM at zenith.",
   "shot.noise": "\u00B1 {n} of noise",
   "shot.snr.sub": "compared within the night",
+  "shot.snr.sub.object": "compared within the night and the object",
   "shot.tilt.sub": "HFD between the corners",
   "shot.curvature.sub": "HFD beyond 75% toward the corners minus HFD at the center",
   "shot.fwhm.field.sub": "pure numbers: between corners \u00B7 corners and center",
@@ -156,6 +157,7 @@ export const enMisure = {
     "From the HFD of the four corners and the center, in px; medians of the measured frames. The largest circle is the corner with the highest HFD. Tilt and curvature over time: tap them among the measures.",
 
   "compare.objects": "Objects compared",
+  "compare.nights": "Nights compared",
   "compare.measure": "Measure",
   "compare.scale": "same scale for all rows \u00B7 tap a row and only that one stays",
   "perfilter.title": "Per filter",
