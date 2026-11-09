@@ -341,6 +341,21 @@ describe("frame per frame e tilt e curvatura", () => {
     expect(slider.getAttribute("aria-valuetext")).toBe("frame 1–182 di 200")
   })
 
+  it("nella finestra dei frame, l'oggetto senza chiave non si chiama come un filtro", async () => {
+    const molti = Array.from({ length: 200 }, (_, i) => ({
+      ...MISURE.series[0],
+      frame_id: i + 1,
+      object_key: i < 100 ? "m-51" : null,
+    })) as unknown as typeof MISURE.series
+    const d = await finestra(conMisure(MISURE_TUTTE, molti))
+    const grafici = await within(d).findByRole("region", { name: "I grafici" })
+    expect(within(grafici).getByRole("button", { name: "M 51" })).toBeTruthy()
+    expect(
+      within(grafici).getByRole("button", { name: "Nessun oggetto identificato" }),
+    ).toBeTruthy()
+    expect(within(grafici).queryByRole("button", { name: "Filtro non indicato" })).toBeNull()
+  })
+
   it("il sensore dalle mediane degli angoli e del centro, col giudizio del tilt", async () => {
     const d = await finestra(conMisure([...MISURE_TUTTE, ...ANGOLI]))
     const sezione = await within(d).findByRole("region", { name: "Tilt e curvatura di campo" })

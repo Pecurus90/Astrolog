@@ -825,7 +825,7 @@ function Finestra({
               className="al-bottone al-bottone--tenue al-bottone--piccolo"
               onClick={gesto(() => vai(frames.findIndex((f) => f.object_key === k)))}
             >
-              {(k && nomi.get(k)) ?? t("filters.none")}
+              {(k && nomi.get(k)) ?? t("archive.panel.noObject")}
             </button>
           ))}
       </div>
