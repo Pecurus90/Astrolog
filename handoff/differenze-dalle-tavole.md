@@ -82,6 +82,8 @@ Scelte diverse dalla tavola:
   cima. App: fissa, la lista scorre dentro. Perche': stesso aspetto, senza spostare la pagina sotto.
 - **La finestra chiusa col velo, Esc o Annulla riporta il fuoco al bottone Cerca; Tab gira dentro
   la finestra.** Tavola: non lo dice. Perche': finestra modale (`aria-modal`).
+- **L'esempio delle notti senza anno.** Tavola: «25/9, settembre 2026». App: «25/9, settembre».
+  Perche': Marco 10/11, un anno fisso invecchia; la ricerca capisce il mese senza anno.
 - **Quale riga in testa quando ne valgono due.** Tavola: archivio vuoto, scansione, «Cerco…»,
   errore (un solo stato nei Tweaks). App: errore, «Cerco…», archivio vuoto, scansione. Perche'
   l'errore e l'attesa riguardano cio' che hai appena scritto; a scansione in corso, mentre scrivi,

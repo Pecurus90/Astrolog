@@ -44,7 +44,7 @@ export const enGuscio = {
   "search.help.objects": "Objects",
   "search.help.objects.e": "m31, NGC 224, Veil",
   "search.help.nights": "Nights",
-  "search.help.nights.e": "9/25, September 2026",
+  "search.help.nights.e": "9/25, September",
   "search.help.gear": "Equipment",
   "search.help.sites": "Sites",
   "search.help.settings": "Settings",

@@ -49,7 +49,7 @@ export const itGuscio = {
   "search.help.objects": "Oggetti",
   "search.help.objects.e": "m31, NGC 224, Velo",
   "search.help.nights": "Notti",
-  "search.help.nights.e": "25/9, settembre 2026",
+  "search.help.nights.e": "25/9, settembre",
   "search.help.gear": "Attrezzatura",
   "search.help.sites": "Siti",
   "search.help.settings": "Impostazioni",
