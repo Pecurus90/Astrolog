@@ -53,8 +53,10 @@ Passi:
        sorgente vera nell'app, o *fuori*.
    12. **Per altri utenti**: nomi di filtri, setup, cartelle, siti della tavola sono dati di
        prova, mai regole (skill `per-altri-utenti`).
-   13. **Aperte**: voci di DECISIONI "da approvare", "Prossimi", Issue che nominano la pagina:
-       nessuna si porta come decisa.
+   13. **Aperte**: la tavola congelata vale tutta, anche le voci di DECISIONI "da approvare"
+       (Marco, 10/11: "se l'app deve essere come la tavola perche' me lo chiedi?"). Restano
+       aperte solo "Prossimi" e le Issue che nominano la pagina. Un errore evidente della tavola
+       (es. «10 min ore») si corregge, lo si dice a Marco e va a Design: non si chiede.
 3. **Piano corto** dai rilievi: backend (campi del punto 2.7), pagina, contratti da riscrivere,
    brief a Design. Un brief aperto che cambia cio' che si porta ferma la fetta finche' Design
    risponde; il resto va avanti.
