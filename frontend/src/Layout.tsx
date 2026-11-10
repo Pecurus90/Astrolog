@@ -276,7 +276,7 @@ function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: Reac
                 })}
                 aria-label={t("frame.search.aria")}
               >
-                <Tratto d={LENTE} lato={18} classe="al-c-telaio__grafico-1" />
+                <Tratto d={LENTE} lato={18} />
                 {t("search.open")}
               </a>
               {aperto === "cerca" && (
@@ -296,7 +296,7 @@ function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: Reac
                   aria-label={nomeImp}
                   style={{ background: aperto === "imp" ? "var(--carta-2)" : "var(--carta)" }}
                 >
-                  <Tratto d={GRANAGGIO} lato={20} classe="al-c-telaio__grafico-1" />
+                  <Tratto d={GRANAGGIO} lato={20} />
                   <SegnoDellaScansione stato={scansione} dove="tondo" />
                 </a>
                 {aperto === "imp" && <Menu tipo="impostazioni" />}

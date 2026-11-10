@@ -3,6 +3,7 @@ import { createContext } from "react"
 import { Link } from "react-router"
 
 import { api } from "./api/client"
+import { Avviso } from "./componenti/Avviso"
 import type { components } from "./api/schema"
 import { tracciatoDellaLuna } from "./disegnoDellaLuna"
 import { type Chiave, giornoEMese, numero, oraDelSito, t, unDecimale } from "./i18n"
@@ -198,11 +199,7 @@ export function PannelloStanotte({ telefono }: { telefono: boolean }) {
         <b className="al-c-telaio__notte-tit">{titolo}</b>
       </span>
       {stanotte.isPending && <span className="al-c-telaio__notte-s">{t("tonight.loading")}</span>}
-      {stanotte.isError && (
-        <span className="al-c-telaio__notte-s" role="alert">
-          {t("tonight.failed")}
-        </span>
-      )}
+      {stanotte.isError && <Avviso tipo="riga" titolo={t("tonight.failed")} />}
       {notte &&
         sito &&
         righeDi(notte, sito).map((r) => (

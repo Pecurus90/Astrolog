@@ -17,21 +17,21 @@ export type Comandi = {
 
 export const LENTE = "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"
 
-/** Un'icona a tratto della testa, come nella tavola. */
+/** Un'icona a tratto della testa o di un menu (`menu`), come nella tavola. */
 export function Tratto({
   d,
   lato,
   spessore = 1.6,
-  classe,
+  menu = false,
 }: {
   d: string
   lato: number
   spessore?: number
-  classe?: string
+  menu?: boolean
 }) {
   return (
     <svg
-      className={classe}
+      className={menu ? "al-c-menu__grafico-1" : "al-c-telaio__grafico-1"}
       width={lato}
       height={lato}
       viewBox="0 0 24 24"

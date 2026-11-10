@@ -249,7 +249,7 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
               to="/da-confermare"
               aria-label={quante > 0 ? t("frame.count", { n: numero(quante) }) : t("nav.review")}
             >
-              <Tratto d={ICONE["/da-confermare"] ?? ""} lato={18} classe="al-c-telaio__grafico-1" />
+              <Tratto d={ICONE["/da-confermare"] ?? ""} lato={18} />
               {quante > 0 && <Conto n={quante} />}
             </Link>
           )}
@@ -264,7 +264,7 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
             aria-expanded={aperto === "cerca"}
             aria-label={t("search.open")}
           >
-            <Tratto d={LENTE} lato={20} classe="al-c-telaio__grafico-1" />
+            <Tratto d={LENTE} lato={20} />
           </a>
         </header>
       </Tema>

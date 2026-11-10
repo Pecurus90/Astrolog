@@ -57,7 +57,7 @@ const POSTI: Record<TipoMenu, CSSProperties> = {
 function VoceDesktop({ pagina }: { pagina: Pagina }) {
   return (
     <Link className="al-c-menu__riga-5" to={pagina.a} role="menuitem">
-      <Tratto lato={20} classe="al-c-menu__grafico-1" d={ICONE[pagina.a] ?? ""} />
+      <Tratto lato={20} menu d={ICONE[pagina.a] ?? ""} />
       <span className="al-c-menu__colonna-3">
         <span className="al-c-menu__testo-4">{t(pagina.chiave)}</span>
         {pagina.sotto && <span className="al-c-menu__testo-2">{t(pagina.sotto)}</span>}
@@ -74,11 +74,9 @@ export function Menu({ tipo }: { tipo: TipoMenu }) {
   if (tipo === "impostazioni") {
     voci = (
       <>
-        {stato === "ferma" && (
-          <VoceScansiona icona={<Tratto lato={20} classe="al-c-menu__grafico-1" d={SCANSIONA} />} />
-        )}
+        {stato === "ferma" && <VoceScansiona icona={<Tratto lato={20} menu d={SCANSIONA} />} />}
         <Link className="al-c-menu__riga-5" to="/impostazioni" role="menuitem">
-          <Tratto lato={20} classe="al-c-menu__grafico-1" d={ICONE["/impostazioni"] ?? ""} />
+          <Tratto lato={20} menu d={ICONE["/impostazioni"] ?? ""} />
           <span className="al-c-menu__colonna-3">
             <span className="al-c-menu__testo-4">{t("frame.settings.all")}</span>
             <span className="al-c-menu__testo-2">{t("frame.settings.all.sub")}</span>
@@ -89,7 +87,7 @@ export function Menu({ tipo }: { tipo: TipoMenu }) {
   } else if (telefono) {
     voci = pagineDi(ALTRO_TELEFONO).map((p) => (
       <Link className="al-c-menu__riga-6" to={p.a} role="menuitem" key={p.a}>
-        <Tratto lato={20} classe="al-c-menu__grafico-1" d={ICONE[p.a] ?? ""} />
+        <Tratto lato={20} menu d={ICONE[p.a] ?? ""} />
         <span className="al-c-menu__testo-5">{t(p.chiave)}</span>
       </Link>
     ))

@@ -201,7 +201,7 @@ describe("il pannello di Stanotte", () => {
     })
     await disegna()
     const pannello = await apri(/^stanotte$/i)
-    expect((await within(pannello).findByRole("alert")).textContent).toBe("Dati di stanotte non disponibili.")
+    expect((await within(pannello).findByRole("status")).textContent).toContain("Dati di stanotte non disponibili.")
   })
 })
 
