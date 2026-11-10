@@ -3098,11 +3098,6 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
 .as-archivio__tabella .as-filtri__legenda { gap: 0 var(--spazio-3); }
 .as-archivio__tabella .as-archivio__produzioni { margin-left: var(--spazio-2); vertical-align: middle; }
 .as-archivio__tabella tbody tr[aria-haspopup] { cursor: pointer; }
-/* v77: the name's command covers the whole row, the focus ring on the row */
-.as-archivio__riga { position: relative; }
-.as-app .as-archivio__riga-apri:focus-visible { outline: none; }
-.as-archivio__riga-apri::after { content: ""; position: absolute; inset: 0; }
-.as-archivio__riga:has(.as-archivio__riga-apri:focus-visible) { box-shadow: inset 0 0 0 2px var(--accento); }
 .as-archivio__col-ore { font-size: var(--testo-lungo); }
 .as-archivio__col-ore .as-archivio__senza { display: block; font-size: var(--testo-minuto); }
 

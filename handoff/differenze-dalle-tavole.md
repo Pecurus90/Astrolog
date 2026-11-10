@@ -152,8 +152,8 @@ Scelte diverse dalla tavola:
 - **Pagina intera con «← Archivio».** Tavola: `contenitore="pagina"` (Riepilogo.dc.html). App:
   solo la finestra; sul telefono la finestra e' gia' a pagina intera.
 - **Elenco, cosa si tocca.** Tavola v77: il comando sul nome steso sulla riga (`al-arch__riga-apri`).
-  App: lo stesso, con le classi della tabella di oggi (`as-archivio__riga-apri`). Perche': la pagina
-  dell'Archivio non e' ancora portata alla tavola.
+  App: il nome. Perche': la tabella di oggi sta nel foglio vecchio, che non si tocca a mano
+  (`tools/controlli_veste.py`); arriva col porting della pagina dell'Archivio.
 - **Dalla notte.** Tavola: gli oggetti della notte non aprono niente (Riepilogo.dc.html 53). App:
   il nome apre la finestra dell'oggetto al posto di quella della notte. Perche': lista fissa di
   Marco, 9/11 (si apre da Archivio, Gli oggetti delle Notti, Ricerca).
