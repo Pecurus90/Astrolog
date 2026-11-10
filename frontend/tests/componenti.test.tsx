@@ -407,20 +407,10 @@ describe("the two sheets", () => {
     expect(primoFoglio).toBe("./stili/consegna/astrolog.css")
   })
 
-  it("app.css switches off the new sheet's ring on Stanotte's site choice, and loads last", () => {
-    // same selector as the sheet's ring plus one class: higher specificity, wins whatever the order
-    const anello = ":not(.al-scelta__voce):not(.al-bottone--pieno)"
-    const foglio = readFileSync(
-      resolve(radice, "src", "stili", "consegna", "astrolog.css"),
-      "utf-8",
-    )
-    expect(foglio).toContain(
-      `[role="radiogroup"] button[role="radio"][aria-checked="true"]${anello} { box-shadow: inset`,
-    )
+  it("app.css resets the frame's links without beating any al- class, and loads last", () => {
+    // the board's head rule `a{color:inherit}` weighs one element: `:where` keeps it there
     const app = readFileSync(resolve(radice, "src", "stili", "app.css"), "utf-8")
-    expect(app).toContain(
-      `[role="radiogroup"] button.as-menu__voce[role="radio"][aria-checked="true"]${anello} {\n  box-shadow: none;\n}`,
-    )
+    expect(app).toContain(":where(.app-telaio) a {\n  color: inherit;\n  text-decoration: none;\n}")
     const main = readFileSync(resolve(radice, "src", "main.tsx"), "utf-8")
     const fogli = [...main.matchAll(/import "(\.\/stili\/[^"]+)"/g)].map((m) => m[1])
     expect(fogli.at(-1)).toBe("./stili/app.css")

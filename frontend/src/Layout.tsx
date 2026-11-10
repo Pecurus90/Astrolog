@@ -1,271 +1,314 @@
-import { type KeyboardEvent, type ReactNode, type UIEvent, useEffect, useRef, useState } from "react"
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { Link, useLocation } from "react-router"
 
-import { Bottone } from "./Bottone"
 import { FinestraDellOggetto } from "./FinestraDellOggetto"
-import { Icon, IconSprite } from "./Icons"
+import { IconSprite } from "./Icons"
+import { Menu } from "./Menu"
+import { PannelloDaConfermare } from "./PannelloDaConfermare"
 import { Ricerca } from "./Ricerca"
-import { AvvisiDellaScansione, Scansiona, ScansioneNelFoglio } from "./Scansiona"
-import { ApriStanotte, Pastiglia, Stanotte } from "./Stanotte"
-import { numero, t } from "./i18n"
-import { PAGINE, type Pagina, paginaDi } from "./pagine"
+import {
+  AvvisiDellaScansione,
+  SegnoDellaScansione,
+  nomeConScansione,
+  statoDi,
+  useFineDelLavoro,
+  useStato,
+} from "./Scansiona"
+import { ApriStanotte, PannelloStanotte, usePastiglia } from "./Stanotte"
+import { type Aperto, type Comandi, Conto, LENTE, Tratto, titoloDi } from "./TelaioComune"
+import { TelaioTelefono } from "./TelaioTelefono"
 import { useRevisione } from "./api/revisione"
+import { useFormato } from "./componenti/formato"
+import { gesto } from "./componenti/gesto"
+import { Tema } from "./componenti/Tema"
+import { numero, t } from "./i18n"
+import { PAGINE, paginaDi } from "./pagine"
 
 /**
- * Il telaio (disegno v26, `51-telaio.css`; contratto in `docs/domini/navigazione.md`): il binario
- * delle pagine, la barra in alto, Stanotte che si apre dalla pastiglia, e sul telefono il foglio
- * "Altro". Stesso markup a ogni misura: lo decide il foglio, dal contenitore.
+ * Il telaio v76 (tavola `Telaio`; contratto in `docs/domini/navigazione.md`): sul desktop la
+ * testa con le pillole, Altro, Stanotte, Da confermare, Cerca e l'ingranaggio; sul telefono la
+ * testa, il corpo e la bolla di vetro (`TelaioTelefono`).
  *
- * - **Qui non si calcola niente**: il conto delle cose da confermare arriva fatto da
- *   `GET /review`, la stessa query della Dashboard.
- * - **Gli stati sono attributi** (`data-stanotte`, `data-altro`, `data-ritirata`): il foglio
- *   legge quelli. Stanotte ricorda l'ultima scelta in questo browser.
- * - **Il fuoco segue cio' che si apre**, e torna a chi l'ha aperto; Esc chiude, prima Altro.
+ * - **Qui non si calcola niente**: il conto e le sezioni da confermare arrivano da `GET /review`,
+ *   la scansione da `GET /pipeline/status`, Stanotte da `GET /tonight`.
+ * - **Un menu aperto alla volta** (`aperto`), come nella tavola: Esc lo chiude e riporta il
+ *   fuoco a chi l'ha aperto, il clic fuori lo chiude, le frecce girano fra le voci, Ctrl K apre Cerca.
+ * - **Solo la testa porta i token del foglio nuovo** (`Tema`): il corpo tiene le pagine col foglio
+ *   vecchio, che sotto `data-modo` prenderebbero il suo `--inchiostro` e il suo `--linea`.
  */
-export function Layout({ children }: { children: ReactNode }) {
+
+// [T] Telaio.dc.html: Ctrl K (Cmd K on a Mac) is the key the Cerca button declares
+const SUL_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+
+/** Lo stato dei menu del telaio e i tasti della tavola (`componentDidMount`): Esc, frecce, Ctrl K,
+ *  clic fuori, e il fuoco sulla prima voce di un menu appena aperto. */
+function useComandi(): Comandi {
   const dove = useLocation()
-  const revisione = useRevisione()
-  const qui = paginaDi(dove.pathname)
-  const daConfermare = revisione.data?.to_confirm ?? 0
+  const [aperto, setAperto] = useState<Aperto | null>(null)
+  const apritori = useRef<Partial<Record<Aperto, HTMLElement | null>>>({})
+  // cambiare pagina chiude: la voce scelta e' gia' la risposta
+  useEffect(() => setAperto(null), [dove.pathname])
 
-  const [stanotte, setStanotte] = useState(ricordata)
-  const [altro, setAltro] = useState(false)
-  const [ritirata, setRitirata] = useState(false)
-  const [cerca, setCerca] = useState(false)
-  const pastiglia = useRef<HTMLButtonElement>(null)
-  const titoloStanotte = useRef<HTMLHeadingElement>(null)
-  const apriAltro = useRef<HTMLButtonElement>(null)
-  const titoloAltro = useRef<HTMLHeadingElement>(null)
-  const prima = useRef(0)
-  // Dove va il fuoco dopo il prossimo disegno: il pannello esiste solo dopo, e un focus chiesto
-  // prima cadrebbe su un elemento ancora nascosto.
-  const fuoco = useRef<HTMLElement | null>(null)
+  const torna = useCallback((quale: Aperto) => apritori.current[quale]?.focus(), [])
   useEffect(() => {
-    fuoco.current?.focus({ preventScroll: true })
-    fuoco.current = null
-  })
+    function giu(e: globalThis.MouseEvent) {
+      if (e.target instanceof Element && e.target.closest("[data-menu]")) return
+      setAperto(null)
+    }
+    function tasto(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        setAperto("cerca")
+        return
+      }
+      // la ricerca tiene i suoi tasti: Esc la chiude da se', le frecce scelgono fra i trovati
+      if (aperto === null || aperto === "cerca") return
+      if (e.key === "Escape") {
+        setAperto(null)
+        torna(aperto)
+      } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        const voci = [
+          ...document.querySelectorAll<HTMLElement>(
+            ".al-c-menu__colonna-1[role=menu] [role=menuitem]",
+          ),
+        ]
+        if (voci.length === 0) return
+        const qui = voci.indexOf(document.activeElement as HTMLElement)
+        const dopo =
+          e.key === "ArrowDown" ? (qui + 1) % voci.length : (qui - 1 + voci.length) % voci.length
+        voci[dopo]?.focus()
+        e.preventDefault()
+      }
+    }
+    document.addEventListener("mousedown", giu)
+    document.addEventListener("keydown", tasto)
+    return () => {
+      document.removeEventListener("mousedown", giu)
+      document.removeEventListener("keydown", tasto)
+    }
+  }, [aperto, torna])
+  // un menu appena aperto porta il fuoco alla sua prima voce
+  useEffect(() => {
+    if (aperto !== "altro" && aperto !== "imp") return
+    document
+      .querySelector<HTMLElement>(".al-c-menu__colonna-1[role=menu] [role=menuitem]")
+      ?.focus({ preventScroll: true })
+  }, [aperto])
 
-  // Cambiare pagina chiude il foglio del telefono: la voce scelta e' gia' la risposta.
-  useEffect(() => setAltro(false), [dove.pathname])
+  return {
+    aperto,
+    tocca: (quale) =>
+      gesto(() => {
+        const chiude = aperto === quale
+        setAperto(chiude ? null : quale)
+        if (chiude) torna(quale)
+      }),
+    segna: (quale) => (e) => {
+      apritori.current[quale] = e
+    },
+    chiudiCerca: (riportaIlFuoco) => {
+      setAperto(null)
+      if (riportaIlFuoco) torna("cerca")
+    },
+    apri: setAperto,
+  }
+}
 
-  function cambiaStanotte(apri: boolean) {
-    setStanotte(apri)
-    ricorda(apri)
-    fuoco.current = apri ? titoloStanotte.current : pastiglia.current
-  }
-  function cambiaAltro(apri: boolean) {
-    setAltro(apri)
-    fuoco.current = apri ? titoloAltro.current : apriAltro.current
-  }
-  function chiudiUno() {
-    if (altro) cambiaAltro(false)
-    else if (stanotte) cambiaStanotte(false)
-  }
-  // La seconda riga del telefono si ritira scorrendo in giu' e torna risalendo (soglie della tavola).
-  function scorre(e: UIEvent<HTMLElement>) {
-    const y = e.currentTarget.scrollTop
-    if (y > prima.current + 4 && y > 40) setRitirata(true)
-    else if (y < prima.current - 4 || y < 40) setRitirata(false)
-    prima.current = y
-  }
-
-  const voci = PAGINE.filter((p) => !p.coda)
-  const coda = PAGINE.filter((p) => p.coda)
-  const nelFoglio = PAGINE.filter((p) => !p.telefono)
-
+export function Layout({ children }: { children: ReactNode }) {
+  const formato = useFormato()
+  const comandi = useComandi()
+  useFineDelLavoro()
+  const corpo = (
+    <>
+      <AvvisiDellaScansione />
+      <ApriStanotte value={() => comandi.apri("notte")}>{children}</ApriStanotte>
+    </>
+  )
   return (
-    <div className="as-telaio-misura">
+    <>
       <IconSprite />
-      {/* object window outside the frame: its Esc must not close Stanotte too */}
+      {/* object window outside the frame: its Esc closes it alone */}
       <FinestraDellOggetto>
-      {/* Esc vale solo col fuoco dentro il telaio, come nella tavola. */}
-      <div
-        className="as-telaio"
-        data-stanotte={stanotte ? "aperta" : "chiusa"}
-        data-altro={altro ? "aperto" : "chiuso"}
-        data-ritirata={ritirata ? "" : undefined}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") chiudiUno()
-        }}
-      >
         <a className="as-telaio__salta" href="#contenuto">
           {t("frame.skip")}
         </a>
-        <nav className="as-telaio__binario" aria-label={t("nav.label")}>
-          <span className="as-telaio__marchio" aria-hidden="true">
-            <span className="as-telaio__segno" />
-          </span>
-          <ul className="as-telaio__voci">
-            {voci.map((p) => (
-              <Voce key={p.a} pagina={p} accesa={p.a === qui?.a} conta={0} />
-            ))}
-          </ul>
-          <ul className="as-telaio__voci as-telaio__voci--coda">
-            {coda.map((p) => (
-              <Voce
-                key={p.a}
-                pagina={p}
-                accesa={p.a === qui?.a}
-                conta={p.a === "/da-confermare" ? daConfermare : 0}
-              />
-            ))}
-            <li className="as-telaio__posto as-telaio__posto--basso as-telaio__posto--telefono">
-              <button
-                className="as-telaio__voce"
-                type="button"
-                aria-expanded={altro}
-                aria-controls="altro"
-                ref={apriAltro}
-                onClick={() => cambiaAltro(!altro)}
-              >
-                <Icon name="cursori" />
-                <span className="as-telaio__parola">{t("frame.more")}</span>
-                {daConfermare > 0 && (
-                  <span
-                    className="as-telaio__conta"
-                    aria-label={t("frame.more.count", { n: numero(daConfermare) })}
-                  >
-                    {numero(daConfermare)}
-                  </span>
-                )}
-              </button>
-            </li>
-          </ul>
-        </nav>
-        {/* Con la ricerca aperta il foglio da' al campo la prima riga del telefono. */}
-        <header className={cerca ? "as-telaio__alto as-telaio__alto--cerca" : "as-telaio__alto"}>
-          <span className="as-telaio__firma" aria-hidden="true">
-            <span className="as-telaio__segno" />
-          </span>
-          <h1 className="as-telaio__titolo">{qui ? t(qui.chiave) : t("nav.unknown")}</h1>
-          <Ricerca aperta={cerca} onAperta={setCerca} />
-          <Scansiona />
-          <Pastiglia ref={pastiglia} aperta={stanotte} onApri={() => cambiaStanotte(!stanotte)} />
-        </header>
-        <main className="as-telaio__corpo" id="contenuto" tabIndex={-1} onScroll={scorre}>
-          <AvvisiDellaScansione />
-          <ApriStanotte value={() => cambiaStanotte(true)}>{children}</ApriStanotte>
-        </main>
-        <button
-          className="as-telaio__velo"
-          type="button"
-          tabIndex={-1}
-          aria-label={t("frame.close")}
-          onClick={chiudiUno}
-        />
-        <Stanotte titolo={titoloStanotte} aperta={stanotte} onChiudi={() => cambiaStanotte(false)} />
-        <div
-          className="as-telaio__altro as-foglio"
-          id="altro"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="altro-titolo"
-          hidden={!altro}
-          onKeyDown={trattieni}
-        >
-          <span className="as-foglio__maniglia" aria-hidden="true" />
-          <div className="as-foglio__testa">
-            <h2 className="as-foglio__titolo" id="altro-titolo" tabIndex={-1} ref={titoloAltro}>
-              {t("frame.more")}
-            </h2>
-            <Bottone verso="nudo" piccolo onClick={() => cambiaAltro(false)}>
-              {t("frame.close.word")}
-            </Bottone>
-          </div>
-          <ScansioneNelFoglio />
-          <ul className="as-foglio__voci">
-            {nelFoglio.map((p) => (
-              <li key={p.a}>
-                <Link className="as-foglio__voce" to={p.a}>
-                  <Icon name={p.icona} />
-                  {t(p.chiave)}
-                  {p.a === "/da-confermare" && daConfermare > 0 && (
-                    <span
-                      className="as-telaio__conta"
-                      aria-label={t("frame.count", { n: numero(daConfermare) })}
-                    >
-                      {numero(daConfermare)}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <p className="as-foglio__piede">{t("app.title")}</p>
-        </div>
-      </div>
+        {formato === "telefono" ? (
+          <TelaioTelefono comandi={comandi}>{corpo}</TelaioTelefono>
+        ) : (
+          <TelaioDesktop comandi={comandi}>{corpo}</TelaioDesktop>
+        )}
       </FinestraDellOggetto>
-    </div>
-  )
-}
-
-/** Una voce del binario. Il conto si legge per intero a chi ascolta ("12 casi da confermare"). */
-function Voce({ pagina, accesa, conta }: { pagina: Pagina; accesa: boolean; conta: number }) {
-  const nome = t(pagina.chiave)
-  const spazio = nome.indexOf(" ")
-  const parola =
-    pagina.dueRighe && spazio > 0 ? (
-      <>
-        {nome.slice(0, spazio)}
-        {/* lo spazio dopo l'a capo tiene il nome intero per chi ascolta ("Da confermare", non
-            "Daconfermare"); a inizio riga non si vede */}
-        <br /> {nome.slice(spazio + 1)}
-      </>
-    ) : (
-      nome
-    )
-  return (
-    <>
-      {pagina.staccata && <li className="as-telaio__stacco" aria-hidden="true" />}
-      <li className={pagina.telefono ? "as-telaio__posto as-telaio__posto--basso" : "as-telaio__posto"}>
-        <Link className="as-telaio__voce" to={pagina.a} aria-current={accesa ? "page" : undefined}>
-          <Icon name={pagina.icona} />
-          <span className="as-telaio__parola">{parola}</span>
-          {conta > 0 && (
-            <span className="as-telaio__conta" aria-label={t("frame.count", { n: numero(conta) })}>
-              {numero(conta)}
-            </span>
-          )}
-        </Link>
-      </li>
     </>
   )
 }
 
-/** Il foglio Altro e' modale: Tab gira fra i suoi controlli e non esce dietro il velo. */
-function trattieni(e: KeyboardEvent<HTMLDivElement>) {
-  if (e.key !== "Tab") return
-  const dentro = e.currentTarget.querySelectorAll<HTMLElement>("a[href], button:not([disabled])")
-  const primo = dentro[0]
-  const ultimo = dentro[dentro.length - 1]
-  if (!primo || !ultimo) return
-  // il titolo, dove il fuoco arriva aprendo, conta come prima del primo
-  const qui = [...dentro].indexOf(document.activeElement as HTMLElement)
-  if (e.shiftKey && qui <= 0) {
-    e.preventDefault()
-    ultimo.focus()
-  } else if (!e.shiftKey && document.activeElement === ultimo) {
-    e.preventDefault()
-    primo.focus()
-  }
+const GRANAGGIO =
+  "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+// open search floats under the head: in the row it would widen it past the frame
+const SOTTO_LA_TESTA: CSSProperties = {
+  position: "absolute",
+  top: "calc(100% + 10px)",
+  right: 0,
+  width: "var(--cerca-aperta)",
 }
-
-const CHIAVE_STANOTTE = "astrolog.stanotte"
-
-/** L'ultima scelta su Stanotte, in questo browser. Senza memoria (navigazione privata) si apre
- *  chiusa: il contenuto viene prima. */
-function ricordata(): boolean {
-  try {
-    return localStorage.getItem(CHIAVE_STANOTTE) === "aperta"
-  } catch {
-    return false
-  }
-}
-
-function ricorda(aperta: boolean) {
-  try {
-    localStorage.setItem(CHIAVE_STANOTTE, aperta ? "aperta" : "chiusa")
-  } catch {
-    // senza memoria si ricomincia chiusa: non e' un errore da mostrare
-  }
+/** La testa del desktop e il corpo, nella colonna del telaio (Telaio.dc.html:14-41). */
+function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: ReactNode }) {
+  const dove = useLocation()
+  const qui = paginaDi(dove.pathname)
+  const revisione = useRevisione().data
+  const quante = revisione?.to_confirm ?? 0
+  const pastiglia = usePastiglia()
+  const scansione = statoDi(useStato().data)
+  const { aperto, tocca, segna } = comandi
+  const nomeImp = nomeConScansione(t("nav.settings"), scansione)
+  const altro = aperto === "altro"
+  return (
+    <div
+      className="al-c-telaio__blocco-2"
+      style={{ minHeight: "100vh", background: "var(--pagina)", padding: "40px" }}
+    >
+      <div className="al-c-telaio__colonna-1" style={{ boxSizing: "border-box" }}>
+        <Tema>
+          <header className="al-c-telaio__riga-1 app-telaio" style={{ flex: "none" }}>
+            <div className="al-c-telaio__riga-2">
+              <span className="al-c-telaio__tondo-1" aria-hidden="true">
+                <span className="al-c-telaio__tondo-2" />
+              </span>
+              AstroLog
+            </div>
+            <nav className="al-c-telaio__riga-3" aria-label={t("frame.nav.label")}>
+              {PAGINE.filter((p) => p.posto === "pillole").map((p) => {
+                const su = p.a === qui?.a
+                return (
+                  <Link
+                    key={p.a}
+                    className="al-c-telaio__pillola-1"
+                    to={p.a}
+                    aria-current={su ? "page" : undefined}
+                    style={{
+                      background: su ? "var(--nav-su)" : "transparent",
+                      color: su ? "var(--nav-su-testo)" : "var(--tenue)",
+                      padding: su ? "9px 18px" : "9px 11px",
+                      fontWeight: su ? 500 : 400,
+                    }}
+                  >
+                    {t(p.chiave)}
+                  </Link>
+                )
+              })}
+              <span className="al-c-telaio__riga-4" data-menu="1">
+                <a
+                  className="al-c-telaio__riga-5"
+                  href="#"
+                  onClick={tocca("altro")}
+                  ref={segna("altro")}
+                  aria-haspopup="menu"
+                  aria-expanded={altro}
+                  style={{
+                    color: altro ? "var(--testo)" : "var(--tenue)",
+                    background: altro ? "var(--carta-2)" : "transparent",
+                  }}
+                >
+                  {t("frame.more")}
+                  <Tratto d={altro ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} lato={12} spessore={2.2} />
+                </a>
+                {altro && <Menu tipo="altro" />}
+              </span>
+            </nav>
+            <div className="al-c-telaio__riga-6" style={{ position: "relative" }}>
+              <span className="al-c-telaio__notte-ancora" data-menu="1">
+                {pastiglia.senzaSito ? (
+                  <Link
+                    className="al-c-telaio__riga-7 al-c-telaio__stanotte"
+                    to="/impostazioni/sito"
+                    aria-label={pastiglia.aria}
+                  >
+                    {pastiglia.etichetta}
+                  </Link>
+                ) : (
+                  <a
+                    className="al-c-telaio__riga-7 al-c-telaio__stanotte"
+                    href="#"
+                    onClick={tocca("notte")}
+                    ref={segna("notte")}
+                    aria-haspopup="dialog"
+                    aria-expanded={aperto === "notte"}
+                    aria-label={pastiglia.aria}
+                  >
+                    <span className="al-c-telaio__stanotte-t">{t("frame.tonight")}</span>
+                    {pastiglia.etichetta}
+                  </a>
+                )}
+                {aperto === "notte" && <PannelloStanotte telefono={false} />}
+              </span>
+              {qui?.a !== "/da-confermare" && (
+                <span className="al-c-telaio__blocco-3" data-menu="1">
+                  <a
+                    className="al-c-telaio__riga-8"
+                    href="#"
+                    onClick={tocca("todo")}
+                    ref={segna("todo")}
+                    aria-haspopup="dialog"
+                    aria-expanded={aperto === "todo"}
+                    aria-label={quante > 0 ? t("frame.count", { n: numero(quante) }) : undefined}
+                  >
+                    {t("nav.review")}
+                    {quante > 0 && <Conto n={quante} />}
+                  </a>
+                  {aperto === "todo" && (
+                    <PannelloDaConfermare quante={quante} sezioni={revisione?.sections ?? []} />
+                  )}
+                </span>
+              )}
+              <a
+                className="al-c-telaio__riga-9"
+                href="#"
+                data-menu="1"
+                onClick={tocca("cerca")}
+                // open: the field keeps the focus, or its blur would close it before the click toggles
+                onMouseDown={(e) => aperto === "cerca" && e.preventDefault()}
+                ref={segna("cerca")}
+                aria-haspopup="dialog"
+                aria-expanded={aperto === "cerca"}
+                title={t("frame.search.title", {
+                  cerca: t("search.open"),
+                  tasto: t(SUL_MAC ? "search.key.shortcut.mac" : "search.key.shortcut"),
+                })}
+                aria-label={t("frame.search.aria")}
+              >
+                <Tratto d={LENTE} lato={18} classe="al-c-telaio__grafico-1" />
+                {t("search.open")}
+              </a>
+              {aperto === "cerca" && (
+                <div data-menu="1" style={SOTTO_LA_TESTA}>
+                  <Ricerca onChiudi={comandi.chiudiCerca} />
+                </div>
+              )}
+              <span className="al-c-telaio__riga-10" data-menu="1">
+                <a
+                  className="al-c-telaio__tondo-4"
+                  href="#"
+                  onClick={tocca("imp")}
+                  ref={segna("imp")}
+                  aria-haspopup="menu"
+                  aria-expanded={aperto === "imp"}
+                  title={nomeImp}
+                  aria-label={nomeImp}
+                  style={{ background: aperto === "imp" ? "var(--carta-2)" : "var(--carta)" }}
+                >
+                  <Tratto d={GRANAGGIO} lato={20} classe="al-c-telaio__grafico-1" />
+                  <SegnoDellaScansione stato={scansione} dove="tondo" />
+                </a>
+                {aperto === "imp" && <Menu tipo="impostazioni" />}
+              </span>
+            </div>
+          </header>
+        </Tema>
+        <main className="app-corpo" id="contenuto" tabIndex={-1}>
+          <h1 className="as-solo-lettori">{titoloDi(dove.pathname, false)}</h1>
+          {children}
+        </main>
+      </div>
+    </div>
+  )
 }

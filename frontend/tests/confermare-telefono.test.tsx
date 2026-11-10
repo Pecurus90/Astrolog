@@ -2,7 +2,7 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, colonna, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import { SALUTE, STANOTTE, colonna, disegna, impostazioni, pulisci, rispondi, vai as apriPagina } from "./banco"
 
 afterEach(pulisci)
 
@@ -41,7 +41,7 @@ async function aperta(larga = 390) {
   // dopo `rispondi`: il banco non deve togliere la misura
   colonna(larga)
   await disegna()
-  fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+  apriPagina("/da-confermare")
   await screen.findByRole("region", { name: "Modifiche da applicare" })
 }
 

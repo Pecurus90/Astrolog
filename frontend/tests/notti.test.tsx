@@ -334,7 +334,8 @@ describe("le Notti", () => {
       notti(pagina([], { empty: motivo, reading_done_pct: 19, waiting: [{ answer_at: "review", frames: 86 }] }))
       const reso = await apriNotti()
       expect(await screen.findByText(titolo)).toBeTruthy()
-      if (azione) expect(screen.getByText(azione)).toBeTruthy()
+      // nel corpo: la testa senza sito dice anche lei "Aggiungi sito"
+      if (azione) expect(within(screen.getByRole("main")).getByText(azione)).toBeTruthy()
       reso.unmount()
       pulisci()
     }

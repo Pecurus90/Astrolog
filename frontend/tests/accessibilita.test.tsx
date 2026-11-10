@@ -24,6 +24,7 @@ import {
   impostazioni,
   pulisci,
   rispondi,
+  vai,
   violazioni,
 } from "./banco"
 import { SCELTE, apriArchivioSu, archivio } from "./archivio-banco"
@@ -130,11 +131,53 @@ describe("l accessibilita della prima pagina", () => {
       ...SPINA,
     })
     const { container } = await disegna()
-    fireEvent.click(await screen.findByRole("button", { name: /stanotte a vicenza/i }))
-    const pannello = await screen.findByRole("complementary", { name: /stanotte/i })
-    await within(pannello).findByRole("radio", { name: /passo giau/i })
-    expect(within(pannello).getByText(/gibbosa crescente/i)).toBeDefined()
+    fireEvent.click(await screen.findByRole("link", { name: /^stanotte a vicenza/i }))
+    const pannello = await screen.findByRole("dialog", { name: "Stanotte" })
+    expect(within(pannello).getByText("Vicenza")).toBeDefined()
     expect(await violazioni(container)).toEqual([])
+  })
+
+  it("e nemmeno i menu del telaio aperti, sul desktop e sul telefono", async () => {
+    // Altro, l'ingranaggio con la scansione al lavoro e Da confermare: tre ruoli diversi (menu,
+    // gruppo con la barra, dialogo con un elenco), ognuno con la sua occasione di sbagliare.
+    const lavoro = {
+      ...SPINA["/api/v1/pipeline/status"].corpo,
+      action: "stop",
+      worker: {
+        ...SPINA["/api/v1/pipeline/status"].corpo.worker,
+        state: "running",
+        stage: "scan",
+        stages: [{ name: "scan", state: "running", current: 3, total: 14, tally: {}, reason: null, pct: 21 }],
+      },
+    }
+    const mappa = {
+      ...STANOTTE,
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 3, sections: [{ key: "filters", count: 3 }] } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+      "/api/v1/pipeline/status": { stato: 200, corpo: lavoro },
+    }
+    rispondi(mappa)
+    const desktop = await disegna()
+    fireEvent.click(await screen.findByRole("link", { name: "Altro" }))
+    await screen.findByRole("menu", { name: "Altre pagine" })
+    expect(await violazioni(desktop.container)).toEqual([])
+    fireEvent.click(screen.getByRole("link", { name: "Impostazioni · scansione in corso" }))
+    await screen.findByRole("group", { name: "Scansione" })
+    expect(await violazioni(desktop.container)).toEqual([])
+    fireEvent.click(screen.getByRole("link", { name: "3 da confermare" }))
+    await screen.findByRole("dialog", { name: "Da confermare" })
+    expect(await violazioni(desktop.container)).toEqual([])
+    pulisci()
+
+    window.history.pushState({}, "", "/?formato=telefono")
+    rispondi(mappa)
+    const telefono = await disegna()
+    const bolla = await screen.findByRole("navigation", { name: "Pagine dell'app" })
+    fireEvent.click(within(bolla).getByRole("link", { name: "Dashboard: mostra le pagine dell'app" }))
+    fireEvent.click(within(bolla).getByRole("link", { name: "Altro · scansione in corso" }))
+    await screen.findByRole("menu", { name: "Altre pagine" })
+    expect(await violazioni(telefono.container)).toEqual([])
   })
 
   it("e nemmeno Da confermare, che e la pagina dove si lavora", async () => {
@@ -236,7 +279,7 @@ describe("l accessibilita della prima pagina", () => {
       "/api/health": { stato: 200, corpo: SALUTE },
     })
     const { container } = await disegna()
-    fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+    vai("/da-confermare")
     await screen.findByRole("region", { name: /filtri/i })
     expect(await violazioni(container)).toEqual([])
   })
@@ -595,7 +638,7 @@ describe("l accessibilita della prima pagina", () => {
       ...SPINA,
     })
     const { container } = await disegna()
-    fireEvent.click(await screen.findByRole("link", { name: /attrezzatura/i }))
+    vai("/attrezzatura")
     await screen.findByRole("list", { name: /setup/i })
     // Anche **i due gesti aperti**: una scheda che si corregge e una che nasce sono campi con le
     // loro etichette, ed e' li' che un modulo senza nomi farebbe danno a chi ascolta.

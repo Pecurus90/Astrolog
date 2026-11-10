@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import {
   FERMO,
   LETTURA,
+  apriImpostazioni,
   SALUTE,
   SPINA,
   STANOTTE,
@@ -65,8 +66,7 @@ function app(
 
 /** Apre la sezione come fa chi usa l'app: dalla barra, poi dall'elenco delle sezioni. */
 async function vaiAlleLetture() {
-  const barra = await screen.findByRole("navigation", { name: /pagine/i })
-  fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+  await apriImpostazioni()
   fireEvent.click(await screen.findByRole("link", { name: /^scansioni$/i }))
 }
 

@@ -3,7 +3,7 @@
  * Impostazioni, la sezione *Servizi*: la chiave Meteoblue, provata sul conto prima di salvarla, e
  * mostrata solo dalle sue ultime cifre. La stessa parte sta nel primo avvio, come passo facoltativo.
  */
-import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
@@ -11,6 +11,7 @@ import {
   SPINA,
   STANOTTE,
   type Voce,
+  apriImpostazioni,
   cambia,
   disegna,
   fuoriDaiMattoni,
@@ -44,8 +45,7 @@ function app(chiave: string | null, risposta: Voce) {
 }
 
 async function vaiAiServizi() {
-  const barra = await screen.findByRole("navigation", { name: /pagine/i })
-  fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+  await apriImpostazioni()
   fireEvent.click(await screen.findByRole("link", { name: /servizi/i }))
 }
 

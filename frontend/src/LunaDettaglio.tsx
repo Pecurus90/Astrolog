@@ -52,10 +52,10 @@ export function LunaInTesta({ luna, aperto, apri }: { luna: Luna; aperto: boolea
  */
 export function LunaDettaglio({ luna, chiudi }: { luna: Luna; chiudi: () => void }) {
   const calendario = useCalendario(true).data
-  // Esc chiude anche col fuoco fuori dal pannello, ma non quello che chiude il cassetto o un altro dialogo
+  // Esc chiude anche col fuoco fuori dal pannello, ma non quello che chiude un altro dialogo (Stanotte)
   useEffect(() => {
     const esc = (ev: KeyboardEvent) => {
-      const altrove = ev.target instanceof Element && ev.target.closest("#stanotte, [role=dialog]:not(#dash-luna-dettaglio)")
+      const altrove = ev.target instanceof Element && ev.target.closest("[role=dialog]:not(#dash-luna-dettaglio)")
       if (ev.key === "Escape" && !altrove) chiudi()
     }
     document.addEventListener("keydown", esc)

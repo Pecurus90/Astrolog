@@ -55,6 +55,14 @@ Dal porting di «Tutto della notte» (passo 33, 8/11), `componenti/`:
   («10 min ore», `AL.ore` in tema.js 51) e doppia con le ore («4 h 18 ore»). Marco 10/11:
   «integrazione», come la finestra della notte e dell'oggetto.
 
+Dal porting del telaio (passo 33, 10/11), `componenti/Telaio.dc.html`:
+- [da dare] Telaio, finestre strette: la cornice ha min-width 1440, ma fra 700 e 1440 px
+  (portatili 1280 e 1366, finestra non a tutto schermo) la testa non ci sta: a 1280 l'ingranaggio
+  esce di 53 px. Marco 10/11: versioni scalate della testa, senza scorrimento di lato (per
+  esempio Cerca solo con la lente, pillole e margini piu' stretti), una per fascia fino a 700.
+- [da dare] Telaio telefono, Da confermare nella testa senza conto: largo 42 px (padding 0 12px,
+  icona 18), sotto i 44 dei bersagli del telefono.
+
 ## Date, da controllare alla consegna
 
 Nessuna.

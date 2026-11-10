@@ -12,7 +12,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, SENZA_SOGGETTI, STANOTTE, disegna, impostazioni, pulisci, riga, rispondi, scritture, vaiASezione } from "./banco"
+import { SALUTE, SENZA_SOGGETTI, STANOTTE, disegna, impostazioni, pulisci, riga, rispondi, scritture, vai, vaiASezione } from "./banco"
 
 afterEach(pulisci)
 
@@ -282,7 +282,7 @@ describe("Da confermare -- i mosaici proposti", () => {
 it("le sezioni senza domande non si vedono", async () => {
   aperta({ ...PAGINA, unclear: [], mosaics: [] })
   await disegna()
-  fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+  vai("/da-confermare")
   await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
   for (const nome of [/frame senza sito/i, /mosaici/i]) {
     expect(screen.queryByRole("region", { name: nome })).toBeNull()

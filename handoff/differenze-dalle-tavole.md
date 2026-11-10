@@ -9,6 +9,60 @@ dopo. Quando la tavola si allinea o l'app la raggiunge, la voce esce.
 Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nelle voci di
 `per-design.md`; da qui in poi stanno qui.
 
+## Telaio (passo 33, commit B, 10/11)
+
+Fuori per ora (esiti della lista fissa):
+- **Il tondo del modo e "Modo automatico".** Tavola: tondo chiaro/scuro nella testa (Telaio 33),
+  "Modo automatico" nell'ingranaggio e "Passa al modo chiaro" in Altro del telefono (Menu 42, 45).
+  App: niente. Perche': Marco 10/11, arrivano col passo Tema.
+- **"dati simulati" in Stanotte.** Tavola: Telaio 26, 51. App: niente. Perche': i dati sono veri.
+- **Cerca in dialogo, coi gruppi pagine e impostazioni.** Tavola: `Cerca` al centro (Telaio 40, 56).
+  App: il campo di `Ricerca.tsx` sotto la testa, a destra, sopra la pagina (sul telefono sotto la
+  testa). Perche': commit D.
+- **Il vetro accanto alla bolla.** Tavola: `vb.acc` (Telaio 60-63), spento (`CON=[]`). App: niente.
+  Perche': Marco v50.
+- **L'anteprima del telefono e la cornice larga 1440.** Tavola: telefono 390 x 844 in una finestra
+  larga, `min-width: 1440px` con la cornice (Telaio 145, 184). App: il telefono riempie la finestra;
+  la cornice grigia c'e' ma si stringe. Perche': servono alla tavola, non a chi usa l'app.
+- **La testa del desktop fra 700 e 1440 px.** Tavola: cornice `min-width: 1440px`, nessuna testa
+  stretta. App: la cornice si stringe e la testa non ci sta (a 1280 l'ingranaggio esce di 53 px).
+  Perche': Marco 10/11, versioni scalate chieste a Design (`handoff/per-design.md`); niente
+  scorrimento di lato nel frattempo.
+- **Da confermare nella testa del telefono, senza conto.** Tavola: 42 px di largo. App: come la
+  tavola. Perche': sotto i 44 px dei bersagli, chiesto a Design.
+- **Gli stati dell'app (caricamento, errore).** Tavola: prop `app` del Telaio (Telaio 13, 38, 55).
+  App: li disegna ogni pagina, come prima. Perche': la lista fissa li tiene nelle pagine.
+- **Pieno (il Planner a tutto schermo).** Tavola: `pn` (Telaio 147). App: niente. Perche': il
+  Planner non c'e' ancora.
+
+Scelte diverse dalla tavola:
+- **La scelta del sito in Stanotte.** Tavola v67: i siti coi bottoni; v70: *Cambia ↗*. App: *Cambia ↗*
+  verso Impostazioni › Sito. Perche': v70 vince. Il ricordo aperto/chiuso di Stanotte esce con lei.
+- **Il giorno dell'ultima scansione e dell'interruzione.** Tavola: «oggi, 07:12» (Menu 36-41).
+  App: «30 set 2026, 07:12». Perche': il giorno relativo non arriva dall'API.
+- **La riga della scansione in corso senza la lettura dei file.** Tavola: sempre «file letti X su Y».
+  App: in una fase dopo la lettura «{fatti} su {su}» della fase. Perche': i file letti esistono
+  solo nella lettura.
+- **Il perche' della scansione bloccata.** Tavola: sempre «Lettura di una cartella non completata».
+  App: quella frase solo se la lettura e' caduta (`scan.state` error), altrimenti «Scansione
+  interrotta da un errore.». Perche': il worker va in errore anche in solve, identify, db.
+- **La barra della scansione non e' un `progressbar`.** Tavola: `role=progressbar` (Menu 13). App:
+  disegno nascosto ai lettori; i numeri li dice la riga sotto. Perche': ARIA non ammette un
+  progressbar dentro un menu (axe, `aria-required-children`).
+- **Le schede nascoste della bolla.** Tavola: chiusa, le altre schede restano nel giro del
+  tabulatore. App: `aria-hidden` e fuori dal giro; la scheda Altro dice `aria-haspopup` e
+  `aria-expanded`, e porta il segno della scansione (la tavola lo calcola, `navTel`, e non lo
+  disegna). Perche': un bottone invisibile non si raggiunge.
+- **Il logo del telefono.** Tavola: `span aria-label` (Telaio 44). App: `role="img"`. Perche': axe
+  rifiuta `aria-label` su un elemento senza ruolo.
+- **Il titolo della pagina sul desktop.** Tavola: nessuno. App: un titolo nascosto in testa al
+  corpo, e il link «Vai al contenuto». Perche': chi usa un lettore di schermo sa dove si trova.
+- **Il verdetto di Stanotte senza «buona».** Tavola: solo «✓ notte buona». App: «! notte incerta»,
+  «✕ notte non adatta», coi segni delle pillole; senza previsione «Previsione non disponibile.
+  Dettagli nella pagina Meteo.». Perche': la tavola mostra un caso solo.
+- **Il menu Altro del telefono, l'ordine.** Tavola: Planner prima di Piano della notte (Menu 44), al
+  contrario del desktop (46). App: come la tavola, ognuno il suo (`ALTRO_TELEFONO`).
+
 ## Notti -- la pagina (passo 33)
 
 - **La parola del numero grande.** Tavola: «ore» (Notti 221), anche coi minuti («10 min ore»).

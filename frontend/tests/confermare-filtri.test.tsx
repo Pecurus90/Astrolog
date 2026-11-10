@@ -16,7 +16,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, chiamate, disegna, impostazioni, pulisci, riga, rispondi, scritture, vaiASezione } from "./banco"
+import { SALUTE, STANOTTE, chiamate, disegna, impostazioni, pulisci, riga, rispondi, scritture, vai, vaiASezione } from "./banco"
 
 afterEach(pulisci)
 
@@ -370,7 +370,7 @@ describe("Da confermare -- i filtri", () => {
     // finito vuoi vederlo.
     aperta({ ...PAGINA, filters: [], to_confirm: 0 })
     await disegna()
-    fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+    vai("/da-confermare")
     await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
     expect(screen.queryByRole("region", { name: /filtri/i })).toBeNull()
   })

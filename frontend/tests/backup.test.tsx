@@ -82,13 +82,13 @@ describe("Il backup", () => {
       "/api/health": { stato: 200, corpo: SALUTE },
     })
     fireEvent.click(screen.getByRole("button", { name: /^ripristina$/i }))
-    expect(await screen.findByRole("navigation", { name: /pagine/i })).toBeDefined()
+    expect(await screen.findByRole("navigation", { name: "Navigazione principale" })).toBeDefined()
     expect(screen.queryByRole("button", { name: /^salta$/i })).toBeNull()
   })
 
   it("senza nulla da proporre non chiede niente", async () => {
     await app("none", true)
-    await screen.findByRole("navigation", { name: /pagine/i })
+    await screen.findByRole("navigation", { name: "Navigazione principale" })
     expect(screen.queryByText(/^backup trovato$/i)).toBeNull()
   })
 

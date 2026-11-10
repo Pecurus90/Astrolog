@@ -126,10 +126,13 @@ describe("il dettaglio della Luna", () => {
     expect(screen.queryByRole("dialog", { name: "La Luna stanotte" })).toBeNull()
   })
 
-  it("Esc dentro il cassetto di Stanotte chiude il cassetto, non il pannello della Luna", async () => {
+  it("Esc dentro Stanotte chiude Stanotte, non il pannello della Luna", async () => {
     await apriLuna()
 
-    fireEvent.keyDown(document.getElementById("stanotte") as HTMLElement, { key: "Escape" })
+    fireEvent.click(screen.getByRole("button", { name: "Stanotte intera" }))
+    const stanotte = await screen.findByRole("dialog", { name: "Stanotte" })
+    fireEvent.keyDown(stanotte, { key: "Escape" })
+    expect(screen.queryByRole("dialog", { name: "Stanotte" })).toBeNull()
     expect(screen.queryByRole("dialog", { name: "La Luna stanotte" })).not.toBeNull()
   })
 

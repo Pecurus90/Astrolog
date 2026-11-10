@@ -1,25 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type Ref, type RefObject, createContext } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { createContext } from "react"
 import { Link } from "react-router"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { Icon } from "./Icons"
-import { CieloLetto } from "./ScalaDelCielo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { useSiti } from "./api/siti"
 import { tracciatoDellaLuna } from "./disegnoDellaLuna"
-import { oraDelSito, t } from "./i18n"
-import { Accordo, type Breve, Giudizio, VentoInQuota } from "./NotteDelMeteo"
+import { type Chiave, giornoEMese, numero, oraDelSito, t, unDecimale } from "./i18n"
 
 /**
- * Stanotte (disegno v25-v26): la pastiglia in alto dice il sito e la Luna, e apre il pannello col
- * sito da scegliere, la Luna e il meteo della notte. I numeri arrivano fatti da
- * `GET /api/v1/tonight` (`docs/domini/effemeridi.md`); i siti da `GET /api/v1/sites`.
+ * Stanotte (Telaio v76, pastiglia v70): la pastiglia dice il sito e apre il pannello col sito, la
+ * Luna e il meteo della notte. I numeri arrivano fatti da `GET /api/v1/tonight`
+ * (`docs/domini/effemeridi.md`): la scala della Luna (`moon_in_dark.level`), i tratti senza Luna,
+ * le ore di posa.
  *
- * - **Qui non si calcola niente**: ne' la classe di Bortle, ne' da che parte e' illuminata la
- *   Luna. Solo il disegno, che sta in `disegnoDellaLuna.ts`.
+ * - **Qui non si calcola niente**: si sceglie la frase, mai un numero.
  * - **Ogni vuoto e' una frase, mai un trattino.**
  */
 
@@ -43,9 +37,9 @@ export function useStanotte() {
 }
 
 type LunaDetta = components["schemas"]["MoonOut"]
+type Notte = components["schemas"]["TonightOut"]
 
-/** Il disco della Luna: il cerchio spento e la parte illuminata. Lo usano anche le Notti, con la
- *  Luna di quella sera. */
+/** Il disco della Luna: il cerchio spento e la parte illuminata. Lo usano le Notti e la Dashboard. */
 export function Disco({
   luna,
   className = "",
@@ -55,201 +49,188 @@ export function Disco({
 }) {
   const illuminata = tracciatoDellaLuna(luna.illumination_pct, luna.lit_side === "right")
   return (
-    <svg className={`as-luna__faccia ${className}`.trim()} viewBox="-12 -12 24 24" aria-hidden="true">
+    <svg
+      className={`as-luna__faccia ${className}`.trim()}
+      viewBox="-12 -12 24 24"
+      aria-hidden="true"
+    >
       <circle className="as-luna__disco" cx="0" cy="0" r="10" />
       {illuminata && <path className="as-luna__illuminata" d={illuminata} />}
     </svg>
   )
 }
 
-/** La pastiglia della barra: il sito e la Luna, e apre Stanotte. Senza sito chiede di sceglierlo. */
-export function Pastiglia({
-  aperta,
-  onApri,
-  ref,
-}: {
-  aperta: boolean
-  onApri: () => void
-  ref: Ref<HTMLButtonElement>
-}) {
-  const detto = useStanotte().data
-  const sito = detto?.site?.name ?? null
-  return (
-    <button
-      className="as-telaio__pastiglia"
-      type="button"
-      aria-expanded={aperta}
-      aria-controls="stanotte"
-      aria-label={sito ? t("tonight.at", { sito }) : t("tonight.nosite.how")}
-      onClick={onApri}
-      ref={ref}
-    >
-      <Icon name="m-sito" className="as-telaio__pastiglia-segno" />
-      <b>{sito ?? t("tonight.nosite.how")}</b>
-      {detto?.moon && <Disco luna={detto.moon} className="as-telaio__pastiglia-luna" />}
-    </button>
-  )
+/** Cio' che la pastiglia dice: il sito con la freccia, o "Aggiungi sito"; vuoto finche' non si sa. */
+export type PastigliaDetta = {
+  sito: string | null
+  etichetta: string
+  aria: string
+  senzaSito: boolean
 }
 
-/** Il pannello di Stanotte: sito, Luna, meteo. */
-export function Stanotte({
-  titolo,
-  aperta,
-  onChiudi,
-}: {
-  titolo: RefObject<HTMLHeadingElement | null>
-  aperta: boolean
-  onChiudi: () => void
-}) {
+/** La pastiglia dalla risposta di stanotte: senza sito porta ad aggiungerlo, finche' non si sa
+ *  (o se non si legge) apre il pannello che lo dice. */
+export function usePastiglia(): PastigliaDetta {
   const stanotte = useStanotte()
-  const detto = stanotte.data
-  return (
-    <aside
-      className="as-telaio__stanotte as-stanotte"
-      id="stanotte"
-      aria-labelledby="stanotte-titolo"
-      hidden={!aperta}
-    >
-      <div className="as-stanotte__testa">
-        <h2 className="as-stanotte__titolo" id="stanotte-titolo" tabIndex={-1} ref={titolo}>
-          {t("tonight.title")}
-        </h2>
-        <Bottone verso="nudo" piccolo onClick={onChiudi}>
-          {t("frame.close.word")}
-        </Bottone>
-      </div>
-      {stanotte.isPending && <p>{t("tonight.loading")}</p>}
-      {stanotte.isError && <Avviso esito="allarme">{t("tonight.failed")}</Avviso>}
-      {detto && (
-        <>
-          <Sito sito={detto.site} />
-          {detto.site && (
-            <div className="as-stanotte__blocco">
-              <span className="as-stanotte__etichetta">{t("tonight.moon")}</span>
-              {detto.moon === null ? <span>{t("tonight.notimezone")}</span> : <Luna luna={detto.moon} />}
-            </div>
-          )}
-          {detto.site && detto.moon !== null && (
-            <div className="as-stanotte__blocco">
-              <span className="as-stanotte__etichetta">{t("tonight.weather")}</span>
-              <MeteoDiStanotte meteo={detto.weather ?? null} />
-            </div>
-          )}
-        </>
-      )}
-    </aside>
-  )
+  const sito = stanotte.data?.site?.name ?? null
+  if (sito)
+    return {
+      sito,
+      etichetta: t("frame.tonight.site", { sito }),
+      aria: t("frame.tonight.aria", { sito }),
+      senzaSito: false,
+    }
+  if (stanotte.data)
+    return {
+      sito: null,
+      etichetta: t("frame.tonight.add"),
+      aria: t("frame.tonight.nosite"),
+      senzaSito: true,
+    }
+  return { sito: null, etichetta: "", aria: t("frame.tonight"), senzaSito: false }
 }
 
-type SitoDiStanotte = components["schemas"]["SiteSkyOut"]
+/** I tre segni del verdetto, come le pillole degli esiti (`Pillola`): il colore non e' mai solo. */
+const VERDETTI: Record<"go" | "marginal" | "nogo", { segno: string; esito: Chiave }> = {
+  go: { segno: "\u{2713}", esito: "ui.outcome.good" },
+  marginal: { segno: "!", esito: "ui.outcome.uncertain" },
+  nogo: { segno: "\u{2715}", esito: "ui.outcome.unsuitable" },
+}
 
-/** Il blocco del sito: i siti da scegliere, la classe del cielo e il rimando ai siti. */
-function Sito({ sito }: { sito: SitoDiStanotte | null }) {
-  const cache = useQueryClient()
-  const siti = useSiti()
-  const scegli = useMutation({
-    mutationFn: async (id: number) => {
-      const { error } = await api.POST("/api/v1/sites/{site_id}/default", {
-        params: { path: { site_id: id } },
-      })
-      if (error) throw new Error(t("tonight.sites.failed"))
-    },
-    // Il sito di casa cambia stanotte, il meteo e l'elenco: si rileggono, non si indovinano.
-    onSettled: () => {
-      for (const chiave of ["tonight", "sites", "weather"]) {
-        void cache.invalidateQueries({ queryKey: [chiave] })
-      }
-    },
+/** Quando la Luna sta nel buio, nelle parole della risposta di Marco (10/11): dopo, fino, dalle-alle,
+ *  tutta la notte. */
+function quandoNelBuio(nelBuio: components["schemas"]["MoonInDarkOut"]): string {
+  if (nelBuio.from_start && nelBuio.to_end) return t("frame.moon.all")
+  if (nelBuio.to_end) return t("frame.moon.after", { da: oraDelSito(nelBuio.since) })
+  if (nelBuio.from_start) return t("frame.moon.until", { a: oraDelSito(nelBuio.until) })
+  return t("frame.moon.between", { da: oraDelSito(nelBuio.since), a: oraDelSito(nelBuio.until) })
+}
+
+/** La frase della Luna per la banda larga, dal gradino che il backend ha gia' deciso. */
+function fraseDellaLuna(notte: Notte): string {
+  const nelBuio = notte.moon_in_dark ?? null
+  if (nelBuio === null) return t("frame.moon.none")
+  if (nelBuio.level === "go") return t("frame.moon.go")
+  return t(nelBuio.level === "nogo" ? "frame.moon.nogo" : "frame.moon.marginal", {
+    quando: quandoNelBuio(nelBuio),
   })
-  const elenco = siti.data?.items ?? []
-  return (
-    <div className="as-stanotte__blocco">
-      <span className="as-stanotte__etichetta" id="stanotte-sito">
-        {t("tonight.site")}
-      </span>
-      {sito === null && <span>{t("tonight.nosite")}</span>}
-      {elenco.length > 1 && (
-        <div className="as-menu__voci" role="radiogroup" aria-labelledby="stanotte-sito">
-          {elenco.map((s) => (
-            <button
-              className="as-menu__voce"
-              type="button"
-              role="radio"
-              aria-checked={s.is_default}
-              key={s.id}
-              disabled={scegli.isPending}
-              onClick={() => !s.is_default && scegli.mutate(s.id)}
-            >
-              <span className="as-menu__nome">{s.name}</span>
-              <span className="as-menu__dove">
-                {s.bortle === null ? t("tonight.sky.none") : t("tonight.sky", { n: s.bortle })}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-      {scegli.error && <Avviso esito="allarme">{scegli.error.message}</Avviso>}
-      {sito && <CieloLetto bortle={sito.bortle} sqm={sito.sky_sqm} />}
-      <Link className="as-stanotte__rimando" to="/impostazioni/sito">
-        {sito === null ? t("tonight.nosite.how") : t("tonight.sites.manage")}
-      </Link>
-    </div>
-  )
 }
 
-/** La Luna: fase, quanto e' illuminata, quando sorge e quando tramonta. */
-function Luna({ luna }: { luna: LunaDetta }) {
+/** Il verdetto della notte con le ore di posa, o la frase che dice che la previsione non c'e'. */
+function verdettoDelMeteo(notte: Notte): string {
+  const meteo = notte.weather ?? null
+  if (meteo?.verdict == null) return t("tonight.weather.none")
+  const { segno, esito } = VERDETTI[meteo.verdict]
+  const verdetto = t("frame.tonight.verdict", { segno, esito: t(esito) })
+  const ore = meteo.exposure_hours ?? null
+  if (ore === null) return verdetto
+  return ore === 0
+    ? t("frame.tonight.exposure.none", { verdetto })
+    : t("frame.tonight.exposure", { verdetto, ore: unDecimale(ore) })
+}
+
+/** Il buio della notte e i suoi tratti senza Luna: "buio 20:48-05:48, senza Luna 20:48-23:40". */
+function buioDellaNotte(notte: Notte): string {
+  const da = notte.chart?.dark_from ?? null
+  const a = notte.chart?.dark_until ?? null
+  const parti: string[] = []
+  if (da && a) parti.push(t("frame.tonight.dark", { da: oraDelSito(da), a: oraDelSito(a) }))
+  const tratti = (notte.moonless_dark ?? []).map((s) =>
+    t("frame.tonight.stretch", { da: oraDelSito(s.starts_at), a: oraDelSito(s.ends_at) }),
+  )
+  if (tratti.length > 0) parti.push(t("frame.tonight.moonless", { tratti: tratti.join(", ") }))
+  return parti.join(" \u{00b7} ")
+}
+
+type Riga = { l: string; v: string; s: string; a: { l: string; a: string } | null }
+
+/** Le tre righe del pannello: sito, Luna, meteo (Telaio v76, `sn.righe`). */
+function righeDi(notte: Notte, sito: components["schemas"]["SiteSkyOut"]): Riga[] {
+  const cielo = sito.bortle === null ? t("tonight.sky.none") : t("tonight.sky", { n: sito.bortle })
+  const luna = notte.moon
+  return [
+    {
+      l: t("frame.tonight.row.site"),
+      v: sito.name,
+      s: t("frame.tonight.default", { cielo }),
+      a: { l: t("frame.tonight.change"), a: "/impostazioni/sito" },
+    },
+    {
+      l: t("frame.tonight.row.moon"),
+      v:
+        luna === null
+          ? t("tonight.notimezone")
+          : luna.rise === null
+            ? t("frame.tonight.moon.norise", { pct: numero(luna.illumination_pct) })
+            : t("frame.tonight.moon", {
+                pct: numero(luna.illumination_pct),
+                ora: oraDelSito(luna.rise),
+              }),
+      s: luna === null ? "" : fraseDellaLuna(notte),
+      a: null,
+    },
+    {
+      l: t("frame.tonight.row.weather"),
+      v: verdettoDelMeteo(notte),
+      s: buioDellaNotte(notte),
+      a: { l: t("frame.tonight.weather"), a: "/meteo" },
+    },
+  ]
+}
+
+/** Il pannello di Stanotte (Telaio v76, `al-c-telaio__notte`): sotto la pastiglia sul desktop,
+ *  sotto la testa sul telefono. */
+export function PannelloStanotte({ telefono }: { telefono: boolean }) {
+  const stanotte = useStanotte()
+  const notte = stanotte.data
+  const sito = notte?.site ?? null
+  const titolo = notte?.night
+    ? t("frame.tonight.title", { giorno: giornoEMese(notte.night) })
+    : t("frame.tonight")
   return (
-    <>
-      <span className="as-luna__fase">
-        <Disco luna={luna} />
-        <span className="as-luna__dice">
-          <span className="as-luna__nome">{t(`moon.${luna.phase_key}`)}</span>
-          <span className="as-luna__quanto">{t("tonight.illuminated", { pct: luna.illumination_pct })}</span>
+    <div
+      className={telefono ? "al-c-telaio__notte al-c-telaio__notte--tel" : "al-c-telaio__notte"}
+      role="dialog"
+      aria-label={t("frame.tonight")}
+      data-menu="1"
+    >
+      <span className="al-c-telaio__notte-testa">
+        <b className="al-c-telaio__notte-tit">{titolo}</b>
+      </span>
+      {stanotte.isPending && <span className="al-c-telaio__notte-s">{t("tonight.loading")}</span>}
+      {stanotte.isError && (
+        <span className="al-c-telaio__notte-s" role="alert">
+          {t("tonight.failed")}
         </span>
-      </span>
-      <Orario quando={luna.rise} verbo="tonight.rise" mai="tonight.rise.never" />
-      <Orario quando={luna.set} verbo="tonight.set" mai="tonight.set.never" />
-    </>
-  )
-}
-
-/** Un orario della notte, o la frase che dice che stanotte non succede. */
-function Orario({
-  quando,
-  verbo,
-  mai,
-}: {
-  quando: string | null
-  verbo: "tonight.rise" | "tonight.set"
-  mai: "tonight.rise.never" | "tonight.set.never"
-}) {
-  if (quando === null) return <span>{t(mai)}</span>
-  return (
-    <span>
-      {t(verbo)} <b>{oraDelSito(quando)}</b>
-    </span>
-  )
-}
-
-/** Il meteo della notte in corso: il verdetto, le ore utili, l'accordo e il vento in quota, e il
- *  collegamento al Meteo per il resto. */
-function MeteoDiStanotte({ meteo }: { meteo: Breve | null }) {
-  return (
-    <>
-      {meteo === null ? (
-        <span>{t("tonight.weather.none")}</span>
-      ) : (
-        <>
-          <Giudizio breve={meteo} />
-          <Accordo breve={meteo} />
-          <VentoInQuota breve={meteo} />
-        </>
       )}
-      <Link className="as-stanotte__rimando" to="/meteo">
-        {t("tonight.weather.open")}
-      </Link>
-    </>
+      {notte &&
+        sito &&
+        righeDi(notte, sito).map((r) => (
+          <div className="al-c-telaio__notte-riga" key={r.l}>
+            <span className="al-c-telaio__notte-l">{r.l}</span>
+            <span className="al-c-telaio__notte-v">
+              <b>{r.v}</b>
+              <span className="al-c-telaio__notte-s">{r.s}</span>
+            </span>
+            {r.a && (
+              <Link to={r.a.a} className="al-bottone al-bottone--testo al-bottone--piccolo">
+                {r.a.l}
+              </Link>
+            )}
+          </div>
+        ))}
+      <span className="al-c-telaio__notte-gesti">
+        <Link to="/meteo" className="al-bottone al-bottone--pieno al-bottone--piccolo">
+          {t("frame.tonight.open.weather")}
+        </Link>
+        <Link
+          to="/piano-della-notte"
+          className="al-bottone al-bottone--contorno al-bottone--piccolo"
+        >
+          {t("frame.tonight.open.plan")}
+        </Link>
+      </span>
+    </div>
   )
 }
 

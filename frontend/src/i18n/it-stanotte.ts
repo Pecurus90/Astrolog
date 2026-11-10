@@ -1,24 +1,15 @@
 /**
- * I testi del **piede della barra**: da dove osservi, e che luna fa.
+ * I testi di **Stanotte** che le pagine condividono col telaio: il cielo del sito, la Luna, il
+ * meteo che manca (quelli della pastiglia v70 stanno in `it-telaio.ts`).
  *
  * File suo per la stessa ragione del primo avvio: `it.ts` e' al tetto di righe, e si spezza per
  * area.
  */
 export const itStanotte = {
-  "tonight.title": "Stanotte",
-  "tonight.at": "Stanotte a {sito}",
-  "tonight.site": "sito",
-  "tonight.moon": "luna",
-  "tonight.weather": "meteo",
-  "tonight.sites.manage": "Gestisci i siti",
-  "tonight.sites.failed": "Cambio del sito non riuscito.",
   "tonight.sky": "Bortle {n}",
   // Il sito c'e' ma non gli e' mai stata data una classe di cielo: non e' un guasto, e' una cosa
   // che manca.
   "tonight.sky.none": "Bortle non indicato",
-  // La rampa di nove bande e' un disegno: chi ascolta sente questa frase al suo posto.
-  "tonight.nosite": "Nessun sito selezionato.",
-  "tonight.nosite.how": "Seleziona sito",
   "tonight.loading": "Caricamento\u2026",
   "tonight.failed": "Dati di stanotte non disponibili.",
   "tonight.notimezone": "Fuso orario del sito non riconosciuto: Luna non calcolabile.",
@@ -31,7 +22,6 @@ export const itStanotte = {
   // questo stesso piede "buio pieno" e' gia' la classe 1 di Bortle (`sky.low`), che e' quanto e'
   // scuro il posto, non quando e' scuro stanotte.
   "tonight.weather.none": "Previsione non disponibile. Dettagli nella pagina Meteo.",
-  "tonight.weather.open": "Apri il Meteo",
   // In barra c'e' il verbo e l'ora, e basta: quanto sale lo mostra il grafico, e il numero si
   // legge nel pannello. Decisione del disegno, dichiarata nel foglio.
   "tonight.rise": "sorge",

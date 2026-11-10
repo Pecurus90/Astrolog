@@ -7,7 +7,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
+import { SALUTE, SPINA, STANOTTE, apriImpostazioni, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
 
 afterEach(pulisci)
 
@@ -21,8 +21,7 @@ async function vaiAllaLuna() {
     ...SPINA,
   })
   await disegna()
-  const barra = await screen.findByRole("navigation", { name: /pagine/i })
-  fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+  await apriImpostazioni()
   fireEvent.click(await screen.findByRole("link", { name: "Luna" }))
   return screen.findByRole("region", { name: "Notti buone per la banda larga" })
 }
@@ -59,7 +58,7 @@ describe("Impostazioni, la Luna", () => {
       ...SPINA,
     })
     await disegna()
-    fireEvent.click(within(await screen.findByRole("navigation", { name: /pagine/i })).getByRole("link", { name: /impostazioni/i }))
+    await apriImpostazioni()
     fireEvent.click(await screen.findByRole("link", { name: "Luna" }))
     const sezione = await screen.findByRole("region", { name: "Notti buone per la banda larga" })
 

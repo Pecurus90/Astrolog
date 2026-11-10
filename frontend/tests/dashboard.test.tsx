@@ -76,7 +76,7 @@ describe("la Dashboard, stanotte", () => {
 
     expect(within(stanotte).getByRole("link", { name: "Meteo" }).getAttribute("href")).toBe("/meteo")
     fireEvent.click(within(stanotte).getByRole("button", { name: "Stanotte intera" }))
-    expect(document.querySelector(".as-telaio")?.getAttribute("data-stanotte")).toBe("aperta")
+    expect(await screen.findByRole("dialog", { name: "Stanotte" })).toBeDefined()
   })
 })
 

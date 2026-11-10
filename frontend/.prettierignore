@@ -31,7 +31,6 @@ src/ImpostazioniCartelle.tsx
 src/ImpostazioniLetture.tsx
 src/ImpostazioniLuna.tsx
 src/ImpostazioniSito.tsx
-src/Layout.tsx
 src/LunaDettaglio.tsx
 src/Meteo.tsx
 src/ModuloDelGesto.tsx
@@ -41,7 +40,6 @@ src/NuovoFiltroOCorredo.tsx
 src/Ricerca.tsx
 src/RigheDellAttrezzatura.tsx
 src/ScalaDelCielo.tsx
-src/Scansiona.tsx
 src/SchedaDelPezzo.tsx
 src/SchedaDelSito.tsx
 src/Semaforo.tsx
@@ -54,7 +52,6 @@ src/SezioneOggetti.tsx
 src/SezioneSenzaTipo.tsx
 src/SezioneStessoPezzo.tsx
 src/Soggetti.tsx
-src/Stanotte.tsx
 src/Tendina.tsx
 src/TendinaDellaBanda.tsx
 src/Volta.tsx

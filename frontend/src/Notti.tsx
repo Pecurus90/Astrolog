@@ -411,10 +411,10 @@ export function Notti() {
   }
 
   return (
-    <div className="as-pagina">
+    <>
       <Pagina formato={formato}>{corpo}</Pagina>
       {finestra}
-    </div>
+    </>
   )
 }
 

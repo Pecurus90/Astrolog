@@ -15,6 +15,7 @@ import { itOggetto } from "./it-oggetto"
 import { itSito } from "./it-sito"
 import { itSolver } from "./it-solver"
 import { itStanotte } from "./it-stanotte"
+import { itTelaio } from "./it-telaio"
 import { itWizard } from "./it-wizard"
 
 export const it = {
@@ -33,18 +34,14 @@ export const it = {
   ...itSito,
   ...itSolver,
   ...itComponenti,
+  ...itTelaio,
   "scan.start": "Scansiona",
   "scan.stop": "Interrompi",
   "scan.resume": "Riprendi",
   "scan.progress": "{fatti} su {su}",
-  "scan.label": "scansione",
-  "scan.idle": "Inattiva",
   "scan.working": "In corso",
-  "scan.stopped": "Interrotta",
-  "scan.blocked": "Bloccata",
-  "scan.blocked.why": "Scansione interrotta da un errore",
+  "scan.blocked.why": "Scansione interrotta da un errore.",
   "scan.blocked.see": "Dettagli",
-  "scan.last": "Ultima scansione: {giorno}, {ora}",
   "scan.stage.scan": "Lettura dei file",
   "scan.stage.normalize": "Normalizzazione dei nomi",
   "scan.stage.solve": "Plate solving",

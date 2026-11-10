@@ -9,7 +9,6 @@
 export const enGuscio = {
   "app.title": "AstroLog",
   "app.loading": "Loading\u2026",
-  "nav.label": "Pages",
   "nav.unknown": "Unknown page",
   "notFound.title": "Page not found",
   "notFound.why":
@@ -19,7 +18,6 @@ export const enGuscio = {
   "soon.why": "This page will be available in a future version.",
   "frame.skip": "Skip to content",
   "frame.more": "More",
-  "frame.more.count": "{n} to confirm",
   "frame.count": "{n} to confirm",
   "frame.close": "Close",
   "frame.close.word": "close",
@@ -31,7 +29,6 @@ export const enGuscio = {
   "nav.review": "To confirm",
   "nav.planner": "Planner",
   "nav.projects": "Projects",
-  "nav.sky": "Sky chart",
   "nav.weather": "Weather",
   "nav.settings": "Settings",
   "search.open": "Search",

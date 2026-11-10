@@ -11,7 +11,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, riga, rispondi, scritture, vaiASezione } from "./banco"
+import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, riga, rispondi, scritture, vai, vaiASezione } from "./banco"
 
 afterEach(pulisci)
 
@@ -123,7 +123,7 @@ describe("Da confermare -- i file che non dicono che file sono", () => {
   it("la sezione non c'e' quando non ci sono cartelle da chiedere", async () => {
     aperta({ ...PAGINA, typeless: [], to_confirm: 0 })
     await disegna()
-    fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+    vai("/da-confermare")
     expect(await screen.findByText("Niente da confermare")).toBeDefined()
     expect(screen.queryByRole("heading", { name: /frame senza tipo/i })).toBeNull()
   })

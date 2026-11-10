@@ -2,7 +2,7 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, rispondi, vai } from "./banco"
 
 afterEach(pulisci)
 
@@ -42,7 +42,7 @@ async function apri(pagina: unknown = PAGINA) {
     "/api/health": { stato: 200, corpo: SALUTE },
   })
   await disegna()
-  fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+  vai("/da-confermare")
   await screen.findByRole("region", { name: "Modifiche da applicare" })
 }
 

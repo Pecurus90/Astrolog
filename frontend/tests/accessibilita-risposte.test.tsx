@@ -18,11 +18,12 @@
  * test-tolto: "e nemmeno Le letture, con una ricevuta per ogni esito"
  * test-tolto: "e nemmeno Il riconoscitore con ASTAP ma senza il suo catalogo"
  */
-import { fireEvent, screen, within } from "@testing-library/react"
+import { fireEvent, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
   LETTURA,
+  apriImpostazioni,
   SALUTE,
   SPINA,
   STANOTTE,
@@ -139,8 +140,7 @@ describe("l accessibilita di dove si risponde", () => {
       ...SPINA,
     })
     const { container } = await disegna()
-    const barra = await screen.findByRole("navigation", { name: /pagine/i })
-    fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+    await apriImpostazioni()
     await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })
     expect(await violazioni(container)).toEqual([])
 
@@ -187,8 +187,7 @@ describe("l accessibilita di dove si risponde", () => {
       ...SPINA,
     })
     const { container } = await disegna()
-    const barra = await screen.findByRole("navigation", { name: /pagine/i })
-    fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+    await apriImpostazioni()
     fireEvent.click(await screen.findByRole("link", { name: /^siti$/i }))
     await screen.findByText(/^siti di osservazione$/i)
     expect(await violazioni(container)).toEqual([])
@@ -215,8 +214,7 @@ describe("l accessibilita di dove si risponde", () => {
       ...SPINA,
     })
     const { container } = await disegna()
-    const barra = await screen.findByRole("navigation", { name: /pagine/i })
-    fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+    await apriImpostazioni()
     fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
     await screen.findByText(/^astap non trovato\./i)
     expect(await violazioni(container)).toEqual([])
@@ -272,8 +270,7 @@ describe("l accessibilita di dove si risponde", () => {
       ...SPINA,
     })
     const { container } = await disegna()
-    const barra = await screen.findByRole("navigation", { name: /pagine/i })
-    fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+    await apriImpostazioni()
     fireEvent.click(await screen.findByRole("link", { name: /^scansioni$/i }))
     await screen.findAllByRole("listitem")
     // e col pannello aperto: e' il bottone che dichiara cosa governa, e una regione in piu' dentro
@@ -298,8 +295,7 @@ describe("l accessibilita di dove si risponde", () => {
       ...SPINA,
     })
     const { container } = await disegna()
-    const barra = await screen.findByRole("navigation", { name: /pagine/i })
-    fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+    await apriImpostazioni()
     fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
     await screen.findByText(/^catalogo stellare mancante$/i)
     expect(await violazioni(container)).toEqual([])

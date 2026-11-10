@@ -13,7 +13,6 @@
 export const itGuscio = {
   "app.title": "AstroLog",
   "app.loading": "Caricamento\u2026",
-  "nav.label": "Le pagine",
   "nav.unknown": "Pagina sconosciuta",
   "notFound.title": "Pagina non trovata",
   "notFound.why":
@@ -23,7 +22,6 @@ export const itGuscio = {
   "soon.why": "Questa pagina sar\u00e0 disponibile in una prossima versione.",
   "frame.skip": "Vai al contenuto",
   "frame.more": "Altro",
-  "frame.more.count": "{n} da confermare",
   "frame.count": "{n} da confermare",
   "frame.close": "Chiudi",
   "frame.close.word": "chiudi",
@@ -35,7 +33,6 @@ export const itGuscio = {
   "nav.review": "Da confermare",
   "nav.planner": "Planner",
   "nav.projects": "Progetti",
-  "nav.sky": "Carta del cielo",
   "nav.weather": "Meteo",
   "nav.settings": "Impostazioni",
   // La ricerca nella barra (Ricerca.tsx): il bottone, il campo, il menu dei trovati.

@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, cambia, chiamate, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import { SALUTE, STANOTTE, cambia, chiamate, disegna, impostazioni, pulisci, rispondi, vai } from "./banco"
 
 afterEach(pulisci)
 
@@ -48,7 +48,7 @@ function aperta(pagina: unknown = PAGINA, extra: Parameters<typeof rispondi>[0] 
 
 async function apri() {
   await disegna()
-  fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+  vai("/da-confermare")
 }
 
 /** Le voci dell'indice, come si leggono: il nome e, dopo, quante senza risposta o la spunta. */

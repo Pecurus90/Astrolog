@@ -423,3 +423,39 @@ il riepilogo si chiude con Esc, ricliccando il nome e toccando fuori - step 33, 
 sotto una carta dell'ultima colonna il riepilogo si allinea a destra, e non esce dalla pagina - step 33, sheet v76: the productions panel under the card is gone
 una produzione senza setup lo dice, invece di restare senza nome - step 33, sheet v76: replaced by the tab saying ottica non indicata in con piu' produzioni le mostra una alla volta
 le frecce scelgono e Invio apre: un oggetto apre l'Archivio ristretto a lui - step 33, Marco 9/11: the search opens the object window over the page; replaced by le frecce scelgono e Invio apre: un oggetto apre la sua finestra sulla pagina dove sei
+Altro apre le voci che non stanno fra le schede del telefono, ed Esc lo chiude - step 33, frame v76: the sheet Altro is a menu; replaced by Altro apre le sette pagine e la scansione se c'e'; niente modo chiaro
+il foglio Altro trattiene il fuoco: Tab non esce dietro il velo - step 33, frame v76: Altro is a non-modal menu without veil; replaced by Esc chiude il menu e riporta il fuoco su Altro; un clic fuori lo chiude
+nel foglio una scansione al lavoro senza fase dice che e' in corso, non inattiva - step 33, frame v76: the sheet is gone; replaced by in corso l'ingranaggio lo dice, e il menu porta fase, barra, file letti e Interrompi anche da un'altra pagina
+nel foglio una scansione interrotta lo dice, accanto a Riprendi - step 33, frame v76: replaced by interrotta: il segno, l'ora, quanto ha letto e Riprendi
+nel foglio una scansione interrotta a meta' di una fase dice che e' interrotta, e dove - step 33, frame v76: replaced by interrotta: il segno, l'ora, quanto ha letto e Riprendi
+bloccata, la scansione nel foglio dice perche' e porta dove si guarda - step 33, frame v76: replaced by bloccata: dice perche', porta ai Dettagli e si fa ripartire
+bloccata, la scansione dice perche' e si fa ripartire dalla barra - step 33, frame v76: replaced by bloccata: dice perche', porta ai Dettagli e si fa ripartire
+il lavoro si vede e si ferma anche da un altra pagina - step 33, frame v76: replaced by in corso l'ingranaggio lo dice, e il menu porta fase, barra, file letti e Interrompi anche da un'altra pagina
+il verbo del pulsante lo decide il backend, non la pagina - step 33, frame v76: the scan sits in the gear menu; covered by interrotta and bloccata, whose gestures send the backend's action
+mentre gira si legge cosa sta facendo, coi numeri veri - step 33, frame v76: replaced by in corso l'ingranaggio lo dice, e il menu porta fase, barra, file letti e Interrompi anche da un'altra pagina
+una cartella persa mentre la leggeva si dice - step 33, frame v76: renamed una cartella persa mentre la leggeva si dice in testa al corpo
+accanto a Da confermare c e quante cose aspettano - step 33, frame v76: replaced by la pillola dice quante domande aspettano e apre le sezioni con Rispondi
+la barra in alto dice che pagina stai guardando - step 33, frame v76: no page title in the desktop head; the phone's is in la testa dice la pagina e porta a Da confermare e a Cerca
+la voce della pagina aperta e' accesa, e solo lei - step 33, frame v76: replaced by le pillole stanno nell'ordine di pagine.tsx, e la pagina aperta e' accesa
+le voci del binario stanno nell ordine di pagine.tsx - step 33, frame v76: replaced by le pillole stanno nell'ordine di pagine.tsx, e la pagina aperta e' accesa
+il binario, la barra alta e il corpo stanno nel telaio - step 33, frame v76: replaced by la testa e il corpo stanno nella colonna del telaio v76
+il contenitore misurato e' il genitore del telaio, non il telaio - step 33, frame v76: replaced by il corpo e' il contenitore che le pagine col foglio vecchio misurano
+app.css switches off the new sheet's ring on Stanotte's site choice, and loads last - step 33, frame v76: the site choice left Stanotte; replaced by app.css resets the frame's links without beating any al- class, and loads last
+aperta, la barra lo dice al foglio: sul telefono il campo prende la riga - step 33, frame v76: replaced by aperta, il bottone Cerca lo dice; Annulla la chiude
+dice il sito, e apre Stanotte - step 33, frame v76: replaced by dice Stanotte e il sito, e apre il pannello
+senza sito chiede di sceglierlo - step 33, frame v76: replaced by senza sito porta ad aggiungerlo
+Esc chiude Stanotte, e il fuoco torna alla pastiglia - step 33, frame v76: replaced by Esc chiude Stanotte e il fuoco torna alla pastiglia; un clic fuori la chiude
+dice da dove osservi, che cielo hai e che luna fa - step 33, frame v76: replaced by dice la notte, il sito col suo cielo, la Luna e il meteo, con l'ora del sito
+l ora e quella del sito, non quella del browser - step 33, frame v76: replaced by dice la notte, il sito col suo cielo, la Luna e il meteo, con l'ora del sito
+una luna che non sorge lo dice a parole - step 33, frame v76: renamed una Luna che non sorge lo dice a parole
+una luna che non tramonta lo dice a parole - step 33, frame v76: the v70 panel says when the Moon rises, not when it sets
+un cielo non dichiarato spegne le tinte della rampa, invece di fingerne una - step 33, frame v76: the v70 panel has no Bortle ramp; replaced by un cielo mai dichiarato si legge, non sparisce
+il lembo illuminato e quello che dice il backend, non uno a caso - step 33, frame v76: the v70 panel draws no Moon disc; the lit side stays in luna-dettaglio and notti
+se il cielo non si legge lo dice, invece di restare vuoto - step 33, frame v76: replaced by se stanotte non si legge lo dice, invece di restare vuoto
+senza sito dice cosa manca, e non promette una pagina che non c e - step 33, frame v76: without a site the pill links to Impostazioni; replaced by senza sito porta ad aggiungerlo
+fra piu' siti, sceglierne un altro lo scrive al backend - step 33, frame v76: the site choice is out (v70 wins: Cambia goes to the sites)
+un sito solo non apre una scelta che non c e - step 33, frame v76: the site choice is out (v70 wins: Cambia goes to the sites)
+dice il verdetto, le ore utili, l'accordo e il vento in quota, e porta al Meteo - step 33, frame v76: the v70 row says verdict and exposure hours; replaced by dice la notte, il sito col suo cielo, la Luna e il meteo, con l'ora del sito
+senza la previsione di stanotte lo dice, e porta al Meteo che spiega perche' - step 33, frame v76: replaced by senza la previsione lo dice; una notte incerta e una senza ore di posa pure
+non promette una previsione che senza fuso non arrivera' mai - step 33, frame v76: replaced by un sito col fuso irriconoscibile si legge lo stesso, e dice cosa manca
+Esc dentro il cassetto di Stanotte chiude il cassetto, non il pannello della Luna - step 33, frame v76: the drawer is a dialog; replaced by Esc dentro Stanotte chiude Stanotte, non il pannello della Luna

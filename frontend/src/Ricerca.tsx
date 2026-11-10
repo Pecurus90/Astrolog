@@ -4,7 +4,6 @@ import { useNavigate } from "react-router"
 
 import { Bottone } from "./Bottone"
 import { CampoDiRicerca, Cerco } from "./CampoDiRicerca"
-import { Icon } from "./Icons"
 import { useApriOggetto } from "./apriOggetto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
@@ -29,9 +28,9 @@ const RITARDO_MS = 250
 const MENU = "trova"
 
 /**
- * La ricerca nella barra in alto (disegno v31, `53-campo` e `55-trova`; contratto in
- * `docs/domini/navigazione.md`). Chiusa e' un bottone; toccata diventa un campo, e alla prima
- * lettera apre sotto il menu dei trovati, per gruppo.
+ * La ricerca della testa (disegno v31, `53-campo` e `55-trova`; contratto in
+ * `docs/domini/navigazione.md`). La monta il bottone Cerca del telaio: montata e' un campo col
+ * fuoco, e alla prima lettera apre sotto il menu dei trovati, per gruppo.
  *
  * - **L'indirizzo di una voce nasce qui**: la rotta dice chi e' (chiave, id, genere), le pagine e
  *   i loro parametri stanno nel frontend.
@@ -39,17 +38,16 @@ const MENU = "trova"
  *   scrivere un'altra lettera vorrebbe dire tornare indietro.
  * - **`combobox` sta sull'input** (ARIA 1.2), non sull'involucro come nella tavola: un involucro
  *   senza fuoco non annuncia niente.
+ * - **Chi chiude con Esc o Annulla ritrova il fuoco sul bottone; chi apre una voce no**: e'
+ *   altrove. Lo dice `onChiudi`, e il bottone lo rimette il telaio.
  */
-export function Ricerca({ aperta, onAperta }: { aperta: boolean; onAperta: (aperta: boolean) => void }) {
+export function Ricerca({ onChiudi }: { onChiudi: (riportaIlFuoco: boolean) => void }) {
   const vai = useNavigate()
   const apriOggetto = useApriOggetto()
   const [testo, setTesto] = useState("")
   const [chiesto, setChiesto] = useState("")
   const [scelta, setScelta] = useState(0)
   const campo = useRef<HTMLInputElement>(null)
-  const bottone = useRef<HTMLButtonElement>(null)
-  // Chi chiude con Esc o Annulla ritrova il fuoco sul bottone; chi apre una voce no: e' altrove.
-  const torna = useRef(false)
 
   useEffect(() => {
     const dopo = setTimeout(() => setChiesto(testo.trim()), RITARDO_MS)
@@ -67,49 +65,15 @@ export function Ricerca({ aperta, onAperta }: { aperta: boolean; onAperta: (aper
   })
   useEffect(() => setScelta(0), [risposta.data])
 
-  useEffect(() => {
-    if (aperta) campo.current?.focus()
-    else if (torna.current) bottone.current?.focus()
-    torna.current = false
-  }, [aperta])
-
-  // Ctrl K (Cmd K sul Mac) da ogni pagina: e' il tasto che il bottone dichiara.
-  useEffect(() => {
-    function tasto(e: globalThis.KeyboardEvent) {
-      if (e.key.toLowerCase() !== "k" || !(e.ctrlKey || e.metaKey)) return
-      e.preventDefault()
-      onAperta(true)
-    }
-    window.addEventListener("keydown", tasto)
-    return () => window.removeEventListener("keydown", tasto)
-  }, [onAperta])
+  useEffect(() => campo.current?.focus(), [])
 
   function chiudi(riportaIlFuoco: boolean) {
-    torna.current = riportaIlFuoco
-    setTesto("")
-    setChiesto("")
-    onAperta(false)
+    onChiudi(riportaIlFuoco)
   }
   function apri(voce: Voce) {
     chiudi(false)
     if (voce.oggetto && apriOggetto) apriOggetto(voce.oggetto.chiave, voce.oggetto.nome)
     else void vai(voce.a)
-  }
-
-  if (!aperta) {
-    return (
-      <button
-        className="as-telaio__cerca"
-        type="button"
-        aria-label={t("search.open")}
-        ref={bottone}
-        onClick={() => onAperta(true)}
-      >
-        <Icon name="cerca" />
-        <span className="as-telaio__cerca-testo">{t("search.placeholder")}</span>
-        <span className="as-telaio__tasto">{t(SUL_MAC ? "search.key.shortcut.mac" : "search.key.shortcut")}</span>
-      </button>
-    )
   }
 
   const scritto = testo.trim() !== ""
@@ -237,8 +201,6 @@ export function Ricerca({ aperta, onAperta }: { aperta: boolean; onAperta: (aper
     </div>
   )
 }
-
-const SUL_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
 
 /** I gruppi che hanno voci, nell'ordine della tavola. Un gruppo vuoto non si mostra. */
 function gruppiDi(trovati: Trovati): Gruppo[] {

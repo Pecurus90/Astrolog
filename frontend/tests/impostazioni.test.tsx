@@ -15,6 +15,7 @@ import { sezioniAperte } from "../src/pagine"
 
 import {
   SALUTE,
+  apriImpostazioni,
   cambia,
   SPINA,
   STANOTTE,
@@ -72,8 +73,7 @@ function app(cartelle: unknown = CARTELLE) {
 
 /** Apre Impostazioni dalla barra, come fa chi usa l'app. */
 async function vaiAImpostazioni() {
-  const barra = await screen.findByRole("navigation", { name: /pagine/i })
-  fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+  await apriImpostazioni()
 }
 
 describe("Impostazioni", () => {
@@ -93,10 +93,9 @@ describe("Impostazioni", () => {
     await app()
 
     expect(await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })).toBeDefined()
-    const barra = await screen.findByRole("navigation", { name: /pagine/i })
-    expect(
-      within(barra).getByRole("link", { name: /impostazioni/i }).getAttribute("aria-current"),
-    ).toBe("page")
+    // l'ingranaggio non e' una pillola: nessuna pillola si accende su una pagina che non e' sua
+    const pillole = await screen.findByRole("navigation", { name: "Navigazione principale" })
+    expect(within(pillole).getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page")).toEqual([])
   })
 
   it("nell elenco ci sono le sezioni che esistono, e solo quelle", async () => {

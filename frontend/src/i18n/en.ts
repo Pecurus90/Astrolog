@@ -18,6 +18,7 @@ import { enOggetto } from "./en-oggetto"
 import { enSito } from "./en-sito"
 import { enSolver } from "./en-solver"
 import { enStanotte } from "./en-stanotte"
+import { enTelaio } from "./en-telaio"
 import { enWizard } from "./en-wizard"
 
 export const en = {
@@ -36,18 +37,14 @@ export const en = {
   ...enSolver,
   ...enMeteo,
   ...enComponenti,
+  ...enTelaio,
   "scan.start": "Scan",
   "scan.stop": "Stop",
   "scan.resume": "Resume",
   "scan.progress": "{fatti} of {su}",
-  "scan.label": "scan",
-  "scan.idle": "Idle",
   "scan.working": "Running",
-  "scan.stopped": "Stopped",
-  "scan.blocked": "Blocked",
-  "scan.blocked.why": "Scan stopped by an error",
+  "scan.blocked.why": "Scan stopped by an error.",
   "scan.blocked.see": "Details",
-  "scan.last": "Last scan: {giorno}, {ora}",
   "scan.stage.scan": "Reading files",
   "scan.stage.normalize": "Normalizing names",
   "scan.stage.solve": "Plate solving",

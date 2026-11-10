@@ -104,11 +104,12 @@ export function attrezzatura(corpo: Record<string, unknown> = {}, porte: Record<
   })
 }
 
-/** Apre l'app e va su Attrezzatura **dalla barra**: e' la strada dell'utente, e prova anche che
- *  la voce sia accesa -- una pagina raggiungibile solo scrivendo l'indirizzo non esiste. */
+/** Apre l'app e va su Attrezzatura **dal menu Altro**: e' la strada dell'utente, e prova anche
+ *  che la voce ci sia -- una pagina raggiungibile solo scrivendo l'indirizzo non esiste. */
 export async function apriAttrezzatura() {
   const reso = await disegna()
-  fireEvent.click(await screen.findByRole("link", { name: /attrezzatura/i }))
+  fireEvent.click(await screen.findByRole("link", { name: "Altro" }))
+  fireEvent.click(await screen.findByRole("menuitem", { name: /^attrezzatura/i }))
   await screen.findByRole("heading", { name: /attrezzatura/i })
   return reso
 }

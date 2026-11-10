@@ -8,13 +8,14 @@
  * scrivere**, perche' sovrascrivere di nascosto toglierebbe l'unica via d'uscita a chi quella
  * ricerca l'ha vista sbagliare.
  */
-import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
   SALUTE,
   SPINA,
   STANOTTE,
+  apriImpostazioni,
   cambia,
   disegna,
   impostazioni,
@@ -50,8 +51,7 @@ function app(solver: unknown = TROVATO, piu: Record<string, unknown> = {}) {
 
 /** Apre la sezione come fa chi usa l'app: dalla barra, poi dall'elenco delle sezioni. */
 async function vaiAlRiconoscitore() {
-  const barra = await screen.findByRole("navigation", { name: /pagine/i })
-  fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+  await apriImpostazioni()
   fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
 }
 

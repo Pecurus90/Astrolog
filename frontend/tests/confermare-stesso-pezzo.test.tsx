@@ -10,7 +10,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, riga, rispondi, scritture, vaiASezione } from "./banco"
+import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, riga, rispondi, scritture, vai, vaiASezione } from "./banco"
 
 afterEach(pulisci)
 
@@ -107,7 +107,7 @@ describe("Da confermare -- strumenti duplicati", () => {
   it("una sezione senza pezzi non si vede, e nemmeno strumenti e setup", async () => {
     aperta({ ...PAGINA, lookalikes: [] })
     await disegna()
-    fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+    vai("/da-confermare")
     await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
     expect(screen.queryByRole("region", { name: /strumenti duplicati/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /strumenti/i })).toBeNull()

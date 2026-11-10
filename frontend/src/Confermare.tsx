@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Bottone } from "./Bottone"
-import { Fragment, type ReactNode, useMemo, useState } from "react"
+import { Fragment, type ReactNode, useEffect, useMemo, useState } from "react"
+import { useLocation } from "react-router"
 
 import { Avviso } from "./Avviso"
 import { DomandaAperta, Risposta, UnCaso } from "./Domanda"
@@ -98,6 +99,12 @@ function LaPagina({ stretta }: { stretta: boolean }) {
   }, [])
 
   const pagina = useRevisione()
+  // Rispondi of the frame lands on its section: the router does not follow a hash
+  const { hash } = useLocation()
+  const pronta = pagina.isSuccess
+  useEffect(() => {
+    if (pronta && hash) document.getElementById(hash.slice(1))?.scrollIntoView?.({ block: "start" })
+  }, [pronta, hash])
   const modelli = useQuery({
     queryKey: ["filter-models"],
     queryFn: async () => {

@@ -50,10 +50,13 @@ function conRicerca(corpo: unknown) {
   rispondi({ ...conArchivio(voceArchivio([M31])), "/api/v1/search": { stato: 200, corpo } })
 }
 
+/** Il bottone Cerca della testa (Telaio v76): il nome dice cosa si cerca. */
+const CERCA = /^cerca oggetto, notte, attrezzatura, sito o pagina$/i
+
 /** Apre la ricerca dalla barra e scrive: e' la strada dell'utente. */
 async function cerca(testo: string) {
   await disegna()
-  fireEvent.click(await screen.findByRole("button", { name: /^cerca$/i }))
+  fireEvent.click(await screen.findByRole("link", { name: CERCA }))
   const campo = await screen.findByRole("combobox", { name: /cerca nell'archivio/i })
   fireEvent.change(campo, { target: { value: testo } })
   return campo
@@ -63,7 +66,10 @@ describe("la ricerca nella barra", () => {
   it("chiusa e' un bottone, e toccata diventa un campo col fuoco", async () => {
     conRicerca(NIENTE)
     await disegna()
-    fireEvent.click(await screen.findByRole("button", { name: /^cerca$/i }))
+    const bottone = await screen.findByRole("link", { name: CERCA })
+    expect(bottone.textContent).toBe("Cerca")
+    expect(bottone.getAttribute("title")).toBe("Cerca · Ctrl K")
+    fireEvent.click(bottone)
     const campo = await screen.findByRole("combobox", { name: /cerca nell'archivio/i })
     await waitFor(() => expect(document.activeElement).toBe(campo))
     // niente da proporre prima della prima lettera
@@ -189,7 +195,7 @@ describe("la ricerca nella barra", () => {
     await screen.findByRole("listbox")
     fireEvent.keyDown(campo, { key: "Escape" })
     cambia({ ...conArchivio(voceArchivio([M31])), "/api/v1/search": { stato: 200, corpo: NIENTE } })
-    fireEvent.click(await screen.findByRole("button", { name: /^cerca$/i }))
+    fireEvent.click(await screen.findByRole("link", { name: CERCA }))
     const riaperto = await screen.findByRole("combobox", { name: /cerca nell'archivio/i })
     fireEvent.change(riaperto, { target: { value: "zzzqq" } })
     expect(screen.queryByRole("listbox")).toBeNull()
@@ -202,7 +208,7 @@ describe("la ricerca nella barra", () => {
     const campo = await cerca("m31")
     await screen.findByRole("listbox")
     fireEvent.keyDown(campo, { key: "Escape" })
-    const bottone = await screen.findByRole("button", { name: /^cerca$/i })
+    const bottone = await screen.findByRole("link", { name: CERCA })
     await waitFor(() => expect(document.activeElement).toBe(bottone))
     expect(screen.queryByRole("listbox")).toBeNull()
   })
@@ -210,17 +216,28 @@ describe("la ricerca nella barra", () => {
   it("Ctrl K la apre da ogni pagina", async () => {
     conRicerca(NIENTE)
     await disegna()
-    await screen.findByRole("button", { name: /^cerca$/i })
-    fireEvent.keyDown(window, { key: "k", ctrlKey: true })
+    await screen.findByRole("link", { name: CERCA })
+    fireEvent.keyDown(document, { key: "k", ctrlKey: true })
     expect(await screen.findByRole("combobox", { name: /cerca nell'archivio/i })).toBeTruthy()
   })
 
-  it("aperta, la barra lo dice al foglio: sul telefono il campo prende la riga", async () => {
+  it("aperta, il bottone Cerca lo dice; Annulla la chiude", async () => {
     conRicerca(NIENTE)
     await cerca("m")
-    expect(screen.getByRole("banner").className).toContain("as-telaio__alto--cerca")
+    const bottone = screen.getByRole("link", { name: CERCA })
+    expect(bottone.getAttribute("aria-haspopup")).toBe("dialog")
+    expect(bottone.getAttribute("aria-expanded")).toBe("true")
     fireEvent.click(screen.getByRole("button", { name: /annulla/i }))
-    await waitFor(() => expect(screen.getByRole("banner").className).not.toContain("as-telaio__alto--cerca"))
+    await waitFor(() => expect(bottone.getAttribute("aria-expanded")).toBe("false"))
+    expect(screen.queryByRole("combobox")).toBeNull()
+  })
+
+  it("sul telefono Cerca e' un tondo nella testa, e apre lo stesso campo", async () => {
+    window.history.pushState({}, "", "/?formato=telefono")
+    conRicerca(NIENTE)
+    await disegna()
+    fireEvent.click(within(await screen.findByRole("banner")).getByRole("link", { name: "Cerca" }))
+    expect(await screen.findByRole("combobox", { name: /cerca nell'archivio/i })).toBeTruthy()
   })
 
   it("il menu aperto non ha difetti di accessibilita'", async () => {

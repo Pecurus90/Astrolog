@@ -6,20 +6,21 @@
  * `tools/controlli_veste.py` sui valori veri. Si prova cio' che **la pagina deve avere perche' il
  * foglio possa funzionare**, e che nessuna pagina nuova se lo dimentichi:
  *
- * - **il telaio esiste ed e' uno**: il binario, la barra alta e il corpo stanno nella stessa
- *   griglia. Da fratelli sciolti non ci sarebbe nessun nodo su cui appenderla;
- * - **il contenitore misurato sta SOPRA il telaio**: un elemento non si stila dalla propria
- *   container query, quindi `.as-telaio-misura` deve essere il genitore e non il telaio stesso --
- *   sbagliarlo non rompe niente a schermo, la misura stretta semplicemente non arriva mai;
+ * - **il telaio esiste ed e' uno**: la testa e il corpo stanno nella colonna del telaio v76, e
+ *   solo la testa porta i token del foglio nuovo;
+ * - **il corpo e' il contenitore `telaio`** che le pagine col foglio vecchio misurano;
  * - **ogni pagina apre la sua colonna**: `.as-pagina` e' il contenitore `colonna` da cui le righe
  *   e le tabelle sanno di essere strette. Una pagina che nasce senza non si accorge di niente
  *   finche' qualcuno non stringe la finestra.
  */
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { PAGINE } from "../src/pagine"
-import { SALUTE, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga, rispondi, vaiASezione } from "./banco"
+import { SALUTE, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga, rispondi, vai, vaiASezione } from "./banco"
 
 afterEach(pulisci)
 
@@ -132,7 +133,7 @@ describe("una riga di Da confermare", () => {
       "/api/v1/vocab/filter-models": { stato: 200, corpo: { items: [] } },
     })
     await disegna()
-    fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+    vai("/da-confermare")
     await screen.findByRole("region", { name: /frame senza tipo/i })
     // la sezione gia' risposta e' chiusa in una riga: si riapre, poi si apre la sua domanda. Una
     // sola e' aperta alla volta, quindi si guarda dopo ogni apertura.
@@ -180,23 +181,29 @@ describe("la veste", () => {
   })
 
 
-  it("il binario, la barra alta e il corpo stanno nel telaio", async () => {
+  it("la testa e il corpo stanno nella colonna del telaio v76", async () => {
     aperta()
     await disegna()
-    const binario = await screen.findByRole("navigation", { name: /pagine/i })
-    const telaio = binario.closest(".as-telaio")
-    expect(telaio).not.toBeNull()
-    expect(binario.classList.contains("as-telaio__binario")).toBe(true)
-    expect(telaio?.querySelector("header.as-telaio__alto")).not.toBeNull()
-    expect(telaio?.querySelector("main.as-telaio__corpo")).not.toBeNull()
+    const pillole = await screen.findByRole("navigation", { name: "Navigazione principale" })
+    const colonna = pillole.closest(".al-c-telaio__colonna-1")
+    expect(colonna).not.toBeNull()
+    expect(pillole.closest("header")?.className).toContain("al-c-telaio__riga-1")
+    // la testa porta i token del foglio nuovo; il corpo no, o le pagine col foglio vecchio
+    // prenderebbero il suo --inchiostro e il suo --linea
+    expect(pillole.closest("[data-modo]")).not.toBeNull()
+    const corpo = colonna?.querySelector(":scope > main") as HTMLElement
+    expect(corpo).not.toBeNull()
+    expect(corpo.closest("[data-modo]")).toBeNull()
   })
 
-  it("il contenitore misurato e' il genitore del telaio, non il telaio", async () => {
+  it("il corpo e' il contenitore che le pagine col foglio vecchio misurano", async () => {
+    // Il foglio vecchio si stringe con `@container telaio`: senza un contenitore con quel nome le
+    // sue pagine non saprebbero di stare in un telefono.
     aperta()
     await disegna()
-    const telaio = (await screen.findByRole("navigation", { name: /pagine/i })).closest(".as-telaio")
-    expect(telaio?.classList.contains("as-telaio-misura")).toBe(false)
-    expect(telaio?.parentElement?.classList.contains("as-telaio-misura")).toBe(true)
+    expect((await screen.findByRole("main")).classList.contains("app-corpo")).toBe(true)
+    const app = readFileSync(resolve(process.cwd(), "src", "stili", "app.css"), "utf-8")
+    expect(app).toContain(".app-corpo {\n  container: telaio / inline-size;")
   })
 
   it("ogni pagina che esiste apre la sua colonna misurata", async () => {
@@ -211,8 +218,12 @@ describe("la veste", () => {
       const corpo = await screen.findByRole("main")
       // il corpo del telaio tiene anche le righe di stato della scansione: la colonna e' la
       // pagina, figlia diretta del corpo
+      // una pagina portata (le Notti) sta sotto il suo `Tema`, nella colonna del telaio
       await waitFor(() =>
-        expect(corpo.querySelector(":scope > .as-pagina"), `${p.a} senza colonna`).not.toBeNull(),
+        expect(
+          corpo.querySelector(":scope > .as-pagina, :scope > [data-modo] > .app-pagina"),
+          `${p.a} senza colonna`,
+        ).not.toBeNull(),
       )
       pulisci()
     }

@@ -22,6 +22,7 @@ import {
   SALUTE,
   SPINA,
   STANOTTE,
+  apriImpostazioni,
   chiamate,
   disegna,
   impostazioni,
@@ -69,8 +70,7 @@ function app(siti: unknown[] = [CASA, USCITA], piu: Record<string, unknown> = {}
 
 /** Apre la sezione come fa chi usa l'app: dalla barra, poi dall'elenco delle sezioni. */
 async function vaiAlSito() {
-  const barra = await screen.findByRole("navigation", { name: /pagine/i })
-  fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
+  await apriImpostazioni()
   // Nome esatto: col piede della barra senza sito, "Seleziona sito" porta allo stesso posto.
   fireEvent.click(await screen.findByRole("link", { name: /^siti$/i }))
 }

@@ -284,13 +284,26 @@ export async function disegna() {
   )
 }
 
+/** Cambia pagina come un collegamento dell'app: l'indirizzo nuovo, e il router che lo rilegge. Sul
+ *  desktop *Da confermare* apre il suo pannello, non la pagina: chi prova la pagina ci va cosi'. */
+export function vai(percorso: string) {
+  window.history.pushState({}, "", percorso)
+  fireEvent.popState(window)
+}
+
+/** Apre le Impostazioni dall'ingranaggio, come chi usa l'app: il menu, poi *Tutte le impostazioni*. */
+export async function apriImpostazioni() {
+  fireEvent.click(await screen.findByRole("link", { name: /^impostazioni( · .*)?$/i }))
+  fireEvent.click(await screen.findByRole("menuitem", { name: /^tutte le impostazioni/i }))
+}
+
 /** Apre l'app, va su *Da confermare* e torna la sezione chiesta.
  *
  * Sta qui perche' ogni sezione della pagina fara' gli stessi due passi: scriverli in ogni file di
  * prova sarebbe lo stesso pezzo in undici case. */
 export async function vaiASezione(nome: RegExp) {
   await disegna()
-  fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+  vai("/da-confermare")
   // Una sezione con tutte le risposte e' chiusa in una riga: la si riapre, come fa chi la usa.
   await waitFor(() => {
     if (!document.querySelector(".as-conferma__conta")) throw new Error("la pagina non c'e' ancora")
@@ -367,13 +380,6 @@ export function fuoriDaiMattoni() {
         // il loro mattone (`ScalaDelCielo`) e la loro classe nel foglio. Vestirle da `as-bottone`
         // vorrebbe dire dargli il bordo e il fondo di un'azione, che non sono.
         "as-bortle__voce",
-        // I controlli del telaio, stessa ragione: la voce Altro del binario, la pastiglia di
-        // Stanotte, il velo e la ricerca chiusa hanno la loro classe nel foglio (`51-telaio.css`),
-        // e da `as-bottone` prenderebbero il bordo e il fondo di un'azione dentro il binario e la barra.
-        "as-telaio__voce",
-        "as-telaio__pastiglia",
-        "as-telaio__velo",
-        "as-telaio__cerca",
         // Le voci di un segmentato -- le due viste dell'Archivio, i tre ordini: sono **una** scelta
         // fra poche, non tre azioni, e il foglio le veste da se' (bordo condiviso, quella accesa
         // piena). Vestirle da `as-bottone` darebbe tre pulsanti attaccati.
