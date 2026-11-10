@@ -13,22 +13,13 @@ Consegna controllata: 16f37b9a (v77, 10/11), in `handoff/design/` al posto della
 
 ## Da dare
 
-- [da dare] Pagine fra 700 e 1000 px: alla v77 la testa del Telaio ci sta da 700 px, ma il
-  contenuto no: sotto i 1000 px alcune carte escono dalla colonna, per esempio la Luna nella
-  Dashboard (lo dice Design stesso nella consegna v77). Ogni pagina dentro la colonna a ogni
-  larghezza da 700 a 1440, senza scorrimento di lato, come la testa.
-- [da dare] Sito dal nome lungo (collaudo v77, 10/11; prova con «Osservatorio del Monte Generoso,
-  terrazza nord sopra la funicolare»): la tavola scorre di lato. Telaio desktop: la pastiglia
-  Stanotte (`.al-c-telaio__riga-7`, `flex: none`, `nowrap`) allarga la testa a ogni larghezza (a
-  1440 pagina 1661/1440). Telaio telefono: il sito sotto il titolo (`.al-c-telaio__riga-12`,
-  secondo span, `nowrap`) passa sotto Da confermare e Cerca (414/390). Notti: il sito nella
-  striscia (`.al-c-striscia__testo-4`, `nowrap`) sborda a 960 e 760; sul telefono la pillola del
-  sito nella carta della notte va a capo su cinque righe. Un nome di sito puo' essere lungo:
-  puntini col nome intero nel `title`, come le pillole della testa del Riepilogo alla v77.
-- [da dare] Errori della tavola v77 trovati nel collaudo: il Telaio sborda di pochi px da solo a
-  1280 (testa 1207/1184), 960, 760 e 700 (il tondo chiaro/scuro `tondo-3` non entra nelle fasce);
-  l'Archivio da' in console `<path> attribute d: "{{ v.d }}"` e `"{{ q.ic }}"`; in `Riepilogo
-  stati` uno schermo ha `data-screen-label` alto 0 e non si cattura.
+- [da dare] Pillola del sito nella carta della notte, telefono (resto della v78, lo dice Design):
+  con un nome lungo la fonte («dalle coordinate nei frame») sparisce, resta solo nel `title`, che
+  sul telefono non si vede. La fonte deve restare leggibile a ogni lunghezza del nome.
+- [da dare] Striscia delle notti sul desktop stretto (resto della v78): nelle carte da 150 px
+  «1 h 50 di banda larga» va a capo su due righe.
+- [da dare] Impostazioni, Primo avvio e Sistema fra 700 e 1440 px (resto della v78: Design non le
+  ha misurate). Claude Code le misura nell'app e porta qui cio' che sborda.
 
 - [da dare] Icona di AstroLog per la scheda del browser (Issue #56, Marco 10/11): oggi l'app
   usa il marchio della testa del telaio (anello e punto, `frontend/src/icona.svg`, colore del
@@ -37,7 +28,16 @@ Consegna controllata: 16f37b9a (v77, 10/11), in `handoff/design/` al posto della
 
 ## Date, da controllare alla consegna
 
-Nessuna.
+Arrivata la v78 (3c2a77a4, 10/11) con le tre voci date: da controllare sulle tavole.
+
+- [data] Pagine fra 700 e 1000 px: ogni pagina dentro la colonna da 700 a 1440, senza
+  scorrimento di lato (v78: carte una sotto l'altra sotto 1000, `data-col` su Carta).
+- [data] Sito dal nome lungo: puntini col nome intero nel `title` nella pastiglia Stanotte, nel
+  sito sotto il titolo del telefono, nella striscia e nella pillola della notte (v78, prova con
+  `?sito=`).
+- [data] Errori della tavola v77: Telaio che sborda di pochi px a 1280, 960, 760 e 700; Archivio
+  coi `<path>` `{{ v.d }}` e `{{ q.ic }}` in console; in `Riepilogo stati` uno schermo alto 0
+  (Design ne ha trovati due con la stessa etichetta, non uno alto 0: da ricontrollare).
 
 ## Fatte
 
