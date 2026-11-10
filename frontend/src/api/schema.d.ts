@@ -871,6 +871,11 @@ export interface paths {
          *
          *     A blank `q` finds nothing, not everything. Not paged: it is a menu of a few per kind, and
          *     `total` says how many more the page that shows them holds.
+         *
+         *     - **Nights** come by date when `q` reads as one, and only then; `why` says the dates read or
+         *       the object they hold.
+         *     - **`archive_empty`**: no frame yet, nothing of the archive is found. **`examples`**: the
+         *       empty field's hints, from your own gear and site. Both answer a blank `q` too.
          */
         get: operations["search_archive"];
         put?: never;
@@ -1998,6 +2003,18 @@ export interface components {
             /** Ends At */
             ends_at: string;
         };
+        /**
+         * DateRead
+         * @description A date the text was read as; `year` and `day` null where it did not write them.
+         */
+        DateRead: {
+            /** Year */
+            year: number | null;
+            /** Month */
+            month: number;
+            /** Day */
+            day: number | null;
+        };
         /** DayNight */
         DayNight: {
             /** Id */
@@ -2339,6 +2356,18 @@ export interface components {
             /** Untimed */
             untimed: number;
         };
+        /** FoundNights */
+        FoundNights: {
+            /** Items */
+            items: components["schemas"]["FoundNight"][];
+            /**
+             * Total
+             * @description How many in all: `items` are the first few.
+             */
+            total: number;
+            /** @description Null when no night is found. */
+            why: components["schemas"]["NightsWhy"] | null;
+        };
         /**
          * FoundObject
          * @description An Archive row: an object, or a confirmed mosaic (`panels`).
@@ -2402,16 +2431,6 @@ export interface components {
             name: string;
             /** Nights */
             nights: number;
-        };
-        /** Found[FoundNight] */
-        Found_FoundNight_: {
-            /** Items */
-            items: components["schemas"]["FoundNight"][];
-            /**
-             * Total
-             * @description How many in all: `items` are the first few.
-             */
-            total: number;
         };
         /** Found[FoundObject] */
         Found_FoundObject_: {
@@ -3819,6 +3838,22 @@ export interface components {
              */
             arrives_on: string | null;
         };
+        /**
+         * NightsWhy
+         * @description Why these nights (Cerca v77): the dates read (`5/6` both ways), the one object shot
+         *     (`object`, its Archive name), or several objects.
+         */
+        NightsWhy: {
+            /**
+             * By
+             * @enum {string}
+             */
+            by: "dates" | "object" | "objects";
+            /** Dates */
+            dates: components["schemas"]["DateRead"][];
+            /** Object */
+            object: string | null;
+        };
         /** Number */
         Number: {
             /** Value */
@@ -4668,12 +4703,34 @@ export interface components {
             /** Folder Id */
             folder_id: number;
         };
+        /**
+         * SearchExamples
+         * @description The empty field's hints, from your own archive; null when there is none to show.
+         */
+        SearchExamples: {
+            /**
+             * Gear
+             * @description The piece or filter with the most time; none counted yet, the first by name.
+             */
+            gear: string | null;
+            /**
+             * Site
+             * @description The default site.
+             */
+            site: string | null;
+        };
         /** SearchResult */
         SearchResult: {
             objects: components["schemas"]["Found_FoundObject_"];
-            nights: components["schemas"]["Found_FoundNight_"];
+            nights: components["schemas"]["FoundNights"];
             gear: components["schemas"]["Found_FoundPiece_"];
             sites: components["schemas"]["Found_FoundSite_"];
+            /**
+             * Archive Empty
+             * @description No frame read yet: the four groups stay empty until the first scan.
+             */
+            archive_empty: boolean;
+            examples: components["schemas"]["SearchExamples"];
         };
         /** SettingsOut */
         SettingsOut: {

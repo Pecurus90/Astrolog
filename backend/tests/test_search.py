@@ -60,8 +60,9 @@ def test_a_blank_search_finds_nothing_not_everything(banco):
     aprire un menu lungo quanto l'archivio."""
     trovato = search.find(banco, "   ", limit=5)
 
-    for gruppo in ("objects", "nights", "gear", "sites"):
+    for gruppo in ("objects", "gear", "sites"):
         assert trovato[gruppo] == {"items": [], "total": 0}, gruppo
+    assert trovato["nights"] == {"items": [], "total": 0, "why": None}
 
 
 @pytest.mark.parametrize("scritto", ["m31", "M 31", "ngc 224", "andromeda"])
@@ -204,6 +205,74 @@ def test_a_site_is_found_by_name_with_its_nights(banco):
     assert [(s["name"], s["nights"]) for s in siti] == [("Casa", 3)]
 
 
+@pytest.mark.parametrize(
+    ("scritto", "letture"),
+    [
+        ("5/6", [{"year": None, "month": 6, "day": 5}, {"year": None, "month": 5, "day": 6}]),
+        ("maggio 2024", [{"year": 2024, "month": 5, "day": None}]),
+    ],
+)
+def test_nights_found_by_date_say_which_dates_were_read(banco, scritto, letture):
+    """Cerca v77: il gruppo dice perche' ci sono quelle notti; `5/6` le due letture."""
+    notti = search.find(banco, scritto, limit=5)["nights"]
+
+    assert notti["why"] == {"by": "dates", "dates": letture, "object": None}
+
+
+def test_a_date_finds_nights_by_date_alone(banco):
+    """Una data e' una data: non cerca anche fra i nomi degli oggetti (Cerca v77)."""
+    banco.execute(
+        "INSERT INTO object_names(object_id, name, origin, is_primary)"
+        " VALUES(2, 'maggio 2024', 'user', 0)"
+    )
+
+    assert date_trovate(search.find(banco, "maggio 2024", limit=5)) == ["2024-05-18", "2024-05-17"]
+
+
+def test_nights_found_by_an_object_name_it(banco):
+    """«con M 45» se l'oggetto e' uno; con piu' oggetti dice solo che sono loro."""
+    uno = search.find(banco, "M45", limit=5)["nights"]["why"]
+    tanti = search.find(banco, "M", limit=5)["nights"]["why"]
+    nessuna = search.find(banco, "zzz", limit=5)["nights"]["why"]
+
+    assert uno == {"by": "object", "dates": [], "object": "M 45"}
+    assert tanti == {"by": "objects", "dates": [], "object": None}
+    assert nessuna is None
+
+
+def test_an_empty_archive_finds_nothing_of_the_archive(archivio):
+    """Archivio vuoto (nessun frame): oggetti, notti, attrezzatura e siti arrivano con la prima
+    scansione, anche un sito gia' scritto nel primo avvio (Cerca v77, «archivio vuoto»)."""
+    luogo(archivio, ROMA)
+    archivio.commit()
+
+    trovato = search.find(archivio, "cas", limit=5)
+
+    assert trovato["archive_empty"] is True
+    assert trovato["sites"] == {"items": [], "total": 0}
+
+
+def test_the_examples_come_from_your_own_archive(banco):
+    """L'aiuto del campo vuoto non mostra l'attrezzatura e il sito di chi ha disegnato la tavola:
+    il pezzo piu' usato e il sito predefinito di chi cerca; senza, niente esempio."""
+    attrezzo(banco, "camera", "ZWO ASI2600MM Pro")
+    ha = filtro(banco, "Ha 3nm")
+    banco.execute(
+        "INSERT INTO gear_usage(subject, subject_id, frames, integration_s, untimed, nights,"
+        " objects_json) VALUES('filter', ?, 4, 1200.0, 0, 2, '[]')",
+        (ha,),
+    )
+
+    trovato = search.find(banco, "", limit=5)
+
+    assert trovato["archive_empty"] is False
+    assert trovato["examples"] == {"gear": "Ha 3nm", "site": "Casa"}
+
+
+def test_without_gear_or_site_there_is_no_example(archivio):
+    assert search.find(archivio, "", limit=5)["examples"] == {"gear": None, "site": None}
+
+
 def test_the_route_answers_the_four_groups(db_path_col_catalogo):
     with TestClient(create_app(db_path_col_catalogo), base_url="http://localhost") as client:
         risposta = client.get("/api/v1/search", params={"q": "m31"})
@@ -211,6 +280,13 @@ def test_the_route_answers_the_four_groups(db_path_col_catalogo):
         chiave = client.get("/api/v1/archive", params={"key": "m-31"})
 
     assert risposta.status_code == 200, risposta.text
-    assert set(risposta.json()) == {"objects", "nights", "gear", "sites"}
+    assert set(risposta.json()) == {
+        "objects",
+        "nights",
+        "gear",
+        "sites",
+        "archive_empty",
+        "examples",
+    }
     assert troppo.status_code == 422
     assert chiave.status_code == 200, chiave.text

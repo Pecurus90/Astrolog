@@ -28,5 +28,10 @@ def search_archive(
     - **Gear** and **sites** by name.
 
     A blank `q` finds nothing, not everything. Not paged: it is a menu of a few per kind, and
-    `total` says how many more the page that shows them holds."""
+    `total` says how many more the page that shows them holds.
+
+    - **Nights** come by date when `q` reads as one, and only then; `why` says the dates read or
+      the object they hold.
+    - **`archive_empty`**: no frame yet, nothing of the archive is found. **`examples`**: the
+      empty field's hints, from your own gear and site. Both answer a blank `q` too."""
     return SearchResult.model_validate(search.find(conn, q, limit))

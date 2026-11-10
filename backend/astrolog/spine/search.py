@@ -8,6 +8,9 @@ from typing import Any
 
 from . import archive, counts, inventory, objects
 
+# One group of the answer: `items`, `total`, and for the nights `why`.
+type Found = dict[str, Any]
+
 # The active languages' month names, full: an abbreviation like "mar" or "set" is also a word.
 _MONTHS = {
     name: number
@@ -66,11 +69,15 @@ def _readings(typed: str) -> list[tuple[int | None, int, int | None]]:
     return []
 
 
-def night_dates(q: str) -> list[str]:
-    """`LIKE` patterns of the dates `q` writes, in the common forms; none if it is not a date."""
+def date_readings(q: str) -> list[tuple[int | None, int, int | None]]:
+    """(year, month, day) of the real dates `q` writes, in the common forms; none if not a date."""
     typed = " ".join(q.lower().split())
-    found = (_day(y, m, d) for y, m, d in _readings(typed) if 1 <= m <= 12)
-    return [p for p in found if p is not None]
+    return [(y, m, d) for y, m, d in _readings(typed) if 1 <= m <= 12 and _day(y, m, d)]
+
+
+def night_dates(q: str) -> list[str]:
+    """`LIKE` patterns of the dates `q` writes; none if it is not a date."""
+    return [p for y, m, d in date_readings(q) if (p := _day(y, m, d)) is not None]
 
 
 def _objects(conn: sqlite3.Connection, q: str, limit: int) -> tuple[list[dict[str, Any]], int]:
@@ -115,13 +122,13 @@ def _whole(column: str) -> str:
     return _WHOLE.format(f=f"REPLACE(LOWER({column}), ' ', '')")
 
 
-# Dates, or a frame of an object so named: `{dates}` are `OR`ed patterns, then the two names'.
-_NIGHTS_WHERE = (
-    "({dates} n.id IN (SELECT f.night_id FROM frames f JOIN objects o ON o.id = f.object_id"  # noqa: S608
+# A frame of an object so named: the two names', each `_WHOLE`.
+_BY_OBJECT = (
+    "n.id IN (SELECT f.night_id FROM frames f JOIN objects o ON o.id = f.object_id"  # noqa: S608
     " WHERE f.copy_of IS NULL AND f.night_id IS NOT NULL AND"
     " (EXISTS (SELECT 1 FROM object_names m WHERE m.object_id = o.id AND " + _whole("m.name") + ")"
     " OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = o.catalog_slug AND "
-    + _whole("k.catalog || k.designation") + "))))"
+    + _whole("k.catalog || k.designation") + ")))"
 )  # fmt: skip
 _NIGHTS = f"""
 SELECT n.id, n.night_date, s.name AS site, {counts.counts_on(counts.Subject.NIGHT)}
@@ -132,18 +139,34 @@ LIMIT ?
 """  # noqa: S608 - constant fragments; `where` holds placeholders
 
 
-def _nights(conn: sqlite3.Connection, q: str, limit: int) -> tuple[list[dict[str, Any]], int]:
+def _nights(conn: sqlite3.Connection, q: str, limit: int, objects: Found) -> Found:
+    """By date when `q` reads as one, else by the objects shot; `why` says which (Cerca v77)."""
+    readings = date_readings(q)
     dates = night_dates(q)
-    where = _NIGHTS_WHERE.format(dates="".join("n.night_date LIKE ? OR " for _ in dates))
-    typed = archive.plain(q)
-    values = [*dates, *([typed] * (2 * _WHOLE_ARGS))]
+    if dates:
+        where = "(" + " OR ".join("n.night_date LIKE ?" for _ in dates) + ")"
+        values: list[str] = dates
+    else:
+        where, values = _BY_OBJECT, [archive.plain(q)] * (2 * _WHOLE_ARGS)
     rows = conn.execute(_NIGHTS.format(where=where), (*values, limit)).fetchall()
     total = conn.execute(
         f"SELECT COUNT(*) FROM nights n WHERE {where}",  # noqa: S608 - placeholders
         values,
     ).fetchone()[0]
     keep = ("id", "night_date", "site", "frames", "integration_s", "untimed")
-    return [{k: r[k] for k in keep} for r in rows], total
+    found: Found = {"items": [{k: r[k] for k in keep} for r in rows], "total": total, "why": None}
+    if total:
+        found["why"] = _why(readings, objects)
+    return found
+
+
+def _why(readings: list[tuple[int | None, int, int | None]], objects: Found) -> dict[str, Any]:
+    if readings:
+        dates = [{"year": y, "month": m, "day": d} for y, m, d in readings]
+        return {"by": "dates", "dates": dates, "object": None}
+    if objects["total"] == 1:
+        return {"by": "object", "dates": [], "object": objects["items"][0]["name"]}
+    return {"by": "objects", "dates": [], "object": None}
 
 
 # Pieces and filters you own, with what the counter wrote; "no filter" is not one.
@@ -195,16 +218,33 @@ def _sites(conn: sqlite3.Connection, pattern: str, limit: int) -> tuple[list[dic
     return rows[:limit], len(rows)
 
 
-def find(conn: sqlite3.Connection, q: str, limit: int) -> dict[str, dict[str, Any]]:
-    """`{kind: {items, total}}`, at most `limit` items per kind. A blank `q` finds nothing:
-    the Archive reads it as no search, the bar as no question."""
+def _examples(conn: sqlite3.Connection) -> dict[str, str | None]:
+    """The empty field's hints from your own archive: the most used piece, the default site."""
+    gear, _ = _gear(conn, "%", 1)
+    site = conn.execute("SELECT name FROM sites ORDER BY is_default DESC, id LIMIT 1").fetchone()
+    return {"gear": gear[0]["name"] if gear else None, "site": site[0] if site else None}
+
+
+def _none() -> dict[str, Found]:
+    nothing: dict[str, Found] = {k: {"items": [], "total": 0} for k in ("objects", "gear", "sites")}
+    return {**nothing, "nights": {"items": [], "total": 0, "why": None}}
+
+
+def find(conn: sqlite3.Connection, q: str, limit: int) -> dict[str, Any]:
+    """`{kind: {items, total}}`, at most `limit` per kind, plus `archive_empty` and `examples`.
+    Blank `q`, or no frames, finds nothing of the archive (Cerca v77)."""
+    empty = conn.execute("SELECT NOT EXISTS (SELECT 1 FROM frames)").fetchone()[0] == 1
+    head = {"archive_empty": empty, "examples": _examples(conn)}
     pattern = archive.folded(q)
-    if pattern is None:
-        return {kind: {"items": [], "total": 0} for kind in ("objects", "nights", "gear", "sites")}
-    found = {
-        "objects": _objects(conn, q, limit),
-        "nights": _nights(conn, q, limit),
-        "gear": _gear(conn, pattern, limit),
-        "sites": _sites(conn, pattern, limit),
+    if pattern is None or empty:
+        return {**_none(), **head}
+    found: dict[str, Found] = {
+        kind: {"items": items, "total": total}
+        for kind, (items, total) in (
+            ("objects", _objects(conn, q, limit)),
+            ("gear", _gear(conn, pattern, limit)),
+            ("sites", _sites(conn, pattern, limit)),
+        )
     }
-    return {kind: {"items": items, "total": total} for kind, (items, total) in found.items()}
+    found["nights"] = _nights(conn, q, limit, found["objects"])
+    return {**found, **head}

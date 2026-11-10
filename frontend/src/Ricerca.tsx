@@ -1,77 +1,119 @@
 import { useQuery } from "@tanstack/react-query"
-import { type FocusEvent, type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react"
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  type MouseEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 import { useNavigate } from "react-router"
 
-import { Bottone } from "./Bottone"
-import { CampoDiRicerca, Cerco } from "./CampoDiRicerca"
 import { useApriOggetto } from "./apriOggetto"
 import { api } from "./api/client"
-import type { components } from "./api/schema"
-import { type Chiave, notte, numero, ore, t } from "./i18n"
-
-type Trovati = components["schemas"]["SearchResult"]
-type Pezzo = components["schemas"]["FoundPiece"]
-
-/** Una voce del menu, gia' pronta: cosa dice e quale pagina apre; un oggetto apre la sua finestra. */
-type Voce = {
-  a: string
-  nome: ReactNode
-  accanto: string | null
-  dice: string
-  non?: boolean
-  oggetto?: { chiave: string; nome: string }
-}
-type Gruppo = { titolo: Chiave; voci: Voce[]; totale: number }
+import { useFormato } from "./componenti/formato"
+import { useTema } from "./componenti/Tema"
+import { type Chiave, numero, t } from "./i18n"
+import { type Voce, SEGNI, gruppiDi } from "./ricercaVoci"
+import { percentualeDi, statoDi, useStato } from "./Scansiona"
+import { LENTE } from "./TelaioComune"
 
 /** Quanto si aspetta dopo l'ultima lettera prima di chiedere: una richiesta per parola, non per tasto. */
 const RITARDO_MS = 250
-const MENU = "trova"
+const MENU = "cerca-lista"
+
+// [T] Cerca.dc.html:72-73 the two layouts, desktop window and phone page
+const DESKTOP = {
+  pannello: { maxWidth: 640, maxHeight: "72vh", background: "var(--carta)", borderRadius: 28, boxShadow: "0 24px 64px rgba(0,0,0,.35)" },
+  campo: "12px 20px",
+  lista: "14px 8px 10px",
+  testo: 18,
+  riga: 52,
+}
+const TELEFONO = {
+  pannello: { maxWidth: "none", minHeight: "100%", background: "var(--telaio)", borderRadius: 0 },
+  campo: "10px 16px",
+  lista: "12px 8px",
+  testo: 17,
+  riga: 56,
+}
+
+/** L'aiuto del campo vuoto: cosa si cerca, con un esempio; attrezzatura e sito dal tuo archivio. */
+const AIUTO: readonly { nome: Chiave; esempio?: Chiave; segno: string; dato?: "gear" | "site" }[] = [
+  { nome: "search.help.objects", esempio: "search.help.objects.e", segno: SEGNI.oggetti },
+  { nome: "search.help.nights", esempio: "search.help.nights.e", segno: SEGNI.notti },
+  { nome: "search.help.gear", segno: SEGNI.attrezzatura, dato: "gear" },
+  { nome: "search.help.sites", segno: SEGNI.siti, dato: "site" },
+  { nome: "search.help.settings", esempio: "search.help.settings.e", segno: SEGNI.impostazioni },
+  { nome: "search.help.pages", esempio: "search.help.pages.e", segno: SEGNI.pagine },
+]
+
+/** Muove un elemento come la tavola (`an`): niente col movimento ridotto o senza `animate`. */
+function muovi(el: Element | null | undefined, kf: Keyframe[], o: KeyframeAnimationOptions): Animation | null {
+  if (!el || typeof el.animate !== "function" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return null
+  return el.animate(kf, { duration: 260, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards", ...o })
+}
 
 /**
- * La ricerca della testa (disegno v31, `53-campo` e `55-trova`; contratto in
- * `docs/domini/navigazione.md`). La monta il bottone Cerca del telaio: montata e' un campo col
- * fuoco, e alla prima lettera apre sotto il menu dei trovati, per gruppo.
+ * Cerca (tavola `componenti/Cerca` v77; contratto in `docs/domini/navigazione.md`): sul desktop
+ * una finestra al centro sopra un velo, sul telefono una pagina intera con Annulla.
  *
- * - **L'indirizzo di una voce nasce qui**: la rotta dice chi e' (chiave, id, genere), le pagine e
- *   i loro parametri stanno nel frontend.
- * - **Il fuoco resta nel campo**: le frecce spostano `aria-activedescendant`, non il fuoco, o
- *   scrivere un'altra lettera vorrebbe dire tornare indietro.
- * - **`combobox` sta sull'input** (ARIA 1.2), non sull'involucro come nella tavola: un involucro
- *   senza fuoco non annuncia niente.
- * - **Chi chiude con Esc o Annulla ritrova il fuoco sul bottone; chi apre una voce no**: e'
- *   altrove. Lo dice `onChiudi`, e il bottone lo rimette il telaio.
+ * - **L'indirizzo di una voce nasce qui**: la rotta dice chi e', le pagine stanno nel frontend.
+ * - **Il fuoco resta nel campo**: le frecce spostano `aria-activedescendant`.
+ * - **Chi chiude con Esc, Annulla o il velo ritrova il fuoco sul bottone; chi apre una voce no**.
  */
 export function Ricerca({ onChiudi }: { onChiudi: (riportaIlFuoco: boolean) => void }) {
   const vai = useNavigate()
   const apriOggetto = useApriOggetto()
+  const tel = useFormato() === "telefono"
+  const scuro = useTema().modo === "scuro"
+  const L = tel ? TELEFONO : DESKTOP
   const [testo, setTesto] = useState("")
   const [chiesto, setChiesto] = useState("")
   const [scelta, setScelta] = useState(0)
   const campo = useRef<HTMLInputElement>(null)
+  const velo = useRef<HTMLDivElement>(null)
+  const pannello = useRef<HTMLDivElement>(null)
+  const esce = useRef(false)
+  const lavoro = useStato().data
 
   useEffect(() => {
     const dopo = setTimeout(() => setChiesto(testo.trim()), RITARDO_MS)
     return () => clearTimeout(dopo)
   }, [testo])
 
+  // anche il campo vuoto chiede: l'aiuto prende gli esempi e "archivio vuoto" dalla rotta
   const risposta = useQuery({
     queryKey: ["search", chiesto],
-    enabled: chiesto !== "",
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/search", { params: { query: { q: chiesto } } })
-      if (error) throw new Error(t("search.failed"))
+      if (error) throw new Error(t("search.note.failed"))
       return data
     },
   })
   useEffect(() => setScelta(0), [risposta.data])
 
-  useEffect(() => campo.current?.focus(), [])
+  useLayoutEffect(() => {
+    campo.current?.focus({ preventScroll: true })
+    if (tel) muovi(pannello.current, [{ opacity: 0, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }], { duration: 280 })
+    else {
+      muovi(velo.current, [{ opacity: 0 }, { opacity: 1 }], { duration: 200 })
+      muovi(pannello.current, [{ opacity: 0, transform: "translateY(-8px) scale(.98)" }, { opacity: 1, transform: "none" }], { duration: 240 })
+    }
+  }, [tel])
 
   function chiudi(riportaIlFuoco: boolean) {
-    onChiudi(riportaIlFuoco)
+    if (esce.current) return
+    esce.current = true
+    const via = tel ? "translateY(24px)" : "translateY(-6px) scale(.98)"
+    const a = muovi(pannello.current, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: via }], { duration: 160, easing: "ease-in", fill: "forwards" })
+    if (!a) return onChiudi(riportaIlFuoco)
+    if (!tel) muovi(velo.current, [{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "forwards" })
+    a.onfinish = () => onChiudi(riportaIlFuoco)
   }
   function apri(voce: Voce) {
-    chiudi(false)
+    onChiudi(false)
     if (voce.oggetto && apriOggetto) apriOggetto(voce.oggetto.chiave, voce.oggetto.nome)
     else void vai(voce.a)
   }
@@ -79,193 +121,230 @@ export function Ricerca({ onChiudi }: { onChiudi: (riportaIlFuoco: boolean) => v
   const scritto = testo.trim() !== ""
   // La risposta vale solo per il testo che l'ha chiesta: nel ritardo dopo una lettera il menu di
   // prima non si mostra, o Invio aprirebbe la voce di un'altra ricerca.
-  const fresca = scritto && chiesto === testo.trim()
-  const gruppi = fresca && risposta.data ? gruppiDi(risposta.data) : []
+  const cerco = scritto && (chiesto !== testo.trim() || risposta.isFetching)
+  // v60: mentre cerca o se AstroLog non risponde, niente righe
+  const ferma = cerco || risposta.isError
+  const gruppi = scritto && !ferma ? gruppiDi(risposta.data, chiesto) : []
   const voci = gruppi.flatMap((g) => g.voci)
-  const niente = fresca && risposta.isSuccess && voci.length === 0
-  const attiva = voci.length > 0 ? `${MENU}-${scelta}` : undefined
+  const sel = Math.min(scelta, Math.max(0, voci.length - 1))
+  const niente = scritto && !ferma && voci.length === 0
+  const nota = notaDi(risposta.isError, cerco, risposta.data?.archive_empty === true, lavoro)
 
+  useEffect(() => {
+    pannello.current?.querySelectorAll("[data-an=riga]").forEach((e, i) => {
+      muovi(e, [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 220, delay: Math.min(i, 10) * 25 })
+    })
+  }, [chiesto, ferma])
+
+  function scegli(n: number) {
+    setScelta(n)
+    document.getElementById(`${MENU}-${n}`)?.scrollIntoView?.({ block: "nearest" })
+  }
   function tasti(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") {
-      // qui si ferma: il telaio non deve chiudere anche Stanotte con lo stesso tasto
+      // qui si ferma: il telaio non deve chiudere anche altro con lo stesso tasto
       e.stopPropagation()
-      chiudi(true)
-    } else if (voci.length === 0) {
-      return
-    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault()
-      const passo = e.key === "ArrowDown" ? 1 : -1
-      setScelta((scelta + passo + voci.length) % voci.length)
+      chiudi(true)
+    } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && voci.length > 0) {
+      e.preventDefault()
+      scegli((sel + (e.key === "ArrowDown" ? 1 : -1) + voci.length) % voci.length)
     } else if (e.key === "Enter") {
-      const voce = voci[scelta]
+      e.preventDefault()
+      const voce = voci[sel]
       if (voce) apri(voce)
     }
   }
-  // Uscire dal campo chiude; un tocco dentro il menu o su Annulla no, o il clic non arriverebbe.
-  function esce(e: FocusEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget)) chiudi(false)
+  // finestra modale: Tab gira fra cio' che sta dentro
+  function giro(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "Tab") return
+    const dentro = [...e.currentTarget.querySelectorAll<HTMLElement>("input, a[href], button")]
+    const qui = dentro.indexOf(document.activeElement as HTMLElement)
+    e.preventDefault()
+    dentro[(qui + (e.shiftKey ? -1 : 1) + dentro.length) % dentro.length]?.focus()
+  }
+  function fuori(e: MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) chiudi(true)
   }
 
+  const fondo: CSSProperties = tel
+    ? { position: "fixed", padding: 0, background: "var(--telaio)", overflowY: "auto" }
+    : {
+        position: "fixed",
+        padding: "11vh 24px 24px",
+        background: `color-mix(in srgb, var(--nero) ${scuro ? 60 : 35}%, transparent)`,
+      }
   let posto = 0
   return (
-    <div className="as-cerca" onBlur={esce}>
-      <CampoDiRicerca
-        etichetta={t("search.label")}
-        role="combobox"
-        aria-expanded={voci.length > 0}
-        aria-controls={MENU}
-        aria-activedescendant={attiva}
-        aria-autocomplete="list"
-        placeholder={t("search.placeholder")}
-        ref={campo}
-        value={testo}
-        onChange={(e) => setTesto(e.target.value)}
-        onKeyDown={tasti}
-        coda={
-          scritto && (!fresca || risposta.isFetching) ? (
-            <Cerco />
+    <div className="al-c-cerca__riga-1" ref={velo} data-menu="1" onMouseDown={fuori} style={fondo}>
+      <div
+        className="al-c-cerca__colonna-1"
+        ref={pannello}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("search.dialog")}
+        onKeyDown={giro}
+        style={L.pannello}
+      >
+        <div className="al-c-cerca__riga-2" style={{ padding: L.campo }}>
+          <svg className="al-c-cerca__grafico-1" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={LENTE} />
+          </svg>
+          <input
+            className="al-c-cerca__blocco-2"
+            ref={campo}
+            value={testo}
+            onChange={(e) => setTesto(e.target.value)}
+            onKeyDown={tasti}
+            role="combobox"
+            aria-expanded={voci.length > 0}
+            aria-controls={MENU}
+            aria-activedescendant={voci.length > 0 && !tel ? `${MENU}-${sel}` : undefined}
+            aria-autocomplete="list"
+            aria-label={t("search.label")}
+            placeholder={t(tel ? "search.placeholder.phone" : "search.placeholder")}
+            style={{ fontSize: L.testo }}
+          />
+          {tel ? (
+            <a
+              className="al-c-cerca__riga-3"
+              href="#"
+              // the board resets links in its helmet (Cerca.dc.html:12): not a browser link
+              style={{ color: "inherit", textDecoration: "none" }}
+              onClick={(e) => {
+                e.preventDefault()
+                chiudi(true)
+              }}
+            >
+              {t("search.cancel")}
+            </a>
           ) : (
-            <span className="as-telaio__tasto" aria-hidden="true">
+            <span className="al-c-cerca__blocco-3" aria-hidden="true">
               {t("search.key.esc")}
             </span>
-          )
-        }
-      />
-      {/* la classe sta su un involucro: il bottone e' un mattone e non ne prende altre */}
-      <span className="as-cerca__annulla">
-        <Bottone verso="nudo" piccolo onClick={() => chiudi(true)}>
-          {t("search.cancel")}
-        </Bottone>
-      </span>
-      {voci.length > 0 && (
-        <div className="as-trova" id={MENU} role="listbox" aria-label={t("search.found")}>
-          {gruppi.map((gruppo) => (
-            <div className="as-trova__gruppo" role="group" aria-label={t(gruppo.titolo)} key={gruppo.titolo}>
-              <p className="as-trova__capo" aria-hidden="true">
-                <span className="as-soprattitolo as-soprattitolo--nudo">{t(gruppo.titolo)}</span>
-                <span className="as-trova__quante">
-                  {gruppo.voci.length < gruppo.totale
-                    ? t("search.some", { n: numero(gruppo.voci.length), tot: numero(gruppo.totale) })
-                    : numero(gruppo.totale)}
-                </span>
-              </p>
-              <ul className="as-trova__voci" role="presentation">
-                {gruppo.voci.map((voce) => {
-                  const qui = posto++
+          )}
+        </div>
+        <div className="al-c-cerca__colonna-2" id={MENU} role="listbox" aria-label={t("search.found")} aria-busy={cerco} style={{ padding: L.lista }}>
+          {nota && (
+            <p className="al-c-cerca__riga-4" aria-live="polite">
+              <span
+                className="al-c-cerca__tondo-1"
+                aria-hidden="true"
+                style={nota.avviso ? { background: "var(--avviso)", color: "var(--avviso-testo)" } : { background: "var(--carta)", color: "var(--testo)" }}
+              >
+                {nota.segno}
+              </span>
+              <span className="al-c-cerca__testo-1">{nota.testo}</span>
+            </p>
+          )}
+          {!scritto && (
+            <div className="al-c-cerca__colonna-3">
+              <span className="al-c-cerca__testo-2">{t("search.help")}</span>
+              <div className="al-c-cerca__colonna-4">
+                {AIUTO.map((a) => {
+                  const esempio = a.dato ? risposta.data?.examples[a.dato] : a.esempio && t(a.esempio)
                   return (
-                    <li
-                      className="as-trova__voce"
-                      role="option"
-                      id={`${MENU}-${qui}`}
-                      aria-selected={qui === scelta}
-                      key={voce.a}
-                      // il fuoco resta nel campo: senza, il clic lo sposterebbe e il menu si chiuderebbe prima
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => apri(voce)}
-                    >
-                      <span className="as-trova__nome">
-                        {voce.nome}
-                        {voce.accanto && <span className="as-trova__comune">{voce.accanto}</span>}
+                    <span className="al-c-cerca__riga-5" key={a.nome}>
+                      <span className="al-c-cerca__tondo-2" aria-hidden="true">
+                        <Segno d={a.segno} />
                       </span>
-                      <span className={voce.non ? "as-trova__dice as-trova__dice--non" : "as-trova__dice"}>
-                        {voce.dice}
+                      <span>
+                        <b className="al-c-cerca__testo-3">{t(a.nome)}</b>
+                        {esempio && <span className="al-c-cerca__testo-4">{` \u00b7 ${esempio}`}</span>}
                       </span>
-                    </li>
+                    </span>
                   )
                 })}
-              </ul>
+              </div>
+            </div>
+          )}
+          {niente && (
+            <div className="al-c-cerca__colonna-5" aria-live="polite">
+              <span className="al-c-cerca__testo-5">{t("search.nothing", { q: chiesto })}</span>
+              <span className="al-c-cerca__testo-6">{t("search.nothing.why")}</span>
+            </div>
+          )}
+          {gruppi.map((g) => (
+            <div className="al-c-cerca__colonna-6" role="group" aria-label={t(g.titolo)} key={g.titolo}>
+              <div className="al-c-cerca__riga-6" aria-hidden="true">
+                <span className="al-c-cerca__testo-7">{t(g.titolo)}</span>
+                <span>{g.perche}</span>
+                <span className="al-c-cerca__testo-8">
+                  {g.voci.length < g.totale ? t("search.some", { n: numero(g.voci.length), tot: numero(g.totale) }) : numero(g.totale)}
+                </span>
+              </div>
+              {g.voci.map((v) => {
+                const qui = posto++
+                const su = !tel && qui === sel
+                return (
+                  <div className="al-c-cerca__riga-7" key={`${v.a} ${v.nome}`}>
+                    <div
+                      className="al-c-cerca__riga-8"
+                      data-an="riga"
+                      id={`${MENU}-${qui}`}
+                      role="option"
+                      aria-selected={su}
+                      // il fuoco resta nel campo: senza, il clic lo sposterebbe
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => apri(v)}
+                      onMouseMove={() => !tel && qui !== sel && setScelta(qui)}
+                      style={{ minHeight: L.riga, background: su ? "var(--carta-2)" : "transparent", cursor: "pointer" }}
+                    >
+                      <span
+                        className="al-c-cerca__tondo-3"
+                        aria-hidden="true"
+                        style={su ? { background: "var(--nav-su)", color: "var(--nav-su-testo)" } : { background: "var(--carta-2)", color: "var(--tenue)" }}
+                      >
+                        <Segno d={g.segno} />
+                      </span>
+                      <span className="al-c-cerca__colonna-7">
+                        <span className="al-c-cerca__blocco-4">
+                          {v.nome}
+                          {v.accanto && <span className="al-c-cerca__testo-9">{` \u00b7 ${v.accanto}`}</span>}
+                        </span>
+                        {tel && v.dice && <span className="al-c-cerca__blocco-5">{v.dice}</span>}
+                      </span>
+                      {!tel && v.dice && <span className="al-c-cerca__blocco-6">{v.dice}</span>}
+                      {su && (
+                        <span className="al-c-cerca__blocco-3" aria-hidden="true">
+                          {t("search.key.enter")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           ))}
-          <p className="as-trova__piede" aria-hidden="true">
-            <span>
-              <span className="as-telaio__tasto">{"\u2191"}</span>
-              <span className="as-telaio__tasto">{"\u2193"}</span> {t("search.keys.choose")}
-            </span>
-            <span>
-              <span className="as-telaio__tasto">{t("search.key.enter")}</span> {t("search.keys.open")}
-            </span>
-            <span>
-              <span className="as-telaio__tasto">{t("search.key.esc")}</span> {t("search.keys.close")}
-            </span>
-          </p>
         </div>
-      )}
-      {(niente || (fresca && risposta.isError)) && (
-        <div className="as-trova" id={MENU} aria-live="polite">
-          <p className="as-trova__niente">
-            {risposta.isError ? risposta.error.message : t("search.nothing", { q: chiesto })}
-          </p>
-          {!risposta.isError && <p className="as-trova__nota">{t("search.nothing.why")}</p>}
-        </div>
-      )}
+        {!tel && (
+          <div className="al-c-cerca__riga-9" aria-hidden="true">
+            <span>{t("search.keys.choose")}</span>
+            <span>{t("search.keys.open")}</span>
+            <span>{t("search.keys.close")}</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-/** I gruppi che hanno voci, nell'ordine della tavola. Un gruppo vuoto non si mostra. */
-function gruppiDi(trovati: Trovati): Gruppo[] {
-  const gruppi: Gruppo[] = [
-    {
-      titolo: "search.group.objects",
-      totale: trovati.objects.total,
-      voci: trovati.objects.items.map((o) => ({
-        // outside the frame, no window: the Archive narrowed to it
-        a: `/archivio?key=${encodeURIComponent(o.key)}`,
-        oggetto: { chiave: o.key, nome: o.name ?? o.key },
-        // un mosaico porta il nome che gli hai dato tu: non e' una sigla di catalogo
-        nome: o.panels === null ? <span className="as-nome-oggetto">{o.name ?? o.key}</span> : <b>{o.name ?? o.key}</b>,
-        accanto: o.common_name,
-        dice:
-          o.panels === null
-            ? quanto(o.frames, o.integration_s)
-            : `${quanto(o.frames, o.integration_s)} \u00b7 ${t("search.mosaic", { n: numero(o.panels) })}`,
-      })),
-    },
-    {
-      titolo: "search.group.nights",
-      totale: trovati.nights.total,
-      voci: trovati.nights.items.map((n) => ({
-        a: `/notti?notte=${n.id}`,
-        nome: <b>{notte(n.night_date)}</b>,
-        accanto: n.site,
-        dice: quanto(n.frames, n.integration_s),
-      })),
-    },
-    {
-      titolo: "search.group.gear",
-      totale: trovati.gear.total,
-      voci: trovati.gear.items.map((p) => ({
-        a: `/attrezzatura?pezzo=${p.kind === "filter" ? "filtro" : "strumento"}-${p.id}`,
-        nome: <b>{p.name}</b>,
-        accanto: t(`search.kind.${p.kind}`),
-        ...usoDi(p),
-      })),
-    },
-    {
-      titolo: "search.group.sites",
-      totale: trovati.sites.total,
-      voci: trovati.sites.items.map((s) => ({
-        a: `/impostazioni/sito?sito=${s.id}`,
-        nome: <b>{s.name}</b>,
-        accanto: null,
-        dice: t("search.site.nights", { n: numero(s.nights) }),
-      })),
-    },
-  ]
-  return gruppi.filter((g) => g.voci.length > 0)
+function Segno({ d }: { d: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d={d} />
+    </svg>
+  )
 }
 
-/** Frame e ore; senza durata nei file "senza tempo", mai "0 h". */
-function quanto(frame: number, secondi: number): string {
-  const n = t("search.frames", { n: numero(frame) })
-  return secondi > 0 ? t("search.timed", { frame: n, ore: ore(secondi) }) : t("search.untimed", { frame: n })
-}
+type Nota = { segno: string; testo: string; avviso?: boolean }
 
-/** Le ore di un pezzo, o perche' non ci sono: il perche' lo decide il backend. */
-function usoDi(pezzo: Pezzo): { dice: string; non?: boolean } {
-  if (!pezzo.counted) return { dice: t("search.notCounted"), non: true }
-  if (pezzo.no_hours !== null || pezzo.frames === null || pezzo.integration_s === null) {
-    return { dice: t(pezzo.no_hours === "no_rig" ? "search.noRig" : "search.filesSilent"), non: true }
-  }
-  return { dice: quanto(pezzo.frames, pezzo.integration_s) }
+/** La riga in testa ai trovati (tavola, `nota`): una sola, la piu' urgente. */
+function notaDi(fallita: boolean, cerco: boolean, vuoto: boolean, lavoro: Parameters<typeof statoDi>[0]): Nota | null {
+  if (fallita) return { segno: "!", testo: t("search.note.failed"), avviso: true }
+  if (cerco) return { segno: "\u2026", testo: t("search.note.waiting") }
+  if (vuoto) return { segno: "?", testo: t("search.note.empty") }
+  if (statoDi(lavoro) !== "in corso") return null
+  const pct = percentualeDi(lavoro)
+  return { segno: "\u2026", testo: pct === null ? t("search.note.scan.nopct") : t("search.note.scan", { pct: numero(pct) }) }
 }

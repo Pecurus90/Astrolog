@@ -58,8 +58,42 @@ class Found[Item](BaseModel):
     total: int = Field(description="How many in all: `items` are the first few.")
 
 
+class DateRead(BaseModel):
+    """A date the text was read as; `year` and `day` null where it did not write them."""
+
+    year: int | None
+    month: int
+    day: int | None
+
+
+class NightsWhy(BaseModel):
+    """Why these nights (Cerca v77): the dates read (`5/6` both ways), the one object shot
+    (`object`, its Archive name), or several objects."""
+
+    by: Literal["dates", "object", "objects"]
+    dates: list[DateRead]
+    object: str | None
+
+
+class FoundNights(Found[FoundNight]):
+    why: NightsWhy | None = Field(description="Null when no night is found.")
+
+
+class SearchExamples(BaseModel):
+    """The empty field's hints, from your own archive; null when there is none to show."""
+
+    gear: str | None = Field(
+        description="The piece or filter with the most time; none counted yet, the first by name."
+    )
+    site: str | None = Field(description="The default site.")
+
+
 class SearchResult(BaseModel):
     objects: Found[FoundObject]
-    nights: Found[FoundNight]
+    nights: FoundNights
     gear: Found[FoundPiece]
     sites: Found[FoundSite]
+    archive_empty: bool = Field(
+        description="No frame read yet: the four groups stay empty until the first scan."
+    )
+    examples: SearchExamples

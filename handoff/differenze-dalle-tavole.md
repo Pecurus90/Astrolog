@@ -16,9 +16,6 @@ Fuori per ora (esiti della lista fissa):
   "Modo automatico" nell'ingranaggio e "Passa al modo chiaro" in Altro del telefono (Menu 42, 45).
   App: niente. Perche': Marco 10/11, arrivano col passo Tema.
 - **"dati simulati" in Stanotte.** Tavola: Telaio 26, 51. App: niente. Perche': i dati sono veri.
-- **Cerca in dialogo, coi gruppi pagine e impostazioni.** Tavola: `Cerca` al centro (Telaio 40, 56).
-  App: il campo di `Ricerca.tsx` sotto la testa, a destra, sopra la pagina (sul telefono sotto la
-  testa). Perche': commit D.
 - **Il vetro accanto alla bolla.** Tavola: `vb.acc` (Telaio 60-63), spento (`CON=[]`). App: niente.
   Perche': Marco v50.
 - **L'anteprima del telefono.** Tavola: telefono 390 x 844 in una finestra larga (Telaio 145).
@@ -58,6 +55,43 @@ Scelte diverse dalla tavola:
   Dettagli nella pagina Meteo.». Perche': la tavola mostra un caso solo.
 - **Il menu Altro del telefono, l'ordine.** Tavola: Planner prima di Piano della notte (Menu 44), al
   contrario del desktop (46). App: come la tavola, ognuno il suo (`ALTRO_TELEFONO`).
+
+## Cerca (passo 33, telaio commit D, 10/11)
+
+Tavola `componenti/Cerca` v77: finestra al centro col velo sul desktop, pagina intera sul
+telefono. Fuori:
+- **Il gruppo Progetti, "Progetti" nell'aiuto e «Planner ↗» accanto agli oggetti.** Tavola:
+  Cerca 109, 115, 138. App: niente. Perche': le pagine Progetti e Planner non ci sono ancora (i
+  rimandi restano spenti finche' la pagina non esiste, `navigazione.md`).
+- **Voci delle Impostazioni senza sezione nell'app.** Tavola: Nome utente, Tema, Orizzonte, Meteo
+  apre su, Soglie del Planner, Tempi della notte, Tetto e sicurezza (Cerca 87). App: niente.
+  Perche': quelle impostazioni non esistono ancora.
+- **«dati simulati» nel piede.** Tavola: Cerca 34-35. App: niente. Perche': i dati sono veri.
+
+Scelte diverse dalla tavola:
+- **Gli esempi di attrezzatura e sito nell'aiuto.** Tavola: «zwo, FRA400», «Casa». App: il pezzo
+  con piu' ore e il sito predefinito di chi cerca, dalla rotta; senza, solo la parola. Perche':
+  principio 1, sono l'attrezzatura e il sito di Marco.
+- **Le voci delle Impostazioni portano alle sezioni dell'app.** Tavola: «Chiave Meteoblue» in
+  Meteo, «Scansione» in Cartelle e scansione. App: Servizi (le chiavi stanno solo li', v68) e
+  Scansioni; in piu' Servizi e Backup, che la tavola non elenca. «Percorso di ASTAP» si trova
+  anche con D50 (Marco 6/11), non solo D80.
+- **Un sito apre la sua sezione.** Tavola: un sito non apre niente (`href: null`, Cerca 116). App:
+  Impostazioni › Siti su quel sito, come prima. Perche': la voce c'e', meglio che porti dove si legge.
+- **Il telefono copre lo schermo con `position: fixed`.** Tavola: `absolute` e lo scorrimento in
+  cima. App: fissa, la lista scorre dentro. Perche': stesso aspetto, senza spostare la pagina sotto.
+- **La finestra chiusa col velo, Esc o Annulla riporta il fuoco al bottone Cerca; Tab gira dentro
+  la finestra.** Tavola: non lo dice. Perche': finestra modale (`aria-modal`).
+- **Quale riga in testa quando ne valgono due.** Tavola: archivio vuoto, scansione, «Cerco…»,
+  errore (un solo stato nei Tweaks). App: errore, «Cerco…», archivio vuoto, scansione. Perche'
+  l'errore e l'attesa riguardano cio' che hai appena scritto; a scansione in corso, mentre scrivi,
+  si legge «Cerco…».
+- **Pezzi e siti col testo in qualunque punto del nome.** Tavola: il nome o una sua parola
+  comincia col testo (`prende`, Cerca 94). App: come prima di questo commit, il frammento ovunque
+  nel nome (con «m» anche «ASI2600MM Pro»); pagine e voci delle Impostazioni invece come la
+  tavola. Perche': la regola dei pezzi e' quella dell'Archivio; cambiarla e' un altro passo.
+- **Le righe sono `div role=option`.** Tavola: `a href="#"`. Perche': un'opzione di un `combobox`
+  non entra nel giro del tabulatore; il fuoco resta nel campo.
 
 ## Notti -- Tutto della notte (passo 33, commit B, 8/11)
 

@@ -32,11 +32,13 @@ Le prove del frontend si chiamano col loro titolo; stanno in `frontend/tests/sch
 | Cerco un oggetto per ogni suo nome, anche quello comune, e vedo quanto ci ho ripreso | `test_an_object_is_found_by_any_of_its_names` (`backend/tests/test_search.py`, come le tre sotto) |
 | Cerco una notte per data, come la scrivo, o per l'oggetto ripreso | `test_a_night_is_found_by_date_in_the_common_forms`, `test_what_is_not_one_of_your_dates_finds_no_night`, `test_a_night_is_found_by_the_object_shot_in_it` |
 | Cerco un pezzo, un filtro o un sito per nome | `test_a_piece_and_a_filter_are_found_by_name_with_what_is_known_of_them`, `test_no_filter_is_not_a_filter_you_own`, `test_a_site_is_found_by_name_with_its_nights` |
-| Il campo vuoto non apre niente; ogni gruppo dice quanti altri ce ne sono | `test_a_blank_search_finds_nothing_not_everything`, `test_each_group_says_how_many_beyond_the_few_it_shows` |
-| Cerca sta nella testa (o con Ctrl K) e apre il campo | *chiusa e' un bottone, e toccata diventa un campo col fuoco*, *Ctrl K la apre da ogni pagina*, *aperta, il bottone Cerca lo dice; Annulla la chiude*, *sul telefono Cerca e' un tondo nella testa, e apre lo stesso campo* (`ricerca.test.tsx`, come le tre sotto) |
-| Scrivo e vedo i trovati per gruppo, con frame e ore, o perche' le ore non ci sono | *mostra i quattro gruppi, ognuno con quante voci ha in tutto*, *un gruppo senza voci non si mostra*, *un campo vuoto non chiede niente alla rotta*, *niente trovato lo dice, e dice cosa si cerca qui* |
+| Il campo vuoto non trova niente; ogni gruppo dice quanti altri ce ne sono | `test_a_blank_search_finds_nothing_not_everything`, `test_each_group_says_how_many_beyond_the_few_it_shows` |
+| Le notti mi dicono perche' ci sono; una data cerca solo per data | `test_nights_found_by_date_say_which_dates_were_read`, `test_a_date_finds_nights_by_date_alone`, `test_nights_found_by_an_object_name_it` |
+| Gli esempi dell'aiuto sono miei; con l'archivio vuoto non trovo niente dell'archivio | `test_the_examples_come_from_your_own_archive`, `test_without_gear_or_site_there_is_no_example`, `test_an_empty_archive_finds_nothing_of_the_archive` |
+| Cerca sta nella testa (o con Ctrl K) e apre la finestra | *chiusa e' un bottone; toccata apre la finestra col campo col fuoco e dice cosa si cerca*, *il campo vuoto prende gli esempi ...*, *Ctrl K la apre da ogni pagina*, *sul telefono Cerca e' un tondo nella testa, apre la pagina intera e Annulla la chiude* (`ricerca.test.tsx`, come le tre sotto) |
+| Scrivo e vedo i trovati per gruppo, con frame e ore, o perche' le ore non ci sono; anche pagine e impostazioni | *mostra i gruppi, ognuno con quante voci ha in tutto, e le notti dicono perche'*, *le notti trovate per data dicono le date lette ...*, *trova le pagine e le voci delle Impostazioni, e le apre*, *un gruppo senza voci non si mostra*, *niente trovato lo dice ...*, *se AstroLog non risponde lo dice, senza righe*, *con l'archivio vuoto ...*, *con la scansione in corso dice la percentuale del backend* |
 | Scelgo con le frecce e apro con Invio o col tocco; ogni voce apre la pagina che gia' la mostra | *le frecce scelgono e Invio apre*, *la voce ... apre la pagina che gia' la mostra* |
-| Esc chiude la ricerca e il fuoco torna al bottone | *Esc chiude e riporta il fuoco al bottone*, *il menu aperto non ha difetti di accessibilita'* |
+| Esc o il velo chiudono e il fuoco torna al bottone | *Esc chiude e riporta il fuoco al bottone*, *aperta, il bottone Cerca lo dice; un tocco sul velo la chiude e il fuoco torna*, *un tocco dentro la finestra non la chiude*, *la finestra aperta non ha difetti di accessibilita'* |
 
 ## Le decisioni
 
@@ -87,16 +89,25 @@ chi usa un lettore di schermo il corpo porta un titolo nascosto.
 - **Cio' che la scansione non ha potuto fare** -- un rifiuto, una cartella caduta mentre la
   leggeva, le cartelle saltate -- e' una **riga di stato in testa al corpo**, con *Dettagli* che
   porta dove si ripara (Marco, 7/10/2026).
-- **Cerca** apre il campo della ricerca (`Ricerca.tsx`), anche con Ctrl K (Cmd K sul Mac). La
-  rotta c'e' (`GET /api/v1/search`): quattro gruppi, pochi per gruppo col totale. Gli oggetti col
-  frammento dell'Archivio, le notti per data nelle forme comuni o per l'oggetto ripreso, pezzi e
-  siti per nome. Una voce dice **chi e'** (chiave, id, genere), non l'indirizzo: le pagine stanno
-  nel frontend. Un oggetto apre la sua **finestra** sopra la pagina dove sei (`archivio.md`). Il
-  campo chiede dopo 250 ms dall'ultima lettera, mostra solo le voci del testo che c'e' scritto, e
-  il fuoco resta nel campo (le frecce spostano `aria-activedescendant`; `combobox` sull'input,
-  ARIA 1.2). La Cerca della v76 -- un dialogo al centro, coi gruppi delle pagine e delle
-  impostazioni -- e' il passo dopo; fino ad allora il campo si apre sotto la testa, a destra, sopra
-  la pagina: non allarga la testa.
+- **Cerca** (tavola `Cerca` v77, `Ricerca.tsx`) si apre dal bottone o con Ctrl K (Cmd K sul Mac):
+  sul desktop una finestra al centro sopra un velo, sul telefono una pagina intera con *Annulla*.
+  Esc, il velo e Annulla chiudono e riportano il fuoco al bottone; Tab gira dentro la finestra.
+  Il campo vuoto dice cosa si cerca ("Si cercano"), con gli esempi di attrezzatura e sito presi
+  dal **tuo** archivio (`examples`: il pezzo con piu' ore, o il primo per nome se nessuno e' contato; il sito
+  predefinito). La rotta
+  (`GET /api/v1/search`) da' quattro gruppi, pochi per gruppo col totale: gli oggetti col
+  frammento dell'Archivio; le notti **per data** quando il testo e' una data, nelle forme comuni,
+  se no per l'oggetto ripreso, col perche' (`why`: "5 giugno e 6 maggio", "con M 31", "con questi
+  oggetti"); pezzi e siti per nome. Senza frame (`archive_empty`) non trova niente dell'archivio
+  e lo dice. **Pagine e voci delle Impostazioni** si cercano nel frontend, perche' i loro nomi
+  stanno solo nei testi: una voce delle Impostazioni porta alla sua sezione, solo se l'app la ha.
+  Cinque voci per gruppo, poi "5 di N". Una voce dice **chi e'** (chiave, id, genere), non
+  l'indirizzo. Un oggetto apre la sua **finestra** sopra la pagina dove sei (`archivio.md`). Una
+  riga in testa, la piu' urgente: AstroLog non risponde, "Cerco…" (e niente righe), archivio
+  vuoto, scansione in corso con la percentuale del backend. Il campo chiede dopo 250 ms
+  dall'ultima lettera, mostra solo le voci del testo scritto, e il fuoco resta nel campo (le
+  frecce spostano `aria-activedescendant`; `combobox` sull'input, ARIA 1.2). Progetti e
+  «Planner ↗» arrivano con le loro pagine.
 
 **Stanotte** (pastiglia v70): la pastiglia dice "Stanotte" e il sito; senza sito "Aggiungi sito"
 porta alle Impostazioni. Il pannello: "Stanotte · {giorno della notte}", tre righe -- il **sito**
@@ -135,4 +146,4 @@ vuol dire che il gesto legge almeno una cartella mai letta fino in fondo.
 Non decide come le pagine sono fatte dentro: ogni pagina ha il suo contratto. Non calcola niente:
 cio' che il telaio mostra -- il conto e le sezioni da confermare, la fase e la percentuale del
 lavoro, l'ultima scansione, il sito, la Luna e il suo gradino, il buio -- arriva pronto dall'API.
-Non ha ancora il tondo del modo, la Cerca in dialogo, la lingua al volo ne' il tuo nome.
+Non ha ancora il tondo del modo, la lingua al volo ne' il tuo nome.

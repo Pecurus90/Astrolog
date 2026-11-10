@@ -112,6 +112,12 @@ export function statoDi(dati: Stato | undefined): StatoScansione {
   return "ferma"
 }
 
+/** La percentuale del lavoro in corso, quella del backend (`pct`); `null` a riposo o senza. */
+export function percentualeDi(dati: Stato | undefined): number | null {
+  if (statoDi(dati) !== "in corso") return null
+  return dati?.worker.stages.find((s) => s.name === dati.worker.stage)?.pct ?? null
+}
+
 /** Come si dice lo stato accanto a un nome ("Impostazioni, scansione in corso"); a riposo niente. */
 const PAROLE_ARIA: Record<StatoScansione, Chiave | null> = {
   ferma: null,

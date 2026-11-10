@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { Link, useLocation } from "react-router"
 
 import { FinestraDellOggetto } from "./FinestraDellOggetto"
@@ -146,13 +146,6 @@ const GRANAGGIO =
   "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
 // [T] Telaio.dc.html:30 the Da confermare sign of the narrow head
 const SEGNO_DA_CONFERMARE = "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6"
-// open search floats under the head: in the row it would widen it past the frame
-const SOTTO_LA_TESTA: CSSProperties = {
-  position: "absolute",
-  top: "calc(100% + 10px)",
-  right: 0,
-  width: "var(--cerca-aperta)",
-}
 /** La testa del desktop e il corpo, nella colonna del telaio (Telaio.dc.html:14-41). */
 function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: ReactNode }) {
   const dove = useLocation()
@@ -300,11 +293,7 @@ function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: Reac
                   <Tratto d={LENTE} lato={18} />
                   <span className="al-c-telaio__cerca-t">{t("search.open")}</span>
                 </a>
-                {aperto === "cerca" && (
-                  <div data-menu="1" style={SOTTO_LA_TESTA}>
-                    <Ricerca onChiudi={comandi.chiudiCerca} />
-                  </div>
-                )}
+                {aperto === "cerca" && <Ricerca onChiudi={comandi.chiudiCerca} />}
                 <span className="al-c-telaio__riga-10" data-menu="1">
                   <a
                     className="al-c-telaio__tondo-4"

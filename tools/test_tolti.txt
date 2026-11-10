@@ -459,3 +459,9 @@ dice il verdetto, le ore utili, l'accordo e il vento in quota, e porta al Meteo 
 senza la previsione di stanotte lo dice, e porta al Meteo che spiega perche' - step 33, frame v76: replaced by senza la previsione lo dice; una notte incerta e una senza ore di posa pure
 non promette una previsione che senza fuso non arrivera' mai - step 33, frame v76: replaced by un sito col fuso irriconoscibile si legge lo stesso, e dice cosa manca
 Esc dentro il cassetto di Stanotte chiude il cassetto, non il pannello della Luna - step 33, frame v76: the drawer is a dialog; replaced by Esc dentro Stanotte chiude Stanotte, non il pannello della Luna
+aperta, il bottone Cerca lo dice; Annulla la chiude - step 33, Cerca v77: no Annulla on the desktop; replaced by aperta, il bottone Cerca lo dice; un tocco sul velo la chiude e il fuoco torna
+chiusa e' un bottone, e toccata diventa un campo col fuoco - step 33, Cerca v77: a dialog now; replaced by chiusa e' un bottone; toccata apre la finestra col campo col fuoco e dice cosa si cerca
+il menu aperto non ha difetti di accessibilita' - step 33, Cerca v77: renamed la finestra aperta non ha difetti di accessibilita'
+mostra i quattro gruppi, ognuno con quante voci ha in tutto - step 33, Cerca v77: replaced by mostra i gruppi, ognuno con quante voci ha in tutto, e le notti dicono perche'
+sul telefono Cerca e' un tondo nella testa, e apre lo stesso campo - step 33, Cerca v77: replaced by sul telefono Cerca e' un tondo nella testa, apre la pagina intera e Annulla la chiude
+un campo vuoto non chiede niente alla rotta - step 33, Cerca v77: the empty field asks the route for its help examples; replaced by il campo vuoto prende gli esempi di attrezzatura e sito dal tuo archivio

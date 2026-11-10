@@ -271,9 +271,9 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
         </header>
       </Tema>
       {aperto === "cerca" && (
-        <div data-menu="1">
+        <Tema>
           <Ricerca onChiudi={comandi.chiudiCerca} />
-        </div>
+        </Tema>
       )}
       {aperto === "notte" && (
         <Tema>

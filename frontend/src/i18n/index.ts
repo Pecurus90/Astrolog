@@ -383,6 +383,19 @@ export function meseEAnno(mese: string): string {
   return new Intl.DateTimeFormat(lingua, { month: "long", year: "numeric", timeZone: "UTC" }).format(mezzanotteUtc(`${mese}-01`))
 }
 
+/** Le date che la ricerca ha letto, unite come la lingua unisce: *5 giugno e 6 maggio*,
+ *  *maggio 2024*. Anno e giorno mancano dove chi cercava non li ha scritti. */
+export function dateLette(date: readonly { year: number | null; month: number; day: number | null }[]): string {
+  const una = (d: (typeof date)[number]) =>
+    new Intl.DateTimeFormat(lingua, {
+      day: d.day === null ? undefined : "numeric",
+      month: "long",
+      year: d.year === null ? undefined : "numeric",
+      timeZone: "UTC",
+    }).format(Date.UTC(d.year ?? 2000, d.month - 1, d.day ?? 1))
+  return new Intl.ListFormat(lingua, { type: "conjunction" }).format(date.map(una))
+}
+
 /** I dodici mesi in breve, senza punto: *gen*, *feb*. */
 export function mesiBrevi(): string[] {
   const breve = new Intl.DateTimeFormat(lingua, { month: "short", timeZone: "UTC" })
