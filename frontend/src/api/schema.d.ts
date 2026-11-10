@@ -1991,6 +1991,13 @@ export interface components {
              */
             passband?: string | null;
         };
+        /** DarkStretchOut */
+        DarkStretchOut: {
+            /** Starts At */
+            starts_at: string;
+            /** Ends At */
+            ends_at: string;
+        };
         /** DayNight */
         DayNight: {
             /** Id */
@@ -2932,6 +2939,22 @@ export interface components {
              */
             no_hours: ("files_silent" | "no_rig") | null;
         };
+        /**
+         * LastScanOut
+         * @description The newest gesture whose receipts have all closed, summed: the gear menu's last-scan line
+         *     (Telaio v76).
+         */
+        LastScanOut: {
+            /** Ended At */
+            ended_at: string;
+            /** New */
+            new: number;
+            /**
+             * Not Read
+             * @description Files the readings could not read (`errors`).
+             */
+            not_read: number;
+        };
         /** Load */
         Load: {
             /**
@@ -3253,6 +3276,32 @@ export interface components {
             min_dark_h: number;
             /** Nights */
             nights: components["schemas"]["MoonCalendarNightOut"][];
+        };
+        /**
+         * MoonInDarkOut
+         * @description The Moon above the horizon in tonight's dark: from the first instant to the last, with the
+         *     broadband word of its lit fraction on the Meteo's Moon scale (ING 25/65).
+         */
+        MoonInDarkOut: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "go" | "marginal" | "nogo";
+            /** Since */
+            since: string;
+            /** Until */
+            until: string;
+            /**
+             * From Start
+             * @description Already up when the dark starts.
+             */
+            from_start: boolean;
+            /**
+             * To End
+             * @description Still up when the dark ends.
+             */
+            to_end: boolean;
         };
         /** MoonOut */
         MoonOut: {
@@ -4043,6 +4092,8 @@ export interface components {
         };
         /** PipelineStatus */
         PipelineStatus: {
+            /** @description `None` before any gesture has ended. */
+            last_scan?: components["schemas"]["LastScanOut"] | null;
             worker: components["schemas"]["WorkerSnapshot"];
             scan: components["schemas"]["ScanProgress"] | null;
             /**
@@ -4259,6 +4310,21 @@ export interface components {
             empty: boolean;
             /** To Confirm */
             to_confirm: number;
+            /**
+             * Sections
+             * @description The sections with open questions, in the page's order, each with how many: they add up to `to_confirm`. The toolbar's Da confermare panel reads them.
+             */
+            sections: components["schemas"]["ReviewSectionOut"][];
+        };
+        /** ReviewSectionOut */
+        ReviewSectionOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "lookalikes" | "filters" | "gear" | "objects" | "typeless" | "unclear" | "mosaics";
+            /** Count */
+            count: number;
         };
         /**
          * RigChoice
@@ -4962,6 +5028,11 @@ export interface components {
                 [key: string]: unknown;
             };
             /**
+             * Pct
+             * @description `current` of `total` in whole percent; `None` without both.
+             */
+            pct?: number | null;
+            /**
              * Reason
              * @description Why the stage stopped, when it stopped on its own: a code, never a sentence.
              */
@@ -5024,6 +5095,14 @@ export interface components {
              * @default []
              */
             planets: components["schemas"]["PlanetOut"][];
+            /**
+             * Moonless Dark
+             * @description The dark's stretches with the Moon down; empty without a night.
+             * @default []
+             */
+            moonless_dark: components["schemas"]["DarkStretchOut"][];
+            /** @description `None` when the Moon is never up in the dark, or no night. */
+            moon_in_dark?: components["schemas"]["MoonInDarkOut"] | null;
         };
         /**
          * TypelessFolder

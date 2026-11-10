@@ -14,13 +14,14 @@ from starlette.datastructures import State
 from ..clock import parse_iso
 from ..db.row import Row
 from ..spine.run import ORDER, queue
-from ..spine.scan_store import run_outcomes, run_row
+from ..spine.scan_store import last_gesture, run_outcomes, run_row
 from ..spine.stages import StageName, count_pending, pending_by_stage
 from ..worker.worker import TERMINAL_STATES, Snapshot, WorkerBusyError
 from ..worker.worker import State as WorkerState
 from . import work
 from .deps import get_db
 from .models import (
+    LastScanOut,
     PipelineAction,
     PipelineStatus,
     ScanEvent,
@@ -34,8 +35,24 @@ from .scan import run_out, start_scan_all
 router = APIRouter(prefix="/api/v1", tags=["pipeline"])
 
 
+def _pct(current: int | None, total: int | None) -> int | None:
+    return round(100 * current / total) if current is not None and total else None
+
+
 def _shown(snapshot: Snapshot) -> WorkerSnapshot:
-    return WorkerSnapshot.model_validate(asdict(snapshot))
+    out = WorkerSnapshot.model_validate(asdict(snapshot))
+    for s in out.stages:
+        s.pct = _pct(s.current, s.total)
+    return out
+
+
+def _last_scan(conn: sqlite3.Connection) -> LastScanOut | None:
+    row = last_gesture(conn)
+    return (
+        LastScanOut(ended_at=row["ended_at"], new=row["new"], not_read=row["not_read"])
+        if row
+        else None
+    )
 
 
 def action_for(snapshot: Snapshot) -> PipelineAction:
@@ -152,6 +169,7 @@ def status(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Pipe
     state = request.app.state
     snapshot = state.worker.snapshot()
     return PipelineStatus(
+        last_scan=_last_scan(conn),
         worker=_shown(snapshot),
         scan=scan_progress(state, conn),
         # the stages that run: one in the graph without work would stay "to do" for ever

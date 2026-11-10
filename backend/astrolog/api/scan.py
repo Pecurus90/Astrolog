@@ -240,7 +240,8 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
     previous = (state.last_scan, state.scan_runs)
     try:
         for folder_id in taken:
-            run_id = start_run(conn, folder_id, now_iso())
+            batch = opened[0].run_id if opened else None
+            run_id = start_run(conn, folder_id, now_iso(), batch)
             opened.append(ScanStarted(run_id=run_id, folder_id=folder_id))
         pairs = [(c.folder_id, c.run_id) for c in opened]
         # the reply carries every receipt, so they all open now

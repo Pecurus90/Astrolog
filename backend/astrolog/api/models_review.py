@@ -207,3 +207,17 @@ class ReviewOut(BaseModel):
         description="The archive holds no frame yet: there is nothing to ask, not nothing left."
     )
     to_confirm: int
+    sections: list["ReviewSectionOut"] = Field(
+        description="The sections with open questions, in the page's order, each with how many: "
+        "they add up to `to_confirm`. The toolbar's Da confermare panel reads them."
+    )
+
+
+ReviewSectionKey = Literal[
+    "lookalikes", "filters", "gear", "objects", "typeless", "unclear", "mosaics"
+]
+
+
+class ReviewSectionOut(BaseModel):
+    key: ReviewSectionKey
+    count: int

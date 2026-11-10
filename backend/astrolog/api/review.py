@@ -18,7 +18,14 @@ from . import review_page as page
 from . import review_write as write
 from .deps import get_db
 from .models_page import page_of
-from .models_review import BandOut, FilterOut, ReviewOut, SettledObjects
+from .models_review import (
+    BandOut,
+    FilterOut,
+    ReviewOut,
+    ReviewSectionKey,
+    ReviewSectionOut,
+    SettledObjects,
+)
 from .models_review_apply import ReviewApplied, ReviewApply
 from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder
 from .scan import sky_follows
@@ -72,19 +79,21 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     mosaic_rows = mosaic_reader.candidates(conn)
     mosaics = [MosaicCandidate(**asdict(m)) for m in mosaic_rows]
     pairs = lookalike.lookalikes(conn)
-    # Seeing a question is not answering it: each one counts until answered, or the count would
-    # drop to zero while the frames still wait.
-    to_confirm = (
-        sum(1 for o in objects if page.asks(o))
-        + len(filters)
-        + len(pairs)
-        + sum(1 for p in unclear if p.site is None)
+    # Seeing a question is not answering it: each counts until answered. In the page's order
+    # (frontend `sezioniDaConfermare.ts`).
+    counts: dict[ReviewSectionKey, int] = {
+        "lookalikes": len(pairs),
+        "filters": len(filters),
         # a card counts until every part it asks is answered
-        + sum(1 for g in gear_rows if not g["complete"])
+        "gear": sum(1 for g in gear_rows if not g["complete"]),
+        "objects": sum(1 for o in objects if page.asks(o)),
+        "typeless": unanswered(typeless_rows),
+        "unclear": sum(1 for p in unclear if p.site is None),
         # a mosaic's no closes it too, or a wrong proposal could only be silenced by accepting it
-        + sum(1 for m in mosaic_rows if m.answer is None)
-        + unanswered(typeless_rows)
-    )
+        "mosaics": sum(1 for m in mosaic_rows if m.answer is None),
+    }
+    sections = [ReviewSectionOut(key=k, count=n) for k, n in counts.items() if n]
+    to_confirm = sum(counts.values())
     return ReviewOut(
         lookalikes=pairs,
         filters=filters,
@@ -99,6 +108,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         mosaics=mosaics,
         empty=conn.execute("SELECT NOT EXISTS (SELECT 1 FROM frames)").fetchone()[0] == 1,
         to_confirm=to_confirm,
+        sections=sections,
     )
 
 

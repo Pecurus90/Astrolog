@@ -722,6 +722,7 @@ CREATE UNIQUE INDEX sessions_key ON sessions (night_id, object_id, COALESCE(rig_
 CREATE TABLE scan_runs (
   id         INTEGER PRIMARY KEY,
   folder_id  INTEGER NOT NULL REFERENCES folders (id),
+  batch      INTEGER,      -- id della prima ricevuta del gesto (anche se poi scartata); NULL: se stessa
   started_at TEXT NOT NULL,
   ended_at   TEXT,
   status     TEXT CHECK (status IN ('ok', 'stopped', 'aborted', 'error')),

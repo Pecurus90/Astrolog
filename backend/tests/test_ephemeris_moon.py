@@ -472,6 +472,35 @@ def test_the_moonless_dark_left_never_exceeds_the_dark_itself():
     assert moon.moonless_dark_left_s(notte, buio)[0] == 32 * 60
 
 
+def test_the_dark_splits_into_moonless_and_moon_up_stretches():
+    """Stanotte dice «senza Luna 20:48–23:40» e «dopo le 23:40 la banda larga e' al limite»
+    (Telaio v76): il buio si divide in tratti con la Luna sotto e tratti con la Luna su, coi bordi
+    del buio esatti. Qui la Luna sorge al ventesimo campione; il buio va dal quinto al 39esimo."""
+    notte = _notte_finta([-10.0] * 20 + [5.0] * 20)
+    zero, passo = notte.grid[0].at, dt.timedelta(minutes=GRID_STEP_MIN)
+    buio = [(zero + passo * 5, zero + passo * 39)]
+
+    tratti = moon.dark_spans(notte, buio)
+
+    assert tratti.moonless == [(zero + passo * 5, zero + passo * 20)]
+    assert tratti.moon_up == [(zero + passo * 20, zero + passo * 39)]
+
+
+def test_a_moon_down_the_whole_dark_leaves_no_moon_up_stretch():
+    notte = _notte_finta([-10.0] * 12)
+    zero, passo = notte.grid[0].at, dt.timedelta(minutes=GRID_STEP_MIN)
+    buio = [(zero + passo * 1.5, zero + passo * 10.5)]
+
+    tratti = moon.dark_spans(notte, buio)
+
+    assert tratti.moonless == buio
+    assert tratti.moon_up == []
+
+
+def test_without_dark_there_are_no_stretches():
+    assert moon.dark_spans(_notte_finta([5.0] * 10), []) == moon.DarkSpans([], [])
+
+
 def test_without_dark_no_moonless_dark_is_left():
     """Senza buio astronomico (l'estate al nord) non resta buio senza Luna da nessun punto."""
     notte = _notte_finta([-10.0] * 10)

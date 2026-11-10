@@ -161,6 +161,22 @@ class ChartOut(BaseModel):
     dark_until: str | None = Field(description="Where astronomical dark ends; `None` without it.")
 
 
+class DarkStretchOut(BaseModel):
+    starts_at: str
+    ends_at: str
+
+
+class MoonInDarkOut(BaseModel):
+    """The Moon above the horizon in tonight's dark: from the first instant to the last, with the
+    broadband word of its lit fraction on the Meteo's Moon scale (ING 25/65)."""
+
+    level: Literal["go", "marginal", "nogo"]
+    since: str
+    until: str
+    from_start: bool = Field(description="Already up when the dark starts.")
+    to_end: bool = Field(description="Still up when the dark ends.")
+
+
 class TonightOut(BaseModel):
     """The night it refers to (`YYYY-MM-DD` in the site's time zone), the site, the Moon and the
     sky."""
@@ -186,3 +202,9 @@ class TonightOut(BaseModel):
     )
     chart: ChartOut | None = Field(default=None, description="`None` without a night.")
     planets: list[PlanetOut] = Field(default=[], description="Empty without a night.")
+    moonless_dark: list[DarkStretchOut] = Field(
+        default=[], description="The dark's stretches with the Moon down; empty without a night."
+    )
+    moon_in_dark: MoonInDarkOut | None = Field(
+        default=None, description="`None` when the Moon is never up in the dark, or no night."
+    )

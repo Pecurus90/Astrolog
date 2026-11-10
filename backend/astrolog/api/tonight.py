@@ -12,13 +12,16 @@ from ..db import config
 from ..ephemeris import moon, planets, sun
 from ..site_of import Site, home_site
 from ..units import bortle_of
+from ..weather import judge
 from . import weather
 from .deps import get_db
 from .models_tonight import (
     ChartOut,
     Compass,
+    DarkStretchOut,
     MoonCalendarNightOut,
     MoonCalendarOut,
+    MoonInDarkOut,
     MoonOut,
     MoonPointOut,
     PhaseKey,
@@ -30,6 +33,7 @@ from .models_tonight import (
     SkyPointOut,
     TonightOut,
 )
+from .models_weather import Level
 
 router = APIRouter(prefix="/api/v1", tags=["tonight"])
 
@@ -52,6 +56,21 @@ def _sky_band(band: sun.SkyBand) -> SkyBandOut:
 
 def _sky_point(point: moon.TrackPoint) -> SkyPointOut:
     return SkyPointOut(at=point.at.isoformat(), altitude_deg=point.altitude_deg)
+
+
+def _moon_in_dark(
+    up: list[moon.Stretch], dark: list[moon.Stretch], pct: int
+) -> MoonInDarkOut | None:
+    if not up:
+        return None
+    word = judge.level(judge.SCALES[judge.Measure.MOON], pct)
+    return MoonInDarkOut(
+        level=cast(Level, word),
+        since=up[0][0].isoformat(),
+        until=up[-1][1].isoformat(),
+        from_start=up[0][0] == dark[0][0],
+        to_end=up[-1][1] == dark[-1][1],
+    )
 
 
 # Only the rows written for where the site is now: a moved site has none until the round rewrites.
@@ -147,6 +166,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
     bands = sun.night_bands(window_start, home.latitude, home.longitude, hours=window_hours)
     dark = [(b.starts_at, b.ends_at) for b in bands if b.kind == sun.Sky.DARK]
     moonless_left = moon.moonless_dark_left_s(moon_night, dark)
+    spans = moon.dark_spans(moon_night, dark)
     tracks = planets.night_tracks(window_start, home.latitude, home.longitude, hours=window_hours)
     span = sun.chart_window(bands)
     return TonightOut(
@@ -167,6 +187,11 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         weather=weather.brief_of(conn, home.id, the_night),
         sky_bands=[_sky_band(f) for f in bands],
         dark_s=round(sum(seconds_between(a, b) for a, b in dark)),
+        moonless_dark=[
+            DarkStretchOut(starts_at=a.isoformat(), ends_at=b.isoformat())
+            for a, b in spans.moonless
+        ],
+        moon_in_dark=_moon_in_dark(spans.moon_up, dark, moon_phase.illumination_pct),
         moon=MoonOut(
             phase_key=cast(PhaseKey, moon_phase.phase_key),
             illumination_pct=moon_phase.illumination_pct,

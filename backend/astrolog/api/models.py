@@ -208,6 +208,9 @@ class StageRecord(BaseModel):
     current: int | None
     total: int | None
     tally: dict[str, Any]
+    pct: int | None = Field(
+        default=None, description="`current` of `total` in whole percent; `None` without both."
+    )
     reason: str | None = Field(
         default=None,
         description="Why the stage stopped, when it stopped on its own: a code, never a sentence.",
@@ -269,7 +272,19 @@ class ScanProgress(BaseModel):
 PipelineAction = Literal["start", "stop", "resume"]
 
 
+class LastScanOut(BaseModel):
+    """The newest gesture whose receipts have all closed, summed: the gear menu's last-scan line
+    (Telaio v76)."""
+
+    ended_at: str
+    new: int
+    not_read: int = Field(description="Files the readings could not read (`errors`).")
+
+
 class PipelineStatus(BaseModel):
+    last_scan: LastScanOut | None = Field(
+        default=None, description="`None` before any gesture has ended."
+    )
     worker: WorkerSnapshot
     scan: ScanProgress | None
     pending: dict[str, int] = Field(description="Per stage: how many frames are still missing.")

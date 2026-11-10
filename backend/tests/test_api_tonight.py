@@ -55,6 +55,8 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
         "weather": None,
         "chart": None,
         "planets": [],
+        "moonless_dark": [],
+        "moon_in_dark": None,
     }
 
 
@@ -367,6 +369,47 @@ def test_each_point_of_the_moon_curve_says_how_much_moonless_dark_is_left(client
     assert all(a >= b for a, b in zip(resta, resta[1:], strict=False)), resta
     assert resta[0] <= detto["dark_s"]
     assert resta[-1] == 0
+
+
+def _secondi(tratti):
+    return sum(
+        (
+            dt.datetime.fromisoformat(f["ends_at"]) - dt.datetime.fromisoformat(f["starts_at"])
+        ).total_seconds()
+        for f in tratti
+    )
+
+
+def test_the_dark_comes_split_into_moonless_and_moon_up(client_vuoto, monkeypatch):
+    """Stanotte scrive «senza Luna 20:48–23:40» e «dopo le 23:40 la banda larga e' al limite»
+    (Telaio v76): i tratti senza Luna e quello con la Luna su escono fatti, e insieme fanno il
+    buio. Il 29/10/2026 a Vicenza la Luna (calante, 81%) sorge a buio fatto: consigliata banda
+    stretta da allora alla fine."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-10-29T16:00:00.000Z")
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    su = detto["moon_in_dark"]
+
+    assert detto["moonless_dark"], detto["moonless_dark"]
+    assert su["level"] == "nogo"
+    assert (su["from_start"], su["to_end"]) == (False, True)
+    assert su["since"] == detto["moonless_dark"][-1]["ends_at"]
+    assert su["until"] == detto["chart"]["dark_until"]
+    luna_su = _secondi([{"starts_at": su["since"], "ends_at": su["until"]}])
+    assert abs(_secondi(detto["moonless_dark"]) + luna_su - detto["dark_s"]) <= 1
+
+
+def test_a_moon_never_up_in_the_dark_has_no_moon_stretch(client_vuoto, monkeypatch):
+    """Luna nuova (9/11/2026): col buio non c'e', e la rotta lo dice con `None`, non con un
+    tratto vuoto; il buio e' tutto senza Luna."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-11-09T16:00:00.000Z")
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+
+    assert detto["moon_in_dark"] is None
+    assert abs(_secondi(detto["moonless_dark"]) - detto["dark_s"]) <= 1
 
 
 def test_the_route_sends_how_long_the_dark_lasts_without_the_weather(client_vuoto):

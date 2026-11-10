@@ -205,6 +205,36 @@ def moonless_dark_left_s(
     return [left[p.at.astimezone(dt.UTC)] for p in night.track]
 
 
+Stretch = tuple[dt.datetime, dt.datetime]
+
+
+@dataclass(frozen=True, slots=True)
+class DarkSpans:
+    """The dark split by the Moon: below the rise/set altitude, and above it."""
+
+    moonless: list[Stretch]
+    moon_up: list[Stretch]
+
+
+def _join(spans: list[Stretch], start: dt.datetime, end: dt.datetime) -> None:
+    if spans and spans[-1][1] == start:
+        spans[-1] = (spans[-1][0], end)
+    else:
+        spans.append((start, end))
+
+
+def dark_spans(night: MoonNight, dark: Sequence[tuple[dt.datetime, dt.datetime]]) -> DarkSpans:
+    """Each grid step's exact overlap with the bands, as `moonless_dark_left_s` counts it."""
+    out = DarkSpans([], [])
+    for p, after in itertools.pairwise(night.grid):
+        side = out.moonless if p.altitude_deg < RISESET_DEG else out.moon_up
+        for a, b in dark:
+            start, end = max(p.at, a), min(after.at, b)
+            if start < end:
+                _join(side, start, end)
+    return out
+
+
 _COMPASS = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
             "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")  # fmt: skip
 

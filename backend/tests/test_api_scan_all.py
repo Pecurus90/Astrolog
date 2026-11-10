@@ -15,6 +15,7 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
+from astrolog.api import pipeline
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.spine import run, scan_store
@@ -102,6 +103,57 @@ def test_the_stage_numbers_are_the_sum_of_the_folders(app):
         if s["name"] == "scan"
     )
     assert stadio["tally"]["found"] == 5 and stadio["tally"]["new"] == 5
+
+
+def test_the_last_scan_says_when_how_many_new_and_how_many_not_read(app, db_path):
+    """Il menu dell'ingranaggio (Telaio v76): «ultima scansione oggi, 07:12 · 214 file nuovi,
+    nessun problema». Sono i conti del **gesto** intero, non dell'ultima cartella; il gesto dopo
+    conta solo i suoi; e restano dopo un riavvio, perche' stanno nelle ricevute."""
+    client, _, _ = app
+    assert status(client)["last_scan"] is None
+
+    scan_all(client)
+    client.app.state.worker.join(30.0)
+    assert wait_until(lambda: status(client)["last_scan"] is not None)
+    primo = status(client)["last_scan"]
+    assert (primo["new"], primo["not_read"]) == (5, 0)
+    ricevute = client.get("/api/v1/scan-runs").json()["items"]
+    assert primo["ended_at"] == max(r["ended_at"] for r in ricevute)
+
+    scan_all(client)
+    client.app.state.worker.join(30.0)
+    assert wait_until(lambda: status(client)["last_scan"]["ended_at"] != primo["ended_at"])
+    assert status(client)["last_scan"]["new"] == 0
+
+    with TestClient(create_app(db_path), base_url="http://localhost") as dopo:
+        assert status(dopo)["last_scan"]["new"] == 0
+
+
+def test_a_gesture_still_open_leaves_the_last_closed_one_said(app, db_path):
+    """Mentre un gesto legge, o se il processo e' morto a meta', il menu dice ancora l'ultimo
+    gesto finito invece di tacere."""
+    client, uno, _ = app
+    scan_all(client)
+    client.app.state.worker.join(30.0)
+    assert wait_until(lambda: status(client)["last_scan"] is not None)
+    chiuso = status(client)["last_scan"]
+
+    with connect(db_path) as conn:
+        start_run(conn, uno, "2026-11-10T09:00:00.000Z")
+
+    assert status(client)["last_scan"] == chiuso
+
+
+def test_a_stage_with_its_numbers_says_how_far_in_percent(app):
+    """La barra del menu (19 %) arriva fatta: il frontend non divide. Finito, lo stadio non ha
+    piu' i suoi numeri, e la percentuale tace invece di dire zero."""
+    client, _, _ = app
+    scan_all(client)
+    client.app.state.worker.join(30.0)
+
+    stadio = next(s for s in status(client)["worker"]["stages"] if s["name"] == "scan")
+    assert stadio["total"] is None and stadio["pct"] is None
+    assert (pipeline._pct(3412, 18430), pipeline._pct(1, 3), pipeline._pct(0, 0)) == (19, 33, None)
 
 
 def test_the_end_of_the_run_is_not_a_number(db_path, tmp_path):

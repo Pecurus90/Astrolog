@@ -128,6 +128,20 @@ def test_review_lists_what_was_found(client):
     assert page["to_confirm"] == atteso
 
 
+def test_each_section_says_how_many_wait_and_they_add_up(client):
+    """Il pannello Da confermare della barra (Telaio v76) dice quante domande per sezione: escono
+    dall'API nell'ordine della pagina, solo le sezioni con qualcosa, e sommano `to_confirm`."""
+    page = review(client)
+    sezioni = page["sections"]
+
+    ordine = ["lookalikes", "filters", "gear", "objects", "typeless", "unclear", "mosaics"]
+    chiavi = [s["key"] for s in sezioni]
+    assert chiavi == [k for k in ordine if k in chiavi]
+    assert all(s["count"] > 0 for s in sezioni)
+    assert sum(s["count"] for s in sezioni) == page["to_confirm"]
+    assert {"key": "filters", "count": len(page["filters"])} in sezioni
+
+
 def test_review_is_empty_on_an_empty_archive(db_path):
     """A mani vuote la pagina non mente: nessuna voce, niente da confermare."""
     with TestClient(create_app(db_path), base_url="http://localhost") as c:

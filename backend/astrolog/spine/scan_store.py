@@ -58,12 +58,27 @@ def folder_root(conn: sqlite3.Connection, folder_id: int) -> tuple[str, str | No
     return row["root_path"], row["retired_at"]
 
 
-def start_run(conn: sqlite3.Connection, folder_id: int, now: str) -> int:
+def start_run(conn: sqlite3.Connection, folder_id: int, now: str, batch: int | None = None) -> int:
+    """`batch`: the gesture's first receipt, so the last gesture is read back after a restart."""
     with transaction(conn):
         cursor = conn.execute(
-            "INSERT INTO scan_runs(folder_id, started_at) VALUES(?, ?)", (folder_id, now)
+            "INSERT INTO scan_runs(folder_id, batch, started_at) VALUES(?, ?, ?)",
+            (folder_id, batch, now),
         )
     return inserted_id(cursor)
+
+
+# The newest gesture whose receipts have all closed: one still reading, or left open by a dead
+# process, does not hide the one before.
+_LAST_GESTURE = """
+SELECT MAX(ended_at) AS ended_at, SUM(new) AS new, SUM(errors) AS not_read
+FROM scan_runs GROUP BY COALESCE(batch, id)
+HAVING COUNT(*) = COUNT(ended_at) ORDER BY MAX(id) DESC LIMIT 1
+"""
+
+
+def last_gesture(conn: sqlite3.Connection) -> sqlite3.Row | None:
+    return conn.execute(_LAST_GESTURE).fetchone()
 
 
 def discard_run(conn: sqlite3.Connection, run_id: int) -> None:
