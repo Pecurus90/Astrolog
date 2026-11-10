@@ -158,11 +158,11 @@ function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: Reac
   const nomeImp = nomeConScansione(t("nav.settings"), scansione)
   const altro = aperto === "altro"
   return (
-    // v77: frame from 700 px, side margins in the sheet (data-cornice)
+    // v78: no min-width (with the scrollbar it scrolled 15 px), side margins in the sheet
     <div
       className="al-c-telaio__blocco-2"
       data-cornice="si"
-      style={{ minHeight: "100vh", background: "var(--pagina)", padding: "40px 0", minWidth: 700 }}
+      style={{ minHeight: "100vh", background: "var(--pagina)", padding: "40px 0" }}
     >
       <div className="al-c-telaio__colonna-1" style={{ boxSizing: "border-box" }}>
         <Tema>
@@ -233,7 +233,15 @@ function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: Reac
                       aria-label={pastiglia.aria}
                     >
                       <span className="al-c-telaio__stanotte-t">{t("frame.tonight")}</span>
-                      {pastiglia.etichetta}
+                      {/* v78: long site with the dots, whole name in the title */}
+                      <span className="al-c-telaio__stanotte-sito" title={pastiglia.etichetta}>
+                        {pastiglia.etichetta}
+                      </span>
+                      {pastiglia.sito && (
+                        <span className="al-c-telaio__stanotte-giu" aria-hidden="true">
+                          {"\u25be"}
+                        </span>
+                      )}
                     </a>
                   )}
                   {aperto === "notte" && <PannelloStanotte telefono={false} />}

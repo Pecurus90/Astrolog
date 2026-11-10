@@ -211,8 +211,27 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
       >
         {titolo}
       </b>
-      <span style={{ fontSize: 12, lineHeight: 1.2, color: "var(--tenue)", whiteSpace: "nowrap" }}>
-        {pastiglia.etichetta}
+      {/* v78: long site with the dots, the arrow apart */}
+      <span
+        title={pastiglia.sito ?? undefined}
+        style={{
+          display: "flex",
+          gap: 4,
+          maxWidth: "100%",
+          fontSize: 12,
+          lineHeight: 1.2,
+          color: "var(--tenue)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+          {pastiglia.etichetta}
+        </span>
+        {pastiglia.sito && (
+          <span style={{ flex: "none" }} aria-hidden="true">
+            {"\u25be"}
+          </span>
+        )}
       </span>
     </>
   )

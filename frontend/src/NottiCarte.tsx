@@ -37,8 +37,13 @@ const PIN =
 
 function Sito({ notte, telefono }: { notte: Notte; telefono: boolean }) {
   const misura = telefono ? 13 : 14
+  const fonte = fonteDelSito(notte)
   return (
-    <span className={telefono ? "al-notti__riga-27" : "al-notti__riga-5"}>
+    // v78: name and source with the dots, both whole in the title
+    <span
+      className={telefono ? "al-notti__riga-27" : "al-notti__riga-5"}
+      title={`${notte.site} \u00B7 ${fonte}`}
+    >
       <svg
         width={misura}
         height={misura}
@@ -52,8 +57,8 @@ function Sito({ notte, telefono }: { notte: Notte; telefono: boolean }) {
       >
         <path d={PIN} />
       </svg>
-      {notte.site}
-      <span className="al-notti__sito-fonte">{`\u00B7 ${fonteDelSito(notte)}`}</span>
+      <span className="al-notti__sito-nome">{notte.site}</span>
+      <span className="al-notti__sito-fonte">{`\u00B7 ${fonte}`}</span>
     </span>
   )
 }

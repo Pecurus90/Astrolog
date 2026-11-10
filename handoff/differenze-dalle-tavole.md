@@ -6,7 +6,7 @@ differenza: **tavola** (file e riga in `handoff/design/pagine/`), **app**, **per
 convenzione pubblica, una decisione di Marco piu' recente, un dato che l'app non ha, o un passo
 dopo. Quando la tavola si allinea o l'app la raggiunge, la voce esce.
 
-Tavola: v77 (10/11). Le differenze delle pagine portate prima dell'8/11 sono nelle voci di
+Tavola: v78 (10/11). Le differenze delle pagine portate prima dell'8/11 sono nelle voci di
 `per-design.md`; da qui in poi stanno qui.
 
 ## Telaio (passo 33, commit B, 10/11)
@@ -20,9 +20,10 @@ Fuori per ora (esiti della lista fissa):
   Perche': Marco v50.
 - **L'anteprima del telefono.** Tavola: telefono 390 x 844 in una finestra larga (Telaio 145).
   App: il telefono riempie la finestra. Perche': serve alla tavola, non a chi usa l'app.
-- **Il contenuto delle pagine fra 700 e 1000 px.** Tavola v77: la testa ci sta, alcune carte
-  escono dalla colonna (la Luna nella Dashboard). App: come la tavola. Perche': chiesto a Design
-  (`handoff/per-design.md`).
+- **Le strisce che scorrono non sfumano il bordo.** Tavola: `componenti/tema.js` 75-85 mette una
+  sfumatura di 40 px sul bordo che continua a ogni elemento con `overflow-x: auto` (striscia delle
+  notti sotto 1000 px e sul telefono). App: taglio netto. Perche': e' di tutte le strisce, non della
+  v78; va col passo che porta la prima striscia del telefono che ancora manca (piano, passo 33).
 - **Gli stati dell'app (caricamento, errore).** Tavola: prop `app` del Telaio (Telaio 13, 38, 55).
   App: li disegna ogni pagina, come prima. Perche': la lista fissa li tiene nelle pagine.
 - **Pieno (il Planner a tutto schermo).** Tavola: `pn` (Telaio 147). App: niente. Perche': il
@@ -53,6 +54,9 @@ Scelte diverse dalla tavola:
 - **Il verdetto di Stanotte senza «buona».** Tavola: solo «✓ notte buona». App: «! notte incerta»,
   «✕ notte non adatta», coi segni delle pillole; senza previsione «Previsione non disponibile.
   Dettagli nella pagina Meteo.». Perche': la tavola mostra un caso solo.
+- **La pastiglia Stanotte larga al massimo 340 px, padding compreso.** Tavola v78: 340 piu' i 28 px
+  di padding (368, `box-sizing: content-box`). App: 340 (`* { box-sizing: border-box }` del foglio
+  dell'app). Perche': il brief v78 dice «al massimo 340»; 28 px di nome in meno.
 - **Il menu Altro del telefono, l'ordine.** Tavola: Planner prima di Piano della notte (Menu 44), al
   contrario del desktop (46). App: come la tavola, ognuno il suo (`ALTRO_TELEFONO`).
 
@@ -94,6 +98,15 @@ Scelte diverse dalla tavola:
   tavola. Perche': la regola dei pezzi e' quella dell'Archivio; cambiarla e' un altro passo.
 - **Le righe sono `div role=option`.** Tavola: `a href="#"`. Perche': un'opzione di un `combobox`
   non entra nel giro del tabulatore; il fuoco resta nel campo.
+
+## Notti -- la pagina fra 700 e 1000 px e il sito lungo (v78, 10/11)
+
+- **La pillola del sito alta 28,8 px (26,8 sul telefono).** Tavola: 26 (24), `line-height: normal`.
+  App: `line-height` ereditato dal corpo dell'app. Perche': il corpo dell'app e' del foglio
+  vecchio, finche' c'e'; la forma resta uguale.
+- **Il calendario delle notti largo 4/12 sotto 1000 px.** Tavola e app uguali: l'involucro
+  `.al-notti__colonna-4` non e' una Carta e non prende la riga intera. A Design
+  (`handoff/per-design.md`).
 
 ## Notti -- Tutto della notte (passo 33, commit B, 8/11)
 

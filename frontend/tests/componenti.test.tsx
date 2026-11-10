@@ -147,6 +147,8 @@ describe("Carta", () => {
     expect(carta.className).toBe("al-c-carta__blocco-1")
     expect(carta.style.background).toBe("var(--prot-fondo)")
     expect(carta.style.gridColumn).toBe("span 6")
+    // v78: the sheet puts a card under 1000 px on the whole row
+    expect(carta.dataset.col).toBe("6")
     expect(carta.style.display).toBe("flex")
   })
 
@@ -158,6 +160,7 @@ describe("Carta", () => {
     )
     const carta = screen.getByRole("region", { name: "x" })
     expect(carta.style.gridColumn).toBe("")
+    expect(carta.dataset.col).toBeUndefined()
     expect(carta.style.display).toBe("grid")
     expect(carta.style.background).toBe("var(--carta)")
   })

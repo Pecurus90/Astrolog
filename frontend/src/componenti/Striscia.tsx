@@ -145,7 +145,9 @@ export function Striscia({
       className="al-c-striscia__blocco-2"
       role="tablist"
       aria-label={nome}
+      // v78: --n lets the sheet keep 150 px tiles under 1000 px
       style={{
+        ["--n" as string]: notti.length,
         display: scorre ? "flex" : "grid",
         gridTemplateColumns: `repeat(${notti.length},minmax(0,1fr))`,
         overflowX: scorre ? "auto" : "visible",
@@ -184,7 +186,11 @@ export function Striscia({
           )}
           <span className="al-c-striscia__colonna-2">
             <span className="al-c-striscia__testo-3">{n.hours}</span>
-            <span className="al-c-striscia__testo-4" style={{ color: "var(--tenue)" }}>
+            <span
+              className="al-c-striscia__testo-4"
+              title={n.range}
+              style={{ color: "var(--tenue)" }}
+            >
               {n.range}
             </span>
           </span>

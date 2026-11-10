@@ -129,6 +129,9 @@ describe("la protagonista sul desktop", () => {
     expect(sito.querySelector("path")?.getAttribute("d")).toMatch(/^M12 21s7-6\.3 7-11\.5/)
     expect(sito.textContent).toBe("Cima Ekar· dalle coordinate nei frame")
     expect(una(sito, ".al-notti__sito-fonte").textContent).toBe("· dalle coordinate nei frame")
+    // v78: name and source each with the dots, both whole in the title
+    expect(una(sito, ".al-notti__sito-nome").textContent).toBe("Cima Ekar")
+    expect(sito.getAttribute("title")).toBe("Cima Ekar · dalle coordinate nei frame")
   })
 
   it("titolo, ore grandi, parola e frame nei loro posti", () => {

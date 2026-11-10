@@ -9,7 +9,7 @@ Quando la consegna nuova arriva in `handoff/design/`, Claude Code controlla ogni
 sulle tavole: `[fatta vN]` se c'e', di nuovo `[data]` con cio' che manca se no. Le voci fatte
 escono alla consegna dopo. Il testo lungo di un brief sta nel suo file accanto (`design-v59.md`).
 
-Consegna controllata: 16f37b9a (v77, 10/11), in `handoff/design/` al posto della v76.
+Consegna controllata: 3c2a77a4 (v78, 10/11), in `handoff/design/` al posto della v77.
 
 ## Da dare
 
@@ -20,6 +20,19 @@ Consegna controllata: 16f37b9a (v77, 10/11), in `handoff/design/` al posto della
   «1 h 50 di banda larga» va a capo su due righe.
 - [da dare] Impostazioni, Primo avvio e Sistema fra 700 e 1440 px (resto della v78: Design non le
   ha misurate). Claude Code le misura nell'app e porta qui cio' che sborda.
+- [da dare] Notti fra 700 e 999 px (collaudo v78, 10/11): il calendario delle notti
+  (`.al-notti__colonna-4`) resta largo 4/12 (244 px a 860) con due terzi vuoti a destra, mentre la
+  carta della notte prende la riga intera. Anche il calendario sulla riga intera, o accanto a
+  qualcosa.
+- [da dare] Sito dal nome lungo, i posti che la v78 non ha toccato (collaudo v78 nell'app con
+  «Osservatorio del Monte Generoso, terrazza nord sopra la funicolare»): nella testa di Tutto della
+  notte, sotto il titolo, il nome va a capo su due righe a 390 e a 700; in Cerca sul telefono la
+  riga «Siti · …» va a capo. Il `?sito=` della tavola non arriva al Riepilogo ne' all'aiuto di Cerca.
+- [da dare] Errori delle tavole v78 (collaudo 10/11): `Notti.dc.html` da' «TypeError: Cannot read
+  properties of undefined (reading 'q')» in componentDidUpdate dopo Tutto della notte, Esc, Cerca;
+  `componenti/Telaio.dc.html` da' quattro `<path> attribute d` coi segnaposto
+  `{{ m.altroChev }}`, `{{ m.modeIcon }}`, `{{ vb.az.d }}`, `{{ b.d }}` (la v78 li ha tolti solo
+  nell'Archivio); `componenti/Telaio.dc.html?formato=telefono` a 390 resta desktop e scorre di 153 px.
 
 - [da dare] Icona di AstroLog per la scheda del browser (Issue #56, Marco 10/11): oggi l'app
   usa il marchio della testa del telaio (anello e punto, `frontend/src/icona.svg`, colore del
@@ -28,18 +41,14 @@ Consegna controllata: 16f37b9a (v77, 10/11), in `handoff/design/` al posto della
 
 ## Date, da controllare alla consegna
 
-Arrivata la v78 (3c2a77a4, 10/11) con le tre voci date: da controllare sulle tavole.
-
-- [data] Pagine fra 700 e 1000 px: ogni pagina dentro la colonna da 700 a 1440, senza
-  scorrimento di lato (v78: carte una sotto l'altra sotto 1000, `data-col` su Carta).
-- [data] Sito dal nome lungo: puntini col nome intero nel `title` nella pastiglia Stanotte, nel
-  sito sotto il titolo del telefono, nella striscia e nella pillola della notte (v78, prova con
-  `?sito=`).
-- [data] Errori della tavola v77: Telaio che sborda di pochi px a 1280, 960, 760 e 700; Archivio
-  coi `<path>` `{{ v.d }}` e `{{ q.ic }}` in console; in `Riepilogo stati` uno schermo alto 0
-  (Design ne ha trovati due con la stessa etichetta, non uno alto 0: da ricontrollare).
+Nessuna.
 
 ## Fatte
+
+Le tre voci date il 10/11 sono fatte nella v78, controllate nell'app e sulle tavole il 10/11 (a
+700, 760, 860, 960, 1000, 1100, 1280, 1440 e 390 nessuno scorrimento di lato, nemmeno con la barra
+vera): pagine fra 700 e 1000 px, sito dal nome lungo, errori della tavola v77 (lo schermo alto 0
+di `Riepilogo stati` non ricontrollato: pagina non ancora portata). I resti sono in «Da dare».
 
 Le 14 voci date il 10/11 sono fatte nella v77 (brief archiviato in
 `handoff/design/docs/archivio/brief-porting-v76.md`).

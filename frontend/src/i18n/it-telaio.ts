@@ -18,7 +18,6 @@ export const itTelaio = {
   "frame.with": "{nome} \u{00b7} {stato}",
   // Stanotte (v70): la pastiglia e il pannello
   "frame.tonight": "Stanotte",
-  "frame.tonight.site": "{sito} \u{25be}",
   "frame.tonight.add": "Aggiungi sito",
   "frame.tonight.aria": "Stanotte a {sito}: sito, Luna e meteo",
   "frame.tonight.nosite": "Nessun sito: aggiungine uno nelle Impostazioni",

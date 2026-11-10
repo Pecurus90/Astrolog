@@ -13,7 +13,6 @@ export const enTelaio = {
   "frame.title.selection": "Selection",
   "frame.with": "{nome} \u{00b7} {stato}",
   "frame.tonight": "Tonight",
-  "frame.tonight.site": "{sito} \u{25be}",
   "frame.tonight.add": "Add site",
   "frame.tonight.aria": "Tonight at {sito}: site, Moon and weather",
   "frame.tonight.nosite": "No site: add one in Settings",

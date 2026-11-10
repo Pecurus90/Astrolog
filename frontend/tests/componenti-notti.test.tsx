@@ -281,6 +281,9 @@ describe("Striscia", () => {
     const lista = screen.getByRole("tablist", { name: "Le notti" })
     expect(lista.className).toBe("al-c-striscia__blocco-2")
     expect(lista.style.gridTemplateColumns).toBe("repeat(2,minmax(0,1fr))")
+    // v78: under 1000 px the sheet keeps 150 px tiles from --n and scrolls inside the card
+    expect(lista.style.getPropertyValue("--n")).toBe("2")
+    expect(lista.querySelector(".al-c-striscia__testo-4")?.getAttribute("title")).toBe("Cima Ekar")
     const schede = screen.getAllByRole("tab")
     expect(schede[0]?.className).toBe("al-c-striscia__colonna-1")
     expect(schede[0]?.getAttribute("aria-selected")).toBe("false")

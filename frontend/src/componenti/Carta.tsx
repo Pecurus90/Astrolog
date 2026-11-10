@@ -92,6 +92,8 @@ export function Carta({
     <section
       ref={carta}
       className="al-c-carta__blocco-1"
+      // v78: under 1000 px the sheet puts a card short of 12 on the whole row
+      data-col={colonna === undefined ? undefined : String(colonne)}
       aria-label={etichetta}
       style={{
         animation: entra

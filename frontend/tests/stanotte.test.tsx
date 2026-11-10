@@ -95,7 +95,12 @@ describe("la pastiglia", () => {
   it("dice Stanotte e il sito, e apre il pannello", async () => {
     await app({})
     const pastiglia = await screen.findByRole("link", { name: "Stanotte a Cima Ekar: sito, Luna e meteo" })
-    expect(pastiglia.textContent).toBe("StanotteCima Ekar ▾")
+    expect(pastiglia.textContent).toBe("StanotteCima Ekar▾")
+    // v78: a long name gets the dots, the whole name in the title; the arrow apart
+    const sito = pastiglia.querySelector(".al-c-telaio__stanotte-sito")
+    expect(sito?.textContent).toBe("Cima Ekar")
+    expect(sito?.getAttribute("title")).toBe("Cima Ekar")
+    expect(pastiglia.querySelector(".al-c-telaio__stanotte-giu")?.getAttribute("aria-hidden")).toBe("true")
     expect(pastiglia.getAttribute("aria-haspopup")).toBe("dialog")
     expect(pastiglia.getAttribute("aria-expanded")).toBe("false")
     expect(screen.queryByRole("dialog", { name: "Stanotte" })).toBeNull()
@@ -209,7 +214,8 @@ describe("Stanotte sul telefono", () => {
   it("il titolo della pagina apre Stanotte sotto la testa", async () => {
     await app({}, "telefono")
     const titolo = await screen.findByRole("link", { name: "Dashboard · Stanotte a Cima Ekar: sito, Luna e meteo" })
-    expect(titolo.textContent).toBe("DashboardCima Ekar ▾")
+    expect(titolo.textContent).toBe("DashboardCima Ekar▾")
+    expect(titolo.querySelector("span[title='Cima Ekar']")?.textContent).toBe("Cima Ekar▾")
     fireEvent.click(titolo)
     const pannello = await screen.findByRole("dialog", { name: "Stanotte" })
     expect(pannello.className).toBe("al-c-telaio__notte al-c-telaio__notte--tel")

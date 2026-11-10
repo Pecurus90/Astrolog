@@ -61,7 +61,8 @@ export function Disco({
   )
 }
 
-/** Cio' che la pastiglia dice: il sito con la freccia, o "Aggiungi sito"; vuoto finche' non si sa. */
+/** Cio' che la pastiglia dice: il sito (la freccia la disegna il telaio), o "Aggiungi sito"; vuoto
+ *  finche' non si sa. */
 export type PastigliaDetta = {
   sito: string | null
   etichetta: string
@@ -77,7 +78,7 @@ export function usePastiglia(): PastigliaDetta {
   if (sito)
     return {
       sito,
-      etichetta: t("frame.tonight.site", { sito }),
+      etichetta: sito,
       aria: t("frame.tonight.aria", { sito }),
       senzaSito: false,
     }
