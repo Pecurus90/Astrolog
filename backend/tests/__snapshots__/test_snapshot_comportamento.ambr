@@ -2786,6 +2786,24 @@
         'optics': 'TS 130 APO',
       }),
     ]),
+    'sections': list([
+      dict({
+        'count': 1,
+        'key': 'lookalikes',
+      }),
+      dict({
+        'count': 2,
+        'key': 'filters',
+      }),
+      dict({
+        'count': 2,
+        'key': 'gear',
+      }),
+      dict({
+        'count': 8,
+        'key': 'objects',
+      }),
+    ]),
     'settled_objects': 0,
     'to_confirm': 13,
     'typeless': list([
