@@ -30,6 +30,11 @@ Consegna controllata: 16f37b9a (v77, 10/11), in `handoff/design/` al posto della
   l'Archivio da' in console `<path> attribute d: "{{ v.d }}"` e `"{{ q.ic }}"`; in `Riepilogo
   stati` uno schermo ha `data-screen-label` alto 0 e non si cattura.
 
+- [da dare] Icona di AstroLog per la scheda del browser (Issue #56, Marco 10/11): oggi l'app
+  usa il marchio della testa del telaio (anello e punto, `frontend/src/icona.svg`, colore del
+  testo chiaro o scuro). Un'icona disegnata per 16 e 32 px, SVG, che regga sulle schede chiare e
+  scure.
+
 ## Date, da controllare alla consegna
 
 Nessuna.

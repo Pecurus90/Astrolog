@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+  <!-- frame logo: ring 2 px and dot 12 px (al-c-telaio__tondo-1/2), --testo of each mode -->
+  <style>
+    g { color: #17181c; }
+    @media (prefers-color-scheme: dark) { g { color: #f4f4f6; } }
+  </style>
+  <g>
+    <circle cx="15" cy="15" r="14" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="15" cy="15" r="6" fill="currentColor"/>
+  </g>
+</svg>
