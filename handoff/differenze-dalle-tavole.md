@@ -197,9 +197,6 @@ Scelte diverse dalla tavola:
 - **Costellazioni.** Tavola: in italiano (Cefeo, Cigno, catalogo.js). App: il nome latino IAU
   (Cepheus, Cygnus), uguale in ogni lingua. Perche': decisione di Marco del 27/9, confermata il
   10/11. A Design.
-- **Altezza delle righe dell'elenco.** Collaudo: 62 px nell'app contro 77 nella tavola, a parita'
-  di padding e colonne; la differenza viene dal contenuto delle celle (nella tavola il nome comune
-  italiano e i filtri vanno a capo). Da riguardare a schermo.
 - **Frame senza durata in una riga con ore.** Tavola: «senza durata» solo senza ore (167). App:
   «120 frame · 12 senza durata» (archivio.md, «non lo so» non e' zero).
 - **Accanto alla ricerca e a «Mostra altri».** Tavola: «15 di 240» fisso (156, 229). App: le righe

@@ -55,6 +55,18 @@ body {
   line-height: normal;
 }
 
+/* The boards have no box-sizing reset and the browser's line height; the old sheet sets both for
+   the whole app. Ported code (under Tema's data-modo, or the frame) gets the browser's back. */
+:where([data-modo], .app-telaio),
+:where([data-modo], .app-telaio) *,
+:where([data-modo], .app-telaio) *::before,
+:where([data-modo], .app-telaio) *::after {
+  box-sizing: revert;
+}
+:where([data-modo], .app-telaio) {
+  line-height: normal;
+}
+
 /* The board's head resets links; zero specificity, so every al- class still wins. */
 :where(.app-telaio) a {
   color: inherit;
