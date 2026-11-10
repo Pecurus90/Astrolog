@@ -56,6 +56,7 @@ def banco(conn):
     return {
         "casa": casa, "deserto": deserto, "rifrattore": rifrattore, "newton": newton,
         "asi2600": asi2600, "asi533": asi533, "m31": m31, "ngc": ngc,
+        "a": a, "agosto": agosto, "ha": ha,
     }  # fmt: skip
 
 
@@ -73,22 +74,12 @@ def test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it(archivio):
     sette di sempre, e NGC 7000, ripresa solo nel 2024, non c'e'."""
     banco(archivio)
 
-    assert stretto(archivio, since="2025-01-01", until="2025-12-31") == (
+    assert stretto(archivio, years=("2025",)) == (
         {"M 31": (5, 3000.0)},
         1,
     )
-    assert stretto(archivio, since="2024-01-01", until="2024-12-31") == (
+    assert stretto(archivio, years=("2024",)) == (
         {"M 31": (2, 600.0), "NGC 7000": (3, 1800.0)},
-        2,
-    )
-
-
-def test_a_period_can_straddle_the_new_year(archivio):
-    """Una stagione invernale va da novembre a febbraio: un anno solo non la dice."""
-    banco(archivio)
-
-    assert stretto(archivio, since="2024-11-01", until="2025-02-28") == (
-        {"M 31": (3, 1200.0), "NGC 7000": (3, 1800.0)},
         2,
     )
 
@@ -102,15 +93,15 @@ def test_the_period_reads_the_night_not_the_clock(archivio):
     ids = riprese(archivio, ngc, 1, notte_id=capodanno, corredo_id=None, filtro=None, secondi=60.0)
     archivio.execute("UPDATE frames SET date_obs = '2025-01-01T01:00:00Z' WHERE id = ?", ids)
 
-    assert "NGC 7000" not in stretto(archivio, since="2025-01-01", until="2025-12-31")[0]
+    assert "NGC 7000" not in stretto(archivio, years=("2025",))[0]
 
 
 def test_you_can_narrow_down_to_one_optics_or_one_camera(archivio):
     """Ottica e camera, ognuna da sola: "con il Newton" e "con la ASI2600" sono due domande."""
     pezzi = banco(archivio)
 
-    assert stretto(archivio, optics=pezzi["newton"]) == ({"M 31": (1, 600.0)}, 1)
-    assert stretto(archivio, camera=pezzi["asi2600"]) == (
+    assert stretto(archivio, optics=(pezzi["newton"],)) == ({"M 31": (1, 600.0)}, 1)
+    assert stretto(archivio, cameras=(pezzi["asi2600"],)) == (
         {"M 31": (6, 3000.0), "NGC 7000": (3, 1800.0)},
         2,
     )
@@ -119,18 +110,18 @@ def test_you_can_narrow_down_to_one_optics_or_one_camera(archivio):
 def test_you_can_narrow_down_to_one_site(archivio):
     pezzi = banco(archivio)
 
-    assert stretto(archivio, site=pezzi["deserto"]) == ({"M 31": (4, 2400.0)}, 1)
+    assert stretto(archivio, sites=(pezzi["deserto"],)) == ({"M 31": (4, 2400.0)}, 1)
 
 
 def test_the_narrowings_hold_on_the_same_pose(archivio):
     """Casa **e** ASI533 e' la posa di gennaio, non "M 31 ha pose a casa e pose con la ASI533"."""
     pezzi = banco(archivio)
 
-    assert stretto(archivio, site=pezzi["casa"], camera=pezzi["asi533"]) == (
+    assert stretto(archivio, sites=(pezzi["casa"],), cameras=(pezzi["asi533"],)) == (
         {"M 31": (1, 600.0)},
         1,
     )
-    assert stretto(archivio, site=pezzi["deserto"], camera=pezzi["asi533"]) == ({}, 0)
+    assert stretto(archivio, sites=(pezzi["deserto"],), cameras=(pezzi["asi533"],)) == ({}, 0)
 
 
 def test_the_filter_of_the_bar_asks_the_same_poses(archivio):
@@ -141,8 +132,8 @@ def test_the_filter_of_the_bar_asks_the_same_poses(archivio):
         archivio,
         limit=50,
         offset=0,
-        filter_name="Lum",
-        scope=Scope(since="2025-01-01", until="2025-12-31"),
+        filters=("Lum",),
+        scope=Scope(years=("2025",)),
     )
 
     assert (righe, quanti) == ([], 0)
@@ -154,7 +145,7 @@ def test_by_hours_reads_the_narrowed_hours(archivio):
     banco(archivio)
 
     tutte, _ = archive.page(archivio, limit=50, offset=0, sort=archive.Order.HOURS)
-    anno = Scope(since="2024-01-01", until="2024-12-31")
+    anno = Scope(years=("2024",))
     nel_2024, _ = archive.page(archivio, limit=50, offset=0, sort=archive.Order.HOURS, scope=anno)
 
     assert nomi(tutte)[:2] == ["M 31", "NGC 7000"]
@@ -165,7 +156,7 @@ def test_the_found_count_follows_the_narrowing(archivio):
     pezzi = banco(archivio)
 
     assert archive.found(archivio) == {"objects": 3, "mosaics": 0}
-    assert archive.found(archivio, scope=Scope(site=pezzi["deserto"])) == {
+    assert archive.found(archivio, scope=Scope(sites=(pezzi["deserto"],))) == {
         "objects": 1,
         "mosaics": 0,
     }
@@ -181,7 +172,7 @@ def test_the_pills_of_a_row_say_the_narrowed_hours(archivio):
         Subject.OBJECT,
         [pezzi["m31"]],
         alone=True,
-        scope=Scope(since="2024-01-01", until="2024-12-31"),
+        scope=Scope(years=("2024",)),
     )
 
     assert [(p["name"], p["integration_s"]) for p in pastiglie[pezzi["m31"]]] == [("Lum", 600.0)]
@@ -199,51 +190,10 @@ def test_a_mosaic_says_only_the_panels_and_hours_shot_in_the_period(archivio):
     archivio.executemany(
         "UPDATE frames SET night_id = ? WHERE id = ?", list(zip(notti, dentro, strict=True))
     )
-    nel_2025 = Scope(since="2025-01-01", until="2025-12-31")
+    nel_2025 = Scope(years=("2025",))
 
-    righe, _ = archive.page(archivio, limit=50, offset=0, mosaic=True, scope=nel_2025)
+    righe, _ = archive.page(archivio, limit=50, offset=0, forms=("mosaic",), scope=nel_2025)
 
     assert [(r["frames"], r["integration_s"]) for r in righe] == [(1, 300.0)]
     assert len(archive.panels(archivio, [CHIAVE], nel_2025)[CHIAVE]) == 1
     assert len(archive.panels(archivio, [CHIAVE])[CHIAVE]) == 2
-
-
-def test_the_choices_offer_the_years_sites_and_pieces_you_shot_with(archivio):
-    """Gli anni sono quelli delle tue notti, dal piu' recente. Siti, ottiche e camere compaiono
-    solo se sono almeno due: con uno solo, sceglierlo non stringe niente."""
-    pezzi = banco(archivio)
-    # posseduta e mai usata: non stringe niente, non si offre
-    attrezzo(archivio, "camera", "Nel cassetto")
-
-    scelte = archive.choices(archivio)
-
-    assert scelte["years"] == ["2025", "2024"]
-    assert scelte["sites"] == [
-        {"id": pezzi["casa"], "name": "Casa"},
-        {"id": pezzi["deserto"], "name": "Deserto"},
-    ]
-    assert scelte["optics"] == [
-        {"id": pezzi["newton"], "name": "Newton"},
-        {"id": pezzi["rifrattore"], "name": "Rifrattore"},
-    ]
-    assert scelte["cameras"] == [
-        {"id": pezzi["asi2600"], "name": "ASI2600"},
-        {"id": pezzi["asi533"], "name": "ASI533"},
-    ]
-
-
-def test_one_site_or_one_camera_is_not_a_choice(archivio):
-    casa = luogo(archivio)
-    ottica, camera = attrezzo(archivio, "optics", "Rifrattore"), attrezzo(archivio, "camera", "ASI")
-    m31, gennaio = oggetto(archivio, "M 31", "m-31"), notte(archivio, casa, "2025-01-15")
-    a = corredo(archivio, ottica, camera)
-    riprese(archivio, m31, 1, notte_id=gennaio, corredo_id=a, filtro=None, secondi=60.0)
-
-    scelte = archive.choices(archivio)
-
-    assert (scelte["years"], scelte["sites"], scelte["optics"], scelte["cameras"]) == (
-        ["2025"],
-        [],
-        [],
-        [],
-    )

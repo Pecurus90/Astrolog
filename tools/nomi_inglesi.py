@@ -52,6 +52,7 @@ ENGLISH = frozenset(
         "meta",
         "mono",
         "multi",
+        "nebula",
         "nina",
         "no",
         "nogo",

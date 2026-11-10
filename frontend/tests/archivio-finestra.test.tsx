@@ -15,6 +15,7 @@ import {
   M31,
   MOSAICO,
   apriArchivio,
+  apriDi,
   conArchivio,
   vaiAll,
   voceArchivio,
@@ -123,7 +124,7 @@ const finestra = () => screen.findByRole("dialog")
 describe("la finestra dell'oggetto", () => {
   it("il tocco sulla carta la apre: nome, nome comune, periodo, siti, ore e frame", async () => {
     await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const f = await finestra()
     expect(f.getAttribute("aria-label")).toBe("Riepilogo: M 31")
@@ -139,7 +140,7 @@ describe("la finestra dell'oggetto", () => {
     await apriCon([M31], {
       "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31, { facts: VICINA }) },
     })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const cielo = await within(await finestra()).findByRole("region", { name: "In cielo" })
     expect(cielo.textContent).toMatch(/Andromeda/)
@@ -165,7 +166,7 @@ describe("la finestra dell'oggetto", () => {
         }),
       },
     })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const f = await finestra()
     expect(await within(f).findByText("il 18 maggio 2024 · 2 notti, 2 siti")).toBeDefined()
@@ -179,9 +180,7 @@ describe("la finestra dell'oggetto", () => {
         corpo: scheda(IGNOTO, { facts: FUORI }),
       },
     })
-    fireEvent.click(
-      within(await screen.findByRole("article")).getByRole("link", { name: "NGC 7000" }),
-    )
+    fireEvent.click(await apriDi("NGC 7000"))
 
     const f = await finestra()
     expect(await within(f).findByText("fuori catalogo")).toBeDefined()
@@ -192,7 +191,7 @@ describe("la finestra dell'oggetto", () => {
 
   it("le notti portano alla loro pagina, con le ore dell'oggetto e il cielo della notte", async () => {
     await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const notti = await within(await finestra()).findByRole("region", { name: "Le notti" })
     const sabato = within(notti).getByRole("link", {
@@ -223,7 +222,7 @@ describe("la finestra dell'oggetto", () => {
       },
       "/api/v1/objects/m-31": { stato: 200, corpo: scheda(due) },
     })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const f = await finestra()
     const schede = await within(f).findAllByRole("tab")
@@ -250,9 +249,7 @@ describe("la finestra dell'oggetto", () => {
       },
       [`/api/v1/objects/${chiave}`]: { stato: 200, corpo: scheda(MOSAICO) },
     })
-    fireEvent.click(
-      within(await screen.findByRole("article")).getByRole("link", { name: "IC 405" }),
-    )
+    fireEvent.click(await apriDi("IC 405"))
 
     const f = await finestra()
     const gruppo = await within(f).findByRole("tablist", { name: "mosaico" })
@@ -281,7 +278,7 @@ describe("la finestra dell'oggetto", () => {
 
   it("una produzione sola non ha linguette", async () => {
     await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
     const f = await finestra()
     await within(f).findByText("Galassia di Andromeda")
     expect(within(f).queryByRole("tab")).toBeNull()
@@ -291,7 +288,7 @@ describe("la finestra dell'oggetto", () => {
     await apriCon([M31], {
       "/api/v1/objects/m-31": { stato: 404, corpo: { detail: "object_not_found" } },
     })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
     expect(await within(await finestra()).findByText("Oggetto non trovato")).toBeDefined()
   })
 
@@ -300,8 +297,7 @@ describe("la finestra dell'oggetto", () => {
       "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) },
       "/api/v1/objects/NGC%207000": { stato: 200, corpo: scheda(IGNOTO, { facts: FUORI }) },
     })
-    const [prima] = await screen.findAllByRole("article")
-    fireEvent.click(within(prima as HTMLElement).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     let f = await finestra()
     expect(
@@ -318,7 +314,8 @@ describe("la finestra dell'oggetto", () => {
   it("nell'elenco il nome apre la stessa finestra", async () => {
     await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } })
     await vaiAll(/elenco/i)
-    fireEvent.click(await screen.findByRole("link", { name: "M 31" }))
+    await screen.findByRole("region", { name: /^elenco$/i })
+    fireEvent.click(await apriDi("M 31"))
     expect((await finestra()).getAttribute("aria-label")).toBe("Riepilogo: M 31")
   })
 })
@@ -341,7 +338,7 @@ describe("le misure dell'oggetto", () => {
       { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } },
       misure({ series: [frame] }),
     )
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const f = await finestra()
     const scelto = await within(f).findByRole("region", { name: "Il frame" })
@@ -351,7 +348,7 @@ describe("le misure dell'oggetto", () => {
 
   it("i gruppi sono le notti, con l'esito accanto; FWHM e SNR in testa", async () => {
     await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const f = await finestra()
     const confronto = await within(f).findByRole("region", { name: "Le notti a confronto" })
@@ -376,7 +373,7 @@ describe("le misure dell'oggetto", () => {
       ],
     }
     await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) } }, senzaScala)
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
 
     const f = await finestra()
     const etichetta = await within(f).findByText("FWHM mediana")
@@ -389,7 +386,7 @@ describe("le misure dell'oggetto", () => {
 describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
   async function apriM31(corpo: unknown, mis?: unknown) {
     await apriCon([M31], { "/api/v1/objects/m-31": { stato: 200, corpo } }, mis as never)
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
     return finestra()
   }
 
@@ -466,7 +463,7 @@ describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
       "/api/v1/objects/m-31/measures": { stato: 500, corpo: { detail: "boom" } },
       "/api/v1/objects/m-31": { stato: 200, corpo: scheda(M31) },
     })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
     const f = await finestra()
     expect(await within(f).findByText(t("window.failed"))).toBeDefined()
     expect(within(f).getByRole("button", { name: t("window.retry") })).toBeDefined()
@@ -476,7 +473,7 @@ describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
     await apriCon([M31], {
       "/api/v1/objects/m-31": { stato: 404, corpo: { detail: "gone" } },
     })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
     const f = await finestra()
     await within(f).findByText(t("object.gone"))
     fireEvent.click(within(f).getByRole("link", { name: t("ui.close") }))
@@ -502,7 +499,7 @@ describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
       "/api/v1/objects/m-31?production=2%3A1": { stato: 200, corpo: scheda(due) },
       "/api/v1/objects/m-31": { stato: 200, corpo: scheda(due) },
     })
-    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    fireEvent.click(await apriDi("M 31"))
     const schede = await within(await finestra()).findAllByRole("tab")
     // v77: optics and camera in the title, the hours (here the frames) below
     expect(schede[1]?.textContent).toBe(

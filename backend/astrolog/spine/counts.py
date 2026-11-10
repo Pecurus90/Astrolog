@@ -119,16 +119,20 @@ def of(subject: Subject, *, rigs_joined: bool = False) -> str:
     return _WITH_RIGS
 
 
+def marks(values: tuple[Any, ...]) -> str:
+    """`?, ?, ?` for the bar's choices: one criterion holds a few dozen at most."""
+    return ", ".join("?" * len(values))  # segnaposto-ok: scelte della barra, 60 al piu'
+
+
 @dataclass(frozen=True)
 class Scope:
-    """Which frames count, when the user narrows by period, site or gear: a row then tells what
-    was asked, not its whole life. `since`/`until` are night dates, in the site's time zone."""
+    """Which frames count when the user narrows by years (night dates), site or gear: a row tells
+    what was asked. Values of one field are either; fields hold together."""
 
-    since: str | None = None
-    until: str | None = None
-    site: int | None = None
-    optics: int | None = None
-    camera: int | None = None
+    years: tuple[str, ...] = ()
+    sites: tuple[int, ...] = ()
+    optics: tuple[int, ...] = ()
+    cameras: tuple[int, ...] = ()
     # One production, null pieces too: (optics, camera) of its rig, (None, None) without a rig.
     production: tuple[int | None, int | None] | None = None
     panel: int | None = None  # one panel of a mosaic: its window's tab
@@ -139,31 +143,28 @@ class Scope:
         nights = [
             (c, v)
             for c, v in (
-                ("n.night_date >= ?", self.since),
-                ("n.night_date <= ?", self.until),
-                ("n.site_id = ?", self.site),
+                ("substr(n.night_date, 1, 4) IN ({})", self.years),
+                ("n.site_id IN ({})", self.sites),
             )
-            if v is not None
+            if v
         ]
         rigs = [
             (c, v)
-            for c, v in (("g.optics_id = ?", self.optics), ("g.camera_id = ?", self.camera))
-            if v is not None
+            for c, v in (
+                ("g.optics_id IN ({})", self.optics),
+                ("g.camera_id IN ({})", self.cameras),
+            )
+            if v
         ]
         parts = []
-        if nights:
-            parts.append(
-                "f.night_id IN (SELECT n.id FROM nights n WHERE "  # noqa: S608 - our columns
-                + " AND ".join(c for c, _ in nights)
-                + ")"
-            )
-        if rigs:
-            parts.append(
-                "f.rig_id IN (SELECT g.id FROM rigs g WHERE "  # noqa: S608 - our columns
-                + " AND ".join(c for c, _ in rigs)
-                + ")"
-            )
-        values = [v for _, v in nights + rigs]
+        for table, link, found in (("nights n", "night_id", nights), ("rigs g", "rig_id", rigs)):
+            if found:
+                parts.append(
+                    f"f.{link} IN (SELECT {table[-1]}.id FROM {table} WHERE "  # noqa: S608 - our columns
+                    + " AND ".join(c.format(marks(v)) for c, v in found)
+                    + ")"
+                )
+        values: list[Any] = [x for _, v in nights + rigs for x in v]
         if self.production is not None:
             parts.append(
                 "(SELECT g.optics_id FROM rigs g WHERE g.id = f.rig_id) IS ?"

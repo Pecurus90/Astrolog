@@ -8,7 +8,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { IGNOTO, M31, conArchivio, voceArchivio } from "./archivio-banco"
+import { IGNOTO, INTERO, M31, conArchivio, voceArchivio } from "./archivio-banco"
 import { FERMO, cambia, chiamate, disegna, pulisci, rispondi, violazioni } from "./banco"
 
 afterEach(pulisci)
@@ -348,16 +348,16 @@ describe("l'Archivio aperto dalla ricerca", () => {
     conRicerca(NIENTE)
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /archivio/i }))
-    await screen.findByRole("heading", { name: /archivio/i })
+    await waitFor(() => expect(window.location.pathname).toBe("/archivio"))
     window.history.replaceState(null, "", "/archivio?key=m-31")
     fireEvent.popState(window)
     const torna = await screen.findByRole("link", { name: /archivio completo/i })
     expect(torna.getAttribute("href")).toBe("/archivio")
-    expect(torna.closest(".as-archivio__ristretto")?.textContent).toContain("M 31")
+    expect(torna.closest(".al-arch__riga-6")?.textContent).toContain("M 31")
     expect(chiamate().some((u) => u.includes("/api/v1/archive") && u.includes("key=m-31"))).toBe(true)
     // la barra esce, resta la vista
     expect(screen.queryByLabelText(/cerca un oggetto/i)).toBeNull()
-    expect(screen.getByRole("tab", { name: /elenco/i })).toBeTruthy()
+    expect(screen.getByRole("radio", { name: /elenco/i })).toBeTruthy()
   })
 
   it("finche' la risposta non arriva non dice ristretto a un oggetto che non e' quello chiesto", async () => {
@@ -376,18 +376,18 @@ describe("l'Archivio aperto dalla ricerca", () => {
     window.history.pushState(null, "", "/archivio?key=m-31")
     fireEvent.popState(window)
     await waitFor(() => expect(chiamate().some((u) => u.includes("key=m-31"))).toBe(true))
-    expect(document.querySelector(".as-archivio__ristretto")).toBeNull()
+    expect(document.querySelector(".al-arch__riga-6")).toBeNull()
 
     liberala()
     const torna = await screen.findByRole("link", { name: /archivio completo/i })
-    expect(torna.closest(".as-archivio__ristretto")?.textContent).toContain("M 31")
+    expect(torna.closest(".al-arch__riga-6")?.textContent).toContain("M 31")
   })
 
   it("una chiave che non trova niente lo dice, e non sembra un archivio vuoto", async () => {
-    rispondi({ ...conArchivio(voceArchivio([])), "/api/v1/search": { stato: 200, corpo: NIENTE } })
+    rispondi({ ...conArchivio(voceArchivio([], { whole: INTERO })), "/api/v1/search": { stato: 200, corpo: NIENTE } })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /archivio/i }))
-    await screen.findByRole("heading", { name: /archivio/i })
+    await waitFor(() => expect(window.location.pathname).toBe("/archivio"))
     window.history.replaceState(null, "", "/archivio?key=non-c-e")
     fireEvent.popState(window)
     expect(await screen.findByText(/^oggetto non trovato$/i)).toBeTruthy()

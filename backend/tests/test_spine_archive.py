@@ -8,7 +8,7 @@ contro i nostri dati, che e' un banco che si fa dire di si'.
 
 import pytest
 
-from astrolog.spine import archive, objects
+from astrolog.spine import archive, archive_criteria, objects
 from conftest import ORDINE_OSTILE
 from group_bench import filtro as nasce_filtro
 
@@ -87,25 +87,25 @@ def test_the_archive_is_sorted_by_name_and_a_name_is_catalogue_then_number(archi
     assert nomi(righe) == ["IC 1396", "M 13", "M 31", "M 103", "NGC 7000", "Il campo dietro casa"]
 
 
-def test_by_hours_and_by_frames_are_two_different_orders(archivio):
-    """Due ordini diversi sugli stessi oggetti: se fossero lo stesso elenco, uno dei due bottoni
-    non servirebbe a niente e nessuno se ne accorgerebbe."""
+def test_a_row_carries_the_common_name_of_the_catalog(archivio):
+    """Il nome comune lo scrive il catalogo, in inglese come lo porta: la finestra dell'oggetto
+    lo mostra gia' cosi'. Chi il catalogo non conosce non ne ha."""
     banco(archivio)
 
-    per_ore, _ = archive.page(archivio, limit=50, offset=0, sort="hours")
-    per_frame, _ = archive.page(archivio, limit=50, offset=0, sort="frames")
+    righe, _ = archive.page(archivio, limit=50, offset=0)
 
-    assert nomi(per_ore)[:3] == ["NGC 7000", "M 31", "M 13"]
-    assert nomi(per_frame)[:3] == ["M 13", "NGC 7000", "M 31"]
+    comuni = {n: r["common_name"] for n, r in zip(nomi(righe), righe, strict=True)}
+    assert comuni["M 31"] == "Andromeda Galaxy"
+    assert comuni["Il campo dietro casa"] is None
 
 
-@pytest.mark.parametrize("ordine", ["hours", "frames"])
+@pytest.mark.parametrize("ordine", ["hours", "recent"])
 def test_two_objects_that_tie_do_not_shuffle_between_pages(archivio, ordine):
     """Due oggetti a pari merito, una pagina per volta: senza un ultimo criterio che non pareggia
     mai, SQLite e' libero di darli in ordine diverso alle due domande, e la seconda pagina
     ripeterebbe la riga della prima o ne salterebbe una.
 
-    Per ore e per frame il pareggio e' il caso normale -- due serate uguali. **Per nome no**: un
+    Per ore e dai piu' recenti il pareggio e' normale -- due serate uguali. **Per nome no**: un
     nome appartiene a un oggetto solo (indice globale in `schema.sql`) e una designazione a una
     voce sola, quindi li' due righe non possono pareggiare, e l'ordine si prova altrove.
 
@@ -237,7 +237,7 @@ def test_you_can_narrow_down_to_one_catalogue(archivio):
     non una parola dello slug: gli slug li scriviamo noi, le designazioni le porta il catalogo."""
     banco(archivio)
 
-    righe, quanti = archive.page(archivio, limit=50, offset=0, catalog="M")
+    righe, quanti = archive.page(archivio, limit=50, offset=0, catalogs=("M",))
 
     assert nomi(righe) == ["M 13", "M 31", "M 103"]
     assert quanti == 3
@@ -248,7 +248,7 @@ def test_you_can_narrow_down_to_one_constellation(archivio):
     non ne ha, e non deve comparire sotto nessuna."""
     banco(archivio)
 
-    righe, _ = archive.page(archivio, limit=50, offset=0, constellation="Cyg")
+    righe, _ = archive.page(archivio, limit=50, offset=0, constellations=("Cyg",))
 
     assert nomi(righe) == ["NGC 7000"]
 
@@ -258,7 +258,7 @@ def test_you_can_narrow_down_to_one_filter(archivio):
     una posa** di quell'oggetto ha quel filtro, non quale sia il filtro dominante."""
     banco(archivio)
 
-    righe, _ = archive.page(archivio, limit=50, offset=0, filter_name="Ha 3nm")
+    righe, _ = archive.page(archivio, limit=50, offset=0, filters=("Ha 3nm",))
 
     assert nomi(righe) == ["NGC 7000"]
 
@@ -269,7 +269,7 @@ def test_the_count_is_what_you_found_not_what_you_have(archivio):
     banco(archivio)
 
     _, tutti = archive.page(archivio, limit=1, offset=0)
-    _, stretti = archive.page(archivio, limit=1, offset=0, catalog="M")
+    _, stretti = archive.page(archivio, limit=1, offset=0, catalogs=("M",))
 
     assert (tutti, stretti) == (6, 3)
 
@@ -290,21 +290,30 @@ def test_the_choices_are_only_what_the_archive_has(archivio):
         ).fetchone()[0],
     }
 
-    scelte = archive.choices(archivio)
+    offerti = scelte(archivio)
 
-    assert scelte["catalogs"] == ["IC", "M", "NGC"]
-    assert scelte["constellations"] == ["And", "Cas", "Cep", "Cyg", "Her"]
-    assert scelte["filters"] == ["Ha 3nm", "Lum"]
+    assert offerti["catalog"] == ["IC", "M", "NGC"]
+    assert offerti["constellation"] == ["And", "Cas", "Cep", "Cyg", "Her"]
+    assert offerti["filter"] == ["Ha 3nm", "Lum"]
     for dove, quante in nel_catalogo.items():
-        assert quante > len(scelte[dove]) * 3, (
+        chiave = {"catalogs": "catalog", "constellations": "constellation"}[dove]
+        assert quante > len(offerti[chiave]) * 3, (
             f"il catalogo ha {quante} {dove}: se fossero pochi come quelli dell'archivio, questa"
             " prova non guarderebbe niente"
         )
 
 
+def scelte(conn):
+    """`{criterio: [voci]}` dei criteri offerti, senza nessuna scelta accesa."""
+    return {
+        c["key"]: [o["value"] for o in c["options"]]
+        for c in archive_criteria.offered(conn, archive.Criteria())
+    }
+
+
 def test_the_dropdowns_are_sorted_like_the_rows(archivio):
-    """Le tendine e le righe ordinano la **stessa cosa**: se una leggesse i byte e l'altra no,
-    `vdB` uscirebbe prima di `WR` nell'elenco e dopo nella tendina, sulla stessa pagina. E i nomi
+    """I criteri e le righe ordinano la **stessa cosa**: se uno leggesse i byte e l'altro no,
+    `vdB` uscirebbe prima di `WR` nell'elenco e dopo nel criterio, sulla stessa pagina. E i nomi
     dei filtri li scrive l'utente nell'header: li' non e' un'ipotesi, capita."""
     oggetto(archivio, "WR 134", "wr-134")
     oggetto(archivio, "vdB 141", "vdb-141")
@@ -313,22 +322,13 @@ def test_the_dropdowns_are_sorted_like_the_rows(archivio):
     posa(archivio, oggetto(archivio, "Un campo"), filtro=zeta)
     posa(archivio, oggetto(archivio, "Un altro"), filtro=nasce_filtro(archivio, "b largo", "b"))
 
-    scelte = archive.choices(archivio)
+    offerti = scelte(archivio)
 
-    assert scelte["catalogs"] == ["vdB", "WR"]
-    assert scelte["filters"] == ["b largo", "Zenith"]
+    assert offerti["catalog"] == ["vdB", "WR"]
+    assert offerti["filter"] == ["b largo", "Zenith"]
 
 
 def test_an_archive_with_nothing_in_it_offers_no_choices(archivio):
-    """A mani vuote le tendine sono vuote, non piene di tutto il catalogo: chi ha appena
+    """A mani vuote i criteri non ci sono, non pieni di tutto il catalogo: chi ha appena
     installato l'app non ha ancora nessun catalogo e nessuna costellazione."""
-    assert archive.choices(archivio) == {
-        "catalogs": [],
-        "constellations": [],
-        "filters": [],
-        "years": [],
-        "sites": [],
-        "optics": [],
-        "cameras": [],
-        "mosaics": False,
-    }
+    assert archive_criteria.offered(archivio, archive.Criteria()) == []

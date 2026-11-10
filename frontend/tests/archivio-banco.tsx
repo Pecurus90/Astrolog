@@ -1,20 +1,19 @@
 /**
- * Il banco dell'**Archivio**: le righe di prova e i due gesti con cui si arriva alla pagina.
- *
- * Sta qui e non in uno dei due file di prova perche' li usano tutti e due -- la pagina
- * (`archivio.test.tsx`) e la barra (`archivio-barra.test.tsx`), spezzati quando il primo ha
- * superato il tetto di righe. Due copie di un banco non sono due prove: sono una prova e una
- * copia che un giorno racconta un archivio diverso.
+ * Il banco dell'**Archivio** (tavola v78): le righe di prova, la risposta della rotta e i gesti
+ * con cui si arriva alla pagina. Lo usano la pagina (`archivio.test.tsx`), i criteri
+ * (`archivio-criteri.test.tsx`) e la finestra dell'oggetto (`archivio-finestra.test.tsx`).
  */
-import { fireEvent, screen } from "@testing-library/react"
+import { fireEvent, screen, waitFor } from "@testing-library/react"
+import { expect } from "vitest"
 
 import { SALUTE, SPINA, STANOTTE, type Voce, disegna, impostazioni, rispondi } from "./banco"
 
-/** Un oggetto pieno: catalogo, costellazione, tipo, e due filtri in ordine di tempo. */
+/** Un oggetto pieno: catalogo, costellazione, tipo, nome comune e due filtri in ordine di tempo. */
 export const M31 = {
   key: "m-31",
   name: "M 31",
   slug: "m-31",
+  common_name: "Andromeda Galaxy",
   frames: 120,
   integration_s: 43200,
   untimed: 0,
@@ -28,6 +27,8 @@ export const M31 = {
     {
       optics: "Rifrattore",
       camera: "ASI2600",
+      optics_id: 1,
+      camera_id: 2,
       frames: 120,
       integration_s: 43200,
       untimed: 0,
@@ -38,28 +39,19 @@ export const M31 = {
   panel_list: [],
 }
 
-/** Cio' che il catalogo non sa dire, e pose di cui una parte non dice la durata: e' la riga di
- *  chiunque abbia un archivio a meta' corsa, non un caso di laboratorio. */
+/** Cio' che il catalogo non sa dire, e frame di cui una parte non dice la durata. */
 export const IGNOTO = {
   key: "NGC 7000",
   name: "NGC 7000",
   slug: null,
+  common_name: null,
   frames: 40,
   integration_s: 7200,
   untimed: 12,
   constellation: null,
   type_code: null,
   filters: [],
-  productions: [
-    {
-      optics: "Rifrattore",
-      camera: "ASI2600",
-      frames: 40,
-      integration_s: 7200,
-      untimed: 12,
-      filters: [],
-    },
-  ],
+  productions: [{ ...M31.productions[0], frames: 40, integration_s: 7200, untimed: 12 }],
   panels: null,
   panel_list: [],
 }
@@ -70,6 +62,7 @@ export const MOSAICO = {
   key: "Newton|ASI2600|800.0#80.00,34.00",
   name: "IC 405",
   slug: "ic-405",
+  common_name: null,
   constellation: "Aur",
   type_code: "EMISSION_NEBULA",
   panels: 4,
@@ -81,26 +74,42 @@ export const MOSAICO = {
   ],
 }
 
-/** Cosa offrono le tendine. Di fabbrica quelle dell'archivio di prova: una pagina senza
- *  scelte e' lo stato di chi ha appena installato l'app, non il caso normale. */
-export const SCELTE = {
-  catalogs: ["M", "NGC"],
-  constellations: ["And", "Cyg"],
-  filters: ["Lum", "Ha"],
-  years: ["2025", "2024"],
-  sites: [],
-  optics: [],
-  cameras: [],
-  mosaics: false,
+const voce = (value: string, rows: number, extra: Record<string, unknown> = {}) => ({
+  value,
+  label: null,
+  passband: null,
+  rows,
+  chosen: false,
+  ...extra,
+})
+
+/** I criteri dell'archivio di prova: due anni, due costellazioni, due filtri. */
+export const CRITERI = [
+  { key: "year", options: [voce("2025", 1), voce("2024", 2)] },
+  { key: "constellation", options: [voce("And", 1), voce("Cyg", 0)] },
+  {
+    key: "filter",
+    options: [voce("Lum", 1, { passband: "L" }), voce("Ha", 2, { passband: "HA" })],
+  },
+  { key: "site", options: [voce("1", 1, { label: "Casa" }), voce("2", 1, { label: "Cima Ekar" })] },
+]
+
+/** Tutto l'archivio, la testa della pagina. */
+export const INTERO = {
+  rows: 240,
+  mosaics: 3,
+  frames: 18430,
+  integration_s: 486 * 3600,
+  untimed: 0,
+  nights: 212,
 }
 
-/** Cio' che il banco risponde su ogni rotta che la pagina tocca, con **la voce dell'Archivio
- *  passata da chi chiama**: i casi che contano davvero -- una risposta trattenuta, un 500 -- non
- *  cambiano il corpo ma la voce, e senza questo la mappa si riscriveva a mano a ogni prova. */
-export function conArchivio(voce: Voce) {
+/** Cio' che il banco risponde su ogni rotta che la pagina tocca, con la voce dell'Archivio
+ *  passata da chi chiama: una risposta trattenuta, un 500. */
+export function conArchivio(v: Voce) {
   return {
     ...STANOTTE,
-    "/api/v1/archive": voce,
+    "/api/v1/archive": v,
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
     "/api/health": { stato: 200, corpo: SALUTE },
@@ -108,14 +117,22 @@ export function conArchivio(voce: Voce) {
   }
 }
 
-/** La voce buona: duecento, con le righe che le passi. Quante ne ha trovate, di fabbrica, sono
- *  tutte oggetti: chi prova i mosaici lo dice in `found`. */
+/** La voce buona: duecento, con le righe che le passi. */
 export function voceArchivio(items: unknown[], extra: Record<string, unknown> = {}) {
   const total = (extra.total as number | undefined) ?? items.length
-  const found = { objects: total, mosaics: 0 }
   return {
     stato: 200,
-    corpo: { items, total, found, limit: 100, offset: 0, choices: SCELTE, ...extra },
+    corpo: {
+      items,
+      total,
+      found: { objects: total, mosaics: 0 },
+      limit: 20,
+      offset: 0,
+      whole: { ...INTERO, rows: Math.max(total, items.length) },
+      criteria: CRITERI,
+      unresolved: null,
+      ...extra,
+    },
   }
 }
 
@@ -123,19 +140,15 @@ export function archivio(items: unknown[], extra: Record<string, unknown> = {}) 
   rispondi(conArchivio(voceArchivio(items, extra)))
 }
 
-/** Apre l'app e va sull'Archivio dalla barra: e' la strada che fa l'utente, e prova anche che la
- *  voce sia accesa -- una pagina raggiungibile solo scrivendo l'indirizzo non esiste. */
+/** Apre l'app e va sull'Archivio dalla barra: e' la strada che fa l'utente. */
 export async function apriArchivio() {
   const reso = await disegna()
   fireEvent.click(await screen.findByRole("link", { name: /archivio/i }))
-  await screen.findByRole("heading", { name: /archivio/i })
+  await waitFor(() => expect(window.location.pathname).toBe("/archivio"))
   return reso
 }
 
-/** L'Archivio raggiunto da un **indirizzo fabbricato**: un collegamento che ti sei mandato, o una
- *  riga scritta a mano. Si passa dalla barra e poi si cambia indirizzo, invece di partire di la',
- *  perche' e' quello che fa il browser -- e perche' cosi' si prova anche che i criteri arrivino
- *  dall'indirizzo e non dallo stato lasciato dal gesto di prima. */
+/** L'Archivio raggiunto da un indirizzo fabbricato: un collegamento che ti sei mandato. */
 export async function apriArchivioSu(indirizzo: string) {
   const reso = await apriArchivio()
   window.history.replaceState(null, "", indirizzo)
@@ -143,37 +156,19 @@ export async function apriArchivioSu(indirizzo: string) {
   return reso
 }
 
-/** Passa all'altra vista come farebbe l'utente: cliccando la sua scheda. */
+/** Passa all'altra vista come farebbe l'utente: col suo bottone a icona. */
 export async function vaiAll(vista: RegExp) {
-  fireEvent.click(await screen.findByRole("tab", { name: vista }))
+  fireEvent.click(await screen.findByRole("radio", { name: vista }))
 }
 
-/** La barra che contiene il campo di ricerca: e' il posto dove vivono `aria-busy` e i segni
- *  dell'attesa, e pescarla dal campo e' l'unico modo stabile -- la barra non ha un ruolo suo. */
-export async function laBarra() {
-  return (await screen.findByLabelText(/cerca un oggetto/i)).closest(".as-restringi")
+/** Il comando che apre la finestra di una riga: il suo nome comincia con quello dell'oggetto. */
+export async function apriDi(nome: string): Promise<HTMLElement> {
+  const esatto = new RegExp(`^${nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")},`)
+  return screen.findByRole("link", { name: esatto })
 }
 
-/** Sceglie una voce da una tendina come farebbe l'utente: la apre, e tocca la voce. La tendina si
- *  cerca per la sua etichetta ("Catalogo"), la voce per il nome che si legge ("Andromeda"), non
- *  per il valore che va nell'indirizzo. */
-export async function scegli(tendina: RegExp, voce: RegExp | string): Promise<void> {
-  fireEvent.click(await laTendina(tendina))
-  fireEvent.click(await screen.findByRole("menuitemradio", { name: voce }))
-}
-
-/** Le voci che una tendina offre, come si leggono, dopo averla aperta. */
-export async function vociDi(tendina: RegExp): Promise<(string | null)[]> {
-  fireEvent.click(await laTendina(tendina))
-  return (await screen.findAllByRole("menuitemradio")).map((v) => v.textContent)
-}
-
-/** La pillola di una tendina, per la sua etichetta. Quando stringe ha accanto la x che la toglie,
- *  e il nome della x ripete l'etichetta ("Togli catalogo: M"): per nome sono due bottoni. Deve
- *  essercene **una**: due pillole con lo stesso nome sarebbero un difetto, non una scelta. */
-export async function laTendina(nome: RegExp): Promise<HTMLElement> {
-  const bottoni = await screen.findAllByRole("button", { name: nome })
-  const pillole = bottoni.filter((b) => b.classList.contains("as-tendina"))
-  if (pillole.length !== 1) throw new Error(`le tendine di nome ${String(nome)} sono ${pillole.length}, non una`)
-  return pillole[0] as HTMLElement
+/** Le carte delle righe, nell'ordine della pagina: le sezioni dentro la griglia delle carte. */
+export async function carte(): Promise<HTMLElement[]> {
+  await screen.findAllByRole("link", { name: /apri il riepilogo$/ })
+  return [...document.querySelectorAll<HTMLElement>(".al-arch__centro-1 > section")]
 }

@@ -465,3 +465,57 @@ il menu aperto non ha difetti di accessibilita' - step 33, Cerca v77: renamed la
 mostra i quattro gruppi, ognuno con quante voci ha in tutto - step 33, Cerca v77: replaced by mostra i gruppi, ognuno con quante voci ha in tutto, e le notti dicono perche'
 sul telefono Cerca e' un tondo nella testa, e apre lo stesso campo - step 33, Cerca v77: replaced by sul telefono Cerca e' un tondo nella testa, apre la pagina intera e Annulla la chiude
 un campo vuoto non chiede niente alla rotta - step 33, Cerca v77: the empty field asks the route for its help examples; replaced by il campo vuoto prende gli esempi di attrezzatura e sito dal tuo archivio
+Criteri apre e chiude le tendine, e dice quanti criteri sono scelti - step 33, Archivio v78: the v31 dropdown bar is gone; the shared Filtri component, tested in componenti tests and archivio-criteri.test.tsx
+Esc chiude la tendina aperta e riporta il fuoco al suo bottone - step 33, Archivio v78: no dropdowns any more, the criteria are pills in the Filtri panel
+Rimuovi periodo riporta a tutto il periodo - step 33, Archivio v78: the period is the years' pills; replaced by togli i criteri toglie anche il periodo e il setup
+Togli i criteri nella barra li toglie tutti - step 33, Archivio v78: replaced by togli i criteri toglie anche il periodo e il setup
+accanto a Carica altri dice quanti ne stai vedendo e quanti sono - step 33, Archivio v78: renamed accanto a Mostra altri dice quanti ne stai vedendo e quanti sono
+anche nell'elenco la riga del mosaico porta la sua etichetta - step 33, Archivio v78: replaced by nell'elenco la colonna delle produzioni dice una, quante, o il mosaico
+cambiata una data, il segno dell'attesa sta sul periodo finche' la risposta non arriva - step 33, Archivio v78: free dates are gone (the sheet's period is years)
+chi non ha mosaici non vede la tendina - step 33, Archivio v78: the mosaic option comes from the backend; test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic
+con un sito solo, o una camera sola, la tendina non c'e' - step 33, Archivio v78: offered by the backend from two options up; test_one_site_or_one_camera_is_not_a_choice
+e a mani vuote un ordine nell'indirizzo non fa comparire la barra - step 33, Archivio v78: the empty state reads the whole archive, not the address; a mani vuote dice cosa fare covers it
+e la vista lascia la sua traccia come gli altri controlli - step 33, Archivio v78: the view is two icon radios; covered by quale vista stai guardando resta nell'indirizzo
+e lo dice anche quando le righe sono zero - step 33, Archivio v78: the busy sign lives on the search field (aria-busy), no separate bar
+e resta anche se a cadere e' un cambio d'ordine - step 33, Archivio v78: covered by se la rete cade dopo un filtro, la barra resta e il filtro si puo' togliere
+i controlli della barra sono mattoni, non classi scritte a mano - step 33, Archivio v78: the bar is the sheet's al-arch classes and the shared Filtri, checked by controlli_veste
+il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente - step 33, Archivio v78: replaced by la carta ha un posto di anteprima per produzione, e dice quante sono
+l'interruttore di vista non si smonta quando l'ultima riga sparisce - step 33, Archivio v78: the view icons live in the head card, which never unmounts
+la barra resta a schermo mentre la ricerca arriva - step 33, Archivio v78: covered by scrivere non riempie la cronologia and keepPreviousData; the head card stays
+la carta del mosaico dice ogni pannello, con oggetto, frame e ore - step 33, Archivio v78: panels left the card for the object window (sheet v76); archivio-finestra.test.tsx
+la conta dice quanti oggetti e quanti mosaici - step 33, Archivio v78: replaced by in testa dice tutto l'archivio: oggetti, mosaici, ore, frame e notti
+la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend - step 33, Archivio v78: the form criterion; test_you_can_narrow_down_by_how_many_productions
+la tendina delle costellazioni legge i nomi in ordine alfabetico, e sceglie la sigla - step 33, Archivio v78: options come in the backend's order; i criteri offrono le voci con quante righe darebbero
+la x accanto a una tendina scelta la toglie - step 33, Archivio v78: a chosen pill is taken off by touching it again (Filtri)
+le tendine offrono quello che hai, e quella vuota non compare - step 33, Archivio v78: backend rule; test_the_choices_are_only_what_the_archive_has
+mentre la risposta arriva, la barra dice che sta aspettando - step 33, Archivio v78: the field carries aria-busy; no separate bar
+nell'elenco il segno delle produzioni c'e' solo quando sono piu' d'una - step 33, Archivio v78: the sheet's column says una; replaced by nell'elenco la colonna delle produzioni dice una, quante, o il mosaico
+nell'elenco le celle che non sanno lo dicono con una forma, non con un vuoto - step 33, Archivio v78: the sheet writes Tipo non disponibile in words; un oggetto che il catalogo non conosce lo dice nella carta
+ogni filtro dice le sue ore, nelle carte e nell'elenco - step 33, Archivio v78: the shared BarraFiltri carries the hours, tested with the Notti
+ogni filtro porta il colore della sua banda, nella forma che il foglio disegna - step 33, Archivio v78: the shared BarraFiltri paints the band, tested with the Notti
+oltre quattro produzioni le anteprime vanno tre per riga, senza nasconderne - step 33, Archivio v78: the sheet's rule; renamed oltre tre produzioni le anteprime vanno su due righe, senza nasconderne
+ore, frame e senza durata stanno in pezzi che non si spezzano - step 33, Archivio v78: the sheet's two spans; un frame che non dice quanto e' durato non diventa zero
+ricliccare la scelta gia' accesa non lascia una tappa morta - step 33, Archivio v78: touching a chosen pill takes it off, a real change
+scegliere le date apre dal e al, e una stagione a cavallo d'anno arriva intera - step 33, Archivio v78: free dates are gone (the sheet's period is years)
+scegliere un catalogo lo scrive nell'indirizzo, senza toccare la vista - step 33, Archivio v78: replaced by scegliere una voce la scrive nell'indirizzo e la chiede alla rotta
+scelta una voce, il fuoco torna alla sua tendina, anche se ora ha la x accanto - step 33, Archivio v78: no dropdowns, focus stays on the pill touched
+se al viene prima di dal lo dice, e il campo e' segnato - step 33, Archivio v78: free dates are gone
+sito, ottica e camera si leggono col nome e stringono per quello - step 33, Archivio v78: replaced by i criteri offrono le voci con quante righe darebbero, nell'ordine della tavola
+solo mosaici: la conta non parla di oggetti - step 33, Archivio v78: the sheet's count says oggetti con questi criteri
+test_a_period_can_straddle_the_new_year - step 33, Archivio v78: free dates are gone; test_two_years_are_either
+test_by_hours_and_by_frames_are_two_different_orders - step 33, Archivio v78: frames order replaced by recent; test_by_hours_and_by_the_latest_night_are_two_different_orders
+test_the_dropdowns_travel_with_the_page - step 33, Archivio v78: renamed test_the_criteria_and_the_whole_archive_travel_with_the_page
+test_the_filter_choices_do_not_read_the_whole_archive - step 33, Archivio v78: each option is counted now, so the criteria read the frames (archivio.md)
+togliere i criteri non fa dire all'app che l'archivio e' vuoto - step 33, Archivio v78: the empty state reads whole.rows, never the found rows
+tornare a un anno dimentica le date scelte prima - step 33, Archivio v78: free dates are gone
+un anno chiede le notti dal primo gennaio al trentuno dicembre - step 33, Archivio v78: the year goes to the route as is; test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it
+un filtro le cui pose non dicono la durata non scrive ore - step 33, Archivio v78: the shared BarraFiltri, tested with the Notti
+un oggetto non ha pannelli da aprire - step 33, Archivio v78: panels left the card for the object window
+un ordine che non esiste non rompe la pagina - step 33, Archivio v78: an unknown sort reads as name; covered by un indirizzo scritto male non stringe
+un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte - step 33, Archivio v78: panels left the card for the object window
+un tasto battuto mentre la consegna torna indietro non sparisce - step 33, Archivio v78: the field keeps its own text and syncs from the address only when it changes
+una data battuta a tastiera arriva intera, senza fermarsi agli anni a meta' - step 33, Archivio v78: free dates are gone
+una data o un id storti nell'indirizzo non stringono e non rompono la pagina - step 33, Archivio v78: renamed un indirizzo scritto male non stringe
+una produzione sola stringe la colonna delle anteprime, e lo dice al singolare - step 33, Archivio v78: one production has one preview and no tag (sheet)
+una riga senza frame contati tiene il suo posto vuoto, e non scrive zero produzioni - step 33, Archivio v78: a row never shot has one preview place (sheet, Math.max)
+una tendina che stringe lo mostra, e la prima voce la toglie - step 33, Archivio v78: a chosen pill shows chosen and touching it takes it off

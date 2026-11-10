@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 360; senza fonte: 1.
-Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 84.
+Valori: 359; senza fonte: 1.
+Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 83.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -21,12 +21,11 @@ Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| archive_page(limit=) | `Query(100, ge=1, le=500)` | P docs/domini/archivio.md |
+| Texts | `Annotated[list[Annotated[str, Query(max_length=120)]], Query(max_le...` | T |
+| Ids | `Annotated[list[int], Query(max_length=60)]` | T |
+| archive_page(limit=) | `Query(20, ge=1, le=500)` | P docs/domini/archivio.md |
 | archive_page(q=) | `Query(None, max_length=200)` | T |
 | archive_page(key=) | `Query(None, max_length=200)` | T |
-| archive_page(catalog=) | `Query(None, max_length=40)` | T |
-| archive_page(constellation=) | `Query(None, max_length=8)` | T |
-| archive_page(filter_name=) | `Query(None, alias="filter", max_length=120)` | T |
 
 ### api/folders.py
 

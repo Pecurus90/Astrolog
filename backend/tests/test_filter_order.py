@@ -5,7 +5,7 @@ A pari banda, per nome. Supera "dal piu' usato": la stessa pastiglia sta sempre 
 
 from astrolog.api import review_page
 from astrolog.clock import now_iso
-from astrolog.spine import archive, counts, filters_used, inventory
+from astrolog.spine import archive, archive_criteria, counts, filters_used, inventory
 from astrolog.vocab.filters import DISPLAY_ORDER, Passband
 
 # Nate in disordine, e le ore crescono verso la fine dell'ordine giusto: "dal piu' usato" darebbe
@@ -88,7 +88,10 @@ def test_a_night_or_an_object_lists_its_filters_in_the_one_order(conn):
 def test_the_archive_dropdown_offers_the_filters_in_the_one_order(conn):
     banco(conn)
 
-    assert archive.choices(conn)["filters"] == [*ATTESO, "Nessun filtro"]
+    filtri = next(
+        c for c in archive_criteria.offered(conn, archive.Criteria()) if c["key"] == "filter"
+    )
+    assert [o["value"] for o in filtri["options"]] == [*ATTESO, "Nessun filtro"]
 
 
 def test_the_gear_page_lists_your_filters_in_the_one_order(conn):

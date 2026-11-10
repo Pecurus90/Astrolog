@@ -326,105 +326,78 @@ ha potuto leggere.
 
 ## Archivio
 
-**Cosa hai ripreso, e quanto.** Ogni riga e' un oggetto, o un mosaico: quanti **frame** gli hai dedicato, quante
-**ore**, e con che **filtri**: una barra divisa nei colori dei filtri, larga per ognuno quanto le
-sue ore, e sotto il nome di ognuno coi suoi frame e le sue ore. Leggi anche che cos'e' e in che
-**costellazione** sta, col suo nome latino ufficiale, uguale in ogni lingua: nella carta su due
-righe, *galassia* e sotto *Andromeda*. Cio' che l'app non sa lo dice a parole -- *Tipo non disponibile*, *Filtri non indicati* --
-e i frame che non dicono la durata sono *senza durata*, mai zero ore.
+**Cosa hai ripreso, e quanto.** In cima leggi tutto il tuo archivio: quanti oggetti, quanti di
+loro sono mosaici, e le ore, i frame e le notti di tutto quello che hai ripreso. Questi numeri non
+cambiano coi criteri: sono quello che hai, non quello che stai guardando.
+
+Ogni riga e' un oggetto, o un mosaico: quante **ore** gli hai dedicato, quanti **frame**, e con che
+**filtri**, in una barra divisa nei colori dei filtri, larga per ognuno quanto le sue ore. Leggi
+anche che cos'e' e in che **costellazione** sta, col suo nome latino ufficiale, uguale in ogni
+lingua (*galassia · Andromeda*). Cio' che l'app non sa lo dice a parole -- *Tipo non disponibile*,
+*Filtri non indicati* -- e i frame che non dicono la durata sono *senza durata*, mai zero ore.
+
+La pagina ha **due viste**, che scegli con le due icone accanto all'ordine:
+
+- **carte**, che e' come si apre. In alto il posto dell'immagine, col nome, diviso in un riquadro
+  per ogni **produzione**, cioe' per ogni coppia di ottica e camera con cui hai ripreso
+  quell'oggetto; sopra leggi quante sono (*2 produzioni*). Un riduttore non fa un'altra
+  produzione; i frame che non dicono il setup ne fanno una a parte;
+- **elenco**, a colonne, per confrontare a colpo d'occhio: sotto il nome leggi il **nome comune**
+  che il catalogo conosce (in inglese, come lo scrive il catalogo), poi tipo e costellazione,
+  integrazione, filtri, e quante produzioni (*una*, *2 produzioni*, *mosaico · 4*).
+
+Toccando una carta, o il nome nell'elenco, si apre la **finestra dell'oggetto**, con le frecce per
+passare all'oggetto prima e dopo.
 
 Un **mosaico** che hai confermato in *Da confermare* e' **una riga sola**, col nome che gli hai
-dato e i frame e le ore di tutti i suoi pannelli, e porta il segno *mosaico · 4 pannelli*: sulla
-carta sotto le ore, nell'elenco nella colonna *Mosaico*. Se hai almeno un
-mosaico, nella barra compare anche **Solo mosaici**, per vedere solo quelli, e accanto all'ordine leggi
-quanti oggetti e quanti mosaici hai trovato (*3 oggetti e 1 mosaico*). Un oggetto che hai ripreso anche da solo, fuori
-dal mosaico, ha la sua riga con quelle sole riprese: niente si conta due volte. Cercando o
-filtrando, il mosaico compare se **uno** dei suoi pannelli risponde -- chi cerca il pezzo di cielo
-di un pannello trova il mosaico. In fondo alla carta del mosaico c'e'
-l'elenco dei pannelli, numerati, da quello a cui hai dato piu' tempo: per ognuno l'oggetto, i
-frame e le ore. Un pannello
-i cui frame non sono legati a nessun oggetto dice *Nessun oggetto identificato*; uno legato a un
-oggetto fuori catalogo porta il nome che ha.
+dato e le ore di tutti i suoi pannelli, e porta il segno *mosaico · 4 pannelli*. I suoi pannelli
+li trovi nella finestra dell'oggetto. Un oggetto ripreso anche da solo, fuori dal mosaico, ha la
+sua riga con quelle sole riprese: niente si conta due volte.
 
-La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
+I **frame senza oggetto** -- quelli che il cielo non ha ancora legato a niente -- hanno una carta
+loro, in testa, con le loro ore e i loro filtri. Se **ASTAP** non e' installato la carta si chiama
+*Non risolti*, e sopra un avviso ti porta alle Impostazioni: quei frame restano non risolti finche'
+il programma non c'e'. Quei frame si guardano in *Da confermare*.
 
-- **carte**, che e' come si apre: una per riga. A sinistra c'e' un riquadro per ogni
-  **produzione**, cioe' per ogni coppia di ottica e camera con cui hai ripreso quell'oggetto, e
-  sotto i dati leggi quante sono (*2 produzioni*). I riquadri sono vuoti: sono il posto delle
-  immagini, che l'app non mostra ancora. Un riduttore non fa un'altra produzione; i frame che non
-  dicono con che setup sono stati ripresi ne fanno una a parte. Se le produzioni sono piu'
-  d'una, un clic sulla carta apre sotto di lei il loro riepilogo: per ognuna l'ottica e la
-  camera, le ore, i frame e i filtri. Si chiude con Esc, con un altro clic sulla carta o con un
-  clic fuori;
-- **elenco**, a colonne allineate, per confrontare a colpo d'occhio chi ha piu' ore o piu' frame;
-  accanto al nome leggi quante produzioni ha, quando sono piu' d'una.
+**Cercare e stringere.** Nel campo cerchi un oggetto con qualunque sigla lo conosci -- `m31`,
+`M 31`, `NGC 224` sono la stessa galassia. **Criteri** apre i nove criteri: Periodo (gli anni),
+Tipo (galassia, nebulosa, ammasso, stella), Costellazione, Filtri, Produzioni (una, piu', mosaico),
+Sito, Ottica, Camera e Catalogo. Puoi accendere piu' voci dello stesso criterio -- 2024 e 2025 --
+e passa chi ne ha una; criteri diversi valgono tutti insieme. Ogni voce dice **quante righe ti
+darebbe** con le altre scelte accese, e una voce che non darebbe niente resta li', spenta. Un
+criterio con una sola voce non compare: sceglierla non cambierebbe niente. *Togli i criteri* li
+toglie tutti; sul telefono, sotto i criteri, *Mostra N oggetti* li chiude e ti mostra il risultato.
 
-In alto c'e' la **barra**: cerchi un oggetto scrivendo qualunque nome con cui lo conosci -- `m31`,
-`M 31`, `NGC 224` sono la stessa galassia -- e stringi l'elenco per **catalogo**, **costellazione**
-o **filtro usato**. Ogni criterio e' una **tendina**: una pillola che dice cosa stringe e il valore
-scelto (*Catalogo tutti*, *Costellazione Andromeda*); la tocchi, scegli dall'elenco, e si applica
-subito. Quando stringe qualcosa si colora e accanto compare una **×** che la toglie; oppure scegli
-la prima voce dell'elenco (*Tutti i cataloghi*). *Togli i criteri*, in coda alle tendine, li toglie
-tutti insieme. Le tendine ti offrono solo quello che hai davvero: se riprendi solo Messier,
-non ti fanno scorrere tutti quelli che il catalogo conosce, e quella che non avrebbe niente da
-offrire non compare. Se hai almeno un mosaico c'e' anche **Solo mosaici**, che si accende e si
-spegne.
+Con periodo, sito, ottica o camera accesi ogni oggetto dice **solo cio' che hai chiesto**:
+stringendo al 2025, M 31 porta le ore, i frame e i filtri del 2025. Il periodo guarda la **notte**,
+non l'orologio: una posa delle due del primo gennaio appartiene alla notte del 31 dicembre.
 
-Sul **telefono** le tendine stanno dietro **Criteri**, che dice quanti ne hai scelti: lo tocchi e
-si aprono sotto la barra, una per riga.
+L'**ordine** sta in una tendina: *Per nome*, che e' come si apre, *Per integrazione*, dalla piu'
+lunga, e *Piu' recenti*, dall'ultima notte in cui l'hai ripreso. Accanto alla ricerca leggi quanti
+ne vedi e quanti sono (*20 di 240, per nome*), o, con un criterio acceso, quanti ne hai trovati
+(*12 oggetti con questi criteri*). In fondo, **Mostra altri** carica i successivi, venti alla volta.
 
-Puoi stringere anche **per periodo**, **sito**, **ottica** e **camera**. Il periodo e' un anno,
-oppure "Intervallo di date": al posto della tendina compaiono le due date **dal** e **al**, comprese,
-con la × che torna a *Tutto il periodo*. Cosi' una stagione invernale da novembre a febbraio sta in una
-scelta sola. Se "al" viene prima di "dal" l'app te lo dice sotto, invece di mostrarti un elenco
-vuoto senza un perche'. Il periodo guarda la **notte**, non l'orologio: una
-posa delle due del primo gennaio appartiene alla notte del 31 dicembre. Con questi criteri accesi
-ogni oggetto dice **solo cio' che hai chiesto**: stringendo al 2025, M 31 porta le ore, i frame e
-i filtri del 2025, non quelli di sempre, e l'ordine per ore segue quelle. Lo stesso per il sito e
-per il setup: "con il Newton" sono i frame fatti col Newton. Un mosaico apre i soli pannelli
-ripresi li', ma il numero di pannelli resta quello del mosaico. Le tendine del sito, dell'ottica e
-della camera compaiono solo se ne hai usati almeno due: con uno solo, sceglierlo non cambierebbe
-niente.
-
-A destra scegli l'**ordine** -- nome, ore o frame, anche lui una tendina -- e l'archivio si apre in
-ordine di nome, perche' e' un inventario: cosa hai ripreso di recente si guarda nelle **Notti**.
-Accanto all'ordine c'e' quanti ne ha **trovati**: con un criterio acceso e' quel numero, non quanti ne hai in tutto. Se la
-richiesta non e' andata a buon fine dice "Conteggio non disponibile", che e' la verita': zero sarebbe l'unica
-risposta che sappiamo falsa.
-
-Mentre l'app cerca, quello che avevi sotto resta a schermo -- finche' c'e' qualcosa da mostrare:
-se la ricerca di prima non aveva trovato niente, sotto la barra resta il vuoto -- e il segno
-dell'attesa compare **su cio' che hai appena toccato**: nel campo, con la parola *Ricerca…*, o sulla
-tendina che hai cambiato. Se la richiesta non parte dalla barra -- il bottone per togliere i
-criteri sotto, il tasto indietro, un collegamento -- il segno compare sul campo e su tutte le
-tendine. Cosi' non perdi il punto in cui stavi scrivendo, e sai che quello che
-vedi e' ancora la risposta di prima.
-
-Se una ricerca non trova niente l'app te lo dice, e non usa le parole dell'archivio vuoto: e'
-questa ricerca che non pesca -- e trovi il bottone per togliere i criteri.
+Se un criterio non trova niente l'app te lo dice -- *Nessun oggetto con questi criteri* -- e non usa
+le parole dell'archivio vuoto. Se la rete cade dopo una scelta, i criteri restano a schermo con
+l'avviso *Archivio non disponibile* e *Riprova*: la scelta la puoi sempre togliere.
 
 Quando apri un oggetto dalla **ricerca in alto**, l'Archivio mostra lui solo e lo dice: "Risultato
-della ricerca: M 31". La barra dei criteri non c'e', perche' non c'e' niente da restringere;
-restano le due viste, e *Archivio completo* ti riporta all'elenco intero. Se quell'oggetto non c'e'
-piu' -- i suoi frame sono stati tolti -- l'app te lo dice, invece di mostrarti un archivio vuoto.
+della ricerca: M 31", con *Archivio completo* per tornare all'elenco intero. Se quell'oggetto non
+c'e' piu' l'app te lo dice, invece di mostrarti un archivio vuoto.
 
-**Tutto quello che stai guardando finisce nell'indirizzo**: la vista, la ricerca, i filtri e
-l'ordine. Se mandi il collegamento a qualcuno, gli si apre esattamente quello che vedi tu. E il
-tasto indietro disfa l'**ultima scelta** -- un filtro, un ordine, la vista -- mentre quello che
-hai **scritto** nella ricerca non lascia una tappa per ogni lettera, quindi il tasto indietro non
-te le fa ripercorrere: disfa la scelta che avevi fatto **prima** di metterti a scrivere, e se non
-ne avevi fatte ti porta fuori dall'Archivio.
+**Tutto quello che stai guardando finisce nell'indirizzo**: la vista, la ricerca, i criteri e
+l'ordine. Se mandi il collegamento a qualcuno, gli si apre esattamente quello che vedi tu. Il tasto
+indietro disfa l'**ultima scelta**; quello che **scrivi** nella ricerca non lascia una tappa per
+ogni lettera.
 
 Le ore sono quelle vere:
 
 - se tieni accanto agli originali anche le **copie calibrate**, non contano due volte;
 - un frame che **non dice quanto e' durato** non vale zero: non entra nelle ore, e l'app te lo
-  dice a parte (*3 senza durata*), come in *Da confermare*;
-- se **nessun** frame di un oggetto dice la durata, non leggi "0 h": le ore non compaiono, e
-  restano solo i frame senza durata;
-- un tempo piccolo ma vero non diventa zero: leggi **< 0,1 h**, qui e in *Da confermare*.
-
-Se hai molti oggetti, in fondo trovi **Carica altri**.
+  dice a parte (*12 senza durata*);
+- se **nessun** frame di un oggetto dice la durata, non leggi "0 h": restano i frame, *senza
+  durata*;
+- un tempo piccolo ma vero non diventa zero: leggi **< 6 min**.
 
 Appena installata, l'Archivio e' vuoto e **te lo dice**, insieme a cosa fare per riempirlo.
 

@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
 from astrolog.db import idlist
-from astrolog.spine import archive, filters_used, objects
+from astrolog.spine import archive, archive_criteria, filters_used, objects
 from astrolog.spine import declarations as decl
 from group_bench import filtro as nasce_filtro
 from test_spine_archive import oggetto, posa
@@ -111,7 +111,7 @@ def test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes(
     delle ore. Lo stesso per chi cerca `LDN 1516`: chi cerca un pannello lo trova."""
     banco(archivio)
 
-    per_catalogo, _ = archive.page(archivio, limit=50, offset=0, catalog="LBN")
+    per_catalogo, _ = archive.page(archivio, limit=50, offset=0, catalogs=("LBN",))
     cercando, _ = archive.page(archivio, limit=50, offset=0, q="ldn1516")
 
     for righe in (per_catalogo, cercando):
@@ -123,7 +123,7 @@ def test_the_filter_used_is_asked_of_the_poses_of_the_row(archivio):
     anche se l'oggetto IC 405 ha pose nel mosaico: quelle non stanno nella sua riga."""
     banco(archivio)
 
-    righe, _ = archive.page(archivio, limit=50, offset=0, filter_name="Ha")
+    righe, _ = archive.page(archivio, limit=50, offset=0, filters=("Ha",))
 
     assert [r["mosaic_key"] for r in righe] == [CHIAVE]
 
@@ -283,8 +283,8 @@ def test_you_can_narrow_down_to_the_mosaics(archivio):
     """ "Solo i mosaici" tiene le righe dei mosaici, e si somma agli altri filtri."""
     banco(archivio)
 
-    solo, quanti = archive.page(archivio, limit=50, offset=0, mosaic=True)
-    nessuno, _ = archive.page(archivio, limit=50, offset=0, mosaic=True, catalog="M")
+    solo, quanti = archive.page(archivio, limit=50, offset=0, forms=("mosaic",))
+    nessuno, _ = archive.page(archivio, limit=50, offset=0, forms=("mosaic",), catalogs=("M",))
 
     assert ([r["mosaic_key"] for r in solo], quanti) == ([CHIAVE], 1)
     assert nessuno == []
@@ -296,16 +296,21 @@ def test_the_count_says_how_many_objects_and_how_many_mosaics(archivio):
     banco(archivio)
 
     assert archive.found(archivio) == {"objects": 2, "mosaics": 1}
-    assert archive.found(archivio, catalog="M") == {"objects": 1, "mosaics": 0}
+    assert archive.found(archivio, catalogs=("M",)) == {"objects": 1, "mosaics": 0}
 
 
 def test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic(archivio):
-    """La tendina dei mosaici c'e' solo se l'archivio ne ha uno confermato: a chi non ne ha
+    """La voce *mosaico* c'e' solo se l'archivio ne ha uno confermato: a chi non ne ha
     prometterebbe qualcosa che non puo' fare."""
+
+    def forme():
+        offerti = archive_criteria.offered(archivio, archive.Criteria())
+        return next(([o["value"] for o in c["options"]] for c in offerti if c["key"] == "form"), [])
+
     posa(archivio, oggetto(archivio, "M 42", "m-42"))
-    assert archive.choices(archivio)["mosaics"] is False
+    assert "mosaic" not in forme()
     banco(archivio)
-    assert archive.choices(archivio)["mosaics"] is True
+    assert "mosaic" in forme()
 
 
 def test_the_pages_count_rows_not_objects(archivio):

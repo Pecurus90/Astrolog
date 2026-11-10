@@ -206,7 +206,8 @@ export function oggettiInFila(n: Notte): string {
   return [primi.map((o) => o.nome).join(" \u00B7 "), altri].filter(Boolean).join(" ")
 }
 
-export function filtri(n: Notte): PezzoFiltro[] {
+/** I pezzi della barra dei filtri di una notte o di una riga dell'Archivio: stessa forma, stessa barra. */
+export function filtri(n: Pick<Notte, "filters" | "frames" | "integration_s">): PezzoFiltro[] {
   // frame senza filtro nell'header: un pezzo tratteggiato, non una barra muta (tavola, `ignoto`)
   if (!n.filters.length && n.frames > 0) {
     return [

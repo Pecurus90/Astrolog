@@ -6,7 +6,6 @@ suo perche' -- e qui si prova che valgono anche da questa parte.
 """
 
 from astrolog.db.connect import connect
-from astrolog.spine import archive
 from conftest import ORDINE_OSTILE
 
 
@@ -20,12 +19,32 @@ def per_nome(risposta):
     return {o["name"]: o for o in risposta["items"]}
 
 
-def test_the_filter_choices_do_not_read_the_whole_archive(db_path):
-    """La tendina dei filtri cerca, per ogni filtro, la prima posa che ha ripreso un oggetto, e la
-    trova con l'indice: e' la domanda che si rifa' a ogni pagina dell'Archivio."""
+def test_repeating_a_criterion_is_either(client):
+    """`?filter=a&filter=b`: passa chi ha l'uno o l'altro, e la conta e' quella della spina."""
+    voci = {c["key"]: [o["value"] for o in c["options"]] for c in archivio(client)["criteria"]}
+    assert len(voci["filter"]) >= 2, "l'archivio di prova ha un filtro solo: non guarda niente"
+    primo, secondo = voci["filter"][:2]
+
+    uno = archivio(client, filter=primo)["total"]
+    tutti_e_due = archivio(client, filter=[primo, secondo])["total"]
+
+    assert tutti_e_due >= uno > 0
+
+
+def test_a_missing_solver_is_said_with_the_frames_it_leaves(client, db_path, monkeypatch):
+    """Senza ASTAP i frame senza oggetto restano non risolti, e la rotta lo dice con loro."""
     with connect(db_path) as conn:
-        plan = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + archive.FILTERS_USED))
-    assert "INDEX frames_filter" in plan, plan
+        conn.execute(
+            "INSERT INTO frames(frame_hash, image_type, header_json, exposure_s, created_at)"
+            " VALUES('senza-oggetto', 'light', '[]', 60.0, 'x')"
+        )
+        conn.commit()
+    monkeypatch.setattr("astrolog.api.archive.solver_where", lambda _conn: (None, None))
+
+    fuori = archivio(client)["unresolved"]
+
+    assert fuori["frames"] >= 1
+    assert fuori["solver_missing"] is True
 
 
 def nome_di(conn, object_id):
@@ -147,23 +166,16 @@ def test_an_order_that_does_not_exist_is_refused_by_the_route(client):
     assert client.get("/api/v1/archive", params={"sort": ORDINE_OSTILE}).status_code == 422
 
 
-def test_the_dropdowns_travel_with_the_page(client):
-    """Le tendine viaggiano **con la pagina**, gia' fatte: chiederle a parte vorrebbe dire una
-    seconda rotta e un secondo giro, e ricavarle a schermo dalle cento righe scaricate darebbe le
-    scelte della prima pagina invece che dell'archivio.
+def test_the_criteria_and_the_whole_archive_travel_with_the_page(client):
+    """I criteri e la testa viaggiano **con la pagina**, gia' fatti: ricavarli a schermo dalle
+    venti righe scaricate darebbe le scelte della prima pagina invece che dell'archivio.
+    Cosa contengono lo prova la spina (`test_spine_archive_criteria.py`)."""
+    intero = archivio(client)
+    stretto = archivio(client, limit=1, q=intero["items"][0]["name"])
 
-    Che dentro ci sia solo cio' che l'archivio ha lo prova la spina
-    (`test_the_choices_are_only_what_the_archive_has`): qui si guarda che **arrivino**, e il nome
-    di prima prometteva la regola dell'altra."""
-    scelte = archivio(client)["choices"]
-
-    assert scelte["filters"], "l'archivio di prova non ha filtri: la prova non guarda niente"
-    with connect(client.app.state.db_path) as conn:
-        tutti = {r[0] for r in conn.execute("SELECT name FROM filters")}
-    assert set(scelte["filters"]) <= tutti
-    # Che siano **in ordine** non si prova qui: lo prova la spina
-    # (`test_the_dropdowns_are_sorted_like_the_rows`). Qui c'era un `== sorted(...)`, che e'
-    # ordine di **byte** e difendeva il difetto che la spina ha appena tolto (`vdB` dopo `WR`).
+    assert intero["criteria"], "l'archivio di prova non offre criteri: la prova non guarda niente"
+    assert stretto["whole"] == intero["whole"]
+    assert intero["whole"]["rows"] == intero["total"]
 
 
 def test_the_filters_of_an_object_come_with_it_from_the_same_house(client, db_path):
@@ -232,6 +244,15 @@ def test_the_list_is_paged_like_every_other(client):
     assert prima["total"] == intero["total"] > 1
     assert len(prima["items"]) == 1
     assert seconda["items"][0]["key"] != prima["items"][0]["key"]
+
+
+def test_the_criteria_come_with_the_first_page_only(client):
+    """«Mostra altri» non cambia i criteri, e contarli legge i frame: arrivano con la prima
+    pagina, la pagina li tiene da li'."""
+    prima, seconda = archivio(client, limit=1), archivio(client, limit=1, offset=1)
+
+    assert prima["criteria"]
+    assert seconda["criteria"] == []
 
 
 def test_an_empty_archive_is_an_answer_not_an_error(client_vuoto):

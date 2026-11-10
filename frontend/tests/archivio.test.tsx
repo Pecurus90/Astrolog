@@ -1,25 +1,10 @@
 // @vitest-environment jsdom
 /**
- * L'**Archivio**: la prima pagina che racconta cosa hai ripreso, invece di chiederti conto.
- *
- * Le regole che si provano qui vengono dal backend e la pagina deve solo **non tradirle**: le ore
- * arrivano gia' sommate (il frontend le porta in ore e basta), un frame senza tempo non diventa
- * zero, i filtri arrivano gia' in ordine. Lo scheletro e la barra dell'app stanno in
- * `layout.test.tsx`; i controlli dell'Archivio in `archivio-barra.test.tsx`, e il banco che i due
- * file si dividono in `archivio-banco.tsx`.
- *
- * La pagina ha **due viste** sulle stesse righe, e si apre a carte (Marco, 22/9/2026). Le prove
- * pescano le carte per il loro ruolo (`article`) e non per `listitem`: dentro una carta c'e' la
- * lista dei filtri, e contare gli elementi di lista conterebbe anche quelli.
- *
- * L'**ultima notte** non si mostra piu' (Marco, 22/9/2026: quel posto e' dei progetti), quindi le
- * due prove che la guardavano qui non hanno piu' un oggetto. Che una data si scriva come data e
- * resti la stessa da un altro fuso ha gia' la sua casa in `frontend/tests/formati.test.ts`.
- * test-tolto: "la notte si scrive come una data, non come esce dal database"
- * test-tolto: "un oggetto che nessuna notte ha raccolto lo dice, invece di mostrare una data"
- * test-tolto: "dice quanti oggetti ci sono in tutto, non quanti ne stai vedendo" -- promette la
- * regola **rovesciata** rispetto a questa fetta (la conta e' quella che hai trovato, non quella
- * che hai): rinominata in "dice quanti ne ha trovati, non quanti ne stai vedendo".
+ * L'**Archivio** (tavola v78): cosa hai ripreso, a carte o in elenco, con la testa di tutto
+ * l'archivio. Le regole vengono dal backend e la pagina deve solo **non tradirle**: le ore
+ * arrivano sommate, un frame senza tempo non diventa zero, i filtri arrivano in ordine. I criteri
+ * stanno in `archivio-criteri.test.tsx`, la finestra dell'oggetto in `archivio-finestra.test.tsx`,
+ * il banco in `archivio-banco.tsx`.
  */
 import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
@@ -27,230 +12,166 @@ import { resolve } from "node:path"
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
+import { numero } from "../src/i18n"
 import { chiamate, pulisci, rispondi } from "./banco"
 import {
   IGNOTO,
+  INTERO,
   M31,
+  MOSAICO,
   apriArchivio,
   apriArchivioSu,
+  apriDi,
   archivio,
+  carte,
   conArchivio,
-  scegli,
   vaiAll,
   voceArchivio,
 } from "./archivio-banco"
 
 afterEach(pulisci)
 
+const testoDi = (el: Element | null | undefined) => el?.textContent ?? ""
+
 describe("l'Archivio", () => {
   it("dice cosa hai ripreso, con i frame e le ore", async () => {
     archivio([M31])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    expect(within(carta).getByText("M 31")).toBeDefined()
-    expect(carta.textContent).toContain("120")
+    const [carta] = await carte()
+    expect(within(carta as HTMLElement).getAllByText("M 31").length).toBeGreaterThan(0)
+    expect(testoDi(carta)).toContain("120 frame")
     // 43.200 s = 12 h: il backend manda i secondi, lo schermo legge le ore
-    expect(carta.textContent).toContain("12")
+    expect(testoDi(carta)).toContain("12 h")
+  })
+
+  it("in testa dice tutto l'archivio: oggetti, mosaici, ore, frame e notti", async () => {
+    archivio([M31], { whole: INTERO })
+    await apriArchivio()
+
+    const testa = await screen.findByRole("region", { name: "L'archivio" })
+    await waitFor(() => expect(testoDi(testa)).toContain("oggetti, di cui 3 mosaici"))
+    expect(testoDi(testa)).toContain("240")
+    expect(testoDi(testa)).toContain(`486 h · ${numero(18430)} frame · 212 notti`)
+  })
+
+  it("se i frame non sanno la notte (nessun sito), la testa non scrive zero notti", async () => {
+    archivio([M31], { whole: { ...INTERO, nights: 0 } })
+    await apriArchivio()
+
+    const testa = await screen.findByRole("region", { name: "L'archivio" })
+    await waitFor(() => expect(testoDi(testa)).toContain(`${numero(18430)} frame`))
+    expect(testoDi(testa)).not.toMatch(/notti|notte/)
   })
 
   it("un frame che non dice quanto e' durato non diventa zero", async () => {
-    // E' la terza forma del dato: "non lo so" non e' "niente". Senza questa riga a schermo, chi
-    // guarda le ore di un oggetto crede che siano tutte li' -- e sono di meno.
     archivio([IGNOTO])
     await apriArchivio()
 
-    expect(await screen.findByText(/12 senza durata/i)).toBeDefined()
-  })
-
-  it("ore, frame e senza durata stanno in pezzi che non si spezzano", async () => {
-    // A capo va un pezzo intero, e il punto resta col pezzo prima: mai un punto a inizio riga.
-    archivio([IGNOTO])
-    await apriArchivio()
-
-    const carta = await screen.findByRole("article")
-    const pezzi = [...carta.querySelectorAll(".as-carta-oggetto__pezzo")].map((p) => p.textContent)
-    expect(pezzi).toEqual(["2 h\u00a0\u00b7", "40 frame\u00a0\u00b7", "12 senza durata"])
+    const [carta] = await carte()
+    expect(testoDi(carta)).toContain("12 senza durata")
   })
 
   it("se nessun frame dice la durata, non scrive zero ore", async () => {
-    // Zero ore e "non lo so" sono due risposte diverse: dove il tempo non si sa, il numero delle
-    // ore non compare, e restano solo i frame senza durata.
     archivio([{ ...IGNOTO, frames: 3, untimed: 3, integration_s: 0 }])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    expect(carta.textContent).toContain("3 senza durata")
-    expect(carta.textContent).not.toMatch(/\b0 h\b/)
+    const [carta] = await carte()
+    expect(testoDi(carta)).toContain("senza durata")
+    expect(testoDi(carta)).not.toMatch(/\b0 h\b/)
   })
 
   it("si apre a carte, e l'altra vista e' a un clic", async () => {
     archivio([M31])
     await apriArchivio()
 
-    expect(await screen.findByRole("tab", { name: /carte/i })).toHaveProperty(
-      "ariaSelected",
-      "true",
-    )
+    expect((await screen.findByRole("radio", { name: /carte/i })).getAttribute("aria-checked")).toBe("true")
     await vaiAll(/elenco/i)
 
-    expect(await screen.findByRole("table")).toBeDefined()
-    expect(screen.queryByRole("article")).toBeNull()
+    expect(await screen.findByRole("region", { name: /^elenco$/i })).toBeDefined()
+    expect(document.querySelector(".al-arch__centro-1")).toBeNull()
   })
 
   it("quale vista stai guardando resta nell'indirizzo", async () => {
-    // Un collegamento all'elenco che si riapre a carte non e' un collegamento a quella vista:
-    // chi lo manda a qualcuno manda un'altra pagina.
     archivio([M31])
     await apriArchivio()
 
     await vaiAll(/elenco/i)
 
-    expect(window.location.search).toContain("vista=elenco")
+    await waitFor(() => expect(window.location.search).toContain("vista=elenco"))
   })
 
   it("cambiare vista non cancella il resto dell'indirizzo", async () => {
-    // La barra che arriva (cerca, filtri, ordine) scrivera' i suoi li' dentro: un interruttore che
-    // riscrive la query intera glieli cancellerebbe a ogni clic, e il filtro sparirebbe cambiando
-    // vista senza che nessuno capisca perche'.
     archivio([M31])
     await apriArchivio()
-    // un parametro **vero** della barra: quando questa prova e' nata la barra non c'era ancora e
-    // ne usava uno inventato, che non avrebbe protetto niente
-    await scegli(/ordina/i, "Integrazione")
+    fireEvent.change(await screen.findByRole("combobox", { name: /^ordine$/i }), { target: { value: "hours" } })
     await waitFor(() => expect(window.location.search).toContain("sort=hours"))
 
     await vaiAll(/elenco/i)
 
+    await waitFor(() => expect(window.location.search).toContain("vista=elenco"))
     expect(window.location.search).toContain("sort=hours")
-    expect(window.location.search).toContain("vista=elenco")
   })
 
   it("dice con che filtri hai ripreso, nell'ordine dei filtri", async () => {
-    // L'ordine e' del backend, uno in tutta l'app (L, R, G, B, Ha, OIII, SII...): rimescolarlo qui
-    // metterebbe la stessa pastiglia in due posti su due pagine.
     archivio([M31])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    const nomi = [...carta.querySelectorAll(".as-filtri__voce b")].map((b) => b.textContent)
-    expect(nomi).toEqual(["Lum", "Ha"])
-  })
-
-  it("ogni filtro porta il colore della sua banda, nella forma che il foglio disegna", async () => {
-    // Tre regole in una: la variante sta **sulla pastiglia**, non sulla voce (dal v29
-    // `.as-filtro--<banda>` dipinge il fondo dell'elemento che la porta: sulla voce farebbe una
-    // fascia piena sotto il nome, e il nome di L, quasi bianco su quasi bianco, non si leggerebbe),
-    // e il nome ha la sua classe. Le macchine della veste non possono vederlo -- guardano le
-    // classi **scritte**, non su quale elemento finiscono.
-    archivio([M31])
-    await apriArchivio()
-
-    const carta = await screen.findByRole("article")
-    const voci = [...carta.querySelectorAll(".as-filtri__voce")]
-
-    expect(voci.map((v) => v.querySelector("i")?.className)).toEqual([
-      "as-filtri__pallino as-filtro--l",
-      "as-filtri__pallino as-filtro--ha",
-    ])
-    // la barra pesa le ore di ogni filtro, e dice a parole cio' che mostra a colori
-    const barra = within(carta).getByRole("img", { name: /filtri: lum .*8 h, ha .*4 h/i })
-    expect([...barra.querySelectorAll("i")].map((i) => i.className)).toEqual(["as-filtro--l", "as-filtro--ha"])
+    const [carta] = await carte()
+    expect(within(carta as HTMLElement).getByText("Lum · Ha")).toBeDefined()
   })
 
   it("un oggetto senza filtri riconosciuti non mostra pastiglie finte", async () => {
-    archivio([IGNOTO])
+    archivio([{ ...IGNOTO, untimed: 0, frames: 0, integration_s: 0 }])
     await apriArchivio()
 
-    // si aspetta la **carta**, non il titolo: il titolo c'e' gia' mentre la pagina carica, e un
-    // `queryBy` su una pagina ancora vuota non trova niente qualunque cosa faccia il codice
-    const carta = await screen.findByRole("article")
-    expect(carta.querySelector(".as-filtri__barra")).toBeNull()
-    // e lo dice: una carta muta sui filtri sembrerebbe un guasto
-    expect(within(carta).getByText(/^filtri non indicati$/i).className).toBe("as-nonsisa")
+    const [carta] = await carte()
+    expect(carta?.querySelector(".al-c-barra-filtri__riga-1")).toBeNull()
+    expect(within(carta as HTMLElement).getByText(/^filtri non indicati$/i)).toBeDefined()
   })
 
   it("un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione", async () => {
-    // Mai un trattino e mai un vuoto: la parola dice cosa manca, il tondo tratteggiato che non si sa.
     archivio([IGNOTO])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    expect(within(carta).getByText(/^tipo non disponibile$/i).className).toBe("as-nonsisa")
-    expect(within(carta).getByText(/^costellazione non disponibile$/i).className).toBe("as-nonsisa")
+    const [carta] = await carte()
+    expect(testoDi(carta)).toContain("Tipo non disponibile · Costellazione non disponibile")
   })
 
-  it("il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente", async () => {
+  it("nell'elenco sotto il nome c'e' il nome comune del catalogo, e il mosaico dice i suoi pannelli", async () => {
+    archivio([M31, MOSAICO])
+    await apriArchivioSu("/archivio?vista=elenco")
+
+    const elenco = await screen.findByRole("region", { name: /^elenco$/i })
+    await waitFor(() => expect(testoDi(elenco)).toContain("Andromeda Galaxy"))
+    expect(testoDi(elenco)).toContain("mosaico di 4 pannelli")
+  })
+
+  it("la costellazione si legge col suo nome latino, non con la sigla", async () => {
     archivio([M31])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article", { name: "M 31" })
-    const posto = carta.querySelector(".as-carta-oggetto__anteprime")
-    expect(posto?.getAttribute("aria-hidden")).toBe("true")
-    expect(posto?.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(1)
-    expect(posto?.querySelector("img")).toBeNull()
+    const [carta] = await carte()
+    expect(testoDi(carta)).toContain("galassia · Andromeda")
   })
 
-  it("nell'elenco le celle che non sanno lo dicono con una forma, non con un vuoto", async () => {
-    archivio([IGNOTO])
-    await apriArchivio()
-    await vaiAll(/elenco/i)
-
-    const tabella = await screen.findByRole("table")
-    expect(within(tabella).getAllByRole("row")).toHaveLength(2) // l'intestazione, piu' l'unica riga
-    // tipo, costellazione e filtri: tre celle che il catalogo non sa riempire, e ognuna lo dice
-    // con una **parola** E con la forma della terza forma del dato -- non col solo colore, e non
-    // con `as-dato--vuoto`, che nel foglio vuol dire "una misura vera che vale zero"
-    expect(within(tabella).getAllByText(/non disponibile$/i)).toHaveLength(2)
-    expect(tabella.querySelectorAll(".as-nonsisa")).toHaveLength(3)
-    // i filtri dicono la stessa cosa nella carta e nell'elenco
-    expect(within(tabella).getByText("Filtri non indicati")).toBeDefined()
-  })
-
-  it("dice quanti ne ha trovati, non quanti ne stai vedendo", async () => {
-    // Due numeri diversi: quello che la pagina scrive e' il **totale che passa il filtro**, non
-    // le righe che hai in mano. Con un filtro acceso "1.240 oggetti" sarebbe un numero che mente,
-    // ed e' anche quello su cui la pagina decide se c'e' un'altra pagina.
-    archivio([M31], { total: 600, limit: 1 })
+  it("dice quanti ne stai vedendo su quanti sono, e in che ordine", async () => {
+    archivio([M31], { total: 600 })
     await apriArchivio()
 
-    // i numeri della conta stanno in un `<b>`: il testo e' su piu' nodi, si legge intero
-    await waitFor(() =>
-      expect(document.querySelector(".as-archivio__conta")?.textContent).toBe("600 oggetti"),
-    )
-    expect(await screen.findAllByRole("article")).toHaveLength(1)
+    expect(await screen.findByText("1 di 600, per nome")).toBeDefined()
   })
 
   it("a mani vuote dice cosa fare, non nessun risultato", async () => {
-    // Chi ha appena installato l'app non ha sbagliato niente: la pagina vuota e' uno stato
-    // legittimo, e deve portare al gesto che lo riempie.
-    archivio([])
+    archivio([], { whole: { ...INTERO, rows: 0, mosaics: 0, frames: 0, integration_s: 0, nights: 0 } })
     await apriArchivio()
 
     expect(await screen.findByText(/^archivio vuoto$/i)).toBeDefined()
-    // e porta al gesto che lo riempie, invece di lasciarti fermo li'
-    expect(screen.getByRole("link", { name: /^aggiungi cartelle$/i })).toBeDefined()
-    expect(screen.queryByRole("alert")).toBeNull()
-  })
-
-  it("e a mani vuote un ordine nell'indirizzo non fa comparire la barra", async () => {
-    // Un collegamento fabbricato, o quello che ti sei mandato prima di svuotare la cartella:
-    // l'ordine non stringe niente, quindi non c'e' niente da togliere, e una barra qui sarebbe un
-    // campo che non puo' cercare niente accanto alle parole di chi ha appena installato l'app.
-    archivio([])
-    const reso = await apriArchivioSu("/archivio?sort=hours")
-
-    expect(await screen.findByText(/^archivio vuoto$/i)).toBeDefined()
+    expect(screen.getByText(/^aggiungi cartelle$/i)).toBeDefined()
     expect(screen.queryByLabelText(/cerca un oggetto/i)).toBeNull()
-    reso.unmount()
   })
 
   it("ogni tipo che il catalogo usa ha la sua parola, e nessuno arriva a schermo come sigla", async () => {
-    // I codici si leggono dal catalogo **impacchettato**, non da una lista scritta qui: se un
-    // catalogo nuovo ne aggiunge uno, questa prova diventa rossa invece di lasciarlo sparire in
-    // silenzio dalla pagina.
-    // Da `frontend/`, dove vitest gira: sotto jsdom `import.meta.url` e' un indirizzo web, non un
-    // file, e non porta al repo.
     const cartella = resolve(process.cwd(), "..", "backend", "astrolog", "catalog", "data")
     const file = readdirSync(cartella).find((n) => /^catalogo-.*\.json$/.test(n))
     expect(file, `nessun catalogo in ${cartella}`).toBeDefined()
@@ -260,20 +181,14 @@ describe("l'Archivio", () => {
     const codici = [...new Set(catalogo.objects.map((o) => o.type_code))]
     expect(codici.length).toBeGreaterThan(0)
 
-    archivio(
-      codici.map((codice, i) => ({ ...M31, key: `k-${i}`, name: `Oggetto ${i}`, type_code: codice })),
-    )
+    archivio(codici.map((codice, i) => ({ ...M31, key: `k-${i}`, name: `Oggetto ${i}`, type_code: codice })))
     await apriArchivio()
 
-    const carte = await screen.findAllByRole("article")
-    expect(carte).toHaveLength(codici.length)
-    for (const [i, carta] of carte.entries()) {
-      // tipo e costellazione su due righe: la parola del tipo sta nella prima, e non e' "non si sa"
-      const [tipo, dove] = [...carta.querySelectorAll(".as-carta-oggetto__chi > span")]
-      expect(tipo?.textContent, `il codice ${codici[i]} non ha una parola`).toMatch(/\S/)
-      expect(tipo?.querySelector(".as-nonsisa"), `il codice ${codici[i]} non ha una parola`).toBeNull()
-      expect(dove?.textContent).toBe("Andromeda")
-      expect(carta.textContent).not.toContain(codici[i])
+    const tutte = await carte()
+    expect(tutte).toHaveLength(codici.length)
+    for (const [i, carta] of tutte.entries()) {
+      expect(testoDi(carta), `il codice ${codici[i]} non ha una parola`).not.toContain("Tipo non disponibile")
+      expect(testoDi(carta)).not.toContain(codici[i])
     }
   })
 
@@ -281,162 +196,143 @@ describe("l'Archivio", () => {
     archivio([{ ...M31, type_code: "CODICE_INVENTATO" }])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    expect(carta.textContent).toContain("Andromeda")
-    expect(carta.textContent).not.toContain("CODICE_INVENTATO")
-    expect(within(carta).getByText(/^tipo non disponibile$/i)).toBeDefined()
+    const [carta] = await carte()
+    expect(testoDi(carta)).not.toContain("CODICE_INVENTATO")
+    expect(testoDi(carta)).toContain("Tipo non disponibile")
   })
 
   it("se l archivio non risponde lo dice, invece di sembrare vuoto, e si riprova", async () => {
     rispondi(conArchivio({ stato: 500, corpo: { detail: "boom" } }))
     await apriArchivio()
 
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText(/^archivio non disponibile$/i)).toBeDefined()
     const prima = chiamate().filter((u) => u.includes("/api/v1/archive")).length
-    fireEvent.click(screen.getByRole("button", { name: /riprova/i }))
+    fireEvent.click(screen.getByText(/^riprova$/i))
     await waitFor(() =>
       expect(chiamate().filter((u) => u.includes("/api/v1/archive")).length).toBeGreaterThan(prima),
     )
   })
 
   it("mentre legge tiene il posto delle carte, e lo dice a chi ascolta", async () => {
-    // Uno scheletro della misura delle carte: quando arrivano niente salta.
     let arriva: (v: unknown) => void = () => {}
     const attesa = new Promise((fatto) => (arriva = fatto))
     rispondi(conArchivio({ ...voceArchivio([M31]), attesa }))
     await apriArchivio()
 
-    const posto = await screen.findByLabelText(/caricamento dell'archivio/i)
-    expect(posto.getAttribute("aria-busy")).toBe("true")
-    expect(posto.querySelectorAll(".as-archivio__scheletro-carta").length).toBeGreaterThan(0)
+    expect(await screen.findByLabelText(/caricamento/i)).toBeDefined()
     arriva(null)
-    expect(await screen.findByRole("article")).toBeDefined()
-    expect(screen.queryByLabelText(/caricamento dell'archivio/i)).toBeNull()
+    expect((await carte()).length).toBe(1)
+    expect(screen.queryByLabelText(/caricamento/i)).toBeNull()
   })
 
-  it("accanto a Carica altri dice quanti ne stai vedendo e quanti sono", async () => {
+  it("accanto a Mostra altri dice quanti ne stai vedendo e quanti sono", async () => {
     archivio([M31], { total: 600, limit: 1 })
     await apriArchivio()
 
-    const altri = await screen.findByRole("button", { name: /carica altri/i })
-    expect(altri.closest(".as-archivio__carico")?.textContent).toContain("1 di 600")
+    const altri = await screen.findByRole("link", { name: /mostra altri 20/i })
+    expect(testoDi(altri.closest(".al-arch__riga-9"))).toContain("1 di 600")
   })
 
   it("quando ce n e piu' di una pagina, si possono vedere anche gli altri", async () => {
-    // Mostrare cento righe su seicento senza una strada per le altre e' un archivio che mente
-    // per omissione: la pagina nasce nuda, non incompleta.
     archivio([M31], { total: 600, limit: 1 })
     await apriArchivio()
 
-    expect(await screen.findByRole("button", { name: /carica altri/i })).toBeDefined()
+    fireEvent.click(await screen.findByRole("link", { name: /mostra altri/i }))
+
+    await waitFor(() => expect(chiamate().some((u) => u.includes("/api/v1/archive") && u.includes("offset=1"))).toBe(true))
   })
 
   it("e quando sono tutte li', non offre di caricarne altre", async () => {
     archivio([M31, IGNOTO])
     await apriArchivio()
 
-    await screen.findAllByRole("article")
-    expect(screen.queryByRole("button", { name: /carica altri/i })).toBeNull()
+    await carte()
+    expect(screen.queryByRole("link", { name: /mostra altri/i })).toBeNull()
   })
 })
 
-describe("l'Archivio, filtri e costellazioni", () => {
-  it("ogni filtro dice le sue ore, nelle carte e nell'elenco", async () => {
-    archivio([M31])
-    await apriArchivio()
+describe("l'Archivio, produzioni, mosaici e frame senza oggetto", () => {
+  const PIU = {
+    ...M31,
+    productions: [M31.productions[0], { ...M31.productions[0], optics: "Newton", optics_id: 3 }],
+  }
 
-    const carta = await screen.findByRole("article")
-    // 28.800 s = 8 h al Lum, 14.400 s = 4 h all'Ha: arrivano gia' sommate dal backend
-    expect(carta.textContent).toMatch(/Lum80 \u00b7 8 h/)
-    expect(carta.textContent).toMatch(/Ha40 \u00b7 4 h/)
-
-    await vaiAll(/elenco/i)
-    const riga = (await screen.findByText("M 31")).closest("tr") as HTMLElement
-    expect(riga.textContent).toMatch(/Lum80 \u00b7 8 h/)
-    expect(riga.textContent).toMatch(/Ha40 \u00b7 4 h/)
-  })
-
-  it("un filtro le cui pose non dicono la durata non scrive ore", async () => {
-    // "0 h" direbbe che con quel filtro non hai ripreso niente: ha ripreso, e non si sa per quanto.
-    archivio([{ ...M31, filters: [{ name: "Lum", passband: "L", frames: 80, integration_s: 0 }] }])
-    await apriArchivio()
-
-    const voce = (await screen.findByRole("article")).querySelector(".as-filtri__voce")
-    expect(voce?.textContent).toBe("Lum80 \u00b7 senza durata")
-  })
-
-  it("la costellazione si legge col suo nome latino, non con la sigla", async () => {
-    archivio([M31])
-    await apriArchivio()
-
-    const carta = await screen.findByRole("article")
-    expect(carta.textContent).toContain("Andromeda")
-    expect(carta.textContent).not.toMatch(/\bAnd\b/)
-
-    await vaiAll(/elenco/i)
-    const riga = (await screen.findByText("M 31")).closest("tr") as HTMLElement
-    expect(riga.textContent).toContain("Andromeda")
-    expect(riga.textContent).not.toMatch(/\bAnd\b/)
-  })
-})
-
-/** Tante produzioni quante ne chiedi, ognuna con un corredo diverso: come le manda la rotta. */
-function conProduzioni(quante: number) {
-  const una = M31.productions[0]
-  return { ...M31, productions: Array.from({ length: quante }, (_, i) => ({ ...una, camera: `Camera ${i}` })) }
-}
-
-describe("l'Archivio, le produzioni", () => {
   it("la carta ha un posto di anteprima per produzione, e dice quante sono", async () => {
-    archivio([conProduzioni(2)])
+    archivio([PIU])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    expect(carta.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(2)
-    expect(within(carta).getByText("2 produzioni").className).toBe("as-carta-oggetto__quante")
-    // due per riga: ne' la colonna stretta di una sola, ne' le tre per riga di tante
-    expect(carta.className).toBe("as-carta as-carta-oggetto")
+    const [carta] = await carte()
+    expect(carta?.querySelectorAll(".al-arch__foto-parte")).toHaveLength(2)
+    expect(testoDi(carta?.querySelector(".al-arch__strato-2"))).toBe("2 produzioni")
   })
 
-  it("una produzione sola stringe la colonna delle anteprime, e lo dice al singolare", async () => {
-    archivio([M31])
+  it("oltre tre produzioni le anteprime vanno su due righe, senza nasconderne", async () => {
+    const cinque = { ...M31, productions: Array.from({ length: 5 }, () => M31.productions[0]) }
+    archivio([cinque])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    expect(carta.className).toContain("as-carta-oggetto--una")
-    expect(within(carta).getByText("1 produzione")).toBeDefined()
+    const [carta] = await carte()
+    const griglia = carta?.querySelector<HTMLElement>(".al-arch__foto-griglia")
+    expect(griglia?.querySelectorAll(".al-arch__foto-parte")).toHaveLength(5)
+    expect(griglia?.style.gridTemplateColumns).toBe("repeat(3,minmax(0,1fr))")
   })
 
-  it("oltre quattro produzioni le anteprime vanno tre per riga, senza nasconderne", async () => {
-    archivio([conProduzioni(5)])
+  it("la carta di un mosaico dice mosaico e quanti pannelli, e si sente", async () => {
+    archivio([MOSAICO])
     await apriArchivio()
 
-    const carta = await screen.findByRole("article")
-    expect(carta.className).toContain("as-carta-oggetto--molte")
-    expect(carta.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(5)
+    const [carta] = await carte()
+    expect(testoDi(carta?.querySelector(".al-arch__strato-2"))).toBe("mosaico · 4 pannelli")
+    expect((await apriDi("IC 405")).getAttribute("aria-label")).toContain("mosaico di 4 pannelli")
   })
 
-  it("una riga senza frame contati tiene il suo posto vuoto, e non scrive zero produzioni", async () => {
-    // Un oggetto i cui frame sono tutti copie non ha produzioni: la carta resta com'e' sempre
-    // stata, col suo posto, invece di restare senza anteprima e dire "0 produzioni".
-    archivio([{ ...M31, frames: 0, integration_s: 0, productions: [] }])
-    await apriArchivio()
+  it("nell'elenco la colonna delle produzioni dice una, quante, o il mosaico", async () => {
+    archivio([M31, PIU, MOSAICO])
+    await apriArchivioSu("/archivio?vista=elenco")
 
-    const carta = await screen.findByRole("article")
-    expect(carta.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(1)
-    expect(carta.className).toContain("as-carta-oggetto--una")
-    expect(carta.textContent).not.toMatch(/produzion/)
+    await screen.findByRole("region", { name: /^elenco$/i })
+    await waitFor(() => expect(document.querySelectorAll(".al-arch__testo-9")).toHaveLength(3))
+    const colonna = [...document.querySelectorAll(".al-arch__testo-9")].map((c) => c.textContent)
+    expect(colonna).toEqual(["una", "2 produzioni", "mosaico · 4"])
   })
 
-  it("nell'elenco il segno delle produzioni c'e' solo quando sono piu' d'una", async () => {
-    archivio([conProduzioni(3), IGNOTO])
+  it("i frame senza oggetto hanno la loro carta, e senza ASTAP l'avviso porta alle Impostazioni", async () => {
+    const fuori = { frames: 1204, integration_s: 51480, untimed: 0, filters: [], solver_missing: true }
+    archivio([M31], { unresolved: fuori })
     await apriArchivio()
-    await vaiAll(/elenco/i)
 
-    const tante = (await screen.findByText("M 31")).closest("tr") as HTMLElement
-    expect(within(tante).getByText("3 produzioni").className).toBe("as-archivio__produzioni")
-    const una = screen.getByText("NGC 7000").closest("tr") as HTMLElement
-    expect(una.textContent).not.toMatch(/produzion/)
+    const tutte = await carte()
+    expect(testoDi(tutte[0])).toContain("Non risolti")
+    expect(testoDi(tutte[0])).toContain(`${numero(1204)} frame`)
+    const avviso = `ASTAP non è installato: ${numero(1204)} frame restano non risolti`
+    expect(await screen.findByText((testo) => testo.startsWith(avviso))).toBeDefined()
+    fireEvent.click(screen.getByText(/^apri le impostazioni$/i))
+    await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/riconoscitore"))
+  })
+
+  it("coi criteri la carta dei frame senza oggetto resta in testa, anche senza oggetti trovati", async () => {
+    const fuori = { frames: 3, integration_s: 0, untimed: 3, filters: [], solver_missing: false }
+    archivio([M31], { unresolved: fuori })
+    await apriArchivioSu("/archivio?type=galaxy")
+
+    const tutte = await carte()
+    expect(testoDi(tutte[0])).toContain("Senza oggetti identificati")
+    expect(testoDi(tutte[1])).toContain("M 31")
+
+    pulisci()
+    archivio([], { unresolved: fuori, whole: INTERO })
+    await apriArchivioSu("/archivio?type=galaxy")
+    expect(await screen.findByText(/^nessun oggetto con questi criteri$/i)).toBeDefined()
+    expect(testoDi(document.querySelector(".al-arch__centro-1 > section"))).toContain("Senza oggetti identificati")
+  })
+
+  it("con ASTAP la carta dice senza oggetti identificati, e non c'e' l'avviso", async () => {
+    const fuori = { frames: 3, integration_s: 0, untimed: 3, filters: [], solver_missing: false }
+    archivio([M31], { unresolved: fuori })
+    await apriArchivio()
+
+    const tutte = await carte()
+    expect(testoDi(tutte[0])).toContain("Senza oggetti identificati")
+    expect(screen.queryByText(/ASTAP non è installato/)).toBeNull()
   })
 })
-

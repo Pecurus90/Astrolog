@@ -16,7 +16,7 @@ from .objects import NAME_COLUMNS, subjects_of, subjects_sql, together
 # The `NOT IN` uses the partial index; `object_id IS NOT NULL` since one NULL in it fails them all.
 _OBJECTS = f"""
 SELECT 'o:' || o.id AS row_key, o.id, NULL AS mosaic_key, o.catalog_slug, {NAME_COLUMNS},
-       e.constellation, e.type_code, c.catalog, c.designation, NULL AS panels
+       e.constellation, e.type_code, e.common_name, c.catalog, c.designation, NULL AS panels
 FROM objects o
 LEFT JOIN catalog_entries e ON e.slug = o.catalog_slug
 LEFT JOIN catalog_names c ON c.slug = o.catalog_slug AND c.is_primary = 1
@@ -35,7 +35,7 @@ _OF_NAME = f"CASE WHEN d.value LIKE '{NAME}%' AND TRIM({_NAME}) <> '' THEN {_NAM
 _MOSAICS = f"""
 SELECT 'm:' || g.mosaic_key AS row_key, NULL AS id, g.mosaic_key, t.slug AS catalog_slug,
        t.name AS primary_name, e.name AS catalog_name,
-       e.constellation, e.type_code, c.catalog, c.designation, g.panels
+       e.constellation, e.type_code, e.common_name, c.catalog, c.designation, g.panels
 FROM (SELECT f.mosaic_key, COUNT(DISTINCT f.panel_id) AS panels FROM frames f
       WHERE f.mosaic_key IS NOT NULL AND f.copy_of IS NULL GROUP BY f.mosaic_key) g
 LEFT JOIN (SELECT d.entity_key, d.field, {_OF_SLUG} AS slug, {_OF_NAME} AS name
@@ -45,13 +45,13 @@ LEFT JOIN (SELECT d.entity_key, d.field, {_OF_SLUG} AS slug, {_OF_NAME} AS name
 LEFT JOIN catalog_entries e ON e.slug = t.slug
 LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608
 
-_ROWS = f"({_OBJECTS} UNION ALL {_MOSAICS}) r"
+ROWS = f"({_OBJECTS} UNION ALL {_MOSAICS}) r"
 
 
 class Order(StrEnum):
     NAME = "name"
     HOURS = "hours"
-    FRAMES = "frames"
+    RECENT = "recent"
 
 
 # By name is catalog then number, or `M 13` would follow `M 103`; `NOCASE` or `vdB` follows `WR`.
@@ -63,8 +63,59 @@ ORDERS = {
         " r.primary_name COLLATE NOCASE, r.row_key"
     ),
     Order.HOURS: f"{counts.ORDER_BY_TIME}, r.row_key",
-    Order.FRAMES: "ORDER BY frames DESC, integration_s DESC, r.row_key",
+    # a row with no night goes last: it was never shot, or its frames do not say when
+    Order.RECENT: "ORDER BY last_night IS NULL, last_night DESC, r.row_key",
 }
+
+
+class Family(StrEnum):
+    """What kind of thing, by family (archivio.md): the catalog's code is too fine to choose by."""
+
+    GALAXY = "galaxy"
+    NEBULA = "nebula"
+    CLUSTER = "cluster"
+    STAR = "star"
+    OTHER = "other"
+    UNKNOWN = "unknown"  # the catalog does not know the row
+
+
+# The catalog's codes (schema.sql, catalog_entries.type_code); one missing here reads "other".
+TYPE_FAMILY: dict[str, Family] = {
+    **dict.fromkeys(("GALAXY", "GALAXY_PAIR", "GALAXY_GROUP", "GALAXY_CLUSTER"), Family.GALAXY),
+    **dict.fromkeys(
+        (
+            "NEBULA",
+            "DARK_NEBULA",
+            "EMISSION_NEBULA",
+            "REFLECTION_NEBULA",
+            "PLANETARY_NEBULA",
+            "HII_REGION",
+            "SUPERNOVA_REMNANT",
+        ),
+        Family.NEBULA,
+    ),  # fmt: skip
+    **dict.fromkeys(("OPEN_CLUSTER", "GLOBULAR_CLUSTER", "STAR_CLUSTER"), Family.CLUSTER),
+    **dict.fromkeys(("STAR", "DOUBLE_STAR", "NOVA_WR"), Family.STAR),
+}
+
+
+def family_sql(column: str) -> str:
+    """The family of a `type_code` column, in SQL; constants only, so no placeholder."""
+    cases = "".join(
+        f" WHEN {column} IN ({', '.join(repr(c) for c, f in TYPE_FAMILY.items() if f == fam)})"
+        f" THEN '{fam}'"
+        for fam in dict.fromkeys(TYPE_FAMILY.values())
+    )
+    return f"(CASE WHEN {column} IS NULL THEN '{Family.UNKNOWN}'{cases} ELSE '{Family.OTHER}' END)"
+
+
+class Form(StrEnum):
+    """How many productions a row has, or whether it is a mosaic (sheet, "Produzioni")."""
+
+    ONE = "one"
+    SEVERAL = "several"
+    MOSAIC = "mosaic"
+
 
 # An object row's objects are itself, even without frames, or a catalog filter would lose it;
 # panels are looked up only for a mosaic, elsewhere the search would find nothing new.
@@ -79,7 +130,7 @@ _ROW_OBJECTS = f"(o2.id = r.id OR ({_IN_ROW_PANELS}))"
 # asks it of the frames the row counts: "Lum in 2025" is one frame, not one of each.
 _WITH_FILTER = (
     "EXISTS (SELECT 1 FROM frames f JOIN filters x ON x.id = f.filter_id"  # noqa: S608
-    f" WHERE {_ROW_FRAMES}{{scope}} AND x.name = ?)"
+    f" WHERE {_ROW_FRAMES}{{scope}} AND x.name IN ({{marks}}))"
 )
 # Narrowed by period, site or gear, a row passes with a frame of its own in it; an object never
 # shot has none, and goes.
@@ -89,24 +140,55 @@ _IN_SCOPE = f"EXISTS (SELECT 1 FROM frames f WHERE {_ROW_FRAMES}{{scope}})"  # n
 _FROM_PANELS = (
     "r.mosaic_key IS NOT NULL AND EXISTS (SELECT 1 FROM frames f CROSS JOIN objects o2"  # noqa: S608
     " CROSS JOIN {table} WHERE f.copy_of IS NULL AND " + counts.of(counts.Subject.MOSAIC) +
-    " AND o2.id = f.object_id AND {link} AND {column} = ?)"
+    " AND o2.id = f.object_id AND {link} AND {column} IN ({marks}))"
 )  # fmt: skip
-_OF_CATALOG = (
-    "(r.catalog = ? OR ("
-    + _FROM_PANELS.format(
-        table="catalog_names c2",
-        link="c2.slug = o2.catalog_slug AND c2.is_primary = 1",
-        column="c2.catalog",
-    )
-    + "))"
+_NAMES, _ENTRIES = "catalog_names c2", "catalog_entries e2"
+_NAME_LINK, _ENTRY_LINK = (
+    "c2.slug = o2.catalog_slug AND c2.is_primary = 1",
+    "e2.slug = o2.catalog_slug",
 )
-_IN_CONSTELLATION = (
-    "(r.constellation = ? OR ("
-    + _FROM_PANELS.format(
-        table="catalog_entries e2", link="e2.slug = o2.catalog_slug", column="e2.constellation"
-    )
-    + "))"
+# (row column, panel table, panel link, panel column): the row's own value, or a panel's.
+_ROW_OR_PANEL = {
+    "catalogs": ("r.catalog", _NAMES, _NAME_LINK, "c2.catalog"),
+    "constellations": ("r.constellation", _ENTRIES, _ENTRY_LINK, "e2.constellation"),
+    "types": (family_sql("r.type_code"), _ENTRIES, _ENTRY_LINK, family_sql("e2.type_code")),
+}
+# How many optics and camera pairs the row's frames have, as `productions.py` groups them.
+PAIR = "COALESCE(pg.optics_id, 0) || ':' || COALESCE(pg.camera_id, 0)"
+PRODUCTIONS = (
+    f"(SELECT COUNT(DISTINCT {PAIR})"  # noqa: S608
+    f" FROM frames f LEFT JOIN rigs pg ON pg.id = f.rig_id WHERE {_ROW_FRAMES}{{scope}})"
 )
+_FORMS = {
+    Form.MOSAIC: "r.mosaic_key IS NOT NULL",
+    Form.ONE: f"(r.mosaic_key IS NULL AND {PRODUCTIONS} = 1)",
+    Form.SEVERAL: f"(r.mosaic_key IS NULL AND {PRODUCTIONS} > 1)",
+}
+
+
+# The latest night of the frames the row counts: the order "Piu' recenti".
+_LAST_NIGHT = (
+    "(SELECT MAX(n.night_date) FROM frames f JOIN nights n ON n.id = f.night_id"  # noqa: S608
+    f" WHERE {_ROW_FRAMES}{{scope}}) AS last_night"
+)
+
+
+def _row_or_panel(field_name: str, chosen: tuple[str, ...]) -> tuple[str, list[Any]]:
+    column, table, link, panel_column = _ROW_OR_PANEL[field_name]
+    marks = counts.marks(chosen)
+    panels = _FROM_PANELS.format(table=table, link=link, column=panel_column, marks=marks)
+    return f"({column} IN ({marks}) OR ({panels}))", [*chosen, *chosen]
+
+
+def _forms(chosen: tuple[Form, ...], narrowed: str, values: list[Any]) -> tuple[str, list[Any]]:
+    """Either form: each with its own sub-select, each with the scope's values."""
+    parts, out = [], []
+    for form in chosen:
+        sql = _FORMS[Form(form)]
+        parts.append(sql.format(scope=narrowed))
+        out += values * sql.count("{scope}")
+    return "(" + " OR ".join(parts) + ")", out
+
 
 # ASCII only, as SQLite's `LOWER()`: half of a rule that lives on both sides.
 _ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
@@ -154,22 +236,22 @@ def _searching(q: str | None) -> tuple[str, list[str]]:
 
 @dataclass(frozen=True)
 class Criteria:
-    """What the bar asks. `q`, `key` (one row), catalog and constellation ask the row; the filter
-    and `scope` its frames, and `scope` also narrows what the row counts."""
+    """What the bar asks: q, key, catalogs, constellations, types, forms ask the row; filters and
+    `scope` its frames. Values of one field are either, fields hold together."""
 
     q: str | None = None
     key: str | None = None
-    catalog: str | None = None
-    constellation: str | None = None
-    filter_name: str | None = None
-    mosaic: bool = False
+    catalogs: tuple[str, ...] = ()
+    constellations: tuple[str, ...] = ()
+    types: tuple[Family, ...] = ()
+    forms: tuple[Form, ...] = ()
+    filters: tuple[str, ...] = ()
     scope: counts.Scope = field(default_factory=counts.Scope)
 
 
-def _where(c: Criteria) -> tuple[str, list[Any]]:
+def where(c: Criteria) -> tuple[str, list[Any]]:
+    """The one rule a row passes by: the page, its count and every option's count ask it."""
     parts, values = ["1 = 1"], []
-    if c.mosaic:
-        parts.append("r.mosaic_key IS NOT NULL")
     searched, its_values = _searching(c.q)
     if searched:
         parts.append(searched)
@@ -177,17 +259,23 @@ def _where(c: Criteria) -> tuple[str, list[Any]]:
     if c.key:
         parts.append(f"{_KEY} = ?")
         values.append(c.key)
-    for part, value in ((_OF_CATALOG, c.catalog), (_IN_CONSTELLATION, c.constellation)):
-        if value:
+    for name in ("catalogs", "constellations", "types"):
+        chosen = getattr(c, name)
+        if chosen:
+            part, its_values = _row_or_panel(name, tuple(chosen))
             parts.append(part)
-            values += [value, value]
+            values += its_values
     narrowed, scope_values = c.scope.sql
+    if c.forms:
+        part, its_values = _forms(c.forms, narrowed, scope_values)
+        parts.append(part)
+        values += its_values
     if narrowed:
         parts.append(_IN_SCOPE.format(scope=narrowed))
         values += scope_values
-    if c.filter_name:
-        parts.append(_WITH_FILTER.format(scope=narrowed))
-        values += [*scope_values, c.filter_name]
+    if c.filters:
+        parts.append(_WITH_FILTER.format(scope=narrowed, marks=counts.marks(c.filters)))
+        values += [*scope_values, *c.filters]
     return " AND ".join(parts), values
 
 
@@ -203,15 +291,17 @@ def page(
     follows. Hours, and the order by hours, are the scope's."""
     order = ORDERS[sort]  # from a closed list: nothing from outside becomes `ORDER BY`
     criteria = Criteria(**conditions)
-    where, values = _where(criteria)
+    cond, values = where(criteria)
     narrowed, scope_values = criteria.scope.sql
     hours = counts.counts_on(counts.Subject.ROW, narrowed)
+    last = _LAST_NIGHT.format(scope=narrowed)
     rows = conn.execute(
-        f"SELECT r.*, {_KEY} AS key, {hours} FROM {_ROWS} WHERE {where} {order} LIMIT ? OFFSET ?",  # noqa: S608
-        (*scope_values * 3, *values, limit, offset),
+        f"SELECT r.*, {_KEY} AS key, {hours}, {last} FROM {ROWS}"  # noqa: S608
+        f" WHERE {cond} {order} LIMIT ? OFFSET ?",
+        (*scope_values * 4, *values, limit, offset),
     )
     total = conn.execute(
-        f"SELECT COUNT(*) FROM {_ROWS} WHERE {where}",  # noqa: S608 - `where` are placeholders
+        f"SELECT COUNT(*) FROM {ROWS} WHERE {cond}",  # noqa: S608 - `where` are placeholders
         values,
     ).fetchone()[0]
     return [dict(r) for r in rows], total
@@ -219,78 +309,64 @@ def page(
 
 def found(conn: sqlite3.Connection, **conditions: Any) -> dict[str, int]:
     """Objects and mosaics apart: the on-screen count does not call a mosaic an object."""
-    where, values = _where(Criteria(**conditions))
+    cond, values = where(Criteria(**conditions))
     # `where` are placeholders, hence the `noqa`
     sql = (
         "SELECT COALESCE(SUM(r.mosaic_key IS NULL), 0), COALESCE(SUM(r.mosaic_key IS NOT NULL), 0)"  # noqa: S608
-        f" FROM {_ROWS} WHERE {where}"
+        f" FROM {ROWS} WHERE {cond}"
     )
     n_objects, n_mosaics = conn.execute(sql, values).fetchone()
     return {"objects": n_objects, "mosaics": n_mosaics}
 
 
-# The first good frame per filter is enough, and the `frames.filter_id` index keeps the search
-# short; a `JOIN` with `DISTINCT` would read them all.
-FILTERS_USED = (
-    "SELECT x.name FROM filters x WHERE EXISTS (SELECT 1 FROM frames f WHERE f.filter_id = x.id"  # noqa: S608
-    " AND f.object_id IS NOT NULL AND f.copy_of IS NULL) ORDER BY " + filters_used.order_by("x")
+# Frames that belong to a row: an object's alone, or a mosaic's even on a panel without one.
+SHOT = (
+    "f.copy_of IS NULL AND (f.mosaic_key IS NOT NULL"
+    " OR (f.object_id IS NOT NULL AND " + counts.ALONE + "))"
+)
+# The row a frame belongs to, as `ROWS` keys it.
+ROW_OF_FRAME = (
+    "CASE WHEN f.mosaic_key IS NOT NULL THEN 'm:' || f.mosaic_key ELSE 'o:' || f.object_id END"
+)
+_TOTALS = (
+    f"SELECT {counts.AGGREGATE}, {counts.UNTIMED}, COUNT(DISTINCT f.night_id) AS nights"  # noqa: S608
+    f" FROM frames f WHERE {SHOT}"
+)
+# Light frames that no object and no mosaic took: unsolved, or solved on a sky with nothing named.
+_UNRESOLVED = (
+    "f.copy_of IS NULL AND f.image_type = 'light' AND f.object_id IS NULL AND f.mosaic_key IS NULL"
 )
 
 
-# Frames that belong to a row: an object's, or a mosaic's even on a panel without one.
-_SHOT = "(f.object_id IS NOT NULL OR f.mosaic_key IS NOT NULL) AND f.copy_of IS NULL"
-_YEARS = (
-    "SELECT DISTINCT substr(n.night_date, 1, 4) FROM nights n"  # noqa: S608 - constants
-    f" WHERE EXISTS (SELECT 1 FROM frames f WHERE f.night_id = n.id AND {_SHOT}) ORDER BY 1 DESC"
-)
-_SITES = (
-    "SELECT s.id, s.name FROM sites s WHERE EXISTS (SELECT 1 FROM nights n"  # noqa: S608
-    f" JOIN frames f ON f.night_id = n.id WHERE n.site_id = s.id AND {_SHOT})"
-    " ORDER BY s.name COLLATE NOCASE"
-)
-# Through the rig, as `Scope` narrows; `{column}` is `optics_id` or `camera_id`.
-_PIECES = (
-    "SELECT i.id, i.name FROM instruments i WHERE EXISTS (SELECT 1 FROM rigs g"  # noqa: S608
-    f" JOIN frames f ON f.rig_id = g.id WHERE g.{{column}} = i.id AND {_SHOT})"
-    " ORDER BY i.name COLLATE NOCASE"
-)
-
-
-def _picks(conn: sqlite3.Connection, sql: str) -> list[dict[str, Any]]:
-    """`{id, name}`, or none if only one: choosing the only site narrows nothing."""
-    picks = [{"id": r[0], "name": r[1]} for r in conn.execute(sql)]
-    return picks if len(picks) > 1 else []
-
-
-def choices(conn: sqlite3.Connection) -> dict[str, Any]:
-    """What the archive holds, not what the catalog knows; `NOCASE` like the rows, and the user's
-    filter names mix case for sure."""
+def totals(conn: sqlite3.Connection) -> dict[str, Any]:
+    """The whole archive, whatever the bar asks: rows, mosaics among them, frames, nights."""
+    rows = found(conn)
+    frames = dict(conn.execute(_TOTALS).fetchone())
     return {
-        "catalogs": _column(
-            conn,
-            "SELECT DISTINCT c.catalog FROM objects o"
-            " JOIN catalog_names c ON c.slug = o.catalog_slug AND c.is_primary = 1"
-            " ORDER BY c.catalog COLLATE NOCASE",
-        ),
-        "constellations": _column(
-            conn,
-            "SELECT DISTINCT e.constellation FROM objects o"
-            " JOIN catalog_entries e ON e.slug = o.catalog_slug"
-            " ORDER BY e.constellation COLLATE NOCASE",
-        ),
-        # filters that shot an object: one owned and never used narrows nothing
-        "filters": _column(conn, FILTERS_USED),
-        # the user's nights, latest first: the period offers years and dates of your choosing
-        "years": _column(conn, _YEARS),
-        "sites": _picks(conn, _SITES),
-        "optics": _picks(conn, _PIECES.format(column="optics_id")),
-        "cameras": _picks(conn, _PIECES.format(column="camera_id")),
-        # offered to whoever has a confirmed mosaic: the partial index says so at once
-        "mosaics": conn.execute(
-            "SELECT EXISTS (SELECT 1 FROM frames WHERE mosaic_key IS NOT NULL)"
-        ).fetchone()[0]
-        == 1,
+        "rows": rows["objects"] + rows["mosaics"],
+        "mosaics": rows["mosaics"],
+        "frames": frames["frames"],
+        "integration_s": frames["integration_s"],
+        "untimed": frames["untimed"] or 0,
+        "nights": frames["nights"],
     }
+
+
+def unresolved(conn: sqlite3.Connection) -> dict[str, Any] | None:
+    """The frames without an object, counted like a row, with filters; None if none."""
+    head = dict(
+        conn.execute(
+            f"SELECT {counts.AGGREGATE}, {counts.UNTIMED} FROM frames f WHERE {_UNRESOLVED}"  # noqa: S608
+        ).fetchone()
+    )
+    if not head["frames"]:
+        return None
+    by_filter = conn.execute(
+        f"SELECT x.name, x.passband, {counts.AGGREGATE} FROM frames f"  # noqa: S608
+        f" JOIN filters x ON x.id = f.filter_id WHERE {_UNRESOLVED}"
+        f" GROUP BY x.id ORDER BY {filters_used.order_by('x')}"
+    )
+    return {**head, "filters": [dict(r) for r in by_filter]}
 
 
 # By framing, with the centre `group` wrote, counted like every row, longest first.
@@ -328,7 +404,3 @@ def panels(
             "untimed": r["untimed"],
         },
     )
-
-
-def _column(conn: sqlite3.Connection, sql: str) -> list[str]:
-    return [r[0] for r in conn.execute(sql)]

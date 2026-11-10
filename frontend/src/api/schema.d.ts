@@ -39,18 +39,20 @@ export interface paths {
         /**
          * Archive Page
          * @description The archive rows -- confirmed objects and mosaics -- with each one's filters, in the order
-         *     `sort` chooses, narrowed by the search parameters.
+         *     `sort` chooses, narrowed by the criteria. A repeated criterion is either
+         *     (`?year=2024&year=2025`), different criteria hold together.
          *
-         *     `since`/`until` (night dates, both included), `site`, `optics` and `camera` narrow the
-         *     **frames**: a row passes with one of its frames in them, and its hours, filters, productions
-         *     and panels are those frames' only -- narrowed to 2025, a row tells 2025.
+         *     `year`, `site`, `optics` and `camera` narrow the **frames**: a row passes with one of its
+         *     frames in them, and its hours, filters, productions and panels are those frames' only --
+         *     narrowed to 2025, a row tells 2025. `filter` asks the same frames and leaves the hours.
          *
          *     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
          *     where `q` would also find `M 10` and `M 101` for `M 1`. With `key`, `q` is not applied.
          *
-         *     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
-         *     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
-         *     a time would be five rounds to see what fits in one.
+         *     `criteria` counts each option with the other choices on, on the first page only (`offset` 0):
+         *     "Mostra altri" does not change them, and they read the frames. `whole` is the whole archive, and
+         *     `unresolved` the light frames no object took. Twenty rows a page (the sheet's "Mostra altri
+         *     20").
          */
         get: operations["archive_page"];
         put?: never;
@@ -1488,56 +1490,20 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
-         * ArchiveChoices
-         * @description What the toolbar dropdowns offer: **what is in the archive**, not what the catalog knows:
-         *     someone who uses two catalogs must not scroll through every one the catalog carries.
+         * ArchiveCriterion
+         * @description A criterion the archive can narrow by: only from two options up, or while one is chosen.
          */
-        ArchiveChoices: {
+        ArchiveCriterion: {
+            key: components["schemas"]["Key"];
             /**
-             * Catalogs
-             * @description The prefixes of the catalogs your objects belong to (`M`, `NGC`...).
+             * Options
+             * @description In the criterion's own order.
              */
-            catalogs: string[];
-            /**
-             * Constellations
-             * @description The three-letter IAU codes, in order.
-             */
-            constellations: string[];
-            /**
-             * Filters
-             * @description The names of the filters you shot at least one object with.
-             */
-            filters: string[];
-            /**
-             * Years
-             * @description The years of your nights, latest first: the period dropdown offers them.
-             */
-            years: string[];
-            /**
-             * Sites
-             * @description The sites you shot from; empty if only one, which would narrow nothing.
-             */
-            sites: components["schemas"]["ArchivePick"][];
-            /**
-             * Optics
-             * @description The optics you shot with; empty if only one.
-             */
-            optics: components["schemas"]["ArchivePick"][];
-            /**
-             * Cameras
-             * @description The cameras you shot with; empty if only one.
-             */
-            cameras: components["schemas"]["ArchivePick"][];
-            /**
-             * Mosaics
-             * @description Whether you have at least one confirmed mosaic: without one, "mosaics only" is not offered.
-             */
-            mosaics: boolean;
+            options: components["schemas"]["ArchiveOption"][];
         };
         /**
          * ArchiveFound
-         * @description How many of the rows found are objects and how many mosaics: the count on screen does not
-         *     call a mosaic an "object".
+         * @description How many of the rows found are objects and how many mosaics.
          */
         ArchiveFound: {
             /** Objects */
@@ -1560,7 +1526,14 @@ export interface components {
             offset: number;
             /** @description The same rows, split between objects and mosaics. */
             found: components["schemas"]["ArchiveFound"];
-            choices: components["schemas"]["ArchiveChoices"];
+            whole: components["schemas"]["ArchiveWhole"];
+            /**
+             * Criteria
+             * @description In the sheet's order.
+             */
+            criteria: components["schemas"]["ArchiveCriterion"][];
+            /** @description The frames without an object; null when there are none. */
+            unresolved: components["schemas"]["ArchiveUnresolved"] | null;
         };
         /**
          * ArchiveObject
@@ -1583,6 +1556,11 @@ export interface components {
              * @description The catalog slug of the object, or of the mosaic's target.
              */
             slug: string | null;
+            /**
+             * Common Name
+             * @description The name the catalog knows it by, in English as the catalog writes it.
+             */
+            common_name: string | null;
             /**
              * Frames
              * @description How many frames, rewritten copies excluded.
@@ -1630,6 +1608,34 @@ export interface components {
             panel_list: components["schemas"]["ArchivePanel"][];
         };
         /**
+         * ArchiveOption
+         * @description One option of a criterion, counted with the other choices on.
+         */
+        ArchiveOption: {
+            /**
+             * Value
+             * @description What goes back to the route: a year, an id, a name, a family, a form.
+             */
+            value: string;
+            /**
+             * Label
+             * @description The name of a site or a piece of gear; null where the value says itself.
+             */
+            label: string | null;
+            /**
+             * Passband
+             * @description A filter's canonical passband: it gives the colour.
+             */
+            passband: string | null;
+            /**
+             * Rows
+             * @description The rows this option would give: zero shows it off, not gone.
+             */
+            rows: number;
+            /** Chosen */
+            chosen: boolean;
+        };
+        /**
          * ArchivePanel
          * @description A panel of a mosaic: the framing, what you shot in it and how much.
          */
@@ -1657,16 +1663,6 @@ export interface components {
             integration_s: number;
             /** Untimed */
             untimed: number;
-        };
-        /**
-         * ArchivePick
-         * @description A site or a piece of gear to narrow by: its id goes back to the route, its name on screen.
-         */
-        ArchivePick: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
         };
         /**
          * ArchiveProduction
@@ -1729,6 +1725,49 @@ export interface components {
              * @description The objects named so far, in a night or still waiting for one.
              */
             objects: number;
+        };
+        /**
+         * ArchiveUnresolved
+         * @description Light frames that no object and no mosaic took, counted like a row.
+         */
+        ArchiveUnresolved: {
+            /** Frames */
+            frames: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
+            /** Filters */
+            filters: components["schemas"]["FilterUsed"][];
+            /**
+             * Solver Missing
+             * @description ASTAP is not there: the frames stay unsolved until it is.
+             */
+            solver_missing: boolean;
+        };
+        /**
+         * ArchiveWhole
+         * @description The whole archive, whatever the bar asks: the head of the page.
+         */
+        ArchiveWhole: {
+            /**
+             * Rows
+             * @description Objects and mosaics together.
+             */
+            rows: number;
+            /**
+             * Mosaics
+             * @description How many of the rows are mosaics.
+             */
+            mosaics: number;
+            /** Frames */
+            frames: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
+            /** Nights */
+            nights: number;
         };
         /**
          * Backfocus
@@ -2040,6 +2079,12 @@ export interface components {
              */
             unit: "ly" | "million_ly";
         };
+        /**
+         * Family
+         * @description What kind of thing, by family (archivio.md): the catalog's code is too fine to choose by.
+         * @enum {string}
+         */
+        Family: "galaxy" | "nebula" | "cluster" | "star" | "other" | "unknown";
         /** FileNotRead */
         FileNotRead: {
             /**
@@ -2338,6 +2383,12 @@ export interface components {
              */
             reason: "root_unreachable" | "scan_running";
         };
+        /**
+         * Form
+         * @description How many productions a row has, or whether it is a mosaic (sheet, "Produzioni").
+         * @enum {string}
+         */
+        Form: "one" | "several" | "mosaic";
         /**
          * FoundNight
          * @description A night, found by date or by an object shot in it; its counts are the whole night's.
@@ -2958,6 +3009,12 @@ export interface components {
              */
             no_hours: ("files_silent" | "no_rig") | null;
         };
+        /**
+         * Key
+         * @description In the sheet's order (Archivio.dc.html 140).
+         * @enum {string}
+         */
+        Key: "year" | "type" | "constellation" | "filter" | "form" | "site" | "optics" | "camera" | "catalog";
         /**
          * LastScanOut
          * @description The newest gesture whose receipts have all closed, summed: the gear menu's last-scan line
@@ -5859,16 +5916,16 @@ export interface operations {
                 offset?: number;
                 q?: string | null;
                 key?: string | null;
-                catalog?: string | null;
-                constellation?: string | null;
-                filter?: string | null;
-                mosaic?: boolean;
-                since?: string | null;
-                until?: string | null;
-                site?: number | null;
-                optics?: number | null;
-                camera?: number | null;
-                sort?: "name" | "hours" | "frames";
+                year?: string[];
+                type?: components["schemas"]["Family"][];
+                constellation?: string[];
+                filter?: string[];
+                form?: components["schemas"]["Form"][];
+                site?: number[];
+                optics?: number[];
+                camera?: number[];
+                catalog?: string[];
+                sort?: "name" | "hours" | "recent";
             };
             header?: never;
             path?: never;

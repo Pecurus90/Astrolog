@@ -9,11 +9,11 @@ vengono da [`glossario.md`](glossario.md); come si legge il nome di un oggetto s
 ## Cosa chiede l'utente
 
 Le prove del frontend si chiamano col loro titolo e stanno in `frontend/tests/archivio.test.tsx`
-(la pagina), in `frontend/tests/archivio-barra.test.tsx` (i controlli) e in
-`frontend/tests/archivio-mosaici.test.tsx` (i mosaici), e i nomi delle costellazioni in
-`frontend/tests/costellazioni.test.ts`;
-quelle del backend in `backend/tests/test_spine_archive.py` (la barra: cerca, filtra, ordina,
-le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosaici) e in
+(la pagina), in `frontend/tests/archivio-criteri.test.tsx` (ricerca e criteri), e i nomi delle
+costellazioni in `frontend/tests/costellazioni.test.ts`;
+quelle del backend in `backend/tests/test_spine_archive.py` (cerca, ordina), in
+`backend/tests/test_spine_archive_criteria.py` (i nove criteri, la testa, i frame senza oggetto),
+in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosaici) e in
 `backend/tests/test_api_archive.py` (cosa la rotta manda).
 
 | richiesta | prova |
@@ -22,52 +22,61 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Le copie calibrate che tengo accanto agli originali non mi raddoppiano le ore | `test_a_rewritten_copy_is_not_another_hour_of_sky` |
 | Un frame che non dice quanto e' durato non conta come zero: me lo dice a parte | `test_a_pose_without_a_time_is_not_zero_hours`; *un frame che non dice quanto e' durato non diventa zero* |
 | Se nessun frame di un oggetto dice la durata, non mi scrive "0 h" | *se nessun frame dice la durata, non scrive zero ore* |
-| Vedo con che filtri ho ripreso ogni oggetto, nell'ordine dei filtri, e quante ore ciascuno | `test_the_filters_of_an_object_come_with_it_from_the_same_house`, `test_a_night_or_an_object_lists_its_filters_in_the_one_order`, `test_the_archive_dropdown_offers_the_filters_in_the_one_order` (`backend/tests/test_filter_order.py`); *dice con che filtri hai ripreso, nell'ordine dei filtri*, *ogni filtro dice le sue ore, nelle carte e nell'elenco*, *un filtro le cui pose non dicono la durata non scrive ore* <!-- glossario-ok --> |
+| Vedo con che filtri ho ripreso ogni oggetto, nell'ordine dei filtri, e quante ore ciascuno | `test_the_filters_of_an_object_come_with_it_from_the_same_house`, `test_a_night_or_an_object_lists_its_filters_in_the_one_order`, `test_the_archive_dropdown_offers_the_filters_in_the_one_order` (`backend/tests/test_filter_order.py`); *dice con che filtri hai ripreso, nell'ordine dei filtri* (la barra dei filtri e' quella delle Notti) <!-- glossario-ok --> |
 | Un oggetto di cui i file non dicono il filtro non mi mostra pastiglie finte | *un oggetto senza filtri riconosciuti non mostra pastiglie finte* |
 | L'Archivio si apre a carte, e con un clic lo vedo a colonne per confrontare | *si apre a carte, e l'altra vista e' a un clic* |
 | Se mando a qualcuno il collegamento all'elenco, gli si apre l'elenco | *quale vista stai guardando resta nell'indirizzo* |
-| Nell'elenco, una cella che il catalogo non sa riempire lo dice con un segno invece di restare vuota | *nell'elenco le celle che non sanno lo dicono con una forma, non con un vuoto* |
+| Sotto il nome, nell'elenco, leggo il nome comune, e un mosaico dice i suoi pannelli | *nell'elenco sotto il nome c'e' il nome comune del catalogo, e il mosaico dice i suoi pannelli* |
 | So quanti oggetti ho trovato, non solo quanti ne sto vedendo | `test_the_count_is_what_you_found_not_what_you_have`, `test_the_bar_narrows_the_page_and_the_count_follows`; *dice quanti ne ha trovati, non quanti ne stai vedendo* |
 | Un oggetto solo non mi viene scritto "1 oggetti" | *un oggetto solo non prende il plurale* |
 | Scrivo tre lettere e trovo il mio oggetto, con qualunque sigla lo chiami | `test_you_find_an_object_by_any_name_it_is_known_by`; *cercare stringe l'elenco nel backend, non a schermo* |
 | Cancello quello che avevo scritto e l'archivio torna intero | `test_searching_for_nothing_is_not_searching` |
 | Dalla ricerca nella barra apro un oggetto, e vedo lui solo (`?key=`), non anche quelli che ne contengono la sigla | `test_the_key_opens_the_archive_on_that_object_alone` (`backend/tests/test_search.py`); *con ?key= chiede quell'oggetto solo, dice che e' ristretto e come tornare*, *una chiave che non trova niente lo dice, e non sembra un archivio vuoto* (`ricerca.test.tsx`) |
-| Stringo per catalogo, costellazione o filtro usato, e le tendine offrono solo quello che ho | `test_you_can_narrow_down_to_one_catalogue`, `test_you_can_narrow_down_to_one_constellation`, `test_you_can_narrow_down_to_one_filter`, `test_the_choices_are_only_what_the_archive_has`; *le tendine offrono quello che hai, e quella vuota non compare* |
-| Ordino per nome, ore o frame, e l'archivio si apre in ordine di nome | `test_the_archive_is_sorted_by_name_and_a_name_is_catalogue_then_number`, `test_by_hours_and_by_frames_are_two_different_orders`; *l'ordine lo sceglie l'utente e lo fa il backend* |
+| Stringo per catalogo, costellazione o filtro usato, e i criteri offrono solo quello che ho | `test_you_can_narrow_down_to_one_catalogue`, `test_you_can_narrow_down_to_one_constellation`, `test_you_can_narrow_down_to_one_filter`, `test_the_choices_are_only_what_the_archive_has`; *i criteri offrono quello che hai, e quello con una voce sola non compare* |
+| Scelgo piu' voci dello stesso criterio e passa chi ne ha una; criteri diversi valgono tutti | `test_two_choices_of_one_criterion_are_either`, `test_two_criteria_hold_together` |
+| Ogni voce dice quante righe darebbe con le altre scelte accese, e una a zero si vede spenta | `test_each_option_counts_the_rows_with_the_other_choices`, `test_an_option_count_is_the_page_it_would_give`; *una voce a zero e' spenta e non si sceglie* |
+| Stringo per tipo (galassia, nebulosa, ammasso, stella) e per produzioni (una, piu', mosaico) | `test_you_can_narrow_down_to_a_kind_of_object`, `test_you_can_narrow_down_by_how_many_productions` |
+| Ordino per nome, integrazione o dai piu' recenti, e l'archivio si apre in ordine di nome | `test_the_archive_is_sorted_by_name_and_a_name_is_catalogue_then_number`, `test_by_hours_and_by_the_latest_night_are_two_different_orders`; *l'ordine lo sceglie l'utente e lo fa il backend* |
+| In testa leggo tutto l'archivio: righe, mosaici, ore, frame, notti, qualunque criterio sia acceso | `test_the_totals_are_the_whole_archive_whatever_the_bar_says` |
+| I frame che non hanno un oggetto stanno in una carta loro in testa, e se manca ASTAP me lo dice | `test_the_frames_without_an_object_are_counted_apart`, `test_a_missing_solver_is_said_with_the_frames_it_leaves`; *i frame senza oggetto hanno la loro carta, e senza ASTAP l'avviso porta alle Impostazioni*, *coi criteri la carta dei frame senza oggetto resta in testa, anche senza oggetti trovati* |
+| Sotto il nome leggo il nome comune che il catalogo conosce | `test_a_row_carries_the_common_name_of_the_catalog` |
 | Se un criterio non trova niente me lo dice, e mi lascia il modo di toglierlo | *quando un criterio non trova niente lo dice, e lascia il modo di toglierlo* |
-| Mando a qualcuno il collegamento di una ricerca e gli si apre la stessa | *scegliere un catalogo lo scrive nell'indirizzo, senza toccare la vista* |
+| Mando a qualcuno il collegamento di una ricerca e gli si apre la stessa | *scegliere una voce la scrive nell'indirizzo e la chiede alla rotta*, *due voci dello stesso criterio vanno insieme, e la rotta le riceve tutte e due*, *un indirizzo scritto male non stringe* |
+| Scrivere non riempie la cronologia; una scelta si', e il tasto indietro torna a quella di prima | *scrivere non riempie la cronologia, e una parola sola e' una domanda sola*, *una tendina lascia la sua traccia, e il tasto indietro torna al filtro di prima* |
+| Se la rete cade dopo una scelta, la testa e i criteri restano e la posso togliere | *se la rete cade dopo un filtro, la barra resta e il filtro si puo' togliere* |
 | Un tempo piccolo ma vero non mi viene scritto zero | *un tempo vero ma piccolo non diventa zero* (`frontend/tests/formati.test.ts`) |
 | Per gli oggetti di catalogo vedo in che costellazione sono e che cosa sono | `test_the_catalog_says_what_kind_of_thing_it_is` |
-| Nella tendina le costellazioni stanno in ordine di nome | *la tendina delle costellazioni legge i nomi in ordine alfabetico, e sceglie la sigla* |
+| I criteri stanno nell'ordine della tavola, e i siti e i pezzi si leggono col nome | *i criteri offrono le voci con quante righe darebbero, nell'ordine della tavola* |
 | La costellazione la leggo col nome latino ufficiale, uguale in ogni lingua | *la costellazione si legge col suo nome latino, non con la sigla*, *ogni sigla del catalogo ha il suo nome*, *il nome e' quello latino ufficiale, anche con la dieresi*, *una sigla che non conosce resta la sigla, invece di sparire* |
 | Se ho molti oggetti li vedo tutti, non solo i primi | `test_the_list_is_paged_like_every_other`; *quando ce n e piu' di una pagina, si possono vedere anche gli altri* |
 | Appena installata, la pagina mi dice cosa fare invece di sembrare rotta | `test_an_empty_archive_is_an_answer_not_an_error`; *a mani vuote dice cosa fare, non nessun risultato* |
 | Se l'archivio non risponde me lo dice, invece di sembrare vuoto, e posso riprovare | *se l archivio non risponde lo dice, invece di sembrare vuoto, e si riprova* |
 | Mentre legge, la pagina tiene il posto delle carte | *mentre legge tiene il posto delle carte, e lo dice a chi ascolta* |
-| Accanto a *Carica altri* leggo quanti ne vedo e quanti sono | *accanto a Carica altri dice quanti ne stai vedendo e quanti sono* |
+| Accanto a *Mostra altri 20* leggo quanti ne vedo e quanti sono | *accanto a Mostra altri dice quanti ne stai vedendo e quanti sono* |
 | Cio' che il catalogo o i file non dicono, la carta lo dice a parole | *un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione*, *un oggetto senza filtri riconosciuti non mostra pastiglie finte*, *un tipo che la pagina non conosce non arriva a schermo come sigla: dice che non si sa* |
-| Il posto dell'anteprima c'e' gia', vuoto | *il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente* |
 | Ogni riga dice con quali setup l'ho ripresa: una produzione per ottica e camera, e insieme fanno la riga | `test_an_object_shot_with_two_rigs_has_two_productions_most_time_first`, `test_the_productions_of_a_row_add_up_to_the_row`, `test_each_production_says_its_own_filters_in_the_order_of_the_row`, `test_a_rewritten_copy_is_not_a_frame_of_a_production`, `test_a_narrowed_row_tells_the_productions_of_what_was_asked`, `test_a_mosaic_has_its_productions_too_and_the_object_alone_keeps_its_own` (`backend/tests/test_spine_archive_productions.py`); `test_each_row_carries_its_productions_and_they_add_up_to_the_row` |
 | Un riduttore non fa un'altra produzione; i frame senza setup lo dicono | `test_the_same_optics_and_camera_at_two_focal_lengths_are_one_production`, `test_frames_that_do_not_say_their_rig_are_a_production_that_says_so`, `test_a_rig_that_knows_only_its_camera_is_its_own_production` |
 | Le produzioni di una pagina costano due domande, non una per riga | `test_all_the_productions_of_a_page_come_in_two_questions` |
-| La carta ha un'anteprima per produzione e dice quante sono; l'elenco lo dice quando sono piu' d'una | *la carta ha un posto di anteprima per produzione, e dice quante sono*, *una produzione sola stringe la colonna delle anteprime, e lo dice al singolare*, *oltre quattro produzioni le anteprime vanno tre per riga, senza nasconderne*, *nell'elenco il segno delle produzioni c'e' solo quando sono piu' d'una* |
+| La carta ha un posto di anteprima per produzione e dice quante sono; l'elenco dice una, quante o il mosaico | *la carta ha un posto di anteprima per produzione, e dice quante sono*, *oltre tre produzioni le anteprime vanno su due righe, senza nasconderne*, *nell'elenco la colonna delle produzioni dice una, quante, o il mosaico* |
 | La carta e il nome nell'elenco aprono la finestra dell'oggetto, le produzioni una alla volta | *il tocco sulla carta la apre: nome, nome comune, periodo, siti, ore e frame*, *con piu' produzioni le mostra una alla volta, e la scelta la chiede all'API*, *una produzione sola non ha linguette*, *le frecce vanno all'oggetto prima e dopo nell'ordine della pagina, Esc chiude*, *nell'elenco il nome apre la stessa finestra* (`frontend/tests/archivio-finestra.test.tsx`) |
 | La finestra dice cio' che l'API scrive: notti, setup, catalogo con parsec e Lune piene | `test_its_nights_in_shooting_order_with_what_it_took_in_each`, `test_the_setups_that_took_it_with_its_frames_only`, `test_what_the_catalog_says_with_its_size_on_the_sky`, `test_a_production_with_pieces_the_frames_do_not_say` (`backend/tests/test_api_object_detail.py`); *in cielo dice tipo, costellazione, distanza e quanto e' grande accanto alla Luna piena*, *un oggetto fuori catalogo lo dice, senza inventare tipo e costellazione*, *un oggetto che non c'e' piu' lo dice* |
 | Un mosaico che ho confermato e' una riga sola, col nome che gli ho dato e le ore di tutti i pannelli | `test_a_confirmed_mosaic_is_one_row_with_the_hours_of_all_its_panels`, `test_after_the_yes_the_archive_shows_the_mosaic_as_one_row` (`backend/tests/test_review_mosaic.py`) |
 | Un oggetto ripreso dentro un mosaico e anche da solo ha la sua riga con le sole riprese sue, e niente si conta due volte | `test_an_object_shot_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_pills_of_a_row_are_the_filters_of_its_own_poses` |
 | Cercando o filtrando, un mosaico compare intero se uno dei suoi pannelli risponde | `test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes`, `test_the_filter_used_is_asked_of_the_poses_of_the_row`, `test_a_mosaic_named_with_a_free_name_is_found_by_that_name` |
 | Un mosaico proposto e non ancora confermato non cambia l'Archivio | `test_without_a_confirmed_mosaic_nothing_changes` |
-| Un mosaico dice di esserlo e quanti pannelli ha, nelle due viste e anche a chi ascolta | `test_a_mosaic_row_says_how_many_panels_it_has`; *la carta di un mosaico dice mosaico e quanti pannelli, e si sente*, *anche nell'elenco la riga del mosaico porta la sua etichetta* (`frontend/tests/archivio-mosaici.test.tsx`) |
-| La carta di un mosaico dice ogni pannello, numerato: il suo oggetto, i frame e le ore (il punto del cielo arriva dalla rotta e non si scrive: Marco, 8/10/2026) | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico dice ogni pannello, con oggetto, frame e ore*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) <!-- glossario-ok --> |
-| Posso vedere solo i mosaici, e l'interruttore *Solo mosaici* c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
-| Stringo a un anno, o a date mie, e ogni riga dice solo le ore, i frame e i filtri di quel periodo | `test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it`, `test_a_period_can_straddle_the_new_year`, `test_the_pills_of_a_row_say_the_narrowed_hours` (`backend/tests/test_spine_archive_scope.py`); *un anno chiede le notti dal primo gennaio al trentuno dicembre*, *scegliere le date apre dal e al, e una stagione a cavallo d'anno arriva intera*, *tornare a un anno dimentica le date scelte prima* (`frontend/tests/archivio-periodo.test.tsx`) |
+| Un mosaico dice di esserlo e quanti pannelli ha, nelle due viste e anche a chi ascolta | `test_a_mosaic_row_says_how_many_panels_it_has`; *la carta di un mosaico dice mosaico e quanti pannelli, e si sente*, *nell'elenco la colonna delle produzioni dice una, quante, o il mosaico* |
+| Ogni pannello di un mosaico, numerato, col suo oggetto, i frame e le ore, arriva con la riga e si apre nella finestra (il punto del cielo arriva dalla rotta e non si scrive: Marco, 8/10/2026) | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions` <!-- glossario-ok --> |
+| Posso vedere solo i mosaici, e la voce *mosaico* c'e' solo se ne ho | `test_you_can_narrow_down_by_how_many_productions`, `test_the_choices_are_only_what_the_archive_has` |
+| Stringo a uno o piu' anni, e ogni riga dice solo le ore, i frame e i filtri di quegli anni | `test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it`, `test_two_years_are_either`, `test_the_pills_of_a_row_say_the_narrowed_hours` (`backend/tests/test_spine_archive_scope.py`) |
 | Il periodo guarda la notte, non l'orologio | `test_the_period_reads_the_night_not_the_clock` |
-| Stringo per sito, ottica o camera, e le condizioni valgono sulla stessa posa | `test_you_can_narrow_down_to_one_optics_or_one_camera`, `test_you_can_narrow_down_to_one_site`, `test_the_narrowings_hold_on_the_same_pose`, `test_the_filter_of_the_bar_asks_the_same_poses`; *sito, ottica e camera si leggono col nome e stringono per quello* |
+| Stringo per sito, ottica o camera, e le condizioni valgono sulla stessa posa | `test_you_can_narrow_down_to_one_optics_or_one_camera`, `test_you_can_narrow_down_to_one_site`, `test_the_narrowings_hold_on_the_same_pose`, `test_the_filter_of_the_bar_asks_the_same_poses` |
 | Per ore, con un periodo acceso, l'ordine segue le ore del periodo | `test_by_hours_reads_the_narrowed_hours` |
 | Un mosaico stretto a un periodo apre i soli pannelli ripresi allora | `test_a_mosaic_says_only_the_panels_and_hours_shot_in_the_period` |
-| Le tendine offrono gli anni delle mie notti, e sito, ottica e camera solo se ne ho almeno due | `test_the_choices_offer_the_years_sites_and_pieces_you_shot_with`, `test_one_site_or_one_camera_is_not_a_choice`; *con un sito solo, o una camera sola, la tendina non c'e'* |
+| I criteri offrono gli anni delle mie notti, i siti e i pezzi con cui ho ripreso, ognuno solo se ha almeno due voci | `test_the_choices_offer_the_years_sites_and_pieces_you_shot_with`, `test_one_site_or_one_camera_is_not_a_choice`, `test_a_chosen_option_stays_even_alone` |
 | "Togli i criteri" toglie anche periodo e setup | *togli i criteri toglie anche il periodo e il setup* |
-| La conta dice quanti oggetti e quanti mosaici ho trovato | `test_the_count_says_how_many_objects_and_how_many_mosaics`; *la conta dice quanti oggetti e quanti mosaici* |
+| La conta dice quante righe ho trovato | `test_the_count_says_how_many_objects_and_how_many_mosaics`; *dice quanti ne ha trovati, non quanti ne stai vedendo*, *dice quanti ne stai vedendo su quanti sono, e in che ordine* |
+| In testa leggo tutto l'archivio | *in testa dice tutto l'archivio: oggetti, mosaici, ore, frame e notti* |
+| Se i miei frame non sanno la notte (non ho dato un sito), non mi scrive "0 notti" | *se i frame non sanno la notte (nessun sito), la testa non scrive zero notti* |
 
 ## Le decisioni
 
@@ -100,8 +109,8 @@ Chi raggruppa e' solo l'Archivio: le Notti e *Da confermare* guardano l'oggetto 
 **Un filtro della barra fa passare il gruppo se uno dei suoi frame passa**, e ogni filtro per
 conto suo. I pannelli di un mosaico sono oggetti di cataloghi diversi -- i quattro di IC 405 sono
 IC, LBN, LDN e Sh2 -- e filtrando i frame invece dei gruppi la riga del mosaico direbbe una parte delle ore. E la
-pagina conta **righe**: cento chieste sono cento righe, non cento oggetti. A schermo pero' la conta
-non chiama "oggetto" un mosaico: *3 oggetti e 1 mosaico*. Quanti pannelli ha un mosaico lo sa solo
+pagina conta **righe**: venti chieste sono venti righe, non venti oggetti. A schermo la testa
+dice i mosaici dentro le righe: *240 oggetti, di cui 3 mosaici* (tavola). Quanti pannelli ha un mosaico lo sa solo
 la geometria, quindi lo scrive sui frame chi la fa (`frames.panel_id`), e la riga li conta. Ogni
 pannello si legge allo stesso modo: i suoi frame, contati come ogni riga, il suo oggetto e il
 centro che la geometria ha scritto (`panels`); il centro dice **quale** pannello, se due inquadrano
@@ -119,15 +128,50 @@ la ASI533, non un oggetto che ha frame dell'una e dell'altra. Il periodo si legg
 trentuno dicembre, le due estreme comprese. Il numero dei pannelli di un mosaico resta quello del
 mosaico: e' cio' che il mosaico e', non cio' che e' stato ripreso nel periodo.
 
-**Sito, ottica e camera si offrono solo da due in su.** Con uno solo, sceglierlo non stringe
-niente: e' la tendina con la sola voce "tutti" sotto un altro nome. Gli anni invece si offrono da
-uno, perche' la stessa tendina porta a "Intervallo di date". Ottica e camera si leggono dal setup
-della posa (`rigs`), come le conta l'Attrezzatura.
+**I criteri sono nove, a scelta multipla, e ogni voce dice quante righe darebbe** (tavola v56.11
+e v78, `Archivio.dc.html` 139-148; superano le tendine a una voce del disegno v31). In ordine:
+Periodo (gli anni delle notti), Tipo, Costellazione, Filtri, Produzioni (una, piu', mosaico),
+Sito, Ottica, Camera, Catalogo. Dentro un criterio basta una voce (o), fra criteri valgono tutti
+(e). La regola che fa passare una riga e' una sola (`spine/archive.where`): la conta di una voce
+e' quella regola con le altre scelte accese e questa voce al posto di quelle del suo criterio,
+(`spine/archive_criteria.py`): una domanda raggruppata per i criteri della riga (tipo,
+costellazione, produzioni, catalogo), e una sola per i cinque dei frame (periodo, filtri, sito,
+ottica, camera), che legge i frame una volta raggruppati per riga, notte, setup e filtro: ogni
+loro voce cambia i frame contati, e filtro e produzioni si chiedono a quei frame, come fa la
+regola. Una prova la confronta
+con la pagina che la voce darebbe. Una voce a zero resta a schermo, spenta: sparire farebbe
+saltare le altre sotto il dito. **Un criterio si offre solo da due voci in su**: con una sola,
+sceglierla non stringe niente; una voce scelta resta in elenco anche a zero. Ottica e camera si
+leggono dal setup della posa (`rigs`), come le conta l'Attrezzatura.
+
+**Il tipo e' una famiglia, non il codice del catalogo**: galassia (anche coppie, gruppi e ammassi
+di galassie), nebulosa (oscura, a emissione, a riflessione, planetaria, regione HII, resto di
+supernova), ammasso (aperto, globulare, stellare), stella (anche doppia, nova, Wolf-Rayet), altro,
+e "non si sa" per chi il catalogo non conosce. La tavola raggruppa per la prima parola del nome
+italiano, che metterebbe gli ammassi di galassie con gli ammassi stellari; la famiglia sta in
+`spine/archive.TYPE_FAMILY`. **Le produzioni** contano le coppie ottica e camera dei
+frame della riga nel periodo, sito e setup scelti, come `productions.py`; un mosaico e' "mosaico".
+
+**In testa, tutto l'archivio** (tavola, «240 oggetti, di cui 3 mosaici · 486 ore · 18 430 frame
+· 212 notti»): righe, mosaici, ore, frame senza tempo, frame e notti di ogni riga, qualunque
+criterio sia acceso (`totals`). La conta di cio' che hai trovato sta accanto alla ricerca. Zero
+notti con dei frame vuol dire che i frame non sanno la notte (nessun sito dato): la testa non
+scrive le notti, come non scrive le ore a zero ("non lo so" non e' zero).
+
+**I frame senza oggetto hanno una carta loro, in testa** (tavola, stato «nessun oggetto
+identificato»): i frame di luce che nessun oggetto e nessun mosaico hanno preso, copie escluse,
+con ore, frame senza tempo e filtri (`unresolved`). Se ASTAP non c'e' la carta si chiama «Non
+risolti» e sopra un avviso porta alle Impostazioni; se c'e', «Senza oggetti identificati». La
+carta resta in testa anche coi criteri accesi (tavola 172), e manca solo sulla riga aperta dalla
+Ricerca (`?key=`). La carta non si apre: quei frame si guardano in Da confermare.
 
 **E costa quanto le righe che mostra, non quanto i frame che contengono.** Le ore si contano solo
 per le righe della pagina, e la conta non le calcola; un filtro guarda i pannelli solo di un
 mosaico. Lo misurano `backend/tests/test_spine_archive_cost.py`, in passi del motore e non in
-millisecondi.
+millisecondi. Le conte delle voci leggono invece i frame, una volta per i cinque criteri dei frame
+qualunque sia il numero delle voci: e' il prezzo di sapere quante righe darebbe ogni voce. Costano
+poche pagine con una forma accesa (`test_the_criteria_read_the_frames_once_not_once_per_option`),
+e arrivano con la sola prima pagina: «Mostra altri» non le cambia, la pagina le tiene da li'.
 
 **Le ore si sommano nel backend, e le copie non contano.** I tre sotto-select stanno in una casa
 sola (`spine/counts.py`), e li usano l'Archivio, *Da confermare* e le Notti: il nome di un oggetto
@@ -143,9 +187,10 @@ accanto. Cosi' un oggetto di cui nessun frame dice la durata non mostra "0 h", e
 si legge nello stesso modo da qualunque pagina lo guardi.
 
 **L'ordine di partenza e' il nome, perche' questo e' un inventario** (Marco, 22/9/2026: *"la
-parte delle riprese con le date avviene gia' con le notti"*). Prima si apriva dalla ripresa piu'
-recente: quella domanda ha la sua pagina, e qui serviva a un'altra. I tre ordini sono **nome, ore,
-frame**, li sceglie l'utente e li fa il **backend** -- due viste della stessa pagina ordinate in
+parte delle riprese con le date avviene gia' con le notti"*). I tre ordini sono **nome,
+integrazione, piu' recenti** (tavola v56.11, 25/10/2026, che supera "frame"): l'ultimo legge
+l'ultima notte dei frame della riga nel periodo scelto, e chi non ne ha va in fondo. Li sceglie
+l'utente e li fa il **backend** -- due viste della stessa pagina ordinate in
 due posti andrebbero d'accordo per caso. L'id chiude sempre, perche' senza un ultimo criterio
 stabile due pagine consecutive potrebbero mostrare la stessa riga due volte.
 
@@ -213,8 +258,8 @@ sarebbe un numero che mente, ed e' anche il numero su cui la pagina decide se ce
 senza una traduzione da tenere. I nomi vengono dall'elenco ufficiale dell'IAU, citato accanto alla
 tabella che li porta.
 
-**L'elenco si impagina come gli altri, ma largo** (cento righe per volta). E' un inventario, non
-un flusso da scorrere: chi ha centomila frame ha comunque una manciata di oggetti.
+**L'elenco si impagina a venti righe** (tavola, «Mostra altri 20», che supera le cento del
+disegno v31): venti carte sono quattro file da cinque, e chi cerca usa la ricerca e i criteri.
 
 ## La carta e le produzioni (Marco, 8/10/2026)
 
@@ -260,7 +305,9 @@ dalla tavola sta in `handoff/differenze-dalle-tavole.md`.
 ## Cosa NON fa
 
 Non ha ancora l'etichetta dei **progetti**, che non esistono. I
-pannelli di un mosaico stanno nella sua **carta**, non nell'elenco. Non mostra **anteprime**: sono decise (la foto finale dell'utente, o
-il suo frame migliore) ma non esistono ancora, e il pozzo che le aspetta tiene gia' il suo posto
-nella carta. Non mostra piu' **l'ultima notte** (Marco, 22/9/2026): quel posto e' dei progetti, e
-quando l'hai ripreso l'ultima volta si guarda nelle Notti.
+pannelli di un mosaico stanno nella **finestra** dell'oggetto, non nella carta (tavola v76). Non
+mostra **anteprime** finche' non si salvano (passo 33.2): il pozzo che le aspetta tiene gia' il
+suo posto nella carta. Non mostra **l'ultima notte** (Marco, 22/9/2026): ordina per lei, ma
+quando l'hai ripreso l'ultima volta si guarda nelle Notti. Non ha ancora **Sole, Sistema solare
+e Aggiungi oggetto** della tavola (ADR 0019, passo 46.12): nessuna sorgente li scrive, e linguette
+che portano a niente non si mostrano.

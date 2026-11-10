@@ -124,7 +124,7 @@ def test_a_narrowed_row_tells_the_productions_of_what_was_asked(archivio):
     b = banco(archivio)
 
     sue = productions.of(
-        archivio, Subject.OBJECT, [b["m31"]], alone=True, scope=Scope(since="2025-01-01")
+        archivio, Subject.OBJECT, [b["m31"]], alone=True, scope=Scope(years=("2025",))
     )[b["m31"]]
 
     assert [(p["optics"], p["frames"]) for p in sue] == [("Rifrattore", 4), ("Newton", 1)]
@@ -180,7 +180,7 @@ def test_the_route_hands_the_row_scope_and_the_object_alone_to_the_productions(
     finally:
         conn.close()
     with TestClient(create_app(db_path_col_catalogo), base_url="http://localhost") as client:
-        nel_2025 = client.get("/api/v1/archive", params={"since": "2025-01-01"}).json()["items"]
+        nel_2025 = client.get("/api/v1/archive", params={"year": "2025"}).json()["items"]
         tutte = client.get("/api/v1/archive").json()["items"]
 
     m31 = next(r for r in nel_2025 if r["name"] == "M 31")

@@ -27,7 +27,7 @@ import {
   vai,
   violazioni,
 } from "./banco"
-import { SCELTE, apriArchivioSu, archivio } from "./archivio-banco"
+import { CRITERI, INTERO, apriArchivioSu, archivio } from "./archivio-banco"
 
 afterEach(pulisci)
 
@@ -340,7 +340,10 @@ describe("l accessibilita della prima pagina", () => {
           total: 300,
           limit: 2,
           offset: 0,
-          choices: SCELTE,
+          found: { objects: 299, mosaics: 1 },
+          whole: INTERO,
+          criteria: CRITERI,
+          unresolved: null,
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -350,12 +353,12 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /archivio/i }))
-    await screen.findByRole("button", { name: /carica altri/i })
+    await screen.findByRole("link", { name: /mostra altri/i })
 
     expect(await violazioni(container)).toEqual([])
 
-    fireEvent.click(await screen.findByRole("tab", { name: /elenco/i }))
-    await screen.findByRole("table")
+    fireEvent.click(await screen.findByRole("radio", { name: /elenco/i }))
+    await screen.findByRole("region", { name: /^elenco$/i })
 
     expect(await violazioni(container)).toEqual([])
   })
@@ -364,9 +367,9 @@ describe("l accessibilita della prima pagina", () => {
     // Uno stato che la barra ha creato: barra accesa, elenco vuoto, il "non ho trovato niente"
     // **dentro** il pannello della vista. Le schede restano e devono continuare a governare due
     // pannelli veri -- e finora axe l'Archivio lo vedeva solo pieno.
-    archivio([])
+    archivio([], { whole: INTERO })
     const { container } = await apriArchivioSu("/archivio?q=zzz")
-    await screen.findByText(/^nessun risultato$/i)
+    await screen.findByText(/^nessun oggetto con questi criteri$/i)
 
     expect(await violazioni(container)).toEqual([])
   })

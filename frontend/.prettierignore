@@ -14,16 +14,13 @@ src/Archivio.tsx
 src/Attrezzatura.tsx
 src/Avviso.tsx
 src/Backup.tsx
-src/BarraDellArchivio.tsx
 src/Campo.tsx
 src/CartaDelParametro.tsx
-src/CarteDellArchivio.tsx
 src/ChiaveMeteoblue.tsx
 src/CieloDelleNubi.tsx
 src/Confermare.tsx
 src/Dashboard.tsx
 src/Domanda.tsx
-src/ElencoDellArchivio.tsx
 src/FiltriUsati.tsx
 src/GestiDelPezzo.tsx
 src/Icons.tsx
@@ -93,9 +90,6 @@ tests/accessibilita-risposte.test.tsx
 tests/accessibilita.test.tsx
 tests/anno.test.tsx
 tests/archivio-banco.tsx
-tests/archivio-barra.test.tsx
-tests/archivio-mosaici.test.tsx
-tests/archivio-periodo.test.tsx
 tests/archivio.test.tsx
 tests/attrezzatura-aggiungi.test.tsx
 tests/attrezzatura-banco.tsx

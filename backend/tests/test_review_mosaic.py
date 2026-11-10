@@ -203,17 +203,17 @@ def test_the_page_reads_the_proposals_without_redoing_the_geometry(pagina, monke
 
 def test_the_route_narrows_to_the_mosaics_and_counts_them_apart(pagina):
     """Dalla rotta: "solo i mosaici" tiene la riga del mosaico, e la conta dice quanti oggetti e
-    quanti mosaici ha trovato. Un valore che non e' un si' o un no e' un 422, non un filtro."""
+    quanti mosaici ha trovato. Una forma che non esiste e' un 422, non un filtro."""
     _risposta(pagina, _mosaici(pagina)[0], "yes")
 
     tutte = pagina.get("/api/v1/archive").json()
-    solo = pagina.get("/api/v1/archive", params={"mosaic": "true"}).json()
+    solo = pagina.get("/api/v1/archive", params={"form": "mosaic"}).json()
 
     assert tutte["found"] == {"objects": 1, "mosaics": 1}
-    assert tutte["choices"]["mosaics"] is True
+    assert tutte["whole"]["mosaics"] == 1
     assert [(r["name"], r["panels"]) for r in solo["items"]] == [("IC 405", 4)]
     assert solo["found"] == {"objects": 0, "mosaics": 1}
-    assert pagina.get("/api/v1/archive", params={"mosaic": "pippo"}).status_code == 422
+    assert pagina.get("/api/v1/archive", params={"form": "pippo"}).status_code == 422
 
 
 def _pannelli(client):

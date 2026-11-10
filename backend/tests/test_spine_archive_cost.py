@@ -6,7 +6,7 @@ catalogo intero per ogni riga.
 """
 
 from astrolog.db.connect import connect, create_database
-from astrolog.spine import archive
+from astrolog.spine import archive, archive_criteria
 from astrolog.spine import declarations as decl
 
 ORA = "2026-09-23T12:00:00Z"
@@ -103,7 +103,7 @@ def test_a_catalogue_filter_does_not_walk_the_catalogue_for_every_row(archivio):
     vorrebbe dire scorrere le voci di quel catalogo per ogni riga."""
     _banco(archivio, 200, 5)
 
-    senza, stretto = _passi(archivio), _passi(archivio, catalog="NGC")
+    senza, stretto = _passi(archivio), _passi(archivio, catalogs=("NGC",))
 
     assert stretto < 3 * senza, (senza, stretto)
 
@@ -115,9 +115,55 @@ def test_a_catalogue_filter_does_not_walk_the_catalogue_for_every_mosaic(archivi
     _banco(archivio, 200, 5)
     _mosaici(archivio, 30)
 
-    senza, stretto = _passi(archivio), _passi(archivio, catalog="Abell")
+    senza, stretto = _passi(archivio), _passi(archivio, catalogs=("Abell",))
 
     assert stretto < 3 * senza, (senza, stretto)
+
+
+def _passi_dei_criteri(conn, criteria):
+    contati = [0]
+
+    def conta():
+        contati[0] += 1
+        return 0
+
+    conn.set_progress_handler(conta, 100)
+    try:
+        archive_criteria.offered(conn, criteria)
+    finally:
+        conn.set_progress_handler(None, 0)
+    return contati[0]
+
+
+def _sparse(conn, voci):
+    """Le stesse pose sparse su `voci` anni e `voci` filtri: cambiano le voci, non le pose."""
+    conn.execute(
+        "INSERT INTO sites(id, name, latitude, longitude, created_at) VALUES(1, 'Casa', 45, 9, ?)",
+        (ORA,),
+    )
+    for v in range(voci):
+        conn.execute(
+            "INSERT INTO nights(id, site_id, night_date, created_at) VALUES(?, 1, ?, ?)",
+            (v + 1, f"{2000 + v}-05-01", ORA),
+        )
+        conn.execute(
+            "INSERT INTO filters(id, name, passband, created_at) VALUES(?, ?, 'L', ?)",
+            (v + 1, f"F{v}", ORA),
+        )
+    conn.execute(f"UPDATE frames SET night_id = 1 + id % {voci}, filter_id = 1 + id % {voci}")  # noqa: S608
+
+
+def test_the_criteria_read_the_frames_once_not_once_per_option(archivio):
+    """Dodici anni e dodici filtri, una forma accesa: le conte di tutti i criteri costano poche
+    pagine con quella forma, che legge le pose di ogni riga una volta. Con una domanda per voce
+    costavano una trentina di pagine (misurato: 230 mila passi contro 7.600)."""
+    _banco(archivio, 200, 48)
+    _sparse(archivio, 12)
+    pagina = _passi(archivio, forms=(archive.Form.ONE,))
+
+    criteri = _passi_dei_criteri(archivio, archive.Criteria(forms=(archive.Form.ONE,)))
+
+    assert criteri < 6 * pagina, (pagina, criteri)
 
 
 def test_the_mosaic_rows_grow_with_the_mosaics_not_with_their_square(archivio):

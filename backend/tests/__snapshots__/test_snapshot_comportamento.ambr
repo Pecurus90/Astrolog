@@ -355,67 +355,147 @@
 # ---
 # name: test_the_pages_of_the_synthetic_archive[archive]
   dict({
-    'choices': dict({
-      'cameras': list([
-        dict({
-          'id': 13,
-          'name': 'ASI2600MM Pro',
-        }),
-        dict({
-          'id': 9,
-          'name': 'ATR2600M',
-        }),
-        dict({
-          'id': 6,
-          'name': 'ATR2600M(USB2.0)',
-        }),
-        dict({
-          'id': 1,
-          'name': 'Canon EOS 700D',
-        }),
-        dict({
-          'id': 11,
-          'name': 'QHY268M',
-        }),
-      ]),
-      'catalogs': list([
-      ]),
-      'constellations': list([
-      ]),
-      'filters': list([
-        'Lum',
-        'R',
-        'Hα',
-        'L-eXtreme',
-        'N',
-        'X',
-      ]),
-      'mosaics': False,
-      'optics': list([
-        dict({
-          'id': 5,
-          'name': 'Askar 103Apo',
-        }),
-        dict({
-          'id': 10,
-          'name': 'RC8',
-        }),
-        dict({
-          'id': 12,
-          'name': 'TS 130 APO',
-        }),
-      ]),
-      'sites': list([
-      ]),
-      'years': list([
-      ]),
-    }),
+    'criteria': list([
+      dict({
+        'key': 'filter',
+        'options': list([
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': 'L',
+            'rows': 1,
+            'value': 'Lum',
+          }),
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': 'R',
+            'rows': 2,
+            'value': 'R',
+          }),
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': 'HA',
+            'rows': 1,
+            'value': 'Hα',
+          }),
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': 'DUO_HAOIII',
+            'rows': 1,
+            'value': 'L-eXtreme',
+          }),
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': 'UNKNOWN',
+            'rows': 1,
+            'value': 'N',
+          }),
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': 'UNKNOWN',
+            'rows': 1,
+            'value': 'X',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'form',
+        'options': list([
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': None,
+            'rows': 5,
+            'value': 'one',
+          }),
+          dict({
+            'chosen': False,
+            'label': None,
+            'passband': None,
+            'rows': 1,
+            'value': 'several',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'optics',
+        'options': list([
+          dict({
+            'chosen': False,
+            'label': 'Askar 103Apo',
+            'passband': None,
+            'rows': 3,
+            'value': '5',
+          }),
+          dict({
+            'chosen': False,
+            'label': 'RC8',
+            'passband': None,
+            'rows': 1,
+            'value': '10',
+          }),
+          dict({
+            'chosen': False,
+            'label': 'TS 130 APO',
+            'passband': None,
+            'rows': 1,
+            'value': '12',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'camera',
+        'options': list([
+          dict({
+            'chosen': False,
+            'label': 'ASI2600MM Pro',
+            'passband': None,
+            'rows': 1,
+            'value': '13',
+          }),
+          dict({
+            'chosen': False,
+            'label': 'ATR2600M',
+            'passband': None,
+            'rows': 1,
+            'value': '9',
+          }),
+          dict({
+            'chosen': False,
+            'label': 'ATR2600M(USB2.0)',
+            'passband': None,
+            'rows': 3,
+            'value': '6',
+          }),
+          dict({
+            'chosen': False,
+            'label': 'Canon EOS 700D',
+            'passband': None,
+            'rows': 1,
+            'value': '1',
+          }),
+          dict({
+            'chosen': False,
+            'label': 'QHY268M',
+            'passband': None,
+            'rows': 1,
+            'value': '11',
+          }),
+        ]),
+      }),
+    ]),
     'found': dict({
       'mosaics': 0,
       'objects': 6,
     }),
     'items': list([
       dict({
+        'common_name': None,
         'constellation': None,
         'filters': list([
           dict({
@@ -456,6 +536,7 @@
         'untimed': 0,
       }),
       dict({
+        'common_name': None,
         'constellation': None,
         'filters': list([
           dict({
@@ -525,6 +606,7 @@
         'untimed': 0,
       }),
       dict({
+        'common_name': None,
         'constellation': None,
         'filters': list([
         ]),
@@ -553,6 +635,7 @@
         'untimed': 0,
       }),
       dict({
+        'common_name': None,
         'constellation': None,
         'filters': list([
           dict({
@@ -593,6 +676,7 @@
         'untimed': 0,
       }),
       dict({
+        'common_name': None,
         'constellation': None,
         'filters': list([
           dict({
@@ -645,6 +729,7 @@
         'untimed': 0,
       }),
       dict({
+        'common_name': None,
         'constellation': None,
         'filters': list([
           dict({
@@ -685,9 +770,31 @@
         'untimed': 0,
       }),
     ]),
-    'limit': 100,
+    'limit': 20,
     'offset': 0,
     'total': 6,
+    'unresolved': dict({
+      'filters': list([
+        dict({
+          'frames': 2,
+          'integration_s': 360.0,
+          'name': 'OSC',
+          'passband': 'OSC',
+        }),
+      ]),
+      'frames': 2,
+      'integration_s': 360.0,
+      'solver_missing': True,
+      'untimed': 0,
+    }),
+    'whole': dict({
+      'frames': 11,
+      'integration_s': 2400.0,
+      'mosaics': 0,
+      'nights': 0,
+      'rows': 6,
+      'untimed': 0,
+    }),
   })
 # ---
 # name: test_the_pages_of_the_synthetic_archive[folders]

@@ -172,6 +172,49 @@ Scelte diverse dalla tavola:
 - **Bottoni degli oggetti sotto la finestra dei frame.** Tavola: uno per gruppo anche se il gruppo
   e' uno (302). App: solo con piu' di un oggetto. Perche': un bottone solo porta dove si e' gia'.
 
+## Archivio -- La pagina (passo 33, tavola v78, 10/11)
+
+- **Deep sky, Sole, Sistema solare e «+ Aggiungi oggetto».** Tavola: linguette in testa e la
+  finestra Aggiungi oggetto (Archivio.dc.html 32, 86-94). App: assenti, la pagina e' il deep sky.
+  Perche': nessuna sorgente scrive oggetti a mano, SER o log (ADR 0019, passo 46.12); linguette
+  che portano a niente non si mostrano.
+- **Anteprime da caricare.** Tavola: un tasto per produzione che aggiunge o cambia la foto (63).
+  App: il posto c'e', col nome; il tasto arriva con l'anteprima salvata (passo 33.2).
+- **Tipo.** Tavola: la prima parola del tipo (139), quindi «ammasso di galassie» sta con gli
+  ammassi. App: le famiglie galassia, nebulosa, ammasso, stella, altro, non si sa (archivio.md).
+- **Catalogo.** Tavola: Messier, NGC, IC, Sharpless, altro (128). App: le sigle che il catalogo
+  scrive (M, NGC, Sh2, LBN...). Perche': «altro» nasconderebbe quale catalogo; il nome e' un dato.
+- **Campo di ricerca.** Tavola: «Cerca: M 31, Velo, Andromeda…» (39). App: «Cerca: M 31, NGC
+  7000…». Perche': la ricerca guarda sigle e nomi dell'oggetto, non i nomi comuni (in inglese nel
+  catalogo): «Velo» non troverebbe niente. A Design.
+- **Nome comune.** Tavola: in italiano (catalogo.js). App: come lo scrive il catalogo, in inglese
+  («Andromeda Galaxy»), come gia' la finestra dell'oggetto.
+- **Carta dei frame senza oggetto.** Tavola: sotto il nome «un gruppo e 2 pannelli senza oggetti
+  identificati» (172, simulato). App: su quella riga «restano qui finché ASTAP non c'è» o «frame
+  senza oggetti identificati», le parole che la tavola mette accanto al nome (l'API non conta
+  gruppi e pannelli); ore, frame e filtri sono quelli veri. La carta non si apre: quei frame si
+  guardano in Da confermare.
+- **Costellazioni.** Tavola: in italiano (Cefeo, Cigno, catalogo.js). App: il nome latino IAU
+  (Cepheus, Cygnus), uguale in ogni lingua. Perche': decisione di Marco del 27/9, confermata il
+  10/11. A Design.
+- **Altezza delle righe dell'elenco.** Collaudo: 62 px nell'app contro 77 nella tavola, a parita'
+  di padding e colonne; la differenza viene dal contenuto delle celle (nella tavola il nome comune
+  italiano e i filtri vanno a capo). Da riguardare a schermo.
+- **Frame senza durata in una riga con ore.** Tavola: «senza durata» solo senza ore (167). App:
+  «120 frame · 12 senza durata» (archivio.md, «non lo so» non e' zero).
+- **Accanto alla ricerca e a «Mostra altri».** Tavola: «15 di 240» fisso (156, 229). App: le righe
+  a schermo su quelle trovate; «Mostra altri N» dice le righe che restano, fino a 20.
+- **Aperto dalla Ricerca (`?key=`).** Tavola: non c'e'. App: al posto della riga di ricerca
+  «← Archivio completo» e «Risultato della ricerca: M 31» (contratto, ricerca.test.tsx).
+- **La rete cade dopo una scelta.** Tavola: non c'e'. App: testa e criteri restano, sotto un avviso
+  «Archivio non disponibile · Riprova» (archivio.md).
+- **Elenco, la carta dei frame senza oggetto.** Riga senza comando e senza ↗: non apre niente.
+- **Testa, frame che non sanno la notte.** Tavola: sempre «· 212 notti» (simulato). App: senza
+  nessuna notte nota (frame letti senza un sito) le notti non si scrivono, come le ore a zero
+  (archivio.md, «non lo so» non e' zero).
+- **Carta dei frame senza oggetto, aperto dalla Ricerca (`?key=`).** Tavola: lo stato non c'e'.
+  App: la carta manca, la pagina e' l'oggetto cercato; coi criteri resta in testa come in tavola.
+
 ## Archivio -- La finestra dell'oggetto (passo 33, commit B, 9/11)
 
 - **Misure dei frame (commit C, 9/11).** Portate: MisureFrame tipo oggetto, gruppi le notti
@@ -200,9 +243,6 @@ Scelte diverse dalla tavola:
   la notte non sa la sua Luna; il cielo e' la frase corta delle Notti.
 - **Pagina intera con «← Archivio».** Tavola: `contenitore="pagina"` (Riepilogo.dc.html). App:
   solo la finestra; sul telefono la finestra e' gia' a pagina intera.
-- **Elenco, cosa si tocca.** Tavola v77: il comando sul nome steso sulla riga (`al-arch__riga-apri`).
-  App: il nome. Perche': la tabella di oggi sta nel foglio vecchio, che non si tocca a mano
-  (`tools/controlli_veste.py`); arriva col porting della pagina dell'Archivio.
 - **Dalla notte.** Tavola: gli oggetti della notte non aprono niente (Riepilogo.dc.html 53). App:
   il nome apre la finestra dell'oggetto al posto di quella della notte. Perche': lista fissa di
   Marco, 9/11 (si apre da Archivio, Gli oggetti delle Notti, Ricerca).

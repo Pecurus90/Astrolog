@@ -1,202 +1,140 @@
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query"
-import { useCallback, useRef, useState } from "react"
-import { Link, useSearchParams } from "react-router"
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
+import { Link, useNavigate, useSearchParams } from "react-router"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
 import {
-  BarraDellArchivio,
-  type Criteri,
+  CRITERI,
+  type ChiaveCriterio,
+  type Criterio,
+  type Elenco,
   ORDINI,
+  PUNTO,
   type Ordine,
-  PERIODO_DATE,
-  SOLO_MOSAICI,
-  type ScelteDellaBarra,
-} from "./BarraDellArchivio"
-import { CarteDellArchivio } from "./CarteDellArchivio"
-import { Altre, paginaDopo } from "./Elenco"
-import { ElencoDellArchivio } from "./ElencoDellArchivio"
-import { nomeDi } from "./RigaDellArchivio"
-import { TuttoDellOggetto } from "./TuttoDellOggetto"
+  mostra,
+  nomeCriterio,
+  nomeVoce,
+  parolaOrdine,
+  sintesi,
+  testa,
+} from "./ArchivioDati"
+import { CarteArchivio, ElencoArchivio } from "./ArchivioRighe"
+import { Avviso } from "./componenti/Avviso"
+import { Carta } from "./componenti/Carta"
+import { Filtri, type GruppoFiltri } from "./componenti/Filtri"
 import { useFormato } from "./componenti/formato"
-import { AzioniDelVuoto, Vuoto } from "./Vuoto"
+import { gesto } from "./componenti/gesto"
+import { Pagina } from "./componenti/Pagina"
+import { type CartaScheletro, Scheletro } from "./componenti/Scheletro"
+import { paginaDopo } from "./Elenco"
+import { tintaDi } from "./MisureDati"
+import { TuttoDellOggetto } from "./TuttoDellOggetto"
 import { api } from "./api/client"
 import { numero, t } from "./i18n"
 
-// Quante righe per volta. Alto di proposito: l'Archivio e' un inventario, non un flusso da
-// scorrere -- chi ha centomila frame ha comunque una manciata di oggetti, e farglieli chiedere
-// venti per volta sarebbe cinque giri per vedere cio' che sta in uno.
-const PER_VOLTA = 100
+// Venti alla volta (tavola, "Mostra altri 20").
+const PER_VOLTA = 20
 
-// Le due viste, e quella che si apre per prima (Marco, 22/9/2026: le carte). Il nome sta
-// nell'indirizzo, quindi e' anche cio' che si scrive in un collegamento: un elenco condiviso deve
-// riaprirsi come elenco.
 const VISTE = ["carte", "elenco"] as const
 type Vista = (typeof VISTE)[number]
-const APERTURA: Vista = "carte"
+// Le icone delle due viste (tavola, `visT`).
+const ICONA: Record<Vista, string> = {
+  carte: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
+  elenco: "M4 6h16M4 12h16M4 18h16",
+}
 
-// Gli identificativi che legano una scheda al suo pannello. Una scheda che dichiara
-// `role="tab"` senza un pannello da governare e' una promessa che nessuno mantiene: chi
-// ascolta sente "scheda 1 di 2" e poi non trova niente che quella scheda apra.
-const SCHEDA: Record<Vista, string> = { carte: "scheda-carte", elenco: "scheda-elenco" }
-const PANNELLO: Record<Vista, string> = { carte: "vista-carte", elenco: "vista-elenco" }
+// Lo scheletro della tavola (`SK`): la testa, poi le carte.
+const scheletro = (tel: boolean): CartaScheletro[] => [
+  { col: "1 / -1", h: "150px", pad: "24px", gap: "14px", blocchi: [t("archive.loading"), { flex: "1", w: "40%" }] },
+  ...Array.from({ length: tel ? 4 : 10 }, () => ({ h: tel ? "300px" : "320px", pad: "12px", blocchi: [{ h: "100%", r: "20px" }] })),
+]
 
-// Quelli che **stringono** l'elenco. L'ordine non ci sta: cambiarlo non toglie righe, e uno
-// stato vuoto che dicesse "nessun oggetto con questi filtri" per un ordinamento sarebbe assurdo.
-const STRINGONO = [
-  "q",
-  "catalog",
-  "constellation",
-  "filter",
-  "mosaic",
-  "period",
-  "since",
-  "until",
-  "site",
-  "optics",
-  "camera",
-] as const
+// La ricerca parte quando chi scrive si ferma: una parola e' una domanda, non una per lettera.
+const ATTESA_MS = 250
+// Le forme che la rotta accetta; un valore storto nell'indirizzo non stringe.
+const CHIAVE = /^.{1,200}$/s
+const ID = /^\d+$/
+const PER_ID: ReadonlySet<ChiaveCriterio> = new Set(["site", "optics", "camera"])
 
-// L'ordine di partenza, e quello a cui si ripiega un `sort` scritto male nell'indirizzo: un
-// indirizzo storto non e' un errore da mostrare -- si guarda l'archivio per nome.
-const APERTURA_ORDINE: Ordine = "name"
+type Scelte = Record<ChiaveCriterio, string[]>
 
-// Cio' con cui la pagina si apre, per i due controlli che un'apertura ce l'hanno: scriverlo
-// nell'indirizzo non aggiunge niente, e lo tiene fuori da `cambia`.
-const APERTURE: Record<string, string> = { vista: APERTURA, sort: APERTURA_ORDINE }
+function scelteDa(indirizzo: URLSearchParams): Scelte {
+  return Object.fromEntries(
+    CRITERI.map((k) => [k, indirizzo.getAll(k).filter((v) => (PER_ID.has(k) ? ID.test(v) : v !== ""))]),
+  ) as Scelte
+}
+
+async function chiedi(query: Record<string, unknown>): Promise<Elenco> {
+  const { data, error } = await api.GET("/api/v1/archive", { params: { query } })
+  if (error) throw new Error(t("archive.failed"))
+  return data
+}
 
 /**
- * L'Archivio: cosa hai ripreso, con quanti frame, quante ore e con che filtri.
- *
- * - **Qui non si calcola e non si filtra niente.** Righe, conta, ordine e le voci delle tendine
- *   arrivano gia' fatti dal backend. Cercare fra le cento righe gia' scaricate troverebbe solo
- *   quelle, e a chi ha seicento oggetti l'app direbbe "non trovato" mentendo.
- * - **Cio' che stai guardando sta nell'indirizzo**: la vista, la ricerca, i filtri e
- *   l'ordine. Cosi' un archivio filtrato si manda a qualcuno e il tasto indietro torna dov'eri.
- * - **A mani vuote non e' un errore**, e non e' la stessa cosa di "non ho trovato niente": la
- *   prima e' lo stato di chi ha appena installato l'app, la seconda e' una risposta.
- * - **Mentre la risposta arriva resta a schermo cio' che c'era, e la barra lo dice.** Tenerlo
- *   evita di smontare il campo -- e con lui il fuoco, a meta' parola -- ma senza un segno l'utente
- *   vedrebbe cio' che ha chiesto accanto a una risposta vecchia, e la crederebbe la sua.
- *
- * Quando i **Progetti** esisteranno, qui ci finiranno solo quelli conclusi, e la riga sara' il
- * riepilogo di un progetto invece che di un oggetto (`docs/domini/archivio.md`). Cambia **quali**
- * righe arrivano, non come si mostrano: questa pagina non si rifa'.
+ * L'**Archivio** (tavola v78, `docs/domini/archivio.md`): cosa hai ripreso, a carte o in elenco,
+ * con la testa di tutto l'archivio, la ricerca e i nove criteri. Qui non si calcola: righe,
+ * conte di ogni voce, ordine, totali e frame senza oggetto arrivano dal backend. Cio' che stai
+ * guardando sta nell'indirizzo: un archivio ristretto si manda a qualcuno, e il tasto indietro
+ * torna alla scelta di prima.
  */
 export function Archivio() {
   const formato = useFormato()
-  const [aperta, setAperta] = useState<string | null>(null)
+  const tel = formato === "telefono"
+  const vai = useNavigate()
   const [indirizzo, cambiaIndirizzo] = useSearchParams()
-  const chiesta = indirizzo.get("vista")
-  const vista: Vista = VISTE.includes(chiesta as Vista) ? (chiesta as Vista) : APERTURA
-  const criteri: Criteri = {
-    q: indirizzo.get("q") ?? "",
-    catalog: indirizzo.get("catalog") ?? "",
-    constellation: indirizzo.get("constellation") ?? "",
-    filter: indirizzo.get("filter") ?? "",
-    // un valore che non e' quello della tendina non stringe: e' un indirizzo scritto male
-    mosaic: indirizzo.get("mosaic") === SOLO_MOSAICI ? SOLO_MOSAICI : "",
-    period: indirizzo.get("period") ?? "",
-    since: inForma(indirizzo.get("since"), DATA),
-    until: inForma(indirizzo.get("until"), DATA),
-    site: inForma(indirizzo.get("site"), ID),
-    optics: inForma(indirizzo.get("optics"), ID),
-    camera: inForma(indirizzo.get("camera"), ID),
-    sort: ordineChiesto(indirizzo.get("sort")),
-  }
-  // La riga sola che la ricerca nella barra apre (`?key=`): la rotta la stringe da se'.
-  const chiave = inForma(indirizzo.get("key"), CHIAVE)
-  const stringi = chiave !== "" || STRINGONO.some((c) => criteri[c])
+  const [aperta, setAperta] = useState<string | null>(null)
+  const [criteriAperti, setCriteriAperti] = useState(false)
 
-  // Scrivere **sostituisce**: una traccia per ogni parola battuta riempirebbe la cronologia di
-  // `m`, `m3`, `m31` e il tasto indietro diventerebbe inutile. Ogni altra scelta -- una tendina,
-  // un ordine, la vista -- lascia la sua traccia, o il tasto indietro non tornerebbe al filtro di
-  // prima ma uscirebbe dall'Archivio.
-  // E **una scelta che non cambia niente non e' un gesto**: ricliccare la scheda che stai gia'
-  // guardando, o l'ordine gia' premuto, lascerebbe una tappa identica alla precedente -- tre clic,
-  // tre pressioni di indietro che non fanno niente. Perche' il confronto funzioni, cio' che vale
-  // **quanto l'apertura** non si scrive: `?vista=carte` dice quello che l'indirizzo nudo dice
-  // gia', e senza toglierlo "torna a carte" e "sei gia' su carte" sarebbero due indirizzi diversi.
+  const vista: Vista = indirizzo.get("vista") === "elenco" ? "elenco" : "carte"
+  const scritto = indirizzo.get("sort")
+  const ordine: Ordine = ORDINI.includes(scritto as Ordine) ? (scritto as Ordine) : "name"
+  const q = indirizzo.get("q") ?? ""
+  const chiaveScritta = indirizzo.get("key")
+  const chiave = chiaveScritta !== null && CHIAVE.test(chiaveScritta) ? chiaveScritta : ""
+  const scelte = scelteDa(indirizzo)
+  const attivi = (q.trim() ? 1 : 0) + CRITERI.reduce((a, k) => a + scelte[k].length, 0)
+
+  // Una scelta lascia la sua traccia; scrivere sostituisce, o il tasto indietro disfarebbe lettere.
   const cambia = useCallback(
-    (cambio: Record<string, string>) => {
-      const netto = Object.fromEntries(
-        Object.entries(cambio).map(([nome, valore]) => [
-          nome,
-          valore === APERTURE[nome] ? "" : valore,
-        ]),
-      )
-      const dopo = conParametri(indirizzo, netto)
-      if (dopo.toString() === indirizzo.toString()) return
-      cambiaIndirizzo(dopo, { replace: Object.keys(cambio).every((c) => c === "q") })
+    (fai: (p: URLSearchParams) => void, sostituisci = false) => {
+      const dopo = new URLSearchParams(indirizzo)
+      fai(dopo)
+      if (dopo.toString() !== indirizzo.toString()) cambiaIndirizzo(dopo, { replace: sostituisci })
     },
     [indirizzo, cambiaIndirizzo],
   )
+  const [scrive, setScrive] = useState(q)
+  const ultimo = useRef(q)
+  useEffect(() => {
+    if (q !== ultimo.current) setScrive(q)
+    ultimo.current = q
+  }, [q])
+  useEffect(() => {
+    if (scrive === q) return
+    const via = setTimeout(() => cambia((p) => (scrive.trim() ? p.set("q", scrive) : p.delete("q")), true), ATTESA_MS)
+    return () => clearTimeout(via)
+  }, [scrive, q, cambia])
 
+  const query = {
+    sort: ordine,
+    ...(chiave ? { key: chiave } : q.trim() ? { q: q.trim() } : {}),
+    ...Object.fromEntries(CRITERI.filter((k) => scelte[k].length).map((k) => [k, scelte[k]])),
+  }
   const elenco = useInfiniteQuery({
-    // i criteri stanno nella chiave: sono **un'altra pagina**, non la stessa ricaricata, e senza
-    // di loro la cache servirebbe le righe di prima alla ricerca dopo
-    queryKey: ["archive", criteri, chiave],
+    queryKey: ["archive", query],
     initialPageParam: 0,
-    queryFn: async ({ pageParam }) => {
-      const { data, error } = await api.GET("/api/v1/archive", {
-        params: {
-          query: {
-            limit: PER_VOLTA,
-            offset: pageParam,
-            sort: criteri.sort,
-            ...(chiave && { key: chiave }),
-            ...(criteri.q && { q: criteri.q }),
-            ...(criteri.catalog && { catalog: criteri.catalog }),
-            ...(criteri.constellation && { constellation: criteri.constellation }),
-            ...(criteri.filter && { filter: criteri.filter }),
-            ...(criteri.mosaic && { mosaic: true }),
-            ...notti(criteri),
-            ...(criteri.site && { site: Number(criteri.site) }),
-            ...(criteri.optics && { optics: Number(criteri.optics) }),
-            ...(criteri.camera && { camera: Number(criteri.camera) }),
-          },
-        },
-      })
-      if (error) throw new Error(t("archive.failed"))
-      return data
-    },
+    queryFn: ({ pageParam }) => chiedi({ limit: PER_VOLTA, offset: pageParam, ...query }),
     getNextPageParam: paginaDopo,
-    // Le righe di prima restano a schermo mentre arrivano quelle nuove. Senza, ogni ricerca
-    // consegnata smonta la barra -- `data` e' indefinito con una chiave nuova -- e col campo
-    // sparisce **il fuoco**: scrivi `m`, il campo si smonta, e `31` finisce da nessuna parte.
+    // le righe di prima restano mentre arrivano le nuove: il campo non si smonta a meta' parola
     placeholderData: keepPreviousData,
   })
-  const prima = elenco.data?.pages[0]
+  // Dalla prima risposta in poi la testa e i criteri restano in mano: se la rete cade dopo una
+  // scelta, il modo di toglierla resta a schermo (archivio.md).
+  const visto = useRef<Elenco | undefined>(undefined)
+  if (elenco.data?.pages[0]) visto.current = elenco.data.pages[0]
+  const prima = elenco.data?.pages[0] ?? visto.current
+  const caduto = elenco.isError && prima !== undefined
   const righe = elenco.data?.pages.flatMap((p) => p.items) ?? []
-  // Le ultime scelte viste restano in mano. Le righe di prima le tiene react-query, ma **non** in
-  // errore: li' `data` torna indefinito e la barra sparirebbe proprio quando serve di piu', con un
-  // filtro acceso e nessun modo di toglierlo che non sia il tasto indietro.
-  const viste = useRef<ScelteDellaBarra | undefined>(undefined)
-  if (prima?.choices) viste.current = prima.choices
-  const scelte = prima?.choices ?? viste.current
 
-  // Chi ha appena installato l'app: una risposta **assestata** senza righe e senza niente da
-  // togliere. `isSuccess` da solo e' vero anche mentre a schermo c'e' la risposta di prima, e
-  // allora togliere i filtri dopo una ricerca a vuoto direbbe "non c'e' ancora niente" a chi ha
-  // milleduecento oggetti, per tutto il giro di rete.
-  const appenaInstallata =
-    elenco.isSuccess && !elenco.isPlaceholderData && righe.length === 0 && !stringi
-
-  // La barra c'e' quando sappiamo **cosa offrono le tendine** e c'e' **qualcosa da governare**:
-  // dalla prima risposta buona in poi resta in attesa e in errore, e se ne va solo dove non c'e'
-  // niente da cercare. Se a cadere e' la **prima** risposta la barra non c'e' ancora: Issue #18,
-  // "Un errore alla primissima risposta dell'Archivio lascia un filtro acceso senza il modo di
-  // toglierlo".
-  //
-  // I pannelli hanno una condizione **diversa**: senza una risposta buona non sappiamo se l'elenco
-  // e' vuoto, e scrivere "non ho trovato niente" sarebbe la stessa bugia della conta a zero, detta
-  // a parole. E l'interruttore sta con loro, o governerebbe il nulla.
-  const barra = Boolean(scelte) && !appenaInstallata && chiave === ""
-  // Una chiave che non trova niente non e' "nessun oggetto con questi filtri": quell'oggetto non c'e'.
-  const sparito = chiave !== "" && elenco.isSuccess && !elenco.isPlaceholderData && righe.length === 0
-  const pannelli = elenco.isSuccess && !sparito && (righe.length > 0 || stringi)
-
-  // La finestra dell'oggetto: le frecce vanno all'oggetto prima e dopo nell'ordine della pagina.
   const qui = aperta === null ? -1 : righe.findIndex((r) => r.key === aperta)
   const vicina = (d: number) => {
     const r = qui < 0 ? undefined : righe[qui + d]
@@ -206,7 +144,7 @@ export function Archivio() {
     <TuttoDellOggetto
       key={aperta}
       chiave={aperta}
-      nome={righe[qui] ? nomeDi(righe[qui]) : aperta}
+      nome={righe[qui]?.name ?? aperta}
       formato={formato}
       onChiudi={() => setAperta(null)}
       onPrima={vicina(-1)}
@@ -214,221 +152,175 @@ export function Archivio() {
     />
   )
 
-  return (
-    <div className="as-pagina">
-     {finestra}
-     <div className="as-archivio">
-      {elenco.isPending && <InLettura />}
-      {elenco.error && (
-        <Avviso
-          esito="allarme"
-          pagina
-          azioni={
-            <Bottone verso="primario" onClick={() => void elenco.refetch()}>
-              {t("archive.retry")}
-            </Bottone>
-          }
-        >
-          {elenco.error.message}
-        </Avviso>
-      )}
-
-      {/* La barra resta anche quando non c'e' niente da mostrare -- un filtro che non trova
-          niente, o una richiesta andata in errore: toglierla lascerebbe senza il modo di disfare
-          cio' che si e' chiesto, cioe' bloccati su una pagina vuota col tasto indietro come unica
-          strada. Vale per **ogni** controllo, ordine compreso. */}
-      {barra && scelte && (
-        <BarraDellArchivio
-          criteri={criteri}
-          scelte={scelte}
-          trovati={prima?.found ?? null}
-          aspetta={elenco.isPlaceholderData}
-          onCriteri={cambia}
-          onTogli={() => cambia(NIENTE)}
-        >
-          {pannelli && (
-            <InterruttoreDiVista vista={vista} onVista={(scelta) => cambia({ vista: scelta })} />
+  let corpo: ReactNode
+  if (elenco.isPending && !prima) {
+    corpo = <Scheletro formato={formato} carte={scheletro(tel)} testo={t("archive.loading")} griglia={tel ? "repeat(2,minmax(0,1fr))" : "repeat(5,minmax(0,1fr))"} gap={tel ? "10px" : "16px"} />
+  } else if (!prima) {
+    corpo = <Avviso tipo="pagina" formato={formato} segno="!" titolo={t("archive.failed")} azione={t("archive.retry")} onAzione={() => void elenco.refetch()} />
+  } else if (prima.whole.rows === 0 && !prima.unresolved) {
+    corpo = <Avviso tipo="pagina" formato={formato} segno="?" titolo={t("archive.empty")} testo={t("archive.empty.why")} azione={t("archive.empty.how")} onAzione={() => void vai("/impostazioni/cartelle")} />
+  } else {
+    const togli = () => {
+      setScrive("")
+      cambia((p) => {
+        for (const k of [...CRITERI, "q"]) p.delete(k)
+      })
+    }
+    const gruppi: GruppoFiltri[] = prima.criteria.map((c: Criterio) => ({
+      l: nomeCriterio(c.key),
+      opz: c.options.map((o) => ({
+        l: nomeVoce(c.key, o),
+        c: numero(o.rows),
+        sel: o.chosen,
+        no: o.rows === 0 && !o.chosen,
+        ...(c.key === "filter" ? { tinta: tintaDi(o.passband ?? undefined) } : {}),
+        on: () =>
+          cambia((p) => {
+            const ora = p.getAll(c.key)
+            p.delete(c.key)
+            const dopo = ora.includes(o.value) ? ora.filter((v) => v !== o.value) : [...ora, o.value]
+            for (const v of dopo) p.append(c.key, v)
+          }),
+      })),
+    }))
+    const intero = testa(prima.whole)
+    // la carta dei frame senza oggetto sta in testa anche coi criteri (tavola 172), non sulla riga
+    // aperta dalla Ricerca; l'avviso di nessun oggetto guarda le righe sole
+    const fuori = prima.unresolved && !chiave ? prima.unresolved : null
+    const nessuno = righe.length === 0
+    const ordineVista = (
+      <OrdineEVista
+        ordine={ordine}
+        vista={vista}
+        onOrdine={(o) => cambia((p) => (o === "name" ? p.delete("sort") : p.set("sort", o)))}
+        onVista={(v) => cambia((p) => (v === "carte" ? p.delete("vista") : p.set("vista", v)))}
+      />
+    )
+    corpo = (
+      <div className="al-arch__colonna-1 al-arch__pagina">
+        <Carta formato={formato} etichetta={t("archive.head")} colonne={12} ritardo={0} padding={tel ? "20px" : "28px"} gap={16}>
+          {tel ? (
+            <div className="al-arch__colonna-2">
+              <span className="al-arch__blocco-4">
+                <b className="al-arch__testo-1">{intero.n} {intero.parola}</b>{PUNTO}{intero.sotto}
+              </span>
+              <div className="al-arch__riga-fine">{ordineVista}</div>
+            </div>
+          ) : (
+            <div className="al-arch__colonna-3">
+              <div className="al-arch__riga-3">
+                <span className="al-arch__riga-4">
+                  <span className="al-arch__testo-2">{intero.n}</span>
+                  <span className="al-arch__colonna-4">
+                    <span className="al-arch__testo-3">{intero.parola}</span>
+                    <span className="al-arch__testo-4">{intero.sotto}</span>
+                  </span>
+                </span>
+                <span className="al-arch__riga-5">{ordineVista}</span>
+              </div>
+            </div>
           )}
-        </BarraDellArchivio>
-      )}
+          {chiave ? (
+            // sulle righe di prima direbbe ristretto a un oggetto non chiesto: si aspetta la risposta
+            !elenco.isPlaceholderData && (
+              <div className="al-arch__riga-6">
+                <Link to="/archivio" className="al-bottone al-bottone--tenue al-bottone--rovescio">
+                  {t("archive.all")}
+                </Link>
+                <span className="al-arch__testo-5">{t("archive.only", { nome: righe[0]?.name ?? chiave })}</span>
+              </div>
+            )
+          ) : (
+            <div className="al-arch__riga-6">
+              <input value={scrive} onChange={(e) => setScrive(e.target.value)} aria-label={t("archive.search")} placeholder={t("archive.search.placeholder")} className="al-campo al-campo--tondo al-campo--piccolo al-arch__blocco-5" aria-busy={elenco.isPlaceholderData ? "true" : "false"} />
+              <Filtri parte="bottone" attivi={attivi} aperto={criteriAperti} onApri={() => setCriteriAperti(!criteriAperti)} altezza={tel ? "44px" : "40px"} formato={formato} />
+              {!tel && <Filtri parte="togli" attivi={attivi} onTogli={togli} altezza="40px" formato="desktop" />}
+              <span className="al-arch__testo-5" aria-live="polite">{sintesi(prima, righe.length, attivi, ordine)}</span>
+            </div>
+          )}
+          {criteriAperti && !chiave && (
+            <Filtri gruppi={gruppi} colonne={5} attivi={attivi} onTogli={togli} mostra={mostra(prima.total)} onMostra={() => setCriteriAperti(false)} formato={formato} />
+          )}
+        </Carta>
 
-      {/* Aperto dalla ricerca: la barra esce, resta la vista, e si dice come tornare (tavola v31).
-          Solo a risposta assestata: sulle righe di prima direbbe ristretto a un oggetto non chiesto. */}
-      {chiave !== "" && pannelli && !elenco.isPlaceholderData && (
-        <div className="as-archivio__ristretto">
-          <Bottone verso="nudo" a="/archivio">
-            {t("archive.all")}
-          </Bottone>
-          <p>
-            {t("archive.only.before")} <b>{righe[0]?.name ?? chiave}</b>
-            {t("archive.only.after")}
-          </p>
-          <InterruttoreDiVista vista={vista} onVista={(scelta) => cambia({ vista: scelta })} />
-        </div>
-      )}
-      {sparito && (
-        <Vuoto sotto={1} titolo="archive.gone" perche="archive.gone.why">
-          <AzioniDelVuoto>
-            <Bottone a="/archivio">{t("archive.all.short")}</Bottone>
-          </AzioniDelVuoto>
-        </Vuoto>
-      )}
+        {prima.unresolved?.solver_missing && (
+          <Avviso tipo="riga" formato={formato} segno="!" titolo={t("archive.solver.missing", { n: numero(prima.unresolved.frames) })} azione={t("archive.solver.open")} onAzione={() => void vai("/impostazioni/riconoscitore")} />
+        )}
 
-      {appenaInstallata && (
-        <Vuoto sotto={1} titolo="archive.empty" perche="archive.empty.why">
-          <AzioniDelVuoto>
-            <Link to="/impostazioni/cartelle">{t("archive.empty.how")}</Link>
-          </AzioniDelVuoto>
-        </Vuoto>
-      )}
+        {caduto && (
+          <Avviso tipo="riga" formato={formato} segno="!" titolo={t("archive.failed")} azione={t("archive.retry")} onAzione={() => void elenco.refetch()} />
+        )}
 
-      {pannelli && (
-        <>
-          {/* Tutti e due i pannelli stanno in pagina, e quello spento porta `hidden`: e' la forma
-              che il foglio si aspetta, ed e' l'unica in cui l'`aria-controls` della scheda spenta
-              punta a qualcosa che esiste. E ci stanno **anche a elenco vuoto**, con dentro il
-              "non ho trovato niente": cosi' l'interruttore non si smonta sotto le dita di chi ci
-              ha il fuoco sopra quando l'ultima riga sparisce, e non resta mai una scheda che
-              governa un pannello che non c'e'. */}
-          <section
-            role="tabpanel"
-            id={PANNELLO.carte}
-            aria-labelledby={SCHEDA.carte}
-            hidden={vista !== "carte"}
-          >
-            {vista === "carte" &&
-              (righe.length > 0 ? <CarteDellArchivio righe={righe} onApri={setAperta} /> : <NonTrovato onTogli={cambia} />)}
-          </section>
-          <section
-            role="tabpanel"
-            id={PANNELLO.elenco}
-            aria-labelledby={SCHEDA.elenco}
-            hidden={vista !== "elenco"}
-          >
-            {vista === "elenco" &&
-              (righe.length > 0 ? <ElencoDellArchivio righe={righe} onApri={setAperta} /> : <NonTrovato onTogli={cambia} />)}
-          </section>
-        </>
-      )}
+        {nessuno && !caduto && (
+          <div className="al-arch__blocco-6">
+            <Avviso tipo="blocco" formato={formato} segno="?" titolo={chiave ? t("archive.gone") : t("archive.nothing")} testo={chiave ? t("archive.gone.why") : t("archive.nothing.why")} />
+          </div>
+        )}
 
-      {/* Quante ne stai vedendo e quante sono: "Mostra altri" da solo non dice quanto manca. */}
-      {elenco.hasNextPage && prima && (
-        <div className="as-archivio__carico">
-          <span>{t("archive.loaded", { n: numero(righe.length), tot: numero(prima.total) })}</span>
-          <Altre elenco={elenco} testo="archive.more" />
-        </div>
-      )}
-     </div>
-    </div>
-  )
-}
+        {(!nessuno || fuori) &&
+          (vista === "carte" ? (
+            <CarteArchivio righe={righe} fuori={fuori} formato={formato} onApri={setAperta} />
+          ) : (
+            <ElencoArchivio righe={righe} fuori={fuori} formato={formato} onApri={setAperta} />
+          ))}
 
-/** La prima risposta non e' arrivata: lo scheletro tiene il posto della barra e delle carte, della
- *  loro misura, cosi' niente salta quando arrivano. */
-function InLettura() {
+        {elenco.hasNextPage && (
+          <div className="al-arch__riga-9">
+            <a href="#" onClick={gesto(() => void elenco.fetchNextPage())} className="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--blocco al-bottone--a-sinistra" aria-busy={elenco.isFetchingNextPage ? "true" : "false"}>
+              {t("archive.more", { n: numero(Math.min(PER_VOLTA, prima.total - righe.length)) })}
+            </a>
+            <span className="al-arch__testo-4">{t("archive.loaded", { n: numero(righe.length), tot: numero(prima.total) })}</span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
-      <div className="as-restringi" aria-hidden="true">
-        <span className="as-scheletro as-archivio__scheletro-campo" />
-        <span className="as-scheletro as-archivio__scheletro-barra" />
-      </div>
-      <div className="as-archivio__carte" aria-busy="true" aria-label={t("archive.loading")}>
-        <span className="as-scheletro as-archivio__scheletro-carta" />
-        <span className="as-scheletro as-archivio__scheletro-carta" />
-        <span className="as-scheletro as-archivio__scheletro-carta" />
-        <span className="as-scheletro as-archivio__scheletro-carta" />
-        <span className="as-scheletro as-archivio__scheletro-carta" />
-        <span className="as-scheletro as-archivio__scheletro-carta" />
-      </div>
+      {finestra}
+      <Pagina formato={formato}>{corpo}</Pagina>
     </>
   )
 }
 
-/** "Non ho trovato niente": una **risposta** a cio' che hai chiesto, non lo stato di chi ha
- *  appena installato l'app -- quello ha parole sue e porta alle cartelle. Sta dentro il pannello
- *  della vista e non accanto, cosi' i pannelli ci sono sempre e l'interruttore non si smonta. */
-function NonTrovato({ onTogli }: { onTogli: (cambio: Record<string, string>) => void }) {
-  return (
-    <Vuoto sotto={1} titolo="archive.nothing" perche="archive.nothing.why">
-      <AzioniDelVuoto>
-        <Bottone onClick={() => onTogli(NIENTE)}>{t("archive.nothing.clear")}</Bottone>
-      </AzioniDelVuoto>
-    </Vuoto>
-  )
-}
-
-// Le forme che la rotta accetta. Un valore storto nell'indirizzo, come un ordine inventato, non
-// stringe: alla rotta sarebbe un 422, e alla prima risposta la pagina resterebbe senza barra.
-const DATA = /^\d{4}-\d{2}-\d{2}$/
-const ID = /^\d+$/
-// la rotta rifiuta una chiave oltre i 200 caratteri: una cosi' e' un indirizzo scritto male
-const CHIAVE = /^.{1,200}$/s
-
-function inForma(scritto: string | null, forma: RegExp) {
-  return scritto !== null && forma.test(scritto) ? scritto : ""
-}
-
-/** Le notti del periodo, le due estreme comprese: un anno va dal primo gennaio al trentuno
- *  dicembre, le date scelte a mano valgono solo sotto `PERIODO_DATE`. Un anno storto
- *  nell'indirizzo non stringe: e' un indirizzo scritto male. */
-function notti({ period, since, until }: Criteri) {
-  if (/^\d{4}$/.test(period)) return { since: `${period}-01-01`, until: `${period}-12-31` }
-  if (period !== PERIODO_DATE) return {}
-  return { ...(since && { since }), ...(until && { until }) }
-}
-
-/** L'ordine chiesto dall'indirizzo, se e' uno dei tre. Un valore inventato non e' un errore da
- *  mostrare -- un `?sort=pippo` che diventasse un 422 lascerebbe la pagina con un avviso e **senza
- *  barra**, cioe' senza il modo di uscirne: e' un indirizzo scritto male, e la pagina si apre come
- *  si apre sempre. L'elenco di quali esistono lo tiene la barra, che e' dove si scelgono. */
-function ordineChiesto(scritto: string | null): Ordine {
-  return ORDINI.some((o) => o.chiave === scritto) ? (scritto as Ordine) : APERTURA_ORDINE
-}
-
-/** Togliere tutto cio' che stringe, lasciando la vista e l'ordine dove sono: chi si e' perso in
- *  un filtro vuole tornare all'archivio intero, non alla pagina di partenza. **Si deriva**
- *  dall'elenco: scritto a mano sarebbe un secondo posto dove dire quali criteri stringono, e un
- *  quinto aggiunto solo di la' darebbe un bottone "togli i criteri" che non li toglie tutti. */
-const NIENTE = Object.fromEntries(STRINGONO.map((c) => [c, ""] as const))
-
-/** L'indirizzo coi parametri cambiati e **tutto il resto com'era**: i controlli della barra sono
- *  cinque piu' la vista, e ognuno che riscrivesse la query intera cancellerebbe gli altri. Un
- *  valore vuoto non resta come parametro vuoto: sparisce, o l'indirizzo si riempirebbe di
- *  `catalog=` che non vogliono dire niente. */
-function conParametri(indirizzo: URLSearchParams, cambio: Record<string, string>) {
-  const dopo = new URLSearchParams(indirizzo)
-  for (const [nome, valore] of Object.entries(cambio)) {
-    if (valore) dopo.set(nome, valore)
-    else dopo.delete(nome)
-  }
-  return dopo
-}
-
-/** L'interruttore fra le due viste. Sono **schede** (`tab`), non interruttori a due stati: ognuna
- *  governa un pannello, e chi ascolta deve sentire quale delle due sta guardando. */
-function InterruttoreDiVista({
+/** Ordine in tendina e vista a due icone (tavola v56.11, 29 e 35), desktop e telefono. */
+function OrdineEVista({
+  ordine,
   vista,
+  onOrdine,
   onVista,
 }: {
+  ordine: Ordine
   vista: Vista
-  onVista: (scelta: Vista) => void
+  onOrdine: (o: Ordine) => void
+  onVista: (v: Vista) => void
 }) {
   return (
-    <div className="as-segmentato" role="tablist" aria-label={t("archive.view")}>
-      {VISTE.map((voce) => (
-        <button
-          key={voce}
-          type="button"
-          className="as-segmentato__voce"
-          role="tab"
-          id={SCHEDA[voce]}
-          aria-controls={PANNELLO[voce]}
-          aria-selected={vista === voce}
-          onClick={() => onVista(voce)}
-        >
-          {t(voce === "carte" ? "archive.view.cards" : "archive.view.list")}
-        </button>
-      ))}
+    <div role="group" aria-label={t("archive.order.view")} className="al-arch__ordine-vista">
+      <select value={ordine} onChange={(e) => onOrdine(e.target.value as Ordine)} aria-label={t("archive.order")} className="al-tendina al-tendina--tondo al-arch__ordine">
+        {ORDINI.map((o) => (
+          <option key={o} value={o}>
+            {parolaOrdine(o)}
+          </option>
+        ))}
+      </select>
+      <div role="radiogroup" aria-label={t("archive.view")} className="al-arch__viste">
+        {VISTE.map((v) => {
+          const parola = t(v === "carte" ? "archive.view.cards" : "archive.view.list")
+          return (
+            <button key={v} type="button" role="radio" aria-checked={vista === v} aria-label={parola} title={parola} onClick={() => onVista(v)} className="al-arch__vista">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d={ICONA[v]} />
+              </svg>
+              <span className="al-arch__vista-parola" aria-hidden="true">
+                {parola}
+              </span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
+

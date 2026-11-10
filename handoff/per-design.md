@@ -38,6 +38,12 @@ Consegna controllata: 3c2a77a4 (v78, 10/11), in `handoff/design/` al posto della
   usa il marchio della testa del telaio (anello e punto, `frontend/src/icona.svg`, colore del
   testo chiaro o scuro). Un'icona disegnata per 16 e 32 px, SVG, che regga sulle schede chiare e
   scure.
+- [da dare] Archivio, porting v78 (10/11): (a) il campo dice «Cerca: M 31, Velo, Andromeda…», ma
+  la ricerca trova sigle e nomi dell'oggetto, non i nomi comuni: l'app scrive «Cerca: M 31, NGC
+  7000…»; (b) le costellazioni nell'app sono latine IAU (Cepheus, Cygnus), decisione di Marco
+  confermata il 10/11: catalogo.js le ha in italiano; (c) i nomi comuni arrivano dal catalogo in
+  inglese («Andromeda Galaxy»); (d) Sole, Sistema solare e Aggiungi oggetto restano fuori finche'
+  non c'e' una sorgente (ADR 0019). Allineare la tavola.
 
 ## Date, da controllare alla consegna
 

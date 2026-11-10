@@ -2,87 +2,100 @@
 only those. The user's sort too, for the reason in `api/nights`."""
 
 import sqlite3
-from datetime import date
-from typing import Any, Literal, cast
+from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, Query
 
-from ..spine import archive, filters_used, objects, productions
+from ..spine import archive, archive_criteria, filters_used, objects, productions
+from ..spine.archive import Family, Form
 from ..spine.counts import Scope, Subject
+from ..spine.solve import solver_where
 from .deps import get_db
 from .models_archive import (
-    ArchiveChoices,
+    ArchiveCriterion,
     ArchiveFound,
     ArchiveList,
     ArchiveObject,
     ArchivePanel,
     ArchiveProduction,
+    ArchiveUnresolved,
+    ArchiveWhole,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["archive"])
 
 # A `Literal` so FastAPI rejects an unknown order before the spine, and the OpenAPI carries it.
-Sort = Literal["name", "hours", "frames"]
+Sort = Literal["name", "hours", "recent"]
+# Repeated parameters, each value bounded: `?year=2024&year=2025`.
+Texts = Annotated[list[Annotated[str, Query(max_length=120)]], Query(max_length=60)]  # [T]
+Ids = Annotated[list[int], Query(max_length=60)]  # [T]
 
 
 @router.get("/archive", response_model=ArchiveList)
 def archive_page(  # noqa: PLR0913
-    limit: int = Query(100, ge=1, le=500),  # [P docs/domini/archivio.md]
+    limit: int = Query(20, ge=1, le=500),  # [P docs/domini/archivio.md]
     offset: int = Query(0, ge=0),
     q: str | None = Query(None, max_length=200),  # [T]
     key: str | None = Query(None, max_length=200),  # [T]
-    catalog: str | None = Query(None, max_length=40),  # [T]
-    constellation: str | None = Query(None, max_length=8),  # [T]
-    filter_name: str | None = Query(None, alias="filter", max_length=120),  # [T]
-    mosaic: bool = False,
-    since: date | None = None,
-    until: date | None = None,
-    site: int | None = None,
-    optics: int | None = None,
-    camera: int | None = None,
+    year: Texts = [],  # noqa: B006 - FastAPI copies the default
+    type_: Annotated[list[Family], Query(alias="type", max_length=10)] = [],  # noqa: B006
+    constellation: Texts = [],  # noqa: B006
+    filter_name: Annotated[
+        list[Annotated[str, Query(max_length=120)]], Query(alias="filter", max_length=60)
+    ] = [],  # noqa: B006
+    form: Annotated[list[Form], Query(max_length=3)] = [],  # noqa: B006
+    site: Ids = [],  # noqa: B006
+    optics: Ids = [],  # noqa: B006
+    camera: Ids = [],  # noqa: B006
+    catalog: Texts = [],  # noqa: B006
     sort: Sort = "name",
     conn: sqlite3.Connection = Depends(get_db),
 ) -> ArchiveList:
     """The archive rows -- confirmed objects and mosaics -- with each one's filters, in the order
-    `sort` chooses, narrowed by the search parameters.
+    `sort` chooses, narrowed by the criteria. A repeated criterion is either
+    (`?year=2024&year=2025`), different criteria hold together.
 
-    `since`/`until` (night dates, both included), `site`, `optics` and `camera` narrow the
-    **frames**: a row passes with one of its frames in them, and its hours, filters, productions
-    and panels are those frames' only -- narrowed to 2025, a row tells 2025.
+    `year`, `site`, `optics` and `camera` narrow the **frames**: a row passes with one of its
+    frames in them, and its hours, filters, productions and panels are those frames' only --
+    narrowed to 2025, a row tells 2025. `filter` asks the same frames and leaves the hours.
 
     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
     where `q` would also find `M 10` and `M 101` for `M 1`. With `key`, `q` is not applied.
 
-    The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
-    whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
-    a time would be five rounds to see what fits in one."""
-    scope = Scope(
-        since=since.isoformat() if since else None,
-        until=until.isoformat() if until else None,
-        site=site,
-        optics=optics,
-        camera=camera,
-    )
-    criteria = {
+    `criteria` counts each option with the other choices on, on the first page only (`offset` 0):
+    "Mostra altri" does not change them, and they read the frames. `whole` is the whole archive, and
+    `unresolved` the light frames no object took. Twenty rows a page (the sheet's "Mostra altri
+    20")."""
+    scope = Scope(years=tuple(year), sites=tuple(site), optics=tuple(optics), cameras=tuple(camera))
+    criteria = archive.Criteria(
         # the row the search opens: words left in the bar must not hide it
-        "q": None if key else q,
-        "key": key,
-        "catalog": catalog,
-        "constellation": constellation,
-        "filter_name": filter_name,
-        "mosaic": mosaic,
-        "scope": scope,
-    }
-    rows, count = archive.page(
-        conn, limit=limit, offset=offset, sort=cast(archive.Order, sort), **criteria
+        q=None if key else q,
+        key=key,
+        catalogs=tuple(catalog),
+        constellations=tuple(constellation),
+        types=tuple(type_),
+        forms=tuple(form),
+        filters=tuple(filter_name),
+        scope=scope,
     )
+    asked = vars(criteria)
+    rows, count = archive.page(
+        conn, limit=limit, offset=offset, sort=cast(archive.Order, sort), **asked
+    )
+    left = archive.unresolved(conn)
     return ArchiveList(
         items=items_of(conn, rows, scope),
         total=count,
-        found=ArchiveFound(**archive.found(conn, **criteria)),
+        found=ArchiveFound(**archive.found(conn, **asked)),
         limit=limit,
         offset=offset,
-        choices=ArchiveChoices(**archive.choices(conn)),
+        whole=ArchiveWhole(**archive.totals(conn)),
+        criteria=[ArchiveCriterion(**c) for c in archive_criteria.offered(conn, criteria)]
+        if offset == 0
+        else [],
+        unresolved=None
+        if left is None
+        else ArchiveUnresolved(**left, solver_missing=solver_where(conn)[0] is None),
     )
 
 
@@ -103,6 +116,7 @@ def items_of(
             key=r["key"],
             name=objects.display_name(r),
             slug=r["catalog_slug"],
+            common_name=r["common_name"],
             frames=r["frames"],
             integration_s=r["integration_s"],
             untimed=r["untimed"],

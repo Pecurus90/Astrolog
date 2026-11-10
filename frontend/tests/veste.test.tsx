@@ -20,6 +20,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { PAGINE } from "../src/pagine"
+import { voceArchivio } from "./archivio-banco"
 import { SALUTE, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga, rispondi, vai, vaiASezione } from "./banco"
 
 afterEach(pulisci)
@@ -43,7 +44,7 @@ function aperta() {
     "/api/v1/review": { stato: 200, corpo: PAGINA },
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/health": { stato: 200, corpo: SALUTE },
-    "/api/v1/archive": { stato: 200, corpo: { items: [], total: 0 } },
+    "/api/v1/archive": voceArchivio([]),
     "/api/v1/vocab/filter-models": { stato: 200, corpo: { items: [] } },
   })
 }
