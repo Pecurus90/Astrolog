@@ -57,9 +57,9 @@ class Component extends DCLogic {
       ['notte', 'normale', '24 settembre: tre oggetti, la fascia sopra il grafico'], ['notte', 'misure in calcolo', 'le misure arrivano'], ['oggetto', 'normale', 'modo chiaro', 'chiaro'], ['notte', 'normale', 'modo chiaro', 'chiaro']];
     const on = this.state.on;
     const tel = T.map(([tipo, st, nota, modo], i) => { const k = 't' + i, nn = String(i + 1).padStart(2, '0');
-      return { tipo, st, nota, modo, titolo: nn + ' · ' + tipo + ' · ' + st + (modo ? ' · ' + modo : ''), label: 'Telefono · ' + nn + ' · ' + tipo + ' · ' + st, ref: this.rif(k), on: !!on[k] }; });
+      return { tipo, st, nota, modo, titolo: nn + ' · ' + tipo + ' · ' + st + (modo ? ' · ' + modo : ''), label: 'Telefono · ' + nn + ' · ' + tipo + ' · ' + st + (modo ? ' · ' + modo : ''), ref: this.rif(k), on: !!on[k] }; });
     const D = [['oggetto', 'normale', 'oggetto'], ['notte', 'normale', 'la notte del 24 settembre'], ['oggetto', 'misure in calcolo', 'misure a metà'], ['notte', 'normale', 'modo chiaro', 'chiaro']];
-    const desk = D.map(([tipo, st, nota, modo], i) => { const k = 'd' + i; return { tipo, st, nota, modo, titolo: tipo + ' · ' + st + (modo ? ' · ' + modo : ''), label: 'Desktop · ' + tipo + ' · ' + st, ref: this.rif(k), on: !!on[k] }; });
+    const desk = D.map(([tipo, st, nota, modo], i) => { const k = 'd' + i; return { tipo, st, nota, modo, titolo: tipo + ' · ' + st + (modo ? ' · ' + modo : ''), label: 'Desktop · ' + String(i + 1).padStart(2, '0') + ' · ' + tipo + ' · ' + st + (modo ? ' · ' + modo : ''), ref: this.rif(k), on: !!on[k] }; });
     const FN = [['oggetto', 'normale', '‹ spenta: è il primo oggetto della pagina'], ['oggetto', 'caricamento', 'la × resta'], ['oggetto', 'errore dell\u0027app', 'la × resta'], ['oggetto', 'non trovato', 'la × resta']];
     const fin = FN.map(([tipo, st, nota], i) => { const k = 'f' + i, nn = String(i + 1).padStart(2, '0'); return { tipo, st, nota, titolo: nn + ' · finestra · ' + st, label: 'Finestra · ' + nn + ' · ' + st, ref: this.rif(k), on: !!on[k] }; });
     return { righeTel: [tel], desk, fin };

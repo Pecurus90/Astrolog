@@ -10,13 +10,13 @@
 <helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
 <div class="al-c-striscia__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
 <sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
-<sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}"><div class="al-c-striscia__blocco-2" ref="{{ rif }}" role="tablist" aria-label="{{ etichetta }}" style="display:{{ dDisp }};grid-template-columns:repeat({{ n }},minmax(0,1fr));overflow-x:{{ dOv }};padding-bottom:{{ dPb }}">
+<sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}"><div class="al-c-striscia__blocco-2" ref="{{ rif }}" role="tablist" aria-label="{{ etichetta }}" style="--n:{{ n }};display:{{ dDisp }};grid-template-columns:repeat({{ n }},minmax(0,1fr));overflow-x:{{ dOv }};padding-bottom:{{ dPb }}">
 <sc-if value="{{ intest }}" hint-placeholder-val="{{ true }}"><span class="al-c-striscia__blocco-3" style="grid-column:span {{ nOre }}">ora per ora</span><sc-if value="{{ nTend }}" hint-placeholder-val="{{ true }}"><span class="al-c-striscia__blocco-3" style="grid-column:span {{ nTend }}">tendenza, meno affidabile</span></sc-if></sc-if>
 <sc-for list="{{ tiles }}" as="n" hint-placeholder-count="7"><a class="al-c-striscia__colonna-1" role="tab" aria-selected="{{ n.sel }}" onClick="{{ n.on }}" style="width:{{ dW }};flex:{{ dFlex }};background:{{ n.bg }};color:{{ n.fg }};border:1.5px dashed {{ n.dash }};box-shadow:{{ n.ring }}">
 <span class="al-c-striscia__riga-1"><b class="al-c-striscia__testo-1">{{ n.day }}</b><span class="al-c-striscia__testo-2" style="color:{{ n.mu }}">{{ n.tag }}</span></span>
 <dc-import name="componenti/Pillola" esito="{{ n.es }}" testo="{{ n.pillT }}" dimensione="piccola" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,22px"></dc-import>
 <sc-if value="{{ n.rip }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Ripresa" tipo="{{ n.rip.tipo }}" testo="{{ n.rip.testo }}" forma="segno" colore="{{ n.fg }}" tenue="{{ n.mu }}" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,16px"></dc-import></sc-if>
-<span class="al-c-striscia__colonna-2"><span class="al-c-striscia__testo-3">{{ n.hours }}</span><span class="al-c-striscia__testo-4" style="color:{{ n.mu }}">{{ n.range }}</span></span>
+<span class="al-c-striscia__colonna-2"><span class="al-c-striscia__testo-3">{{ n.hours }}</span><span class="al-c-striscia__testo-4" title="{{ n.range }}" style="color:{{ n.mu }}">{{ n.range }}</span></span>
 <span class="al-c-striscia__riga-2"><sc-for list="{{ n.cells }}" as="c" hint-placeholder-count="14"><span class="al-c-striscia__pillola-1" style="height:{{ c.h }};background:{{ c.bg }}"></span></sc-for></span>
 </a></sc-for>
 </div></sc-if>

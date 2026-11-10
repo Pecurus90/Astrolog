@@ -1,0 +1,7 @@
+# Brief del 10/11/2026 (collaudo della v77), da Claude Code via Marco
+
+Le tre voci «Da dare» della coda per Design, come sono arrivate.
+
+1. Pagine fra 700 e 1000 px: alla v77 la testa del Telaio ci sta da 700 px, ma il contenuto no: sotto i 1000 px alcune carte escono dalla colonna, per esempio la Luna nella Dashboard (lo dice Design stesso nella consegna v77). Ogni pagina dentro la colonna a ogni larghezza da 700 a 1440, senza scorrimento di lato, come la testa.
+2. Sito dal nome lungo (collaudo v77, 10/11; prova con «Osservatorio del Monte Generoso, terrazza nord sopra la funicolare»): la tavola scorre di lato. Telaio desktop: la pastiglia Stanotte (.al-c-telaio__riga-7, flex: none, nowrap) allarga la testa a ogni larghezza (a 1440 pagina 1661/1440). Telaio telefono: il sito sotto il titolo (.al-c-telaio__riga-12, secondo span, nowrap) passa sotto Da confermare e Cerca (414/390). Notti: il sito nella striscia (.al-c-striscia__testo-4, nowrap) sborda a 960 e 760; sul telefono la pillola del sito nella carta della notte va a capo su cinque righe. Un nome di sito puo' essere lungo: puntini col nome intero nel title, come le pillole della testa del Riepilogo alla v77.
+3. Errori della tavola v77 trovati nel collaudo: il Telaio sborda di pochi px da solo a 1280 (testa 1207/1184), 960, 760 e 700 (il tondo chiaro/scuro tondo-3 non entra nelle fasce); l'Archivio da' in console <path> attribute d: "{{ v.d }}" e "{{ q.ic }}"; in Riepilogo stati uno schermo ha data-screen-label alto 0 e non si cattura.

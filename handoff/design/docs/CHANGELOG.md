@@ -1,5 +1,12 @@
 # AstroLog — cronologia
 
+## v78 — Il collaudo della v77, 3 voci — 10/11/2026
+
+- Pagine fra 700 e 999 px: carte una sotto l'altra (`data-col` su Carta); Da confermare, Selezione, Attrezzatura in una colonna; Meteo della notte e Campionamento su tre colonne; la striscia scorre dentro la carta.
+- Sito lungo coi tre puntini e il `title`: pastiglia Stanotte, sito del telefono, striscia, pillola della notte.
+- Telaio: fasce che scattano prima, nessuno sbordo da 700 a 1440; via il `min-width` 700. Archivio senza errori dei `<path>`. Riepilogo stati con etichette diverse.
+- Pacchetto `consegna/astrolog-v78.zip`.
+
 ## v77 — Correzioni dal porting della v76, 16 voci — 10/11/2026
 
 - Telaio: cornice da 700 px, testa a fasce fino a 1440 (Cerca con la lente, pillole e spazi stretti, marchio e Da confermare col segno, pagine su una riga loro); margini da 40 a 24; Da confermare del telefono largo 44; alPulse e alHalo solo nel foglio.

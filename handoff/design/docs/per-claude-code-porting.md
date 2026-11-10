@@ -95,6 +95,14 @@ Il brief intero e' in `docs/archivio/brief-porting-v59.md`; ogni punto ha la sua
 
 **Stato**: v60–v73 da approvare da Marco sulla tavola, parole comprese.
 
+## v78 (10/11): le 3 voci del collaudo della v77
+
+1. **Fra 700 e 999 px** (`@media (max-width: 999px)` in fondo ad astrolog.css, «v78»): Carta scrive `data-col` (il numero di `colonne`); con `data-col` diverso da 12 la carta va a `grid-column: 1 / -1`. In piu': `.al-conf__centro-1` una colonna e `.al-conf__colonna-1` static; `.al-sel__centro-1` e `.al-sel__centro-3` una colonna; `.al-attr__centro-2 > .al-attr__colonna-1` riga intera; `.al-dash__griglia-6` tre colonne; la Carta del Campionamento (`:has(.al-meteo__colonna-13)`) tre colonne col titolo sopra; `.al-c-striscia__blocco-2` `repeat(var(--n), minmax(150px, 1fr))` con `overflow-x: auto` (Striscia scrive `--n` inline). Nell'app la soglia e' la stessa del cambio di formato: sopra 999 px tutto come a 1440.
+2. **Sito lungo**: Telaio desktop, la pastiglia e' `__stanotte-t` · `__stanotte-sito` (puntini, `title` = sito) · `__stanotte-giu` (▾); `.al-c-telaio__riga-6` e `.al-c-telaio__riga-7` `flex: 0 1 auto; min-width: 0`, la pastiglia `max-width: 340px`. Telaio telefono: il sito sotto il titolo e' una riga flex col nome coi puntini e il ▾ a parte, `title` = sito. Striscia: `__testo-4` coi puntini e `title`, `__colonna-2` `min-width: 0`. Notti: nella pillola `al-notti__sito-nome` e `al-notti__sito-fonte` coi puntini (la fonte si accorcia per prima, `flex-shrink: 2`), `title` = nome · fonte (`n.sitoT`); sul telefono `.al-notti__riga-26 > .al-notti__colonna-7` `min-width: 0`.
+3. **Telaio, fasce**: la seconda fascia da 1219 px di testa (era 1139); sotto 879 `.al-c-telaio__riga-3` `box-sizing: border-box` (il 100% piu' il padding sbordava di 10 px). `minW` della cornice: `0`. **Archivio**: i `<path>` di `v.d` e `q.ic` dentro `sc-if` (nella tavola il segnaposto mandava la stringa `{{ }}`; nell'app non c'e'). **Riepilogo stati**: etichette con numero e modo.
+
+Per provare: `?sito=Osservatorio%20del%20Monte%20Generoso%2C%20terrazza%20nord%20sopra%20la%20funicolare` su qualunque pagina (Telaio) e sulle Notti (al posto di Cima Ekar). Solo tavola.
+
 ## v77 (10/11): le 16 voci del porting della v76
 
 1. **Telaio, finestre strette**: `minW` 700 (era 1440). La testa e' un contenitore (`.al-c-telaio__riga-1`, `container: al-testa / inline-size`) con dentro `.al-c-telaio__testa`; le fasce sono quattro `@container al-testa` in astrolog.css (1199 · 1139 · 999 · 879 px di testa). Nuove parti: `__marchio-t`, `__cerca-t`, `__todo-t`, `__todo-segno`. Padding delle pillole nel foglio (`aria-current="page"`), non piu' inline. Margini di lato: `.al-c-telaio__blocco-2[data-cornice="si"]` e `margin-inline: max(24px, (100% − 1360px) / 2)`; il padding della pagina resta solo in alto e in basso.

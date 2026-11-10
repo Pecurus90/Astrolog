@@ -13,6 +13,15 @@ Le decisioni del vecchio sistema (fino alla v38) stanno in
 4. Carta «È stagione» nella Dashboard (progetti salvati, per priorita').
 5. Poi si cancellano le tavole di prova: `Planner proposte`, `Telefono comandi`, `Telaio vivo` (restano `Planner telefono` e `Planner desktop` come riferimento finche' il porting non e' fatto).
 
+## v78 — Il collaudo della v77, 3 voci (10/11/2026, da Claude Code via Marco; da approvare)
+
+- Fonte: la coda per Design del 10/11, «Da dare» (testo in `docs/archivio/brief-porting-v77.md`). Voce per voce in `docs/per-claude-code-porting.md`, sezione v78.
+- **1 · Pagine fra 700 e 999 px**: le carte che a 1440 dividono la riga (span da 1 a 11) prendono la riga intera, una sotto l'altra. Le pagine con due colonne proprie fanno lo stesso: Da confermare (l'indice sopra l'elenco), Selezione dei frame, Attrezzatura (le due colonne del corredo). Meteo della notte nella Dashboard e Campionamento nel Meteo vanno su tre colonne. La striscia delle notti tiene le carte larghe almeno 150 px e scorre dentro la sua carta, come sul telefono; la pagina non scorre mai di lato. Controllato a 700, 760, 860, 960, 1000, 1100, 1280 e 1440.
+- **2 · Sito dal nome lungo**: dappertutto una riga sola coi tre puntini, il nome intero nel `title`. La pastiglia Stanotte si accorcia (al massimo 340 px) invece di allargare la testa; sul telefono il sito sotto il titolo; nella striscia la riga del sito; nella carta della notte la pillola (nome e fonte, la fonte si accorcia per prima).
+- **3 · Telaio da solo**: le fasce scattano prima (pillole strette da 1220 px di testa, era 1140) e la riga delle pagine sotto 880 conta il suo padding; via il `min-width` di 700 sulla cornice, che con la barra di scorrimento faceva scorrere di 15 px (sotto 700 c'e' il telefono). Archivio: le icone delle viste e delle anteprime non si disegnano finche' il dato non c'e' (niente piu' errori in console). Riepilogo stati: le etichette degli schermi sono tutte diverse (due si chiamavano «Desktop · notte · normale»).
+- Per le tavole: `?sito=` nell'indirizzo mette un nome lungo nel Telaio e, nelle Notti, al posto di Cima Ekar.
+- Pacchetto: `consegna/astrolog-v78.zip` al posto della v77.
+
 ## v77 — Correzioni dal porting della v76, 16 voci (10/11/2026, da Claude Code via Marco; da approvare)
 
 - Fonte: il brief del 10/11 di Claude Code (porting di Notti, Tutto della notte, finestra dell'oggetto, telaio). Voce per voce in `docs/per-claude-code-porting.md`, sezione v77.

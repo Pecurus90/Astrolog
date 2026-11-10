@@ -1423,9 +1423,9 @@ button.al-bottone { margin: 0; font-style: inherit; line-height: inherit; letter
 .al-c-striscia__riga-1 { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
 .al-c-striscia__testo-1 { font-weight: 600; font-size: 16px; white-space: nowrap; }
 .al-c-striscia__testo-2 { font-size: 12px; }
-.al-c-striscia__colonna-2 { display: flex; flex-direction: column; }
+.al-c-striscia__colonna-2 { display: flex; flex-direction: column; min-width: 0; }
 .al-c-striscia__testo-3 { font-size: 22px; font-weight: 300; line-height: 1.15; white-space: nowrap; }
-.al-c-striscia__testo-4 { font-size: 12px; white-space: nowrap; }
+.al-c-striscia__testo-4 { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .al-c-striscia__riga-2 { display: flex; gap: 2px; align-items: end; height: 18px; }
 .al-c-striscia__pillola-1 { flex: 1; border-radius: 999px; }
 .al-c-striscia__riga-3 { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; color: var(--testo); }
@@ -4172,7 +4172,7 @@ button.al-scelta__voce { border: 0; background: transparent; font: inherit; colo
 [data-formato="telefono"] .al-arch__campo-riga { grid-template-columns: minmax(0, 1fr); }
 
 /* v77 · Telaio, le fasce della testa. La cornice parte da 700 px (sotto c'e' il telefono); fra 700 e 1440 la testa si stringe a fasce, senza scorrere di lato.
-   Le fasce guardano la larghezza della testa (contenitore al-testa): da 1200 Cerca solo con la lente; da 1140 pillole e spazi stretti, la pastiglia senza «Stanotte»;
+   Le fasce guardano la larghezza della testa (contenitore al-testa): da 1200 Cerca solo con la lente; da 1220 (v78; era 1140) pillole e spazi stretti, la pastiglia senza «Stanotte»;
    da 1000 il marchio senza nome e Da confermare col segno; da 880 le pagine vanno su una riga loro. I margini di lato scendono da 40 a 24 px. */
 .al-c-telaio__blocco-2[data-cornice="si"] .al-c-telaio__colonna-1 { margin-inline: max(24px, calc((100% - 1360px) / 2)); }
 .al-c-telaio__riga-1 { container: al-testa / inline-size; }
@@ -4184,7 +4184,7 @@ button.al-scelta__voce { border: 0; background: transparent; font: inherit; colo
   .al-c-telaio__cerca-t { display: none; }
   .al-c-telaio__riga-9 { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; color: var(--testo); }
 }
-@container al-testa (max-width: 1139px) {
+@container al-testa (max-width: 1219px) {
   .al-c-telaio__testa { gap: 8px; }
   .al-c-telaio__riga-6 { gap: 6px; }
   .al-c-telaio__riga-3 { font-size: 13px; margin-left: 4px; gap: 2px; }
@@ -4202,8 +4202,14 @@ button.al-scelta__voce { border: 0; background: transparent; font: inherit; colo
 @container al-testa (max-width: 879px) {
   .al-c-telaio__testa { flex-wrap: wrap; row-gap: 10px; }
   .al-c-telaio__marchio-t { display: inline; }
-  .al-c-telaio__riga-3 { order: 3; flex: 1 0 100%; margin-left: 0; justify-content: space-between; }
+  .al-c-telaio__riga-3 { order: 3; flex: 1 0 100%; box-sizing: border-box; margin-left: 0; justify-content: space-between; }
 }
+/* v78 · Il sito puo' avere un nome lungo: la pastiglia si accorcia coi tre puntini (il nome intero nel title), la testa non si allarga */
+.al-c-telaio__riga-6 { min-width: 0; flex: 0 1 auto; }
+.al-c-telaio__notte-ancora { min-width: 0; }
+.al-c-telaio__riga-7 { flex: 0 1 auto; min-width: 0; max-width: 340px; }
+.al-c-telaio__stanotte-t, .al-c-telaio__stanotte-giu { flex: none; }
+.al-c-telaio__stanotte-sito { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Telefono: Da confermare senza conto resta un bersaglio da 44 */
 .al-c-telaio__riga-13 { min-width: 44px; justify-content: center; }
 
@@ -4257,3 +4263,31 @@ button.al-scelta__voce { border: 0; background: transparent; font: inherit; colo
 .al-arch__riga-apri { display: block; min-width: 0; overflow: hidden; color: inherit; text-decoration: none; outline: none; }
 .al-arch__riga-apri::after { content: ""; position: absolute; inset: 0; }
 .al-arch__riga:has(.al-arch__riga-apri:focus-visible) { box-shadow: inset 0 0 0 2px var(--accento); border-radius: 12px; }
+
+/* v78 · Pagine fra 700 e 999 px: le carte che a 1440 dividono la riga (span da 1 a 11) prendono la riga intera, una sotto l'altra. Nessuna carta esce dalla colonna. */
+@media (max-width: 999px) {
+  .al-c-carta__blocco-1[data-col]:not([data-col="12"]) { grid-column: 1 / -1 !important; }
+}
+@media (max-width: 999px) {
+  /* Da confermare: l'indice sopra l'elenco */
+  .al-conf__centro-1 { grid-template-columns: minmax(0, 1fr) !important; }
+  .al-conf__colonna-1 { position: static !important; }
+  /* Selezione dei frame: le colonne affiancate una sotto l'altra */
+  .al-sel__centro-1, .al-sel__centro-3 { grid-template-columns: minmax(0, 1fr); }
+  /* Dashboard, Meteo della notte: sei carte su tre colonne */
+  .al-dash__griglia-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Attrezzatura: le due colonne del corredo una sotto l'altra */
+  .al-attr__centro-2 > .al-attr__colonna-1 { grid-column: 1 / -1 !important; }
+  /* Meteo, Campionamento: i cinque setup su tre colonne, il titolo sopra */
+  .al-c-carta__blocco-1:has(.al-meteo__colonna-13) { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .al-c-carta__blocco-1:has(.al-meteo__colonna-13) > .al-meteo__colonna-11 { grid-column: 1 / -1; }
+  /* Striscia delle notti: le carte tengono la loro misura e la striscia scorre dentro la sua carta, come sul telefono */
+  .al-c-striscia__blocco-2 { grid-template-columns: repeat(var(--n), minmax(150px, 1fr)) !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: thin; scrollbar-color: var(--linea) transparent; }
+}
+
+/* v78 · Notti, la pillola del sito: su una riga, il nome e la fonte coi tre puntini (tutto nel title) */
+.al-notti__riga-5, .al-notti__riga-27 { min-width: 0; max-width: 100%; box-sizing: border-box; white-space: nowrap; }
+.al-notti__riga-5 > svg, .al-notti__riga-27 > svg { flex: none; }
+.al-notti__sito-nome { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.al-notti__sito-fonte { flex: 0 2 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.al-notti__riga-26 > .al-notti__colonna-7 { min-width: 0; flex: 1 1 auto; }

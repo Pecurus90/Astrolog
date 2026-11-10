@@ -34,7 +34,7 @@
 
 <dc-import name="componenti/Carta" formato="desktop" etichetta="La notte" tono="protagonista" colonne="{{ protCols }}" ritardo="0" padding="28px" gap="22" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,560px">
 <div class="al-notti__riga-3">
-<span class="al-notti__riga-4"><b class="al-notti__testo-3">{{ n.titolo }}</b><span class="al-notti__riga-5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg>{{ n.sito }}<span class="al-notti__sito-fonte">· {{ n.sitoF }}</span></span></span>
+<span class="al-notti__riga-4"><b class="al-notti__testo-3">{{ n.titolo }}</b><span class="al-notti__riga-5" title="{{ n.sitoT }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span class="al-notti__sito-nome">{{ n.sito }}</span><span class="al-notti__sito-fonte">· {{ n.sitoF }}</span></span></span>
 <a class="al-notti__tondo-1" href="#" onClick="{{ apri }}" aria-haspopup="dialog" aria-label="Tutto della notte" title="Tutto della notte">↗</a>
 </div>
 <div class="al-notti__riga-6"><span class="al-notti__testo-4" data-an="big">{{ n.big }}</span><span class="al-notti__colonna-1"><span class="al-notti__testo-5">{{ n.bigL }}</span><span class="al-notti__testo-2">{{ n.frameL }}</span></span></div>
@@ -121,7 +121,7 @@
 
 <sc-if value="{{ S.main }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="telefono" etichetta="La notte" tono="protagonista" ritardo="60" padding="20px 16px" gap="16" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,560px">
 <div class="al-notti__riga-26" ref="{{ rifNotte }}">
-<span class="al-notti__colonna-7"><b class="al-notti__testo-24">{{ n.titolo }}</b><span class="al-notti__riga-27"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg>{{ n.sito }}<span class="al-notti__sito-fonte">· {{ n.sitoF }}</span></span></span>
+<span class="al-notti__colonna-7"><b class="al-notti__testo-24">{{ n.titolo }}</b><span class="al-notti__riga-27" title="{{ n.sitoT }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span class="al-notti__sito-nome">{{ n.sito }}</span><span class="al-notti__sito-fonte">· {{ n.sitoF }}</span></span></span>
 <sc-if value="{{ S.nav }}" hint-placeholder-val="{{ true }}"><span class="al-notti__riga-28"><a class="al-notti__tondo-1" href="#" onClick="{{ nav.prima }}" aria-label="La notte prima" aria-disabled="{{ nav.primaNo }}" style="opacity:{{ nav.primaOp }}">‹</a><a class="al-notti__tondo-1" href="#" onClick="{{ nav.dopo }}" aria-label="La notte dopo" aria-disabled="{{ nav.dopoNo }}" style="opacity:{{ nav.dopoOp }}">›</a></span></sc-if><a class="al-notti__tondo-1" href="#" onClick="{{ apri }}" aria-haspopup="dialog" aria-label="Tutto della notte" title="Tutto della notte">↗</a>
 </div>
 <div class="al-notti__riga-29"><span class="al-notti__testo-25" data-an="big">{{ n.big }}</span><span class="al-notti__colonna-15"><span class="al-notti__testo-26">{{ n.bigL }}</span><span class="al-notti__testo-11">{{ n.frameL }}</span></span></div>
@@ -191,6 +191,8 @@ class Component extends DCLogic {
     // Dati simulati in componenti/dati.js (oggi e' il 30 settembre 2026)
     const OGGI = ALdati.oggi, DATI = ALdati.notti;
     const notti = DATI.filter(n => !n.solo || n.solo === stato);
+    // v78: ?sito= nell'indirizzo mette un nome lungo al posto di Cima Ekar (solo a schermo), come nel Telaio
+    const qSito = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('sito') : null, sitoV = s => qSito && s === 'Cima Ekar' ? qSito : s;
     const PRE = { 'una notte sola': '2026-09-24-ekar', 'sito senza fuso': '2026-09-21-calvi', 'meteo che non arriva': '2026-09-22-casa', 'senza durata': '2026-09-20-ekar', 'due siti lo stesso giorno': '2026-09-19-ekar', 'senza buio': '2026-06-21-lofoten' };
     const selId = this.state.sel || PRE[stato] || notti[0].id;
     const si = Math.max(0, notti.findIndex(n => n.id === selId)), N = notti[si];
@@ -218,7 +220,7 @@ class Component extends DCLogic {
     // Ripresa della notte passata (v13, simulata da fase e buio): ore di banda larga
     const ripDi = x => { if (!x.luna || x.met.sb != null || x.met.fuso) return null; const b = x.met.b || 9, bl = SO.larghePassate(x.luna[1], !!x.luna[2], b);
       return { tipo: bl >= b ? 'larga' : bl <= 0 ? 'stretta' : 'mista', testo: SO.breve(bl) }; };
-    const n = { titolo: titolo(N), sito: N.sito, rip: ripDi(N),
+    const n = { titolo: titolo(N), sito: sitoV(N.sito), rip: ripDi(N),
       big: N.ore != null ? fh(N.ore) : num(N.fr) + ' frame', bigL: N.ore != null ? 'Integrazione' : 'senza durata',
       frameL: N.ore != null ? num(N.fr) + ' frame' + (N.st ? ' · ' + N.st + ' senza durata' : '') : 'Nei file non c\u0027è il tempo: le ore non si contano.',
       es: c0.e, pillT: c0.pillT, pillS: segno(c0.e), cieloT: c0.t, cieloS: c0.s, bar: c0.bar || null, azione: c0.az || null,
@@ -230,6 +232,7 @@ class Component extends DCLogic {
       barT: c0.bar ? 'una tacca per ora di buio: le piene contano le ore di posa, non dicono quando' : '',
       // 5.4, v77: da dove viene il sito della notte: lo manda l'app (N.fonte: impostazioni · frame · risposta)
       sitoF: ({ impostazioni: 'il sito di casa, dalle Impostazioni', frame: 'dalle coordinate nei frame', risposta: 'dalla tua risposta in Da confermare' })[N.fonte] || '' };
+    n.sitoT = n.sito + (n.sitoF ? ' · ' + n.sitoF : '');
     const vai = (i, scorri) => e => { e && e.preventDefault(); const x = notti[i]; if (!x) return; if (x.id === N.id && e) { set({ det: true }); return; } set({ sel: x.id, mese: x.mk });
       if (scorri && this._notte) requestAnimationFrame(() => { const r = this._notte.getBoundingClientRect(); window.scrollBy({ top: r.top - 84, behavior: 'smooth' }); }); };
     const nav = { prima: vai(si + 1), dopo: vai(si - 1), primaNo: si >= notti.length - 1 ? 'true' : undefined, dopoNo: si <= 0 ? 'true' : undefined, primaOp: si >= notti.length - 1 ? 0.35 : 1, dopoOp: si <= 0 ? 0.35 : 1 };
@@ -237,7 +240,7 @@ class Component extends DCLogic {
     const CAT = window.ALcat;
     // Righe dell'elenco
     const riga = (x, i) => { const c = cielo(x), on = x.id === N.id;
-      return { g: x.d, dow: x.dow.slice(0, 3), sito: x.sito, ogg: x.ogg.map(o => o[0]).join(' · ') + (x.altri ? ' e ' + x.altri + (x.altri === 1 ? ' altro' : ' altri') : ''),
+      return { g: x.d, dow: x.dow.slice(0, 3), sito: sitoV(x.sito), ogg: x.ogg.map(o => o[0]).join(' · ') + (x.altri ? ' e ' + x.altri + (x.altri === 1 ? ' altro' : ' altri') : ''),
         ore: x.ore != null ? fh(x.ore) : 'senza durata', frame: num(x.fr) + ' frame', filD: x.fil, filT: nomiF(x).join(' · '),
         es: c.e, pillT: c.pillT, pillS: segno(c.e), fondo: on ? 'carta' : 'carta2', cielo: c.corto, rip: ripDi(x), lunaP: x.luna ? x.luna[1] : null, lunaL: x.luna ? (x.luna[2] ? 'destra' : 'sinistra') : '', luna: x.luna ? x.luna[1] + '%' : '',
         sel: on ? 'true' : 'false', bg: on ? t.card2 : 'transparent', ring: on ? t.accent : 'transparent', on: vai(i), onTel: vai(i, true),
@@ -305,7 +308,7 @@ class Component extends DCLogic {
       pad: varA ? '14px 14px 16px' : '16px 0 18px', hpad: varA ? '0' : '0 16px', gpad: varA ? '0' : '0 14px',
       toggle: e => { e.preventDefault(); set({ calAperto: !calAp, mese: null, filAperto: false }); } };
     const strip = (F.desk ? notti.slice(0, 7).map((x, i) => i) : visti).map(i => { const x = notti[i]; const c = cielo(x), prima = F.desk ? i - 1 : visti[visti.indexOf(i) - 1], primaDelMese = prima == null || prima < 0 || notti[prima].mk !== x.mk, ml = primaDelMese ? MESI[x.m - 1] : ''; return { day: x.dow.slice(0, 3) + ' ' + x.d, tagS: ml, tag: ml, tend: false, sel: x.id === N.id,
-      esito: c.e >= 0 ? c.e : 'ignoto', pillT: x.met.a ? 'in arrivo' : x.met.fuso ? 'senza fuso' : c.pillT, rip: ripDi(x), hours: x.ore != null ? fh(x.ore) : 'senza durata', range: x.sito, cells: [], on: vai(i) }; });
+      esito: c.e >= 0 ? c.e : 'ignoto', pillT: x.met.a ? 'in arrivo' : x.met.fuso ? 'senza fuso' : c.pillT, rip: ripDi(x), hours: x.ore != null ? fh(x.ore) : 'senza durata', range: sitoV(x.sito), cells: [], on: vai(i) }; });
 
     const filAp = !!this.state.filAperto, nAtt = (q ? 1 : 0) + Object.values(FS).reduce((a, v) => a + (v ? v.length : 0), 0);
     Object.assign(tc, { filAperto: filAp, filAp: filAp ? 'true' : 'false', filN: nAtt ? String(nAtt) : '', filBg: nAtt ? t.hPill : t.card2, filFg: nAtt ? t.hPillFg : t.text,
