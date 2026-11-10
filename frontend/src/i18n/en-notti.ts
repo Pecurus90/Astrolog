@@ -43,7 +43,7 @@ export const enNotti = {
   "nights.site.answer": "from your answer in To confirm",
   "nights.prev": "The night before",
   "nights.next": "The night after",
-  "nights.hours": "hours",
+  "nights.integration": "integration",
   "nights.untimed": "no duration",
   "nights.frames": "{n} frames",
   "nights.frames.one": "1 frame",

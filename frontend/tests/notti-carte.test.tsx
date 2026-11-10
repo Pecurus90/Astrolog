@@ -135,7 +135,7 @@ describe("la protagonista sul desktop", () => {
     const carta = protagonista(PIENA, "desktop")
     expect(una(carta, ".al-notti__testo-3").textContent).toBe("Mercoledì 30 settembre 2026")
     expect(una(carta, '.al-notti__testo-4[data-an="big"]').textContent).toBe("3 h")
-    expect(una(carta, ".al-notti__testo-5").textContent).toBe("ore")
+    expect(una(carta, ".al-notti__testo-5").textContent).toBe("integrazione")
     expect(una(carta, ".al-notti__colonna-1 .al-notti__testo-2").textContent).toBe("3 frame")
   })
 
@@ -285,7 +285,7 @@ describe("la protagonista sul telefono", () => {
   it("ore, cielo, ripresa, tacche e Luna nei posti del telefono", () => {
     const carta = protagonista(PIENA, "telefono")
     expect(una(carta, '.al-notti__testo-25[data-an="big"]').textContent).toBe("3 h")
-    expect(una(carta, ".al-notti__colonna-15 .al-notti__testo-26").textContent).toBe("ore")
+    expect(una(carta, ".al-notti__colonna-15 .al-notti__testo-26").textContent).toBe("integrazione")
     expect(una(carta, ".al-notti__colonna-15 .al-notti__testo-11").textContent).toBe("3 frame")
     expect(una(carta, ".al-notti__riga-30 .al-notti__testo-11").textContent).toBe("cielo")
     expect(una(carta, ".al-notti__riga-30 .al-pillola").className).toContain("al-pillola--buona")

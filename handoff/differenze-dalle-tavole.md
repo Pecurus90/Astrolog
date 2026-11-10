@@ -9,6 +9,11 @@ dopo. Quando la tavola si allinea o l'app la raggiunge, la voce esce.
 Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nelle voci di
 `per-design.md`; da qui in poi stanno qui.
 
+## Notti -- la pagina (passo 33)
+
+- **La parola del numero grande.** Tavola: «ore» (Notti 221), anche coi minuti («10 min ore»).
+  App: «integrazione». Perche': Marco 10/11; e' la parola delle finestre della notte e dell'oggetto.
+
 ## Notti -- Tutto della notte (passo 33, commit B, 8/11)
 
 - **Tilt, soglie del giudizio.** Tavola: incerto fino a 20% compreso (`soglie.js` 106). App:

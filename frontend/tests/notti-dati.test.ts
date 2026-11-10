@@ -311,7 +311,14 @@ describe("i filtri", () => {
 
 describe("i numeri della protagonista", () => {
   it("con le ore: le ore grandi e i frame sotto", () => {
-    expect(numeri(NOTTE)).toEqual({ grande: "3 h", parola: "ore", sotto: "3 frame" })
+    expect(numeri(NOTTE)).toEqual({ grande: "3 h", parola: "integrazione", sotto: "3 frame" })
+  })
+
+  it("sotto l'ora la parola resta giusta, non dice ore accanto ai minuti (Marco 10/11)", () => {
+    expect(numeri({ ...NOTTE, integration_s: 600 })).toMatchObject({
+      grande: "10 min",
+      parola: "integrazione",
+    })
   })
 
   it("i frame senza durata si aggiungono sotto", () => {

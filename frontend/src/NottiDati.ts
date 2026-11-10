@@ -233,7 +233,7 @@ export function numeri(n: Notte): { grande: string; parola: string; sotto: strin
   const frame = t("nights.frames", { n: n.frames })
   return {
     grande: ore,
-    parola: t("nights.hours"),
+    parola: t("nights.integration"),
     sotto: n.untimed ? `${frame} \u00B7 ${t("nights.frames.untimed", { n: n.untimed })}` : frame,
   }
 }

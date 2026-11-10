@@ -51,6 +51,9 @@ Dal porting di «Tutto della notte» (passo 33, 8/11), `componenti/`:
   camera e ore, non anno e sito. Riepilogo, stati caricamento, errore e non trovato: nessuna x,
   e sul telefono la finestra e' a pagina intera; testa del telefono con due siti dai nomi lunghi:
   pillole e x vanno a capo.
+- [da dare] Notti, la parola accanto al numero grande (221, `bigL`): «ore» anche coi minuti
+  («10 min ore», `AL.ore` in tema.js 51) e doppia con le ore («4 h 18 ore»). Marco 10/11:
+  «integrazione», come la finestra della notte e dell'oggetto.
 
 ## Date, da controllare alla consegna
 
