@@ -144,6 +144,8 @@ export function Layout({ children }: { children: ReactNode }) {
 
 const GRANAGGIO =
   "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+// [T] Telaio.dc.html:30 the Da confermare sign of the narrow head
+const SEGNO_DA_CONFERMARE = "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6"
 // open search floats under the head: in the row it would widen it past the frame
 const SOTTO_LA_TESTA: CSSProperties = {
   position: "absolute",
@@ -163,144 +165,164 @@ function TelaioDesktop({ comandi, children }: { comandi: Comandi; children: Reac
   const nomeImp = nomeConScansione(t("nav.settings"), scansione)
   const altro = aperto === "altro"
   return (
+    // v77: frame from 700 px, side margins in the sheet (data-cornice)
     <div
       className="al-c-telaio__blocco-2"
-      style={{ minHeight: "100vh", background: "var(--pagina)", padding: "40px" }}
+      data-cornice="si"
+      style={{ minHeight: "100vh", background: "var(--pagina)", padding: "40px 0", minWidth: 700 }}
     >
       <div className="al-c-telaio__colonna-1" style={{ boxSizing: "border-box" }}>
         <Tema>
           <header className="al-c-telaio__riga-1 app-telaio" style={{ flex: "none" }}>
-            <div className="al-c-telaio__riga-2">
-              <span className="al-c-telaio__tondo-1" aria-hidden="true">
-                <span className="al-c-telaio__tondo-2" />
-              </span>
-              AstroLog
-            </div>
-            <nav className="al-c-telaio__riga-3" aria-label={t("frame.nav.label")}>
-              {PAGINE.filter((p) => p.posto === "pillole").map((p) => {
-                const su = p.a === qui?.a
-                return (
-                  <Link
-                    key={p.a}
-                    className="al-c-telaio__pillola-1"
-                    to={p.a}
-                    aria-current={su ? "page" : undefined}
+            <div className="al-c-telaio__testa">
+              <div className="al-c-telaio__riga-2" aria-label={t("app.title")}>
+                <span className="al-c-telaio__tondo-1" aria-hidden="true">
+                  <span className="al-c-telaio__tondo-2" />
+                </span>
+                <span className="al-c-telaio__marchio-t">AstroLog</span>
+              </div>
+              <nav className="al-c-telaio__riga-3" aria-label={t("frame.nav.label")}>
+                {PAGINE.filter((p) => p.posto === "pillole").map((p) => {
+                  const su = p.a === qui?.a
+                  return (
+                    <Link
+                      key={p.a}
+                      className="al-c-telaio__pillola-1"
+                      to={p.a}
+                      aria-current={su ? "page" : undefined}
+                      style={{
+                        background: su ? "var(--nav-su)" : "transparent",
+                        color: su ? "var(--nav-su-testo)" : "var(--tenue)",
+                        fontWeight: su ? 500 : 400,
+                      }}
+                    >
+                      {t(p.chiave)}
+                    </Link>
+                  )
+                })}
+                <span className="al-c-telaio__riga-4" data-menu="1">
+                  <a
+                    className="al-c-telaio__riga-5"
+                    href="#"
+                    onClick={tocca("altro")}
+                    ref={segna("altro")}
+                    aria-haspopup="menu"
+                    aria-expanded={altro}
                     style={{
-                      background: su ? "var(--nav-su)" : "transparent",
-                      color: su ? "var(--nav-su-testo)" : "var(--tenue)",
-                      padding: su ? "9px 18px" : "9px 11px",
-                      fontWeight: su ? 500 : 400,
+                      color: altro ? "var(--testo)" : "var(--tenue)",
+                      background: altro ? "var(--carta-2)" : "transparent",
                     }}
                   >
-                    {t(p.chiave)}
-                  </Link>
-                )
-              })}
-              <span className="al-c-telaio__riga-4" data-menu="1">
-                <a
-                  className="al-c-telaio__riga-5"
-                  href="#"
-                  onClick={tocca("altro")}
-                  ref={segna("altro")}
-                  aria-haspopup="menu"
-                  aria-expanded={altro}
-                  style={{
-                    color: altro ? "var(--testo)" : "var(--tenue)",
-                    background: altro ? "var(--carta-2)" : "transparent",
-                  }}
-                >
-                  {t("frame.more")}
-                  <Tratto d={altro ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} lato={12} spessore={2.2} />
-                </a>
-                {altro && <Menu tipo="altro" />}
-              </span>
-            </nav>
-            <div className="al-c-telaio__riga-6" style={{ position: "relative" }}>
-              <span className="al-c-telaio__notte-ancora" data-menu="1">
-                {pastiglia.senzaSito ? (
-                  <Link
-                    className="al-c-telaio__riga-7 al-c-telaio__stanotte"
-                    to="/impostazioni/sito"
-                    aria-label={pastiglia.aria}
-                  >
-                    {pastiglia.etichetta}
-                  </Link>
-                ) : (
-                  <a
-                    className="al-c-telaio__riga-7 al-c-telaio__stanotte"
-                    href="#"
-                    onClick={tocca("notte")}
-                    ref={segna("notte")}
-                    aria-haspopup="dialog"
-                    aria-expanded={aperto === "notte"}
-                    aria-label={pastiglia.aria}
-                  >
-                    <span className="al-c-telaio__stanotte-t">{t("frame.tonight")}</span>
-                    {pastiglia.etichetta}
+                    {t("frame.more")}
+                    <Tratto d={altro ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} lato={12} spessore={2.2} />
                   </a>
-                )}
-                {aperto === "notte" && <PannelloStanotte telefono={false} />}
-              </span>
-              {qui?.a !== "/da-confermare" && (
-                <span className="al-c-telaio__blocco-3" data-menu="1">
-                  <a
-                    className="al-c-telaio__riga-8"
-                    href="#"
-                    onClick={tocca("todo")}
-                    ref={segna("todo")}
-                    aria-haspopup="dialog"
-                    aria-expanded={aperto === "todo"}
-                    aria-label={quante > 0 ? t("frame.count", { n: numero(quante) }) : undefined}
-                  >
-                    {t("nav.review")}
-                    {quante > 0 && <Conto n={quante} />}
-                  </a>
-                  {aperto === "todo" && (
-                    <PannelloDaConfermare quante={quante} sezioni={revisione?.sections ?? []} />
-                  )}
+                  {altro && <Menu tipo="altro" />}
                 </span>
-              )}
-              <a
-                className="al-c-telaio__riga-9"
-                href="#"
-                data-menu="1"
-                onClick={tocca("cerca")}
-                // open: the field keeps the focus, or its blur would close it before the click toggles
-                onMouseDown={(e) => aperto === "cerca" && e.preventDefault()}
-                ref={segna("cerca")}
-                aria-haspopup="dialog"
-                aria-expanded={aperto === "cerca"}
-                title={t("frame.search.title", {
-                  cerca: t("search.open"),
-                  tasto: t(SUL_MAC ? "search.key.shortcut.mac" : "search.key.shortcut"),
-                })}
-                aria-label={t("frame.search.aria")}
-              >
-                <Tratto d={LENTE} lato={18} />
-                {t("search.open")}
-              </a>
-              {aperto === "cerca" && (
-                <div data-menu="1" style={SOTTO_LA_TESTA}>
-                  <Ricerca onChiudi={comandi.chiudiCerca} />
-                </div>
-              )}
-              <span className="al-c-telaio__riga-10" data-menu="1">
+              </nav>
+              <div className="al-c-telaio__riga-6" style={{ position: "relative" }}>
+                <span className="al-c-telaio__notte-ancora" data-menu="1">
+                  {pastiglia.senzaSito ? (
+                    <Link
+                      className="al-c-telaio__riga-7 al-c-telaio__stanotte"
+                      to="/impostazioni/sito"
+                      aria-label={pastiglia.aria}
+                    >
+                      {pastiglia.etichetta}
+                    </Link>
+                  ) : (
+                    <a
+                      className="al-c-telaio__riga-7 al-c-telaio__stanotte"
+                      href="#"
+                      onClick={tocca("notte")}
+                      ref={segna("notte")}
+                      aria-haspopup="dialog"
+                      aria-expanded={aperto === "notte"}
+                      aria-label={pastiglia.aria}
+                    >
+                      <span className="al-c-telaio__stanotte-t">{t("frame.tonight")}</span>
+                      {pastiglia.etichetta}
+                    </a>
+                  )}
+                  {aperto === "notte" && <PannelloStanotte telefono={false} />}
+                </span>
+                {qui?.a !== "/da-confermare" && (
+                  <span className="al-c-telaio__blocco-3" data-menu="1">
+                    <a
+                      className="al-c-telaio__riga-8"
+                      href="#"
+                      onClick={tocca("todo")}
+                      ref={segna("todo")}
+                      aria-haspopup="dialog"
+                      aria-expanded={aperto === "todo"}
+                      // narrow head shows only the sign: the name stays in the label
+                      aria-label={
+                        quante > 0 ? t("frame.count.aria", { n: numero(quante) }) : t("nav.review")
+                      }
+                    >
+                      <svg
+                        className="al-c-telaio__grafico-1 al-c-telaio__todo-segno"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d={SEGNO_DA_CONFERMARE} />
+                      </svg>
+                      <span className="al-c-telaio__todo-t">{t("nav.review")}</span>
+                      {quante > 0 && <Conto n={quante} />}
+                    </a>
+                    {aperto === "todo" && (
+                      <PannelloDaConfermare quante={quante} sezioni={revisione?.sections ?? []} />
+                    )}
+                  </span>
+                )}
                 <a
-                  className="al-c-telaio__tondo-4"
+                  className="al-c-telaio__riga-9"
                   href="#"
-                  onClick={tocca("imp")}
-                  ref={segna("imp")}
-                  aria-haspopup="menu"
-                  aria-expanded={aperto === "imp"}
-                  title={nomeImp}
-                  aria-label={nomeImp}
-                  style={{ background: aperto === "imp" ? "var(--carta-2)" : "var(--carta)" }}
+                  data-menu="1"
+                  onClick={tocca("cerca")}
+                  // open: the field keeps the focus, or its blur would close it before the click toggles
+                  onMouseDown={(e) => aperto === "cerca" && e.preventDefault()}
+                  ref={segna("cerca")}
+                  aria-haspopup="dialog"
+                  aria-expanded={aperto === "cerca"}
+                  title={t("frame.search.title", {
+                    cerca: t("search.open"),
+                    tasto: t(SUL_MAC ? "search.key.shortcut.mac" : "search.key.shortcut"),
+                  })}
+                  aria-label={t("frame.search.aria")}
                 >
-                  <Tratto d={GRANAGGIO} lato={20} />
-                  <SegnoDellaScansione stato={scansione} dove="tondo" />
+                  <Tratto d={LENTE} lato={18} />
+                  <span className="al-c-telaio__cerca-t">{t("search.open")}</span>
                 </a>
-                {aperto === "imp" && <Menu tipo="impostazioni" />}
-              </span>
+                {aperto === "cerca" && (
+                  <div data-menu="1" style={SOTTO_LA_TESTA}>
+                    <Ricerca onChiudi={comandi.chiudiCerca} />
+                  </div>
+                )}
+                <span className="al-c-telaio__riga-10" data-menu="1">
+                  <a
+                    className="al-c-telaio__tondo-4"
+                    href="#"
+                    onClick={tocca("imp")}
+                    ref={segna("imp")}
+                    aria-haspopup="menu"
+                    aria-expanded={aperto === "imp"}
+                    title={nomeImp}
+                    aria-label={nomeImp}
+                    style={{ background: aperto === "imp" ? "var(--carta-2)" : "var(--carta)" }}
+                  >
+                    <Tratto d={GRANAGGIO} lato={20} />
+                    <SegnoDellaScansione stato={scansione} dove="tondo" />
+                  </a>
+                  {aperto === "imp" && <Menu tipo="impostazioni" />}
+                </span>
+              </div>
             </div>
           </header>
         </Tema>

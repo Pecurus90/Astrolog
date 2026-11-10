@@ -165,7 +165,7 @@ describe("l accessibilita della prima pagina", () => {
     fireEvent.click(screen.getByRole("link", { name: "Impostazioni · scansione in corso" }))
     await screen.findByRole("group", { name: "Scansione" })
     expect(await violazioni(desktop.container)).toEqual([])
-    fireEvent.click(screen.getByRole("link", { name: "3 da confermare" }))
+    fireEvent.click(screen.getByRole("link", { name: "Da confermare, 3" }))
     await screen.findByRole("dialog", { name: "Da confermare" })
     expect(await violazioni(desktop.container)).toEqual([])
     pulisci()

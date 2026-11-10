@@ -22,6 +22,7 @@ import { medianeInTesta } from "./MisureDati"
 import { MENTRE_LEGGE_MS } from "./Notti"
 import { cielo, segnoDi } from "./NottiDati"
 import {
+  CroceDegliStati,
   FiltriInTesta,
   FinestraRiepilogo,
   NumeriInTesta,
@@ -68,7 +69,6 @@ export function TuttoDellaNotte({
   onPrima?: (() => void) | undefined
   onDopo?: (() => void) | undefined
 }) {
-  const tel = formato === "telefono"
   const notte = useQuery({
     queryKey: ["nights", "detail", id],
     queryFn: () => dettaglio(id),
@@ -81,6 +81,7 @@ export function TuttoDellaNotte({
   })
   const L = MISURE[formato]
 
+  let pronto = false
   let corpo
   if (notte.isPending) {
     corpo = (
@@ -115,15 +116,10 @@ export function TuttoDellaNotte({
       />
     )
   } else {
+    pronto = true
     const d = notte.data
     corpo = (
-      <div
-        className="al-c-riepilogo__centro-1"
-        style={{
-          gridTemplateColumns: tel ? "minmax(0,1fr)" : "repeat(12,minmax(0,1fr))",
-          gap: L.gap,
-        }}
-      >
+      <div className="al-c-riepilogo__centro-1">
         <Testa
           d={d}
           misure={mis.data}
@@ -152,6 +148,7 @@ export function TuttoDellaNotte({
 
   return (
     <FinestraRiepilogo aria={t("window.night")} formato={formato} onChiudi={onChiudi}>
+      {!pronto && <CroceDegliStati onChiudi={onChiudi} />}
       {corpo}
     </FinestraRiepilogo>
   )
@@ -173,7 +170,6 @@ function Testa({
   onDopo?: (() => void) | undefined
 }) {
   const n = d.night
-  const L = MISURE[formato]
   const conOre = n.integration_s > 0
   const periodo =
     d.first_start && d.last_end
@@ -196,17 +192,9 @@ function Testa({
   )
   const filtri = <FiltriInTesta filtri={n.filters} />
   return (
-    <Carta
-      formato={formato}
-      etichetta={t("window.summary")}
-      colonne={7}
-      ritardo={0}
-      padding={L.pad}
-      gap={16}
-    >
+    <Carta formato={formato} etichetta={t("window.summary")} colonne={7} ritardo={0} gap={16}>
       <RigaDiTesta
         siti={[n.site]}
-        formato={formato}
         prima="nights.prev"
         dopo="nights.next"
         onChiudi={onChiudi}
@@ -216,9 +204,7 @@ function Testa({
       <div className="al-c-riepilogo__colonna-1">
         <span className="al-c-riepilogo__testo-1">{t("window.above")}</span>
         <span className="al-c-riepilogo__riga-5">
-          <b className="al-c-riepilogo__testo-2" style={{ fontSize: L.tfs }}>
-            {dataLunga(n.night_date)}
-          </b>
+          <b className="al-c-riepilogo__testo-2">{dataLunga(n.night_date)}</b>
         </span>
         <span className="al-c-riepilogo__testo-4">{periodo}</span>
       </div>
@@ -265,7 +251,6 @@ function Oggetti({
       etichetta={t("window.objects.title")}
       colonne={12}
       ritardo={60}
-      padding={MISURE[formato].pad}
       gap={14}
     >
       <span className="al-c-riepilogo__riga-10">

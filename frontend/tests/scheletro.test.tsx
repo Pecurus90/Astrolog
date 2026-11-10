@@ -172,7 +172,7 @@ describe("Da confermare", () => {
   it("la pillola dice quante domande aspettano e apre le sezioni con Rispondi", async () => {
     app()
     await disegna()
-    const pillola = await screen.findByRole("link", { name: "12 da confermare" })
+    const pillola = await screen.findByRole("link", { name: "Da confermare, 12" })
     expect(pillola.textContent).toBe("Da confermare12")
     expect(pillola.getAttribute("aria-haspopup")).toBe("dialog")
 
@@ -203,7 +203,7 @@ describe("Da confermare", () => {
     // conto di prima, finche' non si ricaricava la pagina a mano.
     app({ ...FERMO, worker: { ...FERMO.worker, state: "running", stage: "scan" } })
     await disegna()
-    await screen.findByRole("link", { name: "12 da confermare" })
+    await screen.findByRole("link", { name: "Da confermare, 12" })
     const prima = chiamate().filter((u) => u.endsWith("/api/v1/review")).length
 
     cambia({
@@ -212,7 +212,7 @@ describe("Da confermare", () => {
     })
 
     // il battito dello stato mentre gira e' 1,5 s: si aspetta quello, non un tempo inventato
-    expect(await screen.findByRole("link", { name: "40 da confermare" }, { timeout: 5000 })).toBeDefined()
+    expect(await screen.findByRole("link", { name: "Da confermare, 40" }, { timeout: 5000 })).toBeDefined()
     expect(chiamate().filter((u) => u.endsWith("/api/v1/review")).length).toBeGreaterThan(prima)
   })
 })
@@ -365,7 +365,7 @@ describe("il telaio del telefono", () => {
     await telefono()
     const testa = await screen.findByRole("banner")
     expect(testa.querySelector(".al-c-telaio__riga-12 b")?.textContent).toBe("Dashboard")
-    const conferma = await within(testa).findByRole("link", { name: "12 da confermare" })
+    const conferma = await within(testa).findByRole("link", { name: "Da confermare, 12" })
     expect(conferma.getAttribute("href")).toBe("/da-confermare")
     expect(within(testa).getByRole("link", { name: "Cerca" }).getAttribute("aria-haspopup")).toBe("dialog")
     expect(screen.queryByRole("navigation", { name: "Navigazione principale" })).toBeNull()

@@ -23,6 +23,7 @@ export const itGuscio = {
   "frame.skip": "Vai al contenuto",
   "frame.more": "Altro",
   "frame.count": "{n} da confermare",
+  "frame.count.aria": "Da confermare, {n}",
   "frame.close": "Chiudi",
   "frame.close.word": "chiudi",
   "nav.home": "Dashboard",

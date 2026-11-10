@@ -28,6 +28,7 @@ import {
   ripresa,
   segnoDi,
   sommaDelMese,
+  testaDelCielo,
   titoloDi,
 } from "./NottiDati"
 
@@ -341,7 +342,7 @@ function Riga({
         giorno: titoloDi(notte),
         sito: notte.site,
         ore: tempo,
-        cielo: c.pillola,
+        cielo: c.letto ? `${c.pillola}, ${c.letto}` : c.pillola,
       })}
       style={{
         background: scelta ? "var(--carta-2)" : "transparent",
@@ -442,7 +443,7 @@ export function AConfronto({
       </div>
       <div className="al-notti__griglia-5" aria-hidden="true">
         {COLONNE.map((k) => (
-          <span key={k}>{t(k)}</span>
+          <span key={k}>{k === "nights.list.sky" ? testaDelCielo(notti) : t(k)}</span>
         ))}
       </div>
       {[...perMese].map(([mese, righe]) => {

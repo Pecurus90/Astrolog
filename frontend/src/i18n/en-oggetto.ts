@@ -17,7 +17,7 @@ export const enOggetto = {
   "object.period.sites": "{periodo}, {n} sites",
   "object.untimed": "{frame} \u00B7 {n} without duration",
   "object.productions": "productions",
-  "object.production.sub": "{camera} \u00B7 {ore}",
+  "object.production.title": "{ottica} \u00B7 {camera}",
   "object.mosaic": "mosaic",
   "object.mosaic.all": "Overall summary",
   "object.mosaic.panels": "{n} panels",

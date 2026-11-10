@@ -33,6 +33,7 @@ import { MENTRE_LEGGE_MS } from "./Notti"
 import { type EsitoDelGruppo, type Misure, medianeInTesta } from "./MisureDati"
 import { cielo, luna, segnoDi } from "./NottiDati"
 import {
+  CroceDegliStati,
   FiltriInTesta,
   FinestraRiepilogo,
   NumeriInTesta,
@@ -100,14 +101,15 @@ function lingueDi(r: Dettaglio["row"]): Linguetta[] | null {
   return r.productions.map((p) => ({
     chiave: chiaveDi(p),
     domanda: { production: chiaveDi(p) },
-    titolo: p.optics ?? t("gear.rig.noOptics"),
-    sotto: t("object.production.sub", {
+    // v77: the tab says optics and camera, the hours below
+    titolo: t("object.production.title", {
+      ottica: p.optics ?? t("gear.rig.noOptics"),
       camera: p.camera ?? t("gear.rig.noCamera"),
-      ore:
-        p.integration_s > 0
-          ? oreEMinuti(p.integration_s)
-          : t("window.frames", { n: numero(p.frames) }),
     }),
+    sotto:
+      p.integration_s > 0
+        ? oreEMinuti(p.integration_s)
+        : t("window.frames", { n: numero(p.frames) }),
   }))
 }
 
@@ -161,8 +163,8 @@ export function TuttoDellOggetto({
   })
   const mosaico = !!intera.data?.row.panels
   const L = MISURE[formato]
-  const tel = formato === "telefono"
 
+  let pronto = false
   let corpo
   if (intera.isPending || (dati.isPending && !dati.data)) {
     corpo = (
@@ -197,15 +199,10 @@ export function TuttoDellOggetto({
       />
     )
   } else {
+    pronto = true
     const d = dati.data
     corpo = (
-      <div
-        className="al-c-riepilogo__centro-1"
-        style={{
-          gridTemplateColumns: tel ? "minmax(0,1fr)" : "repeat(12,minmax(0,1fr))",
-          gap: L.gap,
-        }}
-      >
+      <div className="al-c-riepilogo__centro-1">
         <Testa
           d={d}
           misure={mis.data}
@@ -240,10 +237,7 @@ export function TuttoDellOggetto({
             />
           )}
         </div>
-        <div
-          className="al-c-riepilogo__colonna-12"
-          style={{ gridColumn: tel ? "auto" : "span 8", gap: L.gap }}
-        >
+        <div className="al-c-riepilogo__colonna-12">
           <LeNotti d={d} formato={formato} />
         </div>
       </div>
@@ -252,6 +246,7 @@ export function TuttoDellOggetto({
 
   return (
     <FinestraRiepilogo aria={t("object.window", { nome })} formato={formato} onChiudi={onChiudi}>
+      {!pronto && <CroceDegliStati onChiudi={onChiudi} />}
       {corpo}
     </FinestraRiepilogo>
   )
@@ -308,8 +303,6 @@ function Testa({
   onPrima?: (() => void) | undefined
   onDopo?: (() => void) | undefined
 }) {
-  const tel = formato === "telefono"
-  const L = MISURE[formato]
   const r = d.row
   const conOre = r.integration_s > 0
   const frame = t("window.frames", { n: numero(r.frames) })
@@ -330,17 +323,9 @@ function Testa({
     <span className="al-c-riepilogo__testo-3">{t("archive.unknown.filters")}</span>
   )
   return (
-    <Carta
-      formato={formato}
-      etichetta={t("window.summary")}
-      colonne={7}
-      ritardo={0}
-      padding={L.pad}
-      gap={16}
-    >
+    <Carta formato={formato} etichetta={t("window.summary")} colonne={7} ritardo={0} gap={16}>
       <RigaDiTesta
         siti={d.sites}
-        formato={formato}
         prima="object.prev"
         dopo="object.next"
         onChiudi={onChiudi}
@@ -350,24 +335,13 @@ function Testa({
       <div className="al-c-riepilogo__colonna-1">
         <span className="al-c-riepilogo__testo-1">{t("object.above")}</span>
         <span className="al-c-riepilogo__riga-5">
-          <b className="al-c-riepilogo__testo-2" style={{ fontSize: L.tfs }}>
-            {r.name ?? r.key}
-          </b>
-          {nome && (
-            <span className="al-c-riepilogo__testo-3" style={{ fontSize: L.sfs }}>
-              {nome}
-            </span>
-          )}
+          <b className="al-c-riepilogo__testo-2">{r.name ?? r.key}</b>
+          {nome && <span className="al-c-riepilogo__testo-3 al-c-riepilogo__nome">{nome}</span>}
         </span>
         <span className="al-c-riepilogo__testo-4">{periodo(d)}</span>
       </div>
       {lingue && (
-        <div
-          className="al-c-riepilogo__riga-6"
-          role="tablist"
-          aria-label={gruppo}
-          style={{ flexWrap: tel ? "nowrap" : "wrap", overflowX: tel ? "auto" : "visible" }}
-        >
+        <div className="al-c-riepilogo__riga-6" role="tablist" aria-label={gruppo}>
           <span className="al-c-riepilogo__blocco-2">{gruppo}</span>
           {lingue.map((p, i) => {
             const sel = i === scelta
@@ -380,7 +354,6 @@ function Testa({
                 aria-selected={sel ? "true" : "false"}
                 onClick={gesto(() => onScegli(i))}
                 style={{
-                  minHeight: tel ? 52 : 48,
                   background: "transparent",
                   color: sel ? "var(--testo)" : "var(--tenue)",
                   boxShadow: sel ? "inset 0 -2px 0 var(--accento)" : "inset 0 -1px 0 var(--linea)",
@@ -450,14 +423,7 @@ function InCielo({ f, formato }: { f: Dettaglio["facts"]; formato: Formato }) {
         },
       ]
   return (
-    <Carta
-      formato={formato}
-      etichetta={t("object.sky")}
-      colonne={12}
-      ritardo={60}
-      padding={MISURE[formato].pad}
-      gap={14}
-    >
+    <Carta formato={formato} etichetta={t("object.sky")} colonne={12} ritardo={60} gap={14}>
       <span className="al-c-riepilogo__riga-10">
         <span className="al-c-riepilogo__testo-14">{t("object.sky")}</span>
         <span className="al-c-riepilogo__testo-8">{t("window.objects.sub")}</span>
@@ -481,20 +447,8 @@ function InCielo({ f, formato }: { f: Dettaglio["facts"]; formato: Formato }) {
 }
 
 function LeNotti({ d, formato }: { d: Dettaglio; formato: Formato }) {
-  const tel = formato === "telefono"
-  const colonne = tel
-    ? "minmax(0,1fr) auto auto auto"
-    : "minmax(140px,1fr) 60px 72px 56px minmax(0,130px) 20px"
-  const largo = tel ? "none" : "flex"
   return (
-    <Carta
-      formato={formato}
-      etichetta={t("object.nights")}
-      colonne={12}
-      ritardo={300}
-      padding={MISURE[formato].pad}
-      gap={4}
-    >
+    <Carta formato={formato} etichetta={t("object.nights")} colonne={12} ritardo={300} gap={4}>
       <span className="al-c-riepilogo__riga-12">
         <span className="al-c-riepilogo__testo-14">{t("object.nights")}</span>
         <span className="al-c-riepilogo__testo-8">
@@ -511,7 +465,6 @@ function LeNotti({ d, formato }: { d: Dettaglio; formato: Formato }) {
             className="al-c-riepilogo__centro-2"
             to={`/notti?notte=${n.id}`}
             aria-label={t("object.night.open", { data })}
-            style={{ gridTemplateColumns: colonne }}
           >
             <span className="al-c-riepilogo__colonna-13">
               <b className="al-c-riepilogo__testo-20">{data}</b>
@@ -520,10 +473,10 @@ function LeNotti({ d, formato }: { d: Dettaglio; formato: Formato }) {
             <span className="al-c-riepilogo__testo-21">
               {integration_s > 0 ? oreEMinuti(integration_s) : t("window.untimed")}
             </span>
-            <span className="al-c-riepilogo__testo-22" style={{ display: largo }}>
+            <span className="al-c-riepilogo__testo-22 al-c-riepilogo__solo-desk">
               {t("window.frames", { n: numero(frames) })}
             </span>
-            <span className="al-c-riepilogo__blocco-5" style={{ display: largo }}>
+            <span className="al-c-riepilogo__blocco-5 al-c-riepilogo__solo-desk">
               {l && (
                 <>
                   <Luna percento={l.pct} lato={l.lato} misura={20} />
@@ -538,9 +491,7 @@ function LeNotti({ d, formato }: { d: Dettaglio; formato: Formato }) {
                 segno={segnoDi(c.esito)}
                 dimensione="minima"
               />
-              <span className="al-c-riepilogo__testo-23" style={{ display: largo }}>
-                {c.corto}
-              </span>
+              <span className="al-c-riepilogo__testo-23 al-c-riepilogo__solo-desk">{c.corto}</span>
             </span>
             <span className="al-c-riepilogo__blocco-6" aria-hidden="true">
               {"\u2197"}

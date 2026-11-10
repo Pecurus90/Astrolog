@@ -6,7 +6,7 @@ differenza: **tavola** (file e riga in `handoff/design/pagine/`), **app**, **per
 convenzione pubblica, una decisione di Marco piu' recente, un dato che l'app non ha, o un passo
 dopo. Quando la tavola si allinea o l'app la raggiunge, la voce esce.
 
-Tavola: v76 (7/11). Le differenze delle pagine portate prima dell'8/11 sono nelle voci di
+Tavola: v77 (10/11). Le differenze delle pagine portate prima dell'8/11 sono nelle voci di
 `per-design.md`; da qui in poi stanno qui.
 
 ## Telaio (passo 33, commit B, 10/11)
@@ -21,15 +21,11 @@ Fuori per ora (esiti della lista fissa):
   testa). Perche': commit D.
 - **Il vetro accanto alla bolla.** Tavola: `vb.acc` (Telaio 60-63), spento (`CON=[]`). App: niente.
   Perche': Marco v50.
-- **L'anteprima del telefono e la cornice larga 1440.** Tavola: telefono 390 x 844 in una finestra
-  larga, `min-width: 1440px` con la cornice (Telaio 145, 184). App: il telefono riempie la finestra;
-  la cornice grigia c'e' ma si stringe. Perche': servono alla tavola, non a chi usa l'app.
-- **La testa del desktop fra 700 e 1440 px.** Tavola: cornice `min-width: 1440px`, nessuna testa
-  stretta. App: la cornice si stringe e la testa non ci sta (a 1280 l'ingranaggio esce di 53 px).
-  Perche': Marco 10/11, versioni scalate chieste a Design (`handoff/per-design.md`); niente
-  scorrimento di lato nel frattempo.
-- **Da confermare nella testa del telefono, senza conto.** Tavola: 42 px di largo. App: come la
-  tavola. Perche': sotto i 44 px dei bersagli, chiesto a Design.
+- **L'anteprima del telefono.** Tavola: telefono 390 x 844 in una finestra larga (Telaio 145).
+  App: il telefono riempie la finestra. Perche': serve alla tavola, non a chi usa l'app.
+- **Il contenuto delle pagine fra 700 e 1000 px.** Tavola v77: la testa ci sta, alcune carte
+  escono dalla colonna (la Luna nella Dashboard). App: come la tavola. Perche': chiesto a Design
+  (`handoff/per-design.md`).
 - **Gli stati dell'app (caricamento, errore).** Tavola: prop `app` del Telaio (Telaio 13, 38, 55).
   App: li disegna ogni pagina, come prima. Perche': la lista fissa li tiene nelle pagine.
 - **Pieno (il Planner a tutto schermo).** Tavola: `pn` (Telaio 147). App: niente. Perche': il
@@ -63,11 +59,6 @@ Scelte diverse dalla tavola:
 - **Il menu Altro del telefono, l'ordine.** Tavola: Planner prima di Piano della notte (Menu 44), al
   contrario del desktop (46). App: come la tavola, ognuno il suo (`ALTRO_TELEFONO`).
 
-## Notti -- la pagina (passo 33)
-
-- **La parola del numero grande.** Tavola: «ore» (Notti 221), anche coi minuti («10 min ore»).
-  App: «integrazione». Perche': Marco 10/11; e' la parola delle finestre della notte e dell'oggetto.
-
 ## Notti -- Tutto della notte (passo 33, commit B, 8/11)
 
 - **Tilt, soglie del giudizio.** Tavola: incerto fino a 20% compreso (`soglie.js` 106). App:
@@ -84,10 +75,8 @@ Scelte diverse dalla tavola:
 - **Luminosita' del cielo senza valore.** Tavola: «nessun frame L o a colori in questa notte» o
   «serve il bias della camera» (235). App: «non c'e' per questi frame». Perche': l'API non manda
   ancora il motivo per l'insieme, solo per frame.
-- **Giudizi tolti.** Tavola: pillole della FWHM (3/4/5″), eccentricita' 0,45/0,71, oggetto basso,
-  fuoco, SNR e HFD relativi, «stelle allungate» del Setup, SQM col Bortle. App: solo i numeri.
-  Perche': nessuna convenzione pubblica per la FWHM (principio 1, ADR 0039); i giudizi di gruppo e
-  setup al passo 40. Brief in `per-design.md`.
+- **SQM col Bortle.** Tavola: il giudizio dello SQM col Bortle. App: solo il numero. Perche':
+  nessuna convenzione pubblica (principio 1, ADR 0039).
 - **Nomi delle misure.** Tavola: in italiano («Fondo cielo», «Massa d'aria», «Gradiente del
   fondo», «Peso del segnale · PSF Signal Weight»). App: il nome tecnico inglese dei programmi,
   uguale in ogni lingua («Background», «Airmass», «Gradient», «PSF Signal Weight»). Perche':
@@ -106,8 +95,6 @@ Scelte diverse dalla tavola:
   accanto al titolo. App: assenti. Perche': Progetti non e' ancora portata; niente e' simulato.
 - **Frame scelto all'apertura.** Tavola: il sesto misurato (368). App: il primo misurato.
   Perche': il sesto e' una scelta della dimostrazione.
-- **Misure della finestra per formato.** Tavola: inline (Riepilogo 97-98, FinestraRiepilogo 36).
-  App: inline uguali. Brief a Design per passarle al foglio.
 
 ## Notti -- Tutto della notte, Frame per frame e Tilt e curvatura (passo 33, commit C, 8/11)
 
@@ -143,8 +130,6 @@ Scelte diverse dalla tavola:
   mediane in testa (Riepilogo 58, 165; MisureFrame 211, 326, 333). Differenze:
   - **Riga del seeing** «seeing previsto … · FWHM allo zenit …» (MisureFrame 332). App: assente.
     Perche': serve la previsione Meteoblue tenuta per le notti passate; arriva in un passo suo.
-  - **Pillole «HFD alta / SNR basso per l'oggetto»** nel frame scelto (354, 356). App: assenti.
-    Perche': soglie senza convenzione pubblica, come i giudizi tolti nelle Notti (sopra).
   - **Tessera della luminosita' del cielo** senza frame L o a colori (229): come nelle Notti, resta.
   - **FWHM in testa con piu' produzioni insieme** (un mosaico). Tavola: la FWHM sempre, l'SNR no
     (165). App: anche la FWHM solo in secondi d'arco; senza scala «—». Perche': i pixel di due
@@ -158,22 +143,17 @@ Scelte diverse dalla tavola:
 - **Mosaico con piu' produzioni.** Tavola: non lo mostra. App: solo le linguette dei pannelli, ogni
   pannello di tutte le produzioni (`?panel` con `?production` e' un 422). Perche': le misure di un
   pannello sono scritte solo cosi'; due righe di linguette non stanno nella testa.
-- **Linguette delle produzioni.** Tavola: «2026 · Rifrattore 80/480 · Cima Ekar» (dati.js,
-  simulate una per anno). App: l'ottica, sotto camera e ore. Perche': una produzione e' ottica e
-  camera (`archivio.md`); anno e sito non la definiscono.
 - **In cielo, le righe sotto tipo e costellazione.** Tavola: «idrogeno ionizzato da stelle
   giovani», «alta d'estate e d'autunno» (156). App: vuote. Perche': testi simulati, il catalogo
   non li ha.
-- **Fuori catalogo, la costellazione.** Tavola: «si muove nel cielo» (157). App: niente sotto.
-  Perche': un oggetto fuori catalogo non per forza si muove (principio 1).
-- **Setup, «simulato» e l'avviso dell'eccentricita'.** Tavola: 35, 173. App: assenti, come nelle
-  Notti (sopra).
+- **Setup, «simulato».** Tavola: 35. App: assente, come nelle Notti (sopra).
 - **Le notti, riga senza Luna.** Tavola: sempre la Luna (121, simulata). App: la cella vuota quando
   la notte non sa la sua Luna; il cielo e' la frase corta delle Notti.
 - **Pagina intera con «← Archivio».** Tavola: `contenitore="pagina"` (Riepilogo.dc.html). App:
   solo la finestra; sul telefono la finestra e' gia' a pagina intera.
-- **Elenco, cosa si tocca.** Tavola: la riga (DECISIONI 1634). App: il nome. Perche': la tabella
-  non ha la classe che stende il comando sulla riga; brief a Design.
+- **Elenco, cosa si tocca.** Tavola v77: il comando sul nome steso sulla riga (`al-arch__riga-apri`).
+  App: lo stesso, con le classi della tabella di oggi (`as-archivio__riga-apri`). Perche': la pagina
+  dell'Archivio non e' ancora portata alla tavola.
 - **Dalla notte.** Tavola: gli oggetti della notte non aprono niente (Riepilogo.dc.html 53). App:
   il nome apre la finestra dell'oggetto al posto di quella della notte. Perche': lista fissa di
   Marco, 9/11 (si apre da Archivio, Gli oggetti delle Notti, Ricerca).

@@ -135,7 +135,7 @@ describe("la protagonista sul desktop", () => {
     const carta = protagonista(PIENA, "desktop")
     expect(una(carta, ".al-notti__testo-3").textContent).toBe("Mercoledì 30 settembre 2026")
     expect(una(carta, '.al-notti__testo-4[data-an="big"]').textContent).toBe("3 h")
-    expect(una(carta, ".al-notti__testo-5").textContent).toBe("integrazione")
+    expect(una(carta, ".al-notti__testo-5").textContent).toBe("Integrazione")
     expect(una(carta, ".al-notti__colonna-1 .al-notti__testo-2").textContent).toBe("3 frame")
   })
 
@@ -285,7 +285,7 @@ describe("la protagonista sul telefono", () => {
   it("ore, cielo, ripresa, tacche e Luna nei posti del telefono", () => {
     const carta = protagonista(PIENA, "telefono")
     expect(una(carta, '.al-notti__testo-25[data-an="big"]').textContent).toBe("3 h")
-    expect(una(carta, ".al-notti__colonna-15 .al-notti__testo-26").textContent).toBe("integrazione")
+    expect(una(carta, ".al-notti__colonna-15 .al-notti__testo-26").textContent).toBe("Integrazione")
     expect(una(carta, ".al-notti__colonna-15 .al-notti__testo-11").textContent).toBe("3 frame")
     expect(una(carta, ".al-notti__riga-30 .al-notti__testo-11").textContent).toBe("cielo")
     expect(una(carta, ".al-notti__riga-30 .al-pillola").className).toContain("al-pillola--buona")
@@ -378,6 +378,16 @@ describe("A confronto", () => {
     ])
     expect(una(carta, ".al-notti__testo-16").textContent).toBe("2 di 30")
     expect(carta.style.gridColumn).toBe("span 8")
+  })
+
+  it("senza aerosol nello storico: lo dice la testa del cielo e chi legge la riga (v77)", () => {
+    const senza = { ...PIENA, weather: { ...METEO, without_aerosol: true } }
+    const carta = confronto([senza])
+    const teste = testi(una(carta, ".al-notti__griglia-5"), "span")
+    expect(teste[4]).toBe("cielo · senza aerosol")
+    expect(riga(carta, 0).getAttribute("aria-label")).toContain(
+      "2,2 di posa su 4 ore · senza aerosol",
+    )
   })
 
   it("le notti si raggruppano per mese, il mese col nome maiuscolo e la sua somma", () => {

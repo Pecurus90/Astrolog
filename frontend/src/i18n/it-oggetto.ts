@@ -17,7 +17,7 @@ export const itOggetto = {
   "object.period.sites": "{periodo}, {n} siti",
   "object.untimed": "{frame} \u00B7 {n} senza durata",
   "object.productions": "produzioni",
-  "object.production.sub": "{camera} \u00B7 {ore}",
+  "object.production.title": "{ottica} \u00B7 {camera}",
   "object.mosaic": "mosaico",
   "object.mosaic.all": "Riepilogo generale",
   "object.mosaic.panels": "{n} pannelli",

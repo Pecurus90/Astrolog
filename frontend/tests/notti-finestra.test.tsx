@@ -485,7 +485,9 @@ describe("la testa e gli oggetti, quando i dati mancano", () => {
 
   it("la x la chiude, e cosi' un tocco fuori dal pannello", async () => {
     const d = await finestra()
-    fireEvent.click(await within(d).findByRole("link", { name: t("ui.close") }))
+    // v77: loading has its own x; wait for the head, or the click lands on a node already gone
+    await within(d).findByRole("region", { name: "Riepilogo" })
+    fireEvent.click(within(d).getByRole("link", { name: t("ui.close") }))
     expect(screen.queryByRole("dialog")).toBeNull()
     const ancora = await finestra()
     fireEvent.click(await within(ancora).findByRole("region", { name: "Riepilogo" }))

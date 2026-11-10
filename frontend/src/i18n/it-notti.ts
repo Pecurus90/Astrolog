@@ -47,7 +47,7 @@ export const itNotti = {
   "nights.site.answer": "dalla tua risposta in Da confermare",
   "nights.prev": "La notte prima",
   "nights.next": "La notte dopo",
-  "nights.integration": "integrazione",
+  "nights.integration": "Integrazione",
   "nights.untimed": "senza durata",
   "nights.frames": "{n} frame",
   "nights.frames.one": "1 frame",

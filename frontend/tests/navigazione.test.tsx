@@ -65,7 +65,7 @@ describe("la navigazione", () => {
       portate.push(this.id)
     }
     await disegna()
-    fireEvent.click(await screen.findByRole("link", { name: "7 da confermare" }))
+    fireEvent.click(await screen.findByRole("link", { name: "Da confermare, 7" }))
     fireEvent.click(await screen.findByRole("link", { name: "Rispondi: Frame senza tipo" }))
     await screen.findByRole("region", { name: /frame senza tipo/i })
     expect(window.location.pathname).toBe("/da-confermare")
@@ -74,7 +74,7 @@ describe("la navigazione", () => {
     await waitFor(() => expect(portate).toContain("frame-senza-tipo"))
     delete (Element.prototype as Partial<Element>).scrollIntoView
     // sulla sua pagina la pillola non c'e': non avrebbe niente da aprire
-    expect(screen.queryByRole("link", { name: "7 da confermare" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Da confermare, 7" })).toBeNull()
   })
 
   it("senza il timbro non c e nessuna barra: il primo avvio viene prima", async () => {

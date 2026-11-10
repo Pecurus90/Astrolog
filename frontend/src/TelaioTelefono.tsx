@@ -247,7 +247,9 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
             <Link
               className="al-c-telaio__riga-13"
               to="/da-confermare"
-              aria-label={quante > 0 ? t("frame.count", { n: numero(quante) }) : t("nav.review")}
+              aria-label={
+                quante > 0 ? t("frame.count.aria", { n: numero(quante) }) : t("nav.review")
+              }
             >
               <Tratto d={ICONE["/da-confermare"] ?? ""} lato={18} />
               {quante > 0 && <Conto n={quante} />}

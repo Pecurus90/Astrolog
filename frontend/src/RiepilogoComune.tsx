@@ -17,10 +17,10 @@ import { type Chiave, decimali, numero, oreEMinuti, t } from "./i18n"
 
 type Setup = components["schemas"]["NightRig"]
 
-// Le misure della finestra per formato (tavola, `L` e `D`: inline anche li', brief a Design).
+// v77: sizes live in the sheet under data-formato; only the Scheletro gap stays here
 export const MISURE = {
-  desktop: { gap: "16px", pad: "28px", tfs: "44px", sfs: "20px", bfs: "64px", nav: "44px" },
-  telefono: { gap: "12px", pad: "20px", tfs: "30px", sfs: "16px", bfs: "48px", nav: "44px" },
+  desktop: { gap: "16px" },
+  telefono: { gap: "12px" },
 }
 
 export const SCHELETRO: CartaScheletro[] = [
@@ -46,7 +46,6 @@ export function FinestraRiepilogo({
   children: ReactNode
 }) {
   const { modo, accento } = useTema()
-  const tel = formato === "telefono"
   const pannello = useApertura(onChiudi)
   const fuori = (e: MouseEvent) => {
     if (e.target === e.currentTarget) onChiudi()
@@ -65,11 +64,6 @@ export function FinestraRiepilogo({
         aria-modal="true"
         aria-label={aria}
         onClick={fuori}
-        style={{
-          position: "fixed",
-          background: tel ? "var(--telaio)" : "rgba(8,8,10,.62)",
-          padding: tel ? 0 : "32px",
-        }}
       >
         <div
           ref={pannello}
@@ -77,14 +71,11 @@ export function FinestraRiepilogo({
           onKeyDown={trattieni}
           className="al-c-finestra-riepilogo__blocco-3"
           data-an="pannello"
-          style={{
-            maxWidth: tel ? "none" : "1180px",
-            borderRadius: tel ? 0 : "32px",
-            padding: tel ? "12px 12px 32px" : "20px",
-            minHeight: tel ? "100%" : 0,
-          }}
         >
-          {children}
+          {/* the summary root: the sheet's phone rules hang on its data-formato (display: contents) */}
+          <div className="al-c-riepilogo__blocco-1" data-formato={formato}>
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -102,12 +93,11 @@ export function Tondo({
 }) {
   return (
     <a
-      className="al-c-riepilogo__tondo-1"
+      className="al-c-riepilogo__tondo-1 al-c-riepilogo__freccia"
       href="#"
       onClick={gesto(on)}
       aria-label={etichetta}
       aria-disabled={on ? undefined : "true"}
-      style={{ width: 44, height: 44, opacity: on ? 1 : 0.35 }}
     >
       {segno}
     </a>
@@ -117,7 +107,6 @@ export function Tondo({
 /** La riga in cima: le frecce a sinistra, le pillole dei siti e la x a destra. */
 export function RigaDiTesta({
   siti,
-  formato,
   prima,
   dopo,
   onChiudi,
@@ -125,36 +114,48 @@ export function RigaDiTesta({
   onDopo,
 }: {
   siti: string[]
-  formato: Formato
   prima: Chiave
   dopo: Chiave
   onChiudi: () => void
   onPrima?: (() => void) | undefined
   onDopo?: (() => void) | undefined
 }) {
-  const L = MISURE[formato]
   return (
     <div className="al-c-riepilogo__riga-1">
       <span className="al-c-riepilogo__riga-3">
         <Tondo etichetta={t(prima)} segno={"\u2039"} on={onPrima} />
         <Tondo etichetta={t(dopo)} segno={"\u203A"} on={onDopo} />
       </span>
-      <span className="al-c-riepilogo__riga-4">
+      <span className="al-c-riepilogo__testa-destra">
         {siti.map((s) => (
-          <span key={s} className="al-c-riepilogo__pillola-1">
+          <span key={s} className="al-c-riepilogo__pillola-1" title={s}>
             {s}
           </span>
         ))}
-        <a
-          className="al-c-riepilogo__tondo-2"
-          href="#"
-          onClick={gesto(onChiudi)}
-          aria-label={t("ui.close")}
-          style={{ width: L.nav, height: L.nav }}
-        >
-          {t("ui.close.sign")}
-        </a>
+        <Croce onChiudi={onChiudi} />
       </span>
+    </div>
+  )
+}
+
+function Croce({ onChiudi }: { onChiudi: () => void }) {
+  return (
+    <a
+      className="al-c-riepilogo__tondo-2"
+      href="#"
+      onClick={gesto(onChiudi)}
+      aria-label={t("ui.close")}
+    >
+      {t("ui.close.sign")}
+    </a>
+  )
+}
+
+/** La x sopra caricamento, errore e non trovato: la finestra si chiude anche senza dati. */
+export function CroceDegliStati({ onChiudi }: { onChiudi: () => void }) {
+  return (
+    <div className="al-c-riepilogo__testa-stato">
+      <Croce onChiudi={onChiudi} />
     </div>
   )
 }
@@ -256,14 +257,7 @@ export function Setups({ setups, formato }: { setups: Setup[]; formato: Formato 
   const lettere = SETUP_IN_LETTERE[setups.length - 1]
   const titolo = lettere ? t(lettere) : t("window.rigs", { n: setups.length })
   return (
-    <Carta
-      formato={formato}
-      etichetta={t("window.rig")}
-      colonne={5}
-      ritardo={30}
-      padding={MISURE[formato].pad}
-      gap={12}
-    >
+    <Carta formato={formato} etichetta={t("window.rig")} colonne={5} ritardo={30} gap={12}>
       <span className="al-c-riepilogo__riga-13" style={{ alignItems: "center" }}>
         <span className="al-c-riepilogo__testo-14">{titolo}</span>
         <Link
@@ -334,8 +328,7 @@ export function Setups({ setups, formato }: { setups: Setup[]; formato: Formato 
             ))}
             {tutte.length > viste.length || aperto ? (
               <a
-                className="al-bottone al-bottone--testo al-bottone--piccolo al-bottone--a-filo"
-                style={{ alignSelf: "flex-start", minHeight: formato === "telefono" ? 44 : 34 }}
+                className="al-bottone al-bottone--testo al-bottone--piccolo al-bottone--a-filo al-c-riepilogo__strumenti"
                 href="#"
                 onClick={gesto(() => setAperti({ ...aperti, [s.id]: !aperto }))}
                 aria-expanded={aperto ? "true" : "false"}
@@ -370,7 +363,6 @@ export function NumeriInTesta({
   esito?: ReactNode
   filtri: ReactNode
 }) {
-  const L = MISURE[formato]
   if (formato === "telefono")
     return (
       <div className="al-c-riepilogo__colonna-3">
@@ -395,9 +387,7 @@ export function NumeriInTesta({
     )
   return (
     <div className="al-c-riepilogo__riga-8">
-      <span className="al-c-riepilogo__testo-10" style={{ fontSize: L.bfs }}>
-        {grande}
-      </span>
+      <span className="al-c-riepilogo__testo-10">{grande}</span>
       <span className="al-c-riepilogo__colonna-6">
         <span className="al-c-riepilogo__testo-11">{conOre ? t("window.integration") : ""}</span>
         <span className="al-c-riepilogo__testo-12">{sotto}</span>

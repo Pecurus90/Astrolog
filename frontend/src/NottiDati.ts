@@ -65,6 +65,8 @@ export interface Cielo {
   /** Una tacca per ora di buio, piene quante le ore di posa. */
   tacche: { tutte: number; piene: number } | null
   modificaSito: boolean
+  /** Read label of the A confronto row: exposure hours and no-aerosol (board v77, `aria`). */
+  letto?: string
 }
 
 function conAerosol(testo: string, senza: boolean): string {
@@ -137,7 +139,14 @@ export function cielo(n: Notte): Cielo {
       ? null
       : { tutte: Math.round(m.dark_hours), piene: Math.round(m.exposure_hours) },
     modificaSito: false,
+    ...(m.without_aerosol && !senzaBuio ? { letto: conAerosol(corto, true) } : {}),
   }
+}
+
+/** Sky column head: says no-aerosol when a listed night has none. */
+export function testaDelCielo(notti: Notte[]): string {
+  const senza = notti.some((n) => n.weather.without_aerosol)
+  return conAerosol(t("nights.list.sky"), senza)
 }
 
 const TIPI: Record<NonNullable<Notte["shooting"]>["kind"], TipoRipresa> = {

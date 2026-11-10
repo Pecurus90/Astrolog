@@ -472,6 +472,17 @@ describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
     expect(within(f).getByRole("button", { name: t("window.retry") })).toBeDefined()
   })
 
+  it("quando l'oggetto non c'e' piu', la x chiude lo stesso (v77)", async () => {
+    await apriCon([M31], {
+      "/api/v1/objects/m-31": { stato: 404, corpo: { detail: "gone" } },
+    })
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
+    const f = await finestra()
+    await within(f).findByText(t("object.gone"))
+    fireEvent.click(within(f).getByRole("link", { name: t("ui.close") }))
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
   it("una produzione senza ore e senza camera lo dice nella sua linguetta", async () => {
     const due = {
       ...M31,
@@ -493,8 +504,9 @@ describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
     })
     fireEvent.click(within(await screen.findByRole("article")).getByRole("link", { name: "M 31" }))
     const schede = await within(await finestra()).findAllByRole("tab")
+    // v77: optics and camera in the title, the hours (here the frames) below
     expect(schede[1]?.textContent).toBe(
-      `Rifrattore${t("object.production.sub", { camera: t("gear.rig.noCamera"), ore: "7 frame" })}`,
+      `${t("object.production.title", { ottica: "Rifrattore", camera: t("gear.rig.noCamera") })}7 frame`,
     )
     expect(
       within(await finestra()).getByRole("tablist", { name: t("object.productions") }),

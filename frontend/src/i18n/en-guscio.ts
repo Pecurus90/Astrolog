@@ -19,6 +19,7 @@ export const enGuscio = {
   "frame.skip": "Skip to content",
   "frame.more": "More",
   "frame.count": "{n} to confirm",
+  "frame.count.aria": "To confirm, {n}",
   "frame.close": "Close",
   "frame.close.word": "close",
   "nav.home": "Dashboard",

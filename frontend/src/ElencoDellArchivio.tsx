@@ -48,10 +48,15 @@ export function ElencoDellArchivio({ righe, onApri }: { righe: Riga[]; onApri: (
 function UnaRiga({ riga, onApri }: { riga: Riga; onApri: (key: string) => void }) {
   const ore = oreDi(riga.integration_s)
   return (
-    <tr>
+    <tr className="as-archivio__riga">
       <td>
-        {/* Il tocco sul nome apre la finestra dell'oggetto (tavola v76). */}
-        <a href="#" aria-haspopup="dialog" onClick={gesto(() => onApri(riga.key))}>
+        {/* Il comando sta sul nome e si stende su tutta la riga (tavola v77, al-arch__riga-apri). */}
+        <a
+          className="as-archivio__riga-apri"
+          href="#"
+          aria-haspopup="dialog"
+          onClick={gesto(() => onApri(riga.key))}
+        >
           <Nome riga={riga} inRiga />
         </a>
         {/* Una sola e' la regola e non si scrive: il segno dice quando sono di piu'. */}

@@ -999,7 +999,6 @@ button.al-bottone { margin: 0; font-style: inherit; line-height: inherit; letter
 /* v62: Altre misure, la cella con la tendina in fondo alle tessere */
 .al-c-misure-frame__altre { border-radius: 18px; padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; box-shadow: inset 0 0 0 1.5px var(--linea); }
 .al-c-misure-frame__altre-tendina { width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; font-family: var(--carattere); }
-.al-c-riepilogo__ecc { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; text-wrap: pretty; }
 .al-c-misure-frame__spark--prima { stroke: var(--accento); }
 .al-c-misure-frame__barra { fill: var(--barra-mese); stroke: none; }
 .al-c-misure-frame__barra--accesa { fill: var(--accento); stroke: var(--accento); }
@@ -4171,3 +4170,90 @@ button.al-scelta__voce { border: 0; background: transparent; font: inherit; colo
 [data-formato="telefono"] .al-arch__solo-desk { display: none; }
 [data-formato="telefono"] .al-arch__elenco-ore { align-items: flex-end; }
 [data-formato="telefono"] .al-arch__campo-riga { grid-template-columns: minmax(0, 1fr); }
+
+/* v77 · Telaio, le fasce della testa. La cornice parte da 700 px (sotto c'e' il telefono); fra 700 e 1440 la testa si stringe a fasce, senza scorrere di lato.
+   Le fasce guardano la larghezza della testa (contenitore al-testa): da 1200 Cerca solo con la lente; da 1140 pillole e spazi stretti, la pastiglia senza «Stanotte»;
+   da 1000 il marchio senza nome e Da confermare col segno; da 880 le pagine vanno su una riga loro. I margini di lato scendono da 40 a 24 px. */
+.al-c-telaio__blocco-2[data-cornice="si"] .al-c-telaio__colonna-1 { margin-inline: max(24px, calc((100% - 1360px) / 2)); }
+.al-c-telaio__riga-1 { container: al-testa / inline-size; }
+.al-c-telaio__testa { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+.al-c-telaio__pillola-1 { padding: 9px 11px; white-space: nowrap; }
+.al-c-telaio__pillola-1[aria-current="page"] { padding: 9px 18px; }
+.al-c-telaio__todo-segno { display: none; }
+@container al-testa (max-width: 1199px) {
+  .al-c-telaio__cerca-t { display: none; }
+  .al-c-telaio__riga-9 { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; color: var(--testo); }
+}
+@container al-testa (max-width: 1139px) {
+  .al-c-telaio__testa { gap: 8px; }
+  .al-c-telaio__riga-6 { gap: 6px; }
+  .al-c-telaio__riga-3 { font-size: 13px; margin-left: 4px; gap: 2px; }
+  .al-c-telaio__pillola-1 { padding: 9px 8px; }
+  .al-c-telaio__pillola-1[aria-current="page"] { padding: 9px 14px; }
+  .al-c-telaio__riga-5 { padding: 9px 9px; }
+  .al-c-telaio__stanotte-t { display: none; }
+  .al-c-telaio__riga-7 { padding: 10px 14px; }
+}
+@container al-testa (max-width: 999px) {
+  .al-c-telaio__marchio-t, .al-c-telaio__todo-t { display: none; }
+  .al-c-telaio__todo-segno { display: block; }
+  .al-c-telaio__riga-8 { padding: 10px 12px; gap: 6px; }
+}
+@container al-testa (max-width: 879px) {
+  .al-c-telaio__testa { flex-wrap: wrap; row-gap: 10px; }
+  .al-c-telaio__marchio-t { display: inline; }
+  .al-c-telaio__riga-3 { order: 3; flex: 1 0 100%; margin-left: 0; justify-content: space-between; }
+}
+/* Telefono: Da confermare senza conto resta un bersaglio da 44 */
+.al-c-telaio__riga-13 { min-width: 44px; justify-content: center; }
+
+/* v77 · Riepilogo: le misure del formato, prima scritte nella tabella L. La radice ha data-formato; desktop qui, telefono sotto. */
+.al-c-riepilogo__centro-1 { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.al-c-riepilogo__riga-1 { flex-wrap: nowrap; }
+.al-c-riepilogo__riga-2 { min-height: 34px; padding: 0 16px; background: var(--carta-2); font-weight: 500; flex: none; }
+.al-c-riepilogo__riga-3 { flex: none; }
+.al-c-riepilogo__testa-destra { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.al-c-riepilogo__testa-destra .al-c-riepilogo__pillola-1 { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.al-c-riepilogo__freccia, .al-c-riepilogo__testa-destra .al-c-riepilogo__tondo-2, .al-c-riepilogo__testa-stato .al-c-riepilogo__tondo-2 { width: 44px; height: 44px; flex: none; }
+/* Freccia spenta: il segno oltre all'opacita' (aria-disabled, il cursore, nessuna azione), come «Carica altre» nelle Notti */
+.al-c-riepilogo__freccia[aria-disabled="true"] { opacity: .35; cursor: not-allowed; }
+.al-c-riepilogo__testa-stato { display: flex; justify-content: flex-end; }
+.al-c-riepilogo__testo-2 { font-size: 44px; }
+.al-c-riepilogo__nome { font-size: 20px; }
+.al-c-riepilogo__riga-6 { flex-wrap: wrap; }
+.al-c-riepilogo__colonna-2 { min-height: 48px; }
+.al-c-riepilogo__testo-10 { font-size: 64px; }
+.al-c-riepilogo__riga-9 { margin-left: auto; }
+.al-c-riepilogo__strumenti { align-self: flex-start; min-height: 34px; }
+.al-c-riepilogo__testo-15 { font-size: 24px; }
+.al-c-riepilogo__colonna-12 { grid-column: span 8; gap: 16px; }
+.al-c-riepilogo__centro-2 { grid-template-columns: minmax(140px, 1fr) 60px 72px 56px minmax(0, 130px) 20px; }
+.al-c-riepilogo__solo-desk { display: flex; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__centro-1 { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__riga-2 { min-height: 44px; padding: 0 4px; background: transparent; font-weight: 600; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__testo-2 { font-size: 30px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__nome { font-size: 16px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__riga-6 { flex-wrap: nowrap; overflow-x: auto; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__colonna-2 { min-height: 52px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__testo-10 { font-size: 48px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__riga-9 { margin-left: 0; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__strumenti { min-height: 44px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__testo-15 { font-size: 18px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__colonna-12 { grid-column: auto; gap: 12px; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__centro-2 { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+.al-c-riepilogo__blocco-1[data-formato="telefono"] .al-c-riepilogo__solo-desk { display: none; }
+
+/* v77 · FinestraRiepilogo: velo e pannello. Desktop: finestra larga 1180. Telefono: pagina intera; nell'anteprima su una finestra larga, il telefono da 390 × 844. */
+.al-c-finestra-riepilogo__blocco-2 { position: fixed; background: rgba(8,8,10,.62); padding: 32px; }
+.al-c-finestra-riepilogo__blocco-1[data-posizione="dentro"] .al-c-finestra-riepilogo__blocco-2 { position: absolute; }
+.al-c-finestra-riepilogo__blocco-3 { max-width: 1180px; border-radius: 32px; padding: 20px; }
+.al-c-finestra-riepilogo__blocco-1[data-formato="telefono"] .al-c-finestra-riepilogo__blocco-2 { background: var(--telaio); padding: 0; }
+.al-c-finestra-riepilogo__blocco-1[data-formato="telefono"] .al-c-finestra-riepilogo__blocco-3 { max-width: none; border-radius: 0; padding: 12px 12px 32px; min-height: 100%; }
+.al-c-finestra-riepilogo__blocco-1[data-formato="telefono"][data-anteprima="si"] .al-c-finestra-riepilogo__blocco-2 { background: rgba(8,8,10,.62); padding: 32px 16px; }
+.al-c-finestra-riepilogo__blocco-1[data-formato="telefono"][data-anteprima="si"] .al-c-finestra-riepilogo__blocco-3 { max-width: 390px; border-radius: 44px; min-height: 0; height: 844px; overflow-y: auto; box-shadow: 0 0 0 10px var(--cornice-telefono); }
+
+/* v77 · Archivio, elenco: il comando sta sul nome e si stende su tutta la riga (::after), come la carta; la riga si tocca ovunque */
+.al-arch__riga { position: relative; }
+.al-arch__riga-apri { display: block; min-width: 0; overflow: hidden; color: inherit; text-decoration: none; outline: none; }
+.al-arch__riga-apri::after { content: ""; position: absolute; inset: 0; }
+.al-arch__riga:has(.al-arch__riga-apri:focus-visible) { box-shadow: inset 0 0 0 2px var(--accento); border-radius: 12px; }
