@@ -248,10 +248,10 @@ class Component extends DCLogic {
       const conferma = this.state.del === x.id || (['elimina', 'elimina non riuscito'].includes(stato) && this.state.del === null && x.id === 'ngc6992'), delErr = conferma && stato === 'elimina non riuscito' && !this.state.delOk;
       const nPan = mo ? mo.c * mo.r : 1;
       const fil = x.fil.map(([k, a, b]) => ({ l: AL.FD[k][0], c: AL.tinta(t, k).bg, w: x.senzaOb ? '0%' : Math.min(100, a / b * 100) + '%', fatte: a ? H(a) : '0 h', ob: x.senzaOb ? '—' : H(b) }));
-      // Le misure come nel riepilogo dell'Archivio: mediane del progetto, un giudizio dove c'e' una soglia (dati simulati dalle tre mediane)
+      // Le misure come nel riepilogo dell'Archivio: mediane del progetto, un giudizio dove c'e' una soglia pubblica (v77: niente per FWHM ed eccentricita') (dati simulati dalle tre mediane)
       const mis = x.mis ? (() => { const [fw, ecc, sqm, n] = x.mis, nonG = MS.nonGiudicabile(F), gz = g => g ? { s: g.s, t: g.t, bg: g.e === 'neutra' ? t.card : t.pills[g.e][0], fg: g.e === 'neutra' ? t.text : t.pills[g.e][1] } : null, k = (fw * 10) % 7;
-        return [{ l: 'FWHM', v: fw.toFixed(1).replace('.', ',') + '″ · ' + (fw / scala).toFixed(1).replace('.', ',') + ' px', s: nonG ? 'non giudicabile su questo setup' : MS.camp(fw / scala), gz: nonG ? null : gz(MS.fwhm(fw, F)) },
-          { l: 'Eccentricità', v: ecc.toFixed(2).replace('.', ','), s: '', gz: gz(MS.ecc(ecc)) },
+        return [{ l: 'FWHM', v: fw.toFixed(1).replace('.', ',') + '″ · ' + (fw / scala).toFixed(1).replace('.', ',') + ' px', s: nonG ? 'non giudicabile su questo setup' : MS.camp(fw / scala), gz: null },
+          { l: 'Eccentricità', v: ecc.toFixed(2).replace('.', ','), s: '', gz: null },
           { l: 'Luminosità del cielo', v: 'SQM ' + sqm.toFixed(1).replace('.', ','), s: 'Bortle ' + BORTLE[c[6]] + ' a ' + c[6], gz: gz(MS.cielo(sqm, BORTLE[c[6]])) }]; })() : [];
       const notti = x.sol ? [{ l: 'Nel piano', v: x.nelPiano ? x.nelPiano : 'non in un piano', s: x.nelPiano ? 'Sistema solare · notte' : '', link: x.nelPiano ? { l: 'Apri il piano ↗', href: 'Piano della notte.dc.html' } : null }, { l: 'Ultima volta nel piano', v: x.ult, s: '' }].map(n => ({ ...n, bd: '1px solid ' + t.line })) : [
         ...(x.gr === 'corso' ? [{ l: 'Stanotte', v: PIANO[x.id] ? 'nel piano · ' + PIANO[x.id] : 'non nel piano', s: '', link: { l: PIANO[x.id] ? 'Apri il piano ↗' : 'Aggiungi al piano ↗', href: 'Piano della notte.dc.html' } }] : []),

@@ -237,6 +237,8 @@ Il Riepilogo in una finestra larga (desktop) o a pagina intera (telefono), con p
 | tipo | string | oggetto, notte | "oggetto" |
 | notte | object |  |  |
 | oggetto | object |  |  |
+| stato | string | normale, caricamento, errore dell'app, non trovato | "normale" |
+| anteprima | boolean |  | (telefono in una finestra larga: il telefono da 390 × 844; false nelle tavole) |
 | posizione | string | fissa, dentro | "dentro" |
 | aria | string |  |  |
 | onChiudi | () => void |  |  |
@@ -246,7 +248,7 @@ Il Riepilogo in una finestra larga (desktop) o a pagina intera (telefono), con p
 | dopoNo | boolean |  |  |
 | formato | string | desktop, telefono | "desktop" |
 
-Classi: `al-c-finestra-riepilogo__…` (sez. 2 di astrolog.css; inline restano solo i valori dai dati).
+Classi: `al-c-finestra-riepilogo__…`. v77: velo e pannello nel foglio, dalla radice con `data-formato`, `data-posizione` (fissa · dentro) e `data-anteprima` (si · no); inline niente.
 
 Lo usano: Archivio, Notti.
 
@@ -453,7 +455,7 @@ Il riepilogo di un oggetto o di una notte: produzioni, misure, attrezzatura.
 
 Stati: normale, caricamento, misure in calcolo, senza durata.
 
-Classi: `al-bottone`, `al-c-riepilogo__…`.
+Classi: `al-bottone`, `al-c-riepilogo__…`. v77: la radice ha `data-formato`; le misure del formato stanno nel foglio, come l'Archivio. Frecce ‹ › spente con `aria-disabled`.
 
 Lo usano: Riepilogo stati, Riepilogo, FinestraRiepilogo.
 
@@ -541,7 +543,7 @@ Lo usano: Meteo, Notti, Sistema.
 
 ## Telaio
 
-La cornice della pagina: barra in alto (desktop) o in basso (telefono), menu, Cerca, modo.
+La cornice della pagina: barra in alto (desktop) o in basso (telefono), menu, Cerca, modo. v77: la cornice parte da 700 px; fra 700 e 1440 la testa si stringe a fasce (contenitore `al-testa`, vedi astrolog.css «Telaio, le fasce della testa»).
 
 | parametro | tipo | valori | partenza |
 |---|---|---|---|

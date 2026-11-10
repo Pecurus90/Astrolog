@@ -66,14 +66,14 @@
 
 <sc-if value="{{ V.elenco }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="Elenco" colonne="12" ritardo="60" padding="{{ L.lpad }}" gap="2" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,600px">
 <sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><div class="al-arch__centro-2 al-arch__elenco-righe" aria-hidden="true"><span>oggetto</span><span>tipo e costellazione</span><span>integrazione</span><span>filtri</span><span>produzioni</span><span></span></div></sc-if>
-<sc-for list="{{ carte }}" as="o" hint-placeholder-count="10"><a class="al-arch__centro-3 al-arch__elenco-righe" href="#" onClick="{{ o.on }}" aria-haspopup="dialog" aria-label="{{ o.aria }}">
-<span class="al-arch__colonna-6"><b class="al-arch__blocco-10">{{ o.n }}</b><span class="al-arch__blocco-9">{{ o.comune }}</span></span>
+<sc-for list="{{ carte }}" as="o" hint-placeholder-count="10"><div class="al-arch__centro-3 al-arch__elenco-righe al-arch__riga">
+<span class="al-arch__colonna-6"><a class="al-arch__riga-apri" href="#" onClick="{{ o.on }}" aria-haspopup="dialog" aria-label="{{ o.aria }}"><b class="al-arch__blocco-10">{{ o.n }}</b></a><span class="al-arch__blocco-9">{{ o.comune }}</span></span>
 <span class="al-arch__blocco-11 al-arch__solo-desk">{{ o.sub }}</span>
 <span class="al-arch__colonna-1 al-arch__elenco-ore"><span class="al-arch__testo-8">{{ o.ore }}</span><span class="al-arch__testo-7">{{ o.fr }}</span></span>
 <span class="al-arch__blocco-12 al-arch__solo-desk"><sc-if value="{{ o.bar }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/BarraFiltri" filtri="{{ o.filD }}" altezza="8" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,8px"></dc-import></sc-if><span class="al-arch__blocco-9">{{ o.filT }}</span></span>
 <span class="al-arch__testo-9 al-arch__solo-desk">{{ o.prod }}</span>
-<span class="al-arch__blocco-13 al-arch__solo-desk">↗</span>
-</a></sc-for>
+<span class="al-arch__blocco-13 al-arch__solo-desk" aria-hidden="true">↗</span>
+</div></sc-for>
 </dc-import></sc-if>
 
 <sc-if value="{{ altre }}" hint-placeholder-val="{{ true }}"><div class="al-arch__riga-9"><a href="#" class="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--blocco al-bottone--a-sinistra">Mostra altri 20</a><span class="al-arch__testo-4">{{ altre }}</span></div></sc-if>

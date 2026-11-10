@@ -141,8 +141,8 @@ class Component extends DCLogic {
       return { k, med: fm(q[1]), qs: fm(q[0]) + ' – ' + fm(q[2]), q1: pc(q[0]), qw: ((q[2] - q[0]) / (hi - lo) * 100).toFixed(1) + '%', m: pc(q[1]), lo: fm(lo), hi: fm(hi), soglia: '', gz: null, nota: '', ...extra }; };
     const A = { su: pr.su, righe: [
       pr.px ? box('FWHM', pr.fw, 0, 4, v => P(v, 1) + ' px', { nota: 'Senza scala del cielo: in px, non si confronta fra setup.' })
-        : box('FWHM', pr.fw, 0, 7, v => P(v, 1) + '″', { med: P(pr.fw[1], 1) + '″ · ' + P(pr.fw[1] / pr.sc, 1) + ' px', gz: MS.fwhm(pr.fw[1], MS.F(pr.sc, pr.ap)), nota: MS.nonGiudicabile(MS.F(pr.sc, pr.ap)) ? 'non giudicabile su questo setup · ' + MS.camp(pr.fw[1] / pr.sc) : MS.camp(pr.fw[1] / pr.sc) }),
-      box('Eccentricità', pr.ec, 0, 1, v => VG(v, 2), { soglia: '45%', gz: MS.ecc(pr.ec[1]), nota: 'Rotonde fino a 0,45, allungate oltre 0,71.' }),
+        : box('FWHM', pr.fw, 0, 7, v => P(v, 1) + '″', { med: P(pr.fw[1], 1) + '″ · ' + P(pr.fw[1] / pr.sc, 1) + ' px', nota: MS.nonGiudicabile(MS.F(pr.sc, pr.ap)) ? 'non giudicabile su questo setup · ' + MS.camp(pr.fw[1] / pr.sc) : MS.camp(pr.fw[1] / pr.sc) }),
+      box('Eccentricità', pr.ec, 0, 1, v => VG(v, 2), {}),
       box('SNR', pr.sn, 0, 600, v => AL.num(Math.round(v)), { nota: 'PSF SNR: si confronta solo dentro la stessa notte e lo stesso oggetto, mai fra camere.' })] };
     const prodP = PR.map((x, j) => ({ l: x.n, sel: j === s.prod, on: () => set({ prod: j }) }));
     // Luminosita' del cielo
@@ -159,7 +159,7 @@ class Component extends DCLogic {
       mk('Non ancora misurato', 'misura in corso', '', 'misura in corso', '', { pulse: true }),
       mk('Non misurabile (nuvole, frame di prova)', 'troppo poche stelle', '', 'troppo poche stelle', '?'),
       mk('Forma stimata', 'forma stimata', 'FWHM 4,1″ · 2,1 px · eccentricità 0,52', 'Forma stimata: il fit non è riuscito.', '!'),
-      mk('Frame non risolto', 'senza scala del cielo', 'FWHM 2,1 px · HFD 2,9 px', 'Senza scala del cielo: niente FWHM allo zenit.', '?'),
+      mk('Frame non risolto', 'senza scala del cielo', 'FWHM 2,1 px · HFD 2,9 px', 'Senza scala del cielo: FWHM e HFD in px, niente FWHM allo zenit.', '?'),
       mk('Senza sito o senza coordinate dell\u0027oggetto', 'senza sito', 'FWHM 4,2″ · 2,2 px', 'Senza sito: niente FWHM allo zenit.', '?'),
       mk('Trasparenza e nuvole senza serie', 'serie troppo corta', '', 'serve una serie: almeno 5 frame dello stesso campo e filtro', '?'),
       mk('Frame non confrontabili', 'frame non confrontabili', '', 'camera, guadagno o tempo di posa diversi: fondo e rumore non si confrontano; la ragione accanto', '!'),

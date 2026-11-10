@@ -70,7 +70,7 @@
 
 <sc-if value="{{ S.list }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="desktop" etichetta="A confronto" colonne="{{ fl.lcols }}" ritardo="180" padding="24px 20px 24px" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,600px">
 <div class="al-notti__riga-15"><span class="al-notti__testo-1">A confronto</span><span class="al-notti__testo-2">{{ lista.sub }}</span></div>
-<div class="al-notti__griglia-5" aria-hidden="true"><span>giorno</span><span>sito e oggetti</span><span>integrazione</span><span>filtri</span><span>cielo</span><span>Luna</span></div>
+<div class="al-notti__griglia-5" aria-hidden="true"><span>giorno</span><span>sito e oggetti</span><span>integrazione</span><span>filtri</span><span>{{ lista.cieloH }}</span><span>Luna</span></div>
 <sc-for list="{{ gruppi }}" as="g" hint-placeholder-count="2"><div class="al-notti__colonna-5">
 <span class="al-notti__riga-16"><b class="al-notti__testo-9">{{ g.mese }}</b><span>{{ g.sub }}</span></span>
 <sc-for list="{{ g.righe }}" as="r" hint-placeholder-count="4"><a class="al-notti__griglia-6" data-an="riga" href="#" onClick="{{ r.on }}" aria-pressed="{{ r.sel }}" aria-label="{{ r.aria }}" style="background:{{ r.bg }};box-shadow:inset 0 0 0 2px {{ r.ring }}">
@@ -202,10 +202,11 @@ class Component extends DCLogic {
     const esito = n => n.met.u != null ? SO.livello(SO.puntoNotte(n.met)) : n.met.sb != null ? SO.livello(SO.puntoNotte({ ...n.met, u: n.met.sb, b: 9 })) : -1;
     // Cielo in classi okta (dall'app), il numero accanto
     const nuv = x => SO.cielo(x) + ', in media ' + x + '%';
-    const SZ = '';
+    // v77 (6): lo storico del meteo non ha l'aerosol: ogni notte passata lo dice accanto alle ore di posa (SO.senzaPassate)
+    const SZ = SO.senzaRiga(SO.senzaPassate) ? ' · ' + SO.senzaRiga(SO.senzaPassate) : '';
     const cielo = n => { const m = n.met, e = esito(n);
-      if (m.u != null) return { e, pillT: AL.PAROLE[e], t: cap(nuv(m.n)), s: SO.posaN(m.u) + ' ore di posa su ' + m.b + ' di buio' + SZ, corto: SO.posaN(m.u) + ' di posa su ' + m.b + ' ore' + SZ, bar: Array.from({ length: m.b }, (_, i) => i < m.u ? t.pills[e][1] : t.track) };
-      if (m.sb != null) return { e, pillT: AL.PAROLE[e], t: cap(nuv(m.n)), s: m.sb + ' ore visibili col Sole sotto l\u0027orizzonte' + SZ, corto: m.sb + ' ore visibili, senza buio' + SZ };
+      if (m.u != null) return { e, pillT: AL.PAROLE[e], t: cap(nuv(m.n)), s: SO.posaN(m.u) + ' ore di posa su ' + m.b + ' di buio' + SZ, corto: SO.posaN(m.u) + ' di posa su ' + m.b + ' ore', bar: Array.from({ length: m.b }, (_, i) => i < m.u ? t.pills[e][1] : t.track) };
+      if (m.sb != null) return { e, pillT: AL.PAROLE[e], t: cap(nuv(m.n)), s: m.sb + ' ore visibili col Sole sotto l\u0027orizzonte' + SZ, corto: m.sb + ' ore visibili, senza buio' };
       if (m.a) return { e, pillT: 'meteo in arrivo', t: 'Il meteo arriva il ' + m.a, s: 'L\u0027archivio del meteo è definitivo dopo 5 giorni.', corto: 'arriva il ' + m.a };
       if (m.tace) return { e, pillT: 'senza meteo', t: 'Il meteo non è ancora arrivato', s: 'Il servizio del meteo non ha ancora risposto per questa notte.', corto: 'non ancora arrivato' };
       return { e, pillT: 'non disponibile', t: 'Non disponibile', s: 'Fuso orario del sito non riconosciuto.', corto: 'sito senza fuso', az: 'Modifica sito' }; };
@@ -218,7 +219,7 @@ class Component extends DCLogic {
     const ripDi = x => { if (!x.luna || x.met.sb != null || x.met.fuso) return null; const b = x.met.b || 9, bl = SO.larghePassate(x.luna[1], !!x.luna[2], b);
       return { tipo: bl >= b ? 'larga' : bl <= 0 ? 'stretta' : 'mista', testo: SO.breve(bl) }; };
     const n = { titolo: titolo(N), sito: N.sito, rip: ripDi(N),
-      big: N.ore != null ? fh(N.ore) : num(N.fr) + ' frame', bigL: N.ore != null ? 'ore' : 'senza durata',
+      big: N.ore != null ? fh(N.ore) : num(N.fr) + ' frame', bigL: N.ore != null ? 'Integrazione' : 'senza durata',
       frameL: N.ore != null ? num(N.fr) + ' frame' + (N.st ? ' · ' + N.st + ' senza durata' : '') : 'Nei file non c\u0027è il tempo: le ore non si contano.',
       es: c0.e, pillT: c0.pillT, pillS: segno(c0.e), cieloT: c0.t, cieloS: c0.s, bar: c0.bar || null, azione: c0.az || null,
       luna: N.luna ? { t: N.luna[0], s: 'illuminata ' + AL.al(N.luna[1]) + N.luna[1] + '%', p: N.luna[1], lato: N.luna[2] ? 'destra' : 'sinistra' } : null,
@@ -227,8 +228,8 @@ class Component extends DCLogic {
       filD: N.fil, link: 'I ' + num(N.fr) + ' frame in Archivio',
       // 5.1: la barra e' una proporzione, non un orario
       barT: c0.bar ? 'una tacca per ora di buio: le piene contano le ore di posa, non dicono quando' : '',
-      // 5.4: da dove viene il sito della notte (lo dice l'app; simulato)
-      sitoF: /casa/i.test(N.sito) ? 'il sito di casa, dalle Impostazioni' : 'dalle coordinate nei frame' };
+      // 5.4, v77: da dove viene il sito della notte: lo manda l'app (N.fonte: impostazioni · frame · risposta)
+      sitoF: ({ impostazioni: 'il sito di casa, dalle Impostazioni', frame: 'dalle coordinate nei frame', risposta: 'dalla tua risposta in Da confermare' })[N.fonte] || '' };
     const vai = (i, scorri) => e => { e && e.preventDefault(); const x = notti[i]; if (!x) return; if (x.id === N.id && e) { set({ det: true }); return; } set({ sel: x.id, mese: x.mk });
       if (scorri && this._notte) requestAnimationFrame(() => { const r = this._notte.getBoundingClientRect(); window.scrollBy({ top: r.top - 84, behavior: 'smooth' }); }); };
     const nav = { prima: vai(si + 1), dopo: vai(si - 1), primaNo: si >= notti.length - 1 ? 'true' : undefined, dopoNo: si <= 0 ? 'true' : undefined, primaOp: si >= notti.length - 1 ? 0.35 : 1, dopoOp: si <= 0 ? 0.35 : 1 };
@@ -240,7 +241,7 @@ class Component extends DCLogic {
         ore: x.ore != null ? fh(x.ore) : 'senza durata', frame: num(x.fr) + ' frame', filD: x.fil, filT: nomiF(x).join(' · '),
         es: c.e, pillT: c.pillT, pillS: segno(c.e), fondo: on ? 'carta' : 'carta2', cielo: c.corto, rip: ripDi(x), lunaP: x.luna ? x.luna[1] : null, lunaL: x.luna ? (x.luna[2] ? 'destra' : 'sinistra') : '', luna: x.luna ? x.luna[1] + '%' : '',
         sel: on ? 'true' : 'false', bg: on ? t.card2 : 'transparent', ring: on ? t.accent : 'transparent', on: vai(i), onTel: vai(i, true),
-        aria: titolo(x) + ', ' + x.sito + ', ' + (x.ore != null ? fh(x.ore) : 'senza durata') + ', cielo: ' + c.pillT }; };
+        aria: titolo(x) + ', ' + x.sito + ', ' + (x.ore != null ? fh(x.ore) : 'senza durata') + ', cielo: ' + c.pillT + (x.met.u != null && SZ ? ', ' + c.corto + SZ : '') }; };
     const righeTutte = notti.map(riga);
     const somma = arr => { const h = arr.reduce((s, x) => s + (x.ore || 0), 0); return arr.length ? arr.length + (arr.length === 1 ? ' notte' : ' notti') + (h ? ' · ' + fh(h) : '') : 'nessuna notte'; };
     const CORN = st => ALdati.corredi[ALdati.corredoDi(st)].breve, ESW = ['buona', 'incerta', 'non adatta'];
@@ -325,7 +326,7 @@ class Component extends DCLogic {
     const Ddesk = D && F.desk ? D : null, Dtel = D && F.tel ? { ...D, wPad: cornice ? '32px 16px' : '0', wW: cornice ? '390px' : '100%', wH: cornice ? '844px' : '100%', wR: cornice ? '44px' : '0' } : null;
     return { Ddesk, Dtel, pronto: true, fuori, fuoriOn, altre, rifR: this.rifR, modo, accento: p.accento, setModo: m => set({ modo: m }), t, F, S, SK, av, n, nav, cal, gruppi, telLista, righe, rT: (() => { const n = righe.length, ap = !!this.state.rAp, brutto = righe.some(r => r.s === '!'); return { chiuso: S.list && n > 0, lista: S.list && n > 0 && ap, exp: ap ? 'true' : 'false', l: n === 1 ? righe[0].t : n + ' cose da vedere', s: brutto ? '!' : '?', fg: brutto ? t.warn : t.text, chevT: ap ? '▴' : '▾', chev: ap ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', on: e => { e.preventDefault(); set({ rAp: !ap }); } }; })(), rifNotte: this.rifNotte, tc, strip, pistaN, D,
       apri: e => { e.preventDefault(); set({ det: true }); }, chiudi: e => { e.preventDefault(); set({ det: false }); },
-      protCols: single ? 12 : 8, fl, lista: { sub: attivi ? visti.length + (visti.length === 1 ? ' notte' : ' notti') + ' con questi criteri' : 'oggetti, filtri e cielo, notte per notte', conta: Math.min(20, visti.length) + ' di ' + (attivi ? visti.length : 212), vuota: !visti.length, testa: (notti.length > 7 ? 'le ultime 7' : 'dalla più recente') + ' · le altre dal calendario e sotto' } };
+      protCols: single ? 12 : 8, fl, lista: { cieloH: SZ ? 'cielo' + SZ : 'cielo', sub: attivi ? visti.length + (visti.length === 1 ? ' notte' : ' notti') + ' con questi criteri' : 'oggetti, filtri e cielo, notte per notte', conta: Math.min(20, visti.length) + ' di ' + (attivi ? visti.length : 212), vuota: !visti.length, testa: (notti.length > 7 ? 'le ultime 7' : 'dalla più recente') + ' · le altre dal calendario e sotto' } };
   }
 }
 </script>

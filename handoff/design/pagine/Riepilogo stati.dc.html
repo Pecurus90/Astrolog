@@ -21,6 +21,13 @@
 <sc-for list="{{ riga }}" as="it" hint-placeholder-count="8"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:10px;flex:none;width:390px"><span style="font-size:18px;font-weight:500;color:var(--tavola-testo)">{{ it.titolo }}</span><span style="font-size:14px;color:var(--tavola-tenue);min-height:40px">{{ it.nota }}</span><div style="width:390px;height:844px;overflow-y:auto;overflow-x:hidden;border-radius:44px;box-shadow:0 0 0 10px var(--tavola-cornice), 0 30px 60px rgba(0,0,0,.4);background:var(--tavola-schermo)"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Riepilogo" contenitore="pagina" tipo="{{ it.tipo }}" stato="{{ it.st }}" modo="{{ it.modo }}" formato="telefono" hint-size="390px,844px"></dc-import></sc-if></div></div></sc-for>
 </div></sc-for>
 </div>
+<div style="display:flex;flex-direction:column;gap:32px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">In finestra (dall'Archivio e dalle Notti) · telefono 390 px</span>
+<span style="font-size:15px;color:var(--tavola-tenue);max-width:900px">La finestra sul telefono è a pagina intera. Anche mentre carica, se AstroLog non risponde o se l'oggetto non c'è più, la × in alto la chiude.</span>
+<div style="display:flex;gap:56px;align-items:flex-start">
+<sc-for list="{{ fin }}" as="it" hint-placeholder-count="4"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:10px;flex:none;width:390px"><span style="font-size:18px;font-weight:500;color:var(--tavola-testo)">{{ it.titolo }}</span><span style="font-size:14px;color:var(--tavola-tenue);min-height:40px">{{ it.nota }}</span><div style="position:relative;width:390px;height:844px;overflow:hidden;border-radius:44px;box-shadow:0 0 0 10px var(--tavola-cornice), 0 30px 60px rgba(0,0,0,.4);background:var(--tavola-schermo)"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/FinestraRiepilogo" posizione="dentro" anteprima="{{ false }}" tipo="{{ it.tipo }}" stato="{{ it.st }}" prima-no="{{ true }}" formato="telefono" hint-size="390px,844px"></dc-import></sc-if></div></div></sc-for>
+</div>
+</div>
 <div style="display:flex;flex-direction:column;gap:24px">
 <span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Desktop · 1440 px</span>
 <div style="display:flex;gap:80px;align-items:flex-start">
@@ -53,7 +60,9 @@ class Component extends DCLogic {
       return { tipo, st, nota, modo, titolo: nn + ' · ' + tipo + ' · ' + st + (modo ? ' · ' + modo : ''), label: 'Telefono · ' + nn + ' · ' + tipo + ' · ' + st, ref: this.rif(k), on: !!on[k] }; });
     const D = [['oggetto', 'normale', 'oggetto'], ['notte', 'normale', 'la notte del 24 settembre'], ['oggetto', 'misure in calcolo', 'misure a metà'], ['notte', 'normale', 'modo chiaro', 'chiaro']];
     const desk = D.map(([tipo, st, nota, modo], i) => { const k = 'd' + i; return { tipo, st, nota, modo, titolo: tipo + ' · ' + st + (modo ? ' · ' + modo : ''), label: 'Desktop · ' + tipo + ' · ' + st, ref: this.rif(k), on: !!on[k] }; });
-    return { righeTel: [tel], desk };
+    const FN = [['oggetto', 'normale', '‹ spenta: è il primo oggetto della pagina'], ['oggetto', 'caricamento', 'la × resta'], ['oggetto', 'errore dell\u0027app', 'la × resta'], ['oggetto', 'non trovato', 'la × resta']];
+    const fin = FN.map(([tipo, st, nota], i) => { const k = 'f' + i, nn = String(i + 1).padStart(2, '0'); return { tipo, st, nota, titolo: nn + ' · finestra · ' + st, label: 'Finestra · ' + nn + ' · ' + st, ref: this.rif(k), on: !!on[k] }; });
+    return { righeTel: [tel], desk, fin };
   }
 }
 </script>

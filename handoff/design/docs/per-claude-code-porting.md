@@ -1,4 +1,4 @@
-# Per Claude Code · porting (v76, 7/11/2026)
+# Per Claude Code · porting (v77, 10/11/2026)
 
 Da Claude Design. Versione finale dopo il brief del 6/11 (v60–v73): sostituisce in `handoff/design/` la consegna v58.6. La tavola e' la specifica, aspetto e funzioni (regola del 27/10); controlla ogni pagina con la lista di /porta-tavola prima di portarla. Sostituisce `docs/archivio/per-claude-code-porting-v32.md` (resta valido per tutto cio' che qui non e' detto).
 
@@ -94,6 +94,27 @@ Il brief intero e' in `docs/archivio/brief-porting-v59.md`; ogni punto ha la sua
 **Restano disegnati, arrivano dopo**: esportazioni N.I.N.A. e SharpCap, ricerche online (JPL, MPC, VizieR, AAVSO, TNS), eventi dall'orbita vera, la mappa del transito, la carta Sole del Meteo, Diagnostica e «Ultimo tentativo» dei servizi.
 
 **Stato**: v60–v73 da approvare da Marco sulla tavola, parole comprese.
+
+## v77 (10/11): le 16 voci del porting della v76
+
+1. **Telaio, finestre strette**: `minW` 700 (era 1440). La testa e' un contenitore (`.al-c-telaio__riga-1`, `container: al-testa / inline-size`) con dentro `.al-c-telaio__testa`; le fasce sono quattro `@container al-testa` in astrolog.css (1199 · 1139 · 999 · 879 px di testa). Nuove parti: `__marchio-t`, `__cerca-t`, `__todo-t`, `__todo-segno`. Padding delle pillole nel foglio (`aria-current="page"`), non piu' inline. Margini di lato: `.al-c-telaio__blocco-2[data-cornice="si"]` e `margin-inline: max(24px, (100% − 1360px) / 2)`; il padding della pagina resta solo in alto e in basso.
+2. **Telefono, Da confermare**: `.al-c-telaio__riga-13` min-width 44. Etichetta: «Da confermare, 4».
+3. **Helmet del Telaio**: senza alPulse e alHalo.
+4. **Meteo**: `summ()` legge il picco del Vento da `m.raffiche`; usciti i `picco:` dei dati (righe 276, 284, 291, 305–318).
+5. **Notti, fonte**: `notte.fonte` = `impostazioni` · `frame` · `risposta` (in `dati.js`); la tavola non guarda piu' il nome.
+6. **Notti, senza aerosol**: `ALsoglie.senzaPassate = ['l\u0027aerosol']`; `SZ` = « · senza aerosol» nella carta della notte (`s`), non nella riga corta; in A confronto la testa della colonna (`lista.cieloH`) e l'`aria-label` della riga.
+7. **Notti, bigL**: «Integrazione» (era «ore»).
+8. **Riepilogo**: radice `data-formato`; `L` tiene solo `t3`, `t1` e il gap dello Scheletro; le misure sono in «v77 · Riepilogo» del foglio; il padding delle carte e' quello di Carta (28 / 20). **FinestraRiepilogo**: radice `data-formato`, `data-posizione`, `data-anteprima`; `D` dice solo quale caso.
+9. **Riepilogo, frecce**: `.al-c-riepilogo__freccia[aria-disabled="true"]`; il clic non chiama `onPrima`/`onDopo`.
+10. **MisureFrame**: `st: 'illeggibile'` nei frame simulati; `FRT` (tutti) per i «di» (su, pillole dei filtri, Per filtro, A confronto), `FR` (senza quelli) per tutto il resto. Testo unico «Senza scala del cielo: FWHM e HFD in px, niente FWHM allo zenit.» anche in Misure dei frame.
+11. **Giudizi**: usciti da `soglie.misure` `fwhm`, `ecc`, `basso`, `snrBasso`, `fuoco`, `snrBassoOgg`, `hfdAltaOgg`, `minimo`; usciti i loro usi in MisureFrame, Misure dei frame, Progetti e l'avviso dell'eccentricita' del Setup nel Riepilogo. Restano `F`, `nonGiudicabile`, `camp`, `tilt`, `cielo`.
+12. **Archivio, elenco**: la riga e' `div.al-arch__riga`; il comando e' `a.al-arch__riga-apri` sul nome, con `::after` a `inset: 0` (come `as-carta-oggetto__apri`); fuoco da tastiera sulla riga con `:has(:focus-visible)`.
+13. **Fuori catalogo**: costellazione senza riga sotto.
+14. **Produzioni**: `l` = ottica · camera (`corredi[c].n`), `sub` = ore (`AL.ore`).
+15. **Riepilogo in finestra**: `S.testa` mostra la × (`.al-c-riepilogo__testa-stato`) in caricamento, errore e non trovato; FinestraRiepilogo passa `stato`. Sul telefono il pannello e' `min-height: 100%`.
+16. **Testa del telefono**: `.al-c-riepilogo__testa-destra` senza a capo; pillole con i tre puntini e `title`, × e frecce `flex: none`.
+
+In piu': Dashboard, il commento `//` della v76 a meta' della riga di `moonPills` spegneva la classe; ora e' `/* */`.
 
 ## v76 (7/11): le 11 voci del secondo controllo
 

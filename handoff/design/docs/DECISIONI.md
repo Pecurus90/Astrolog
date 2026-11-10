@@ -13,6 +13,28 @@ Le decisioni del vecchio sistema (fino alla v38) stanno in
 4. Carta «È stagione» nella Dashboard (progetti salvati, per priorita').
 5. Poi si cancellano le tavole di prova: `Planner proposte`, `Telefono comandi`, `Telaio vivo` (restano `Planner telefono` e `Planner desktop` come riferimento finche' il porting non e' fatto).
 
+## v77 — Correzioni dal porting della v76, 16 voci (10/11/2026, da Claude Code via Marco; da approvare)
+
+- Fonte: il brief del 10/11 di Claude Code (porting di Notti, Tutto della notte, finestra dell'oggetto, telaio). Voce per voce in `docs/per-claude-code-porting.md`, sezione v77.
+- **1 · Finestre strette** (Marco, 10/11: versioni scalate, niente scorrimento di lato): la cornice parte da 700 px (sotto c'e' il telefono). Le fasce guardano la larghezza della testa: sotto 1200 px Cerca solo con la lente; sotto 1140 pillole e spazi stretti, la pastiglia dice solo il sito; sotto 1000 il marchio senza nome e Da confermare col segno e il conto; sotto 880 le pagine vanno su una riga loro, sotto marchio e comandi. I margini di lato scendono da 40 a 24 px. Supera il min-width 1440 della v56.
+- **2 · Da confermare sul telefono** senza conto: largo almeno 44.
+- **3 · alPulse e alHalo**: una casa sola, il foglio; tolti dall'helmet del Telaio.
+- **4 · Raffiche**: un numero solo. La carta del Vento prende il picco dalla serie delle Raffiche (simulata, vento × 1,5); i picchi scritti nei dati sono usciti.
+- **5 · Fonte del sito della notte** (Marco, 7/11): la manda l'app, tre valori: `impostazioni` «il sito di casa, dalle Impostazioni», `frame` «dalle coordinate nei frame», `risposta` «dalla tua risposta in Da confermare». Nella tavola: Rifugio Calvi.
+- **6 · Senza aerosol**: lo storico del meteo non ha l'aerosol, quindi ogni notte passata dice «· senza aerosol» accanto alle ore di posa (`soglie.senzaPassate`). In A confronto non sta nelle righe (si sovrapponeva ed e' uguale per tutte): una volta sola nella testa della colonna, «cielo · senza aerosol», e nella lettura della riga.
+- **7 · Integrazione** (Marco, 10/11): accanto al numero grande delle Notti «Integrazione», come nella finestra della notte e dell'oggetto; senza durata resta «senza durata».
+- **8 · Riepilogo e FinestraRiepilogo**: come l'Archivio alla v75, la radice ha `data-formato` e le misure del formato stanno nel foglio. Inline solo i dati (la linguetta scelta).
+- **9 · Frecce ‹ › spente**: `aria-disabled`, cursore «non consentito», nessuna azione, oltre all'opacita'.
+- **10 · Frame che non si misura** (Marco, 8/11): di un altro programma, riscritto, rotto o in .fz. Non compare ne' nei grafici ne' nel frame, senza parole; conta solo nel «di» di «su 112 di 120». «Senza scala del cielo: FWHM e HFD in px, niente FWHM allo zenit.» e' il testo unico.
+- **11 · Giudizi che l'app non da'**: escono le pillole della FWHM (3 / 4 / 5″), l'eccentricita' 0,45 / 0,71 e «oggetto basso» a massa d'aria 2; restano i numeri. Escono anche SNR basso, fuoco, HFD alta e «stelle allungate» del Setup: arrivano piu' avanti, con la regola dei 2,5 Qn (ADR 0039). Vale anche per le misure dei Progetti. Supera v62 e v63 dove davano quei giudizi.
+- **12 · Elenco dell'Archivio**: il comando e' il nome (`al-arch__riga-apri`), steso su tutta la riga con `::after`; la riga e' `al-arch__riga`.
+- **13 · Fuori catalogo**: via «si muove nel cielo».
+- **14 · Produzioni**: la linguetta dice ottica e camera, sotto le ore. Supera «2026 · Rifrattore 80/480 · Cima Ekar» del 17/10.
+- **15 · Riepilogo in finestra**, caricamento, errore e non trovato: la × in alto; sul telefono la finestra e' a pagina intera. Tavola: `Riepilogo stati`, «In finestra».
+- **16 · Testa del telefono con due siti lunghi**: le pillole si accorciano coi tre puntini (il nome intero al passaggio), × e frecce restano sulla riga.
+- **Dashboard**: il commento della v76 sulla pillola della Luna spegneva la logica della pagina; corretto.
+- Pacchetto: `consegna/astrolog-v77.zip` al posto della v76.
+
 ## v76 — Il secondo controllo, 11 voci (7/11/2026, da Claude Code; da approvare)
 
 - Voce per voce in `docs/per-claude-code-porting.md`, sezione v76.

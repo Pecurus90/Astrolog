@@ -1,5 +1,16 @@
 # AstroLog — cronologia
 
+## v77 — Correzioni dal porting della v76, 16 voci — 10/11/2026
+
+- Telaio: cornice da 700 px, testa a fasce fino a 1440 (Cerca con la lente, pillole e spazi stretti, marchio e Da confermare col segno, pagine su una riga loro); margini da 40 a 24; Da confermare del telefono largo 44; alPulse e alHalo solo nel foglio.
+- Meteo: picco del Vento dalla serie delle Raffiche, tolti i picchi scritti a mano.
+- Notti: fonte del sito dall'app (impostazioni · frame · risposta, «dalla tua risposta in Da confermare»); «senza aerosol» accanto alle ore di posa e nella testa della colonna di A confronto; «Integrazione» accanto al numero grande.
+- Riepilogo e FinestraRiepilogo: `data-formato` e misure nel foglio; frecce spente con `aria-disabled`; × anche in caricamento, errore e non trovato; testa del telefono senza andare a capo coi siti lunghi; via «si muove nel cielo».
+- MisureFrame: il frame che non si misura conta solo in «su 112 di 120»; via i giudizi di FWHM, eccentricità, oggetto basso e quelli del gruppo e del setup; un testo solo per «Senza scala del cielo».
+- Archivio: nell'elenco il comando sta sul nome e si stende sulla riga (`al-arch__riga-apri`). Produzioni: la linguetta dice ottica, camera e ore.
+- Dashboard: corretto un commento che spegneva la logica (v76).
+- Pacchetto `consegna/astrolog-v77.zip`.
+
 ## v76 — Secondo controllo, 11 voci — 7/11/2026
 
 - Selezione: gradiente in unità di rumore; cartella d'esempio Condivisa/Astro.

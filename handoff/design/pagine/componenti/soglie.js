@@ -94,26 +94,13 @@
   const MISURE = {
     // F: il limite del corredo, due pixel per stella o la diffrazione (116/D, in mm), il maggiore
     F: (scala, apertura) => Math.max(2 * scala, apertura ? 116 / apertura : 0),
-    // FWHM in ″ (consenso dei forum): sotto 2 / 2-3 / 3-4 / 4-5 / oltre; le soglie sotto F salgono a F
-    fwhm: (v, F) => { if (F > 3) return null; if (v < F) return G(0, 'al limite del setup');
-      return v < Math.max(2, F) ? G(0, 'eccellente') : v < 3 ? G(0, 'buono') : v < 4 ? G('neutra', 'nella media') : v < 5 ? G(1, 'scarso') : G(2, 'pessimo'); },
+    // v77: niente giudizio della FWHM (nessuna convenzione pubblica), ne' dell'eccentricita', ne' «oggetto basso»: l'app non li da'. Restano i numeri.
     nonGiudicabile: F => F > 3,
     // Campionamento in px, senza voto
     camp: px => px < 1.5 ? 'sottocampionata (grave)' : px < 2 ? 'sottocampionata' : px <= 3 ? 'ideale' : 'sovracampionata',
-    // Eccentricita': 0,45 dai forum, 0,71 ESO; in mezzo solo il numero
-    ecc: v => v <= 0.45 ? G(0, 'rotonde') : v > 0.71 ? G(1, 'allungate') : null,
     // Tilt (ASTAP): fino al 10% / 10-20% / oltre
     tilt: v => v <= 10 ? G(0, 'buono') : v <= 20 ? G(1, 'incerto') : G(2, 'non adatto'),
-    // Solo sul frame, contro la sua notte (stesso oggetto e filtro), con almeno 10 frame (scelta di Marco).
-    // Giudizi relativi a 2,5 Qn (ADR 0039, Marco 24/10/2026; a schermo «rispetto al gruppo»): la stessa regola delle soglie della Selezione dei frame. Nel disegno la dispersione si simula col MAD scalato.
-    minimo: 10,
-    snrBasso: (v, arr) => { if (arr.length < 10) return null; const m = qn(arr, .5), mad = 1.4826 * qn(arr.map(x => Math.abs(x - m)), .5); return v < m - 2.5 * mad ? G(1, 'SNR basso per la notte') : null; },   // 2,5 Qn (ADR 0039), simulato col MAD scalato
-    fuoco: (v, arr) => { if (arr.length < 10) return null; return v > qn(arr, .1) * 1.05 ? G(1, 'fuoco peggiore') : null; },   // N.I.N.A., +5% sulle migliori
-    // Il frame contro l'oggetto: stessi oggetto e filtro, tutte le notti, almeno 10 (scelta di Marco); HFD fra notti: + 2,5 Qn, non "fuoco"
-    snrBassoOgg: (v, arr) => { if (arr.length < 10) return null; const m = qn(arr, .5), mad = 1.4826 * qn(arr.map(x => Math.abs(x - m)), .5); return v < m - 2.5 * mad ? G(1, 'SNR basso per l\u0027oggetto') : null; },
-    hfdAltaOgg: (v, arr) => { if (arr.length < 10) return null; const m = qn(arr, .5), mad = 1.4826 * qn(arr.map(x => Math.abs(x - m)), .5); return v > m + 2.5 * mad ? G(1, 'HFD alta per l\u0027oggetto') : null; },
-    // Massa d'aria sopra 2, sotto 30° (AAVSO): solo la parola
-    basso: X => X > 2 ? G(1, 'oggetto basso') : null,
+    // v77: i giudizi del gruppo e del setup (SNR basso, fuoco, HFD alta, stelle allungate del setup) arrivano piu' avanti, con la regola dei 2,5 Qn (ADR 0039)
     bortleDi: sqm => { const r = BORTLE.find(([x]) => sqm > x); return r ? r[1] : 9; },
     cielo: (sqm, bortleSito) => bortleSito == null ? null : MISURE.bortleDi(sqm) <= bortleSito ? G(0, 'come il Bortle del sito') : G(1, 'più chiaro del Bortle del sito') };
   // ── Dal contratto del meteo (docs/domini/meteo.md): intervalli, arrotondamenti, Luna. Il verdetto NO: resta il punteggio 0-100 (Marco, 20/10/2026).
@@ -210,7 +197,8 @@
     puntoNotte: m => m.q ?? Math.round(35 + 55 * m.u / m.b - 0.3 * (m.n ?? 20)),
     // La riga accanto alla Trasparenza quando manca l'aerosol: «senza aerosol» (ADR 0034). Il seeing non entra, quindi non manca mai.
     senzaRiga: senza => (senza || []).includes('l\u0027aerosol') ? 'senza aerosol' : '',
-    senzaPassate: [],
+    // Le notti passate: lo storico del meteo non ha l'aerosol (v77), quindi accanto alle ore di posa sempre «senza aerosol»
+    senzaPassate: ['l\u0027aerosol'],
     // I fattori che mancano in tutte le ore date (risposte di ora()): quelli da scrivere accanto al punteggio della notte
     senzaTutte: qs => { const v = qs.filter(Boolean); return v.length ? v[0].senza.filter(k => v.every(q => q.senza.includes(k))) : []; },
     // La ripresa (v13). ripresa(fase %, altezza °) -> 'larga' | 'stretta'
