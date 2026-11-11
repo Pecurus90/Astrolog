@@ -9,15 +9,15 @@ Quando la consegna nuova arriva in `handoff/design/`, Claude Code controlla ogni
 sulle tavole: `[fatta vN]` se c'e', di nuovo `[data]` con cio' che manca se no. Le voci fatte
 escono alla consegna dopo. Il testo lungo di un brief sta nel suo file accanto (`design-v59.md`).
 
-Consegna controllata: dce48035 (v79, 10/11), in `handoff/design/` al posto della v78.
+Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della v79.
 
 ## Da dare
 
-- [da dare] Dopo la v81 (Marco, 11/11: tutto IAU): i nomi delle stelle della Carta del cielo
+- [fatta v82] Dopo la v81 (Marco, 11/11: tutto IAU): i nomi delle stelle della Carta del cielo
   con i nomi propri IAU (WGSN: Polaris, Sirius, Arcturus), uguali in ogni lingua come le
   costellazioni latine; anche nella descrizione della scala di Bortle del Primo avvio
   «Pleiades» al posto di «le Pleiadi».
-- [data 11/11] Dopo la v80 (Marco, 11/11: si' a tutte e due): (a) i circa 150 attributi SVG col
+- [fatta v82] Dopo la v80 (Marco, 11/11: si' a tutte e due): (a) i circa 150 attributi SVG col
   segnaposto nelle altre tavole (Archivio, Menu, Planner, Statistiche e le altre): stessa cura
   di Cerca e Telaio, l'icona nasce gia' col suo disegno; nessuna tavola, aperta da sola, da'
   errori in console. (b) I nomi comuni scritti a mano in italiano (Progetti, Cerca, Primo avvio,
@@ -26,11 +26,11 @@ Consegna controllata: dce48035 (v79, 10/11), in `handoff/design/` al posto della
   cinque (prime quattro per ore, «altri N filtri» con la somma, poi «Filtro non indicato», ogni
   filtro con la sua fetta nell'anello) va bene: disegnarne lo stato, desktop e telefono, nella
   tavola «Dashboard stati».
-- [data 11/11] Errori delle tavole v79 (collaudo 11/11): il `sc-if` attorno ai `<path d="{{ … }}">`
+- [fatta v82] Errori delle tavole v79 (collaudo 11/11): il `sc-if` attorno ai `<path d="{{ … }}">`
   non basta, il browser legge il segnaposto prima del runtime. `componenti/Cerca.dc.html` da'
   `<path> attribute d` con `{{ a.d }}` e `{{ g.d }}`; `componenti/Telaio.dc.html` ancora i quattro
   `{{ m.altroChev }}`, `{{ m.modeIcon }}`, `{{ vb.az.d }}`, `{{ b.d }}`. Solo tavola: l'app non li ha.
-- [data 11/11] Archivio, porting v78 (10/11): (a) il campo dice «Cerca: M 31, Velo, Andromeda…», ma
+- [fatta v82] Archivio, porting v78 (10/11): (a) il campo dice «Cerca: M 31, Velo, Andromeda…», ma
   la ricerca trova sigle e nomi dell'oggetto, non i nomi comuni: l'app scrive «Cerca: M 31, NGC
   7000…»; (b) le costellazioni nell'app sono latine IAU (Cepheus, Cygnus), decisione di Marco
   confermata il 10/11: catalogo.js le ha in italiano; (c) i nomi comuni arrivano dal catalogo in
@@ -38,7 +38,7 @@ Consegna controllata: dce48035 (v79, 10/11), in `handoff/design/` al posto della
   non c'e' una sorgente (ADR 0019). Allineare la tavola.
 ## Date, da controllare alla consegna
 
-- [data 11/11] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un
+- [fatta v82] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un
   errore: «4,6»; (b) i frame senza filtro sono l'ultima riga «Filtro non indicato» col pallino a
   filo tratteggiato e un pezzo grigio dell'anello: disegnarli; (c) l'app elenca tutti i filtri
   dell'anno: dire se e dove tagliare; (d) senza notti nell'anno prima ne' tratteggio ne'
