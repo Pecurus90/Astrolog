@@ -96,7 +96,6 @@ function Mesi({ anno, telefono }: { anno: Anno; telefono: boolean }) {
   const detto = t(anno.previous_known ? "dashboard.year.bars" : "dashboard.year.bars.alone", {
     anno: String(anno.year),
   })
-  const fantasma = telefono ? "al-dash__strato-3" : "al-dash__strato-2"
   return (
     <>
       <div
@@ -113,7 +112,12 @@ function Mesi({ anno, telefono }: { anno: Anno; telefono: boolean }) {
                 data-anim="1"
                 style={{ ...VIA, height: b.h, background: b.bg, boxShadow: `inset 0 0 0 1px ${b.ring}` }}
               />
-              {anno.previous_known && <span className={fantasma} style={{ height: b.gh }} />}
+              {anno.previous_known && (
+                <span
+                  className={telefono ? "al-dash__strato-3" : "al-dash__strato-2"}
+                  style={{ height: b.gh }}
+                />
+              )}
             </>
           )
           return telefono ? (
