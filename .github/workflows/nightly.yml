@@ -39,6 +39,10 @@ jobs:
       # A step limit below the job's, so a shard cut short still saves and reports.
       - name: Mutants of shard ${{ matrix.shard }}
         timeout-minutes: 270
+        # syrupy 7 fails mutmut's --collect-only on unused snapshots; env, not pyproject:
+        # a new pytest_add_cli_args resets every cached verdict
+        env:
+          PYTEST_ADDOPTS: --snapshot-warn-unused
         run: |
           patterns="$(python ../tools/mutation_shards.py ${{ matrix.shard }})"
           python ../tools/mutation_shards.py --drop-broken mutants
