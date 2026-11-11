@@ -13,11 +13,20 @@ Consegna controllata: dce48035 (v79, 10/11), in `handoff/design/` al posto della
 
 ## Da dare
 
-- [da dare] Errori delle tavole v79 (collaudo 11/11): il `sc-if` attorno ai `<path d="{{ … }}">`
+- [da dare] Dopo la v80 (Marco, 11/11: si' a tutte e due): (a) i circa 150 attributi SVG col
+  segnaposto nelle altre tavole (Archivio, Menu, Planner, Statistiche e le altre): stessa cura
+  di Cerca e Telaio, l'icona nasce gia' col suo disegno; nessuna tavola, aperta da sola, da'
+  errori in console. (b) I nomi comuni scritti a mano in italiano (Progetti, Cerca, Primo avvio,
+  Da confermare, Selezione, Planner, `cupola.js`, `dati-cielo.js`) si leggono da `catalogo.js`:
+  costellazioni latine IAU, nomi comuni in inglese, come l'app. (c) La proposta dei filtri oltre
+  cinque (prime quattro per ore, «altri N filtri» con la somma, poi «Filtro non indicato», ogni
+  filtro con la sua fetta nell'anello) va bene: disegnarne lo stato, desktop e telefono, nella
+  tavola «Dashboard stati».
+- [data 11/11] Errori delle tavole v79 (collaudo 11/11): il `sc-if` attorno ai `<path d="{{ … }}">`
   non basta, il browser legge il segnaposto prima del runtime. `componenti/Cerca.dc.html` da'
   `<path> attribute d` con `{{ a.d }}` e `{{ g.d }}`; `componenti/Telaio.dc.html` ancora i quattro
   `{{ m.altroChev }}`, `{{ m.modeIcon }}`, `{{ vb.az.d }}`, `{{ b.d }}`. Solo tavola: l'app non li ha.
-- [da dare] Archivio, porting v78 (10/11): (a) il campo dice «Cerca: M 31, Velo, Andromeda…», ma
+- [data 11/11] Archivio, porting v78 (10/11): (a) il campo dice «Cerca: M 31, Velo, Andromeda…», ma
   la ricerca trova sigle e nomi dell'oggetto, non i nomi comuni: l'app scrive «Cerca: M 31, NGC
   7000…»; (b) le costellazioni nell'app sono latine IAU (Cepheus, Cygnus), decisione di Marco
   confermata il 10/11: catalogo.js le ha in italiano; (c) i nomi comuni arrivano dal catalogo in
