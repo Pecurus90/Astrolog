@@ -23,7 +23,9 @@ Consegna controllata: dce48035 (v79, 10/11), in `handoff/design/` al posto della
   confermata il 10/11: catalogo.js le ha in italiano; (c) i nomi comuni arrivano dal catalogo in
   inglese («Andromeda Galaxy»); (d) Sole, Sistema solare e Aggiungi oggetto restano fuori finche'
   non c'e' una sorgente (ADR 0019). Allineare la tavola.
-- [da dare] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un
+## Date, da controllare alla consegna
+
+- [data 11/11] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un
   errore: «4,6»; (b) i frame senza filtro sono l'ultima riga «Filtro non indicato» col pallino a
   filo tratteggiato e un pezzo grigio dell'anello: disegnarli; (c) l'app elenca tutti i filtri
   dell'anno: dire se e dove tagliare; (d) senza notti nell'anno prima ne' tratteggio ne'
@@ -33,10 +35,6 @@ Consegna controllata: dce48035 (v79, 10/11), in `handoff/design/` al posto della
   (h) a 700 px le etichette dei mesi si accavallano («marapr»), anche in tavola; (i) a 860 e
   1280 lo scarto «−2 h 20» va a capo a meta'. Disegnare (d), (e), (f) negli stati. Dettaglio in
   `differenze-dalle-tavole.md`.
-
-## Date, da controllare alla consegna
-
-Nessuna.
 
 ## Fatte
 
