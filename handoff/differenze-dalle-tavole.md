@@ -251,8 +251,6 @@ Fuori per ora (esiti della lista fissa):
   Perche': i progetti non esistono ancora (passi 44, 44.1).
 - **Il Sole.** Tavola: la scelta Luna/Sole e la carta del Sole con Kp (55-72). App: la scelta ha
   solo «Luna», come lo stato «Sole non disponibile» della tavola (570). Perche': passi 46.10-46.12.
-- **«Il 2026» a barre e «Filtri del 2026».** Arrivano col commit D; fino ad allora in fondo resta
-  la sezione dell'anno di prima.
 
 Diverse dalla tavola:
 - **Le sei carte del meteo restano le stesse anche a notte coperta.** Tavola: con la notte
@@ -281,3 +279,25 @@ Diverse dalla tavola:
   (passo 10); 25 e 65 vengono dalla scala della Luna del Meteo.
 - **Giorni polari.** Tavola: «fino al 12 agosto» (427). App: senza la data. Perche': il backend
   non scrive quando il buio torna.
+
+## Dashboard -- Il 2026 e Filtri del 2026 (passo 33, commit D, 11/11)
+
+Diverse dalla tavola:
+- **«4,6 notti al mese».** Tavola: «4.6» col punto (Dashboard.dc.html 132). App: «4,6». Perche':
+  errore della tavola, la virgola decimale e' di Marco (6/11). A Design.
+- **I frame senza filtro.** Tavola: solo filtri con nome (533). App: ultima riga «Filtro non
+  indicato» col pallino a filo tratteggiato, e nell'anello un pezzo grigio. Perche': le quote
+  fanno 100 solo con loro; e' l'insieme 'Filtro non indicato' delle Notti (9/11). A Design.
+- **Un filtro a colori nell'anello.** Tavola: un colore pieno per «RGB» (535). App: tre fette R,
+  G, B, come le strisce del pallino. Perche': la strisciata del foglio dentro un conic-gradient
+  cancella l'anello intero (collaudo 11/11). A Design.
+- **Quanti filtri.** Tavola: cinque righe. App: tutti i filtri dell'anno. Perche': un archivio con
+  piu' filtri non ne perde; nessuna regola dice dove tagliare. A Design se va tagliato.
+- **Senza l'anno prima.** Tavola: sempre il 2025 tratteggiato e il confronto. App: senza notti
+  nell'anno prima niente tratteggio, niente «2025» in legenda e niente confronto. Perche': un
+  confronto con zero ore non dice niente al primo anno di un archivio. A Design.
+- **Un anno senza ore.** Tavola: non c'e'. App: «0 h in 0 notti», media «—», e in Filtri
+  «Nessuna posa nel 2026, per ora.» al posto dell'anello (Marco, 11/11). A Design.
+- **L'anno che non risponde.** Tavola: non c'e'. App: un Avviso riga «L'anno non si legge: l'app
+  non risponde.» al posto delle due carte. A Design.
+- **Il quadretto per giorno** (tavola v37) esce: la v79 non lo disegna.

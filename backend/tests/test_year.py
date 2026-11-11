@@ -1,5 +1,5 @@
-"""L'anno della Dashboard (tavola v37, `as-dashboard__anno`): "il 2026, fino a oggi". Le notti, le
-ore, la media a notte e al mese, e un quadretto per giorno colorato per ore riprese."""
+"""L'anno della Dashboard (tavola v79, «Il 2026, fino a oggi» e «Filtri del 2026»): le notti, le
+ore, la media a notte e al mese, una barra per mese accanto all'anno prima, la quota dei filtri."""
 
 import datetime as dt
 
@@ -48,23 +48,6 @@ def test_the_averages_are_per_night_and_per_elapsed_month(conn):
     assert anno.per_month == 0.2  # gia' a un decimale, come la mostra lo schermo
 
 
-def test_one_square_per_day_with_its_level_and_the_days_still_to_come(conn):
-    """Le soglie sono quelle della legenda della tavola: 0 h, meno di 2, 2-4, 4-6, oltre 6."""
-    giorni = {g.date: g for g in year.of(conn, OGGI).days}
-    assert len(giorni) == 366  # il 2024 e' bisestile
-    assert giorni["2024-05-17"].level == "under2"
-    assert giorni["2024-05-18"].level == "4to6"
-    assert giorni["2024-05-18"].integration_s == 18000
-    assert giorni["2024-05-19"].level == "none"
-    assert giorni["2024-10-01"].level == "future"
-
-
-def test_the_grid_starts_on_monday(conn):
-    """Sette righe da lunedi': il primo gennaio 2024 e' un lunedi', il 2026 comincia di giovedi'."""
-    assert year.of(conn, OGGI).lead_blank == 0
-    assert year.of(conn, dt.date(2026, 3, 1)).lead_blank == 3
-
-
 def test_in_the_first_month_the_average_divides_by_a_whole_month(conn):
     """Una notte il primo gennaio e' una notte al mese, non trentuno (Marco, 16/10/2026)."""
     posa(conn, quando="2025-01-01T21:00:00Z", esposizione=3600.0, hash_="capodanno")
@@ -97,6 +80,17 @@ def test_the_year_before_month_by_month_and_in_the_same_period(conn):
     assert anno.months[5].previous_s == 7200
     assert anno.months[11].previous_s == 3600
     assert anno.previous_same_period_s == 7200
+    # «128 h 40 contro 131 h · −2 h 20»: la differenza col segno, gia' fatta
+    assert (anno.previous_known, anno.vs_previous_s) == (True, 23400 - 7200)
+
+
+def test_without_the_year_before_there_is_nothing_to_compare(conn):
+    """Il primo anno di un archivio non ha un anno prima: niente tratteggio ne' confronto, non un
+    confronto con zero ore."""
+    anno = year.of(conn, dt.date(2025, 9, 30))
+    assert anno.previous_known is True  # il 2024 ha le sue notti
+    primo = year.of(conn, dt.date(2023, 12, 31))
+    assert primo.previous_known is False
 
 
 def test_on_february_29_the_same_period_ends_on_the_28th(conn):
@@ -123,11 +117,46 @@ def test_the_hours_per_filter_with_their_share_and_the_frames_naming_none(conn):
     posa(conn, quando="2024-06-02T21:00:00Z", esposizione=10800.0, filtro_id=ha, hash_="h")
     corri(conn)
     anno = year.of(conn, OGGI)
+    # i frame senza filtro per ultimi, come nelle misure della notte: chiave e banda UNKNOWN
     assert [(f.name, f.passband, f.integration_s, f.share_pct) for f in anno.filters] == [
         ("Ha", "ha", 10800, 30),
         ("OIII", "oiii", 1800, 5),
+        ("__no_filter__", "UNKNOWN", 23400, 65),
     ]
-    assert (anno.no_filter_s, anno.no_filter_pct) == (23400, 65)
+
+
+def test_the_ring_pieces_follow_each_other_on_the_exact_shares(conn):
+    """L'anello dei filtri: ogni pezzo comincia dove finisce l'altro, sulle quote esatte e non su
+    quelle arrotondate, e l'ultimo chiude a 100."""
+    ha = filtro(conn, "Ha", "ha")
+    posa(conn, quando="2024-06-02T21:00:00Z", esposizione=11700.0, filtro_id=ha, hash_="h")
+    corri(conn)
+    pezzi = [(f.ring_from, f.ring_to) for f in year.of(conn, OGGI).filters]
+    assert pezzi == [(0.0, 33.333), (33.333, 100.0)]
+
+
+def test_fractional_exposures_close_the_ring_at_100(db_path):
+    """Due filtri da 300,6 s: arrotondati uno per uno fanno 602 su 601. Le quote stanno sui
+    secondi esatti, l'anello chiude a 100 e la rotta risponde (revisione 11/11)."""
+    c = connect(db_path)
+    prepara(c)
+    luogo(c, ROMA)
+    ha, oiii = filtro(c, "Ha", "ha"), filtro(c, "OIII", "oiii")
+    posa(c, quando="2024-06-01T21:00:00Z", esposizione=300.6, filtro_id=ha, hash_="h")
+    posa(c, quando="2024-06-01T22:00:00Z", esposizione=300.6, filtro_id=oiii, hash_="o")
+    corri(c)
+    c.commit()
+    anno = year.of(c, OGGI)
+    assert anno.filters[-1].ring_to == 100.0
+    assert sum(f.share_pct for f in anno.filters) == 100
+    c.close()
+    with TestClient(create_app(db_path), base_url="http://localhost") as client:
+        assert client.get("/api/v1/year").status_code == 200
+
+
+def test_a_year_without_hours_has_no_filters(conn):
+    anno = year.of(conn, dt.date(2025, 2, 1))
+    assert anno.filters == []
 
 
 def test_the_shares_add_up_to_100(conn):
@@ -137,7 +166,7 @@ def test_the_shares_add_up_to_100(conn):
     posa(conn, quando="2024-06-02T21:00:00Z", esposizione=23400.0, filtro_id=b, hash_="g")
     corri(conn)
     anno = year.of(conn, OGGI)
-    assert sum(f.share_pct for f in anno.filters) + anno.no_filter_pct == 100
+    assert sum(f.share_pct for f in anno.filters) == 100
 
 
 def test_the_route_answers_the_year_of_the_home_site(db_path, conn):
@@ -145,18 +174,16 @@ def test_the_route_answers_the_year_of_the_home_site(db_path, conn):
         r = c.get("/api/v1/year")
     assert r.status_code == 200, r.text
     detto = r.json()
-    assert set(detto) >= {
+    assert set(detto) == {
         "year",
         "until",
         "nights",
         "integration_s",
         "per_night_s",
         "per_month",
-        "lead_blank",
-        "days",
         "months",
         "previous_same_period_s",
+        "previous_known",
+        "vs_previous_s",
         "filters",
-        "no_filter_s",
-        "no_filter_pct",
     }

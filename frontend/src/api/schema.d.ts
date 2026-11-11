@@ -5952,22 +5952,6 @@ export interface components {
             /** Stages */
             stages: components["schemas"]["StageRecord"][];
         };
-        /** YearDayOut */
-        YearDayOut: {
-            /**
-             * Date
-             * @description `YYYY-MM-DD`, a night date.
-             */
-            date: string;
-            /**
-             * Level
-             * @description `future` after today; `none` without hours; then the board's legend: under 2 h, 2-4, 4-6, over 6.
-             * @enum {string}
-             */
-            level: "future" | "none" | "under2" | "2to4" | "4to6" | "over6";
-            /** Integration S */
-            integration_s: number;
-        };
         /** YearFilterOut */
         YearFilterOut: {
             /**
@@ -5984,9 +5968,19 @@ export interface components {
             integration_s: number;
             /**
              * Share Pct
-             * @description Of the year's `integration_s`, rounded.
+             * @description Of the year's `integration_s`, whole: they add up to 100.
              */
             share_pct: number;
+            /**
+             * Ring From
+             * @description Where its piece of the ring starts, in %.
+             */
+            ring_from: number;
+            /**
+             * Ring To
+             * @description Where it ends: the next one starts here, the last ends at 100.
+             */
+            ring_to: number;
         };
         /** YearMonthOut */
         YearMonthOut: {
@@ -6044,16 +6038,6 @@ export interface components {
              */
             per_month: number;
             /**
-             * Lead Blank
-             * @description Empty squares before January 1 in a Monday-first week grid (0-6).
-             */
-            lead_blank: number;
-            /**
-             * Days
-             * @description Every day of the year, January 1 first.
-             */
-            days: components["schemas"]["YearDayOut"][];
-            /**
              * Months
              * @description January to December.
              */
@@ -6064,17 +6048,20 @@ export interface components {
              */
             previous_same_period_s: number;
             /**
+             * Previous Known
+             * @description The year before has nights: without, neither dashed bars nor comparison.
+             */
+            previous_known: boolean;
+            /**
+             * Vs Previous S
+             * @description `integration_s` less `previous_same_period_s`: negative when behind.
+             */
+            vs_previous_s: number;
+            /**
              * Filters
-             * @description The year's filters, the most shot first.
+             * @description The year's filters, the most shot first; the frames naming none last, as `__no_filter__` of band `UNKNOWN`. Empty without hours.
              */
             filters: components["schemas"]["YearFilterOut"][];
-            /**
-             * No Filter S
-             * @description The frames naming no filter, outside `filters`.
-             */
-            no_filter_s: number;
-            /** No Filter Pct */
-            no_filter_pct: number;
         };
     };
     responses: never;

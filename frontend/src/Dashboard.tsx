@@ -22,11 +22,12 @@ import { useStanotte } from "./Stanotte"
 
 /**
  * The **Dashboard** on board v79: tonight's big card (Night and Solar System), the Moon with its
- * calendar, the night's weather in six cards, the next three nights, and what is left to answer.
+ * calendar, the night's weather in six cards, the next three nights, what is left to answer, and
+ * the year with its filters.
  * Nothing is computed here: the numbers arrive written by `/tonight`, `/weather` and the archive.
  *
  * - **Out until their step**: projects and the finished-projects question (44, 44.1), the Sun
- *   and Kp (46.10-46.12); the year at the board's shape comes with the next commit.
+ *   and Kp (46.10-46.12).
  */
 
 // the skeleton's cards at the real ones' sizes (board v79, `SK`)
@@ -513,6 +514,7 @@ export function Dashboard() {
           {tempo}
           {inizio}
           {prossime}
+          {!senzaArchivio && <AnnoDellaDashboard formato={formato} />}
         </div>
       )
     } else {
@@ -534,11 +536,7 @@ export function Dashboard() {
             </div>
           )}
           {prossime}
-          {!senzaArchivio && (
-            <div style={{ gridColumn: "1 / -1" }}>
-              <AnnoDellaDashboard lettura={null} />
-            </div>
-          )}
+          {!senzaArchivio && <AnnoDellaDashboard formato={formato} />}
         </div>
       )
     }

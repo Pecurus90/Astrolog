@@ -1,19 +1,17 @@
-"""The year so far, for the Dashboard: nights, hours, one square per day (board v37), a bar per
-month beside the year before and the share of each filter (board v79)."""
+"""The year so far, for the Dashboard (board v79): nights, hours, a bar per month beside the year
+before and the share of each filter, with its piece of the ring."""
 
 import calendar
 import datetime as dt
 import sqlite3
 from dataclasses import dataclass
-from enum import StrEnum
 
+from ..vocab.filters import Passband
 from . import counts, filters_used
-
-# The board's legend: 0 h, under 2, 2-4, 4-6, over 6. [T] Design board
-_EDGES_H = ((2, "under2"), (4, "2to4"), (6, "4to6"))
+from .night_criteria import NO_FILTER
 
 # Same frames as the Nights page: inside a night, copies left out. Two sites on one date make one
-# square, so the calendar counts dates, not night rows.
+# night, so the year counts dates, not night rows.
 _PER_DATE = f"""
 SELECT n.night_date AS night_date, COALESCE(SUM(f.exposure_s), 0) AS integration_s
 FROM frames f JOIN nights n ON {counts.of(counts.Subject.NIGHT)}
@@ -30,22 +28,6 @@ WHERE f.copy_of IS NULL AND n.night_date BETWEEN ? AND ?
 GROUP BY f.filter_id
 ORDER BY integration_s DESC, {filters_used.order_by("x")}
 """  # noqa: S608 - our columns
-
-
-class Level(StrEnum):
-    FUTURE = "future"
-    NONE = "none"
-    UNDER2 = "under2"
-    BETWEEN2_4 = "2to4"
-    BETWEEN4_6 = "4to6"
-    OVER6 = "over6"
-
-
-@dataclass(frozen=True, slots=True)
-class Day:
-    date: str
-    level: Level
-    integration_s: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +47,8 @@ class FilterShare:
     passband: str
     integration_s: int
     share_pct: int
+    ring_from: float
+    ring_to: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,23 +59,11 @@ class Year:
     integration_s: int
     per_night_s: int | None
     per_month: float
-    lead_blank: int
-    days: list[Day]
     months: list[Month]
     previous_same_period_s: int
+    previous_known: bool
+    vs_previous_s: int
     filters: list[FilterShare]
-    no_filter_s: int
-    no_filter_pct: int
-
-
-def _level(seconds: float) -> Level:
-    if seconds <= 0:
-        return Level.NONE
-    hours = seconds / 3600
-    for edge, name in _EDGES_H:
-        if hours < edge:
-            return Level(name)
-    return Level.OVER6
 
 
 def _per_date(conn: sqlite3.Connection, first: dt.date, last: dt.date) -> dict[str, float]:
@@ -112,10 +84,8 @@ def _same_day_before(today: dt.date) -> dt.date:
     return dt.date(today.year - 1, today.month, day)
 
 
-def _months(conn: sqlite3.Connection, today: dt.date, shot: dict[str, float]) -> list[Month]:
+def _months(now: list[int], then: list[int], today: dt.date) -> list[Month]:
     """The bars on the fullest month of both years: the comparison reads at a glance."""
-    before = _per_date(conn, dt.date(today.year - 1, 1, 1), dt.date(today.year - 1, 12, 31))
-    now, then = _by_month(shot), _by_month(before)
     top = max([*now, *then, 1])
     return [
         Month(
@@ -131,25 +101,32 @@ def _months(conn: sqlite3.Connection, today: dt.date, shot: dict[str, float]) ->
     ]
 
 
-def _filters(
-    conn: sqlite3.Connection, today: dt.date, total: int
-) -> tuple[list[FilterShare], int, int]:
-    """Each filter's time and share of the year, the most shot first, then the time and share of
-    the frames naming no filter."""
+def _filters(conn: sqlite3.Connection, today: dt.date) -> list[FilterShare]:
+    """Each filter's time and share, the most shot first, no filter last (as the night's
+    measures). On exact seconds: rounded one by one, two of 300.6 s make 602 of 601."""
     rows = conn.execute(_PER_FILTER, (dt.date(today.year, 1, 1).isoformat(), today.isoformat()))
-    named, none_s = [], 0
+    named: list[tuple[str, str, float]] = []
+    none_s = 0.0
     for r in rows:
-        seconds = round(r["integration_s"])
         if r["name"] is None:
-            none_s = seconds
-        elif seconds > 0:
-            named.append((r["name"], r["passband"], seconds))
-    *pcts, none_pct = _shares([s for _, _, s in named] + [none_s], total)
-    shares = [FilterShare(n, b, s, p) for (n, b, s), p in zip(named, pcts, strict=True)]
-    return shares, none_s, none_pct
+            none_s = r["integration_s"]
+        elif r["integration_s"] > 0:
+            named.append((r["name"], r["passband"], r["integration_s"]))
+    if none_s > 0:
+        named.append((NO_FILTER, Passband.UNKNOWN.value, none_s))
+    total = sum(s for _, _, s in named)
+    pcts = _shares([s for _, _, s in named], total)
+    shares, done = [], 0.0
+    last = len(named) - 1
+    for i, ((name, band, seconds), pct) in enumerate(zip(named, pcts, strict=True)):
+        start = done * 100 / total
+        done += seconds
+        end = 100.0 if i == last else done * 100 / total
+        shares.append(FilterShare(name, band, round(seconds), pct, round(start, 3), round(end, 3)))
+    return shares
 
 
-def _shares(parts: list[int], total: int) -> list[int]:
+def _shares(parts: list[float], total: float) -> list[int]:
     """Whole percents that add up to 100: the leftover points go to the largest remainders
     (Hamilton's method), so the list and the ring never say 99 or 101."""
     if not total:
@@ -164,18 +141,13 @@ def _shares(parts: list[int], total: int) -> list[int]:
 
 def of(conn: sqlite3.Connection, today: dt.date) -> Year:
     """From January 1 to `today`, the night date of now at home. A night with frames but no timed
-    frame is a night all the same, of level `none`."""
-    first = dt.date(today.year, 1, 1)
-    shot = _per_date(conn, first, today)
+    frame is a night all the same."""
+    shot = _per_date(conn, dt.date(today.year, 1, 1), today)
     total = round(sum(shot.values()))
-    period_before = _per_date(conn, dt.date(today.year - 1, 1, 1), _same_day_before(today))
-    filters, no_filter_s, no_filter_pct = _filters(conn, today, total)
-    days = []
-    for i in range(366 if calendar.isleap(today.year) else 365):
-        day = first + dt.timedelta(days=i)
-        key = day.isoformat()
-        seconds = round(shot.get(key, 0))
-        days.append(Day(key, Level.FUTURE if day > today else _level(seconds), seconds))
+    before = _per_date(conn, dt.date(today.year - 1, 1, 1), dt.date(today.year - 1, 12, 31))
+    period_before = round(
+        sum(s for d, s in before.items() if d <= _same_day_before(today).isoformat())
+    )
     # At least a whole month: one night on the first of January is one a month, not thirty-one.
     months = max(1.0, today.month - 1 + today.day / calendar.monthrange(today.year, today.month)[1])
     return Year(
@@ -185,11 +157,9 @@ def of(conn: sqlite3.Connection, today: dt.date) -> Year:
         integration_s=total,
         per_night_s=round(total / len(shot)) if shot else None,
         per_month=round(len(shot) / months, 1),
-        lead_blank=first.weekday(),
-        days=days,
-        months=_months(conn, today, shot),
-        previous_same_period_s=round(sum(period_before.values())),
-        filters=filters,
-        no_filter_s=no_filter_s,
-        no_filter_pct=no_filter_pct,
+        months=_months(_by_month(shot), _by_month(before), today),
+        previous_same_period_s=period_before,
+        previous_known=bool(before),
+        vs_previous_s=total - period_before,
+        filters=_filters(conn, today),
     )
