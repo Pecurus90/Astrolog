@@ -1,257 +1,131 @@
 // @vitest-environment jsdom
 /**
- * La **Dashboard** sul disegno v37 (`pagine/dashboard.html` del progetto Design), prima fetta: la
- * testa di stanotte, le sei carte del meteo della notte col grafico che si apre sotto, le prossime
- * tre notti, cio' che resta da riprendere e i progetti che ancora non ci sono.
- *
- * La pagina non calcola niente: verdetto, ore serene, giudizi e conti arrivano scritti dal
- * backend. Qui si prova che li mostra al posto della tavola e che i gesti aprono cio' che dicono.
+ * La **Dashboard** piena (tavola v79): la carta grande con le ore di posa e il Sistema solare,
+ * la Luna col calendario, le sei carte del meteo, le prossime 3 notti, Da riprendere. Ogni numero
+ * a schermo e' quello che l'API ha scritto.
  */
 import { fireEvent, screen, within } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 
 import { pulisci } from "./banco"
-import { NOTTE, NOTTE_ARCHIVIO, PROSSIME, montaDashboard, notti } from "./dashboard-banco"
+import { NOTTE, SCALA_DELLA_LUNA, STANOTTE_PIENA, montaDashboard } from "./dashboard-banco"
 import { misura } from "./meteo-banco"
 
 afterEach(pulisci)
-afterEach(() => vi.unstubAllGlobals())
 
-async function apriDashboard(altre: Record<string, unknown> = {}, larga?: number) {
-  await montaDashboard({ altre, larga })
-  return screen.findByRole("region", { name: /stanotte a Casa/i })
-}
+const testo = () => document.body.textContent ?? ""
 
-describe("la Dashboard, stanotte", () => {
-  it("in testa il sito, le ore di buio sereno col semaforo grande e la Luna con fase, luce e orari", async () => {
-    const stanotte = await apriDashboard()
-
-    expect(stanotte.querySelector(".as-dashboard__grande")?.textContent).toBe("3 ore di buio sereno")
-    expect(stanotte.querySelector(".as-semaforo--grande")?.textContent).toBe("incerta")
-    const luna = await within(stanotte).findByText("Gibbosa calante, illuminata al 62%")
-    expect(luna.closest(".as-luna")?.textContent).toContain("sorge alle 23:40 · tramonta alle 15:17")
+describe("la Dashboard piena", () => {
+  it("la carta grande dice le ore di posa, il verdetto e da dove vengono", async () => {
+    await montaDashboard()
+    expect(await screen.findByText("Ore di posa stanotte")).toBeDefined()
+    expect(screen.getByText("4,6 ore")).toBeDefined()
+    expect(screen.getByText("✓ notte buona")).toBeDefined()
+    const sotto = testo()
+    expect(sotto).toContain("3,1 in banda larga, 1,5 solo banda stretta")
+    expect(sotto).toContain("buio 20:48–05:48")
+    expect(sotto).toContain("trasparenza media 78/100")
+    expect(sotto).toContain("3 modelli d'accordo su 4")
+    expect(sotto).toContain("vento a 700 hPa 15 km/h, meno vento in 2 notti su 10 dell'ultimo anno")
   })
 
-  it("le sei carte del meteo della notte, sempre al loro posto, con l'eta' della previsione", async () => {
-    const stanotte = await apriDashboard()
-
-    const carte = await within(stanotte).findAllByRole("button", { expanded: false, name: /buio|Meteoblue|hPa|10 m|rugiada|ottico|Non disponibile/ })
-    expect(carte.map((c) => c.querySelector(".as-parametro__nome")?.textContent)).toEqual(["Nuvole", "Seeing", "Jet stream", "Vento", "Condensa", "Aerosol"])
-    expect(stanotte.querySelector(".as-dashboard__aggiornato")?.textContent).toMatch(/^Previsione del 25 settembre, /)
+  it("la fascia della ripresa e le due tessere vengono dai tratti del buio", async () => {
+    await montaDashboard()
+    await screen.findByText("Ore di posa stanotte")
+    expect(screen.getAllByText("banda larga").length).toBeGreaterThan(0)
+    expect(screen.getByText("2 h 52")).toBeDefined()
+    expect(screen.getByText("6 h 08")).toBeDefined()
+    expect(testo()).toContain("23:40–05:48")
   })
 
-  it("la carta delle Nuvole non ha la riga del giudizio: la sua parola e' il verdetto in testa", async () => {
-    const stanotte = await apriDashboard()
-
-    const [nuvole, , , vento] = await within(stanotte).findAllByRole("button", { expanded: false, name: /buio|Meteoblue|hPa|10 m|rugiada|ottico|Non disponibile/ })
-    expect(nuvole?.querySelector(".as-semaforo")).toBeNull()
-    expect(vento?.querySelector(".as-semaforo")?.textContent).toContain("non adatta dalle")
-    expect(vento?.querySelector(".as-parametro__picco")?.textContent).toBe("raffiche fino a 35 km/h tra le 22:00 e le 23:00")
+  it("la vista del Sistema solare dice il pianeta piu' alto e quando sorgono gli altri", async () => {
+    await montaDashboard()
+    fireEvent.click(await screen.findByRole("tab", { name: "Sistema solare" }))
+    expect(await screen.findByText("Più alto stanotte, nel Sistema solare")).toBeDefined()
+    expect(screen.getAllByText("Saturno").length).toBeGreaterThan(0)
+    expect(screen.getByText("41° alle 23:00")).toBeDefined()
+    expect(testo()).toContain("Giove sorge alle 23:05")
+    expect(testo()).toContain("Venere tramonta alle 19:40")
   })
 
-  it("una carta apre sotto il suo grafico, una alla volta, e chiudi lo richiude", async () => {
-    const stanotte = await apriDashboard()
-
-    const vento = within(stanotte).getAllByRole("button", { name: /a 10 m/ })[0] as HTMLElement
-    const condensa = within(stanotte).getByRole("button", { name: /rugiada/ })
-    fireEvent.click(vento)
-    expect(vento.getAttribute("aria-expanded")).toBe("true")
-    const pannello = document.getElementById(vento.getAttribute("aria-controls") ?? "") as HTMLElement
-    expect(pannello.hidden).toBe(false)
-    expect(pannello.textContent).toContain("Vento, dal tramonto all'alba")
-    expect(pannello.querySelector("svg .as-scala__tratto")).not.toBeNull()
-
-    fireEvent.click(condensa)
-    expect(vento.getAttribute("aria-expanded")).toBe("false")
-    expect(condensa.getAttribute("aria-expanded")).toBe("true")
-
-    const aperto = document.getElementById(condensa.getAttribute("aria-controls") ?? "") as HTMLElement
-    fireEvent.click(within(aperto).getByRole("button", { name: "chiudi" }))
-    expect(condensa.getAttribute("aria-expanded")).toBe("false")
-    expect(document.activeElement).toBe(condensa)
+  it("la Luna porta fase, pillole e calendario a tre gradini, con la notte ripresa", async () => {
+    await montaDashboard()
+    expect(await screen.findByText("La Luna stanotte")).toBeDefined()
+    // nella carta della Luna e nella legenda del grafico
+    expect(screen.getAllByText("sorge 23:40 · tramonta domani 15:17")).toHaveLength(2)
+    expect(screen.getByText(/^distanza 371.200 km$/)).toBeDefined()
+    expect(screen.getByText("sorge a est-nord-est")).toBeDefined()
+    expect(await screen.findByText("banda larga buona, Luna fino al 25%")).toBeDefined()
+    expect(screen.getByText("al limite, fino al 65%")).toBeDefined()
+    const giorno = await screen.findByRole("button", { name: /19 settembre.*notte di ripresa/ })
+    fireEvent.click(giorno)
+    expect(await screen.findByText("Casa: M 31 · M 33 · 180 frame")).toBeDefined()
+    expect(screen.getByRole("link", { name: "Apri la notte in Notti" }).getAttribute("href")).toBe("/notti?notte=7")
   })
 
-  it("Meteo porta alla pagina del Meteo, Stanotte intera apre Stanotte", async () => {
-    const stanotte = await apriDashboard()
-
-    expect(within(stanotte).getByRole("link", { name: "Meteo" }).getAttribute("href")).toBe("/meteo")
-    fireEvent.click(within(stanotte).getByRole("button", { name: "Stanotte intera" }))
-    expect(await screen.findByRole("dialog", { name: "Stanotte" })).toBeDefined()
-  })
-})
-
-describe("la Dashboard, le prossime tre notti", () => {
-  it("dopo stanotte le tre notti seguenti col giorno, le ore serene e il semaforo, verso il Meteo", async () => {
-    await apriDashboard()
-
-    const prossime = await screen.findByRole("region", { name: "meteo delle prossime 3 notti" })
-    const serate = within(prossime).getAllByRole("link")
-    expect(serate).toHaveLength(3)
-    expect(serate[0]?.textContent).toContain("Domenica 27")
-    expect(serate[0]?.textContent).toContain("nessuna serena")
-    expect(serate[0]?.textContent).toContain("non adatta")
-    expect(serate[1]?.textContent).toContain("8 ore · 21–05")
-    expect(serate[1]?.textContent).toContain("buona")
-    expect(serate[1]?.getAttribute("href")).toBe("/meteo")
-    expect(serate[1]?.getAttribute("aria-label")).toBe("Meteo di lunedì 28")
+  it("il dettaglio della Luna si apre e si chiude", async () => {
+    await montaDashboard()
+    fireEvent.click(await screen.findByRole("link", { name: "La Luna in dettaglio" }))
+    const det = await screen.findByRole("region", { name: "La Luna, in dettaglio" })
+    expect(within(det).getByText("21 giorni")).toBeDefined()
+    fireEvent.click(within(det).getByRole("link", { name: "Chiudi il dettaglio" }))
+    expect(screen.queryByRole("region", { name: "La Luna, in dettaglio" })).toBeNull()
   })
 
-  it("la terza e' gia' tendenza, come nel Meteo: lo dice, con le ore di buio e non quelle serene", async () => {
-    await apriDashboard()
-
-    const prossime = await screen.findByRole("region", { name: "meteo delle prossime 3 notti" })
-    const terza = within(prossime).getAllByRole("link")[2]
-    expect(terza?.querySelector("b")?.textContent).toBe("Martedì 29 · tendenza")
-    expect(terza?.textContent).toContain("9 ore di buio")
-  })
-})
-
-describe("la Dashboard, il cielo delle prossime notti", () => {
-  it("ogni notte dice il cielo in parole col suo segno, la pioggia e le ore di buio senza Luna", async () => {
-    const pioggia = misura("rain", { level: "nogo", since: "2026-09-27T17:00:00+02:00" })
-    const notti = [
-      { ...PROSSIME[0], sky_word: "overcast", moonless_dark_hours: 0, measures: [pioggia] },
-      { ...PROSSIME[1], sky_word: "clear", moonless_dark_hours: 3 },
-      { ...PROSSIME[2], sky_word: "scattered", moonless_dark_hours: 4 },
-    ]
-    await montaDashboard({ previsione: { nights: [NOTTE, ...notti] } })
-
-    const serate = within(await screen.findByRole("region", { name: "meteo delle prossime 3 notti" })).getAllByRole("link")
-    expect(serate.map((s) => s.querySelector("p span:last-child")?.textContent)).toEqual([
-      "Coperto, pioggia dalle 17",
-      "Sereno · 3 h di buio senza Luna",
-      "Nuvole sparse · 4 h di buio senza Luna",
-    ])
-    expect(serate.map((s) => s.querySelector("svg.as-icona-meteo use")?.getAttribute("href"))).toEqual(["#i-m-pioggia", "#i-m-sereno", "#i-m-velato"])
-  })
-})
-
-describe("la Dashboard, da riprendere", () => {
-  it("i casi da confermare con Rispondi, e l'ultima notte verso la sua pagina", async () => {
-    await apriDashboard()
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    expect(await within(lavoro).findByText("32 da confermare")).toBeTruthy()
-    expect(within(lavoro).getByRole("link", { name: "Rispondi" }).getAttribute("href")).toBe("/da-confermare")
-    const ultima = await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })
-    expect(ultima.getAttribute("href")).toBe("/notti?notte=7")
-    expect(ultima.textContent).toContain("4 h 12 min su M 31 e altri 2, 180 frame")
+  it("le sei carte del meteo, ognuna al suo posto; senza chiave il seeing lo dice", async () => {
+    await montaDashboard()
+    expect(await screen.findByText("Meteo della notte")).toBeDefined()
+    for (const nome of ["Nuvole", "Seeing", "Jet stream", "Vento", "Condensa", "Aerosol"]) {
+      expect(screen.getAllByText(nome).length).toBeGreaterThan(0)
+    }
+    expect(testo()).toContain("serve una chiave Meteoblue")
+    expect(testo()).toContain("Previsione del 30 settembre")
   })
 
-  it("con un oggetto solo la notte dice quello, senza altri", async () => {
-    await apriDashboard(notti([{ ...NOTTE_ARCHIVIO, objects: NOTTE_ARCHIVIO.objects.slice(0, 1) }]))
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    const ultima = await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })
-    expect(ultima.textContent).toContain("4 h 12 min su M 31, 180 frame")
+  it("le prossime 3 notti: il giorno, la ripresa, le ore di posa e il cielo", async () => {
+    await montaDashboard()
+    expect(await screen.findByText("Le prossime 3 notti")).toBeDefined()
+    expect(screen.getByText("Giovedì 1")).toBeDefined()
+    expect(screen.getByText("nessuna ora di posa")).toBeDefined()
+    expect(screen.getByText("8,4 ore di posa · 21–06")).toBeDefined()
+    expect(screen.getByText("Coperto · 96%")).toBeDefined()
+    expect(screen.getByText("9 ore di buio · tendenza")).toBeDefined()
+    // la tendenza non ha le ore, ma la sua Trasparenza c'e'
+    expect(screen.getAllByText("trasparenza media nel buio").length).toBe(3)
   })
 
-  it("una notte i cui file non dicono la durata non scrive un tempo", async () => {
-    await apriDashboard(notti([{ ...NOTTE_ARCHIVIO, integration_s: 0 }]))
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    const ultima = await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })
-    expect(ultima.textContent).toContain("M 31 e altri 2, 180 frame senza durata")
-    expect(ultima.textContent).not.toContain("0 s")
+  it("una Luna che tramonta la sera e sorge il mattino dopo lo dice in quest'ordine", async () => {
+    await montaDashboard({ stanotte: { moon: { ...STANOTTE_PIENA.moon, set: "2026-09-30T17:07:00+02:00", rise: "2026-10-01T09:49:00+02:00" } } })
+    expect((await screen.findAllByText("tramonta 17:07 · sorge domani 09:49")).length).toBeGreaterThan(0)
   })
 
-  it("sotto i casi da confermare i frame che non stanno in nessuna notte (tavola dashboard-stati-coperta)", async () => {
-    await apriDashboard(notti([NOTTE_ARCHIVIO], 214))
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    const riga = (await within(lavoro).findByText("32 da confermare")).closest(".as-riga")
-    expect(riga?.textContent).toContain("214 frame fuori dai conti")
+  it("un aerosol fra le due soglie non e' un dato che manca: dice fra quali", async () => {
+    const aerosol = misura("aerosol", { level: null, value: 0.14, axis_max: 0.2 })
+    await montaDashboard({
+      previsione: {
+        nights: [{ ...NOTTE, measures: [...NOTTE.measures.filter((m) => m.code !== "aerosol"), aerosol] }],
+        scales: [SCALA_DELLA_LUNA, { code: "aerosol", steps: [{ level: "nogo", bound: 1, strict: false }, { level: null, bound: 0.1, strict: false }], lower_is_worse: false }],
+      },
+    })
+    expect(await screen.findByText("fra 0,1 e 1")).toBeDefined()
+    expect(screen.getByText("0,14")).toBeDefined()
   })
 
-  it("con niente da confermare i frame fuori dai conti portano a Notti, che dice dove si risponde", async () => {
-    await apriDashboard({ ...notti([NOTTE_ARCHIVIO], 3), "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } } })
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    const fuori = await within(lavoro).findByRole("link", { name: /3 frame fuori dai conti/ })
-    expect(fuori.getAttribute("href")).toBe("/notti")
-    expect(within(lavoro).queryByRole("link", { name: "Rispondi" })).toBeNull()
+  it("Da riprendere: i casi da confermare portano a rispondere, i frame fuori alle Notti", async () => {
+    await montaDashboard({ altre: { "/api/v1/nights": { stato: 200, corpo: {
+      items: [], total: 0, limit: 1, offset: 0, totals: { nights: 1, frames: 500, integration_s: 0, untimed: 0, objects: 3 },
+      waiting: [{ answer_at: "site", frames: 412 }], waiting_frames: 412, still_reading: 0, reading_done_pct: null } } } })
+    expect(await screen.findByText("Da confermare, 32")).toBeDefined()
+    expect(screen.getByRole("link", { name: "Rispondi" }).getAttribute("href")).toBe("/da-confermare")
+    expect(screen.getByText("412 frame fuori dai conti")).toBeDefined()
+    expect(screen.getByRole("link", { name: "Vedi in Notti" }).getAttribute("href")).toBe("/notti")
   })
 
-  it("mentre i casi da confermare caricano i frame fuori dai conti non diventano un rimando a Notti", async () => {
-    const mai = new Promise(() => {})
-    await apriDashboard({ ...notti([NOTTE_ARCHIVIO], 3), "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 }, attesa: mai } })
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })
-    expect(within(lavoro).queryByRole("link", { name: /fuori dai conti/ })).toBeNull()
-  })
-
-  it("senza frame fuori dai conti la riga non ne parla", async () => {
-    await apriDashboard()
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    await within(lavoro).findByText("32 da confermare")
-    expect(lavoro.textContent).not.toContain("fuori dai conti")
-  })
-
-  it("senza notti nell'archivio non c'e' l'ultima notte, e niente da confermare non e' una riga", async () => {
-    await apriDashboard({ ...notti([]), "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } } })
-
-    await screen.findByRole("region", { name: "meteo delle prossime 3 notti" })
-    expect(screen.queryByRole("region", { name: "da riprendere" })).toBeNull()
-  })
-})
-
-describe("la Dashboard, i progetti", () => {
-  it("finche' i progetti non esistono la loro sezione lo dice, con Crea un progetto primario verso Progetti", async () => {
-    const stanotte = await apriDashboard()
-
-    const progetti = await screen.findByRole("region", { name: "progetti in corso" })
-    expect(within(stanotte).queryByText(/^Nessun progetto in corso\./)).toBeNull()
-    expect(within(progetti).getByText(/^Nessun progetto in corso\./)).toBeTruthy()
-    const crea = within(progetti).getByRole("link", { name: "Crea un progetto" })
-    expect(crea.getAttribute("href")).toBe("/progetti")
-    expect(crea.className).toContain("as-bottone--primario")
-    expect(progetti.parentElement?.className).toBe("as-dashboard__coppia")
-  })
-
-  it("col primario sui progetti Rispondi scende a tenue", async () => {
-    await apriDashboard()
-
-    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
-    expect((await within(lavoro).findByRole("link", { name: "Rispondi" })).className).toContain("as-bottone--tenue")
-  })
-})
-
-describe("la Dashboard sul telefono", () => {
-  const sulTelefono = () => apriDashboard({}, 390)
-
-  it("ha il suo markup: stanotte col vuoto dei progetti, niente da riprendere e niente rimandi", async () => {
-    const stanotte = await sulTelefono()
-
-    expect(document.querySelector(".as-dashboard")?.className).toBe("as-dashboard as-tel-dash")
-    expect(within(stanotte).getByText(/^Nessun progetto in corso\./)).toBeTruthy()
-    expect(screen.queryByRole("region", { name: "da riprendere" })).toBeNull()
-    expect(within(stanotte).queryByRole("link", { name: "Meteo" })).toBeNull()
-  })
-
-  it("le sei misure sono carte piccole; toccata, una apre sotto il suo grafico, chiudi lo richiude", async () => {
-    const stanotte = await sulTelefono()
-
-    const carte = [...stanotte.querySelectorAll<HTMLButtonElement>("button.as-tel-carta")]
-    expect(carte.map((c) => c.querySelector(".as-tel-carta__nome")?.textContent)).toEqual(["Nuvole", "Seeing", "Jet stream", "Vento", "Condensa", "Aerosol"])
-    const vento = carte[3] as HTMLButtonElement
-    fireEvent.click(vento)
-    const dettaglio = document.getElementById(vento.getAttribute("aria-controls") ?? "") as HTMLElement
-    expect(dettaglio.className).toBe("as-tel-dettaglio")
-    expect(dettaglio.hidden).toBe(false)
-    expect(dettaglio.querySelector("svg")?.getAttribute("viewBox")).toBe("0 0 340 170")
-    fireEvent.click(within(dettaglio).getByRole("button", { name: "chiudi" }))
-    expect(dettaglio.hidden).toBe(true)
-    expect(document.activeElement).toBe(vento)
-  })
-
-  it("le prossime 3 notti stanno in una riga sempre aperta, senza collegamenti", async () => {
-    await sulTelefono()
-
-    const riga = (await screen.findByRole("heading", { level: 3, name: "Le prossime 3 notti" })).closest("li") as HTMLElement
-    expect(riga.className).toBe("as-tel-sez as-tel-sez--aperta")
-    expect(riga.querySelectorAll("article.as-serata")).toHaveLength(3)
-    expect(within(riga).queryAllByRole("link")).toHaveLength(0)
+  it("sul telefono le prossime notti mostrano la prima, le altre a richiesta", async () => {
+    await montaDashboard({ larga: 390 })
+    expect(await screen.findByText("Giovedì 1")).toBeDefined()
+    expect(screen.queryByText("Venerdì 2")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: /Le altre 2 notti/ }))
+    expect(await screen.findByText("Venerdì 2")).toBeDefined()
   })
 })

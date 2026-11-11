@@ -238,91 +238,57 @@ quando l'app intanto e' passata ad altro: le altre restano lette, e quella si ri
 
 La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
 
-- **In testa**: il sito, quante **ore di buio sereno** ci sono stanotte e il semaforo con la sua
-  parola (buona, incerta, non adatta). Accanto la **Luna**: la fase, quanto e' illuminata, quando
-  sorge e quando tramonta. **Toccala** e sotto si apre il suo dettaglio: quanto e' illuminata,
-  quanti giorni ha, a che ora sorge e **da che parte** (a est-nord-est), fin dove **sale** stanotte
-  e a che ora (*sotto l'orizzonte* se stanotte non sorge), quando tramonta, quanto e' lontana, e in che
-  notte cadono la prossima **Luna nuova** e la prossima **piena**. Accanto, il **calendario** di
-  questo mese e del prossimo (le frecce passano dall'uno all'altro): ogni giorno col disco della
-  Luna, *nuova* e *piena* nel loro giorno, oggi contornato, e **colorate le notti buone per la
-  banda larga** secondo le due soglie delle Impostazioni, sezione *Luna*. Passa sopra un giorno e
-  leggi la Luna e le ore di buio senza Luna. Il calendario lo prepara l'app da sola in background
-  appena c'e' un sito di casa: nei primi secondi puo' non esserci ancora. Lo stesso dopo che sposti
-  il sito di casa o ne scegli un altro: quello del posto di prima sparisce subito, e il nuovo
-  compare da solo entro un minuto circa (anche la prossima nuova e piena aspettano lui).
-- **La volta**: la notte disegnata, da mezz'ora prima dell'ora del tramonto a mezz'ora dopo l'ora
-  piu' vicina all'alba, coi colori veri del crepuscolo. Sopra l'orizzonte salgono e scendono **Saturno, Giove,
-  Marte e Venere** e la **Luna**, ognuno col suo nome nel punto piu' alto; le righe a tratti dicono
-  quando comincia il buio, quando sorge la Luna e quando il buio finisce. Le **nuvole** velano ogni
-  ora quanto e' coperta, e se stanotte non c'e' nessuna ora serena una coltre copre tutto e le
-  curve si spengono. Passa col puntatore e leggi, per quell'ora, quanto buio senza Luna resta da
-  li' a fine notte (*Senza Luna ancora 1 h 50 min*; se non ne resta, la riga non c'e') e quanto e'
-  alto ognuno. Sul telefono i nomi stanno nella legenda sotto: toccane uno e la sua curva si accende.
+- **La carta grande, in testa**: quante **ore di posa** ti da' stanotte e il verdetto della notte
+  (buona, incerta, non adatta, ognuno col suo segno). Le ore di posa sono le ore di buio pesate
+  per quanta luce lascia passare il cielo, la **Trasparenza** del Meteo. Sotto, cosa permette la
+  Luna (per esempio *dopo le 23:40 consigliata banda stretta*) e una riga con le ore divise fra
+  **banda larga** e **solo banda stretta**, il buio, i tratti senza Luna, la Trasparenza media,
+  quanti modelli sono d'accordo e il vento in quota. Il grafico va da mezz'ora prima del tramonto
+  a dopo l'alba, con le fasce del crepuscolo: la **Trasparenza ora per ora** e la **Luna**
+  tratteggiata; sotto, una fascia dice quando si riprende in banda larga e quando solo in banda
+  stretta. Passa col puntatore, o usa le frecce, e leggi i valori a quell'ora.
+  La vista **Sistema solare** mostra invece Saturno, Giove, Marte, Venere e la Luna: in testa il
+  pianeta piu' alto stanotte, con l'altezza e l'ora, e quando sorgono o tramontano gli altri.
+- **La Luna**: la fase, quanto e' illuminata, quando sorge e tramonta, fin dove sale, quanto e'
+  lontana, quanti giorni ha e da che parte sorge. Due tessere dicono quante ore di buio stanotte
+  sono **banda larga** e quante **solo banda stretta**, e quando. La freccia apre il dettaglio.
+  Sotto, il **calendario** di questo mese e del prossimo: ogni giorno ha il suo gradino -- banda
+  larga buona con la Luna fino al 25%, al limite fino al 65%, poi solo banda stretta -- e le ore
+  di buio senza Luna; *nuova* e *piena* nel loro giorno. Una **stella** segna le notti che hai
+  ripreso: toccala e leggi dove e cosa, con la freccia che apre quella notte nelle Notti. Il
+  calendario lo prepara l'app da sola appena c'e' un sito di casa: nei primi secondi puo' non
+  esserci ancora, e lo dice.
 - **Il meteo della notte**: sei carte, sempre nello stesso ordine -- Nuvole, Seeing, Jet stream,
-  Vento, Condensa, Aerosol -- come quelle del Meteo in piccolo: il valore della notte, cosa vuol
-  dire, il giudizio con le sue ore, le barrette ora per ora e il picco. Tocca una carta e sotto si
-  apre il suo grafico **dal tramonto all'alba**, sul cielo coi suoi colori; una alla volta,
-  *chiudi* lo richiude. *Stanotte intera* apre il pannello di Stanotte, *Meteo* porta alla
-  pagina intera.
-- **Le prossime 3 notti**: il giorno, le ore serene e il semaforo; ognuna porta al Meteo. La
-  terza e' gia' **tendenza**, come nel Meteo: dice le ore di buio, non quelle serene.
-- **I progetti in corso** non esistono ancora: la loro sezione lo dice, e *Crea un progetto* --
-  la cosa da fare adesso -- porta alla pagina Progetti, che arrivera'. Durante la **prima
-  scansione** la sezione dice invece quanti oggetti la lettura ha trovato finora -- o, finche'
-  non ne ha riconosciuto nessuno, che li sta ancora cercando.
-- **Da riprendere**, accanto: quante domande ci sono **da confermare**, con *Rispondi*, e sotto
-  quanti frame sono **fuori dai conti** -- quelli che non stanno ancora in nessuna notte e non
-  aspettano una tua risposta in Da confermare (quelli li conta gia' la riga sopra): il sito da
-  dichiarare, o una data che manca. Se da confermare non c'e' niente, la riga porta alle Notti, che
-  dicono dove si risponde. Durante la prima scansione i frame fuori dai conti non si contano
-  ancora. Poi l'ultima notte che hai ripreso -- quanto tempo, su quale oggetto (quello con piu'
-  tempo, e quanti altri) e quanti frame -- che si apre nelle Notti. Se i file di quella notte non
-  dicono la durata, invece del tempo leggi *frame senza durata*. Se non c'e' niente da riprendere,
-  la sezione non c'e'.
-- **L'anno**, in fondo: *il 2026, fino a oggi*, con quante **notti** hai ripreso, quante **ore**,
-  quante ore **a notte in media** e quante **notti al mese**. Sotto, un **quadretto per giorno**
-  da gennaio a dicembre, una colonna per settimana da lunedi': piu' e' chiaro, piu' ore hai ripreso
-  quella notte (0 h, meno di 2, 2-4, 4-6, oltre 6); i giorni che devono ancora venire sono solo
-  contornati. Passa sopra un quadretto e leggi il giorno e le ore. "Oggi" e' la notte in corso, da
-  mezzogiorno a mezzogiorno. Durante la **prima scansione**, finche' ogni frame non ha la sua notte,
-  accanto al titolo c'e' *in lettura* con la percentuale dei frame gia' messi nella loro notte,
-  notti e ore dicono *finora* e le medie aspettano *a scansione finita*. Sul telefono l'anno non c'e': lo trovi sul desktop.
+  Vento, Condensa, Aerosol -- col valore della notte, le barrette ora per ora nei colori del
+  giudizio, il picco e il giudizio. Senza chiave Meteoblue il seeing non c'e', e la carta lo dice;
+  con un jet stream molto forte scrive *scarso*, la stima di Meteoblue. La freccia porta al Meteo.
+- **Le prossime 3 notti**: il giorno, cosa permette la Luna, il verdetto, le ore di posa con le
+  ore buone, il cielo in parole (*Sereno*, *Nuvole sparse*, *Nuvoloso*, *Coperto*, contati in
+  ottavi di cielo come i bollettini meteo) con la pioggia, e una piccola curva della Trasparenza.
+  La terza e' gia' **tendenza**: dice le ore di buio.
+- **Da riprendere**, in cima quando serve: quante domande ci sono **da confermare**, con
+  *Rispondi*, e quanti frame sono **fuori dai conti** -- quelli che non stanno in nessuna notte --
+  con la freccia verso le Notti.
+- **L'anno**, in fondo: quante notti e ore hai ripreso quest'anno, mese per mese.
 
-Sul **telefono** la pagina e' piu' corta: in testa stanotte e la cosa da fare adesso (oggi *Crea un
-progetto*), la Luna che toccata apre il suo dettaglio, la volta piu' piccola con un'ora ogni
-quattro e i nomi nella legenda sotto, poi le sei carte piccole, tre per riga, che toccate aprono
-sotto il loro grafico, e le prossime 3 notti. Alle altre pagine -- le Notti, Da confermare, il Meteo -- si va dalla barra in
-basso.
+Sul **telefono** le carte stanno una sotto l'altra; delle prossime notti vedi la prima, e *Le
+altre 2 notti* apre le altre.
 
-Quando manca qualcosa, in testa alla parte che manca una riga dice cosa e cosa fare, con un'azione
-sola in evidenza; il resto della pagina resta quello che si puo' calcolare:
+Quando manca qualcosa, la parte che manca lo dice, e il resto resta:
 
-- **Senza un sito** la pagina mostra solo i passi per cominciare: prima *Scegli il sito*, poi
-  l'archivio, che resta spento finche' il sito non c'e'.
-- **Senza una cartella d'archivio** in testa c'e' *archivio vuoto* con *Scegli la cartella*;
-  stanotte e il meteo ci sono gia', perche' dipendono solo dal sito, e progetti, notti e anno
-  compaiono dopo la prima scansione. Sul telefono, dove l'anno non c'e', queste frasi non lo
-  promettono.
-- **Se il meteo non risponde** e non resta una previsione che valga, in testa leggi quanto dura il
-  buio di stanotte (e' calcolo, non previsione) e *Non disponibile*; al posto delle carte e delle
-  prossime notti un allarme dice da quando non arriva risposta e che l'app riprova da sola ogni 15
-  minuti, con *Riprova ora*. Se a non rispondere e' l'app stessa sul meteo, la pagina lo dice in
-  cima; progetti, da riprendere e l'anno vengono dall'archivio e restano al loro posto.
-- **Durante la prima scansione** sotto le prossime notti una riga dice quanti file ha letto su
-  quanti della cartella che sta leggendo e, dopo il primo minuto, quanto le manca al ritmo tenuto
-  finora; i conti crescono man mano. Vale anche per una cartella nuova aggiunta a un archivio gia'
-  letto: e' la sua prima lettura.
-  In *da riprendere* i casi da confermare si contano a scansione finita, e l'ultima notte e' la
-  piu' recente trovata finora.
-- **Le prossime 3 notti** dicono anche il cielo in parole, col suo segno -- *Sereno*, *Nuvole sparse*,
-  *Nuvoloso*, *Coperto*, dalla copertura media nel buio contata in ottavi di cielo come fanno i
-  bollettini meteo (okta): *Sereno* solo senza nuvole, *Coperto* solo a cielo tutto chiuso -- la pioggia da che ora, e le ore di buio senza Luna, quelle buone per
-  la banda larga.
+- **Senza un sito** la pagina mostra *Per cominciare*: scegli il sito e, se manca, la cartella
+  delle riprese.
+- **Senza una cartella d'archivio** *Per cominciare* propone la cartella; stanotte, la Luna e il
+  meteo ci sono gia', perche' dipendono solo dal sito.
+- **Durante la prima scansione** *Per cominciare* dice quanti file ha letto su quanti e quanto
+  manca; i casi da confermare arrivano a scansione finita.
+- **Se il meteo non risponde** e non resta una previsione che valga, la carta del meteo lo dice,
+  con *Riprova ora*: l'app riprova anche da sola. In testa leggi quanto dura il buio, che si
+  calcola. Prima della prima previsione la carta dice che e' in arrivo.
+- **Se il fuso orario del sito non si riconosce**, in cima un avviso porta a modificare il sito.
 
-Se
-qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che non
-ha potuto leggere.
+Se qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che
+non ha potuto leggere.
 
 ## Archivio
 

@@ -19,7 +19,6 @@ src/CartaDelParametro.tsx
 src/ChiaveMeteoblue.tsx
 src/CieloDelleNubi.tsx
 src/Confermare.tsx
-src/Dashboard.tsx
 src/Domanda.tsx
 src/FiltriUsati.tsx
 src/GestiDelPezzo.tsx
@@ -28,7 +27,6 @@ src/ImpostazioniCartelle.tsx
 src/ImpostazioniLetture.tsx
 src/ImpostazioniLuna.tsx
 src/ImpostazioniSito.tsx
-src/LunaDettaglio.tsx
 src/Meteo.tsx
 src/ModuloDelGesto.tsx
 src/NotteDelMeteo.tsx
@@ -51,7 +49,6 @@ src/SezioneStessoPezzo.tsx
 src/Soggetti.tsx
 src/Tendina.tsx
 src/TendinaDellaBanda.tsx
-src/Volta.tsx
 src/Vuoto.tsx
 src/Wizard.tsx
 src/WizardFolders.tsx
@@ -118,7 +115,6 @@ tests/impostazioni-riconoscitore.test.tsx
 tests/impostazioni-servizi.test.tsx
 tests/impostazioni-sito.test.tsx
 tests/impostazioni.test.tsx
-tests/luna-dettaglio.test.tsx
 tests/mattoni.test.tsx
 tests/meteo-banco.tsx
 tests/meteo-stati.test.tsx
@@ -132,7 +128,6 @@ tests/scheletro.test.tsx
 tests/singolare.test.ts
 tests/stanotte.test.tsx
 tests/veste.test.tsx
-tests/volta.test.tsx
 tests/wizard-cartelle.test.tsx
 tests/wizard-sito.test.tsx
 tests/wizard-solver.test.tsx

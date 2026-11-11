@@ -3470,6 +3470,8 @@ export interface components {
             lit_side: "left" | "right";
             /** @description The highest point of the night. **Never absent**, not even without rise and set times: a Moon that does not rise still climbs, below the horizon, and how little it climbs is the answer. */
             highest: components["schemas"]["SkyPointOut"];
+            /** @description The highest drawn point inside the chart's span: what the Dashboard says it climbs to tonight. `None` without a chart. */
+            highest_in_chart?: components["schemas"]["SkyPointOut"] | null;
             /**
              * Track
              * @description The altitude curve along the night, for whoever draws it. The first and last points are the two ends of the night: a chart that closed earlier would lose the last half hour.
@@ -4283,6 +4285,18 @@ export interface components {
             key: "saturn" | "jupiter" | "mars" | "venus";
             /** Track */
             track: components["schemas"]["SkyPointOut"][];
+            /**
+             * Rise
+             * @description Its first rise inside the chart's span; `None`: not there.
+             */
+            rise?: string | null;
+            /**
+             * Set
+             * @description As `rise`, its first set.
+             */
+            set?: string | null;
+            /** @description Its top inside the chart's span; `None` without a chart. */
+            highest?: components["schemas"]["SkyPointOut"] | null;
         };
         /** ProbeOut */
         ProbeOut: {
@@ -4908,6 +4922,24 @@ export interface components {
             dark_hours: number;
         };
         /**
+         * ShootingStretchOut
+         * @description A stretch of tonight's dark and what the Moon lets you shoot in it: broadband while it is
+         *     down or below the Meteo's Moon scale's no-go (ING 65%), narrowband only above.
+         */
+        ShootingStretchOut: {
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "broadband" | "narrowband";
+            /** Starts At */
+            starts_at: string;
+            /** Ends At */
+            ends_at: string;
+            /** Seconds */
+            seconds: number;
+        };
+        /**
          * Sides
          * @description Width and height: degrees for the field, millimetres for the sensor.
          */
@@ -5264,6 +5296,27 @@ export interface components {
             moonless_dark: components["schemas"]["DarkStretchOut"][];
             /** @description `None` when the Moon is never up in the dark, or no night. */
             moon_in_dark?: components["schemas"]["MoonInDarkOut"] | null;
+            /**
+             * Shooting
+             * @description The dark in time order, split by band; together they make `dark_s`. Empty without a night.
+             * @default []
+             */
+            shooting: components["schemas"]["ShootingStretchOut"][];
+            /**
+             * Highest Planet
+             * @description The planet whose top inside the chart is highest, among those that rise there (above the planets' rise altitude); `None` when none does.
+             */
+            highest_planet?: ("saturn" | "jupiter" | "mars" | "venus") | null;
+            /**
+             * Broadband Dark S
+             * @description Of `dark_s`, the broadband stretches together; `None` as it.
+             */
+            broadband_dark_s?: number | null;
+            /**
+             * Narrowband Dark S
+             * @description Of `dark_s`, the narrowband stretches together.
+             */
+            narrowband_dark_s?: number | null;
         };
         /**
          * TypelessFolder

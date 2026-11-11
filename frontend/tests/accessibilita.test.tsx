@@ -60,6 +60,8 @@ describe("l accessibilita della prima pagina", () => {
           },
           // Il piede si monta **pieno**, fasce comprese: senza, axe guarda una tela che nessun
           // utente vedra' mai -- l'API le manda sempre.
+          planets: [],
+          shooting: [],
           sky_bands: [
             { starts_at: "2026-09-19T12:00:00+02:00", ends_at: "2026-09-19T19:00:00+02:00", kind: "day" },
             { starts_at: "2026-09-19T19:00:00+02:00", ends_at: "2026-09-19T20:30:00+02:00", kind: "civil" },
@@ -112,6 +114,8 @@ describe("l accessibilita della prima pagina", () => {
           },
           // Il piede si monta **pieno**, fasce comprese: senza, axe guarda una tela che nessun
           // utente vedra' mai -- l'API le manda sempre.
+          planets: [],
+          shooting: [],
           sky_bands: [
             { starts_at: "2026-09-19T12:00:00+02:00", ends_at: "2026-09-19T19:00:00+02:00", kind: "day" },
             { starts_at: "2026-09-19T19:00:00+02:00", ends_at: "2026-09-19T20:30:00+02:00", kind: "civil" },

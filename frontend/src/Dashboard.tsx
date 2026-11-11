@@ -1,104 +1,121 @@
 import { useQuery } from "@tanstack/react-query"
-import { Fragment, type ReactNode, useContext, useRef, useState } from "react"
+import { useNavigate } from "react-router"
 import { Link } from "react-router"
 
 import { AnnoDellaDashboard } from "./Anno"
-import { Avanza, Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import type { SegnoDellaMisura } from "./Icons"
-import { CartaDelTelefono, CartaDellaDashboard } from "./CartaDelParametro"
-import { type Destra, ScalaDellaMisura } from "./CieloDelleNubi"
-import { useStato } from "./Scansiona"
-import { PrimaDellaPrevisione, senzaPrevisioneIn, silenzio, useAggiorna, usePrevisione } from "./Meteo"
-import { OreSerene, oreDellaVoce, verdetto } from "./NotteDelMeteo"
-import { MENTRE_LEGGE_MS } from "./Notti"
-import { Semaforo } from "./Semaforo"
-import { LunaDettaglio, LunaInTesta } from "./LunaDettaglio"
-import { ApriStanotte, useStanotte } from "./Stanotte"
-import { Volta } from "./Volta"
-import { AzioniDelVuoto, VuotoDellaSezione } from "./Vuoto"
 import { api } from "./api/client"
-import type { components } from "./api/schema"
-import { useColonnaStretta } from "./colonna"
-import { type Chiave, durata, fa, giorno, giornoBreve, giornoEMese, giornoENumero, maiuscola, numero, oraDelSito, orario, t } from "./i18n"
 import { useRevisione } from "./api/revisione"
-
-type Meteo = components["schemas"]["WeatherOut"]
-type Notte = Meteo["nights"][number]
-type NotteDellArchivio = components["schemas"]["Night"]
-
-/** Le sei carte del meteo, sempre al loro posto (Marco, 12/10/2026, `docs/domini/meteo.md`). */
-const SEI: readonly Destra[] = ["cloud", "seeing", "jet", "wind", "condensation", "aerosol"]
-
+import { Avviso } from "./componenti/Avviso"
+import { Carta } from "./componenti/Carta"
+import { useFormato } from "./componenti/formato"
+import { Pagina } from "./componenti/Pagina"
+import { type CartaScheletro, Scheletro } from "./componenti/Scheletro"
+import type { Formato } from "./componenti/Tema"
+import { DashboardLuna } from "./DashboardLuna"
+import { MeteoDellaNotte, ProssimeNotti } from "./DashboardMeteo"
+import { DashboardNotte } from "./DashboardNotte"
+import { mesiBrevi, numero, oreEMinuti, t } from "./i18n"
+import { usePrevisione } from "./Meteo"
+import { MENTRE_LEGGE_MS } from "./Notti"
+import { useStato } from "./Scansiona"
+import { useStanotte } from "./Stanotte"
 
 /**
- * La **Dashboard** sul disegno v37 (`pagine/dashboard.html` e `dashboard-telefono.html` del
- * progetto Design): stanotte in testa con la Luna, le sei carte del meteo della notte che aprono
- * sotto il loro grafico, le prossime tre notti, i progetti e cio' che resta da riprendere.
+ * The **Dashboard** on board v79: tonight's big card (Night and Solar System), the Moon with its
+ * calendar, the night's weather in six cards, the next three nights, and what is left to answer.
+ * Nothing is computed here: the numbers arrive written by `/tonight`, `/weather` and the archive.
  *
- * - **Qui non si calcola niente**: verdetto, ore serene, giudizi e conti arrivano scritti, dalle
- *   stesse query del Meteo, di Stanotte e della barra.
- * - **Il telefono ha un markup suo** (`as-tel-dash`): stanotte e la cosa da fare adesso, le carte
- *   piccole, le prossime notti in una riga sempre aperta; niente rimandi ad altre pagine, ci va la
- *   barra in basso.
- * - I progetti ancora non esistono: lo dice la loro sezione, e il suo e' il primario della pagina.
+ * - **Out until their step**: projects and the finished-projects question (44, 44.1), the Sun
+ *   and Kp (46.10-46.12); the year at the board's shape comes with the next commit.
  */
-export function Dashboard() {
-  const meteo = usePrevisione()
-  const detto = meteo.data
-  const [telefono, misura] = useColonnaStretta()
-  // senza una cartella e senza un frame non c'e' archivio: la prima azione e' scegliere la cartella.
-  // Le cartelle tolte lasciano i loro frame, e un archivio con le sue notti non e' vuoto.
-  // la prima scansione al lavoro: i conti crescono ancora, e la pagina lo dice
-  const stato = useStato().data
-  const scan = stato?.scan
-  const lettura = scan?.first && scan.state === "running" && scan.last_event ? { ...scan.last_event, manca: scan.remaining_s ?? null } : null
-  const cartelle = useQuanteCartelle().data
-  // rilegge finche' la spina lavora alla prima lettura, non solo mentre si leggono i file
-  const primaInCorso = scan?.first === true && stato?.worker.state === "running"
-  const archivio = useArchivio(primaInCorso).data
-  // la prima lettura finisce quando `group` ha dato a ogni frame la sua notte, non con lo stadio scan
-  const ancoraInLettura = lettura !== null || (scan?.first === true && (archivio ? archivio.still_reading > 0 : primaInCorso))
-  const archivioVuoto = cartelle?.total === 0 && archivio?.totals?.frames === 0
-  // per tutta la prima lettura; finche' le notti non rispondono, zero: "sta ancora cercando"
-  const trovati = ancoraInLettura ? archivio?.totals?.objects ?? 0 : null
-  const sito = detto?.site ?? null
-  // il meteo che non risponde senza una previsione che valga: la notte e le prossime non si dicono
-  const giu = detto ? silenzio(detto) !== null && senzaPrevisioneIn(detto) : false
-  // progetti, da riprendere e l'anno vengono dall'archivio: ci sono anche se il meteo non risponde
-  const conArchivio = (sito !== null || meteo.isError) && !archivioVuoto && !telefono
-  return (
-    <div className="as-pagina" ref={misura}>
-      <PrimaDellaPrevisione meteo={meteo} senzaSito={false} />
-      <div className={telefono ? "as-dashboard as-tel-dash" : "as-dashboard"}>
-        {detto && sito === null && <PerCominciare archivioVuoto={archivioVuoto} telefono={telefono} />}
-        {sito && archivioVuoto && <ArchivioVuoto />}
-        {detto && sito && (
-          <Stanotte detto={detto} sito={sito} telefono={telefono}
-            giu={giu ? { quando: detto.fetched_at, ogni: detto.retry_s, primario: !archivioVuoto } : null}
-            progetti={!archivioVuoto} trovati={trovati} />
-        )}
-        {detto && sito && !giu && <Prossime detto={detto} telefono={telefono} />}
-        {lettura && <PrimaLettura lettura={lettura} />}
-        {/* sul telefono sotto non arriva niente: la frase prometterebbe progetti e anno */}
-        {sito && archivioVuoto && !telefono && <Seguito />}
-        {conArchivio && (
-          <div className="as-dashboard__coppia">
-            <Progetti trovati={trovati} />
-            <DaRiprendere finora={lettura !== null} />
-          </div>
-        )}
-        {/* sul telefono l'anno non c'e': la tavola dice "nient'altro"; si guarda sul desktop */}
-        {conArchivio && (
-          <AnnoDellaDashboard lettura={ancoraInLettura ? archivio?.reading_done_pct ?? 0 : null} />
-        )}
-      </div>
-    </div>
-  )
-}
 
-/** L'archivio in una riga: l'ultima notte e i totali (`limit=1`). Mentre la spina legge, o restano
- *  frame senza notte, si rilegge da sola, o la percentuale della lettura resterebbe ferma. */
+// the skeleton's cards at the real ones' sizes (board v79, `SK`)
+const SCHELETRO_DESK: CartaScheletro[] = [
+  {
+    col: "span 7",
+    h: "606px",
+    blocchi: [
+      { riga: [{ h: "36px", w: "300px" }, t("ui.loading")], tra: true },
+      { h: "16px", w: "180px" },
+      { h: "64px", w: "260px" },
+      { h: "16px", w: "62%" },
+      { flex: "1", w: "100%" },
+      { h: "28px", w: "48%" },
+    ],
+  },
+  {
+    col: "span 5",
+    h: "606px",
+    blocchi: [
+      { h: "36px", w: "150px" },
+      {
+        riga: [
+          { h: "76px", w: "76px", r: "50%", flex: "none" },
+          {
+            figli: [
+              { h: "14px", w: "40%" },
+              { h: "22px", w: "65%" },
+              { h: "14px", w: "55%" },
+            ],
+            gap: "8px",
+            flex: "1",
+          },
+        ],
+        gap: "18px",
+      },
+      { h: "24px", w: "100%" },
+      { flex: "1", w: "100%" },
+    ],
+  },
+  {
+    col: "span 12",
+    h: "348px",
+    blocchi: [
+      { h: "24px", w: "220px" },
+      {
+        griglia: "repeat(6,minmax(0,1fr))",
+        gap: "12px",
+        flex: "1",
+        figli: [1, 2, 3, 4, 5, 6].map(() => ({ h: "100%" })),
+      },
+    ],
+  },
+  {
+    col: "span 12",
+    h: "308px",
+    blocchi: [
+      { h: "24px", w: "200px" },
+      { flex: "1", w: "100%" },
+    ],
+  },
+]
+const SCHELETRO_TEL: CartaScheletro[] = [
+  {
+    h: "470px",
+    blocchi: [
+      { h: "36px", w: "80%" },
+      t("ui.loading"),
+      { h: "48px", w: "55%" },
+      { flex: "1", w: "100%" },
+    ],
+  },
+  {
+    h: "260px",
+    blocchi: [
+      { h: "36px", w: "45%" },
+      { flex: "1", w: "100%" },
+    ],
+  },
+  {
+    h: "230px",
+    blocchi: [
+      { h: "22px", w: "50%" },
+      { flex: "1", w: "100%" },
+    ],
+  },
+]
+
+/** The archive in one line: the latest night and the totals. While the spine reads, it rereads. */
 function useArchivio(leggendo: boolean) {
   return useQuery({
     queryKey: ["nights", "ultima"],
@@ -111,8 +128,8 @@ function useArchivio(leggendo: boolean) {
   })
 }
 
-/** Le cartelle d'archivio scelte: la stessa query delle Impostazioni. */
-function useQuanteCartelle() {
+/** The archive folders chosen: the same query as the Settings. */
+function useCartelle() {
   return useQuery({
     queryKey: ["folders"],
     queryFn: async () => {
@@ -123,401 +140,408 @@ function useQuanteCartelle() {
   })
 }
 
-/** Senza sito non si calcola niente (tavola dashboard-stati v37): due passi in fila, il sito aperto
- *  e l'archivio dopo, spento finche' il primo non e' fatto. Con l'archivio gia' scelto, uno. */
-function PerCominciare({ archivioVuoto, telefono }: { archivioVuoto: boolean; telefono: boolean }) {
-  return (
-    <section className="as-dashboard__inizio" aria-labelledby="dash-inizio">
-      <p className="as-soprattitolo" id="dash-inizio">{t("dashboard.start.kicker")}</p>
-      {archivioVuoto && <p className="as-dashboard__inizio-titolo">{t("dashboard.start.title")}</p>}
-      <div className="as-dashboard__passi">
-        <Avviso esito="ora" segno={numero(1)} pagina titolo={t("dashboard.start.site.title")}
-          azioni={<Bottone verso="primario" a="/impostazioni/sito">{t("dashboard.start.site.how")}</Bottone>}>
-          {t("dashboard.start.site.text")}
-        </Avviso>
-        {archivioVuoto && (
-          <Avviso esito="dopo" segno={numero(2)} pagina titolo={t("dashboard.start.archive.title")}>
-            {t("dashboard.start.archive.text")}
-          </Avviso>
-        )}
+type Passo = {
+  titolo: string
+  testo: string
+  azione?: { l: string; a: string }
+  barra?: { pct: number; righe: string[] }
+}
+
+/** A step of Per cominciare: the first one full, the second in outline (board v55.4). */
+function PassoDelVia({ passo: p, n, formato }: { passo: Passo; n: number; formato: Formato }) {
+  const tel = formato === "telefono"
+  const primo = n === 1
+  const tondo = {
+    background: primo ? "var(--accento)" : "transparent",
+    color: primo ? "var(--giorno-su-testo)" : "var(--tenue)",
+    boxShadow: primo ? "none" : "inset 0 0 0 1.5px var(--linea)",
+  }
+  const fondo = { background: primo ? "var(--carta-2)" : "transparent" }
+  const azione = p.azione && (
+    <Link
+      className={`al-bottone ${primo ? "al-bottone--pieno" : "al-bottone--contorno"}${tel ? " al-bottone--blocco" : ""}`}
+      to={p.azione.a}
+    >
+      {p.azione.l}
+    </Link>
+  )
+  const barra = p.barra && (
+    <>
+      <span
+        className="al-dash__riga-23"
+        role="progressbar"
+        aria-label={t("dashboard.scan.bar")}
+        aria-valuenow={p.barra.pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <span className="al-dash__pillola-5" style={{ width: `${p.barra.pct}%` }} />
+      </span>
+      <span className={tel ? "al-dash__colonna-18" : "al-dash__riga-24"}>
+        {p.barra.righe.map((r) => (
+          <span key={r} className={tel ? "al-dash__testo-40" : "al-dash__pillola-6"}>
+            {r}
+          </span>
+        ))}
+      </span>
+    </>
+  )
+  if (tel) {
+    return (
+      <div className="al-dash__colonna-28" style={{ ...fondo, padding: primo ? "16px" : "0 16px" }}>
+        <span className="al-dash__riga-41">
+          <span className="al-dash__tondo-14" style={tondo}>
+            {numero(n)}
+          </span>
+          <b className="al-dash__testo-38" style={{ fontWeight: primo ? 600 : 500 }}>
+            {p.titolo}
+          </b>
+        </span>
+        <span className="al-dash__testo-39">{p.testo}</span>
+        {barra}
+        {azione}
       </div>
-      <p className="as-dashboard__dopo">{t(telefono ? "dashboard.start.after.phone" : "dashboard.start.after")}</p>
-    </section>
-  )
-}
-
-/** L'archivio senza cartelle: in testa alla pagina, con la sua azione, la prima. */
-function ArchivioVuoto() {
-  return (
-    <Avviso esito="attesa" pagina titolo={t("dashboard.archive.empty.title")}
-      azioni={<Bottone verso="primario" a="/impostazioni/cartelle">{t("dashboard.archive.empty.how")}</Bottone>}>
-      {t("dashboard.archive.empty.text")}
-    </Avviso>
-  )
-}
-
-/** Al posto di progetti, lavoro e anno quando l'archivio non c'e' ancora: una frase sola. */
-function Seguito() {
-  return (
-    <section className="as-dashboard__seguito" aria-labelledby="dash-seguito">
-      <p className="as-soprattitolo" id="dash-seguito">{t("dashboard.later.title")}</p>
-      <div className="as-vuoto as-vuoto--sezione">
-        <p className="as-vuoto__testo">{t("dashboard.later.text")}</p>
-      </div>
-    </section>
-  )
-}
-
-/** Il meteo che non risponde senza una previsione che valga: da quando, ogni quanto riprova. */
-type Giu = { quando: string | null; ogni: number; primario: boolean }
-
-/** La testa di stanotte e il meteo della notte; sul telefono anche la cosa da fare adesso. Col
- *  meteo giu' la testa dice il buio calcolato, e un allarme prende il posto delle carte. */
-function Stanotte({ detto, sito, telefono, giu, progetti, trovati }: {
-  detto: Meteo; sito: string; telefono: boolean; giu: Giu | null; progetti: boolean; trovati: number | null
-}) {
-  const notte = useStanotte().data
-  const luna = notte?.moon ?? null
-  const apriStanotte = useContext(ApriStanotte)
-  const stanotte = giu ? undefined : detto.nights[0]
-  const [lunaAperta, setLunaAperta] = useState(false)
-  const chiudiLuna = () => {
-    setLunaAperta(false)
-    document.getElementById("dash-luna-apri")?.focus()
+    )
   }
   return (
-    <section className="as-dashboard__stanotte" aria-labelledby="dash-titolo">
-      <div className="as-dashboard__testa">
-        <div className="as-dashboard__dice">
-          <p className="as-soprattitolo" id="dash-titolo">{t("dashboard.tonight", { sito })}</p>
-          {stanotte && (
-            <div className="as-dashboard__verdetto">
-              {stanotte.window !== null && (
-                <p className="as-dashboard__grande">
-                  <OreSerene cielo={stanotte} />
-                </p>
-              )}
-              <Semaforo livello={stanotte.verdict} grande>{verdetto(stanotte)}</Semaforo>
-            </div>
-          )}
-          {/* il buio e' calcolo, non previsione: c'e' anche col meteo giu' (tavola dashboard-stati-meteo) */}
-          {giu && notte?.dark_s != null && (
-            <div className="as-dashboard__verdetto">
-              {/* d'estate a nord il buio astronomico non arriva: lo dice la parola, non "0 s" */}
-              {notte.dark_s > 0 ? (
-                <p className="as-dashboard__grande">
-                  <b>{durata(notte.dark_s)}</b> {t("weather.clear.trend")}
-                </p>
-              ) : (
-                <span className="as-meteo__parola">{t("weather.verdict.noNight")}</span>
-              )}
-              <Semaforo livello={null} grande>{t("weather.verdict.unknown")}</Semaforo>
-            </div>
-          )}
-        </div>
-        {luna && <LunaInTesta luna={luna} aperto={lunaAperta} apri={() => setLunaAperta(!lunaAperta)} />}
-      </div>
-      {/* sul telefono la cosa da fare adesso e' il primario della pagina: senza progetti, crearne uno */}
-      {telefono && progetti && <VuotoDeiProgetti trovati={trovati} />}
-      {luna && lunaAperta && <LunaDettaglio luna={luna} chiudi={chiudiLuna} />}
-      {notte && (
-        <Volta stanotte={notte} telefono={telefono}
-          nubi={stanotte ? stanotte.hours.filter((o) => o.shown) : []}
-          coperta={stanotte !== undefined && stanotte.window !== null && stanotte.usable_hours === 0} />
-      )}
-      {giu && <MeteoGiu giu={giu} />}
-      {stanotte && stanotte.window !== null && stanotte.measures.length > 0 && <MeteoDellaNotte detto={detto} notte={stanotte} telefono={telefono} />}
-      {!telefono && (
-        <p className="as-dashboard__rimando">
-          {apriStanotte && (
-            <a href="#" role="button" onClick={(ev) => { ev.preventDefault(); apriStanotte() }}>{t("dashboard.tonight.full")}</a>
-          )}
-          <Link to="/meteo">{t("nav.weather")}</Link>
-        </p>
-      )}
-    </section>
-  )
-}
-
-/** L'allarme del meteo giu': da quando non risponde, ogni quanto riprova da solo, e Riprova ora
- *  (tenue quando il primario della pagina e' un altro). */
-function MeteoGiu({ giu }: { giu: Giu }) {
-  const riprova = useAggiorna()
-  const ogni = numero(Math.round(giu.ogni / 60))
-  return (
-    <Avviso esito="allarme" pagina titolo={t("dashboard.weather.down.title")}
-      azioni={<Bottone verso={giu.primario ? "primario" : "tenue"} onClick={() => riprova.mutate()} disabled={riprova.isPending}>{t("dashboard.weather.down.how")}</Bottone>}>
-      {giu.quando
-        ? t("dashboard.weather.down.text", { giorno: giorno(giu.quando), ora: orario(giu.quando), fa: fa(giu.quando), minuti: ogni })
-        : t("dashboard.weather.down.text.never", { minuti: ogni })}
-    </Avviso>
-  )
-}
-
-/** L'eta' della previsione, come nella testa del Meteo. */
-function Aggiornato({ detto }: { detto: Meteo }) {
-  if (detto.fetched_at === null) return null
-  return (
-    <span className="as-dashboard__aggiornato">
-      {t("weather.head.arrived", { giorno: giornoBreve(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) })}
-    </span>
-  )
-}
-
-/** Le sei carte e, sotto, il grafico di quella aperta: una alla volta. Sul desktop i grafici
- *  stanno sotto la fila; sul telefono ognuno sotto la sua carta piccola. */
-function MeteoDellaNotte({ detto, notte: n, telefono }: { detto: Meteo; notte: Notte; telefono: boolean }) {
-  const [aperta, setAperta] = useState<Destra | null>(null)
-  const carte = useRef<Partial<Record<Destra, HTMLButtonElement | null>>>({})
-  const ore = n.hours.filter((o) => o.shown)
-  const misure = SEI.flatMap((codice) => n.measures.filter((m) => m.code === codice).map((m) => ({ codice, m })))
-  const apri = (codice: Destra) => setAperta(aperta === codice ? null : codice)
-  const chiudi = (codice: Destra) => {
-    setAperta(null)
-    // sul telefono la carta piccola si trova da cio' che governa: non porta un ref
-    const carta = telefono ? document.querySelector<HTMLElement>(`[aria-controls="dash-t-${codice}"]`) : carte.current[codice]
-    carta?.focus()
-  }
-  const pannello = (codice: Destra, fuori?: { id: string; hidden: boolean }) => (
-    <div className="as-pannello" {...fuori}>
-      <div className="as-pannello__capo">
-        <p className="as-pannello__nome">{t("dashboard.weather.panel", { nome: t(`weather.measure.${codice}` as Chiave) })}</p>
-        <Bottone verso="nudo" piccolo onClick={() => chiudi(codice)}>{t("frame.close.word")}</Bottone>
-      </div>
-      {aperta === codice && <ScalaDellaMisura notte={n} ore={ore} scale={detto.scales} codice={codice} telefono={telefono} />}
+    <div
+      className="al-dash__griglia-8"
+      style={{ ...fondo, padding: primo ? "18px 20px" : "2px 20px 6px" }}
+    >
+      <span className="al-dash__tondo-9" style={tondo}>
+        {numero(n)}
+      </span>
+      <span className="al-dash__colonna-2">
+        <b style={{ fontSize: primo ? "17px" : "16px", fontWeight: primo ? 600 : 500 }}>
+          {p.titolo}
+        </b>
+        <span className="al-dash__testo-21">{p.testo}</span>
+        {barra && <span className="al-dash__colonna-14">{barra}</span>}
+      </span>
+      {azione}
     </div>
   )
-  return (
-    <>
-      <div className="as-dashboard__sopra-meteo as-dashboard__meteo-capo">
-        <p className="as-soprattitolo as-dashboard__meteo-titolo">{t("dashboard.weather.title")}</p>
-        <Aggiornato detto={detto} />
-      </div>
-      <div className="as-dashboard__meteo">
-        {telefono ? (
-          <div className="as-tel-carte">
-            {misure.map(({ codice, m }) => (
-              <Fragment key={codice}>
-                <CartaDelTelefono misura={m} notte={n} ore={ore} scala={detto.scales.find((s) => s.code === codice)}
-                  aperta={aperta === codice} governa={`dash-t-${codice}`} apri={() => apri(codice)} />
-                <div className="as-tel-dettaglio" id={`dash-t-${codice}`} hidden={aperta !== codice}>{pannello(codice)}</div>
-              </Fragment>
-            ))}
-          </div>
-        ) : (
-          <>
-            <div className="as-parametri as-parametri--fila">
-              {misure.map(({ codice, m }) => (
-                <CartaDellaDashboard key={codice} misura={m} notte={n} ore={ore} scala={detto.scales.find((s) => s.code === codice)}
-                  aperta={aperta === codice} governa={`dash-m-${codice}`} apri={() => apri(codice)}
-                  ref={(b) => { carte.current[codice] = b }} />
-              ))}
-            </div>
-            {misure.map(({ codice }) => (
-              <Fragment key={codice}>{pannello(codice, { id: `dash-m-${codice}`, hidden: aperta !== codice })}</Fragment>
-            ))}
-          </>
-        )}
-      </div>
-    </>
-  )
 }
 
-/** Le tre notti dopo stanotte, come nella fila del Meteo: il giorno, le ore serene, il semaforo.
- *  Sul desktop portano al Meteo; sul telefono stanno in una riga sempre aperta, senza rimandi. */
-function Prossime({ detto, telefono }: { detto: Meteo; telefono: boolean }) {
-  const notti = detto.nights.slice(1, 4)
-  if (notti.length === 0) return null
-  const serata = (n: Notte) => {
-    const dentro = (
-      <>
-        {/* senza le nuvole misurate nessun segno: un cielo disegnato sarebbe inventato */}
-        {n.sky_word || pioveDalle(n) ? (
-          <svg className="as-icona-meteo" viewBox="0 0 20 20" aria-hidden="true">
-            <use href={`#i-${segnoDelCielo(n)}`} />
-          </svg>
-        ) : (
-          <span aria-hidden="true" />
-        )}
-        <p>
-          {/* dalla quarta notte la previsione e' una tendenza, e lo dice (Marco, 26/9 e 14/10/2026) */}
-          <b>{n.trend ? `${maiuscola(giornoENumero(n.night))} \u00b7 ${t("weather.night.trend")}` : maiuscola(giornoENumero(n.night))}</b>
-          <span>{oreDellaVoce(n)}</span>
-          {n.sky_word && <span>{cieloInParole(n)}</span>}
-        </p>
-        <Semaforo livello={n.verdict}>{verdetto(n)}</Semaforo>
-      </>
-    )
-    return telefono ? (
-      <article key={n.night} className="as-serata">{dentro}</article>
-    ) : (
-      <Link key={n.night} className="as-serata" to="/meteo" aria-label={t("dashboard.nights.label", { giorno: giornoENumero(n.night) })}>{dentro}</Link>
+function PerCominciare({ passi, formato }: { passi: Passo[]; formato: Formato }) {
+  const titolo = t("dashboard.start.title")
+  if (formato === "telefono") {
+    return (
+      <Carta formato="telefono" etichetta={titolo} ritardo={240} padding="20px" gap="14">
+        <span className="al-dash__testo-29">{titolo}</span>
+        {passi.map((p, i) => (
+          <PassoDelVia key={p.titolo} passo={p} n={i + 1} formato={formato} />
+        ))}
+      </Carta>
     )
   }
-  const corpo = (
-    <>
-      <div className="as-dashboard__meteo-capo">
-        <p className="as-soprattitolo as-dashboard__meteo-titolo" id="dash-giorni">{t("dashboard.nights.title")}</p>
-        <Aggiornato detto={detto} />
+  return (
+    <Carta padding="24px 28px" gap="16">
+      <span className="al-dash__testo-1">{titolo}</span>
+      {passi.map((p, i) => (
+        <PassoDelVia key={p.titolo} passo={p} n={i + 1} formato={formato} />
+      ))}
+    </Carta>
+  )
+}
+
+/** The year before the first scan: twelve empty months (board `monthsEmpty`). */
+function AnnoVuoto({ anno }: { anno: string }) {
+  const mesi = mesiBrevi()
+  const tratteggio =
+    "repeating-linear-gradient(135deg, var(--barretta-spenta) 0 3px, transparent 3px 8px)"
+  return (
+    <Carta padding="24px 28px" gap="14" flex="1">
+      <div className="al-dash__riga-25">
+        <span className="al-dash__testo-1">{t("dashboard.year.empty.title", { anno })}</span>
+        <span className="al-dash__testo-2">{t("dashboard.year.empty.sub")}</span>
       </div>
-      <div className="as-dashboard__meteo">
-        <div className="as-serate">{notti.map(serata)}</div>
+      <div className="al-dash__griglia-9" aria-hidden="true">
+        {mesi.map((m) => (
+          <span key={m} className="al-dash__pillola-8" style={{ background: tratteggio }} />
+        ))}
       </div>
-    </>
-  )
-  if (!telefono) return <section className="as-dashboard__prossime" aria-labelledby="dash-giorni">{corpo}</section>
-  return (
-    <ul className="as-tel-righe as-carta">
-      <RigaAperta nome={t("dashboard.nights.short")}>{corpo}</RigaAperta>
-    </ul>
-  )
-}
-
-/** Il segno del cielo di una notte (tavola v37): la pioggia vince sulle nuvole. */
-function segnoDelCielo(n: Notte): SegnoDellaMisura {
-  if (pioveDalle(n)) return "m-pioggia"
-  if (n.sky_word === "clear") return "m-sereno"
-  return n.sky_word === "scattered" ? "m-velato" : "nuvola"
-}
-
-/** L'ora in cui comincia la pioggia che non si puo', se c'e'. */
-const pioveDalle = (n: Notte) => n.measures.find((m) => m.code === "rain" && m.level === "nogo")?.since ?? null
-
-/** "Coperto, pioggia dalle 17", "Sereno \u00b7 3 h di buio senza Luna": le parole del cielo
- *  (okta WMO, scritte dal backend), la pioggia e le ore di buio con la Luna giu'. */
-function cieloInParole(n: Notte): string {
-  const pioggia = pioveDalle(n)
-  const cielo = `${t(`weather.sky.word.${n.sky_word ?? "clear"}`)}${pioggia ? t("dashboard.nights.rain", { ora: oraDelSito(pioggia).slice(0, 2) }) : ""}`
-  const senzaLuna = n.moonless_dark_hours ? t("dashboard.nights.moonless", { durata: durata(n.moonless_dark_hours * 3600) ?? "" }) : null
-  return senzaLuna ? `${cielo} \u00b7 ${senzaLuna}` : cielo
-}
-
-/** Una riga del telefono sempre aperta (`as-tel-sez--aperta`): il nome in testa, il corpo sotto. */
-function RigaAperta({ nome, children }: { nome: string; children: ReactNode }) {
-  return (
-    <li className="as-tel-sez as-tel-sez--aperta">
-      <h3 className="as-tel-sez__h">
-        <span className="as-tel-apri as-tel-apri--fermo">
-          <span className="as-tel-apri__nome">{nome}</span>
-          <span className="as-tel-apri__dato" />
-          <span className="as-tel-apri__sub" />
-        </span>
-      </h3>
-      <div className="as-tel-corpo as-tel-corpo--fisso">{children}</div>
-    </li>
-  )
-}
-
-/** La prima scansione al lavoro (tavola dashboard-stati-lettura v37): quanti file su quanti, quanto
- *  manca al ritmo finora (lo stima il backend; nel primo minuto tace), e che non serve fare niente. */
-function PrimaLettura({ lettura: l }: { lettura: { current: number; total: number; manca: number | null } }) {
-  const valori = { fatti: numero(l.current), su: numero(l.total) }
-  return (
-    <Avviso esito="lavoro" pagina titolo={t("dashboard.scan.title")}
-      sotto={<Avanza pct={l.total ? Math.round((l.current / l.total) * 100) : 0} nome={t("dashboard.scan.bar")} />}>
-      {l.manca === null ? t("dashboard.scan.text.noEta", valori) : t("dashboard.scan.text", { ...valori, quanto: durata(l.manca) ?? "" })}
-    </Avviso>
-  )
-}
-
-/** Il vuoto dei progetti: una frase e Crea un progetto, il primario della pagina. Durante la prima
- *  scansione (`trovati`) dice gli oggetti trovati finora, senza bottone (tavola dashboard-stati-lettura). */
-function VuotoDeiProgetti({ trovati }: { trovati: number | null }) {
-  if (trovati === 0) return <VuotoDellaSezione testo="dashboard.projects.searching" />
-  if (trovati !== null) return <VuotoDellaSezione testo="dashboard.projects.sofar" valori={{ n: numero(trovati) }} />
-  return (
-    <VuotoDellaSezione testo="dashboard.projects.none">
-      <AzioniDelVuoto>
-        <Bottone verso="primario" a="/progetti">{t("dashboard.projects.create")}</Bottone>
-      </AzioniDelVuoto>
-    </VuotoDellaSezione>
-  )
-}
-
-/** I progetti in corso: finche' non esistono, la sezione lo dice (tavola dashboard-stati-progetti). */
-function Progetti({ trovati }: { trovati: number | null }) {
-  return (
-    <section className="as-dashboard__progetti" aria-labelledby="dash-progetti">
-      {/* un div e non l'header della tavola: per chi ascolta sarebbe un secondo "banner" accanto alla barra */}
-      <div className="as-dashboard__capo">
-        <p className="as-soprattitolo" id="dash-progetti">{t("dashboard.projects.title")}</p>
+      <div className="al-dash__griglia-10" aria-hidden="true">
+        {mesi.map((m) => (
+          <span key={m}>{m}</span>
+        ))}
       </div>
-      <VuotoDeiProgetti trovati={trovati} />
-    </section>
+      <span className="al-dash__testo-2">{t("dashboard.year.empty.text")}</span>
+    </Carta>
   )
 }
 
-/** Cio' che resta da fare: le domande da confermare e l'ultima notte ripresa. Vuoto, non c'e'; c'e'
- *  anche senza sito, perche' l'archivio non dipende dal sito. */
-function DaRiprendere({ finora }: { finora: boolean }) {
+type Riga = {
+  segno: "!" | "?"
+  titolo: string
+  testo: string
+  azione: string
+  a: string
+  vai: boolean
+}
+
+/** What is left half answered: the cases to confirm and the frames outside every night. */
+function DaRiprendere({
+  righe,
+  errore,
+  formato,
+}: {
+  righe: Riga[]
+  errore: string | null
+  formato: Formato
+}) {
+  const tel = formato === "telefono"
+  const titolo = t("dashboard.redo.title")
+  const riga = (r: Riga) => (
+    <div key={r.titolo} className={tel ? "al-dash__griglia-16" : "al-dash__griglia-2"}>
+      <span
+        className="al-dash__tondo-1"
+        aria-hidden="true"
+        style={
+          r.segno === "!"
+            ? { background: "var(--avviso)", color: "var(--avviso-testo)" }
+            : {
+                background: "var(--carta)",
+                color: "var(--testo)",
+                boxShadow: "inset 0 0 0 1.5px var(--linea)",
+              }
+        }
+      >
+        {r.segno}
+      </span>
+      <span className="al-dash__colonna-1">
+        <b className="al-dash__testo-3">{r.titolo}</b>
+        {r.testo && <span className="al-dash__testo-4">{r.testo}</span>}
+      </span>
+      {r.vai ? (
+        <Link className="al-dash__tondo-3" to={r.a} aria-label={r.azione} title={r.azione}>
+          {"\u2197"}
+        </Link>
+      ) : (
+        <Link
+          className={
+            tel
+              ? "al-bottone al-bottone--pieno al-bottone--blocco al-dash__riga-29"
+              : "al-bottone al-bottone--pieno al-bottone--piccolo"
+          }
+          to={r.a}
+        >
+          {r.azione}
+        </Link>
+      )}
+    </div>
+  )
+  if (tel) {
+    return (
+      <Carta formato="telefono" etichetta={titolo} ritardo={0} padding="20px" gap="10">
+        <span className="al-dash__testo-29">{titolo}</span>
+        {errore && <Avviso tipo="riga" formato={formato} segno="!" titolo={errore} />}
+        {righe.map(riga)}
+      </Carta>
+    )
+  }
+  return (
+    <Carta colonne={12} ritardo={0} padding="20px 24px" gap="10">
+      <div className="al-dash__riga-1">
+        <span className="al-dash__testo-1">{titolo}</span>
+        <span className="al-dash__testo-2">{t("dashboard.redo.sub")}</span>
+      </div>
+      {errore && <Avviso tipo="riga" formato={formato} segno="!" titolo={errore} />}
+      {righe.map(riga)}
+    </Carta>
+  )
+}
+
+export function Dashboard() {
+  const formato = useFormato()
+  const tel = formato === "telefono"
+  const vai = useNavigate()
+  const stanotte = useStanotte()
+  const meteo = usePrevisione()
+  const pipeline = useStato().data
+  const scan = pipeline?.scan
+  // the first read ends when `group` gave every frame its night, not with the scan stage
+  const primaInCorso = scan?.first === true && pipeline?.worker.state === "running"
+  const cartelle = useCartelle().data
+  const archivio = useArchivio(primaInCorso).data
+  const primaLettura =
+    (scan?.first === true && scan.state === "running") ||
+    (scan?.first === true && (archivio ? archivio.still_reading > 0 : primaInCorso))
   const revisione = useRevisione()
-  // `undefined` mentre carica: la riga verso Notti aspetta di sapere che non c'e' niente da confermare
-  const daConfermare = revisione.data?.to_confirm
-  const archivio = useArchivio(finora).data
-  const ultima = archivio?.items[0] ?? null
-  // i frame che non stanno in nessuna notte (tavola dashboard-stati-coperta): durante la prima
-  // scansione non sono ancora contati
-  const fuori = finora ? 0 : archivio?.waiting_frames ?? 0
-  const fuoriDaiConti = fuori > 0 ? t("dashboard.work.outside", { n: numero(fuori) }) : null
-  if (!finora && !daConfermare && !fuori && !ultima && !revisione.error) return null
-  return (
-    <section className="as-dashboard__lavoro" aria-labelledby="dash-lavoro">
-      <p className="as-soprattitolo" id="dash-lavoro">{t("dashboard.work.title")}</p>
-      {/* uno zero su un archivio che non ha risposto sarebbe una bugia tranquillizzante */}
-      {revisione.error && <Avviso esito="allarme">{revisione.error.message}</Avviso>}
-      {/* durante la prima scansione i casi da confermare non sono ancora contati */}
-      {finora && (
-        <div className="as-riga">
-          <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
-          <span>
-            <b>{t("dashboard.work.toConfirm")}</b>
-            {t("dashboard.work.toConfirm.later")}
-          </span>
-        </div>
-      )}
-      {!finora && daConfermare !== undefined && daConfermare > 0 && (
-        <div className="as-riga">
-          <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
-          <span>
-            <b>{t("frame.count", { n: numero(daConfermare) })}</b>
-            {fuoriDaiConti}
-          </span>
-          {/* il primario della pagina e' Crea un progetto: Rispondi scende a tenue */}
-          <Bottone verso="tenue" piccolo a="/da-confermare">{t("dashboard.work.answer")}</Bottone>
-        </div>
-      )}
-      {/* niente da confermare: si risponde altrove (sito, data), e Notti dice dove */}
-      {!finora && (daConfermare === 0 || revisione.error) && fuoriDaiConti && (
-        <Link className="as-riga" to="/notti">
-          <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
-          <span>
-            <b>{fuoriDaiConti}</b>
-          </span>
-          <span className="as-riga__freccia" aria-hidden="true">{"\u2192"}</span>
-        </Link>
-      )}
-      {ultima && (
-        <Link className="as-riga" to={`/notti?notte=${ultima.id}`}>
-          <span className="as-riga__segno" aria-hidden="true" />
-          <span>
-            <b>{maiuscola(giornoEMese(ultima.night_date))}</b>
-            {finora ? t("dashboard.work.night.sofar") : comeEAndata(ultima)}
-          </span>
-          <span className="as-riga__freccia" aria-hidden="true">{"\u2192"}</span>
-        </Link>
-      )}
-    </section>
-  )
-}
+  const s = stanotte.data
+  const m = meteo.data
 
-/** "4 h 12 min su M 31 e altri 2, 180 frame": tempo, frame, l'oggetto con piu' tempo (ordine del
- *  backend) e quanti altri. Mai "0 s": senza durata nei file lo si dice a parole. */
-function comeEAndata(n: NotteDellArchivio): string {
-  const frase = n.integration_s > 0 ? "dashboard.work.night" : "dashboard.work.untimed"
-  const valori = { durata: durata(n.integration_s) ?? "", frame: numero(n.frames) }
-  const primo = n.objects[0]?.name
-  if (!primo) return t(`${frase}.bare`, valori)
-  const altri = n.objects.length - 1
-  if (altri === 0) return t(frase, { ...valori, oggetto: primo })
-  return t(`${frase}.more`, { ...valori, oggetto: primo, n: numero(altri) })
+  let corpo
+  if (stanotte.isPending || (meteo.isPending && !meteo.isError)) {
+    corpo = (
+      <Scheletro
+        formato={formato}
+        carte={tel ? SCHELETRO_TEL : SCHELETRO_DESK}
+        testo={t("ui.loading")}
+      />
+    )
+  } else if (!s) {
+    corpo = (
+      <Avviso
+        tipo="pagina"
+        formato={formato}
+        segno="!"
+        titolo={t("tonight.failed")}
+        azione={t("dashboard.retry")}
+        onAzione={() => void stanotte.refetch()}
+      />
+    )
+  } else {
+    const sito = s.site !== null
+    const vuoto = cartelle?.total === 0 && archivio?.totals?.frames === 0
+    // the archive does not hang on the site: without a site its answers still wait
+    const senzaArchivio = vuoto || primaLettura
+    const anno = (s.night ?? new Date().toISOString()).slice(0, 4)
+    const cartella: Passo = {
+      titolo: t("dashboard.start.folder.title"),
+      testo: t("dashboard.start.folder.text"),
+      azione: { l: t("dashboard.start.folder.how"), a: "/impostazioni/cartelle" },
+    }
+    const passi: Passo[] = !sito
+      ? [
+          {
+            titolo: t("dashboard.start.site.title"),
+            testo: t("dashboard.start.site.text"),
+            azione: { l: t("dashboard.start.site.how"), a: "/impostazioni/sito" },
+          },
+          ...(vuoto ? [cartella] : []),
+        ]
+      : !senzaArchivio
+        ? []
+        : primaLettura
+          ? [
+              {
+                titolo: t("dashboard.start.scan.title"),
+                testo: t("dashboard.start.scan.text"),
+                barra: {
+                  pct: scan?.last_event?.total
+                    ? Math.round((scan.last_event.current / scan.last_event.total) * 100)
+                    : 0,
+                  righe: [
+                    scan?.last_event
+                      ? scan.remaining_s
+                        ? t("dashboard.start.scan.files.eta", {
+                            fatti: numero(scan.last_event.current),
+                            su: numero(scan.last_event.total),
+                            quanto: oreEMinuti(scan.remaining_s),
+                          })
+                        : t("dashboard.start.scan.files", {
+                            fatti: numero(scan.last_event.current),
+                            su: numero(scan.last_event.total),
+                          })
+                      : t("dashboard.start.scan.starting"),
+                    t("dashboard.start.scan.later"),
+                  ],
+                },
+              },
+              {
+                titolo: t("dashboard.start.project.title"),
+                testo: t("dashboard.start.project.sofar", {
+                  n: numero(archivio?.totals?.objects ?? 0),
+                }),
+                azione: { l: t("dashboard.start.project.how"), a: "/progetti" },
+              },
+            ]
+          : [
+              cartella,
+              {
+                titolo: t("dashboard.start.project.title"),
+                testo: t("dashboard.start.project.text"),
+              },
+            ]
+    const righe: Riga[] = []
+    const daConfermare = revisione.data?.to_confirm ?? 0
+    if (!senzaArchivio && daConfermare > 0) {
+      righe.push({
+        segno: "!",
+        titolo: t("dashboard.redo.toConfirm", { n: numero(daConfermare) }),
+        testo: "",
+        azione: t("dashboard.redo.answer"),
+        a: "/da-confermare",
+        vai: false,
+      })
+    }
+    if (!senzaArchivio && archivio && archivio.waiting_frames > 0) {
+      righe.push({
+        segno: "?",
+        titolo: t(
+          archivio.waiting_frames === 1 ? "dashboard.work.outside.one" : "dashboard.work.outside",
+          { n: numero(archivio.waiting_frames) },
+        ),
+        testo: t("dashboard.redo.outside.text"),
+        azione: t("dashboard.redo.outside.how"),
+        a: "/notti",
+        vai: true,
+      })
+    }
+    const fuso = sito && s.night === null
+    const avviso = fuso && (
+      <Avviso
+        tipo="pagina"
+        formato={formato}
+        segno="!"
+        titolo={t("dashboard.noZone.title")}
+        testo={t("dashboard.noZone.text", { sito: s.site?.name ?? "" })}
+        azione={t("dashboard.noZone.how")}
+        onAzione={() => void vai("/impostazioni/sito")}
+      />
+    )
+    const notte = sito && <DashboardNotte stanotte={s} notte={m?.nights[0]} formato={formato} />
+    const luna = sito && <DashboardLuna stanotte={s} meteo={m} formato={formato} />
+    const tempo = sito && m && <MeteoDellaNotte meteo={m} formato={formato} />
+    const prossime = sito && m && (
+      <ProssimeNotti meteo={m} colonne={senzaArchivio ? 4 : 12} formato={formato} />
+    )
+    const inizio = passi.length > 0 && <PerCominciare passi={passi} formato={formato} />
+    // a zero on an archive that did not answer would be a reassuring lie: it is said
+    const errore = senzaArchivio ? null : (revisione.error?.message ?? null)
+    const riprendi = (righe.length > 0 || errore) && (
+      <DaRiprendere righe={righe} errore={errore} formato={formato} />
+    )
+    if (tel) {
+      corpo = (
+        <div className="al-dash__colonna-17">
+          {avviso}
+          {riprendi}
+          {notte}
+          {luna}
+          {tempo}
+          {inizio}
+          {prossime}
+        </div>
+      )
+    } else {
+      corpo = (
+        <div className="al-dash__griglia-1">
+          {avviso}
+          {riprendi}
+          {notte}
+          {luna}
+          {tempo}
+          {(inizio || senzaArchivio) && (
+            <div
+              className="al-dash__colonna-13"
+              data-anim="1"
+              style={{ gridColumn: sito ? "span 8" : "span 12", animationPlayState: "running" }}
+            >
+              {inizio}
+              {senzaArchivio && <AnnoVuoto anno={anno} />}
+            </div>
+          )}
+          {prossime}
+          {!senzaArchivio && (
+            <div style={{ gridColumn: "1 / -1" }}>
+              <AnnoDellaDashboard lettura={null} />
+            </div>
+          )}
+        </div>
+      )
+    }
+  }
+  return <Pagina formato={formato}>{corpo}</Pagina>
 }

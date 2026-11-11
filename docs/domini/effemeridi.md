@@ -196,6 +196,12 @@ conta la sua sovrapposizione esatta con le fasce di buio: il conto non supera ma
 (`test_the_moonless_dark_left_never_exceeds_the_dark_itself`). Il lettore della volta lo scrive e
 basta (`test_from_each_point_of_the_curve_how_much_dark_without_the_moon_is_left`).
 
+**Il buio diviso per banda** (Dashboard v79, 11/11/2026). `/tonight` porta `shooting`: il buio in
+ordine di tempo, a tratti, ognuno `broadband` o `narrowband` coi suoi secondi. Con la Luna giu' e'
+banda larga; con la Luna su decide la scala della Luna del Meteo (dal 65%, `nogo`, solo banda
+stretta); due tratti vicini della stessa banda sono uno. Insieme fanno `dark_s`
+(`test_the_dark_comes_split_by_what_the_moon_lets_you_shoot`).
+
 ## Cosa NON promettiamo
 
 - **I pianeti ci sono solo per la volta** della Dashboard: Saturno, Giove, Marte e Venere, la loro

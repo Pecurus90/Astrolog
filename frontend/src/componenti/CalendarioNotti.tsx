@@ -79,6 +79,16 @@ const due = (n: number): string => String(n).padStart(2, "0")
 const colonna = (anno: number, mese: number, giorno: number): number =>
   (new Date(Date.UTC(anno, mese, giorno)).getUTCDay() + 6) % 7
 
+/** Days in a month (0-11): calendar geometry. */
+export const giorniNelMese = (anno: number, mese: number): number =>
+  new Date(Date.UTC(anno, mese + 1, 0)).getUTCDate()
+
+/** A day cell's size on each form. */
+export function cellaDi(formato: Formato): { height: string; gap: string; fontSize: string } {
+  const L = MISURE[formato]
+  return { height: L.ch, gap: L.cg, fontSize: L.cfs }
+}
+
 /**
  * The month's nights (v76 `CalendarioNotti`, `tipo="notti"`): a day per cell, its nights' signs,
  * coloured by the outcome the app chose. In the current month the grid stops at today's week.
@@ -112,33 +122,15 @@ export function CalendarioNotti({
   numero?: string
   numeroL?: string
   conta?: string
-  onPrima?: () => void
-  onDopo?: () => void
-  primaNo?: boolean
-  dopoNo?: boolean
-  formato?: Formato
-}) {
-  const { modo, accento } = useTema()
-  const L = MISURE[formato]
+} & NavigaMese) {
   const perGiorno = new Map(giorni.map((g) => [g.d, g]))
-  const nelMese = new Date(Date.UTC(anno, mese + 1, 0)).getUTCDate()
+  const nelMese = giorniNelMese(anno, mese)
   const chiusa = oggi === undefined ? nelMese : oggi + 6 - colonna(anno, mese, oggi)
   const fine = chiusa < nelMese ? chiusa : nelMese
   const mese2 = `${anno}-${due(mese + 1)}`
-  const scritto = meseEAnno(mese2)
-  const cella = { height: L.ch, gap: L.cg, fontSize: L.cfs }
-
+  const cella = cellaDi(formato)
   const celle: ReactNode[] = []
-  for (let i = 0; i < colonna(anno, mese, 1); i++) {
-    celle.push(
-      <span
-        key={`v${i}`}
-        className="al-c-calendario-notti__colonna-4"
-        aria-hidden="true"
-        style={{ ...cella, visibility: "hidden" }}
-      />,
-    )
-  }
+
   for (let d = 1; d <= fine; d++) {
     const g = perGiorno.get(d)
     const adesso = d === oggi
@@ -197,6 +189,99 @@ export function CalendarioNotti({
     )
   }
 
+  return (
+    <CorniceCalendario
+      anno={anno}
+      mese={mese}
+      titolo={titolo}
+      sub={sub}
+      celle={celle}
+      legenda={LEGENDA.map(([e, k]) => ({
+        s: SEGNI[e],
+        l: t(k),
+        bg: TINTE[e].fondo,
+        fg: TINTE[e].testo,
+      }))}
+      onPrima={onPrima}
+      onDopo={onDopo}
+      primaNo={primaNo}
+      dopoNo={dopoNo}
+      formato={formato}
+      sopra={
+        numero && (
+          <span className="al-c-calendario-notti__colonna-3">
+            <span className="al-c-calendario-notti__riga-2">
+              <span className="al-c-calendario-notti__testo-3">{numero}</span>
+              <span className="al-c-calendario-notti__testo-4">{numeroL}</span>
+            </span>
+            <span className="al-c-calendario-notti__testo-5">{conta}</span>
+          </span>
+        )
+      }
+    />
+  )
+}
+
+/** The month arrows and the form, the same for both calendars. */
+export interface NavigaMese {
+  onPrima?: () => void
+  onDopo?: () => void
+  primaNo?: boolean
+  dopoNo?: boolean
+  formato?: Formato
+}
+
+/** A legend entry: sign on its ground, then the words. */
+export interface VoceLegenda {
+  s: string
+  l: string
+  bg: string
+  fg: string
+}
+
+/**
+ * The month frame both calendars share (v79 `CalendarioNotti`): arrows and title, what goes above
+ * the grid, the weekdays with the blanks before day one, the day cells, the legend.
+ */
+export function CorniceCalendario({
+  anno,
+  mese,
+  titolo,
+  sub,
+  sopra,
+  celle,
+  legenda,
+  onPrima,
+  onDopo,
+  primaNo = false,
+  dopoNo = false,
+  formato = "desktop",
+}: {
+  anno: number
+  mese: number
+  titolo?: string | undefined
+  sub?: string | undefined
+  sopra?: ReactNode
+  /** The day cells, from day one. */
+  celle: ReactNode[]
+  legenda: VoceLegenda[]
+  onPrima?: (() => void) | undefined
+  onDopo?: (() => void) | undefined
+  primaNo?: boolean
+  dopoNo?: boolean
+  formato?: Formato
+}) {
+  const { modo, accento } = useTema()
+  const L = MISURE[formato]
+  const scritto = meseEAnno(`${anno}-${due(mese + 1)}`)
+  const vuote = Array.from({ length: colonna(anno, mese, 1) }, (_, i) => (
+    <span
+      key={`v${i}`}
+      className="al-c-calendario-notti__colonna-4"
+      aria-hidden="true"
+      style={{ ...cellaDi(formato), visibility: "hidden" }}
+    />
+  ))
   const freccia = (no: boolean, f: (() => void) | undefined, chiave: Chiave, segno: string) => (
     <a
       className="al-c-calendario-notti__tondo-1"
@@ -209,7 +294,6 @@ export function CalendarioNotti({
       {segno}
     </a>
   )
-
   return (
     <div className="al-c-calendario-notti__blocco-1" data-modo={modo} data-accento={accento}>
       <div className="al-c-calendario-notti__colonna-1" style={{ gap: L.gap }}>
@@ -221,17 +305,9 @@ export function CalendarioNotti({
             </b>
             {sub && <span className="al-c-calendario-notti__testo-2">{sub}</span>}
           </span>
-          {freccia(dopoNo, onDopo, "ui.calendar.next", "\u203A")}
+          {freccia(dopoNo, onDopo, "ui.calendar.next", "\u203a")}
         </div>
-        {numero && (
-          <span className="al-c-calendario-notti__colonna-3">
-            <span className="al-c-calendario-notti__riga-2">
-              <span className="al-c-calendario-notti__testo-3">{numero}</span>
-              <span className="al-c-calendario-notti__testo-4">{numeroL}</span>
-            </span>
-            <span className="al-c-calendario-notti__testo-5">{conta}</span>
-          </span>
-        )}
+        {sopra}
         <div className="al-c-calendario-notti__griglia-1" style={{ gap: L.gg }}>
           {SETTIMANA.map((k) => (
             <span
@@ -242,21 +318,22 @@ export function CalendarioNotti({
               {t(k)}
             </span>
           ))}
+          {vuote}
           {celle}
         </div>
         <div
           className="al-c-calendario-notti__riga-3"
           style={{ marginTop: L.lmt, padding: L.lpad }}
         >
-          {LEGENDA.map(([e, k]) => (
-            <span key={e} className="al-c-calendario-notti__riga-4">
+          {legenda.map((v) => (
+            <span key={v.s} className="al-c-calendario-notti__riga-4">
               <i
                 className="al-c-calendario-notti__centro-1"
-                style={{ background: TINTE[e].fondo, color: TINTE[e].testo }}
+                style={{ background: v.bg, color: v.fg }}
               >
-                {SEGNI[e]}
+                {v.s}
               </i>
-              {t(k)}
+              {v.l}
             </span>
           ))}
         </div>

@@ -27,7 +27,7 @@ describe("la prima pagina", () => {
       ...SPINA,
     })
     await disegna()
-    expect(await within(await screen.findByRole("main")).findByText("7 da confermare")).toBeDefined()
+    expect(await within(await screen.findByRole("main")).findByText("Da confermare, 7")).toBeDefined()
   })
 
   it("un errore non si inghiotte: lo dice invece di mostrare zero", async () => {
@@ -39,7 +39,7 @@ describe("la prima pagina", () => {
       ...CASA,
     })
     await disegna()
-    const avviso = await screen.findByRole("alert")
+    const avviso = await screen.findByText("Da confermare non disponibile")
     expect(avviso.textContent).toContain("Da confermare non disponibile")
     // E soprattutto: nessun conteggio a schermo. Uno zero su un archivio che non ha risposto e'
     // una bugia tranquillizzante, ed e' il difetto che la riga dell'errore in `App.tsx` evita.

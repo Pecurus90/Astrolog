@@ -6,7 +6,7 @@
 import { screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { chiamate, pulisci } from "./banco"
+import { pulisci } from "./banco"
 import { montaDashboard } from "./dashboard-banco"
 
 afterEach(pulisci)
@@ -74,27 +74,7 @@ describe("l'anno della Dashboard", () => {
     await montaDashboard({ altre: { "/api/v1/year": { stato: 200, corpo: anno() }, "/api/v1/weather": { stato: 500, corpo: {} } } })
 
     expect(await screen.findByRole("region", { name: "il 2026, fino a oggi" })).toBeTruthy()
-    expect(screen.getByRole("region", { name: "da riprendere" })).toBeTruthy()
-  })
-
-  it("durante la prima scansione l'anno si rilegge da solo", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    try {
-      const evento = { current: 10, total: 100, file: "D:/Astro/a.fits", run_id: 1, folder_id: 1, found: 10, new: 10, unchanged: 0, duplicates: 0, missing: 0, skipped: 0, errors: 0, online_only: 0 }
-      const scansione = {
-        worker: { state: "running", stage: "scan", started_at: "2026-09-25T15:00:00Z", ended_at: null, stages: [] },
-        scan: { state: "running", folder_id: 1, run_id: 1, last_event: evento, receipt: null, remaining_s: null, first: true },
-        pending: {},
-        action: "stop",
-      }
-      await apriAnno(anno(), { "/api/v1/pipeline/status": { stato: 200, corpo: scansione } })
-      const prima = chiamate().filter((u) => u.includes("/api/v1/year")).length
-
-      await vi.advanceTimersByTimeAsync(16_000)
-      expect(chiamate().filter((u) => u.includes("/api/v1/year")).length).toBeGreaterThan(prima)
-    } finally {
-      vi.useRealTimers()
-    }
+    expect(screen.getByText("Da confermare, 32")).toBeTruthy()
   })
 
   it("un anno senza notti non ha la media a notte: lo dice con un trattino, non con zero", async () => {
@@ -102,86 +82,5 @@ describe("l'anno della Dashboard", () => {
 
     const media = [...sezione.querySelectorAll(".as-dashboard__medie div")][2]
     expect(media?.querySelector("dd")?.textContent).toBe("—")
-  })
-
-  it("durante la prima scansione le notti e le ore sono finora, e le medie a scansione finita", async () => {
-    const evento = { current: 10, total: 100, file: "D:/Astro/a.fits", run_id: 1, folder_id: 1, found: 10, new: 10, unchanged: 0, duplicates: 0, missing: 0, skipped: 0, errors: 0, online_only: 0 }
-    const scansione = {
-      worker: { state: "running", stage: "scan", started_at: "2026-09-25T15:00:00Z", ended_at: null, stages: [] },
-      scan: { state: "running", folder_id: 1, run_id: 1, last_event: evento, receipt: null, remaining_s: null, first: true },
-      pending: {},
-      action: "stop",
-    }
-    const sezione = await apriAnno(anno(), {
-      "/api/v1/pipeline/status": { stato: 200, corpo: scansione },
-      "/api/v1/nights": {
-        stato: 200,
-        corpo: {
-          items: [], total: 0, limit: 1, offset: 0, totals: { nights: 0, frames: 0, integration_s: 0, untimed: 0 },
-          waiting: [], waiting_frames: 0, still_reading: 90, reading_done_pct: 15,
-        },
-      },
-    })
-
-    expect(within(sezione).getByText("in lettura, 15%")).toBeTruthy()
-    const medie = [...sezione.querySelectorAll(".as-dashboard__medie dd")].map((d) => d.textContent)
-    expect(medie).toEqual(["41finora", "128 h 40 minfinora", "—a scansione finita", "—a scansione finita"])
-  })
-
-  it("finito lo stadio della scansione, la prima lettura continua finche' i frame non hanno la loro notte", async () => {
-    const scansione = {
-      worker: { state: "running", stage: "solve", started_at: "2026-09-25T15:00:00Z", ended_at: null, stages: [] },
-      scan: { state: "completed", folder_id: 1, run_id: 1, last_event: null, receipt: null, remaining_s: null, first: true },
-      pending: {},
-      action: "stop",
-    }
-    const sezione = await apriAnno(anno(), {
-      "/api/v1/pipeline/status": { stato: 200, corpo: scansione },
-      "/api/v1/nights": {
-        stato: 200,
-        corpo: {
-          items: [], total: 0, limit: 1, offset: 0, totals: { nights: 0, frames: 0, integration_s: 0, untimed: 0 },
-          waiting: [], waiting_frames: 0, still_reading: 90, reading_done_pct: 15,
-        },
-      },
-    })
-
-    expect(await within(sezione).findByText("in lettura, 15%")).toBeTruthy()
-    expect(within(sezione).queryByRole("link", { name: "Statistiche" })).toBeNull()
-    const medie = [...sezione.querySelectorAll(".as-dashboard__medie dd")].map((d) => d.textContent)
-    expect(medie).toEqual(["41finora", "128 h 40 minfinora", "—a scansione finita", "—a scansione finita"])
-  })
-
-  it("a scansione finita l'anno si rilegge: i conti veri, non quelli dell'apertura", async () => {
-    const evento = { current: 10, total: 100, file: "D:/Astro/a.fits", run_id: 1, folder_id: 1, found: 10, new: 10, unchanged: 0, duplicates: 0, missing: 0, skipped: 0, errors: 0, online_only: 0 }
-    const scansione: Record<string, unknown> = {
-      worker: { state: "running", stage: "scan", started_at: "2026-09-25T15:00:00Z", ended_at: null, stages: [] },
-      scan: { state: "running", folder_id: 1, run_id: 1, last_event: evento, receipt: null, remaining_s: null, first: true },
-      pending: {},
-      action: "stop",
-    }
-    // il banco serializza a ogni chiamata: cambiare l'oggetto e' cio' che il backend dira' dopo
-    const corpo: Record<string, unknown> = { ...anno({}), nights: 0, integration_s: 0, per_night_s: null, per_month: 0 }
-    const sezione = await apriAnno(corpo, { "/api/v1/pipeline/status": { stato: 200, corpo: scansione } })
-    expect(within(sezione).getByText("in lettura, 0%")).toBeTruthy()
-
-    Object.assign(corpo, anno())
-    scansione.worker = { state: "completed", stage: null, started_at: "2026-09-25T15:00:00Z", ended_at: "2026-09-25T16:00:00Z", stages: [] }
-    scansione.scan = null
-    scansione.action = "start"
-
-    // il battito dello stato mentre gira e' 1,5 s
-    await within(sezione).findByText("3 h 8 min", {}, { timeout: 5000 })
-    const medie = [...sezione.querySelectorAll(".as-dashboard__medie dd")].map((d) => d.textContent)
-    expect(medie).toEqual(["41", "128 h 40 min", "3 h 8 min", "4,6 notti"])
-  })
-
-  it("sul telefono l'anno non c'e': la tavola del telefono dice nient'altro, e niente rimandi", async () => {
-    await montaDashboard({ altre: { "/api/v1/year": { stato: 200, corpo: anno() } }, larga: 390 })
-
-    await screen.findByText("meteo della notte")
-    // montato, chiederebbe l'anno insieme al resto della pagina: qui non lo chiede nessuno
-    expect(chiamate().some((u) => u.includes("/api/v1/year"))).toBe(false)
-    expect(screen.queryByRole("region", { name: "il 2026, fino a oggi" })).toBeNull()
   })
 })

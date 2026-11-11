@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type PointerEvent, type ReactNode, type Ref, useState } from "react"
+import { type KeyboardEvent, type PointerEvent, type ReactNode, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
@@ -20,8 +20,8 @@ type Campo = "cloud_total_pct" | "cloud_low_pct" | "precip_mm" | "wind_kmh" | "d
 // Come il disegno (v27) mostra ogni carta: il campo dell'ora, l'unita', la riga sotto il valore e
 // se il grafico e' a barre (le misure con soglia) o a linea (le neutre). Presentazione: i numeri
 // e i giudizi arrivano scritti dal backend.
-type Forma = { campo: Campo; unita?: Chiave; sotto?: Chiave; barre: boolean; piccola?: boolean }
-const FORME: Partial<Record<Codice, Forma>> = {
+export type Forma = { campo: Campo; unita?: Chiave; sotto?: Chiave; barre: boolean; piccola?: boolean }
+export const FORME: Partial<Record<Codice, Forma>> = {
   cloud: { campo: "cloud_total_pct", unita: "weather.unit.pct", sotto: "weather.card.mean", barre: true },
   cloud_low: { campo: "cloud_low_pct", unita: "weather.unit.pct", sotto: "weather.card.mean", barre: true },
   rain: { campo: "precip_mm", unita: "weather.unit.mm", sotto: "weather.card.total", barre: true },
@@ -156,39 +156,6 @@ export function CartaDelTelefono({ misura: m, notte: n, ore, scala, aperta, gove
   )
 }
 
-/**
- * La carta della **Dashboard** (`as-parametro--piccolo` in un bottone): la carta del Meteo in
- * piccolo -- valore, cosa dice, giudizio, barrette e picco -- che apre sotto il suo grafico
- * (`governa`). Le Nuvole non hanno la riga del giudizio: la loro parola e' il verdetto in testa.
- */
-export function CartaDellaDashboard({ misura: m, notte: n, ore, scala, aperta, governa, apri, ref }: {
-  misura: Misura; notte: Notte; ore: Ora[]; scala?: Scala | undefined; aperta: boolean; governa: string; apri: () => void
-  ref?: Ref<HTMLButtonElement>
-}) {
-  const forma = FORME[m.code]
-  if (!forma) return null
-  return (
-    <button ref={ref} className="as-parametro as-parametro--piccolo" type="button" aria-expanded={aperta} aria-controls={governa} onClick={apri}>
-      <span className="as-parametro__nome">{t(`weather.measure.${m.code}` as Chiave)}</span>
-      <span className="as-parametro__valore">
-        <b>{m.value === null ? t("weather.card.unknown") : numero(tondo(m.code, m.value))}</b>
-        {m.value !== null && forma.unita && <span className={m.code === "seeing" ? "as-parametro__segno" : undefined}>{t(forma.unita)}</span>}
-      </span>
-      <span className="as-parametro__sotto">{sotto(m, n, forma)}</span>
-      {m.level !== null && m.code !== "cloud" && m.known_hours > 0 && (
-        <span className="as-parametro__sem">
-          <Semaforo livello={m.level}>{giudizio(m)}</Semaforo>
-        </span>
-      )}
-      <span className="as-parametro__grafico">
-        <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={null} dove="dashboard" />
-        <Asse ore={ore} dentro />
-      </span>
-      <span className="as-parametro__picco">{picco(m, n, forma, scala)}</span>
-    </button>
-  )
-}
-
 function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
   misura: Misura; notte: Notte; ore: Ora[]; scala: Scala | undefined; forma: Forma; nome: string; oraDelCielo: number | null
 }) {
@@ -308,7 +275,7 @@ function SeeingSenzaChiave({ nome, rifiutata }: { nome: string; rifiutata: boole
 }
 
 /** La riga sotto il valore: cosa dice il numero, e su quali ore. */
-function sotto(m: Misura, n: Notte, forma: Forma): string {
+export function sotto(m: Misura, n: Notte, forma: Forma): string {
   if (m.code === "seeing" && m.known_until && m.known_hours < (n.window_hours ?? 0)) {
     return t("weather.card.seeing.part", { a: oraDelSito(m.known_until) })
   }
@@ -333,7 +300,7 @@ function giudizio(m: Misura): string {
 }
 
 /** Il picco con le sue ore, o cio' che la carta dice al suo posto. */
-function picco(m: Misura, n: Notte, forma: Forma, scala: Scala | undefined): string {
+export function picco(m: Misura, n: Notte, forma: Forma, scala: Scala | undefined): string {
   // nessuna ora data: "mai sotto" o "nessuna pioggia" sarebbero un fatto inventato
   if (m.known_hours === 0) return ""
   if (m.code === "wind") {
@@ -456,8 +423,8 @@ function tratti(ore: Ora[], c: Campo): number[][] {
 }
 
 /** Tre ore sotto il grafico: la prima, quella in mezzo, l'ultima. */
-function Asse({ ore, dentro = false }: { ore: Ora[]; dentro?: boolean }) {
-  const Riga = dentro ? "span" : "p"
+function Asse({ ore }: { ore: Ora[] }) {
+  const Riga = "p"
   const scelte = [0, (ore.length - 1) >> 1, ore.length - 1].filter((i, k, a) => i >= 0 && a.indexOf(i) === k)
   return (
     <Riga className="as-parametro__asse" aria-hidden="true">

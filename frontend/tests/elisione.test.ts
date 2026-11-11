@@ -18,10 +18,10 @@ describe("l'articolo davanti a una percentuale", () => {
   })
 
   it("vale per ogni articolo, anche nel mezzo della frase", () => {
-    expect(t("dashboard.moon.legend", { pct: 8, ore: 4 })).toContain("Luna sotto l'8%")
-    expect(t("dashboard.moon.day", { giorno: "8 settembre", pct: 85, durata: "1 h" })).toBe(
-      "8 settembre: Luna all'85%, 1 h di buio senza Luna",
+    expect(t("dashboard.moon.detail.legend", { buona: 8, limite: 85 })).toContain(
+      "Luna fino all'8%, al limite fino all'85%",
     )
+    expect(t("ui.moonCalendar.good", { pct: 11 })).toBe("banda larga buona, Luna fino all'11%")
   })
 
   it("110 si legge centodieci, e l'articolo resta intero", () => {

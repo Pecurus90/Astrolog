@@ -3,7 +3,7 @@ downloads, so a lazy import would leave the process online until this route firs
 
 import sqlite3
 from datetime import datetime
-from typing import cast
+from typing import Literal, cast
 
 from fastapi import APIRouter, Depends
 
@@ -29,6 +29,7 @@ from .models_tonight import (
     PhaseKey,
     PlanetKey,
     PlanetOut,
+    ShootingStretchOut,
     SiteSkyOut,
     SkyBandOut,
     SkyKind,
@@ -73,6 +74,54 @@ def _moon_in_dark(
         from_start=up[0][0] == dark[0][0],
         to_end=up[-1][1] == dark[-1][1],
     )
+
+
+def _planet(night: planets.PlanetNight, span: sun.ChartWindow | None) -> PlanetOut:
+    track = [_sky_point(q) for q in night.track]
+    out = PlanetOut(key=cast(PlanetKey, night.key.value), track=track)
+    if span is None:
+        return out
+    inside = planets.within(night, span.starts_at, span.ends_at)
+    out.rise, out.set = _iso(inside.rise), _iso(inside.set)
+    out.highest = _sky_point(inside.highest)
+    return out
+
+
+def _highest_in(track: list[moon.TrackPoint], span: sun.ChartWindow | None) -> SkyPointOut | None:
+    inside = [p for p in track if span and span.starts_at <= p.at <= span.ends_at]
+    return _sky_point(max(inside, key=lambda p: p.altitude_deg)) if inside else None
+
+
+def _highest_planet(out: list[PlanetOut]) -> PlanetKey | None:
+    up = [p for p in out if p.highest and p.highest.altitude_deg > planets.PLANET_RISESET_DEG]
+    if not up:
+        return None
+    return max(up, key=lambda p: p.highest.altitude_deg if p.highest else 0.0).key
+
+
+def _shooting(spans: moon.DarkSpans, pct: int) -> list[ShootingStretchOut]:
+    """Moonless and Moon-up stretches in time order, each with its band; neighbours of one band
+    join, so a dim Moon rising adds no seam."""
+    narrow = judge.level(judge.SCALES[judge.Measure.MOON], pct) == "nogo"
+    marked = sorted(
+        [(a, b, "broadband") for a, b in spans.moonless]
+        + [(a, b, "narrowband" if narrow else "broadband") for a, b in spans.moon_up]
+    )
+    joined: list[tuple[datetime, datetime, str]] = []
+    for a, b, band in marked:
+        if joined and joined[-1][2] == band and joined[-1][1] == a:
+            joined[-1] = (joined[-1][0], b, band)
+        else:
+            joined.append((a, b, band))
+    return [
+        ShootingStretchOut(
+            band=cast(Literal["broadband", "narrowband"], band),
+            starts_at=a.isoformat(),
+            ends_at=b.isoformat(),
+            seconds=round(seconds_between(a, b)),
+        )
+        for a, b, band in joined
+    ]
 
 
 # Only the rows written for where the site is now: a moved site has none until the round rewrites.
@@ -175,7 +224,13 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
     spans = moon.dark_spans(moon_night, dark)
     tracks = planets.night_tracks(window_start, home.latitude, home.longitude, hours=window_hours)
     span = sun.chart_window(bands)
+    shooting = _shooting(spans, moon_phase.illumination_pct)
+    planets_out = [_planet(p, span) for p in tracks]
     return TonightOut(
+        highest_planet=_highest_planet(planets_out),
+        shooting=shooting,
+        broadband_dark_s=sum(s.seconds for s in shooting if s.band == "broadband"),
+        narrowband_dark_s=sum(s.seconds for s in shooting if s.band == "narrowband"),
         chart=ChartOut(
             starts_at=span.starts_at.isoformat(),
             ends_at=span.ends_at.isoformat(),
@@ -184,10 +239,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         )
         if span
         else None,
-        planets=[
-            PlanetOut(key=cast(PlanetKey, p.key.value), track=[_sky_point(q) for q in p.track])
-            for p in tracks
-        ],
+        planets=planets_out,
         night=the_night,
         site=_site_sky(home),
         weather=weather.brief_of(conn, home.id, the_night),
@@ -214,6 +266,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
             next_new=_next(conn, home, the_night, "new"),
             next_full=_next(conn, home, the_night, "full"),
             highest=_sky_point(moon_night.highest),
+            highest_in_chart=_highest_in(moon_night.track, span),
             track=[
                 MoonPointOut(
                     at=p.at.isoformat(), altitude_deg=p.altitude_deg, moonless_dark_left_s=s

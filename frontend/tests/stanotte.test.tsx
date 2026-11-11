@@ -35,6 +35,8 @@ const NOTTE = {
   site: { name: "Cima Ekar", sky_sqm: 21.4, bortle: 3 },
   moon: LUNA,
   sky_bands: [],
+  planets: [],
+  shooting: [],
   chart: {
     starts_at: "2026-09-30T18:30:00+02:00",
     ends_at: "2026-10-01T07:30:00+02:00",

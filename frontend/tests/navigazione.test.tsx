@@ -52,7 +52,7 @@ describe("la navigazione", () => {
     await disegna()
     expect(await screen.findByRole("navigation", { name: "Navigazione principale" })).toBeDefined()
     // La home non cambia mestiere: dice quante cose ci sono da confermare.
-    expect(await within(await screen.findByRole("main")).findByText("7 da confermare")).toBeDefined()
+    expect(await within(await screen.findByRole("main")).findByText("Da confermare, 7")).toBeDefined()
   })
 
   it("dalla barra si arriva a Da confermare, e l indirizzo cambia", async () => {

@@ -241,3 +241,43 @@ Scelte diverse dalla tavola:
 - **Una Luna piena e mezza.** Tavola: «più di 1 Lune piene» da 1,5 a 2 Lune (132). App: «più di
   una Luna piena». Lo stesso giorno da due siti: tavola non lo dice; app «il 18 maggio 2024 · 2
   notti».
+
+## Dashboard -- La pagina (passo 33, commit C, 11/11)
+
+Fuori per ora (esiti della lista fissa):
+- **Progetti in corso, vista Progetti, «Prima scansione finita».** Tavola: carta dei progetti, la
+  vista del grafico e la domanda dei progetti finiti (Dashboard.dc.html 21-24, 85-98). App:
+  assenti; le prossime 3 notti prendono la riga intera, come la tavola senza progetti (297).
+  Perche': i progetti non esistono ancora (passi 44, 44.1).
+- **Il Sole.** Tavola: la scelta Luna/Sole e la carta del Sole con Kp (55-72). App: la scelta ha
+  solo «Luna», come lo stato «Sole non disponibile» della tavola (570). Perche': passi 46.10-46.12.
+- **«Il 2026» a barre e «Filtri del 2026».** Arrivano col commit D; fino ad allora in fondo resta
+  la sezione dell'anno di prima.
+
+Diverse dalla tavola:
+- **Le sei carte del meteo restano le stesse anche a notte coperta.** Tavola: con la notte
+  coperta Pioggia e Visibilità prendono il posto di Seeing e Aerosol (360-365). App: sempre
+  Nuvole, Seeing, Jet stream, Vento, Condensa, Aerosol; Seeing e Aerosol senza ore dicono «non si
+  misura» (stato della CardMeteo). Perche': nessun dato dice quando una notte e' «coperta» per
+  cambiare le carte; sei carte al loro posto (Marco, 12/10). A Design.
+- **«La prossima notte buona».** Tavola: a notte coperta la testa dice «la prossima notte buona e'
+  venerdi' 2, con 8,4 ore di posa» (418). App: non lo dice ancora. Perche': il backend non la
+  scrive; arriva col passo 33.4.
+- **Le curvette delle prossime notti senza la Luna.** Tavola: la linea tratteggiata della Luna e
+  «Luna 00:10» (517, 523). App: la Trasparenza ora per ora e le ore di buio senza Luna. Perche':
+  la previsione non porta l'altezza della Luna ora per ora.
+- **La Ripresa delle prossime notti.** Tavola: dalla Luna ora per ora (509). App: dalle ore di
+  posa divise per banda («3,1 in banda larga, 1,5 stretta»), che il backend scrive per notte.
+- **Prossime notti senza previsione.** Tavola: le tre notti restano, con le ore di buio (526). App:
+  la carta non c'e'. Perche': senza previsione la risposta non ha le notti dopo stanotte.
+- **Da riprendere.** Tavola: le domande una per una («Due siti lo stesso giorno», «Filtro
+  sconosciuto», 588). App: «Da confermare, N» con Rispondi e i frame fuori dai conti. Perche':
+  l'elenco tipizzato delle domande arriva col passo 33.4.
+- **Prima scansione.** Tavola: «Cartella Dati/Astro» e «in lettura: il 2024» (583). App: file
+  letti su quanti e quanto manca. Perche': lo stato della scansione non dice cartella e anno in
+  lettura.
+- **Il dettaglio della Luna.** Tavola: «(le soglie stanno nelle Impostazioni, gruppo Luna)» (596).
+  App: la frase senza la parentesi. Perche': la regola della Luna non e' ancora nelle Impostazioni
+  (passo 10); 25 e 65 vengono dalla scala della Luna del Meteo.
+- **Giorni polari.** Tavola: «fino al 12 agosto» (427). App: senza la data. Perche': il backend
+  non scrive quando il buio torna.

@@ -214,7 +214,7 @@ export const SITO_DI_CASA: components["schemas"]["SiteOut"] = {
  *  **non** si inietta da solo, cosi' una prova puo' ancora accorgersi se `/tonight` viene chiesta
  *  dove non doveva -- per esempio dentro il primo avvio, dove il piede non e' montato. */
 export const STANOTTE = {
-  "/api/v1/tonight": { stato: 200, corpo: { night: null, site: null, moon: null, sky_bands: [], weather: null } },
+  "/api/v1/tonight": { stato: 200, corpo: { night: null, site: null, moon: null, sky_bands: [], dark_s: null, weather: null, chart: null, planets: [], moonless_dark: [], moon_in_dark: null, shooting: [] } },
   // Stanotte chiede i siti per la scelta; uno solo non apre la scelta, quindi non smentisce il
   // "senza sito" di sopra.
   "/api/v1/sites": { stato: 200, corpo: { items: [SITO_DI_CASA], total: 1, limit: 50, offset: 0 } },

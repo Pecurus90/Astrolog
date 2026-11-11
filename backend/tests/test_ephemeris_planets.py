@@ -33,6 +33,23 @@ def test_venus_in_december_2024_is_an_evening_planet():
     assert at["23:00"] < 0
 
 
+def test_within_the_chart_venus_sets_and_jupiter_rises_and_culminates():
+    """Dicembre 2024, 18-08: Venere sera tramonta prima delle 23 e non risorge; Giove sorge nel
+    pomeriggio, quindi nel grafico non sorge, e culmina verso mezzanotte."""
+    tracks = {p.key: p for p in planets.night_tracks(NOON, *CASA, hours=24)}
+    da = dt.datetime(2024, 12, 15, 18, 0, tzinfo=ROME)
+    a = dt.datetime(2024, 12, 16, 8, 0, tzinfo=ROME)
+
+    venere = planets.within(tracks["venus"], da, a)
+    giove = planets.within(tracks["jupiter"], da, a)
+
+    assert venere.rise is None
+    assert venere.set is not None and 19 <= venere.set.hour <= 22
+    assert giove.rise is None
+    assert giove.highest.at.hour in (23, 0, 1)
+    assert 60 <= giove.highest.altitude_deg <= 72
+
+
 def test_a_track_is_drawn_every_track_step_in_the_site_zone():
     saturn = planets.night_tracks(NOON, *CASA, hours=24)[0]
     assert len(saturn.track) == 24 * 60 // TRACK_STEP_MIN + 1

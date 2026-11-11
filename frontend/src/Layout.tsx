@@ -14,7 +14,7 @@ import {
   useFineDelLavoro,
   useStato,
 } from "./Scansiona"
-import { ApriStanotte, PannelloStanotte, usePastiglia } from "./Stanotte"
+import { PannelloStanotte, usePastiglia } from "./Stanotte"
 import { type Aperto, type Comandi, Conto, LENTE, Tratto, titoloDi } from "./TelaioComune"
 import { TelaioTelefono } from "./TelaioTelefono"
 import { useRevisione } from "./api/revisione"
@@ -121,7 +121,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const corpo = (
     <>
       <AvvisiDellaScansione />
-      <ApriStanotte value={() => comandi.apri("notte")}>{children}</ApriStanotte>
+      {children}
     </>
   )
   return (

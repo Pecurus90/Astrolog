@@ -117,6 +117,11 @@ class MoonOut(BaseModel):
         "and set times: a Moon that does not rise still climbs, below the horizon, and how "
         "little it climbs is the answer."
     )
+    highest_in_chart: SkyPointOut | None = Field(
+        default=None,
+        description="The highest drawn point inside the chart's span: what the Dashboard says "
+        "it climbs to tonight. `None` without a chart.",
+    )
     track: list[MoonPointOut] = Field(
         description="The altitude curve along the night, for whoever draws it. The first and "
         "last points are the two ends of the night: a chart that closed earlier would lose the "
@@ -166,6 +171,13 @@ class PlanetOut(BaseModel):
 
     key: PlanetKey
     track: list[SkyPointOut]
+    rise: str | None = Field(
+        default=None, description="Its first rise inside the chart's span; `None`: not there."
+    )
+    set: str | None = Field(default=None, description="As `rise`, its first set.")
+    highest: SkyPointOut | None = Field(
+        default=None, description="Its top inside the chart's span; `None` without a chart."
+    )
 
 
 class ChartOut(BaseModel):
@@ -191,6 +203,16 @@ class MoonInDarkOut(BaseModel):
     until: str
     from_start: bool = Field(description="Already up when the dark starts.")
     to_end: bool = Field(description="Still up when the dark ends.")
+
+
+class ShootingStretchOut(BaseModel):
+    """A stretch of tonight's dark and what the Moon lets you shoot in it: broadband while it is
+    down or below the Meteo's Moon scale's no-go (ING 65%), narrowband only above."""
+
+    band: Literal["broadband", "narrowband"]
+    starts_at: str
+    ends_at: str
+    seconds: int
 
 
 class TonightOut(BaseModel):
@@ -223,4 +245,20 @@ class TonightOut(BaseModel):
     )
     moon_in_dark: MoonInDarkOut | None = Field(
         default=None, description="`None` when the Moon is never up in the dark, or no night."
+    )
+    shooting: list[ShootingStretchOut] = Field(
+        default=[],
+        description="The dark in time order, split by band; together they make `dark_s`. "
+        "Empty without a night.",
+    )
+    highest_planet: PlanetKey | None = Field(
+        default=None,
+        description="The planet whose top inside the chart is highest, among those that rise "
+        "there (above the planets' rise altitude); `None` when none does.",
+    )
+    broadband_dark_s: int | None = Field(
+        default=None, description="Of `dark_s`, the broadband stretches together; `None` as it."
+    )
+    narrowband_dark_s: int | None = Field(
+        default=None, description="Of `dark_s`, the narrowband stretches together."
     )

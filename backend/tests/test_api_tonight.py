@@ -57,6 +57,10 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
         "planets": [],
         "moonless_dark": [],
         "moon_in_dark": None,
+        "shooting": [],
+        "broadband_dark_s": None,
+        "narrowband_dark_s": None,
+        "highest_planet": None,
     }
 
 
@@ -354,6 +358,41 @@ def test_the_route_sends_the_four_planets_of_the_chart(client_vuoto):
     for p in pianeti:
         assert len(p["track"]) > 90
         assert all(-90 <= q["altitude_deg"] <= 90 for q in p["track"])
+        # la legenda del Sistema solare (v79): il punto piu' alto dentro il grafico
+        dentro = [q for q in p["track"] if q["at"] == p["highest"]["at"]]
+        assert dentro, p["highest"]
+    # la testa del Sistema solare: il piu' alto stanotte, scelto qui e non a schermo
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    alto = max(pianeti, key=lambda p: p["highest"]["altitude_deg"])
+    assert detto["highest_planet"] == alto["key"]
+
+
+def test_the_moon_says_how_high_it_climbs_inside_the_chart(client_vuoto, monkeypatch):
+    """«Sale fino a 68 gradi alle 07:30» (Dashboard v79): il massimo dentro il grafico, non quello
+    del mezzogiorno che apre la finestra della notte."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-11-10T16:00:00.000Z")
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    alto, grafico = detto["moon"]["highest_in_chart"], detto["chart"]
+    dentro = [
+        p for p in detto["moon"]["track"] if grafico["starts_at"] <= p["at"] <= grafico["ends_at"]
+    ]
+
+    assert grafico["starts_at"] <= alto["at"] <= grafico["ends_at"]
+    assert alto["altitude_deg"] == max(p["altitude_deg"] for p in dentro)
+
+
+def test_with_every_planet_below_the_horizon_none_is_the_highest():
+    """Un pianeta che non sorge mai nel grafico non e' "il piu' alto": la testa non lo nomina."""
+    from astrolog.api.models_tonight import PlanetOut, SkyPointOut
+    from astrolog.api.tonight import _highest_planet
+
+    sotto = PlanetOut(key="mars", track=[], highest=SkyPointOut(at="x", altitude_deg=-0.6))
+    appena = PlanetOut(key="venus", track=[], highest=SkyPointOut(at="x", altitude_deg=-0.3))
+
+    assert _highest_planet([sotto]) is None
+    assert _highest_planet([sotto, appena]) == "venus"
 
 
 def test_each_point_of_the_moon_curve_says_how_much_moonless_dark_is_left(client_vuoto):
@@ -398,6 +437,37 @@ def test_the_dark_comes_split_into_moonless_and_moon_up(client_vuoto, monkeypatc
     assert su["until"] == detto["chart"]["dark_until"]
     luna_su = _secondi([{"starts_at": su["since"], "ends_at": su["until"]}])
     assert abs(_secondi(detto["moonless_dark"]) + luna_su - detto["dark_s"]) <= 1
+
+
+def test_the_dark_comes_split_by_what_the_moon_lets_you_shoot(client_vuoto, monkeypatch):
+    """La fascia sotto il grafico della Dashboard e le due tessere della Luna (tavola v79):
+    banda larga fin che la Luna e' giu', poi solo banda stretta, coi loro secondi. La stessa
+    notte del 29/10/2026 a Vicenza: un tratto per banda, che insieme fanno il buio."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-10-29T16:00:00.000Z")
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    tratti = detto["shooting"]
+
+    assert [s["band"] for s in tratti] == ["broadband", "narrowband"]
+    assert tratti[0]["starts_at"] == detto["chart"]["dark_from"]
+    assert tratti[0]["ends_at"] == tratti[1]["starts_at"] == detto["moon_in_dark"]["since"]
+    assert tratti[1]["ends_at"] == detto["chart"]["dark_until"]
+    assert abs(sum(s["seconds"] for s in tratti) - detto["dark_s"]) <= 1
+    assert (detto["broadband_dark_s"], detto["narrowband_dark_s"]) == (
+        tratti[0]["seconds"],
+        tratti[1]["seconds"],
+    )
+
+
+def test_a_night_without_the_moon_is_all_broadband(client_vuoto, monkeypatch):
+    """Luna nuova (9/11/2026): tutto il buio e' banda larga, in un tratto solo."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-11-09T16:00:00.000Z")
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    tratti = client_vuoto.get("/api/v1/tonight").json()["shooting"]
+
+    assert [s["band"] for s in tratti] == ["broadband"]
 
 
 def test_a_moon_never_up_in_the_dark_has_no_moon_stretch(client_vuoto, monkeypatch):

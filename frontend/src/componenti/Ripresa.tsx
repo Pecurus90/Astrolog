@@ -1,46 +1,59 @@
 import { t } from "../i18n"
+import type { Formato } from "./Tema"
 
 /** What the night allows with the Moon: broadband, only narrowband, or broadband then narrowband. */
 export type TipoRipresa = "larga" | "stretta" | "mista"
 
 /**
- * The night's shooting with the Moon (v76 `Ripresa`, the `segno` form): sign and words. The sign
- * takes the text colour, never the accent: shape and word say the kind.
+ * The night's shooting with the Moon (v76 `Ripresa`): sign and words. `segno` is the small form
+ * beside a pill; `riga` the line under a big number. The sign takes the text colour, never the
+ * accent: shape and word say the kind.
  */
 export function Ripresa({
   tipo = "mista",
   testo,
+  forma = "segno",
   fondo = "carta",
+  formato = "desktop",
   colore,
   tenue,
 }: {
   tipo?: TipoRipresa
   /** The words, written by the app (hours of broadband, then narrowband). */
   testo: string
+  forma?: "segno" | "riga"
   fondo?: "carta" | "protagonista"
+  formato?: Formato
   /** Colour of the sign; without it, the text colour of the ground. */
   colore?: string
   /** Colour of the words; without it, the muted colour of the ground. */
   tenue?: string
 }) {
   const protagonista = fondo === "protagonista"
+  const riga = forma === "riga"
   const segno = colore || (protagonista ? "var(--prot-testo)" : "var(--testo)")
-  const parole = tenue || (protagonista ? "var(--prot-tenue)" : "var(--tenue)")
+  const parole = riga ? segno : tenue || (protagonista ? "var(--prot-tenue)" : "var(--tenue)")
+  const w = riga ? 20 : 16
+  const h = riga ? 10 : 8
   return (
     <span
       className="al-c-ripresa__riga-1"
       role="img"
       aria-label={t("ui.shooting.label", { testo })}
-      style={{ gap: "6px", color: segno }}
+      style={{ gap: riga ? "10px" : "6px", color: segno }}
     >
-      <span className="al-c-ripresa__riga-2" aria-hidden="true" style={{ marginTop: "3px" }}>
+      <span
+        className="al-c-ripresa__riga-2"
+        aria-hidden="true"
+        style={{ marginTop: riga ? "4px" : "3px" }}
+      >
         {tipo !== "stretta" && (
-          <svg className="al-c-ripresa__grafico-1" width={16} height={8} viewBox="0 0 20 10">
+          <svg className="al-c-ripresa__grafico-1" width={w} height={h} viewBox="0 0 20 10">
             <rect x="1" y="1" width="18" height="8" rx="4" fill="currentColor" />
           </svg>
         )}
         {tipo !== "larga" && (
-          <svg className="al-c-ripresa__grafico-1" width={16} height={8} viewBox="0 0 20 10">
+          <svg className="al-c-ripresa__grafico-1" width={w} height={h} viewBox="0 0 20 10">
             <rect
               x="1.6"
               y="1.6"
@@ -58,7 +71,11 @@ export function Ripresa({
       </span>
       <span
         className="al-c-ripresa__blocco-1"
-        style={{ fontSize: "12px", fontWeight: 400, color: parole }}
+        style={{
+          fontSize: riga ? (formato === "telefono" ? "14px" : "15px") : "12px",
+          fontWeight: riga ? 500 : 400,
+          color: parole,
+        }}
       >
         {testo}
       </span>

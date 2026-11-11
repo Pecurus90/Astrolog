@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query"
-import { createContext } from "react"
 import { Link } from "react-router"
 
 import { api } from "./api/client"
@@ -17,9 +16,6 @@ import { type Chiave, giornoEMese, numero, oraDelSito, t, unDecimale } from "./i
  * - **Qui non si calcola niente**: si sceglie la frase, mai un numero.
  * - **Ogni vuoto e' una frase, mai un trattino.**
  */
-
-/** Apre il pannello di Stanotte dalla pagina ("Stanotte intera" della Dashboard): lo da' il telaio. */
-export const ApriStanotte = createContext<(() => void) | null>(null)
 
 export function useStanotte() {
   return useQuery({
@@ -109,7 +105,7 @@ function quandoNelBuio(nelBuio: components["schemas"]["MoonInDarkOut"]): string 
 }
 
 /** La frase della Luna per la banda larga, dal gradino che il backend ha gia' deciso. */
-function fraseDellaLuna(notte: Notte): string {
+export function fraseDellaLuna(notte: Notte): string {
   const nelBuio = notte.moon_in_dark ?? null
   if (nelBuio === null) return t("frame.moon.none")
   if (nelBuio.level === "go") return t("frame.moon.go")
@@ -132,7 +128,7 @@ function verdettoDelMeteo(notte: Notte): string {
 }
 
 /** Il buio della notte e i suoi tratti senza Luna: "buio 20:48-05:48, senza Luna 20:48-23:40". */
-function buioDellaNotte(notte: Notte): string {
+export function buioDellaNotte(notte: Notte): string {
   const da = notte.chart?.dark_from ?? null
   const a = notte.chart?.dark_until ?? null
   const parti: string[] = []

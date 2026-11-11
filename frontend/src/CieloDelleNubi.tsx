@@ -52,8 +52,6 @@ const RIGHE = { go: "as-cielo__riga--buona", marginal: "as-cielo__riga--incerta"
 type Tela = { largo: number; alto: number; sinistra: number; destra: number; cima: number; fondo: number; ogni: number }
 const CIELO: Tela = { largo: 1080, alto: 300, sinistra: 44, destra: 48, cima: 30, fondo: 274, ogni: 1 }
 const TELEFONO: Tela = { largo: 358, alto: 220, sinistra: 38, destra: 36, cima: 30, fondo: 194, ogni: 2 }
-const SOLA: Tela = { largo: 1000, alto: 210, sinistra: 12, destra: 46, cima: 30, fondo: 184, ogni: 1 }
-const SOLA_TELEFONO: Tela = { largo: 340, alto: 170, sinistra: 12, destra: 34, cima: 30, fondo: 144, ogni: 2 }
 // il valore sta sotto il suo punto; il nome di una linea sopra (raffiche, aria) o sotto (rugiada)
 const SOTTO_IL_PUNTO = 16
 const SOPRA_IL_PUNTO = -8
@@ -242,35 +240,6 @@ export function CieloDelleNubi({
           <span>{t("weather.sky.legend.span", { da: oraDelSito(ore[0]?.at ?? ""), a: oraDelSito(ore[ore.length - 1]?.at ?? "") })}</span>
         )}
       </p>
-    </div>
-  )
-}
-
-/** Una misura sola dal tramonto all'alba, sul cielo coi suoi colori: lo stesso disegno della scala
- *  di destra (la Dashboard lo apre sotto la sua carta, `docs/domini/meteo.md`). */
-export function ScalaDellaMisura({ notte: n, ore, scale, codice, telefono = false }: {
-  notte: Notte; ore: Ora[]; scale: Scala[]; codice: Destra
-  /** Sul telefono la tela e' la sua, piu' piccola, con un'ora si' e una no. */
-  telefono?: boolean
-}) {
-  const tela = telefono ? SOLA_TELEFONO : SOLA
-  const { largo, alto, sinistra, destra, fondo } = tela
-  const passo = (largo - sinistra - destra) / (ore.length || 1)
-  const x = (i: number) => sinistra + (i + 0.5) * passo
-  const da = DISEGNO[codice].scala
-  const id = `scala-${n.night}-${codice}`
-  return (
-    <div className="as-cielo__tela">
-      <svg viewBox={`0 0 ${largo} ${alto}`} role="img" aria-label={t("dashboard.weather.img", { nome: t(`weather.measure.${codice}` as Chiave) })}>
-        <Fondi id={id} ore={ore} />
-        <rect width={largo} height={alto} fill={`url(#${id}-c)`} />
-        {/* la terra prima della scala: lo zero della scala le sta sopra, come nella tavola */}
-        <rect className="as-volta__terra" x={0} y={fondo + 0.5} width={largo} height={alto - fondo} />
-        <ScalaDiDestra destra={codice} ore={ore} misura={n.measures.find((m) => m.code === da)}
-          scala={da === codice ? scale.find((s) => s.code === codice) : undefined} x={x} passo={passo} id={`${id}-tr`} tela={tela} />
-        <line className="as-volta__orizzonte" x1={sinistra} x2={largo} y1={fondo} y2={fondo} />
-        <Ore ore={ore} x={x} tela={tela} />
-      </svg>
     </div>
   )
 }

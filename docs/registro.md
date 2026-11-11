@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 362; senza fonte: 1.
-Fonti: C norma: 183; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 84.
+Valori: 363; senza fonte: 1.
+Fonti: C norma: 184; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 84.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -182,6 +182,12 @@ Fonti: C norma: 183; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T
 |---|---|---|
 | _MAIN_PHASES | `_MAIN_PHASES = ((0, MoonPhase.NEW), (90, MoonPhase.FIRST_QUARTER), ...` | C USNO https://aa.usno.navy.mil/faq/moon_phases: phase angle 0, 90, 180, 270; crescent < half |
 | _MAIN_PHASES | `(270, MoonPhase.LAST_QUARTER))` | C USNO https://aa.usno.navy.mil/faq/moon_phases: phase angle 0, 90, 180, 270; crescent < half |
+
+### ephemeris/planets.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| PLANET_RISESET_DEG | `-0.5667` | C USNO https://aa.usno.navy.mil/faq/RST_defs: stars and planets at zenith distance 90d 34m |
 
 ### ephemeris/sun.py
 
