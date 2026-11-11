@@ -22,7 +22,7 @@ export const itComponenti = {
   "ui.weather.chiave-non-valida.title": "Chiave Meteoblue non valida o scaduta.",
   "ui.weather.chiave-non-valida.pill": "chiave non valida",
   "ui.weather.non-disponibile.title": "Non disponibile",
-  "ui.weather.non-disponibile.text": "Non tutti i modelli danno la visibilit\u00e0.",
+  "ui.weather.non-disponibile.text": "La previsione non la d\u00e0 per stanotte.",
   "ui.weather.non-disponibile.pill": "non disponibile",
   "ui.weather.in-arrivo.title": "Seeing in arrivo da Meteoblue.",
   "ui.weather.in-arrivo.text": "La chiave \u00e8 salvata: il seeing arriva al prossimo giro.",

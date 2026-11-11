@@ -22,7 +22,7 @@ export const enComponenti = {
   "ui.weather.chiave-non-valida.title": "Meteoblue key invalid or expired.",
   "ui.weather.chiave-non-valida.pill": "invalid key",
   "ui.weather.non-disponibile.title": "Not available",
-  "ui.weather.non-disponibile.text": "Not every model provides visibility.",
+  "ui.weather.non-disponibile.text": "The forecast does not give it for tonight.",
   "ui.weather.non-disponibile.pill": "not available",
   "ui.weather.in-arrivo.title": "Seeing coming from Meteoblue.",
   "ui.weather.in-arrivo.text": "The key is saved: seeing arrives on the next round.",

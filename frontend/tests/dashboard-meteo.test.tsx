@@ -193,6 +193,17 @@ describe("le sei carte", () => {
     expect(carta("Vento").testo).toContain("Non disponibile")
   })
 
+  it("una misura senza ore dice che manca nella previsione, non la visibilita' (Issue #59)", async () => {
+    await montaDashboard({
+      previsione: { nights: [{ ...NOTTE, measures: [misura("jet", { known_hours: 0 })] }] },
+    })
+    await screen.findByText("Meteo della notte")
+    for (const nome of ["Jet stream", "Vento"]) {
+      expect(carta(nome).testo).toContain("La previsione non la dà per stanotte.")
+      expect(carta(nome).testo).not.toContain("visibilità")
+    }
+  })
+
   it("un valore che manca e' un punto di domanda; un giudizio senza soglie non c'e'", async () => {
     const misure = [
       ...NOTTE.measures.filter((m) => m.code !== "jet" && m.code !== "aerosol"),
