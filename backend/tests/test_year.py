@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.spine import year
-from group_bench import ROMA, corri, luogo, posa, prepara
+from group_bench import ROMA, corri, filtro, luogo, posa, prepara
 
 OGGI = dt.date(2024, 9, 30)
 
@@ -77,6 +77,69 @@ def test_an_empty_year_has_no_average_per_night_instead_of_zero(conn):
     assert (anno.nights, anno.per_night_s, anno.per_month) == (0, None, 0)
 
 
+def test_twelve_months_with_their_hours_the_current_one_and_those_to_come(conn):
+    """Tavola v79, «Il 2026, fino a oggi»: una barra per mese, quella del mese in corso accesa,
+    quelle dopo vuote."""
+    mesi = year.of(conn, OGGI).months
+    assert [m.month for m in mesi] == list(range(1, 13))
+    assert mesi[4].integration_s == 23400
+    assert [m.integration_s for i, m in enumerate(mesi) if i != 4] == [0] * 11
+    assert [m.current for m in mesi].index(True) == 8
+    assert [m.future for m in mesi] == [False] * 9 + [True] * 3
+
+
+def test_the_year_before_month_by_month_and_in_the_same_period(conn):
+    """Il tratteggio e' l'anno prima, mese intero; il confronto a parole e' lo stesso periodo, dal
+    primo gennaio allo stesso giorno: il 30 dicembre 2023 sta nel mese, non nel periodo."""
+    posa(conn, quando="2023-06-10T21:00:00Z", esposizione=7200.0, hash_="giugno")
+    corri(conn)
+    anno = year.of(conn, OGGI)
+    assert anno.months[5].previous_s == 7200
+    assert anno.months[11].previous_s == 3600
+    assert anno.previous_same_period_s == 7200
+
+
+def test_on_february_29_the_same_period_ends_on_the_28th(conn):
+    posa(conn, quando="2023-02-28T21:00:00Z", esposizione=3600.0, hash_="28")
+    corri(conn)
+    assert year.of(conn, dt.date(2024, 2, 29)).previous_same_period_s == 3600
+
+
+def test_the_bars_are_scaled_on_the_fullest_month_of_both_years(conn):
+    """Il mese piu' pieno dei due anni e' la barra intera: il confronto si legge a occhio."""
+    posa(conn, quando="2023-06-10T21:00:00Z", esposizione=46800.0, hash_="giugno")
+    corri(conn)
+    mesi = year.of(conn, OGGI).months
+    assert mesi[5].previous_bar == 1.0
+    assert mesi[4].bar == 0.5
+    assert mesi[0].bar == 0.0
+
+
+def test_the_hours_per_filter_with_their_share_and_the_frames_naming_none(conn):
+    """«Filtri del 2026»: ore e quota di ogni filtro, dal piu' ripreso; i frame che non dicono il
+    filtro sono ore loro, non di un filtro."""
+    ha, oiii = filtro(conn, "Ha", "ha"), filtro(conn, "OIII", "oiii")
+    posa(conn, quando="2024-06-01T21:00:00Z", esposizione=1800.0, filtro_id=oiii, hash_="o")
+    posa(conn, quando="2024-06-02T21:00:00Z", esposizione=10800.0, filtro_id=ha, hash_="h")
+    corri(conn)
+    anno = year.of(conn, OGGI)
+    assert [(f.name, f.passband, f.integration_s, f.share_pct) for f in anno.filters] == [
+        ("Ha", "ha", 10800, 30),
+        ("OIII", "oiii", 1800, 5),
+    ]
+    assert (anno.no_filter_s, anno.no_filter_pct) == (23400, 65)
+
+
+def test_the_shares_add_up_to_100(conn):
+    """Tre terzi arrotondati da soli fanno 99: il punto che manca va al resto piu' grande."""
+    a, b = filtro(conn, "R", "r"), filtro(conn, "G", "g")
+    posa(conn, quando="2024-06-01T21:00:00Z", esposizione=23400.0, filtro_id=a, hash_="r")
+    posa(conn, quando="2024-06-02T21:00:00Z", esposizione=23400.0, filtro_id=b, hash_="g")
+    corri(conn)
+    anno = year.of(conn, OGGI)
+    assert sum(f.share_pct for f in anno.filters) + anno.no_filter_pct == 100
+
+
 def test_the_route_answers_the_year_of_the_home_site(db_path, conn):
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         r = c.get("/api/v1/year")
@@ -91,4 +154,9 @@ def test_the_route_answers_the_year_of_the_home_site(db_path, conn):
         "per_month",
         "lead_blank",
         "days",
+        "months",
+        "previous_same_period_s",
+        "filters",
+        "no_filter_s",
+        "no_filter_pct",
     }

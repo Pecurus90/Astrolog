@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 359; senza fonte: 1.
-Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 83.
+Valori: 360; senza fonte: 1.
+Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 84.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -60,6 +60,12 @@ Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T
 |---|---|---|
 | IlluminationPct | `Annotated[int, Field(ge=0, le=100)]` | T |
 | MoonOut.ceiling_deg | `le=90,` | T |
+
+### api/models_year.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| YearMonthOut.month | `Field(ge=1, le=12)` | T |
 
 ### api/nights.py
 

@@ -5843,6 +5843,55 @@ export interface components {
             /** Integration S */
             integration_s: number;
         };
+        /** YearFilterOut */
+        YearFilterOut: {
+            /**
+             * Name
+             * @description The name you gave it, or the one the files carried.
+             */
+            name: string;
+            /**
+             * Passband
+             * @description The canonical passband: it is what gives the colour.
+             */
+            passband: string;
+            /** Integration S */
+            integration_s: number;
+            /**
+             * Share Pct
+             * @description Of the year's `integration_s`, rounded.
+             */
+            share_pct: number;
+        };
+        /** YearMonthOut */
+        YearMonthOut: {
+            /** Month */
+            month: number;
+            /** Integration S */
+            integration_s: number;
+            /**
+             * Previous S
+             * @description The same whole month of the year before.
+             */
+            previous_s: number;
+            /**
+             * Bar
+             * @description The bar's height: 1 is the fullest month of both years.
+             */
+            bar: number;
+            /**
+             * Previous Bar
+             * @description As `bar`, for the year before.
+             */
+            previous_bar: number;
+            /** Current */
+            current: boolean;
+            /**
+             * Future
+             * @description After the current month: nothing to count yet.
+             */
+            future: boolean;
+        };
         /**
          * YearOut
          * @description The year so far: what the Dashboard's year section shows, already counted.
@@ -5879,6 +5928,28 @@ export interface components {
              * @description Every day of the year, January 1 first.
              */
             days: components["schemas"]["YearDayOut"][];
+            /**
+             * Months
+             * @description January to December.
+             */
+            months: components["schemas"]["YearMonthOut"][];
+            /**
+             * Previous Same Period S
+             * @description The year before from January 1 to the same day (February 29 on the 28th).
+             */
+            previous_same_period_s: number;
+            /**
+             * Filters
+             * @description The year's filters, the most shot first.
+             */
+            filters: components["schemas"]["YearFilterOut"][];
+            /**
+             * No Filter S
+             * @description The frames naming no filter, outside `filters`.
+             */
+            no_filter_s: number;
+            /** No Filter Pct */
+            no_filter_pct: number;
         };
     };
     responses: never;

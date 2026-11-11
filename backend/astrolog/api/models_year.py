@@ -15,6 +15,25 @@ class YearDayOut(BaseModel):
     integration_s: int
 
 
+class YearMonthOut(BaseModel):
+    month: int = Field(ge=1, le=12)  # [T] calendar months
+    integration_s: int
+    previous_s: int = Field(description="The same whole month of the year before.")
+    bar: float = Field(
+        ge=0, le=1, description="The bar's height: 1 is the fullest month of both years."
+    )
+    previous_bar: float = Field(ge=0, le=1, description="As `bar`, for the year before.")
+    current: bool
+    future: bool = Field(description="After the current month: nothing to count yet.")
+
+
+class YearFilterOut(BaseModel):
+    name: str = Field(description="The name you gave it, or the one the files carried.")
+    passband: str = Field(description="The canonical passband: it is what gives the colour.")
+    integration_s: int
+    share_pct: int = Field(description="Of the year's `integration_s`, rounded.")
+
+
 class YearOut(BaseModel):
     """The year so far: what the Dashboard's year section shows, already counted."""
 
@@ -28,3 +47,10 @@ class YearOut(BaseModel):
         description="Empty squares before January 1 in a Monday-first week grid (0-6)."
     )
     days: list[YearDayOut] = Field(description="Every day of the year, January 1 first.")
+    months: list[YearMonthOut] = Field(description="January to December.")
+    previous_same_period_s: int = Field(
+        description="The year before from January 1 to the same day (February 29 on the 28th)."
+    )
+    filters: list[YearFilterOut] = Field(description="The year's filters, the most shot first.")
+    no_filter_s: int = Field(description="The frames naming no filter, outside `filters`.")
+    no_filter_pct: int
