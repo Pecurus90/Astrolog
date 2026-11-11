@@ -248,7 +248,11 @@ export function Ricerca({ onChiudi }: { onChiudi: (riportaIlFuoco: boolean) => v
                       <span className="al-c-cerca__tondo-2" aria-hidden="true">
                         <Segno d={a.segno} />
                       </span>
-                      <span>
+                      {/* v79: one line with the dots, all of it in the title */}
+                      <span
+                        className="al-c-cerca__aiuto-t"
+                        title={esempio ? `${t(a.nome)} \u00b7 ${esempio}` : t(a.nome)}
+                      >
                         <b className="al-c-cerca__testo-3">{t(a.nome)}</b>
                         {esempio && <span className="al-c-cerca__testo-4">{` \u00b7 ${esempio}`}</span>}
                       </span>

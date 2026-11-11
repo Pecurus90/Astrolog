@@ -100,6 +100,9 @@ describe("Cerca, la finestra", () => {
     await waitFor(() => expect(aiuto.textContent).toContain("Attrezzatura · Askar 107PHQ"))
     expect(aiuto.textContent).toContain("Siti · Monte Lema")
     expect(aiuto.textContent).toContain("Oggetti · m31, NGC 224, Velo")
+    // v79: each line on one line with the dots, all of it in the title
+    const righe = [...aiuto.querySelectorAll(".al-c-cerca__aiuto-t")].map((r) => r.getAttribute("title"))
+    expect(righe).toContain("Siti · Monte Lema")
     // Progetti arriva con la sua pagina
     expect(aiuto.textContent).not.toContain("Progetti")
   })

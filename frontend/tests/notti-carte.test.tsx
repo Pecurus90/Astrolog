@@ -13,7 +13,7 @@ import type { Formato } from "../src/componenti/Tema"
 import { t } from "../src/i18n"
 import { AConfronto, Protagonista, TuttoLArchivio, type VoceFuori } from "../src/NottiCarte"
 import type { Elenco, Notte } from "../src/NottiDati"
-import { pulisci } from "./banco"
+import { pulisci, una } from "./banco"
 
 afterEach(pulisci)
 
@@ -105,12 +105,6 @@ function protagonista(
   return screen.getByRole("region", { name: "La notte" })
 }
 
-const una = (dentro: Element, selettore: string): HTMLElement => {
-  const el = dentro.querySelector<HTMLElement>(selettore)
-  if (!el) throw new Error(`manca ${selettore}`)
-  return el
-}
-
 const testi = (dentro: Element, selettore: string): string[] =>
   [...dentro.querySelectorAll(selettore)].map((e) => e.textContent ?? "")
 
@@ -127,9 +121,11 @@ describe("la protagonista sul desktop", () => {
     expect(carta.querySelector(".al-notti__riga-27")).toBeNull()
     expect(sito.querySelector("svg")?.getAttribute("width")).toBe("14")
     expect(sito.querySelector("path")?.getAttribute("d")).toMatch(/^M12 21s7-6\.3 7-11\.5/)
-    expect(sito.textContent).toBe("Cima Ekar· dalle coordinate nei frame")
-    expect(una(sito, ".al-notti__sito-fonte").textContent).toBe("· dalle coordinate nei frame")
-    // v78: name and source each with the dots, both whole in the title
+    // v79: the pill holds only the name; the source sits beside it, outside the pill
+    expect(sito.textContent).toBe("Cima Ekar")
+    expect(sito.querySelector(".al-notti__sito-fonte")).toBeNull()
+    const insieme = una(carta, ".al-notti__sito")
+    expect(una(insieme, ".al-notti__sito-fonte").textContent).toBe("dalle coordinate nei frame")
     expect(una(sito, ".al-notti__sito-nome").textContent).toBe("Cima Ekar")
     expect(sito.getAttribute("title")).toBe("Cima Ekar · dalle coordinate nei frame")
   })

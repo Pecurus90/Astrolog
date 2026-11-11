@@ -159,6 +159,13 @@ export function cambia(mappa: Record<string, Voce>) {
   mappaCorrente = mappa
 }
 
+/** Il solo elemento del selettore dentro `dentro`; manca = la prova cade col suo nome. */
+export const una = (dentro: Element, selettore: string): HTMLElement => {
+  const el = dentro.querySelector<HTMLElement>(selettore)
+  if (!el) throw new Error(`manca ${selettore}`)
+  return el
+}
+
 /** Lo stato del lavoro quando non sta girando niente: la barra in alto lo chiede su ogni pagina
  *  dell'app, quindi le prove che la disegnano lo dichiarano. Sta qui perche' e' lo stesso pezzo
  *  in cinque file -- ma **non** si inietta da solo in ogni mappa: il banco rifiuta cio' che non

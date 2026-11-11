@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import { t } from "../src/i18n"
 import { distanza, estensione } from "../src/TuttoDellaNotte"
-import { type Voce, pulisci } from "./banco"
+import { type Voce, pulisci, una } from "./banco"
 import { DICIOTTO, apri, chieste, notte, pagina, rotte } from "./notti-banco"
 
 afterEach(pulisci)
@@ -153,7 +153,11 @@ describe("la finestra della notte", () => {
     const d = await finestra()
     const testa = await within(d).findByRole("region", { name: "Riepilogo" })
     expect(within(testa).getByText("Sabato 18 maggio 2024")).toBeTruthy()
-    expect(within(testa).getByText("Cima Ekar · dalle 23:00 alle 01:30")).toBeTruthy()
+    // v79: site with the dots and the whole time, one line, all of it in the title
+    const periodo = una(testa, ".al-c-riepilogo__periodo")
+    expect(una(periodo, ".al-c-riepilogo__periodo-s").textContent).toBe("Cima Ekar")
+    expect(una(periodo, ".al-c-riepilogo__periodo-t").textContent).toBe(" · dalle 23:00 alle 01:30")
+    expect(periodo.getAttribute("title")).toBe("Cima Ekar · dalle 23:00 alle 01:30")
     expect(within(testa).getByText("3 h")).toBeTruthy()
     expect(await within(testa).findByText("2,4″")).toBeTruthy()
     expect(within(testa).getByText("36")).toBeTruthy()
@@ -425,7 +429,9 @@ describe("la testa e gli oggetti, quando i dati mancano", () => {
     const corpo = { ...DETTAGLIO, night, first_start: null, last_end: null }
     const d = await finestra(conDettaglio(corpo))
     const testa = await within(d).findByRole("region", { name: "Riepilogo" })
-    expect(within(testa).getByText(t("window.span.untimed", { sito: "Cima Ekar" }))).toBeTruthy()
+    expect(una(testa, ".al-c-riepilogo__periodo").getAttribute("title")).toBe(
+      `Cima Ekar · ${t("window.span.untimed")}`,
+    )
     expect(within(testa).getByText(t("window.frames", { n: "4" }))).toBeTruthy()
     expect(within(testa).getByText(t("window.untimed"))).toBeTruthy()
   })

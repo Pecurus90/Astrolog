@@ -171,10 +171,11 @@ function Testa({
 }) {
   const n = d.night
   const conOre = n.integration_s > 0
-  const periodo =
+  const orario = ` \u00b7 ${
     d.first_start && d.last_end
-      ? t("window.span", { sito: n.site, da: oraDelSito(d.first_start), a: oraDelSito(d.last_end) })
-      : t("window.span.untimed", { sito: n.site })
+      ? t("window.span", { da: oraDelSito(d.first_start), a: oraDelSito(d.last_end) })
+      : t("window.span.untimed")
+  }`
   const grande = conOre ? oreEMinuti(n.integration_s) : t("window.frames", { n: numero(n.frames) })
   const sotto = conOre
     ? `${t("window.frames", { n: numero(n.frames) })} \u00B7 ${t("window.objects", { n: n.objects.length })}`
@@ -206,7 +207,11 @@ function Testa({
         <span className="al-c-riepilogo__riga-5">
           <b className="al-c-riepilogo__testo-2">{dataLunga(n.night_date)}</b>
         </span>
-        <span className="al-c-riepilogo__testo-4">{periodo}</span>
+        {/* v79: long site with the dots, the time stays whole */}
+        <span className="al-c-riepilogo__testo-4 al-c-riepilogo__periodo" title={n.site + orario}>
+          <span className="al-c-riepilogo__periodo-s">{n.site}</span>
+          <span className="al-c-riepilogo__periodo-t">{orario}</span>
+        </span>
       </div>
       <NumeriInTesta
         formato={formato}

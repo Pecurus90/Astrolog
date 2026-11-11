@@ -39,26 +39,28 @@ function Sito({ notte, telefono }: { notte: Notte; telefono: boolean }) {
   const misura = telefono ? 13 : 14
   const fonte = fonteDelSito(notte)
   return (
-    // v78: name and source with the dots, both whole in the title
-    <span
-      className={telefono ? "al-notti__riga-27" : "al-notti__riga-5"}
-      title={`${notte.site} \u00B7 ${fonte}`}
-    >
-      <svg
-        width={misura}
-        height={misura}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
+    // v79: source out of the pill, beside it or below, wraps instead of cutting
+    <span className="al-notti__sito">
+      <span
+        className={telefono ? "al-notti__riga-27" : "al-notti__riga-5"}
+        title={`${notte.site} \u00B7 ${fonte}`}
       >
-        <path d={PIN} />
-      </svg>
-      <span className="al-notti__sito-nome">{notte.site}</span>
-      <span className="al-notti__sito-fonte">{`\u00B7 ${fonte}`}</span>
+        <svg
+          width={misura}
+          height={misura}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d={PIN} />
+        </svg>
+        <span className="al-notti__sito-nome">{notte.site}</span>
+      </span>
+      <span className="al-notti__sito-fonte">{fonte}</span>
     </span>
   )
 }

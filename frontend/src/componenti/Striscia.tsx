@@ -145,7 +145,7 @@ export function Striscia({
       className="al-c-striscia__blocco-2"
       role="tablist"
       aria-label={nome}
-      // v78: --n lets the sheet keep 150 px tiles under 1000 px
+      // v79: --n lets the sheet keep 176 px tiles, scrolling inside the card
       style={{
         ["--n" as string]: notti.length,
         display: scorre ? "flex" : "grid",

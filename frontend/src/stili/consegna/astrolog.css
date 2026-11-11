@@ -4282,12 +4282,39 @@ button.al-scelta__voce { border: 0; background: transparent; font: inherit; colo
   .al-c-carta__blocco-1:has(.al-meteo__colonna-13) { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .al-c-carta__blocco-1:has(.al-meteo__colonna-13) > .al-meteo__colonna-11 { grid-column: 1 / -1; }
   /* Striscia delle notti: le carte tengono la loro misura e la striscia scorre dentro la sua carta, come sul telefono */
-  .al-c-striscia__blocco-2 { grid-template-columns: repeat(var(--n), minmax(150px, 1fr)) !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: thin; scrollbar-color: var(--linea) transparent; }
+  /* v79 · Notti: il calendario prende la riga intera come la carta della notte */
+  .al-notti__colonna-4 { grid-column: 1 / -1; }
+  .al-c-striscia__blocco-2 { grid-template-columns: repeat(var(--n), minmax(176px, 1fr)) !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: thin; scrollbar-color: var(--linea) transparent; }
 }
 
 /* v78 · Notti, la pillola del sito: su una riga, il nome e la fonte coi tre puntini (tutto nel title) */
 .al-notti__riga-5, .al-notti__riga-27 { min-width: 0; max-width: 100%; box-sizing: border-box; white-space: nowrap; }
 .al-notti__riga-5 > svg, .al-notti__riga-27 > svg { flex: none; }
 .al-notti__sito-nome { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.al-notti__sito-fonte { flex: 0 2 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* v79 · la fonte esce dalla pillola: accanto se c'e' posto, sotto se no; va a capo, non si taglia */
+.al-notti__sito { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; max-width: 100%; }
+.al-notti__sito-fonte { margin-left: 0; font-size: 12px; line-height: 1.3; color: var(--tenue); white-space: normal; text-wrap: pretty; min-width: 0; }
 .al-notti__riga-26 > .al-notti__colonna-7 { min-width: 0; flex: 1 1 auto; }
+
+/* v79 · Striscia sul desktop: «1 h 50 di banda larga» su una riga. La carta non scende sotto 176 px; se le notti non ci stanno la striscia scorre dentro la sua carta */
+.al-c-striscia__colonna-1 .al-c-ripresa__blocco-1 { white-space: nowrap; }
+.al-c-striscia__blocco-2[style*="grid"] { grid-template-columns: repeat(var(--n), minmax(176px, 1fr)) !important; overflow-x: auto !important; scrollbar-width: thin; scrollbar-color: var(--linea) transparent; }
+
+/* v79 · Tutto della notte, sotto il titolo: il sito su una riga coi tre puntini (tutto nel title), l'orario resta intero */
+.al-c-riepilogo__periodo { display: flex; min-width: 0; max-width: 100%; white-space: nowrap; }
+.al-c-riepilogo__periodo-s { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.al-c-riepilogo__periodo-t { flex: none; }
+.al-c-cerca__aiuto-t { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.al-c-cerca__riga-5 { min-width: 0; }
+/* v79 · Card meteo stretta (Sistema a 700): l'avviso e il suo comando vanno a capo dentro la carta */
+.al-c-card-meteo__colonna-4, .al-c-card-meteo__riga-6, .al-c-card-meteo__colonna-5 { min-width: 0; }
+.al-c-card-meteo__colonna-5 { overflow-wrap: break-word; }
+.al-bottone.al-c-card-meteo__blocco-4 { max-width: 100%; white-space: normal; text-align: left; height: auto; min-height: 28px; }
+@media (max-width: 999px) {
+  /* v79 · Sistema: la card meteo del telefono sopra le due compatte */
+  .al-sis__griglia-12 { grid-template-columns: minmax(0, 1fr); }
+  .al-sis__griglia-12 > :first-child { max-width: 150px; }
+  /* v79 · Sistema: le carte affiancate una sotto l'altra */
+  .al-sis__griglia-2, .al-sis__griglia-9, .al-sis__griglia-10 { grid-template-columns: minmax(0, 1fr); }
+  .al-sis__griglia-2 > *, .al-sis__griglia-9 > *, .al-sis__griglia-10 > * { grid-column: 1 / -1; }
+}
