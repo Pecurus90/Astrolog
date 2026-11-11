@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from .. import levels
 from .verdict import (
     CLOUD_GO_MAX_PCT,
     CLOUD_MARGINAL_MAX_PCT,
@@ -173,8 +174,11 @@ SCALES: dict[Measure, Scale] = {
         Scale(
             Measure.MOON,
             _field("moon_pct"),
-            # [C ING: dark time lit fraction under 0.25, grey to 0.65, then bright]
-            [Step(NOGO, 65.0, strict=False), Step(MARGINAL, 25.0, strict=False)],
+            # one home with the Moon calendar: `levels.moon_level`
+            [
+                Step(NOGO, levels.MOON_BRIGHT_PCT, strict=False),
+                Step(MARGINAL, levels.MOON_GREY_PCT, strict=False),
+            ],
             digits=0,
             axis_top=100.0,  # [T] chart axis, percent
         ),

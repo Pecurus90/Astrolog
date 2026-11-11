@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 360; senza fonte: 1.
-Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 84.
+Valori: 362; senza fonte: 1.
+Fonti: C norma: 183; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T tecnico: 84.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -218,6 +218,8 @@ Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T
 | SEVERE_UNDER_PX | `1.5` | C Howell et al. 1996, PASP 108:1074 |
 | IDEAL_LOW_PX | `2.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
 | IDEAL_HIGH_PX | `3.0` | C AAVSO CCD Photometry Guide; Diffraction Limited |
+| MOON_GREY_PCT | `25.0` | C ING Technical Note 127: dark time lit fraction under 0.25 |
+| MOON_BRIGHT_PCT | `65.0` | C ING Technical Note 127: grey time to 0.65, then bright |
 
 ### measure_list.py
 
@@ -822,7 +824,6 @@ Fonti: C norma: 181; U usanza: 3; D metodo: 32; M misura: 22; P decisione: 40; T
 | SCALES | `[Step(NOGO, 1.0, strict=False), Step(None, 0.1, strict=False)],` | C NASA |
 | SCALES | `digits=2,` | T |
 | SCALES | `axis_top=0.2,` | T |
-| SCALES | `[Step(NOGO, 65.0, strict=False), Step(MARGINAL, 25.0, strict=False)],` | C ING: dark time lit fraction under 0.25, grey to 0.65, then bright |
 | SCALES | `axis_top=100.0,` | T |
 | SCALES | `axis_top=20.0,` | T |
 | NEUTRAL | `Scale(Measure.CLOUD_MID, _field("cloud_mid_pct"), [], axis_top=100.0),` | T |

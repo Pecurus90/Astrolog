@@ -18,6 +18,19 @@ IDEAL_LOW_PX = 2.0  # [C AAVSO CCD Photometry Guide; Diffraction Limited]
 IDEAL_HIGH_PX = 3.0  # [C AAVSO CCD Photometry Guide; Diffraction Limited]
 
 
+# The Moon's lit percent: dark time under 0.25, grey to 0.65, then bright
+MOON_GREY_PCT = 25.0  # [C ING Technical Note 127: dark time lit fraction under 0.25]
+MOON_BRIGHT_PCT = 65.0  # [C ING Technical Note 127: grey time to 0.65, then bright]
+
+
+def moon_level(lit_pct: float) -> Verdict:
+    """The Meteo's Moon scale, the hour's and the Moon calendar's night alike: broadband good,
+    marginal, narrowband only. Both bounds belong to the step above."""
+    if lit_pct >= MOON_BRIGHT_PCT:
+        return Verdict.NOGO
+    return Verdict.MARGINAL if lit_pct >= MOON_GREY_PCT else Verdict.GO
+
+
 class SamplingClass(StrEnum):
     SEVERE_UNDER = "severe_under"
     UNDER = "under"

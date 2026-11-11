@@ -9,8 +9,8 @@ from ..clock import night_date, night_window
 from ..db import config
 from ..db.replace_table import replace_rows
 from ..ephemeris import moon
+from ..levels import moon_level
 from ..site_of import Site
-from ..weather import judge
 
 COLUMNS = (
     "site_id", "night_date", "latitude", "longitude", "phase_key", "illumination_pct",
@@ -77,7 +77,7 @@ def rebuild(conn: sqlite3.Connection, site: Site, wanted: list[str]) -> None:
             n.moonless_dark_s,
             *events.get(n.night, (None, None)),
             int(n.illumination_pct < max_pct or n.moonless_dark_s >= min_dark_s),
-            judge.level(judge.SCALES[judge.Measure.MOON], n.illumination_pct),
+            moon_level(n.illumination_pct),
         )  # fmt: skip
         for n in nights
     ]
