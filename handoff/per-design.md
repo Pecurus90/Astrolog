@@ -13,7 +13,11 @@ Consegna controllata: dce48035 (v79, 10/11), in `handoff/design/` al posto della
 
 ## Da dare
 
-- [da dare] Dopo la v80 (Marco, 11/11: si' a tutte e due): (a) i circa 150 attributi SVG col
+- [da dare] Dopo la v81 (Marco, 11/11: tutto IAU): i nomi delle stelle della Carta del cielo
+  con i nomi propri IAU (WGSN: Polaris, Sirius, Arcturus), uguali in ogni lingua come le
+  costellazioni latine; anche nella descrizione della scala di Bortle del Primo avvio
+  «Pleiades» al posto di «le Pleiadi».
+- [data 11/11] Dopo la v80 (Marco, 11/11: si' a tutte e due): (a) i circa 150 attributi SVG col
   segnaposto nelle altre tavole (Archivio, Menu, Planner, Statistiche e le altre): stessa cura
   di Cerca e Telaio, l'icona nasce gia' col suo disegno; nessuna tavola, aperta da sola, da'
   errori in console. (b) I nomi comuni scritti a mano in italiano (Progetti, Cerca, Primo avvio,
