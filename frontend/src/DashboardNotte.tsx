@@ -261,7 +261,11 @@ export function DashboardNotte({
                 n: t(`dashboard.chart.planet.${k}`),
                 punti: punti.map((q) => ({ x: x(q.at), v: q.altitude_deg })),
                 c: COLORE_PIANETA[k],
-                scrivi: (i: number) => sottoOrizzonte(punti[i]?.altitude_deg ?? -1),
+                scrivi: (i: number) => {
+                  const at = passi[i]?.at
+                  const q = at ? punti.find((r) => Date.parse(r.at) === Date.parse(at)) : undefined
+                  return q ? sottoOrizzonte(q.altitude_deg) : t("dashboard.chart.unknown")
+                },
               },
             ]
           }),

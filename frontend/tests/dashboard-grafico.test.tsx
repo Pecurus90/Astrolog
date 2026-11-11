@@ -453,6 +453,21 @@ describe("la vista del Sistema solare", () => {
     ).toEqual(["Saturnotramonta 04:10", "Giovemassimo 34\u00b0", "Marte"])
   })
 
+  it("il cursore legge ogni pianeta alla sua ora, non al passo della Luna (Issue #58)", async () => {
+    await montaDashboard()
+    fireEvent.click(await screen.findByRole("tab", { name: "Sistema solare" }))
+    const c = await cursore()
+    expect(c.getAttribute("aria-valuetext")).toBe(
+      "alle 22:00: Saturno non disponibile, Giove non disponibile, Marte non disponibile, " +
+        "Venere non disponibile, Luna sotto l'orizzonte · banda larga",
+    )
+    fireEvent.keyDown(c, { key: "ArrowLeft" })
+    expect(c.getAttribute("aria-valuetext")).toBe(
+      "alle 20:00: Saturno 20°, Giove sotto l'orizzonte, Marte sotto l'orizzonte, " +
+        "Venere sotto l'orizzonte, Luna sotto l'orizzonte",
+    )
+  })
+
   it("senza il pianeta piu' alto la vista non c'e'", async () => {
     await montaDashboard({ stanotte: { highest_planet: null } })
     await cursore()
