@@ -13,6 +13,18 @@ Le decisioni del vecchio sistema (fino alla v38) stanno in
 4. Carta «È stagione» nella Dashboard (progetti salvati, per priorita').
 5. Poi si cancellano le tavole di prova: `Planner proposte`, `Telefono comandi`, `Telaio vivo` (restano `Planner telefono` e `Planner desktop` come riferimento finche' il porting non e' fatto).
 
+## v79 — Il collaudo della v78, 7 voci (10/11/2026, da Claude Code via Marco; da approvare)
+
+- Fonte: la coda per Design del 10/11, «Da dare» (testo in `docs/archivio/brief-porting-v78.md`). Voce per voce in `docs/per-claude-code-porting.md`, sezione v79.
+- **1 · Pillola del sito nella carta della notte**: la fonte esce dalla pillola. Nella pillola resta il nome coi tre puntini; la fonte («dalle coordinate nei frame») le sta accanto se c'e' posto, sotto se no, in piccolo e tenue, e va a capo invece di tagliarsi. Desktop e telefono uguali.
+- **2 · Striscia delle notti sul desktop**: la carta di una notte non scende sotto 176 px e la riga della ripresa («1 h 50 di banda larga») non va a capo; se le notti non ci stanno la striscia scorre dentro la sua carta, a ogni larghezza (fra 700 e 999 come prima).
+- **3 · Impostazioni, Primo avvio, Sistema** misurate a 700, 860, 960, 1000, 1100, 1280 e 1440: Impostazioni e Primo avvio non sbordano. Sistema sbordava a 700: sotto 1000 le carte affiancate vanno una sotto l'altra, la card meteo del telefono sta sopra le due compatte e l'avviso della card meteo (testo e comando) va a capo dentro la carta.
+- **4 · Notti fra 700 e 999**: il calendario delle notti prende la riga intera, come la carta della notte.
+- **5 · Sito dal nome lungo**: Tutto della notte, sotto il titolo, il sito coi tre puntini e l'orario intero, su una riga (tutto nel `title`). Cerca: le righe dell'aiuto su una riga coi tre puntini. Il `?sito=` della tavola arriva anche a Tutto della notte e all'aiuto di Cerca (la voce Siti).
+- **6 · Errori**: il runtime delle tavole passa a `componentDidUpdate` solo le props di prima; Cerca leggeva lo stato di prima e cadeva (l'errore «reading 'q'» delle Notti). Ora Cerca tiene da se' l'ultima ricerca. Le icone coi segnaposto: ogni `<path d="{{ … }}">` di tutte le tavole e' dentro un `sc-if` sul suo dato, come nell'Archivio (Telaio, Cerca, Menu, Riepilogo, Impostazioni, Planner, Piano della notte e le altre: 70 icone). `Telaio.dc.html?formato=telefono` aperto da solo e' il telefono (il parametro vale solo li').
+- **7 · Icona della scheda**: `pagine/icona.svg` (32 px e piu') e `pagine/icona-16.svg` (16 px, linee piu' spesse in proporzione). Il marchio della testa, anello e punto chiari, su una tessera scura a angoli tondi con un filo chiaro attorno: si legge sulle schede chiare e su quelle scure senza dipendere dal modo. Colori fissi, non cambiano coi cinque accenti. Il Telaio la mette nella testa delle tavole.
+- Pacchetto: `consegna/astrolog-v79.zip` al posto della v78.
+
 ## v78 — Il collaudo della v77, 3 voci (10/11/2026, da Claude Code via Marco; da approvare)
 
 - Fonte: la coda per Design del 10/11, «Da dare» (testo in `docs/archivio/brief-porting-v77.md`). Voce per voce in `docs/per-claude-code-porting.md`, sezione v78.

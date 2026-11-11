@@ -95,6 +95,16 @@ Il brief intero e' in `docs/archivio/brief-porting-v59.md`; ogni punto ha la sua
 
 **Stato**: v60–v73 da approvare da Marco sulla tavola, parole comprese.
 
+## v79 (10/11): le 7 voci del collaudo della v78
+
+1. **Pillola del sito** (Notti, desktop e telefono): `.al-notti__sito` (flex, va a capo) contiene la pillola (`__riga-5` / `__riga-27`, solo icona e `__sito-nome` coi puntini) e, fuori, `__sito-fonte` (12 px, `--tenue`, `white-space: normal`). La fonte c'e' solo se l'app la manda.
+2. **Striscia** (astrolog.css, «v79 · Striscia sul desktop»): `grid-template-columns: repeat(var(--n), minmax(176px, 1fr))` e `overflow-x: auto` a ogni larghezza; `.al-c-striscia__colonna-1 .al-c-ripresa__blocco-1 { white-space: nowrap }`.
+3. **Sistema** (`@media (max-width: 999px)`, «v79 · Sistema»): `al-sis__griglia-2/9/10` una colonna; `__griglia-12` una colonna. CardMeteo: `__colonna-4/5` e `__riga-6` `min-width: 0`, il comando `__blocco-4` va a capo. Impostazioni e Primo avvio: nessuno sbordo misurato.
+4. **Notti**: nella stessa media `.al-notti__colonna-4 { grid-column: 1 / -1 }`.
+5. **Sito lungo**: Riepilogo, notte: `H.pS` (sito) e `H.pT` (« · dalle 21:00 alle …») in `.al-c-riepilogo__periodo` (una riga, il sito coi puntini, l'orario `flex: none`, `title` = tutto); l'oggetto resta `H.periodo` com'era. Cerca: `.al-c-cerca__aiuto-t` una riga coi puntini, `title`. Nell'app il sito arriva dai dati; `?sito=` e' solo tavola (Notti → Tutto della notte, Riepilogo, Cerca).
+6. **Errori**: Cerca `componentDidUpdate(pp)` senza `ps` (`this._qPrima`). Ogni `<path d="{{ x }}">` e' in `<sc-if value="{{ x }}">` (solo tavola: in React il `d` e' gia' una stringa). Telaio: `?formato=` letto solo se la pagina aperta e' `Telaio.dc.html`.
+7. **Icona**: `pagine/icona.svg` (viewBox 32) e `pagine/icona-16.svg` (viewBox 16) al posto di `frontend/src/icona.svg`; in `index.html` due `<link rel="icon" type="image/svg+xml">`, `sizes="any"` e `sizes="16x16"`. Tessera `#0d0d10`, filo bianco al 22–25%, anello e punto `#f4f4f6`.
+
 ## v78 (10/11): le 3 voci del collaudo della v77
 
 1. **Fra 700 e 999 px** (`@media (max-width: 999px)` in fondo ad astrolog.css, «v78»): Carta scrive `data-col` (il numero di `colonne`); con `data-col` diverso da 12 la carta va a `grid-column: 1 / -1`. In piu': `.al-conf__centro-1` una colonna e `.al-conf__colonna-1` static; `.al-sel__centro-1` e `.al-sel__centro-3` una colonna; `.al-attr__centro-2 > .al-attr__colonna-1` riga intera; `.al-dash__griglia-6` tre colonne; la Carta del Campionamento (`:has(.al-meteo__colonna-13)`) tre colonne col titolo sopra; `.al-c-striscia__blocco-2` `repeat(var(--n), minmax(150px, 1fr))` con `overflow-x: auto` (Striscia scrive `--n` inline). Nell'app la soglia e' la stessa del cambio di formato: sopra 999 px tutto come a 1440.

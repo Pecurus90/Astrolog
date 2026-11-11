@@ -19,12 +19,12 @@
 </div>
 <div class="al-c-cerca__colonna-2" id="cerca-lista" role="listbox" aria-label="Trovati" aria-busy="{{ occupato }}" style="padding:{{ L.lpad }}">
 <sc-if value="{{ nota }}" hint-placeholder-val="{{ false }}"><p class="al-c-cerca__riga-4"><span class="al-c-cerca__tondo-1" aria-hidden="true" style="background:{{ nota.bg }};color:{{ nota.fg }}">{{ nota.s }}</span><span class="al-c-cerca__testo-1">{{ nota.t }}</span></p></sc-if>
-<sc-if value="{{ vuoto }}" hint-placeholder-val="{{ false }}"><div class="al-c-cerca__colonna-3"><span class="al-c-cerca__testo-2">Si cercano</span><div class="al-c-cerca__colonna-4"><sc-for list="{{ aiuto }}" as="a" hint-placeholder-count="5"><span class="al-c-cerca__riga-5"><span class="al-c-cerca__tondo-2" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{ a.d }}"></path></svg></span><span><b class="al-c-cerca__testo-3">{{ a.l }}</b><span class="al-c-cerca__testo-4"> {{ a.es }}</span></span></span></sc-for></div></div></sc-if>
+<sc-if value="{{ vuoto }}" hint-placeholder-val="{{ false }}"><div class="al-c-cerca__colonna-3"><span class="al-c-cerca__testo-2">Si cercano</span><div class="al-c-cerca__colonna-4"><sc-for list="{{ aiuto }}" as="a" hint-placeholder-count="5"><span class="al-c-cerca__riga-5"><span class="al-c-cerca__tondo-2" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><sc-if value="{{ a.d }}" hint-placeholder-val="{{ false }}"><path d="{{ a.d }}"></path></sc-if></svg></span><span class="al-c-cerca__aiuto-t" title="{{ a.tit }}"><b class="al-c-cerca__testo-3">{{ a.l }}</b><span class="al-c-cerca__testo-4"> {{ a.es }}</span></span></span></sc-for></div></div></sc-if>
 <sc-if value="{{ niente }}" hint-placeholder-val="{{ false }}"><div class="al-c-cerca__colonna-5"><span class="al-c-cerca__testo-5">{{ niente.t }}</span><span class="al-c-cerca__testo-6">Qui si cercano oggetti, notti, attrezzatura, siti e pagine.</span></div></sc-if>
 <sc-for list="{{ gruppi }}" as="g" hint-placeholder-count="2"><div class="al-c-cerca__colonna-6" role="group" aria-label="{{ g.l }}">
 <div class="al-c-cerca__riga-6"><span class="al-c-cerca__testo-7">{{ g.l }}</span><span>{{ g.perche }}</span><span class="al-c-cerca__testo-8">{{ g.quante }}</span></div>
 <sc-for list="{{ g.voci }}" as="v" hint-placeholder-count="3"><div class="al-c-cerca__riga-7"><a class="al-c-cerca__riga-8" data-an="riga" id="{{ v.id }}" href="#" role="option" aria-selected="{{ v.sel }}" onClick="{{ v.on }}" onMouseMove="{{ v.hov }}" style="min-height:{{ L.rowH }};background:{{ v.bg }}">
-<span class="al-c-cerca__tondo-3" aria-hidden="true" style="background:{{ v.ib }};color:{{ v.ic }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{ g.d }}"></path></svg></span>
+<span class="al-c-cerca__tondo-3" aria-hidden="true" style="background:{{ v.ib }};color:{{ v.ic }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><sc-if value="{{ g.d }}" hint-placeholder-val="{{ false }}"><path d="{{ g.d }}"></path></sc-if></svg></span>
 <span class="al-c-cerca__colonna-7"><span class="al-c-cerca__blocco-4">{{ v.n }}<span class="al-c-cerca__testo-9">{{ v.c }}</span></span><sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><span class="al-c-cerca__blocco-5">{{ v.dice }}</span></sc-if></span>
 <sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><span class="al-c-cerca__blocco-6">{{ v.dice }}</span></sc-if>
 <sc-if value="{{ v.invio }}" hint-placeholder-val="{{ false }}"><span class="al-c-cerca__blocco-3" aria-hidden="true">Invio</span></sc-if>
@@ -56,7 +56,8 @@ class Component extends DCLogic {
     requestAnimationFrame(() => { if (this._in && !this.props.statico) { this._in.focus({ preventScroll: true }); const v = this._in.value; this._in.setSelectionRange(v.length, v.length); } });
     if (this.props.formato === 'telefono' && !this.props.statico) { let e = this._in; while (e && e !== document.body) { if (e.scrollHeight > e.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(e).overflowY)) e.scrollTop = 0; e = e.parentElement; } window.scrollTo(0, 0); }
   }
-  componentDidUpdate(pp, ps) { if (pp.testo !== this.props.testo) this.setState({ q: null, sel: 0 }); if (ps.q !== this.state.q) this.righe(); }
+  // v79: il runtime passa solo le props di prima, lo stato di prima si tiene qui
+  componentDidUpdate(pp) { if (pp && pp.testo !== this.props.testo) this.setState({ q: null, sel: 0 }); if (this._qPrima !== this.state.q) { this._qPrima = this.state.q; this.righe(); } }
   componentWillUnmount() { this._alw && clearInterval(this._alw); }
   alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
@@ -135,7 +136,8 @@ class Component extends DCLogic {
       : stato === 'errore dell\u0027app' ? { s: '!', bg: t.warn, fg: t.warnFg, t: 'AstroLog non risponde, riprova.' } : null;
     // v60: mentre cerca o se AstroLog non risponde, niente righe
     const ferma = stato === 'cerco' || stato === 'errore dell\u0027app';
-    const aiuto = [['Oggetti', 'm31, NGC 224, Velo', D.ogg], ['Notti', '25/9, settembre 2026', D.notti], ['Progetti', 'IC 1396, Luna', D.prog], ['Attrezzatura', 'zwo, FRA400', D.att], ['Siti', 'Casa', D.siti], ['Impostazioni', 'Bortle, Meteoblue', D.imp], ['Pagine', 'Meteo', D.pag]].map(([l, es, d]) => ({ l, es: '· ' + es, d }));
+    const aiuto = [['Oggetti', 'm31, NGC 224, Velo', D.ogg], ['Notti', '25/9, settembre 2026', D.notti], ['Progetti', 'IC 1396, Luna', D.prog], ['Attrezzatura', 'zwo, FRA400', D.att], ['Siti', (typeof location !== 'undefined' && new URLSearchParams(location.search).get('sito')) || 'Casa', D.siti], ['Impostazioni', 'Bortle, Meteoblue', D.imp], ['Pagine', 'Meteo', D.pag]].map(([l, es, d]) => ({ l, es: '· ' + es, d, tit: l + ' · ' + es }));
+    // v79: ?sito= della tavola arriva anche qui; la riga resta una, coi tre puntini
     return { pronto: true, t, L, q, rifIn: this.rifIn, scrivi: e => this.setState({ q: e.target.value, sel: 0 }), tasti, chiudi, fuori: e => { if (e.target === e.currentTarget && !stat) chiudi(); },
       aperto: flat.length ? 'true' : 'false', attivo: flat.length ? 'cerca-v' + sel : undefined, nota, vuoto: !qn, aiuto, niente: !ferma && qn && !flat.length ? { t: 'Niente per «' + q.trim() + '».' } : null, gruppi: ferma ? [] : gruppi, occupato: stato === 'cerco' ? 'true' : 'false' };
   }

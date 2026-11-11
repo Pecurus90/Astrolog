@@ -34,7 +34,7 @@
 
 <dc-import name="componenti/Carta" formato="desktop" etichetta="La notte" tono="protagonista" colonne="{{ protCols }}" ritardo="0" padding="28px" gap="22" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,560px">
 <div class="al-notti__riga-3">
-<span class="al-notti__riga-4"><b class="al-notti__testo-3">{{ n.titolo }}</b><span class="al-notti__riga-5" title="{{ n.sitoT }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span class="al-notti__sito-nome">{{ n.sito }}</span><span class="al-notti__sito-fonte">· {{ n.sitoF }}</span></span></span>
+<span class="al-notti__riga-4"><b class="al-notti__testo-3">{{ n.titolo }}</b><span class="al-notti__sito"><span class="al-notti__riga-5" title="{{ n.sitoT }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span class="al-notti__sito-nome">{{ n.sito }}</span></span><sc-if value="{{ n.sitoF }}" hint-placeholder-val="{{ true }}"><span class="al-notti__sito-fonte">{{ n.sitoF }}</span></sc-if></span></span>
 <a class="al-notti__tondo-1" href="#" onClick="{{ apri }}" aria-haspopup="dialog" aria-label="Tutto della notte" title="Tutto della notte">↗</a>
 </div>
 <div class="al-notti__riga-6"><span class="al-notti__testo-4" data-an="big">{{ n.big }}</span><span class="al-notti__colonna-1"><span class="al-notti__testo-5">{{ n.bigL }}</span><span class="al-notti__testo-2">{{ n.frameL }}</span></span></div>
@@ -121,7 +121,7 @@
 
 <sc-if value="{{ S.main }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="telefono" etichetta="La notte" tono="protagonista" ritardo="60" padding="20px 16px" gap="16" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,560px">
 <div class="al-notti__riga-26" ref="{{ rifNotte }}">
-<span class="al-notti__colonna-7"><b class="al-notti__testo-24">{{ n.titolo }}</b><span class="al-notti__riga-27" title="{{ n.sitoT }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span class="al-notti__sito-nome">{{ n.sito }}</span><span class="al-notti__sito-fonte">· {{ n.sitoF }}</span></span></span>
+<span class="al-notti__colonna-7"><b class="al-notti__testo-24">{{ n.titolo }}</b><span class="al-notti__sito"><span class="al-notti__riga-27" title="{{ n.sitoT }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21zM12 7.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span class="al-notti__sito-nome">{{ n.sito }}</span></span><sc-if value="{{ n.sitoF }}" hint-placeholder-val="{{ true }}"><span class="al-notti__sito-fonte">{{ n.sitoF }}</span></sc-if></span></span>
 <sc-if value="{{ S.nav }}" hint-placeholder-val="{{ true }}"><span class="al-notti__riga-28"><a class="al-notti__tondo-1" href="#" onClick="{{ nav.prima }}" aria-label="La notte prima" aria-disabled="{{ nav.primaNo }}" style="opacity:{{ nav.primaOp }}">‹</a><a class="al-notti__tondo-1" href="#" onClick="{{ nav.dopo }}" aria-label="La notte dopo" aria-disabled="{{ nav.dopoNo }}" style="opacity:{{ nav.dopoOp }}">›</a></span></sc-if><a class="al-notti__tondo-1" href="#" onClick="{{ apri }}" aria-haspopup="dialog" aria-label="Tutto della notte" title="Tutto della notte">↗</a>
 </div>
 <div class="al-notti__riga-29"><span class="al-notti__testo-25" data-an="big">{{ n.big }}</span><span class="al-notti__colonna-15"><span class="al-notti__testo-26">{{ n.bigL }}</span><span class="al-notti__testo-11">{{ n.frameL }}</span></span></div>
@@ -319,7 +319,7 @@ class Component extends DCLogic {
     // Tutto della notte: il Riepilogo in finestra (desktop) o a pagina intera (telefono)
     const aperto = this.state.det ?? (p.dettaglio === 'aperto'); this._aperto = aperto;
     const D = aperto && S.main ? { aria: 'Riepilogo della notte: ' + titolo(N), pos: p.dettaglio ? 'dentro' : 'fissa', fmt: F.desk ? 'desktop' : 'telefono',
-      notte: { id: N.id, titolo: titolo(N), sito: N.sito, ore: N.ore, fr: N.fr, ogg: N.ogg, altri: N.altri, fil: N.fil, luna: N.luna, es: c0.e, esT: c0.pillT },
+      notte: { id: N.id, titolo: titolo(N), sito: sitoV(N.sito), ore: N.ore, fr: N.fr, ogg: N.ogg, altri: N.altri, fil: N.fil, luna: N.luna, es: c0.e, esT: c0.pillT },
       chiudi: this.chiudiDet, prima: () => vai(si + 1)(), dopo: () => vai(si - 1)(), primaNo: si >= notti.length - 1, dopoNo: si <= 0 } : null;
     this._nId = N.id; this._lista = visti.join(','); this._tel = tel;
 

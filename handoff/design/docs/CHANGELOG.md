@@ -1,5 +1,15 @@
 # AstroLog — cronologia
 
+## v79 — Il collaudo della v78, 7 voci — 10/11/2026
+
+- Carta della notte: la fonte del sito fuori dalla pillola, accanto o sotto, sempre leggibile.
+- Striscia sul desktop: carte da almeno 176 px, la ripresa su una riga, la striscia scorre dentro la carta.
+- Sistema fra 700 e 999: carte una sotto l'altra, card meteo senza sbordi. Impostazioni e Primo avvio misurate, a posto.
+- Notti fra 700 e 999: calendario sulla riga intera. Tutto della notte e Cerca: sito lungo su una riga; `?sito=` anche li'.
+- Errori: Cerca senza lo stato di prima (il runtime non lo passa); 70 icone coi segnaposto dentro `sc-if`; `Telaio.dc.html?formato=telefono`.
+- Icona della scheda: `pagine/icona.svg`, `pagine/icona-16.svg`.
+- Pacchetto `consegna/astrolog-v79.zip`.
+
 ## v78 — Il collaudo della v77, 3 voci — 10/11/2026
 
 - Pagine fra 700 e 999 px: carte una sotto l'altra (`data-col` su Carta); Da confermare, Selezione, Attrezzatura in una colonna; Meteo della notte e Campionamento su tre colonne; la striscia scorre dentro la carta.

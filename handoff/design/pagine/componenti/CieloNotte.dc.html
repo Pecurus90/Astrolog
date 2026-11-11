@@ -18,12 +18,12 @@
 <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
 <svg viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="{{ notte.aria }}" style="width:100%;height:{{ notte.h }};display:block;overflow:visible">
 <rect x="{{ notte.bx }}" y="0" width="{{ notte.bw }}" height="200" fill="var(--carta-2)"></rect>
-<path d="{{ notte.dOrz }}" fill="var(--traccia)"></path>
+<sc-if value="{{ notte.dOrz }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dOrz }}" fill="var(--traccia)"></path></sc-if>
 <line x1="0" x2="600" y1="{{ notte.ym }}" y2="{{ notte.ym }}" stroke="var(--tenue)" stroke-width="1" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"></line>
 <line x1="0" x2="600" y1="{{ notte.y0 }}" y2="{{ notte.y0 }}" stroke="var(--linea)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
-<path d="{{ notte.dLuna }}" fill="none" stroke="var(--luna-linea)" stroke-width="1.5" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"></path>
-<path d="{{ notte.dTutta }}" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
-<path d="{{ notte.dUtile }}" fill="none" stroke="var(--accento)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+<sc-if value="{{ notte.dLuna }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dLuna }}" fill="none" stroke="var(--luna-linea)" stroke-width="1.5" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"></path></sc-if>
+<sc-if value="{{ notte.dTutta }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dTutta }}" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></sc-if>
+<sc-if value="{{ notte.dUtile }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dUtile }}" fill="none" stroke="var(--accento)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path></sc-if>
 <sc-if value="{{ notte.mer }}" hint-placeholder-val="{{ false }}"><line x1="{{ notte.mer.x }}" x2="{{ notte.mer.x }}" y1="0" y2="200" stroke="var(--accento)" stroke-width="1.5" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line></sc-if>
 <line x1="{{ notte.x }}" x2="{{ notte.x }}" y1="0" y2="200" stroke="var(--testo)" stroke-width="1.5" vector-effect="non-scaling-stroke"></line>
 </svg>
