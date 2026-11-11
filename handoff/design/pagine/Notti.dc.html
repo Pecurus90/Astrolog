@@ -173,9 +173,9 @@ class Component extends DCLogic {
     if (this._nId !== this._pN) { if (this._pN) { M.numero(r); M.barre(r); } this._pN = this._nId; }
     if (this._lista !== this._pL) { if (this._pL != null) M.righe(r); this._pL = this._lista; } }
   // Token, soglie, catalogo e dati simulati stanno in componenti/ (tema.js, soglie.js, catalogo.js, dati.js)
-  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALnome && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
-    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f + '?v81'; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   renderVals() {

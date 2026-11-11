@@ -110,9 +110,9 @@ class Component extends DCLogic {
   componentWillUnmount() { this.ferma(); this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rsz); }
   ferma() { (this._t || []).forEach(clearTimeout); this._t = []; }
   dopo(ms, f) { (this._t = this._t || []).push(setTimeout(f, ms)); }
-  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALnome && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
-    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f + '?v81'; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   // Lo stato di partenza da passo + stato (Tweaks). I passi prima di quello scelto risultano fatti, il seeing saltato.
@@ -157,7 +157,7 @@ class Component extends DCLogic {
       'cartelle: già registrata': () => PC('Dati/Astro/2026', 'registrata'),
       'cartelle: aggiunte': () => { s.aggiunte = TRE.slice(); },
       'cartelle: NAS': () => { s.dove = 'nas'; },
-      'cartelle: NAS vuota': () => { s.dove = 'nas'; s.nasDir = '/data/astro/2026/Cima Ekar/IC 1396 Proboscide d\u0027Elefante/Ha 300 s'; },
+      'cartelle: NAS vuota': () => { s.dove = 'nas'; s.nasDir = '/data/astro/2026/Cima Ekar/IC 1396/Ha 300 s'; },
       'cartelle: NAS senza elenco': () => { s.dove = 'nas'; s.nasLista = false; },
       'seeing: verifica in corso': () => KEY('in corso', '3f9c1e07d5ab12'),
       'seeing: chiave valida': () => { KEY('valida'); s.chiaveSalvata = 'ab12'; },
@@ -302,12 +302,12 @@ const BORTLE = [["cielo eccellente, buio pieno","La Via Lattea proietta ombre, e
   ["periferia luminosa","Niente luce zodiacale; il cielo basso è grigio-bianco e la Via Lattea si intravede solo allo zenit. M33 solo col binocolo."],
   ["fra periferia e città","Tutto il cielo è grigio chiaro, con sorgenti di luce forte in ogni direzione; la Via Lattea quasi non si vede."],
   ["cielo di città","Il cielo è grigio o arancione e ci si legge; molte stelle delle costellazioni sono deboli o non si vedono affatto."],
-  ["centro città","Le costellazioni si perdono e, a occhio nudo, a parte le Pleiadi non si vede nessun oggetto Messier: restano Luna, pianeti e gli ammassi più luminosi."]];
+  ["centro città","Le costellazioni si perdono e, a occhio nudo, a parte Pleiades non si vede nessun oggetto Messier: restano Luna, pianeti e gli ammassi più luminosi."]];
 const POSTI = [{ n: 'Cima Ekar, Asiago (VI), Italia', nome: 'Cima Ekar', lat: '45.8486 N', lon: '11.5689 E' }, { n: 'Pennar, Asiago (VI), Italia', nome: 'Pennar', lat: '45.8664 N', lon: '11.5264 E' }];
 const TRE = [{ p: 'Dati/Astro/2026', n: '1240 file FITS' }, { p: 'Esterno/Archivio/Deep sky', n: 'oltre 5000 file FITS' }, { p: 'Esterno/Archivio/Calibrazione', n: '486 file FITS' }];
 const NAS = { '/data': ['astro', 'backup', 'foto'], '/data/astro': ['2024', '2025', '2026', 'calibrazione'], '/data/astro/2026': ['Casa', 'Cima Ekar'],
-  '/data/astro/2026/Cima Ekar': ['IC 1396 Proboscide d\u0027Elefante', 'M 31 Galassia di Andromeda', 'NGC 7000 Nebulosa Nord America', 'dark', 'flat'],
-  '/data/astro/2026/Cima Ekar/IC 1396 Proboscide d\u0027Elefante': ['Ha 300 s', 'OIII 300 s', 'SII 300 s'] };
+  '/data/astro/2026/Cima Ekar': ['IC 1396', 'M 31', 'NGC 7000', 'dark', 'flat'],
+  '/data/astro/2026/Cima Ekar/IC 1396': ['Ha 300 s', 'OIII 300 s', 'SII 300 s'] };
 // "46,4843 N": virgola o punto, lettera del verso facoltativa (S e O negativi)
 function coord(x, lat) { const q = (x || '').trim(); if (!q) return {};
   const m = /^(-?\d+(?:[.,]\d+)?)\s*°?\s*([NSEOW])?$/i.exec(q), es = lat ? '46.4843 N' : '12.0561 E';

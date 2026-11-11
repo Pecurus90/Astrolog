@@ -13,6 +13,27 @@ Le decisioni del vecchio sistema (fino alla v38) stanno in
 4. Carta «È stagione» nella Dashboard (progetti salvati, per priorita').
 5. Poi si cancellano le tavole di prova: `Planner proposte`, `Telefono comandi`, `Telaio vivo` (restano `Planner telefono` e `Planner desktop` come riferimento finche' il porting non e' fatto).
 
+## v82 — Tutto IAU e console pulita (11/11/2026, Marco; da approvare)
+
+- **Stelle**: nella Carta del cielo i nomi propri IAU (WGSN), uguali in ogni lingua: Polaris, Sirius, Arcturus, Canopus, Castor, Pollux, Procyon, Regulus (gli altri lo erano gia').
+- **Primo avvio**: nella scala di Bortle «a parte Pleiades».
+- **Console pulita**: ogni tavola aperta da sola, a 1440 px, senza errori ne' avvisi. Correzioni: `catalogo.js` si carica con `?v81` e le tavole aspettano anche `ALnome` (una copia vecchia in memoria dava «ALnome is not defined»); Da confermare costruisce i nomi solo quando il catalogo c'e'; Carta e Finestra senza contenuto non avvisano; CieloCriteri, CieloLista e CieloNotte, aperti senza dati, restano vuoti invece di avvisare.
+
+## v81 — Dopo la v80: segnaposto, nomi dal catalogo, filtri oltre cinque (11/11/2026, Marco; da approvare)
+
+- **1 · Segnaposto SVG**: in tutte le tavole gli attributi geometrici coi dati (`d`, `viewBox`, `x`, `y`, `x1`…, `cx`, `r`, `width`, `height`, `points`, `transform`) si scrivono `sc-camel-d="{{ … }}"`, `sc-camel-view-box="{{ … }}"`: il browser non li legge come geometria, il runtime li passa con il nome giusto. 288 attributi in 18 file. Solo tavola.
+- **2 · Nomi dal catalogo**: nessun nome comune ne' costellazione scritti a mano. `catalogo.js` ha `ALcat` (con Sh2-155), `ALnomi` (i nomi in inglese degli oggetti fuori da ALcat) e `ALnome(sigla)`; Progetti, Cerca, Da confermare, Selezione, Planner e la Carta del cielo (`cupola.js`) leggono da li'. Le costellazioni della Carta del cielo (`dati-cielo.js`) sono latine IAU. Primo avvio: le cartelle d'esempio hanno la sola sigla. Sh2-129 del Planner arriva da SIMBAD, non dal catalogo: «Flying Bat Nebula», Cepheus.
+- **3 · Filtri oltre cinque**: approvata la proposta della v80. Stato «anno con molti filtri» in Dashboard stati (H2 desktop, P0 telefono): sette filtri con nome, i primi quattro, «altri 3 filtri», Filtro non indicato.
+- Stelle e Pleiadi del Primo avvio: vedi v82.
+
+## v80 — Il collaudo e il porting della v79, 3 voci (11/11/2026, da Claude Code via Marco; da approvare)
+
+- Fonte: la coda per Design dell'11/11, «Da dare» (testo in `docs/archivio/brief-porting-v79.md`). Voce per voce in `docs/per-claude-code-porting.md`, sezione v80.
+- **1 · Errori delle icone**: in Cerca e nel Telaio nessun `<path d="{{ … }}">` resta nel markup: l'icona coi dati e' un elemento che la logica costruisce gia' col suo `d` (`a.p`, `g.p`, `m.altroChevP`, `m.modeIconP`, `vb.az.p`, `b.p`). Solo tavola.
+- **2 · Archivio come l'app**: il campo dice «Cerca: M 31, NGC 7000…» e trova solo sigle e nomi dell'oggetto, non i nomi comuni. `catalogo.js`: costellazioni latine IAU (Cygnus, Cepheus, Cassiopeia…), nomi comuni in inglese («Andromeda Galaxy», «Elephant's Trunk Nebula»): valgono per tutte le tavole che leggono il catalogo. Via Sole, Sistema solare (comete comprese), le linguette e «Aggiungi oggetto» con la sua finestra, e i tre stati che li mostravano: tornano quando c'e' una sorgente (ADR 0019).
+- **3 · Dashboard, Il 2026 e Filtri del 2026**: «4,6». «Filtro non indicato» e' sempre l'ultima riga, pallino a filo tratteggiato e fetta grigia (`--tenue`). Un filtro a colori nell'anello e' tre fette R, G, B attaccate; in elenco resta il pallino a strisce. **Dove si taglia**: fino a sei righe; se i filtri con nome sono piu' di cinque, i primi quattro per ore e una riga «altri N filtri» con la somma (pallino diviso nei loro colori), poi «Filtro non indicato»; nell'anello ogni filtro ha la sua fetta. Percentuali arrotondate col resto piu' grande, la somma fa 100. Senza notti nell'anno prima: niente tratteggio, niente legenda, niente confronto. Anno senza ore: «0 h», «in 0 notti», media «—», «0» notti al mese, confronto col 2025 se c'e', «Nessuna posa nel 2026, per ora.» al posto dell'anello e dell'elenco. L'anno che non risponde: una carta sola «Il 2026, fino a oggi» con l'Avviso riga «Il 2026 non si è caricato…» e Riprova; il resto della pagina c'e'. Mesi: quando il grafico e' piu' stretto di 420 px le etichette diventano iniziali (G F M A…). Lo scarto («−2 h 20») non va mai a capo; la riga della legenda va a capo intera. Negli stati: I, J, K sul desktop, P, Q, R sul telefono.
+- Pacchetto: `consegna/astrolog-v80.zip` al posto della v79.
+
 ## v79 — Il collaudo della v78, 7 voci (10/11/2026, da Claude Code via Marco; da approvare)
 
 - Fonte: la coda per Design del 10/11, «Da dare» (testo in `docs/archivio/brief-porting-v78.md`). Voce per voce in `docs/per-claude-code-porting.md`, sezione v79.

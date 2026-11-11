@@ -108,7 +108,7 @@
 <dc-import name="componenti/Carta" padding="24px 28px" gap="14" flex="1" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
 <div class="al-dash__riga-25"><span class="al-dash__testo-1">Il 2026</span><span class="al-dash__testo-2">si riempie dopo la prima scansione</span></div>
 <div class="al-dash__griglia-9"><sc-for list="{{ monthsEmpty }}" as="m" hint-placeholder-count="12"><span class="al-dash__pillola-8" style="background:{{ m.bg }}"></span></sc-for></div>
-<div class="al-dash__griglia-10"><sc-for list="{{ monthsEmpty }}" as="m" hint-placeholder-count="12"><span>{{ m.l }}</span></sc-for></div>
+<div class="al-dash__griglia-10"><sc-for list="{{ monthsEmpty }}" as="m" hint-placeholder-count="12"><span><span class="al-dash__mese-lungo">{{ m.l }}</span><span class="al-dash__mese-corto" aria-hidden="true">{{ m.c }}</span></span></sc-for></div>
 <span class="al-dash__testo-2">Ore, notti e filtri dell'anno, mese per mese.</span>
 </dc-import>
 </div></sc-if>
@@ -125,11 +125,15 @@
 </sc-for>
 </dc-import></sc-if>
 
-<sc-if value="{{ S.archive }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" colonne="8" ritardo="360" padding="24px 28px" griglia="260px minmax(0,1fr)" gap="32" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<sc-if value="{{ S.archive }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ anno.errore }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" colonne="12" ritardo="360" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,120px">
+<span class="al-dash__testo-1">Il 2026, fino a oggi</span>
+<dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="!" titolo="Il 2026 non si è caricato: ore, notti e filtri dell'anno tornano quando AstroLog risponde." azione="Riprova" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import>
+</dc-import></sc-if>
+<sc-if value="{{ anno.ok }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" colonne="8" ritardo="360" padding="24px 28px" griglia="260px minmax(0,1fr)" gap="32" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
 <div class="al-dash__colonna-15">
 <span class="al-dash__testo-1">Il 2026, fino a oggi</span>
-<span class="al-dash__colonna-12"><span class="al-dash__testo-22">128 h 40</span><span class="al-dash__testo-18">in 41 notti</span></span>
-<div class="al-dash__griglia-12"><span class="al-dash__riquadro-1"><b class="al-dash__testo-23">3 h 08</b><br><span class="al-dash__testo-13">a notte, in media</span></span><span class="al-dash__riquadro-1"><b class="al-dash__testo-23">4.6</b><br><span class="al-dash__testo-13">notti al mese</span></span></div>
+<span class="al-dash__colonna-12"><span class="al-dash__testo-22">{{ anno.tot }}</span><span class="al-dash__testo-18">{{ anno.notti }}</span></span>
+<div class="al-dash__griglia-12"><span class="al-dash__riquadro-1"><b class="al-dash__testo-23">{{ anno.media }}</b><br><span class="al-dash__testo-13">a notte, in media</span></span><span class="al-dash__riquadro-1"><b class="al-dash__testo-23">{{ anno.mese }}</b><br><span class="al-dash__testo-13">notti al mese</span></span></div>
 <a class="al-dash__tondo-3 al-dash__blocco-11" href="Statistiche.dc.html" aria-label="Apri Statistiche" title="Statistiche">↗</a>
 </div>
 <div class="al-dash__colonna-3">
@@ -138,23 +142,24 @@
 <div class="al-dash__colonna-16">
 <sc-if value="{{ m.tag }}" hint-placeholder-val="{{ false }}"><span class="al-dash__strato-1">14 h 40</span></sc-if>
 <span class="al-dash__pillola-9" data-anim="1" style="height:{{ m.h }};background:{{ m.bg }};box-shadow:inset 0 0 0 1px {{ m.ring }}"></span>
-<span class="al-dash__strato-2" style="height:{{ m.gh }}"></span>
+<sc-if value="{{ m.g }}" hint-placeholder-val="{{ true }}"><span class="al-dash__strato-2" style="height:{{ m.gh }}"></span></sc-if>
 </div>
 </sc-for>
 </div>
-<div class="al-dash__griglia-10"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span>{{ m.l }}</span></sc-for></div>
-<div class="al-dash__riga-27"><span class="al-dash__riga-28"><i class="al-dash__pillola-10"></i>2026</span><span class="al-dash__riga-28"><i class="al-dash__pillola-11"></i>2025</span><span class="al-dash__testo-24">128 h 40 contro 131 h nello stesso periodo del 2025 · <b class="al-dash__testo-25">−2 h 20</b></span></div>
+<div class="al-dash__griglia-10"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span><span class="al-dash__mese-lungo">{{ m.l }}</span><span class="al-dash__mese-corto" aria-hidden="true">{{ m.c }}</span></span></sc-for></div>
+<sc-if value="{{ anno.prev }}" hint-placeholder-val="{{ true }}"><div class="al-dash__riga-27"><span class="al-dash__riga-28"><i class="al-dash__pillola-10"></i>2026</span><span class="al-dash__riga-28"><i class="al-dash__pillola-11"></i>2025</span><span class="al-dash__testo-24">{{ anno.conf }} · <b class="al-dash__testo-25">{{ anno.diff }}</b></span></div></sc-if>
 </div>
 </dc-import>
 
 <dc-import name="componenti/Carta" colonne="4" ritardo="420" padding="24px" gap="16" giustifica="space-between" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
 <span class="al-dash__testo-1">Filtri del 2026</span>
-<div class="al-dash__griglia-14">
-<span class="al-dash__tondo-10" data-anim="1" style="background:{{ filterRing }}"><span class="al-dash__tondo-11"><span class="al-dash__testo-26">36%</span><span class="al-dash__testo-13">in Hα</span></span></span>
-<div class="al-dash__colonna-3"><sc-for list="{{ filters }}" as="f" hint-placeholder-count="5"><span class="al-dash__griglia-15"><i class="al-dash__tondo-12" style="background:{{ f.c }}"></i><span><b class="al-dash__testo-7">{{ f.n }}</b> <span class="al-dash__testo-27">{{ f.h }}</span></span><b class="al-dash__testo-28">{{ f.p }}</b></span></sc-for></div>
+<sc-if value="{{ anno.pose }}" hint-placeholder-val="{{ true }}"><div class="al-dash__griglia-14">
+<span class="al-dash__tondo-10" data-anim="1" style="background:{{ filterRing }}"><span class="al-dash__tondo-11"><span class="al-dash__testo-26">{{ fTop.p }}</span><span class="al-dash__testo-13">{{ fTop.l }}</span></span></span>
+<div class="al-dash__colonna-3"><sc-for list="{{ filters }}" as="f" hint-placeholder-count="6"><span class="al-dash__griglia-15"><i class="al-dash__tondo-12" style="background:{{ f.c }};border:{{ f.bd }}"></i><span><b class="al-dash__testo-7">{{ f.n }}</b> <span class="al-dash__testo-27">{{ f.h }}</span></span><b class="al-dash__testo-28">{{ f.p }}</b></span></sc-for></div>
 </div>
-<span class="al-dash__testo-13">Quota delle 128 h 40 per filtro, da gennaio a oggi.</span>
-</dc-import></sc-if>
+<span class="al-dash__testo-13">{{ anno.nota }}</span></sc-if>
+<sc-if value="{{ anno.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-dash__testo-18">Nessuna posa nel 2026, per ora.</span></sc-if>
+</dc-import></sc-if></sc-if>
 
 </div></sc-if>
 </dc-import></sc-if>
@@ -242,15 +247,19 @@
 </dc-import></sc-if>
 
 <sc-if value="{{ S.archive }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="telefono" etichetta="Il 2026" ritardo="360" padding="20px" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
-<div class="al-dash__riga-25" style="align-items:center"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="al-dash__testo-29">Il 2026</span><span class="al-dash__testo-13">41 notti · 3 h 08 a notte · 4,6 al mese</span></span><a class="al-dash__tondo-3" href="Statistiche.dc.html" aria-label="Apri Statistiche" title="Statistiche">↗</a></div>
-<span class="al-dash__testo-43">128 h 40</span>
-<div class="al-dash__griglia-19"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><div class="al-dash__riga-45"><span class="al-dash__pillola-9" data-anim="1" style="height:{{ m.h }};background:{{ m.bg }};box-shadow:inset 0 0 0 1px {{ m.ring }}"></span><span class="al-dash__strato-3" style="height:{{ m.gh }}"></span></div></sc-for></div>
+<div class="al-dash__riga-25" style="align-items:center"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="al-dash__testo-29">Il 2026</span><sc-if value="{{ anno.ok }}" hint-placeholder-val="{{ true }}"><span class="al-dash__testo-13">{{ anno.tel }}</span></sc-if></span><a class="al-dash__tondo-3" href="Statistiche.dc.html" aria-label="Apri Statistiche" title="Statistiche">↗</a></div>
+<sc-if value="{{ anno.errore }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="!" titolo="Il 2026 non si è caricato: ore, notti e filtri dell'anno tornano quando AstroLog risponde." azione="Riprova" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></sc-if>
+<sc-if value="{{ anno.ok }}" hint-placeholder-val="{{ true }}">
+<span class="al-dash__testo-43">{{ anno.tot }}</span>
+<div class="al-dash__griglia-19"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><div class="al-dash__riga-45"><span class="al-dash__pillola-9" data-anim="1" style="height:{{ m.h }};background:{{ m.bg }};box-shadow:inset 0 0 0 1px {{ m.ring }}"></span><sc-if value="{{ m.g }}" hint-placeholder-val="{{ true }}"><span class="al-dash__strato-3" style="height:{{ m.gh }}"></span></sc-if></div></sc-for></div>
 <div class="al-dash__griglia-20"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span>{{ m.l }}</span></sc-for></div>
-<span class="al-dash__testo-13">tratteggio = 2025 · −2 h 20 rispetto allo stesso periodo</span>
-<div class="al-dash__griglia-21">
-<span class="al-dash__tondo-15" data-anim="1" style="background:{{ filterRing }}"><span class="al-dash__tondo-16"><span class="al-dash__testo-41">36%</span><span class="al-dash__testo-17">in Hα</span></span></span>
-<div class="al-dash__colonna-30"><sc-for list="{{ filters }}" as="f" hint-placeholder-count="5"><span class="al-dash__griglia-22"><i class="al-dash__tondo-17" style="background:{{ f.c }}"></i><b class="al-dash__testo-7">{{ f.n }}</b><span>{{ f.p }}</span></span></sc-for></div>
-</div>
+<sc-if value="{{ anno.prev }}" hint-placeholder-val="{{ true }}"><span class="al-dash__testo-13">tratteggio = 2025 · <b class="al-dash__testo-25">{{ anno.diff }}</b> rispetto allo stesso periodo</span></sc-if>
+<sc-if value="{{ anno.pose }}" hint-placeholder-val="{{ true }}"><div class="al-dash__griglia-21">
+<span class="al-dash__tondo-15" data-anim="1" style="background:{{ filterRing }}"><span class="al-dash__tondo-16"><span class="al-dash__testo-41">{{ fTop.p }}</span><span class="al-dash__testo-17">{{ fTop.l }}</span></span></span>
+<div class="al-dash__colonna-30"><sc-for list="{{ filters }}" as="f" hint-placeholder-count="6"><span class="al-dash__griglia-22"><i class="al-dash__tondo-17" style="background:{{ f.c }};border:{{ f.bd }}"></i><b class="al-dash__testo-7">{{ f.n }}</b><span>{{ f.p }}</span></span></sc-for></div>
+</div></sc-if>
+<sc-if value="{{ anno.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-dash__testo-18" style="border-top:1px solid var(--linea);padding-top:14px">Nessuna posa nel 2026, per ora.</span></sc-if>
+</sc-if>
 </dc-import></sc-if>
 
 </div></sc-if>
@@ -258,7 +267,7 @@
 
 </sc-if></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;prima volta&quot;,&quot;caricamento&quot;,&quot;senza previsione&quot;,&quot;notte coperta&quot;,&quot;seeing senza chiave&quot;,&quot;senza sito&quot;,&quot;prima scansione&quot;,&quot;prima scansione finita&quot;,&quot;da riprendere&quot;,&quot;dettaglio Luna&quot;,&quot;senza progetti&quot;,&quot;sito senza fuso&quot;,&quot;Luna che non sorge&quot;,&quot;Luna che non tramonta&quot;,&quot;calendario non ancora scritto&quot;,&quot;prima previsione non arrivata&quot;,&quot;seeing, chiave non valida&quot;,&quot;giorni polari&quot;,&quot;errore dell'app&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;sole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;non disponibile&quot;,&quot;disponibile&quot;],&quot;default&quot;:&quot;non disponibile&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;prima volta&quot;,&quot;caricamento&quot;,&quot;senza previsione&quot;,&quot;notte coperta&quot;,&quot;seeing senza chiave&quot;,&quot;senza sito&quot;,&quot;prima scansione&quot;,&quot;prima scansione finita&quot;,&quot;da riprendere&quot;,&quot;dettaglio Luna&quot;,&quot;senza progetti&quot;,&quot;sito senza fuso&quot;,&quot;Luna che non sorge&quot;,&quot;Luna che non tramonta&quot;,&quot;calendario non ancora scritto&quot;,&quot;prima previsione non arrivata&quot;,&quot;seeing, chiave non valida&quot;,&quot;giorni polari&quot;,&quot;anno con molti filtri&quot;,&quot;anno senza notti prima&quot;,&quot;anno senza ore&quot;,&quot;anno che non risponde&quot;,&quot;errore dell'app&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;sole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;non disponibile&quot;,&quot;disponibile&quot;],&quot;default&quot;:&quot;non disponibile&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;}}">
 class Component extends DCLogic {
   state = { cf: false, w: typeof window !== 'undefined' ? window.innerWidth : 1440, calOpen: false, modo: null, menu: null, view: 'notte', hover: null, month: 'set', sel: null, psort: 'ore', ls: 'luna' };
   componentDidMount() {
@@ -273,9 +282,9 @@ class Component extends DCLogic {
   componentWillUnmount() { this._alw && clearInterval(this._alw); this._mo && this._mo.disconnect(); this._io && this._io.disconnect(); window.removeEventListener('beforeprint', this._bp); window.removeEventListener('resize', this._rs); }
   componentDidUpdate() { this._scan && this._scan(); }
   // Token e soglie stanno in componenti/tema.js e componenti/soglie.js
-  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALnome && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
-    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f + '?v81'; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   // Stato dell'app (v60): caricamento ed errore li mostra il Telaio
@@ -527,12 +536,31 @@ class Component extends DCLogic {
       return { ...n, rip: rN, es: n.s, sign: signs[n.s], pBg: t.pills[n.s][0], pFg: t.pills[n.s][1], curve };
     });
 
-    // Anno e filtri
-    const months = ML.map((l, i) => ({ l, gh: (14 + mh25[i] / 20 * 72) + '%', tag: i === 8, h: (i > 8 ? 40 : 14 + mh[i] / 20 * 72) + '%', bg: i > 8 ? hatch(t.sparkOff) : i === 8 ? t.calOn : t.monthBar, ring: i > 8 ? t.sparkOff : 'transparent' }));
-    const FA = [['Hα','46 h 20',36],['OIII','38 h 10',30],['L','16 h 30',13],['SII','14 h 50',11],['RGB','12 h 50',10]];
-    const fcol = [FC[0], FC[1], FC[3], FC[2], FC[4]];
-    let a0 = 0; const filterRing = 'conic-gradient(' + FA.map((f, j) => { const s0 = a0; a0 += f[2]; return fcol[j] + ' ' + s0 + '% ' + (a0 - 0.6) + '%, ' + t.card + ' ' + (a0 - 0.6) + '% ' + a0 + '%'; }).join(', ') + ')';
-    const filters = FA.map((f, j) => ({ n: f[0], h: f[1], p: f[2] + '%', c: fcol[j] }));
+    // Anno e filtri (v80): tre stati dell'anno; i filtri come li elenca l'app, «Filtro non indicato» in fondo
+    const MC = ['G','F','M','A','M','G','L','A','S','O','N','D'];
+    const AS = stato === 'anno con molti filtri' ? 'molti' : stato === 'anno senza notti prima' ? 'senzaPrima' : stato === 'anno senza ore' ? 'vuoto' : stato === 'anno che non risponde' ? 'errore' : 'normale';
+    const vuotoA = AS === 'vuoto', prevA = AS !== 'senzaPrima';
+    const anno = { ok: AS !== 'errore', errore: AS === 'errore', vuoto: vuotoA, pose: !vuotoA, prev: prevA,
+      tot: vuotoA ? '0 h' : '128 h 40', notti: vuotoA ? 'in 0 notti' : 'in 41 notti', media: vuotoA ? '—' : '3 h 08', mese: vuotoA ? '0' : '4,6',
+      conf: (vuotoA ? '0 h' : '128 h 40') + ' contro 131 h nello stesso periodo del 2025', diff: vuotoA ? '−131 h' : '−2 h 20',
+      tel: vuotoA ? '0 notti · media — · 0 al mese' : '41 notti · 3 h 08 a notte · 4,6 al mese', nota: 'Quota delle 128 h 40 per filtro, da gennaio a oggi.' };
+    const months = ML.map((l, i) => ({ l, c: MC[i], g: prevA, gh: (14 + mh25[i] / 20 * 72) + '%', tag: i === 8 && !vuotoA, h: (i > 8 ? 40 : vuotoA ? 0 : 14 + mh[i] / 20 * 72) + '%', bg: i > 8 ? hatch(t.sparkOff) : i === 8 ? t.calOn : t.monthBar, ring: i > 8 ? t.sparkOff : 'transparent' }));
+    // minuti per filtro (simulati); percentuali al resto piu' grande, la somma fa 100
+    const FA0 = AS === 'molti' ? [['ha', 2600], ['oiii', 2100], ['l', 990], ['sii', 890], ['colori', 480], ['r', 300], ['hb', 200], ['ignoto', 160]]
+      : [['ha', 2780], ['oiii', 2290], ['l', 990], ['sii', 890], ['colori', 610], ['ignoto', 160]];
+    const totF = FA0.reduce((a, f) => a + f[1], 0), pq = FA0.map(f => f[1] / totF * 100), pf = pq.map(Math.floor);
+    pq.map((x, i) => [x - pf[i], i]).sort((a, b) => b[0] - a[0]).slice(0, 100 - pf.reduce((a, b) => a + b, 0)).forEach(([, i]) => pf[i]++);
+    const FR = FA0.map(([k, m], i) => ({ k, m, p: pf[i] })), conN = FR.filter(f => f.k !== 'ignoto'), ign = FR.filter(f => f.k === 'ignoto');
+    // colori di una fetta: un filtro a colori sono tre fette R, G, B; il non indicato e' grigio
+    const fette = k => { const c = AL.FD[k][1]; return Array.isArray(c) ? c.map(j => FC[j]) : typeof c === 'number' ? [FC[c]] : [t.muted]; };
+    let a0 = 0; const filterRing = 'conic-gradient(' + conN.concat(ign).map(f => { const cs = fette(f.k), w = (f.p - 0.6) / cs.length, s0 = a0; a0 += f.p;
+      return cs.map((c, j) => c + ' ' + (s0 + j * w) + '% ' + (s0 + (j + 1) * w) + '%').join(', ') + ', ' + t.card + ' ' + (a0 - 0.6) + '% ' + a0 + '%'; }).join(', ') + ')';
+    // fino a sei righe: oltre cinque filtri con nome, i primi quattro e «altri N filtri»
+    const riga = f => { const ti = AL.tinta(t, f.k); return { n: AL.FD[f.k][0], h: AL.ore(f.m / 60), p: f.p + '%', c: ti.bg, bd: ti.bd }; };
+    const altri = conN.length > 5 ? conN.slice(4) : [];
+    const filters = (altri.length ? conN.slice(0, 4).map(riga).concat([{ n: 'altri ' + altri.length + ' filtri', h: AL.ore(altri.reduce((a, f) => a + f.m, 0) / 60), p: altri.reduce((a, f) => a + f.p, 0) + '%',
+      c: 'conic-gradient(' + altri.map((f, j) => fette(f.k)[0] + ' ' + (j / altri.length * 100) + '% ' + ((j + 1) / altri.length * 100) + '%').join(', ') + ')', bd: '0' }]) : conN.map(riga)).concat(ign.map(riga));
+    const fTop = { p: conN[0].p + '%', l: 'in ' + AL.FD[conN[0].k][0] };
 
     // Sole
     const sunC = AL.SOLE;
@@ -571,7 +599,7 @@ class Component extends DCLogic {
     const lsOpts = (soleOk ? [['luna', 'Luna'], ['sole', 'Sole']] : [['luna', 'Luna']]).map(([kk, l]) => ({ l, sel: kk === lsK, on: () => set({ ls: kk }) }));
 
     const meteoSub = fuso ? 'Serve il fuso orario del sito' : prima ? 'Nessuna previsione ancora: primo avvio alle 19:40' : S.noMeteo ? 'Ultima previsione valida: 30 settembre, 08:05 (12 ore fa)' : S.coperta ? 'Previsione del 30 settembre, 18:05 · seeing e aerosol non si misurano sotto le nuvole' : 'Previsione del 30 settembre, 18:05 (2 ore fa)';
-    const monthsEmpty = ML.map(l => ({ l, bg: hatch(t.sparkOff) }));
+    const monthsEmpty = ML.map((l, i) => ({ l, c: MC[i], bg: hatch(t.sparkOff) }));
     // Primi passi: senza sito, prima volta (sito gia' scelto), prima scansione al lavoro
     // v55.4: l'azione del passo e' il bottone comune: pieno il primo passo, a contorno il secondo
     const P1 = { href: '#', aCls: 'al-bottone al-bottone--pieno', bg: t.card2, pad: '18px 20px', padT: '16px', nBg: t.accent, nFg: t.calOnFg, nSh: 'none', fs: '17px', fw: 600, aBg: t.hPill, aFg: t.hPillFg, aSh: 'none' };
@@ -598,7 +626,7 @@ class Component extends DCLogic {
     const nAp = !!this.state.nextAp, nextAll = typeof next !== 'undefined' ? next : [];
     const nextT = { voci: nAp ? nextAll : nextAll.slice(0, 1), altre: nextAll.length > 1, exp: nAp ? 'true' : 'false', l: nAp ? 'Mostra meno' : 'Le altre ' + (nextAll.length - 1) + ' notti', chev: nAp ? '▴' : '▾', on: e => { e.preventDefault(); set({ nextAp: !nAp }); } };
     return { mt, avT, lunaT, fmtL: F.tel ? 'telefono' : 'desktop', pronto: true, passi, riprendi, fine, nextT, lunaDet, ripV: view === 'notte' ? rip : null, ripLati, sitoT: S.sito ? 'Cima Ekar' : '', scanT: stato === 'prima scansione' ? 'in corso' : 'ferma', SK, modo, accento: this.props.accento, setModo: m => set({ modo: m }), hvVal, hvSubTel: String(cv.hv.sub || '').split(' · ')[0], F, calOpen: this.state.calOpen, calChev: this.state.calOpen ? '▴' : '▾', calToggle: () => set({ calOpen: !this.state.calOpen }), S, meteoSub, monthsEmpty, t, views, hv: cv.hv, chart, legend: cv.legend, bandKey, meteo, calNav, selNight, sunEl, sunChart, kpEl, lsOpts,
-      lunaVis: lsK === 'luna' ? 'visible' : 'hidden', soleVis: lsK === 'sole' ? 'visible' : 'hidden', sortOpts, proj, next, months, filterRing, filters,
+      lunaVis: lsK === 'luna' ? 'visible' : 'hidden', soleVis: lsK === 'sole' ? 'visible' : 'hidden', sortOpts, proj, next, months, filterRing, filters, anno, fTop,
       tickHours: ['18','20','22','00','02','04','06','08'], dow: ['lu','ma','me','gi','ve','sa','do'],
       moonPills: [((i, m) => { for (let j = 1; j < N; j++) if (moonAlt[j] > m) { m = moonAlt[j]; i = j; } const h = (18 + i * 0.25) % 24; return 'sale fino a ' + Math.round(m) + '° alle ' + String(Math.floor(h)).padStart(2, '0') + ':' + String(Math.round(h % 1 * 60)).padStart(2, '0'); })(0, moonAlt[0]) /* dalla curva della carta */, 'distanza 371 240 km', 'età 21 giorni', 'sorge a est-nord-est'],
       sunPills: ['flusso solare 168', 'brillamento M1.2 alle 14:05', 'protuberanza al bordo ovest'],

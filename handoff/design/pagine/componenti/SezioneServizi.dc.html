@@ -66,9 +66,9 @@ class Component extends DCLogic {
   // Le quattro sezioni nuove di Impostazioni (v32): Servizi, Scansioni, Diagnostica, Backup. Dati simulati.
   state = { copiato: false, tutti: false };
   componentWillUnmount() { this._alw && clearInterval(this._alw); clearTimeout(this._tc); }
-  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALnome && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
-    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f + '?v81'; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   renderVals() {

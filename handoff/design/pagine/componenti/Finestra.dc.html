@@ -30,9 +30,9 @@ class Component extends DCLogic {
     const a = f[0], z = f[f.length - 1];
     if (e.shiftKey && (document.activeElement === a || document.activeElement === this._p)) { e.preventDefault(); z.focus(); }
     else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } };
-  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALnome && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
-    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f + '?v81'; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   renderVals() {
@@ -40,7 +40,7 @@ class Component extends DCLogic {
     const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono';
     const lg = p.larghezza || 'media';
     return { pronto: true, t, fmt: tel ? 'telefono' : 'desktop', rif: this.rif, tasti: this.tasti, chiudi: this.chiudi,
-      titolo: p.titolo || 'Finestra', segno: p.segno || '', sottotitolo: p.sottotitolo || '', contenuto: p.children,
+      titolo: p.titolo || 'Finestra', segno: p.segno || '', sottotitolo: p.sottotitolo || '', contenuto: p.children ?? null,
       testa: p.testa !== 'no' && p.testa !== false,
       vcls: 'al-finestra' + (p.posizione === 'dentro' ? ' al-finestra--dentro' : '') + (lg === 'schermo' ? ' al-finestra--schermo' : ''),
       pcls: 'al-finestra__pannello al-finestra__pannello--' + lg + (p.fondo === 'carta' ? ' al-finestra__pannello--carta' : ''),

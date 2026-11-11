@@ -95,6 +95,24 @@ Il brief intero e' in `docs/archivio/brief-porting-v59.md`; ogni punto ha la sua
 
 **Stato**: v60–v73 da approvare da Marco sulla tavola, parole comprese.
 
+## v82 (11/11): tutto IAU, console pulita
+
+1. **Stelle**: `dati-cielo.js`, «nomiStelle», nomi propri IAU (WGSN). Nell'app i nomi delle stelle vengono dal catalogo, uguali in ogni lingua.
+2. **Bortle**: «a parte Pleiades» nel testo del centro citta'.
+3. **Console**: solo tavola (cache di catalogo.js, componenti aperti senza props). Nulla da portare.
+
+## v81 (11/11): segnaposto, nomi dal catalogo, filtri oltre cinque
+
+1. **Segnaposto**: `sc-camel-<attributo>` e' solo della tavola (il runtime lo rende `d`, `viewBox`…). Nell'app nulla da portare.
+2. **Nomi**: nell'app nome comune e costellazione vengono gia' dal catalogo; la tavola ora fa lo stesso con `ALnome(sigla)` e `ALcat[sigla][2]`. Le costellazioni della Carta del cielo sono latine IAU (`dati-cielo.js`, «costellazioni»).
+3. **Filtri oltre cinque**: la regola della v80 resta quella (`conN.length > 5`); lo stato `anno con molti filtri` la mostra.
+
+## v80 (11/11): le 3 voci del collaudo e del porting della v79
+
+1. **Icone** (Cerca, Telaio): `{{ a.p }}`, `{{ g.p }}`, `{{ m.altroChevP }}`, `{{ m.modeIconP }}`, `{{ vb.az.p }}`, `{{ b.p }}` dentro l'`<svg>` sono `React.createElement('path', { d })`. Solo tavola: nell'app il `d` e' gia' una stringa.
+2. **Archivio**: `placeholder="Cerca: M 31, NGC 7000…"`; `okQ` confronta solo `o.n` senza spazi. `catalogo.js` come il catalogo dell'app (latino IAU, nomi comuni in inglese). Tolti `linguette`, `lingT`, il «+» del telefono, «+ Aggiungi oggetto», la Finestra e gli stati Sole, Sistema solare, aggiungi oggetto; le comete dei FITS restano fuori con il Sistema solare.
+3. **Dashboard** (logica, «Anno e filtri (v80)»): `anno` (`ok`, `errore`, `vuoto`, `pose`, `prev`, testi) e `fTop`; `months[].g` spegne il tratteggio, `months[].c` l'iniziale. Anello: per ogni filtro `fette(k)` da `AL.FD` (array = una fetta per colore, `null` = `t.muted`), 0,6 % di stacco in `--carta` dopo ogni filtro. Elenco: `AL.tinta` per il pallino (`bd` tratteggiato per `ignoto`); oltre cinque filtri con nome, quattro + «altri N filtri». astrolog.css, «v80 · Dashboard»: `.al-dash__griglia-10 { container-type: inline-size }`, `@container (max-width: 420px)` scambia `__mese-lungo` e `__mese-corto`; `.al-dash__testo-25 { white-space: nowrap }`; `.al-dash__riga-27 { flex-wrap: wrap }`. Stati in `Dashboard stati`: I, J, K (desktop), P, Q, R (telefono).
+
 ## v79 (10/11): le 7 voci del collaudo della v78
 
 1. **Pillola del sito** (Notti, desktop e telefono): `.al-notti__sito` (flex, va a capo) contiene la pillola (`__riga-5` / `__riga-27`, solo icona e `__sito-nome` coi puntini) e, fuori, `__sito-fonte` (12 px, `--tenue`, `white-space: normal`). La fonte c'e' solo se l'app la manda.

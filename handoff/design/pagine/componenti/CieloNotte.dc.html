@@ -8,7 +8,7 @@
 <body>
 <x-dc>
 <helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
-<sc-if value="{{ notteOn }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="{{ formato }}" colonne="{{ colA }}" padding="{{ pad }}" gap="14" ritardo="0" etichetta="Stanotte" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
+<sc-if value="{{ notte }}" hint-placeholder-val="{{ false }}"><sc-if value="{{ notteOn }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ formato }}" colonne="{{ colA }}" padding="{{ pad }}" gap="14" ritardo="0" etichetta="Stanotte" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px 16px;flex-wrap:wrap">
 <div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 240px"><span style="font-size:22px;font-weight:500">{{ notte.titolo }}</span><span style="font-size:13px;color:var(--tenue);text-wrap:pretty">{{ notte.sub }}</span><a class="al-bottone al-bottone--testo al-bottone--piccolo" href="Meteo.dc.html" style="align-self:flex-start;margin-left:-14px">Meteo di stanotte ↗</a></div>
 <span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;text-align:right"><b style="font-size:44px;font-weight:300;line-height:1;letter-spacing:-.02em;white-space:nowrap">{{ notte.ore }}</b><span style="font-size:12px;color:var(--tenue)">{{ notte.oreL }}</span></span>
@@ -17,15 +17,15 @@
 <div style="position:relative;height:{{ notte.h }};font-size:11px;color:var(--tenue)"><sc-for list="{{ notte.yl }}" as="y" hint-placeholder-count="4"><span style="position:absolute;right:0;top:{{ y.y }};transform:translateY(-50%)">{{ y.l }}</span></sc-for></div>
 <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
 <svg viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="{{ notte.aria }}" style="width:100%;height:{{ notte.h }};display:block;overflow:visible">
-<rect x="{{ notte.bx }}" y="0" width="{{ notte.bw }}" height="200" fill="var(--carta-2)"></rect>
-<sc-if value="{{ notte.dOrz }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dOrz }}" fill="var(--traccia)"></path></sc-if>
-<line x1="0" x2="600" y1="{{ notte.ym }}" y2="{{ notte.ym }}" stroke="var(--tenue)" stroke-width="1" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"></line>
-<line x1="0" x2="600" y1="{{ notte.y0 }}" y2="{{ notte.y0 }}" stroke="var(--linea)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
-<sc-if value="{{ notte.dLuna }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dLuna }}" fill="none" stroke="var(--luna-linea)" stroke-width="1.5" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"></path></sc-if>
-<sc-if value="{{ notte.dTutta }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dTutta }}" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></sc-if>
-<sc-if value="{{ notte.dUtile }}" hint-placeholder-val="{{ false }}"><path d="{{ notte.dUtile }}" fill="none" stroke="var(--accento)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path></sc-if>
-<sc-if value="{{ notte.mer }}" hint-placeholder-val="{{ false }}"><line x1="{{ notte.mer.x }}" x2="{{ notte.mer.x }}" y1="0" y2="200" stroke="var(--accento)" stroke-width="1.5" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line></sc-if>
-<line x1="{{ notte.x }}" x2="{{ notte.x }}" y1="0" y2="200" stroke="var(--testo)" stroke-width="1.5" vector-effect="non-scaling-stroke"></line>
+<rect sc-camel-x="{{ notte.bx }}" y="0" sc-camel-width="{{ notte.bw }}" height="200" fill="var(--carta-2)"></rect>
+<sc-if value="{{ notte.dOrz }}" hint-placeholder-val="{{ false }}"><path sc-camel-d="{{ notte.dOrz }}" fill="var(--traccia)"></path></sc-if>
+<line x1="0" x2="600" sc-camel-y1="{{ notte.ym }}" sc-camel-y2="{{ notte.ym }}" stroke="var(--tenue)" stroke-width="1" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"></line>
+<line x1="0" x2="600" sc-camel-y1="{{ notte.y0 }}" sc-camel-y2="{{ notte.y0 }}" stroke="var(--linea)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+<sc-if value="{{ notte.dLuna }}" hint-placeholder-val="{{ false }}"><path sc-camel-d="{{ notte.dLuna }}" fill="none" stroke="var(--luna-linea)" stroke-width="1.5" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"></path></sc-if>
+<sc-if value="{{ notte.dTutta }}" hint-placeholder-val="{{ false }}"><path sc-camel-d="{{ notte.dTutta }}" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></sc-if>
+<sc-if value="{{ notte.dUtile }}" hint-placeholder-val="{{ false }}"><path sc-camel-d="{{ notte.dUtile }}" fill="none" stroke="var(--accento)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path></sc-if>
+<sc-if value="{{ notte.mer }}" hint-placeholder-val="{{ false }}"><line sc-camel-x1="{{ notte.mer.x }}" sc-camel-x2="{{ notte.mer.x }}" y1="0" y2="200" stroke="var(--accento)" stroke-width="1.5" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line></sc-if>
+<line sc-camel-x1="{{ notte.x }}" sc-camel-x2="{{ notte.x }}" y1="0" y2="200" stroke="var(--testo)" stroke-width="1.5" vector-effect="non-scaling-stroke"></line>
 </svg>
 <div style="position:relative;height:14px;font-size:11px;color:var(--tenue)"><sc-for list="{{ notte.ore12 }}" as="o" hint-placeholder-count="7"><span style="position:absolute;left:{{ o.x }};transform:translateX(-50%)">{{ o.l }}</span></sc-for></div>
 </div>
@@ -41,8 +41,8 @@
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;padding-top:12px;border-top:1px solid var(--linea)">
 <sc-for list="{{ notte.righe }}" as="r" hint-placeholder-count="4"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;color:var(--tenue)">{{ r.l }}</span><b style="font-weight:500;font-variant-numeric:tabular-nums">{{ r.v }}</b></span></sc-for>
 </div>
-</dc-import></sc-if>
-<dc-import name="componenti/Carta" formato="{{ formato }}" colonne="{{ colB }}" padding="{{ pad }}" gap="14" ritardo="60" etichetta="Periodo migliore" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
+</dc-import></sc-if></sc-if>
+<sc-if value="{{ anno }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ formato }}" colonne="{{ colB }}" padding="{{ pad }}" gap="14" ritardo="60" etichetta="Periodo migliore" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
 <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:22px;font-weight:500">Periodo migliore</span><span style="font-size:13px;color:var(--tenue);text-wrap:pretty">{{ anno.sub }}</span></div>
 <b style="font-size:20px;font-weight:500;text-wrap:pretty">{{ anno.periodo }}</b>
 <div role="img" aria-label="{{ anno.aria }}" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:150px">
@@ -50,7 +50,7 @@
 </div>
 <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;font-size:11px;text-align:center"><sc-for list="{{ anno.mesi }}" as="m" hint-placeholder-count="12"><span style="display:flex;flex-direction:column;gap:2px;color:{{ m.lc }};font-weight:{{ m.fw }}"><span>{{ m.l }}</span><span aria-hidden="true">{{ m.ok }}</span></span></sc-for></div>
 <span style="font-size:12px;color:var(--tenue);text-wrap:pretty">{{ anno.nota }}</span>
-</dc-import>
+</dc-import></sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:460},&quot;notte&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;anno&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;colA&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;8&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;colB&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;4&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pad&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;24px 28px&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;notteOn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}"></script>
 </body>

@@ -14,9 +14,9 @@
 class Component extends DCLogic {
   componentDidMount() { this._bp = () => { if (this._el) this._el.style.animationPlayState = 'running'; }; window.addEventListener('beforeprint', this._bp); }
   componentWillUnmount() { this._alw && clearInterval(this._alw); this._io && this._io.disconnect(); window.removeEventListener('beforeprint', this._bp); }
-  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALnome && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
-    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f + '?v81'; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   // L'entrata parte quando la carta entra nello schermo, una volta sola.
@@ -35,7 +35,7 @@ class Component extends DCLogic {
     const px = v => v == null || v === '' ? undefined : num(v) ? v + 'px' : v;
     const col = tel || p.colonne == null || p.colonne === '' ? undefined : (num(p.colonne) ? 'span ' + p.colonne : p.colonne);
     const rit = p.ritardo;
-    return { pronto: true, colN: col ? String(p.colonne) : undefined, rif: this.rif, etichetta: p.etichetta, contenuto: p.children,
+    return { pronto: true, colN: col ? String(p.colonne) : undefined, rif: this.rif, etichetta: p.etichetta, contenuto: p.children ?? null,
       anim: rit == null || rit === '' ? undefined : 'alIn var(--durata-entrata) var(--curva-entrata) ' + rit + 'ms both paused',
       col, bg: prot ? t.hBg : t.card, fg: prot ? t.hFg : t.text, r: tel ? '24px' : '28px',
       pad: px(p.padding) || (tel ? '20px' : '28px'), disp: p.griglia ? 'grid' : 'flex', griglia: p.griglia,

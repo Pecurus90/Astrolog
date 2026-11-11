@@ -8,7 +8,7 @@
 <body>
 <x-dc>
 <helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
-<div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+<sc-if value="{{ crit }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:14px;min-width:0">
 <div style="display:flex;align-items:flex-start;gap:12px">
 <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><b style="font-size:15px;font-weight:600">{{ crit.titolo }}</b><span style="font-size:12px;color:var(--tenue);text-wrap:pretty">{{ crit.sub }}</span></div>
 <sc-if value="{{ crit.chiudi }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ crit.chiudi }}" aria-label="Chiudi i criteri" style="flex:none;width:36px;height:36px;border:0;border-radius:50%;background:var(--carta-2);color:inherit;cursor:pointer;font-size:17px">×</button></sc-if>
@@ -32,7 +32,7 @@
 </div></sc-if>
 <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;color:var(--tenue)">Ordina</span><dc-import name="componenti/PillolaScelta" forma="pillole" misura="piccola" fondo="carta" opzioni="{{ crit.ord }}" etichetta="Ordina" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import></div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--linea)"><b style="font-size:13px;font-weight:600">{{ crit.conto }}</b><span style="display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{ crit.cambiati }}" hint-placeholder-val="{{ false }}"><button type="button" class="al-bottone al-bottone--testo al-bottone--piccolo" onClick="{{ crit.ripristina }}">Ripristina</button></sc-if><sc-if value="{{ crit.mostra }}" hint-placeholder-val="{{ false }}"><button type="button" class="al-bottone al-bottone--pieno al-bottone--piccolo" onClick="{{ crit.mostra }}">Mostra la lista</button></sc-if></span></div>
-</div>
+</div></sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:380,&quot;height&quot;:560},&quot;crit&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;}}"></script>
 </body>

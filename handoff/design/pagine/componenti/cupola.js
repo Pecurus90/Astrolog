@@ -60,17 +60,7 @@
   const CALORE = [[0, [58, 36, 128]], [0.3, [140, 47, 132]], [0.58, [226, 82, 74]], [0.8, [255, 169, 74]], [1, [255, 241, 194]]];
   const calore = k => { k = clamp(k, 0, 1); let i = 1; while (i < CALORE.length - 1 && CALORE[i][0] < k) i++; const [a, ca] = CALORE[i - 1], [b, cb] = CALORE[i], f = (k - a) / (b - a || 1); return ca.map((v, j) => Math.round(lerp(v, cb[j], f))); };
   const caloreCss = k => 'rgb(' + calore(k).join(',') + ')';
-  const NOMI = { 'M 1': 'Nebulosa Granchio', 'M 6': 'Ammasso Farfalla', 'M 7': 'Ammasso di Tolomeo', 'M 8': 'Nebulosa Laguna', 'M 11': 'Ammasso Anatra Selvatica', 'M 13': 'Ammasso di Ercole',
-    'M 16': 'Nebulosa Aquila', 'M 17': 'Nebulosa Omega', 'M 20': 'Nebulosa Trifida', 'M 24': 'Nube del Sagittario', 'M 27': 'Nebulosa Manubrio', 'M 31': 'Galassia di Andromeda', 'M 33': 'Galassia del Triangolo',
-    'M 42': 'Grande Nebulosa di Orione', 'M 43': 'Nebulosa di De Mairan', 'M 44': 'Presepe', 'M 45': 'Pleiadi', 'M 51': 'Galassia Vortice', 'M 57': 'Nebulosa Anello', 'M 63': 'Galassia Girasole',
-    'M 64': 'Galassia Occhio Nero', 'M 65': 'Tripletto del Leone', 'M 66': 'Tripletto del Leone', 'M 76': 'Piccolo Manubrio', 'M 81': 'Galassia di Bode', 'M 82': 'Galassia Sigaro', 'M 83': 'Girandola australe',
-    'M 97': 'Nebulosa Civetta', 'M 101': 'Galassia Girandola', 'M 104': 'Galassia Sombrero', 'NGC 281': 'Nebulosa Pacman', 'IC 1805': 'Nebulosa Cuore', 'IC 1848': 'Nebulosa Anima', 'IC 434': 'Testa di Cavallo',
-    'NGC 2024': 'Nebulosa Fiamma', 'IC 405': 'Stella Fiammeggiante', 'IC 410': 'Nebulosa Girini', 'NGC 1499': 'Nebulosa California', 'NGC 6888': 'Nebulosa Crescente', 'NGC 6946': 'Galassia Fuochi d\u0027artificio',
-    'NGC 2264': 'Albero di Natale', 'NGC 7023': 'Nebulosa Iris', 'NGC 6543': 'Occhio di Gatto', 'NGC 1977': 'Uomo che corre', 'NGC 2359': 'Elmo di Thor', 'NGC 3628': 'Galassia Hamburger', 'NGC 4631': 'Galassia Balena',
-    'IC 443': 'Nebulosa Medusa', 'NGC 7380': 'Nebulosa Mago', 'IC 63': 'Fantasma di Cassiopea', 'NGC 869': 'Doppio Ammasso', 'NGC 884': 'Doppio Ammasso', 'NGC 2237': 'Nebulosa Rosetta', 'NGC 2174': 'Testa di Scimmia',
-    'NGC 4565': 'Galassia Ago', 'IC 2118': 'Testa di Strega', 'NGC 3372': 'Nebulosa della Carena', 'NGC 5128': 'Centaurus A', 'NGC 2392': 'Nebulosa Eschimese', 'NGC 4038': 'Galassie Antenne', 'IC 342': 'Galassia Nascosta',
-    'NGC 6334': 'Zampa di Gatto', 'NGC 6357': 'Nebulosa Aragosta', 'IC 4604': 'Rho Ophiuchi', 'NGC 7662': 'Palla di Neve Blu', 'IC 1318': 'Nebulosa di Sadr', 'NGC 6960': 'Velo occidentale', 'NGC 6992': 'Velo orientale',
-    'Velo intero': 'Nebulosa Velo', 'NGC 6995': 'Velo orientale, parte sud', 'NGC 7635': 'Nebulosa Bolla', 'IC 5146': 'Nebulosa Bozzolo', 'NGC 7293': 'Nebulosa Elica', 'NGC 253': 'Galassia dello Scultore', 'NGC 7000': 'Nebulosa Nord America', 'IC 5070': 'Nebulosa Pellicano', 'IC 1396': 'Proboscide d\u0027Elefante' };
+  // Nomi comuni: da catalogo.js (ALnome), come l'app (v81)
   const piega = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/['\u2019]/g, ' ');
   const chiave = s => piega(s).replace(/\s+/g, '').replace(/^messier/, 'm');
   let CAT = null;
@@ -79,7 +69,7 @@
     if (CAT) return CAT; const C = window.ALcielo; if (!C) return null;
     const cat = window.ALcat || {}, ARCH = new Set((window.ALdati ? window.ALdati.oggetti : []).map(o => o.n));
     const S = i16(C.stelle), O = i16(C.oggetti);
-    const dso = C.sigle.split('|').map((s, i) => { const [id, alt] = s.split('/'), k = i * 5, mag = O[k + 3] / 10, size = O[k + 4] / 10, ac = cat[id], nome = (ac && ac[0]) || NOMI[id] || '', m = /^M \d+$/.test(id);
+    const dso = C.sigle.split('|').map((s, i) => { const [id, alt] = s.split('/'), k = i * 5, mag = O[k + 3] / 10, size = O[k + 4] / 10, ac = cat[id], nome = window.ALnome ? window.ALnome(id) : '', m = /^M \d+$/.test(id);
       return { id, alt: alt || '', ra: O[k] / 90, dec: O[k + 1] / 300, cls: O[k + 2], mag: mag > 99 ? null : mag, size, nome, tipo: (ac && ac[1]) || CLASSI[O[k + 2]], cost: ac ? ac[2] : '',
         pri: ARCH.has(id) ? 1 : (nome || m) ? 0.9 : mag < 9 ? 0.7 : (mag < 10.5 || size > 20) ? 0.5 : mag < 12 ? 0.3 : 0.1, arch: ARCH.has(id), i, k: chiave(id), k2: alt ? chiave(alt) : '', kn: piega(nome) }; });
     const perId = new Map(dso.map(o => [o.id, o]));
@@ -89,7 +79,8 @@
     return CAT;
   }
   function aggiungi(lista) { const c = catalogo(); if (!c) return; for (const x of lista) { if (c.perId.has(x.id)) continue;
-    const o = { id: x.id, alt: '', ra: x.ra, dec: x.dec, cls: x.cls, mag: x.mag == null ? null : x.mag, size: x.size || 10, nome: x.nome || '', tipo: x.tipo || CLASSI[x.cls], cost: x.cost || '', pri: 0.9, arch: false, i: c.dso.length, k: chiave(x.id), k2: '', kn: piega(x.nome || '') };
+    const o = { id: x.id, alt: '', ra: x.ra, dec: x.dec, cls: x.cls, mag: x.mag == null ? null : x.mag, size: x.size || 10, nome: x.nome || (window.ALnome ? window.ALnome(x.id) : ''), tipo: x.tipo || CLASSI[x.cls], cost: x.cost || (window.ALcat && window.ALcat[x.id] ? window.ALcat[x.id][2] : ''), pri: 0.9, arch: false, i: c.dso.length, k: chiave(x.id), k2: '' };
+    o.kn = piega(o.nome);
     c.dso.push(o); c.perId.set(o.id, o); } }
   // Ricerca: sigla esatta, poi inizio di sigla, poi nome comune; anche pianeti, Luna, costellazioni, stelle
   function cerca(q, n) {

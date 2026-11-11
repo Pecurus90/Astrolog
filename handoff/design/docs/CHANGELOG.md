@@ -1,5 +1,25 @@
 # AstroLog — cronologia
 
+## v82 — Tutto IAU e console pulita — 11/11/2026
+
+- Stelle della Carta del cielo coi nomi IAU; «Pleiades» nel Primo avvio.
+- Console pulita in tutte le 58 tavole aperte da sole: `?v81` su catalogo.js, attesa di `ALnome`, Da confermare, Carta, Finestra, CieloCriteri, CieloLista, CieloNotte.
+- Pacchetto `consegna/astrolog-v82.zip`.
+
+## v81 — Segnaposto, nomi dal catalogo, filtri oltre cinque — 11/11/2026
+
+- 288 attributi SVG coi dati come `sc-camel-*` in 18 tavole: nessun errore del browser.
+- `catalogo.js`: `ALnomi`, `ALnome()`, Sh2-155; le tavole leggono i nomi comuni da li'; costellazioni della Carta del cielo in latino.
+- Dashboard stati: «anno con molti filtri» (H2, P0).
+- Pacchetto `consegna/astrolog-v81.zip`.
+
+## v80 — Il collaudo e il porting della v79, 3 voci — 11/11/2026
+
+- Cerca e Telaio: le icone coi dati sono elementi costruiti dalla logica, niente `d="{{ }}"` nel markup.
+- Archivio: campo «Cerca: M 31, NGC 7000…», ricerca sulle sigle; catalogo con costellazioni latine e nomi comuni in inglese; via Sole, Sistema solare, Aggiungi oggetto.
+- Dashboard: «4,6»; Filtro non indicato, filtro a colori in tre fette, taglio a sei righe; stati «anno senza notti prima», «anno senza ore», «anno che non risponde» (I, J, K; P, Q, R); mesi a iniziali sotto 420 px; lo scarto non va a capo.
+- Pacchetto `consegna/astrolog-v80.zip`.
+
 ## v79 — Il collaudo della v78, 7 voci — 10/11/2026
 
 - Carta della notte: la fonte del sito fuori dalla pillola, accanto o sotto, sempre leggibile.

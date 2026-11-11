@@ -36,7 +36,7 @@
 <span class="al-c-riepilogo__riga-13" style="align-items:center"><span class="al-c-riepilogo__testo-14">{{ CO.titolo }}</span><span class="al-c-riepilogo__testo-8">simulato</span><a class="al-c-riepilogo__tondo-1" href="Attrezzatura.dc.html" aria-label="Apri in Attrezzatura" title="Attrezzatura" style="width:44px;height:44px;margin-left:auto;flex:none">↗</a></span>
 <sc-for list="{{ CO.corredi }}" as="c" hint-placeholder-count="1"><div class="al-c-riepilogo__colonna-15">
 <span class="al-c-riepilogo__colonna-6"><b class="al-c-riepilogo__testo-24">{{ c.n }}</b><span class="al-c-riepilogo__testo-8">{{ c.uso }}</span></span>
-<sc-for list="{{ c.vis }}" as="x" hint-placeholder-count="4"><span style="display:flex;gap:10px;align-items:flex-start;min-width:0"><span aria-hidden="true" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--carta-2);display:grid;place-items:center;color:var(--tenue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><sc-if value="{{ x.d }}" hint-placeholder-val="{{ false }}"><path d="{{ x.d }}"></path></sc-if></svg></span><span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span class="al-c-riepilogo__testo-3">{{ x.l }}</span><span style="text-wrap:pretty">{{ x.v }}</span></span></span></sc-for>
+<sc-for list="{{ c.vis }}" as="x" hint-placeholder-count="4"><span style="display:flex;gap:10px;align-items:flex-start;min-width:0"><span aria-hidden="true" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--carta-2);display:grid;place-items:center;color:var(--tenue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><sc-if value="{{ x.d }}" hint-placeholder-val="{{ false }}"><path sc-camel-d="{{ x.d }}"></path></sc-if></svg></span><span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span class="al-c-riepilogo__testo-3">{{ x.l }}</span><span style="text-wrap:pretty">{{ x.v }}</span></span></span></sc-for>
 <sc-if value="{{ c.puo }}" hint-placeholder-val="{{ false }}"><a class="al-bottone al-bottone--testo al-bottone--piccolo al-bottone--a-filo al-c-riepilogo__strumenti" href="#" onClick="{{ c.toggle }}" aria-expanded="{{ c.ap }}">{{ c.toggleL }} <span aria-hidden="true">{{ c.chev }}</span></a></sc-if>
 </div></sc-for>
 
@@ -77,9 +77,9 @@ class Component extends DCLogic {
   componentDidUpdate(pp) { this.moto(); if ((pp.oggetto && pp.oggetto.n) !== (this.props.oggetto && this.props.oggetto.n)) this.setState({ prod: 0 }); }
   rifR = el => { this._root = el; };
   moto() { const M = window.ALmoto, r = this._root; if (!M || !r) return; if (this._firma !== this._pF) { M.disegna(r); if (this._pF == null) M.mini(r); this._pF = this._firma; } }
-  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALnome && window.ALdati; if (ok()) return true;
     const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
-    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f + '?v81'; s.setAttribute('data-al', f); document.head.appendChild(s); } });
     if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
     return false; }
   renderVals() {
