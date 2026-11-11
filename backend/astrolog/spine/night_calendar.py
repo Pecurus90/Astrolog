@@ -6,7 +6,7 @@ import sqlite3
 from typing import Any
 
 from ..levels import Verdict
-from . import counts
+from . import counts, nights
 
 _MONTH = f"""
 SELECT n.id, n.night_date, s.name AS site,
@@ -20,6 +20,34 @@ ORDER BY n.night_date, s.name COLLATE NOCASE, n.id
 """  # noqa: S608 - constant fragments of the spine
 
 _FIRST = "SELECT substr(MIN(night_date), 1, 7) FROM nights"
+
+_SHOTS = f"""
+SELECT n.id, n.night_date, s.name AS site, {counts.counts_on(counts.Subject.NIGHT)}
+FROM nights n JOIN sites s ON s.id = n.site_id
+WHERE n.night_date BETWEEN ? AND ?
+ORDER BY n.night_date, s.name COLLATE NOCASE, n.id
+"""  # noqa: S608 - constant fragments of the spine
+
+
+def shots(conn: sqlite3.Connection, first: str, last: str) -> dict[str, list[dict[str, Any]]]:
+    """`{night date: [night]}` from any site, for the Moon calendar's star: where, which objects,
+    how many frames and how long."""
+    rows = conn.execute(_SHOTS, (first, last)).fetchall()
+    names = nights.objects_of(conn, [r["id"] for r in rows])
+    out: dict[str, list[dict[str, Any]]] = {}
+    for r in rows:
+        out.setdefault(r["night_date"], []).append(
+            {
+                "night_id": r["id"],
+                "site": r["site"],
+                # an object with no name breaks spina-identify invariant 3: left out, not shown
+                "objects": [o["name"] for o in names.get(r["id"], []) if o["name"]],
+                "frames": r["frames"],
+                "integration_s": round(r["integration_s"]),
+                "untimed": r["untimed"],
+            }
+        )
+    return out
 
 
 def _next(month: dt.date) -> dt.date:

@@ -13,7 +13,7 @@ from astrolog.db.connect import connect, create_database
 from astrolog.site_of import home_site
 from astrolog.spine import moon_calendar
 from astrolog.weather import forecast
-from group_bench import ROMA, luogo, prepara
+from group_bench import ROMA, corri, luogo, posa, prepara
 
 OGGI = dt.date(2026, 10, 16)
 
@@ -127,6 +127,40 @@ def test_a_good_broadband_night_has_little_moon_or_enough_dark_without_it(scritt
     for r in righe(scritto):
         attesa = r["illumination_pct"] < 25 or r["moonless_dark_s"] >= 4 * 3600
         assert bool(r["broadband_good"]) == attesa, r["night_date"]
+
+
+def test_each_night_has_its_step_on_the_meteo_moon_scale(scritto):
+    """I tre gradini della tavola v79 (CalendarioNotti, Luna): fino al 25% banda larga buona, fino
+    al 65% al limite, oltre solo banda stretta; la stessa scala della Luna del Meteo (ING)."""
+    gradi = {r["night_date"]: (r["illumination_pct"], r["moon_level"]) for r in righe(scritto)}
+    for data, (pct, grado) in gradi.items():
+        atteso = "go" if pct < 25 else "marginal" if pct < 65 else "nogo"
+        assert grado == atteso, data
+    assert {g for _, g in gradi.values()} == {"go", "marginal", "nogo"}
+
+
+def test_the_calendar_shows_the_nights_shot_on_its_days(db_path, scritto):
+    """La stella della notte di ripresa: sito, oggetti, frame e ore, da qualunque sito."""
+    scritto.execute(
+        "INSERT INTO object_names(object_id, name, origin, is_primary) VALUES(1, 'M 31', 'user', 1)"
+    )
+    posa(scritto, quando="2026-10-12T21:00:00Z", esposizione=600.0, hash_="a")
+    posa(scritto, quando="2026-10-12T22:00:00Z", hash_="b")
+    corri(scritto)
+    scritto.commit()
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        notti = c.get("/api/v1/moon/calendar").json()["nights"]
+    (giorno,) = [n for n in notti if n["shots"]]
+    (ripresa,) = giorno["shots"]
+    assert giorno["date"] == "2026-10-12"
+    assert (ripresa["site"], ripresa["frames"], ripresa["integration_s"], ripresa["untimed"]) == (
+        "Casa",
+        2,
+        600,
+        1,
+    )
+    assert ripresa["objects"] == ["M 31"]
+    assert ripresa["night_id"]
 
 
 def test_changing_a_threshold_rejudges_the_nights_at_once(db_path, scritto):

@@ -90,9 +90,11 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   fuori dal voto; senza chiave Meteoblue viene dal jet stream, detto. Un dato che manca (aerosol)
   esce dal conto e la pagina dice quale. Condensa e vento incerto sono avvisi accanto. Costruiti
   (`weather/score.py`, 7/11/2026): Trasparenza, verdetto, Ore di posa in tutto, "senza aerosol";
-  ogni ora pesa per la sua parte di buio, letta ogni 5 minuti attorno all'ora. Arrivano con il
-  porting del Meteo e della Dashboard la divisione per banda della Luna e la linea ora per ora; il
-  buio nautico con ADR 0035. Le ore serene (`usable_*`) restano le nuvole sole, per le pagine di
+  ogni ora pesa per la sua parte di buio, letta ogni 5 minuti attorno all'ora. Costruite col
+  porting della Dashboard (11/11/2026): la Trasparenza di ogni ora (`transparency` dell'ora) e la
+  divisione per banda della Luna (`broadband_exposure_hours`, `narrowband_exposure_hours`: un'ora
+  con la Luna dal 65%, la scala della Luna qui sotto, e' solo banda stretta; le due fanno il
+  totale). Il buio nautico arriva con ADR 0035. Le ore serene (`usable_*`) restano le nuvole sole, per le pagine di
   oggi. Prove: `backend/tests/test_weather_score.py`.
 - **Ogni misura ha anche la sua parola.** Ogni misura con soglia ha la sua parola
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e

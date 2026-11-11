@@ -1313,7 +1313,8 @@ export interface paths {
          * Moon Calendar
          * @description The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
          *     this month and the next, each night with its Moon, the dark hours without it and whether it is
-         *     good for broadband by the two thresholds in the settings, which travel along for the legend.
+         *     good for broadband by the two thresholds in the settings, which travel along for the legend,
+         *     its step on the Meteo's Moon scale, and the nights shot that day from any site (SQL sums).
          *     Nothing is computed here: before the round has run, `nights` is empty.
          */
         get: operations["moon_calendar"];
@@ -3338,6 +3339,18 @@ export interface components {
              * @description Good for broadband by the two thresholds in the settings.
              */
             good: boolean;
+            /**
+             * Level
+             * @description The Moon's step on the Meteo's Moon scale (ING 25/65): broadband good, broadband marginal, narrowband only.
+             * @enum {string}
+             */
+            level: "go" | "marginal" | "nogo";
+            /**
+             * Shots
+             * @description Empty: nothing shot.
+             * @default []
+             */
+            shots: components["schemas"]["MoonCalendarShotOut"][];
         };
         /**
          * MoonCalendarOut
@@ -3352,6 +3365,30 @@ export interface components {
             min_dark_h: number;
             /** Nights */
             nights: components["schemas"]["MoonCalendarNightOut"][];
+        };
+        /**
+         * MoonCalendarShotOut
+         * @description A night shot on that day, from any site: the calendar's star.
+         */
+        MoonCalendarShotOut: {
+            /** Night Id */
+            night_id: number;
+            /** Site */
+            site: string;
+            /**
+             * Objects
+             * @description Display names, the most shot first.
+             */
+            objects: string[];
+            /** Frames */
+            frames: number;
+            /** Integration S */
+            integration_s: number;
+            /**
+             * Untimed
+             * @description Frames that do not say how long they lasted.
+             */
+            untimed: number;
         };
         /**
          * MoonInDarkOut
@@ -3867,6 +3904,16 @@ export interface components {
              * @description Ore di posa: the Transparency / 100 summed over the window's hours, tenths.
              */
             exposure_hours?: number | null;
+            /**
+             * Broadband Exposure Hours
+             * @description Of `exposure_hours`, the hours good for broadband too.
+             */
+            broadband_exposure_hours?: number | null;
+            /**
+             * Narrowband Exposure Hours
+             * @description Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale (ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
+             */
+            narrowband_exposure_hours?: number | null;
             /**
              * Dark Hours
              * @description The window's length in hours, tenths: the dark, or the Sun down.
@@ -5409,6 +5456,16 @@ export interface components {
              */
             exposure_hours?: number | null;
             /**
+             * Broadband Exposure Hours
+             * @description Of `exposure_hours`, the hours good for broadband too.
+             */
+            broadband_exposure_hours?: number | null;
+            /**
+             * Narrowband Exposure Hours
+             * @description Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale (ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
+             */
+            narrowband_exposure_hours?: number | null;
+            /**
              * Dark Hours
              * @description The window's length in hours, tenths: the dark, or the Sun down.
              * @default 0
@@ -5494,6 +5551,11 @@ export interface components {
              */
             dew_spread_c: number | null;
             levels: components["schemas"]["WeatherLevelsOut"];
+            /**
+             * Transparency
+             * @description 0-100, tenths: the light the hour lets through (score v4, ADR 0034); zero when a rule blocks it, `None` without its clouds.
+             */
+            transparency?: number | null;
             /**
              * Shown
              * @description Whether the page draws this hour (`shown_from`-`shown_until`).
@@ -5623,6 +5685,16 @@ export interface components {
              * @description Ore di posa: the Transparency / 100 summed over the window's hours, tenths.
              */
             exposure_hours?: number | null;
+            /**
+             * Broadband Exposure Hours
+             * @description Of `exposure_hours`, the hours good for broadband too.
+             */
+            broadband_exposure_hours?: number | null;
+            /**
+             * Narrowband Exposure Hours
+             * @description Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale (ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
+             */
+            narrowband_exposure_hours?: number | null;
             /**
              * Dark Hours
              * @description The window's length in hours, tenths: the dark, or the Sun down.

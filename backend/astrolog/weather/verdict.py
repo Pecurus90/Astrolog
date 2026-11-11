@@ -91,6 +91,8 @@ class Summary:
     # score v4 (ADR 0034, `score.py`): None without every window hour's clouds
     transparency: float | None = None
     exposure_hours: float | None = None
+    broadband_exposure_hours: float | None = None
+    narrowband_exposure_hours: float | None = None
     dark_hours: float = 0.0
     without_aerosol: bool = False
 

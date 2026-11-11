@@ -118,6 +118,27 @@ def test_the_exposure_hours_are_the_transparency_times_the_dark():
     assert detto.dark_hours == 3.0
 
 
+def test_the_exposure_splits_where_the_moon_leaves_only_narrowband():
+    """Tavola v79, «4,6 ore: 3,1 in banda larga, 1,5 solo banda stretta»: un'ora con la Luna sopra
+    il 65% (la scala della Luna del Meteo, ING) e' posa solo per la banda stretta."""
+    detto = score.assess(notte({}, {"moon_pct": 80.0, "cloud_total_pct": 50.0}, {"moon_pct": 30.0}))
+    assert detto.exposure_hours == 2.5
+    assert (detto.broadband_exposure_hours, detto.narrowband_exposure_hours) == (2.0, 0.5)
+
+
+def test_hours_that_do_not_know_the_moon_have_no_split():
+    """Lo storico delle Notti non scrive la Luna ora per ora: dire «tutta banda larga» sarebbe
+    falso con la Luna piena, quindi la divisione non c'e'."""
+    detto = score.assess(notte({}, {}))
+    assert detto.exposure_hours == 2.0
+    assert (detto.broadband_exposure_hours, detto.narrowband_exposure_hours) == (None, None)
+
+
+def test_without_a_score_there_is_no_split():
+    detto = score.assess(notte({}, {"cloud_total_pct": None}))
+    assert (detto.broadband_exposure_hours, detto.narrowband_exposure_hours) == (None, None)
+
+
 def test_a_night_without_aerosol_says_so():
     """Lo storico non porta l'aerosol: la Trasparenza resta quella delle nuvole, e lo si dice."""
     assert score.assess(notte({})).without_aerosol is True

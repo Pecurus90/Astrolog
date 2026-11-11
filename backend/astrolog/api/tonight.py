@@ -11,6 +11,7 @@ from ..clock import midnight_of, night_date, night_window, now_iso, seconds_betw
 from ..db import config
 from ..ephemeris import moon, planets, sun
 from ..site_of import Site, home_site
+from ..spine import night_calendar
 from ..units import bortle_of
 from ..weather import judge
 from . import weather
@@ -21,6 +22,7 @@ from .models_tonight import (
     DarkStretchOut,
     MoonCalendarNightOut,
     MoonCalendarOut,
+    MoonCalendarShotOut,
     MoonInDarkOut,
     MoonOut,
     MoonPointOut,
@@ -94,7 +96,8 @@ def _next(conn: sqlite3.Connection, site: Site, night: str, kind: str) -> str | 
 def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut:
     """The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
     this month and the next, each night with its Moon, the dark hours without it and whether it is
-    good for broadband by the two thresholds in the settings, which travel along for the legend.
+    good for broadband by the two thresholds in the settings, which travel along for the legend,
+    its step on the Meteo's Moon scale, and the nights shot that day from any site (SQL sums).
     Nothing is computed here: before the round has run, `nights` is empty."""
     prefs = config.read(conn)
     home = home_site(conn)
@@ -106,6 +109,7 @@ def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut
         if home
         else []
     )
+    shot = night_calendar.shots(conn, rows[0]["night_date"], rows[-1]["night_date"]) if rows else {}
     return MoonCalendarOut(
         today=night_date(now_iso(), home.timezone) if home else None,
         max_pct=prefs.moon_broadband_max_pct,
@@ -119,6 +123,8 @@ def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut
                 event=r["event"],
                 lit_side=moon.lit_side(r["phase_key"], home.latitude) if home else "right",
                 good=bool(r["broadband_good"]),
+                level=r["moon_level"],
+                shots=[MoonCalendarShotOut(**s) for s in shot.get(r["night_date"], [])],
             )
             for r in rows
         ],

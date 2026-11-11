@@ -179,8 +179,11 @@ Technical Note 127, come il Meteo; ADR 0034), con le **ore di buio senza
 Luna scritte accanto**. Le soglie sono una casa sola con il Meteo (`meteo.md`), di fabbrica 25 e 65
 dall'orizzonte, e si cambiano nelle Impostazioni (Marco, 24/10/2026). Oggi il codice segna ancora
 "buona per la banda larga" sotto il 25% **o** con almeno 4 ore di buio senza Luna
-(`moon_broadband_max_pct`, `moon_broadband_min_dark_h`): la regola delle 4 ore esce con i tre
-gradini.
+(`moon_broadband_max_pct`, `moon_broadband_min_dark_h`). I tre gradini sono scritti dall'11/11/2026
+(`moon_nights.moon_level`, sulla scala della Luna del Meteo, fissa a 25 e 65 finche' la regola
+della Luna non entra nelle Impostazioni): con quella regola escono `good` e le 4 ore. Ogni giorno
+porta anche le notti riprese quel giorno, da ogni sito (`shots`: sito, oggetti, frame, ore), la
+stella della tavola v79 (`test_moon_calendar.py`).
 
 **Orizzonte e crepuscoli sono quelli dell'USNO** (ADR 0035): Sole e Luna sorgono e tramontano a
 -0,833° (rifrazione 34' piu' raggio 16'), sull'altezza topocentrica, che porta gia' la parallasse

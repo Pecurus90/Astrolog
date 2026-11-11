@@ -112,6 +112,14 @@ def test_every_hour_carries_the_judgement_of_each_judged_measure(db):  # noqa: F
     assert {o["levels"]["cloud"] for o in ore} == {"go"}
 
 
+def test_every_hour_carries_its_transparency(db):  # noqa: F811
+    """La linea «Trasparenza della notte» della Dashboard, ora per ora: 30% di nuvole e niente
+    aerosol lasciano il 70% della luce."""
+    scritta(db, Finto(risposta(cloud_total_pct=30.0)))
+    ore = json.loads(notte_di(db, "2026-09-25")["hours_json"])
+    assert {o["transparency"] for o in ore if o["shown"]} == {70.0}
+
+
 def test_every_hour_writes_its_values_as_the_night_does_on_the_side_of_their_word(db):  # noqa: F811
     """Un'ora si scrive con le cifre della sua misura, come la notte; il numero resta dal lato
     della soglia dove sta il valore vero, e la parola dell'ora viene dal valore vero."""

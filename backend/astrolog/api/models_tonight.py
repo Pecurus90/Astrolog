@@ -26,6 +26,17 @@ Compass = Literal[
 ]  # fmt: skip
 
 
+class MoonCalendarShotOut(BaseModel):
+    """A night shot on that day, from any site: the calendar's star."""
+
+    night_id: int
+    site: str
+    objects: list[str] = Field(description="Display names, the most shot first.")
+    frames: int
+    integration_s: int
+    untimed: int = Field(description="Frames that do not say how long they lasted.")
+
+
 class MoonCalendarNightOut(BaseModel):
     date: str
     phase_key: "PhaseKey"
@@ -36,6 +47,11 @@ class MoonCalendarNightOut(BaseModel):
         description="As `MoonOut.lit_side`, for the day's disc."
     )
     good: bool = Field(description="Good for broadband by the two thresholds in the settings.")
+    level: Literal["go", "marginal", "nogo"] = Field(
+        description="The Moon's step on the Meteo's Moon scale (ING 25/65): broadband good, "
+        "broadband marginal, narrowband only.",
+    )
+    shots: list[MoonCalendarShotOut] = Field(default=[], description="Empty: nothing shot.")
 
 
 class MoonCalendarOut(BaseModel):

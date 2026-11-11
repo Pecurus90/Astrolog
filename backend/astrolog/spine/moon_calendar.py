@@ -10,10 +10,11 @@ from ..db import config
 from ..db.replace_table import replace_rows
 from ..ephemeris import moon
 from ..site_of import Site
+from ..weather import judge
 
 COLUMNS = (
     "site_id", "night_date", "latitude", "longitude", "phase_key", "illumination_pct",
-    "dark_s", "moonless_dark_s", "event", "event_at", "broadband_good",
+    "dark_s", "moonless_dark_s", "event", "event_at", "broadband_good", "moon_level",
 )  # fmt: skip
 
 # The two settings that judge a night: changing one rewrites the judgement, not the sky.
@@ -76,6 +77,7 @@ def rebuild(conn: sqlite3.Connection, site: Site, wanted: list[str]) -> None:
             n.moonless_dark_s,
             *events.get(n.night, (None, None)),
             int(n.illumination_pct < max_pct or n.moonless_dark_s >= min_dark_s),
+            judge.level(judge.SCALES[judge.Measure.MOON], n.illumination_pct),
         )  # fmt: skip
         for n in nights
     ]

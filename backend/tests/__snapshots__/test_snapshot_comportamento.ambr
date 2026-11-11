@@ -262,9 +262,11 @@
         'untimed': 0,
         'weather': dict({
           'arrives_on': None,
+          'broadband_exposure_hours': None,
           'cloud_total_pct': None,
           'dark_hours': 0.0,
           'exposure_hours': None,
+          'narrowband_exposure_hours': None,
           'sky_word': None,
           'state': 'waiting',
           'transparency': None,
@@ -314,9 +316,11 @@
         'untimed': 0,
         'weather': dict({
           'arrives_on': None,
+          'broadband_exposure_hours': None,
           'cloud_total_pct': None,
           'dark_hours': 0.0,
           'exposure_hours': None,
+          'narrowband_exposure_hours': None,
           'sky_word': None,
           'state': 'waiting',
           'transparency': None,

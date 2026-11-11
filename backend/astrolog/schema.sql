@@ -676,6 +676,8 @@ CREATE TABLE moon_nights (
   event            TEXT CHECK (event IN ('new', 'full')),
   event_at         TEXT,                           -- l'istante della fase, nel fuso del sito
   broadband_good   INTEGER NOT NULL CHECK (broadband_good IN (0, 1)),
+  -- il gradino della Luna sulla scala del Meteo (ING 25/65): larga, al limite, solo stretta
+  moon_level       TEXT NOT NULL CHECK (moon_level IN ('go', 'marginal', 'nogo')),
   PRIMARY KEY (site_id, night_date)
 ) STRICT;
 

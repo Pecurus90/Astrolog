@@ -32,6 +32,24 @@ def transparency(h: Hour) -> float | None:
     return 100.0 * (1 - clouds / 100) * haze
 
 
+def narrowband_only(h: Hour) -> bool:
+    """The Moon up and from 65% on the Meteo's Moon scale (ING): the hour is narrowband only."""
+    scale = judge.SCALES[Measure.MOON]
+    return judge.level(scale, scale.read(h)) == Verdict.NOGO
+
+
+def _split(kept: float, narrow: float, known: bool) -> dict[str, float | None]:
+    """The exposure by the Moon's band, only where the hours know the Moon (the forecast does,
+    the history does not). The broadband part is the rest: the two add up, tenth for tenth."""
+    if not known:
+        return {"broadband_exposure_hours": None, "narrowband_exposure_hours": None}
+    narrow_h = round(narrow / 100, 1)
+    return {
+        "broadband_exposure_hours": round(round(kept / 100, 1) - narrow_h, 1),
+        "narrowband_exposure_hours": narrow_h,
+    }
+
+
 def _verdict(value: float | None) -> Verdict | None:
     if value is None:
         return None
@@ -50,6 +68,9 @@ def assess(hours: Sequence[Hour]) -> Summary:
     complete = bool(shares) and None not in lights
     dark = sum(w for _, w in shares)
     kept = sum(t * w for t, (_, w) in zip(lights, shares, strict=True) if t is not None)
+    narrow = sum(
+        t * w for t, (h, w) in zip(lights, shares, strict=True) if t and narrowband_only(h)
+    )
     clarity = round(kept / dark, 1) if complete and dark else None
     cover = [h.values.get("cloud_total_pct") for h in night]
     clouds_known = bool(night) and None not in cover
@@ -68,6 +89,9 @@ def assess(hours: Sequence[Hour]) -> Summary:
         wind_700hpa_kmh=mean_of(night, "wind_700hpa_kmh"),
         transparency=clarity,
         exposure_hours=round(kept / 100, 1) if clarity is not None else None,
+        **_split(
+            kept, narrow, clarity is not None and any("moon_pct" in h.values for h, _ in shares)
+        ),
         dark_hours=round(dark, 1),
         without_aerosol=any(h.values.get("aerosol_optical_depth") is None for h, _ in shares),
     )

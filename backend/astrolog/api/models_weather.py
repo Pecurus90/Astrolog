@@ -64,6 +64,11 @@ class WeatherHourOut(BaseModel):
         description="Air minus dew point, the quantity condensation is judged on."
     )
     levels: WeatherLevelsOut
+    transparency: float | None = Field(
+        default=None,
+        description="0-100, tenths: the light the hour lets through (score v4, ADR 0034); zero "
+        "when a rule blocks it, `None` without its clouds.",
+    )
     shown: bool = Field(
         description="Whether the page draws this hour (`shown_from`-`shown_until`)."
     )
@@ -163,6 +168,15 @@ class WeatherSkyOut(BaseModel):
     exposure_hours: float | None = Field(
         default=None,
         description="Ore di posa: the Transparency / 100 summed over the window's hours, tenths.",
+    )
+    broadband_exposure_hours: float | None = Field(
+        default=None, description="Of `exposure_hours`, the hours good for broadband too."
+    )
+    narrowband_exposure_hours: float | None = Field(
+        default=None,
+        description="Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale "
+        "(ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where "
+        "the hours do not know the Moon (the history).",
     )
     dark_hours: float = Field(
         default=0.0, description="The window's length in hours, tenths: the dark, or the Sun down."

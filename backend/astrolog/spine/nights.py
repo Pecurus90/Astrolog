@@ -153,6 +153,13 @@ def _site_from(r: sqlite3.Row) -> SiteFrom:
     return SiteFrom.FRAMES if r["from_frames"] else SiteFrom.HOME
 
 
+def objects_of(conn: sqlite3.Connection, ids: Sequence[int]) -> dict[int, list[dict[str, Any]]]:
+    """`{night id: [object]}`, the most shot first: Nights and Moon calendar ask it alike."""
+    return idlist.grouped(
+        conn, _OBJECTS, ids, "night_id", lambda r: {**obj.counted(r), "untimed": r["untimed"]}
+    )
+
+
 def page(
     conn: sqlite3.Connection, *, ids: Sequence[int], weather: Observed, max_pct: int
 ) -> list[dict[str, Any]]:
@@ -161,9 +168,7 @@ def page(
         rows = conn.execute(_PAGE.format(listed=held), (weather.kind,)).fetchall()
     moons = _moons(rows)
     shooting = _shooting(rows, moons, max_pct)
-    night_objects = idlist.grouped(
-        conn, _OBJECTS, ids, "night_id", lambda r: {**obj.counted(r), "untimed": r["untimed"]}
-    )
+    night_objects = objects_of(conn, ids)
     filters = filters_used.of(conn, counts.Subject.NIGHT, ids)
     return [
         {

@@ -66,6 +66,10 @@ def _moon_by_hour(site: Site, instants: Sequence[str]) -> dict[str, int | None]:
     }
 
 
+def _tenths(value: float | None) -> float | None:
+    return None if value is None else round(value, 1)
+
+
 def _agreement(said: Sequence[verdict.Verdict | None], total: int) -> dict[str, int]:
     """How many models say go, marginal, nogo or do not know; a model that wrote nothing that
     night does not know, it is not one model fewer."""
@@ -87,6 +91,7 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
                 **h.row(),
                 **judge.shown_values({**h.values, "dew_spread_c": judge.spread(h)}),
                 "levels": judge.hour_levels(h),
+                "transparency": _tenths(score.transparency(h)),
                 "shown": h.at in shown,
                 "clear": summary.usable_hours is not None
                 and h.at in judged
