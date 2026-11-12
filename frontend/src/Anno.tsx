@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import type { CSSProperties } from "react"
+import type { CSSProperties, ReactNode } from "react"
 import { Link } from "react-router"
 
 import { api } from "./api/client"
@@ -306,20 +306,7 @@ function Telefono({ anno }: { anno: Anno }) {
     t("dashboard.year.tel.perMonth", { n: unDecimale(anno.per_month) }),
   ].join(" \u00b7 ")
   return (
-    <Carta
-      formato="telefono"
-      etichetta={t("dashboard.year.short", { anno: a })}
-      ritardo={360}
-      padding="20px"
-      gap="14"
-    >
-      <div className="al-dash__riga-25" style={{ alignItems: "center" }}>
-        <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-          <span className="al-dash__testo-29">{t("dashboard.year.short", { anno: a })}</span>
-          <span className="al-dash__testo-13">{sotto}</span>
-        </span>
-        <Statistiche />
-      </div>
+    <CartaTelefono anno={a} sotto={sotto}>
       <span className="al-dash__testo-43">{ore(anno.integration_s)}</span>
       <Mesi anno={anno} telefono />
       {anno.previous_known && (
@@ -348,6 +335,36 @@ function Telefono({ anno }: { anno: Anno }) {
           {t("dashboard.year.none", { anno: a })}
         </span>
       )}
+    </CartaTelefono>
+  )
+}
+
+/** La carta "Il 2026" del telefono: titolo, riga sotto se c'e', e Statistiche (tavola 249-250). */
+function CartaTelefono({
+  anno,
+  sotto,
+  children,
+}: {
+  anno: string
+  sotto?: string
+  children: ReactNode
+}) {
+  return (
+    <Carta
+      formato="telefono"
+      etichetta={t("dashboard.year.short", { anno })}
+      ritardo={360}
+      padding="20px"
+      gap="14"
+    >
+      <div className="al-dash__riga-25" style={{ alignItems: "center" }}>
+        <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <span className="al-dash__testo-29">{t("dashboard.year.short", { anno })}</span>
+          {sotto && <span className="al-dash__testo-13">{sotto}</span>}
+        </span>
+        <Statistiche />
+      </div>
+      {children}
     </Carta>
   )
 }
@@ -399,21 +416,5 @@ function AnnoCheNonRisponde({
       </Carta>
     )
   }
-  return (
-    <Carta
-      formato="telefono"
-      etichetta={t("dashboard.year.short", { anno })}
-      ritardo={360}
-      padding="20px"
-      gap="14"
-    >
-      <div className="al-dash__riga-25" style={{ alignItems: "center" }}>
-        <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-          <span className="al-dash__testo-29">{t("dashboard.year.short", { anno })}</span>
-        </span>
-        <Statistiche />
-      </div>
-      {avviso}
-    </Carta>
-  )
+  return <CartaTelefono anno={anno}>{avviso}</CartaTelefono>
 }
