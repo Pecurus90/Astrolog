@@ -30,6 +30,7 @@ type Accumulo = {
   objects: Record<string, Schema["ObjectEdit"]>
   typeless: Record<string, Schema["TypelessFolderEdit"]>
   unclear: Record<string, Schema["CoordinatesEdit"]>
+  undated: Record<string, Schema["UndatedEdit"]>
   mosaics: Record<string, Schema["MosaicEdit"]>
 }
 const VUOTO: Accumulo = {
@@ -39,6 +40,7 @@ const VUOTO: Accumulo = {
   objects: {},
   typeless: {},
   unclear: {},
+  undated: {},
   mosaics: {},
 }
 
@@ -125,7 +127,7 @@ function LaPagina({ stretta }: { stretta: boolean }) {
           gear: Object.values(accumulo.gear),
           typeless: Object.values(accumulo.typeless),
           unclear: Object.values(accumulo.unclear),
-          undated: [], // la domanda arriva col porting della tavola v82 (passo 33, commit D)
+          undated: Object.values(accumulo.undated),
           mosaics: Object.values(accumulo.mosaics),
           objects: Object.values(accumulo.objects),
         },
@@ -179,6 +181,8 @@ function LaPagina({ stretta }: { stretta: boolean }) {
     objects: (dati.objects ?? []).map((o) => ({ chiave: o.key, salvata: o.answer !== null })),
     typeless: (dati.typeless ?? []).map((g) => ({ chiave: g.key, salvata: g.answer !== null })),
     unclear: (dati.unclear ?? []).map((p) => ({ chiave: p.key, salvata: p.site !== null })),
+    // la domanda la disegna la pagina sulla tavola v82: fino ad allora la sezione non c'e'
+    undated: [],
     mosaics: (dati.mosaics ?? []).map((m) => ({ chiave: m.key, salvata: m.answer !== null })),
   }
   const tutte = Object.keys(SEZIONI) as QualeSezione[]
@@ -326,6 +330,7 @@ function LaPagina({ stretta }: { stretta: boolean }) {
     ),
     typeless: <SezioneSenzaTipo gruppi={dati.typeless} risposte={accumulo.typeless} onRisposta={scrivi("typeless")} />,
     unclear: <SezioneLuoghi posti={dati.unclear} risposte={accumulo.unclear} onRisposta={scrivi("unclear")} />,
+    undated: null,
     mosaics: <SezioneMosaici mosaici={dati.mosaics} risposte={accumulo.mosaics} onRisposta={scrivi("mosaics")} />,
   }
   const piede = (
