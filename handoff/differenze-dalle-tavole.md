@@ -292,3 +292,15 @@ il 12/11. Restano diverse dalla tavola:
   Perche': lo stesso decimale fisso di «2,0» e «4,6» (tavola v76, `posaN`); un numero solo che
   cambia forma per lo zero e' un caso in piu'. Non a Design: differenza di una cifra.
 - **Il quadretto per giorno** (tavola v37) esce: la v79 non lo disegna.
+
+## Da confermare -- Il backend (passo 33, commit A e B, 12/11)
+
+- **Montatura** (tavola v82, `Da confermare.dc.html` 220-222; DECISIONI 3.8): fuori. Tavola:
+  «EQ6-R è la tua montatura? Sì, è la montatura · La montatura è un'altra». App: la sezione non
+  c'e'. Perche': nessun header vero mostra lo stesso nome come telescopio e come montatura (in
+  `tests/header/` l'ASIAIR scrive la montatura, N.I.N.A. l'ottica), e la tavola non dice cosa fa
+  «La montatura è un'altra»; Marco, 12/11: «non saprei cosa fare qua». Entra quando un file vero
+  porta il caso (Issue #24).
+- **Progetti finiti** (tavola 232-245): fuori fino ai Progetti (passo 44.1).
+- **«Nessun filtro» c'era già**: tavola, esito di Applica; prima l'app rifiutava con un 409.
+  Ora i frame passano alla riga che c'e' (contratto `docs/domini/spina.md`).

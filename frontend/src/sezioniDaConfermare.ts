@@ -11,6 +11,7 @@ export const SEZIONI = {
   objects: { ancora: "oggetti", titolo: "review.objects" },
   typeless: { ancora: "frame-senza-tipo", titolo: "review.typeless" },
   unclear: { ancora: "frame-senza-sito", titolo: "review.unclear" },
+  undated: { ancora: "frame-senza-data", titolo: "review.undated" },
   mosaics: { ancora: "mosaici-proposti", titolo: "review.mosaics" },
 } as const satisfies Record<string, { ancora: string; titolo: Chiave }>
 

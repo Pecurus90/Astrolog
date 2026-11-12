@@ -145,6 +145,7 @@ export const it = {
   "review.card.mono": "mono",
   "review.card.color": "a colori",
   "review.typeless": "Frame senza tipo",
+  "review.undated": "Frame senza data",
   "review.typeless.why":
     "Tipo di frame non indicato nei file. Finch\u00e9 non viene indicato, i frame sono esclusi dal conteggio delle ore.",
   "review.typeless.question": "Tipo dei frame in {cartella}",

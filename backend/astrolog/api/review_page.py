@@ -1,14 +1,15 @@
 """Each section arrives ready for the screen, because the frontend only formats. The sky candidates
 are written by identify, since the catalog cone is costly; the rest is composed here."""
 
+import json
 import sqlite3
 from dataclasses import asdict
 from typing import Any, Final
 
 from ..place import by_distance, distance_km
-from ..site_of import known_sites
+from ..site_of import known_sites, site_at
 from ..spine import coordinates as places
-from ..spine import filters_used, frame_proofs, gear, object_answer, rigs, unnamed
+from ..spine import filters_used, frame_proofs, gear, object_answer, rigs, undated, unnamed
 from ..spine import objects as obj
 from ..spine.group import GroupReason
 from ..spine.identify_decide import DOUBT
@@ -24,6 +25,7 @@ from .models_review_groups import (
     SiteCandidate,
     Subject,
     UnclearCoordinates,
+    UndatedFolder,
     UnnamedGroup,
 )
 
@@ -225,6 +227,34 @@ def subjects_by(
         obj.count_subject(groups.setdefault(r["owner"], {}), r["object_id"], r["n"])
     obj.subjects(conn, groups.values())
     return {k: [Subject(**s) for s in g["subjects"]["found"]] for k, g in groups.items()}
+
+
+def undated_folders(conn: sqlite3.Connection) -> list[UndatedFolder]:
+    """The folders are few, so one query per folder for its proofs, never one per frame."""
+    rows = undated.by_folder(conn)
+    if not rows:
+        return []
+    known = known_sites(conn)
+    out = []
+    for g in rows:
+        narrow = ("AND f.id IN (SELECT value FROM json_each(?))", (json.dumps(g["frame_ids"]),))
+        seen = frame_proofs.of(conn, "1", where=narrow[0], args=narrow[1]).get(1)
+        found = site_at(conn, g["site_lat"], g["site_lon"], known)
+        out.append(
+            UndatedFolder(
+                key=g["key"],
+                frames=g["frames"],
+                integration_s=g["integration_s"],
+                untimed=g["untimed"],
+                site=found[0].name if isinstance(found, tuple) else None,
+                file_nights=g["file_nights"],
+                rig_nights=undated.rig_nights(conn, g["rig_ids"]),
+                subjects=subjects_by(conn, "1", *narrow).get(1, []),
+                rigs=[FrameRig(**asdict(r)) for r in seen.rigs] if seen else [],
+                answer=g["answer"],
+            )
+        )
+    return out
 
 
 def _common_names(conn: sqlite3.Connection) -> dict[str, str]:

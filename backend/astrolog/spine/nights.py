@@ -31,7 +31,7 @@ _ANSWER_AT = {
     GroupReason.NO_OBJECT: AnswerAt.REVIEW,
     GroupReason.NO_ACTIVE_SITE: AnswerAt.SITE,
     GroupReason.SITE_NO_TIMEZONE: AnswerAt.SITE,
-    # the user writes the date; its section comes with To confirm's port
+    # the user writes the date, per folder (`spine/undated.py`)
     GroupReason.NO_DATE: AnswerAt.DATE,
 }
 

@@ -18,6 +18,7 @@ from ..spine import (
     object_answer,
     rigs,
     typeless_answer,
+    undated,
     unnamed,
 )
 from ..spine.declarations import TypeAnswer
@@ -94,6 +95,9 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> Appl
         changed += 1
     for edit in body.unclear:
         requeued.update(_answer_where(conn, edit, now))
+        changed += 1
+    for edit in body.undated:
+        requeued.update(undated.declare(conn, edit.key, edit.night.isoformat(), now))
         changed += 1
     out.changed = changed
     return out

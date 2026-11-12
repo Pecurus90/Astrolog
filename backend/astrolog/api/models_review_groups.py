@@ -109,6 +109,31 @@ class TypelessFolder(BaseModel):
     answer: TypelessAnswer | None
 
 
+class UndatedFolder(BaseModel):
+    """The frames that do not say when they were taken, grouped by **folder**. The date of the
+    file on disk is the copy's, not the shot's: it is a proof
+    (`file_nights`), never an answer. One answers with the evening -- the night's date on the site
+    -- written or chosen among the nights of the same setup. An answered group stays on the page,
+    so one can change one's mind."""
+
+    key: str = Field(description="The folder path: it is the key one answers with.")
+    frames: int
+    integration_s: float = Field(description="The sum of their time; on screen in hours.")
+    untimed: int = Field(description="How many do not tell their time: counted, not zero.")
+    site: str | None = Field(
+        description="The site their night goes on; empty when none is declared yet."
+    )
+    file_nights: list[str] = Field(
+        description="The nights of the files' dates on disk, YYYY-MM-DD: the copy's, as a proof."
+    )
+    rig_nights: list[str] = Field(
+        description="The nights with the same setup, most recent first: the ones to choose from."
+    )
+    subjects: list[Subject] = Field(description="The objects in the field, the most taken first.")
+    rigs: list[FrameRig] = Field(description="Optics and camera of its frames, most used first.")
+    answer: str | None = Field(description="The evening said, YYYY-MM-DD.")
+
+
 # What sat in front, as an answer: "colour" goes on the camera's card, the other two on the
 # signature (`spine.signature.FilterAnswer`, kept glued by a test).
 GearFilterAnswer = Literal["color", "no_filter", "filter"]

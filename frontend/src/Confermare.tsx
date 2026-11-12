@@ -125,6 +125,7 @@ function LaPagina({ stretta }: { stretta: boolean }) {
           gear: Object.values(accumulo.gear),
           typeless: Object.values(accumulo.typeless),
           unclear: Object.values(accumulo.unclear),
+          undated: [], // la domanda arriva col porting della tavola v82 (passo 33, commit D)
           mosaics: Object.values(accumulo.mosaics),
           objects: Object.values(accumulo.objects),
         },

@@ -274,7 +274,7 @@ def review(client):
 def to_confirm_without(pagina, sezione):
     """Quanto conta la pagina di Da confermare tolta una sezione, ricomposto dai suoi campi: e' un
     oracolo scritto dalla pagina, non dal codice che conta, e un numero a memoria invecchierebbe."""
-    gruppi = ("typeless", "mosaics")
+    gruppi = ("typeless", "undated", "mosaics")
     conti = {
         "lookalikes": len(pagina["lookalikes"]),
         "filters": len(pagina["filters"]),

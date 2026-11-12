@@ -203,6 +203,9 @@ CREATE TABLE header_aliases (
 -- di camera e telescopio, focale, sensore (ADR 0014, S1); il campo `gear` tiene in JSON i NOMI di
 -- camera e ottica, la focale e cosa c'era davanti (`no_filter`, o `filter` col nome del filtro).
 -- Vale anche per i frame che arriveranno con la stessa firma, in qualunque notte.
+-- Per una CARTELLA (`folder`) la chiave e' il suo percorso: `image_type` dice se i frame senza
+-- tipo sono light o calibrazione, `night` la sera della ripresa dei frame senza data
+-- (AAAA-MM-GG, nel fuso del sito; Marco, 6/11/2026). Valgono anche per i file che arriveranno li'.
 -- Per i frame che non dicono l'OGGETTO e di cui il cielo non dice niente (`frame`) la chiave e'
 -- l'impronta del frame, non il gruppo, che porta la notte (ADR 0014, S2): la risposta del gruppo
 -- si scrive su ognuno, e il campo `object` vale "catalog:<slug>", "name:<nome>" oppure "none",

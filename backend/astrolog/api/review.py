@@ -84,6 +84,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     unclear = page.unclear_coordinates(conn)
     gear_rows = gear_reader.by_signature(conn)
     typeless_rows = typeless_reader.by_folder(conn)
+    undated_rows = page.undated_folders(conn)
     mosaic_rows = mosaic_reader.candidates(conn)
     mosaics = [MosaicCandidate(**asdict(m)) for m in mosaic_rows]
     pairs = lookalike.lookalikes(conn)
@@ -97,6 +98,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         "objects": sum(1 for o in objects if page.asks(o)),
         "typeless": unanswered(typeless_rows),
         "unclear": sum(1 for p in unclear if p.site is None),
+        "undated": sum(1 for u in undated_rows if u.answer is None),
         # a mosaic's no closes it too, or a wrong proposal could only be silenced by accepting it
         "mosaics": sum(1 for m in mosaic_rows if m.answer is None),
     }
@@ -113,6 +115,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         gear=[GearSignature(**g) for g in gear_rows],
         optics_choices=page.optics_choices(conn),
         typeless=[TypelessFolder(**g) for g in typeless_rows],
+        undated=undated_rows,
         mosaics=mosaics,
         empty=conn.execute("SELECT NOT EXISTS (SELECT 1 FROM frames)").fetchone()[0] == 1,
         to_confirm=to_confirm,
@@ -171,6 +174,8 @@ def _stages_touched(body: ReviewApply) -> set[StageName]:
     if body.typeless:
         # the SKY of those frames is requeued: name and night follow from the stage graph
         wanted.add(StageName.SOLVE)
+    if body.undated:
+        wanted.add(StageName.GROUP)  # only the night changes
     if body.objects:
         wanted.add(StageName.IDENTIFY)
     elif body.unclear:

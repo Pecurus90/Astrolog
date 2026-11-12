@@ -12,6 +12,7 @@ from .models_review_groups import (
     Subject,
     TypelessFolder,
     UnclearCoordinates,
+    UndatedFolder,
     UnnamedGroup,
 )
 
@@ -216,6 +217,9 @@ class ReviewOut(BaseModel):
     typeless: list[TypelessFolder] = Field(
         description="The folders whose frames do not tell what file they are."
     )
+    undated: list[UndatedFolder] = Field(
+        description="The folders whose frames do not tell when they were taken."
+    )
     mosaics: list[MosaicCandidate] = Field(description="The regions taken in side-by-side panels.")
     empty: bool = Field(
         description="The archive holds no frame yet: there is nothing to ask, not nothing left."
@@ -228,7 +232,7 @@ class ReviewOut(BaseModel):
 
 
 ReviewSectionKey = Literal[
-    "lookalikes", "filters", "gear", "objects", "typeless", "unclear", "mosaics"
+    "lookalikes", "filters", "gear", "objects", "typeless", "unclear", "undated", "mosaics"
 ]
 
 

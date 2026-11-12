@@ -12,7 +12,7 @@ from .. import night_measures
 from ..clock import night_date, now_iso
 from ..db.transaction import transaction
 from ..site_of import Site, Sites, known_sites, site_at
-from . import gear_usage, mosaic
+from . import gear_usage, mosaic, undated
 from . import group_store as store
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
 from .stages import StageName, StageStatus, ready, set_status
@@ -106,11 +106,18 @@ def _where(conn: sqlite3.Connection, frame: sqlite3.Row, known: Sites) -> _Place
     if frame["object_id"] is None:
         return GroupReason.NO_OBJECT
     # without a zone, so "unreadable date" stays apart from "the site's zone does not exist"
+    said = None
     if night_date(frame["date_obs"]) is None:
-        return GroupReason.NO_DATE
+        said = undated.answer_of_frame(conn, frame["id"])  # the evening, already local
+        if said is None:
+            return GroupReason.NO_DATE
     found = site_at(conn, frame["site_lat"], frame["site_lon"], known)
     if not isinstance(found, tuple):
         return GroupReason(found)  # the same codes
+    if said is not None:  # a site without a zone waits like any frame on it
+        return (
+            _Placed(found[0], said, found[1]) if found[0].timezone else GroupReason.SITE_NO_TIMEZONE
+        )
     return _with_timezone(found[0], frame, answered=found[1])
 
 

@@ -1,6 +1,7 @@
 """The answers of "To confirm": what Apply accepts, and what comes back. One answers with the
 stable key read from the page, never with the row number."""
 
+from datetime import date
 from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -125,6 +126,14 @@ class TypelessFolderEdit(BaseModel):
     kind: TypelessAnswer
 
 
+class UndatedEdit(BaseModel):
+    """The answer about a folder of frames without a date: the evening, the night's date on the
+    site. A real date only: "30 February" is a 422, not a night."""
+
+    key: str = Field(min_length=1, description="The folder path read from the page.")
+    night: date = Field(lt=date.max, description="The last calendar day has no next noon.")
+
+
 class MosaicEdit(BaseModel):
     """The answer about a proposed mosaic: yes, those panels are a mosaic (`yes`), or no.
 
@@ -164,6 +173,7 @@ class ReviewApply(BaseModel):
     unclear: list[CoordinatesEdit] = []
     gear: list[GearEdit] = []
     typeless: list[TypelessFolderEdit] = []
+    undated: list[UndatedEdit] = []
     mosaics: list[MosaicEdit] = []
 
 

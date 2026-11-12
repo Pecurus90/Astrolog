@@ -4456,6 +4456,11 @@ export interface components {
              */
             typeless: components["schemas"]["TypelessFolderEdit"][];
             /**
+             * Undated
+             * @default []
+             */
+            undated: components["schemas"]["UndatedEdit"][];
+            /**
              * Mosaics
              * @default []
              */
@@ -4514,6 +4519,11 @@ export interface components {
              */
             typeless: components["schemas"]["TypelessFolder"][];
             /**
+             * Undated
+             * @description The folders whose frames do not tell when they were taken.
+             */
+            undated: components["schemas"]["UndatedFolder"][];
+            /**
              * Mosaics
              * @description The regions taken in side-by-side panels.
              */
@@ -4537,7 +4547,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "lookalikes" | "filters" | "gear" | "objects" | "typeless" | "unclear" | "mosaics";
+            key: "lookalikes" | "filters" | "gear" | "objects" | "typeless" | "unclear" | "undated" | "mosaics";
             /** Count */
             count: number;
         };
@@ -5472,6 +5482,81 @@ export interface components {
             /** Candidates */
             candidates: components["schemas"]["SiteCandidate"][];
             subjects: components["schemas"]["Subjects"];
+        };
+        /**
+         * UndatedEdit
+         * @description The answer about a folder of frames without a date: the evening, the night's date on the
+         *     site. A real date only: "30 February" is a 422, not a night.
+         */
+        UndatedEdit: {
+            /**
+             * Key
+             * @description The folder path read from the page.
+             */
+            key: string;
+            /**
+             * Night
+             * Format: date
+             * @description The last calendar day has no next noon.
+             */
+            night: string;
+        };
+        /**
+         * UndatedFolder
+         * @description The frames that do not say when they were taken, grouped by **folder** (board v82, Marco
+         *     6/11/2026). The date of the file on disk is the copy's, not the shot's: it is a proof
+         *     (`file_nights`), never an answer. One answers with the evening -- the night's date on the site
+         *     -- written or chosen among the nights of the same setup. An answered group stays on the page,
+         *     so one can change one's mind.
+         */
+        UndatedFolder: {
+            /**
+             * Key
+             * @description The folder path: it is the key one answers with.
+             */
+            key: string;
+            /** Frames */
+            frames: number;
+            /**
+             * Integration S
+             * @description The sum of their time; on screen in hours.
+             */
+            integration_s: number;
+            /**
+             * Untimed
+             * @description How many do not tell their time: counted, not zero.
+             */
+            untimed: number;
+            /**
+             * Site
+             * @description The site their night goes on; empty when none is declared yet.
+             */
+            site: string | null;
+            /**
+             * File Nights
+             * @description The nights of the files' dates on disk, YYYY-MM-DD: the copy's, as a proof.
+             */
+            file_nights: string[];
+            /**
+             * Rig Nights
+             * @description The nights with the same setup, most recent first: the ones to choose from.
+             */
+            rig_nights: string[];
+            /**
+             * Subjects
+             * @description The objects in the field, the most taken first.
+             */
+            subjects: components["schemas"]["Subject"][];
+            /**
+             * Rigs
+             * @description Optics and camera of its frames, most used first.
+             */
+            rigs: components["schemas"]["FrameRig"][];
+            /**
+             * Answer
+             * @description The evening said, YYYY-MM-DD.
+             */
+            answer: string | null;
         };
         /**
          * Unit

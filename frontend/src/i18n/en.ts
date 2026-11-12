@@ -148,6 +148,7 @@ export const en = {
   "review.card.mono": "mono",
   "review.card.color": "colour",
   "review.typeless": "Frames without a type",
+  "review.undated": "Frames without a date",
   "review.typeless.why":
     "Frame type not stated in the files. Until it is stated, the frames are excluded from the hours count.",
   "review.typeless.question": "Frame type in {cartella}",
