@@ -6,6 +6,7 @@ il cielo lo corregge quando la misura non e' quella del corredo.
 """
 
 from astrolog.db.connect import connect
+from astrolog.spine import gear
 from astrolog.spine import run as run_mod
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
@@ -142,3 +143,17 @@ def test_without_xpixsz_the_camera_card_pixel_times_the_binning_measures(db_path
     list(normalize_frames(conn))
     assert [r[0] for r in conn.execute("SELECT focal_mm FROM frame_wcs")] == [560] * 3
     assert _focali(conn) == [560] * 3
+
+
+def test_the_pixel_you_write_on_the_camera_measures_too(db_path, tmp_path):
+    """Il pixel scritto in Attrezzatura sta fra le dichiarazioni, non nella colonna dei file: il
+    solve lo legge come la pagina, la tua parola sopra i file (Issue #62)."""
+    conn = connect(db_path)
+    root = _archivio(tmp_path, FOCALLEN=700.0, XBINNING=1)
+    list(scan_folder(conn, add_folder(conn, root)))
+    list(normalize_frames(conn))
+    camera = conn.execute("SELECT id FROM instruments WHERE kind = 'camera'").fetchone()[0]
+    gear.declare_instrument(conn, camera, {"pixel_size_um": PIXEL})
+    list(solve_frames(conn, exe="astap", run=solver({i: _ini(560.0) for i in range(9)}),
+                      cache=tmp_path / "c"))  # fmt: skip
+    assert [r[0] for r in conn.execute("SELECT focal_mm FROM frame_wcs")] == [560] * 3

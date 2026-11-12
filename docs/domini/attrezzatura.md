@@ -265,11 +265,11 @@ e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono 
   "Per salvare servono ottica, camera e focale effettiva."; unione: "L'unione non è reversibile.";
   "{n} frame da rielaborare", anche dopo il salvataggio, che altrimenti chiude il modulo senza
   messaggio; il numero e' `requeued`: i frame che uno stadio rilegge davvero (mono / a colori di
-  una camera, la banda di un filtro, un'unione, una parte scelta). La tavola (v66 10.3) lo vuole
-  anche per sensore, pixel, risoluzione, focale e fattore: oggi nessuno stadio legge quei campi
-  scritti da te (la risoluzione dei frame viene dai loro header), e un numero che non rielabora
-  niente sarebbe falso; il pixel dovrebbe arrivare al solve dei frame senza `XPIXSZ` (Issue #62),
-  e allora li rimette in coda;
+  una camera, la banda di un filtro, un'unione, una parte scelta, il pixel di una camera, che
+  rimanda al solve i frame senza `XPIXSZ`: misurano la focale col pixel della scheda). La tavola
+  (v66 10.3) lo vuole anche per sensore, risoluzione, focale e fattore: nessuno stadio legge quei
+  campi scritti da te (la risoluzione dei frame viene dai loro header), e un numero che non
+  rielabora niente sarebbe falso;
 - scansione in corso: Salva spento con "Scansione in corso: si salva al termine." (non
   "potrai"); oggi c'e' solo il rifiuto dopo ("riprova al termine");
 - non si legge: "Attrezzatura non disponibile" e "Riprova".

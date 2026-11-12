@@ -2,12 +2,15 @@
 and the schema alone would let a mount be born with a telescope's aperture."""
 
 import sqlite3
+from collections.abc import Collection
 from typing import Any, Final
 
 from fastapi import HTTPException
 
+from ..db import idlist
 from ..spine import gear
 from ..spine import unfiltered as unfiltered_reader
+from ..spine.stages import StageName, invalidate
 from ..vocab.instruments import InstrumentKind
 from .models_gear import InstrumentCorrection
 
@@ -67,27 +70,63 @@ def answer(
     if edit.merge_into is not None:
         return merge(conn, instrument_id, edit.merge_into, now)
     colour_before = _colour(conn, instrument_id)
+    pixel_before = _pixel(conn, instrument_id)
     kind = _kind(conn, instrument_id)  # None: `declare_instrument` raises the LookupError
     card = edit.model_dump(exclude_none=True)
     if kind is not None:
         of_the_kind(kind, card)
     if not gear.declare_instrument(conn, instrument_id, card, now):
         return set()
+    requeued: set[int] = set()
     # The colour also answers for the frames that do not name their filter, requeued only if it
     # changes: "mono" on a camera already treated as mono moves nothing.
     if edit.camera_type is not None and _colour(conn, instrument_id) != colour_before:
-        return set(unfiltered_reader.requeue(conn, instrument_id))
-    return set()
+        requeued.update(unfiltered_reader.requeue(conn, instrument_id))
+    if _pixel(conn, instrument_id) != pixel_before:
+        requeued.update(solve_again(conn, instrument_id, now))
+    return requeued
+
+
+def solve_again(conn: sqlite3.Connection, camera_id: int, now: str) -> list[int]:
+    """The frames without `XPIXSZ` measure their focal with the card's pixel (Issue #62)."""
+    frames = [
+        r[0]
+        for r in conn.execute(
+            "SELECT f.id FROM frames f JOIN rigs r ON r.id = f.rig_id"
+            " WHERE r.camera_id = ? AND f.pixel_size_um IS NULL",
+            (camera_id,),
+        )
+    ]
+    invalidate(conn, frames, StageName.SOLVE, now=now)
+    return frames
+
+
+def _pixel(conn: sqlite3.Connection, instrument_id: int) -> float | None:
+    """A camera's pixel as the page and the solve read it, your word over the files'."""
+    return gear.camera_specs(conn).get(instrument_id, {}).get("pixel_size_um")
 
 
 def merge(conn: sqlite3.Connection, instrument_id: int, into_id: int, now: str) -> set[int]:
     """The merge of two spellings. Returns the frames to requeue."""
     colour_before = _colour(conn, into_id)
+    pixel_before = _pixel(conn, into_id)
     requeued = set(gear.merge_instrument(conn, instrument_id, into_id, now))
     # the absorbed camera's answer passes to the kept one: its frames feel it if it changes
     if _colour(conn, into_id) != colour_before:
         requeued.update(unfiltered_reader.requeue(conn, into_id))
+    if _pixel(conn, into_id) != pixel_before:
+        requeued.update(solve_again(conn, into_id, now))
     return requeued
+
+
+def first_stage(conn: sqlite3.Connection, frames: Collection[int]) -> StageName:
+    """Where the work restarts: the solve if some requeued frame waits for it."""
+    with idlist.holding(conn, frames) as listed:
+        waiting = conn.execute(
+            f"SELECT 1 FROM frame_stages WHERE frame_id IN {listed}"  # noqa: S608
+            " AND stage = 'solve' AND status = 'pending' LIMIT 1"
+        ).fetchone()
+    return StageName.SOLVE if waiting else StageName.NORMALIZE
 
 
 def _kind(conn: sqlite3.Connection, instrument_id: int) -> InstrumentKind | None:

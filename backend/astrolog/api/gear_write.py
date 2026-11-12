@@ -78,7 +78,9 @@ def edit_instrument(
     now = now_iso()
     with write.writing(conn):
         requeued = instrument_answer.answer(conn, instrument_id, body, now)
-    return _written(request, instrument_id, requeued)
+        # a camera's pixel, written or merged, sends frames back to the solve
+        stage = instrument_answer.first_stage(conn, requeued)
+    return _written(request, instrument_id, requeued, stage)
 
 
 @router.patch("/gear/rigs/{rig_id}", response_model=GearWritten)
@@ -229,7 +231,12 @@ def _deleting(conn: sqlite3.Connection, act: Callable[[], None]) -> None:
         raise HTTPException(status_code=409, detail={"code": "in_rig", "rigs": err.rigs}) from err
 
 
-def _written(request: Request, row_id: int, requeued: Collection[int]) -> GearWritten:
+def _written(
+    request: Request,
+    row_id: int,
+    requeued: Collection[int],
+    stage: StageName = StageName.NORMALIZE,
+) -> GearWritten:
     """The work restarts only if some frame has to be redone."""
-    started = bool(requeued) and work.after(request.app.state, {StageName.NORMALIZE})
+    started = bool(requeued) and work.after(request.app.state, {stage})
     return GearWritten(id=row_id, requeued=len(requeued), run_started=started)

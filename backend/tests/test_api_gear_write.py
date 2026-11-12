@@ -200,6 +200,43 @@ def test_what_you_declare_about_a_camera_is_what_the_page_shows(archivio):
     assert scritto["pixel_size_um"] == 3.8
 
 
+def test_a_new_pixel_sends_the_frames_without_one_back_to_the_solve(archivio):
+    """I frame che non dicono `XPIXSZ` misurano la focale col pixel della scheda: cambiato, si
+    rifanno dal solve, e la pagina dice quanti (Issue #62). Lo stesso pixel non sposta niente."""
+    id_camera = pezzo(archivio, "camera", "ASI2600MM")["id"]
+
+    with mock.patch.object(work, "after", return_value=True) as riparte:
+        cambiato = correggi(archivio, id_camera, pixel_size_um=3.8)
+        uguale = correggi(archivio, id_camera, pixel_size_um=3.8)
+
+    assert cambiato.json()["requeued"] == 2
+    assert riparte.call_args_list[0].args[1] == {"solve"}
+    assert uguale.json()["requeued"] == 0
+    conn = connect(archivio.app.state.db_path)
+    try:
+        attesa = conn.execute(
+            "SELECT COUNT(*) FROM frame_stages WHERE stage = 'solve' AND status = 'pending'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    assert attesa == 2
+
+
+def test_a_merge_that_brings_a_pixel_sends_the_frames_back_to_the_solve(archivio):
+    """Unita a una grafia col pixel scritto da te, la camera tenuta prende quel pixel: i suoi
+    frame senza `XPIXSZ` si rifanno dal solve (visto dal revisore, 12/11)."""
+    tenuta = pezzo(archivio, "camera", "ASI2600MM")["id"]
+    grafia = crea(archivio, kind="camera", name="ASI 2600", pixel_size_um=3.9).json()["id"]
+
+    with mock.patch.object(work, "after", return_value=True) as riparte:
+        unita = correggi(archivio, grafia, merge_into=tenuta)
+
+    assert unita.status_code == 200, unita.text
+    assert pezzo(archivio, "camera", "ASI2600MM")["pixel_size_um"] == 3.9
+    assert unita.json()["requeued"] == 2
+    assert riparte.call_args_list[0].args[1] == {"solve"}
+
+
 def test_the_same_guard_holds_on_the_correction(archivio):
     """La guardia sui campi di un genere e' **una casa sola**, e ci passano due porte: la nascita
     (`test_a_field_that_does_not_belong_to_the_kind_does_not_enter`) e la correzione. Provata su

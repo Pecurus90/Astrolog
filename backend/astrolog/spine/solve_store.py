@@ -16,7 +16,10 @@ def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
         "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS root_path,"
         " (SELECT p.rel_path FROM positions p"
         "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS rel_path,"
-        " (SELECT i.pixel_size_um FROM rigs r JOIN instruments i ON i.id = r.camera_id"
+        # your word over the files', as `gear.camera_specs` reads it
+        " (SELECT COALESCE((SELECT d.value FROM declarations d WHERE d.entity_type = 'instrument'"
+        "   AND d.entity_key = i.kind || '|' || i.name AND d.field = 'pixel_size_um'),"
+        "   i.pixel_size_um) FROM rigs r JOIN instruments i ON i.id = r.camera_id"
         "   WHERE r.id = f.rig_id) AS card_pixel_um,"
         " (SELECT r.focal_mm FROM rigs r WHERE r.id = f.rig_id) AS rig_focal_mm"
         " FROM frames f WHERE f.id = ?",

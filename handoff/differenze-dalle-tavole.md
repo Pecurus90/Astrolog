@@ -370,10 +370,10 @@ diverse dalla tavola:
 - **Luna piena del campo.** Tavola: 0,52° (`Attrezzatura.dc.html` 328). App: 0,527°
   (`moon_deg`). Perche': il diametro apparente medio della NASA, 1896″ (NSSDC Moon Fact Sheet);
   a schermo la Luna e' piu' larga di un pixel su 100.
-- **«{n} frame da rielaborare» dopo sensore, pixel, risoluzione, focale o fattore.** Tavola (192,
+- **«{n} frame da rielaborare» dopo sensore, risoluzione, focale o fattore.** Tavola (192,
   DECISIONI v66 10.3): dopo ognuna di queste modifiche. App: solo quando uno stadio rilegge
-  davvero dei frame (colore della camera, banda del filtro, unione, parte scelta). Perche': oggi
-  nessuno stadio legge quei campi scritti da te; il pixel dovrebbe (Issue #62), e allora li conta.
+  davvero dei frame (colore e pixel della camera, banda del filtro, unione, parte scelta).
+  Perche': nessuno stadio legge gli altri campi scritti da te.
 - **Elimina l'ottica o la camera di un setup senza frame.** Tavola: non lo prevede (la sua ottica
   di un setup ha sempre frame). App: rifiutato (409 `in_rig`), il setup e' fatto di loro. Il testo
   a schermo arriva col commit D.
