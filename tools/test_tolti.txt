@@ -592,3 +592,4 @@ test_one_square_per_day_with_its_level_and_the_days_still_to_come - step 33, Das
 test_the_grid_starts_on_monday - step 33, Dashboard D: the v37 square per day gives way to the board v79 bars and filters ring (anno.test, test_year)
 un anno senza notti non ha la media a notte: lo dice con un trattino, non con zero - step 33, Dashboard D: the v37 square per day gives way to the board v79 bars and filters ring (anno.test, test_year)
 un quadretto per giorno da lunedi', col livello delle sue ore e i giorni che verranno - step 33, Dashboard D: the v37 square per day gives way to the board v79 bars and filters ring (anno.test, test_year)
+l'anno che non risponde lo dice, e il resto della pagina c'e' - step 33, board v80 state K: renamed l'anno che non risponde lo dice nella sua carta, con Riprova, e il resto della pagina c'e'

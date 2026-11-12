@@ -208,7 +208,8 @@ export const enDashboard = {
   "dashboard.year.empty.text": "Hours, nights and filters of the year, month by month.",
   "dashboard.year.title": "{anno}, so far",
   "dashboard.year.short": "{anno}",
-  "dashboard.year.failed": "The year cannot be read: the app is not answering.",
+  "dashboard.year.failed":
+    "{anno} did not load: hours, nights and filters of the year come back when AstroLog answers.",
   "dashboard.year.open": "Open Statistics",
   "dashboard.year.zero": "0 h",
   "dashboard.year.inNights": "in {n} nights",
@@ -221,10 +222,12 @@ export const enDashboard = {
   "dashboard.year.tel.nights": "{n} nights",
   "dashboard.year.tel.nights.one": "1 night",
   "dashboard.year.tel.perNight": "{ore} per night",
+  "dashboard.year.tel.noAverage": "average —", // glifo-ok: the board's dash
   "dashboard.year.tel.perMonth": "{n} per month",
   "dashboard.year.tel.vs": "dashed = {anno} \u00b7 {scarto} against the same period",
   "dashboard.year.filters.title": "Filters of {anno}",
   "dashboard.year.filters.in": "in {filtro}",
+  "dashboard.year.filters.others": "{n} other filters",
   "dashboard.year.filters.caption": "Share of the {ore} per filter, from January to today.",
   "dashboard.year.none": "No exposures in {anno}, so far.",
 }

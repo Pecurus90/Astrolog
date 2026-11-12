@@ -25,6 +25,9 @@ describe("gli stati della Dashboard", () => {
     expect(screen.getByRole("link", { name: "Scegli la cartella" }).getAttribute("href")).toBe("/impostazioni/cartelle")
     expect(screen.queryByText("Ore di posa stanotte")).toBeNull()
     expect(screen.getByText("si riempie dopo la prima scansione")).toBeDefined()
+    // tavola v80, `monthsEmpty`: anche qui le iniziali per il grafico stretto
+    const corti = [...document.querySelectorAll(".al-dash__mese-corto")].map((m) => m.textContent)
+    expect(corti.join("")).toBe("GFMAMGLASOND")
   })
 
   it("prima volta: il sito c'e', la cartella no; la notte si vede gia'", async () => {

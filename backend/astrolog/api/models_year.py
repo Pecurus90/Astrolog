@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from ..spine.year import RowKind
+
 
 class YearMonthOut(BaseModel):
     month: int = Field(ge=1, le=12)  # [T] calendar months
@@ -30,6 +32,18 @@ class YearFilterOut(BaseModel):
     )
 
 
+class YearFilterRowOut(BaseModel):
+    kind: RowKind = Field(
+        description="`filter` one filter; `others` the filters past the fourth, when more than "
+        "five have a name; `no_filter` the frames naming none."
+    )
+    name: str = Field(description="As `YearFilterOut.name`; empty for `others`.")
+    passbands: list[str] = Field(description="One per filter in the row: the dot's colours.")
+    integration_s: int
+    share_pct: int = Field(description="Of the year's `integration_s`: the rows add up to 100.")
+    count: int = Field(ge=1, description="Filters in the row: N of 'altri N filtri'.")
+
+
 class YearOut(BaseModel):
     """The year so far: what the Dashboard's year section shows, already counted."""
 
@@ -51,5 +65,9 @@ class YearOut(BaseModel):
     )
     filters: list[YearFilterOut] = Field(
         description="The year's filters, the most shot first; the frames naming none last, as "
-        "`__no_filter__` of band `UNKNOWN`. Empty without hours."
+        "`__no_filter__` of band `UNKNOWN`. Empty without hours. The ring draws these."
+    )
+    rows: list[YearFilterRowOut] = Field(
+        description="The list beside the ring, at most six rows (board v81): past five named "
+        "filters the first four and one `others`, then `no_filter`. Empty without hours."
     )

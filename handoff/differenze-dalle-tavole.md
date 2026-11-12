@@ -285,22 +285,10 @@ Diverse dalla tavola:
 
 ## Dashboard -- Il 2026 e Filtri del 2026 (passo 33, commit D, 11/11)
 
-Diverse dalla tavola:
-- **«4,6 notti al mese».** Tavola: «4.6» col punto (Dashboard.dc.html 132). App: «4,6». Perche':
-  errore della tavola, la virgola decimale e' di Marco (6/11). A Design.
-- **I frame senza filtro.** Tavola: solo filtri con nome (533). App: ultima riga «Filtro non
-  indicato» col pallino a filo tratteggiato, e nell'anello un pezzo grigio. Perche': le quote
-  fanno 100 solo con loro; e' l'insieme 'Filtro non indicato' delle Notti (9/11). A Design.
-- **Un filtro a colori nell'anello.** Tavola: un colore pieno per «RGB» (535). App: tre fette R,
-  G, B, come le strisce del pallino. Perche': la strisciata del foglio dentro un conic-gradient
-  cancella l'anello intero (collaudo 11/11). A Design.
-- **Quanti filtri.** Tavola: cinque righe. App: tutti i filtri dell'anno. Perche': un archivio con
-  piu' filtri non ne perde; nessuna regola dice dove tagliare. A Design se va tagliato.
-- **Senza l'anno prima.** Tavola: sempre il 2025 tratteggiato e il confronto. App: senza notti
-  nell'anno prima niente tratteggio, niente «2025» in legenda e niente confronto. Perche': un
-  confronto con zero ore non dice niente al primo anno di un archivio. A Design.
-- **Un anno senza ore.** Tavola: non c'e'. App: «0 h in 0 notti», media «—», e in Filtri
-  «Nessuna posa nel 2026, per ora.» al posto dell'anello (Marco, 11/11). A Design.
-- **L'anno che non risponde.** Tavola: non c'e'. App: un Avviso riga «L'anno non si legge: l'app
-  non risponde.» al posto delle due carte. A Design.
+Le differenze del commit D le ha disegnate la v80-v82 (4,6 con la virgola, «Filtro non
+indicato», filtro a colori in tre fette, taglio a sei righe, stati I J K e P Q R H2 P0); portate
+il 12/11. Restano diverse dalla tavola:
+- **Notti al mese senza notti.** Tavola, stato J: «0» (Dashboard.dc.html 544). App: «0,0».
+  Perche': lo stesso decimale fisso di «2,0» e «4,6» (tavola v76, `posaN`); un numero solo che
+  cambia forma per lo zero e' un caso in piu'. Non a Design: differenza di una cifra.
 - **Il quadretto per giorno** (tavola v37) esce: la v79 non lo disegna.

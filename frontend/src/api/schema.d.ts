@@ -4630,6 +4630,11 @@ export interface components {
             piece_ids: number[];
         };
         /**
+         * RowKind
+         * @enum {string}
+         */
+        RowKind: "filter" | "others" | "no_filter";
+        /**
          * Sampling
          * @description The scale in "/px, and the seeing it is best for: from 2x to 3x the scale.
          */
@@ -5982,6 +5987,33 @@ export interface components {
              */
             ring_to: number;
         };
+        /** YearFilterRowOut */
+        YearFilterRowOut: {
+            /** @description `filter` one filter; `others` the filters past the fourth, when more than five have a name; `no_filter` the frames naming none. */
+            kind: components["schemas"]["RowKind"];
+            /**
+             * Name
+             * @description As `YearFilterOut.name`; empty for `others`.
+             */
+            name: string;
+            /**
+             * Passbands
+             * @description One per filter in the row: the dot's colours.
+             */
+            passbands: string[];
+            /** Integration S */
+            integration_s: number;
+            /**
+             * Share Pct
+             * @description Of the year's `integration_s`: the rows add up to 100.
+             */
+            share_pct: number;
+            /**
+             * Count
+             * @description Filters in the row: N of 'altri N filtri'.
+             */
+            count: number;
+        };
         /** YearMonthOut */
         YearMonthOut: {
             /** Month */
@@ -6059,9 +6091,14 @@ export interface components {
             vs_previous_s: number;
             /**
              * Filters
-             * @description The year's filters, the most shot first; the frames naming none last, as `__no_filter__` of band `UNKNOWN`. Empty without hours.
+             * @description The year's filters, the most shot first; the frames naming none last, as `__no_filter__` of band `UNKNOWN`. Empty without hours. The ring draws these.
              */
             filters: components["schemas"]["YearFilterOut"][];
+            /**
+             * Rows
+             * @description The list beside the ring, at most six rows (board v81): past five named filters the first four and one `others`, then `no_filter`. Empty without hours.
+             */
+            rows: components["schemas"]["YearFilterRowOut"][];
         };
     };
     responses: never;

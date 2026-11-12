@@ -402,6 +402,12 @@ export function mesiBrevi(): string[] {
   return Array.from({ length: 12 }, (_, m) => breve.format(Date.UTC(2000, m, 1)).replace(".", ""))
 }
 
+/** Le iniziali dei mesi (tavola v80, `MC`): `G F M A ...` quando il grafico e' stretto. */
+export function mesiIniziali(): string[] {
+  const stretto = new Intl.DateTimeFormat(lingua, { month: "narrow", timeZone: "UTC" })
+  return Array.from({ length: 12 }, (_, m) => stretto.format(Date.UTC(2000, m, 1)).toUpperCase())
+}
+
 /** Quanto tempo fa, come lo dice la lingua: *2 ore fa*, *ieri*. L'eta' di un istante la sa solo
  *  chi guarda, adesso: il backend non puo' mandarla scritta. */
 export function fa(istante: string, adesso: Date = new Date()): string {

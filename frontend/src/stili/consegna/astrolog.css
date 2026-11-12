@@ -4318,3 +4318,11 @@ button.al-scelta__voce { border: 0; background: transparent; font: inherit; colo
   .al-sis__griglia-2, .al-sis__griglia-9, .al-sis__griglia-10 { grid-template-columns: minmax(0, 1fr); }
   .al-sis__griglia-2 > *, .al-sis__griglia-9 > *, .al-sis__griglia-10 > * { grid-column: 1 / -1; }
 }
+
+/* v80 · Dashboard, Il 2026: le etichette dei mesi diventano iniziali quando il grafico e' stretto (a 700 px «marapr»); lo scarto non va a capo */
+.al-dash__griglia-10 { container-type: inline-size; }
+.al-dash__mese-corto { display: none; }
+@container (max-width: 420px) { .al-dash__mese-lungo { display: none; } .al-dash__mese-corto { display: inline; } }
+.al-dash__testo-25 { white-space: nowrap; }
+.al-dash__riga-27 { flex-wrap: wrap; row-gap: 4px; }
+.al-dash__tondo-12, .al-dash__tondo-17 { box-sizing: border-box; }

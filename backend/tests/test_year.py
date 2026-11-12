@@ -169,6 +169,49 @@ def test_the_shares_add_up_to_100(conn):
     assert sum(f.share_pct for f in anno.filters) == 100
 
 
+def _sei_filtri(conn, n):
+    """`n` filtri con nome, il primo il piu' ripreso: 6000 s, 5000 s, ... un'ora di distacco."""
+    bande = ["ha", "oiii", "l", "sii", "r", "hb", "g"]
+    for i in range(n):
+        fid = filtro(conn, f"F{i}", bande[i])
+        quando = f"2024-06-{i + 1:02d}T21:00:00Z"
+        posa(conn, quando=quando, esposizione=6000.0 - i * 600, filtro_id=fid, hash_=f"f{i}")
+    corri(conn)
+
+
+def test_up_to_five_named_filters_the_list_is_one_row_each(conn):
+    """«Filtri del 2026» (tavola v81, H2): fino a cinque filtri con nome, una riga ciascuno, poi
+    i frame senza filtro; nessuna riga «altri»."""
+    _sei_filtri(conn, 5)
+    righe = year.of(conn, OGGI).rows
+    assert [(r.kind, r.name, r.passbands) for r in righe] == [
+        ("filter", "F0", ["ha"]),
+        ("filter", "F1", ["oiii"]),
+        ("filter", "F2", ["l"]),
+        ("filter", "F3", ["sii"]),
+        ("filter", "F4", ["r"]),
+        ("no_filter", "__no_filter__", ["UNKNOWN"]),
+    ]
+
+
+def test_past_five_named_filters_the_fifth_row_sums_the_others(conn):
+    """Oltre cinque: i primi quattro per ore, «altri N filtri» con le ore e la quota sommate e le
+    bande di ognuno per il pallino, poi i frame senza filtro. L'anello resta di tutti."""
+    _sei_filtri(conn, 7)
+    anno = year.of(conn, OGGI)
+    altri = anno.rows[4]
+    assert [r.kind for r in anno.rows] == ["filter"] * 4 + ["others", "no_filter"]
+    assert (altri.count, altri.passbands) == (3, ["r", "hb", "g"])
+    assert altri.integration_s == 3600 + 3000 + 2400
+    assert altri.share_pct == sum(f.share_pct for f in anno.filters[4:7])
+    assert sum(r.share_pct for r in anno.rows) == 100
+    assert len(anno.filters) == 8
+
+
+def test_a_year_without_hours_has_no_rows(conn):
+    assert year.of(conn, dt.date(2025, 2, 1)).rows == []
+
+
 def test_the_route_answers_the_year_of_the_home_site(db_path, conn):
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         r = c.get("/api/v1/year")
@@ -186,4 +229,5 @@ def test_the_route_answers_the_year_of_the_home_site(db_path, conn):
         "previous_known",
         "vs_previous_s",
         "filters",
+        "rows",
     }

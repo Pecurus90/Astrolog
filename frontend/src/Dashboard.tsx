@@ -14,7 +14,7 @@ import type { Formato } from "./componenti/Tema"
 import { DashboardLuna } from "./DashboardLuna"
 import { MeteoDellaNotte, ProssimeNotti } from "./DashboardMeteo"
 import { DashboardNotte } from "./DashboardNotte"
-import { mesiBrevi, numero, oreEMinuti, t } from "./i18n"
+import { mesiBrevi, mesiIniziali, numero, oreEMinuti, t } from "./i18n"
 import { usePrevisione } from "./Meteo"
 import { MENTRE_LEGGE_MS } from "./Notti"
 import { useStato } from "./Scansiona"
@@ -249,6 +249,7 @@ function PerCominciare({ passi, formato }: { passi: Passo[]; formato: Formato })
 /** The year before the first scan: twelve empty months (board `monthsEmpty`). */
 function AnnoVuoto({ anno }: { anno: string }) {
   const mesi = mesiBrevi()
+  const iniziali = mesiIniziali()
   const tratteggio =
     "repeating-linear-gradient(135deg, var(--barretta-spenta) 0 3px, transparent 3px 8px)"
   return (
@@ -263,8 +264,11 @@ function AnnoVuoto({ anno }: { anno: string }) {
         ))}
       </div>
       <div className="al-dash__griglia-10" aria-hidden="true">
-        {mesi.map((m) => (
-          <span key={m}>{m}</span>
+        {mesi.map((m, i) => (
+          <span key={m}>
+            <span className="al-dash__mese-lungo">{m}</span>
+            <span className="al-dash__mese-corto">{iniziali[i]}</span>
+          </span>
         ))}
       </div>
       <span className="al-dash__testo-2">{t("dashboard.year.empty.text")}</span>
@@ -514,7 +518,7 @@ export function Dashboard() {
           {tempo}
           {inizio}
           {prossime}
-          {!senzaArchivio && <AnnoDellaDashboard formato={formato} />}
+          {!senzaArchivio && <AnnoDellaDashboard formato={formato} anno={anno} />}
         </div>
       )
     } else {
@@ -536,7 +540,7 @@ export function Dashboard() {
             </div>
           )}
           {prossime}
-          {!senzaArchivio && <AnnoDellaDashboard formato={formato} />}
+          {!senzaArchivio && <AnnoDellaDashboard formato={formato} anno={anno} />}
         </div>
       )
     }

@@ -5,6 +5,7 @@ import calendar
 import datetime as dt
 import sqlite3
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ..vocab.filters import Passband
 from . import counts, filters_used
@@ -51,6 +52,26 @@ class FilterShare:
     ring_to: float
 
 
+class RowKind(StrEnum):
+    FILTER = "filter"
+    OTHERS = "others"
+    NO_FILTER = "no_filter"
+
+
+@dataclass(frozen=True, slots=True)
+class FilterRow:
+    kind: RowKind
+    name: str
+    passbands: list[str]
+    integration_s: int
+    share_pct: int
+    count: int
+
+
+# At most six rows: past five named, the first four and "altri N" (Dashboard stati H2).
+_NAMED_ROWS = 5  # [D tavola v81, Dashboard:558]
+
+
 @dataclass(frozen=True, slots=True)
 class Year:
     year: int
@@ -64,6 +85,31 @@ class Year:
     previous_known: bool
     vs_previous_s: int
     filters: list[FilterShare]
+    rows: list[FilterRow]
+
+
+def _row(f: FilterShare) -> FilterRow:
+    kind = RowKind.NO_FILTER if f.name == NO_FILTER else RowKind.FILTER
+    return FilterRow(kind, f.name, [f.passband], f.integration_s, f.share_pct, 1)
+
+
+def _rows(shares: list[FilterShare]) -> list[FilterRow]:
+    """The list beside the ring: past five named filters the rest in one row, its hours and
+    share summed; the frames naming none stay last."""
+    named = [f for f in shares if f.name != NO_FILTER]
+    rest = [_row(f) for f in shares if f.name == NO_FILTER]
+    if len(named) <= _NAMED_ROWS:
+        return [_row(f) for f in named] + rest
+    others = named[_NAMED_ROWS - 1 :]
+    summed = FilterRow(
+        RowKind.OTHERS,
+        "",
+        [f.passband for f in others],
+        sum(f.integration_s for f in others),
+        sum(f.share_pct for f in others),
+        len(others),
+    )
+    return [_row(f) for f in named[: _NAMED_ROWS - 1]] + [summed] + rest
 
 
 def _per_date(conn: sqlite3.Connection, first: dt.date, last: dt.date) -> dict[str, float]:
@@ -150,6 +196,7 @@ def of(conn: sqlite3.Connection, today: dt.date) -> Year:
     )
     # At least a whole month: one night on the first of January is one a month, not thirty-one.
     months = max(1.0, today.month - 1 + today.day / calendar.monthrange(today.year, today.month)[1])
+    shares = _filters(conn, today)
     return Year(
         year=today.year,
         until=today.isoformat(),
@@ -161,5 +208,6 @@ def of(conn: sqlite3.Connection, today: dt.date) -> Year:
         previous_same_period_s=period_before,
         previous_known=bool(before),
         vs_previous_s=total - period_before,
-        filters=_filters(conn, today),
+        filters=shares,
+        rows=_rows(shares),
     )

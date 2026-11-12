@@ -14,26 +14,55 @@ afterEach(() => vi.unstubAllGlobals())
 
 const MESI = Array.from({ length: 12 }, (_, i) => ({
   month: i + 1,
-  integration_s: i === 8 ? 52800 : 0,
-  previous_s: 0,
+  integration_s: i === 8 ? 52800 : i === 2 ? 105600 : 0,
+  previous_s: i === 3 ? 26400 : 0,
   bar: i === 2 ? 1 : i === 8 ? 0.5 : 0,
   previous_bar: i === 3 ? 0.25 : 0,
   current: i === 8,
   future: i > 8,
 }))
 
+type Filtro = { name: string; passband: string; integration_s: number; share_pct: number }
+
+/** Le righe come le scrive `/year` fino a cinque filtri: una per filtro, senza filtro per ultimo. */
+function righeDi(filtri: Filtro[]) {
+  return filtri.map((f) => ({
+    kind: f.name === "__no_filter__" ? "no_filter" : "filter",
+    name: f.name,
+    passbands: [f.passband],
+    integration_s: f.integration_s,
+    share_pct: f.share_pct,
+    count: 1,
+  }))
+}
+
+const FILTRI = [
+  { name: "Hα", passband: "HA", integration_s: 166800, share_pct: 36, ring_from: 0, ring_to: 36.01 },
+  { name: "OIII", passband: "OIII", integration_s: 137400, share_pct: 30, ring_from: 36.01, ring_to: 65.67 },
+  { name: "__no_filter__", passband: "UNKNOWN", integration_s: 159000, share_pct: 34, ring_from: 65.67, ring_to: 100 },
+]
+
 /** Il 2026 fino al 30 settembre, come la tavola: 128 h 40 in 41 notti, il 2025 a 131 h. */
 function anno(altro: Record<string, unknown> = {}) {
+  const filters = (altro.filters as Filtro[] | undefined) ?? FILTRI
   return {
     year: 2026, until: "2026-09-30", nights: 41, integration_s: 463200, per_night_s: 11280, per_month: 4.6,
     months: MESI, previous_same_period_s: 471600, previous_known: true, vs_previous_s: -8400,
-    filters: [
-      { name: "Hα", passband: "HA", integration_s: 166800, share_pct: 36, ring_from: 0, ring_to: 36.01 },
-      { name: "OIII", passband: "OIII", integration_s: 137400, share_pct: 30, ring_from: 36.01, ring_to: 65.67 },
-      { name: "__no_filter__", passband: "UNKNOWN", integration_s: 159000, share_pct: 34, ring_from: 65.67, ring_to: 100 },
-    ],
+    filters, rows: righeDi(filters),
     ...altro,
   }
+}
+
+/** Tavola v81, H2: sette filtri con nome, i primi quattro, «altri 3 filtri», poi senza filtro. */
+const MOLTI = {
+  rows: [
+    { kind: "filter", name: "Hα", passbands: ["HA"], integration_s: 156000, share_pct: 33, count: 1 },
+    { kind: "filter", name: "OIII", passbands: ["OIII"], integration_s: 126000, share_pct: 27, count: 1 },
+    { kind: "filter", name: "L", passbands: ["L"], integration_s: 59400, share_pct: 13, count: 1 },
+    { kind: "filter", name: "SII", passbands: ["SII"], integration_s: 53400, share_pct: 11, count: 1 },
+    { kind: "others", name: "", passbands: ["OSC", "R", "HB"], integration_s: 58800, share_pct: 13, count: 3 },
+    { kind: "no_filter", name: "__no_filter__", passbands: ["UNKNOWN"], integration_s: 9600, share_pct: 3, count: 1 },
+  ],
 }
 
 async function apri(corpo: unknown = anno(), larga?: number) {
@@ -83,6 +112,39 @@ describe("l'anno della Dashboard, desktop", () => {
     expect(carta.querySelectorAll(".al-dash__strato-2")).toHaveLength(0)
     expect(within(carta).queryByText("2025")).toBeNull()
     expect(within(carta).queryByText(/contro/)).toBeNull()
+    // tavola v80, stato I: senza il 2025 la legenda non c'e', nemmeno la voce del 2026
+    expect(carta.querySelector(".al-dash__riga-27")).toBeNull()
+  })
+
+  it("un mese senza ore non ha barra: la barra piu' bassa direbbe che qualcosa c'e' (stato J)", async () => {
+    await apri()
+    const carta = await screen.findByRole("region", { name: "Il 2026, fino a oggi" })
+
+    const barre = [...carta.querySelectorAll<HTMLElement>(".al-dash__pillola-9")]
+    expect(barre[0]?.style.height).toBe("0%")
+    const prima = [...carta.querySelectorAll<HTMLElement>(".al-dash__strato-2")]
+    expect(prima[0]?.style.height).toBe("0%")
+  })
+
+  it("sotto ogni mese il nome e l'iniziale: il foglio mostra l'iniziale quando il grafico e' stretto", async () => {
+    await apri()
+    const carta = await screen.findByRole("region", { name: "Il 2026, fino a oggi" })
+
+    const corti = [...carta.querySelectorAll(".al-dash__mese-corto")].map((m) => m.textContent)
+    expect(corti.join("")).toBe("GFMAMGLASOND")
+    expect(carta.querySelectorAll(".al-dash__mese-lungo")).toHaveLength(12)
+  })
+
+  it("oltre cinque filtri i primi quattro, «altri 3 filtri» con ore e quota e una torta dei loro colori", async () => {
+    await apri(anno(MOLTI))
+    const carta = await screen.findByRole("region", { name: "Filtri del 2026" })
+
+    const righe = [...carta.querySelectorAll(".al-dash__griglia-15")].map((r) => r.textContent)
+    expect(righe).toHaveLength(6)
+    expect(righe[4]).toBe("altri 3 filtri 16 h 2013%")
+    expect(righe[5]).toBe("Filtro non indicato 2 h 403%")
+    const pallino = carta.querySelectorAll<HTMLElement>(".al-dash__tondo-12")[4]
+    expect(pallino?.style.background).toContain("conic-gradient(var(--filtro-r) 0%")
   })
 
   it("i filtri con ore e quota, i frame senza filtro per ultimi e a parole, l'anello dall'API", async () => {
@@ -104,10 +166,13 @@ describe("l'anno della Dashboard, desktop", () => {
 
     expect(within(carta).getByText("in 0 notti")).toBeTruthy()
     expect(within(carta).getByText("—")).toBeTruthy()
+    // tavola v80, stato J: «0 h» sopra il mese in corso non c'e'
+    expect(carta.querySelector(".al-dash__strato-1")).toBeNull()
     const filtri = screen.getByRole("region", { name: "Filtri del 2026" })
     expect(within(filtri).getByText("Nessuna posa nel 2026, per ora.")).toBeTruthy()
     expect(filtri.querySelector(".al-dash__tondo-10")).toBeNull()
-    expect(filtri.style.justifyContent).toBe("flex-start")
+    // tavola 153: la carta dei filtri e' space-between anche vuota
+    expect(filtri.style.justifyContent).toBe("space-between")
   })
 
   it("un filtro a colori e' tre fette R, G, B: un gradiente dentro l'anello lo cancellerebbe (collaudo 11/11)", async () => {
@@ -135,10 +200,16 @@ describe("l'anno della Dashboard, desktop", () => {
     expect(await screen.findByText("in 1 notte")).toBeTruthy()
   })
 
-  it("l'anno che non risponde lo dice, e il resto della pagina c'e'", async () => {
+  it("l'anno che non risponde lo dice nella sua carta, con Riprova, e il resto della pagina c'e'", async () => {
     await montaDashboard({ altre: { "/api/v1/year": { stato: 500, corpo: {} } } })
 
-    expect(await screen.findByText("L'anno non si legge: l'app non risponde.")).toBeTruthy()
+    const carta = await screen.findByRole("region", { name: "Il 2026, fino a oggi" })
+    expect(
+      within(carta).getByText(
+        "Il 2026 non si è caricato: ore, notti e filtri dell'anno tornano quando AstroLog risponde.",
+      ),
+    ).toBeTruthy()
+    expect(within(carta).getByRole("button", { name: "Riprova" })).toBeTruthy()
     expect(screen.getByText("Da confermare, 32")).toBeTruthy()
   })
 
@@ -166,6 +237,22 @@ describe("l'anno della Dashboard, telefono", () => {
   it("un anno senza notti dice la media col trattino, come il desktop", async () => {
     await apri(anno({ nights: 0, integration_s: 0, per_night_s: null, per_month: 0, filters: [] }), 390)
     const carta = await screen.findByRole("region", { name: "Il 2026" })
-    expect(within(carta).getByText("0 notti · — a notte · 0,0 al mese")).toBeTruthy()
+    expect(within(carta).getByText("0 notti · media — · 0,0 al mese")).toBeTruthy()
+    expect(within(carta).getByText("Nessuna posa nel 2026, per ora.").style.borderTop).toContain("1px solid")
+  })
+
+  it("l'anno che non risponde: la carta col titolo e Statistiche, l'avviso dentro (stato R)", async () => {
+    await montaDashboard({ altre: { "/api/v1/year": { stato: 500, corpo: {} } }, larga: 390 })
+
+    const carta = await screen.findByRole("region", { name: "Il 2026" })
+    expect(within(carta).getByRole("link", { name: "Apri Statistiche" })).toBeTruthy()
+    expect(within(carta).getByRole("button", { name: "Riprova" })).toBeTruthy()
+  })
+
+  it("oltre cinque filtri le stesse sei righe del desktop", async () => {
+    await apri(anno(MOLTI), 390)
+    const carta = await screen.findByRole("region", { name: "Il 2026" })
+    const righe = [...carta.querySelectorAll(".al-dash__griglia-22")].map((r) => r.textContent)
+    expect(righe[4]).toBe("altri 3 filtri13%")
   })
 })

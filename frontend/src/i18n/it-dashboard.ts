@@ -210,7 +210,8 @@ export const itDashboard = {
   "dashboard.year.empty.text": "Ore, notti e filtri dell'anno, mese per mese.",
   "dashboard.year.title": "Il {anno}, fino a oggi",
   "dashboard.year.short": "Il {anno}",
-  "dashboard.year.failed": "L'anno non si legge: l'app non risponde.",
+  "dashboard.year.failed":
+    "Il {anno} non si è caricato: ore, notti e filtri dell'anno tornano quando AstroLog risponde.", // glifo-ok: la è della tavola
   "dashboard.year.open": "Apri Statistiche",
   "dashboard.year.zero": "0 h",
   "dashboard.year.inNights": "in {n} notti",
@@ -223,10 +224,12 @@ export const itDashboard = {
   "dashboard.year.tel.nights": "{n} notti",
   "dashboard.year.tel.nights.one": "1 notte",
   "dashboard.year.tel.perNight": "{ore} a notte",
+  "dashboard.year.tel.noAverage": "media —", // glifo-ok: il trattino della tavola
   "dashboard.year.tel.perMonth": "{n} al mese",
   "dashboard.year.tel.vs": "tratteggio = {anno} \u00b7 {scarto} rispetto allo stesso periodo",
   "dashboard.year.filters.title": "Filtri del {anno}",
   "dashboard.year.filters.in": "in {filtro}",
+  "dashboard.year.filters.others": "altri {n} filtri",
   "dashboard.year.filters.caption": "Quota delle {ore} per filtro, da gennaio a oggi.",
   "dashboard.year.none": "Nessuna posa nel {anno}, per ora.",
 }
