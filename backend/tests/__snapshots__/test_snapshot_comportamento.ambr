@@ -923,12 +923,25 @@
       dict({
         'bands': list([
         ]),
+        'bar_pct': 80.0,
         'brand': None,
         'counted': True,
         'fast_optics': None,
         'filter_size': None,
         'frames': 4,
         'id': 3,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 3,
+            'rig_id': 2,
+          }),
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 3,
+          }),
+        ]),
         'integration_s': 480.0,
         'mergeable_into': list([
           5,
@@ -954,12 +967,25 @@
       dict({
         'bands': list([
         ]),
+        'bar_pct': 60.0,
         'brand': None,
         'counted': True,
         'fast_optics': None,
         'filter_size': None,
         'frames': 2,
         'id': 5,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 2,
+          }),
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 4,
+          }),
+        ]),
         'integration_s': 360.0,
         'mergeable_into': list([
           3,
@@ -991,12 +1017,20 @@
       dict({
         'bands': list([
         ]),
+        'bar_pct': 100.0,
         'brand': None,
         'counted': True,
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
         'id': 7,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 5,
+          }),
+        ]),
         'integration_s': 600.0,
         'mergeable_into': list([
           3,
@@ -1022,12 +1056,20 @@
       dict({
         'bands': list([
         ]),
+        'bar_pct': 60.0,
         'brand': None,
         'counted': True,
         'fast_optics': None,
         'filter_size': None,
         'frames': 2,
         'id': 1,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 2,
+            'rig_id': 1,
+          }),
+        ]),
         'integration_s': 360.0,
         'mergeable_into': list([
           3,
@@ -1047,12 +1089,20 @@
       dict({
         'bands': list([
         ]),
+        'bar_pct': 50.0,
         'brand': None,
         'counted': True,
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
         'id': 2,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 1,
+          }),
+        ]),
         'integration_s': 300.0,
         'mergeable_into': list([
           3,
@@ -1078,12 +1128,20 @@
       dict({
         'bands': list([
         ]),
+        'bar_pct': 50.0,
         'brand': None,
         'counted': True,
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
         'id': 4,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 2,
+          }),
+        ]),
         'integration_s': 300.0,
         'mergeable_into': list([
           3,
@@ -1110,12 +1168,20 @@
       dict({
         'bands': list([
         ]),
+        'bar_pct': 50.0,
         'brand': None,
         'counted': True,
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
         'id': 6,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 2,
+          }),
+        ]),
         'integration_s': 300.0,
         'mergeable_into': list([
           3,
@@ -1145,6 +1211,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 52.6,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1154,9 +1221,18 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 1,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 13,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 5,
+          }),
+        ]),
         'integration_s': 600.0,
         'kind': 'camera',
         'mergeable_into': list([
@@ -1210,6 +1286,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 10.5,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1219,9 +1296,21 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 1,
+        'from_files': list([
+          'pixel_size_um',
+          'width_px',
+          'height_px',
+        ]),
         'height_px': 3,
         'id': 9,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 3,
+          }),
+        ]),
         'integration_s': 120.0,
         'kind': 'camera',
         'mergeable_into': list([
@@ -1272,6 +1361,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 100.0,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1281,9 +1371,21 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 7,
+        'from_files': list([
+          'pixel_size_um',
+          'width_px',
+          'height_px',
+        ]),
         'height_px': 3,
         'id': 6,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 7,
+            'rig_id': 2,
+          }),
+        ]),
         'integration_s': 1140.0,
         'kind': 'camera',
         'mergeable_into': list([
@@ -1346,6 +1448,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 57.9,
         'brand': None,
         'camera_type': 'color',
         'cooled': None,
@@ -1355,9 +1458,22 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 3,
+        'from_files': list([
+          'camera_type',
+          'pixel_size_um',
+          'width_px',
+          'height_px',
+        ]),
         'height_px': 3,
         'id': 1,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 3,
+            'rig_id': 1,
+          }),
+        ]),
         'integration_s': 660.0,
         'kind': 'camera',
         'mergeable_into': list([
@@ -1408,6 +1524,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 21.1,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1417,9 +1534,18 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 1,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 11,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 4,
+          }),
+        ]),
         'integration_s': 240.0,
         'kind': 'camera',
         'mergeable_into': list([
@@ -1473,6 +1599,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 100.0,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1482,9 +1609,23 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 8,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 7,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 7,
+            'rig_id': 2,
+          }),
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 3,
+          }),
+        ]),
         'integration_s': 1260.0,
         'kind': 'filter_wheel',
         'mergeable_into': list([
@@ -1539,6 +1680,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 100.0,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1548,9 +1690,23 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 8,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 8,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 7,
+            'rig_id': 2,
+          }),
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 3,
+          }),
+        ]),
         'integration_s': 1260.0,
         'kind': 'focuser',
         'mergeable_into': list([
@@ -1605,6 +1761,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 100.0,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1614,9 +1771,18 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 3,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 2,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 3,
+            'rig_id': 1,
+          }),
+        ]),
         'integration_s': 660.0,
         'kind': 'guide_camera',
         'mergeable_into': list([
@@ -1666,6 +1832,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 100.0,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1675,9 +1842,18 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 2,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 3,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 2,
+            'rig_id': 1,
+          }),
+        ]),
         'integration_s': 480.0,
         'kind': 'mount',
         'mergeable_into': list([
@@ -1721,6 +1897,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 37.5,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1730,9 +1907,18 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 1,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 4,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 1,
+          }),
+        ]),
         'integration_s': 180.0,
         'kind': 'mount',
         'mergeable_into': list([
@@ -1770,6 +1956,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 100.0,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1779,9 +1966,23 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 8,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 5,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 7,
+            'rig_id': 2,
+          }),
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 3,
+          }),
+        ]),
         'integration_s': 1260.0,
         'kind': 'optics',
         'mergeable_into': list([
@@ -1844,6 +2045,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 19.0,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1853,9 +2055,18 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 1,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 10,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 4,
+          }),
+        ]),
         'integration_s': 240.0,
         'kind': 'optics',
         'mergeable_into': list([
@@ -1906,6 +2117,7 @@
         'adc_bits': None,
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
+        'bar_pct': 47.6,
         'brand': None,
         'camera_type': None,
         'cooled': None,
@@ -1915,9 +2127,18 @@
         'filter_size': None,
         'focal_mm': None,
         'frames': 1,
+        'from_files': list([
+        ]),
         'height_px': None,
         'id': 12,
         'image_circle_mm': None,
+        'in_rigs': list([
+          dict({
+            'chosen': False,
+            'frames': 1,
+            'rig_id': 5,
+          }),
+        ]),
         'integration_s': 600.0,
         'kind': 'optics',
         'mergeable_into': list([
@@ -1965,8 +2186,10 @@
         'width_px': None,
       }),
     ]),
+    'moon_deg': 0.5266666666666666,
     'rigs': list([
       dict({
+        'bar_pct': 100.0,
         'camera': 'ATR2600M(USB2.0)',
         'counted': True,
         'focal_mm': 560.0,
@@ -2119,6 +2342,7 @@
         'width_deg': None,
       }),
       dict({
+        'bar_pct': 57.9,
         'camera': 'Canon EOS 700D',
         'counted': True,
         'focal_mm': 560.0,
@@ -2252,6 +2476,7 @@
         'width_deg': None,
       }),
       dict({
+        'bar_pct': 52.6,
         'camera': 'ASI2600MM Pro',
         'counted': True,
         'focal_mm': 910.0,
@@ -2366,6 +2591,7 @@
         'width_deg': None,
       }),
       dict({
+        'bar_pct': 21.1,
         'camera': 'QHY268M',
         'counted': True,
         'focal_mm': 1624.0,
@@ -2480,6 +2706,7 @@
         'width_deg': None,
       }),
       dict({
+        'bar_pct': 10.5,
         'camera': 'ATR2600M',
         'counted': True,
         'focal_mm': 560.0,
