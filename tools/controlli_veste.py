@@ -190,6 +190,8 @@ MATTONI_CHE_PARLANO = {
     # the v58 bricks: Avviso with its sign, Scheletro saying "Caricamento" to who listens
     "frontend/src/componenti/Avviso.tsx",
     "frontend/src/componenti/Scheletro.tsx",
+    # the outcome of Apply in To confirm: board v82 draws it as its own block, not an Avviso
+    "frontend/src/ConfermareGuscio.tsx",
 }
 
 
