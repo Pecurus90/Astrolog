@@ -88,7 +88,7 @@ async function mandati() {
   return corpo?.objects
 }
 
-const applicaSpento = () => expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+const applicaSpento = () => expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
 const prova = (dove: HTMLElement) =>
   [...dove.querySelectorAll("dl.as-domanda-prova > div")].map(
     (r) => `${r.querySelector("dt")?.textContent}=${r.querySelector("dd")?.textContent}`,
@@ -100,7 +100,8 @@ describe("Da confermare -- gli oggetti", () => {
     const sezione = await vaiASezione(/^oggetti$/i)
     expect(sezione.querySelector(".as-conferma-sezione__quante")?.textContent).toBe("2 domande")
     const indice = within(screen.getByRole("navigation", { name: "Sezioni" })).getAllByRole("listitem")
-    expect(indice.map((v) => v.textContent)).toEqual(["Oggetti2", "Frame senza tipo1"])
+    // il nome, quante senza risposta, e il tondo col numero
+    expect(indice.map((v) => v.textContent)).toEqual(["Oggetti2 senza risposta2", "Frame senza tipo1 senza risposta1"])
   })
 
   it("un oggetto in dubbio mostra cosa c'e' nel campo, e per ogni voce se e' nell'inquadratura", async () => {
@@ -197,7 +198,7 @@ describe("Da confermare -- gli oggetti", () => {
     const scheda = riga(sezione, "NGC 7000")
     expect(within(scheda).getByRole("radio", { name: /IC 5070/ })).toHaveProperty("checked", true)
     fireEvent.click(within(scheda).getByRole("radio", { name: /^NGC 7000/ }))
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", false)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBeNull()
     fireEvent.click(within(scheda).getByRole("radio", { name: /IC 5070/ }))
     applicaSpento()
   })
@@ -210,7 +211,7 @@ describe("Da confermare -- gli oggetti", () => {
     const campo = within(scheda).getByLabelText("Nome dell'oggetto")
     expect(campo).toHaveProperty("value", "M 31")
     fireEvent.change(campo, { target: { value: "M 3" } })
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", false)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBeNull()
     fireEvent.change(campo, { target: { value: "M 31" } })
     applicaSpento()
   })

@@ -177,6 +177,8 @@ export const it = {
   "review.subjects.notFound": "{frame} senza oggetti identificati",
   "review.subjects.notYet": "{frame} non risolti",
   "review.count.word": "da confermare",
+  "review.count.label": "Il conto",
+  "review.ticks": "Con risposta: {k} su {n}",
   "review.index": "Sezioni",
   "review.index.open": "{n} senza risposta",
   "review.index.open.one": "1 senza risposta",
@@ -184,13 +186,15 @@ export const it = {
   "review.rule": "Le risposte si salvano tutte insieme con Applica. Rispondere \u00e8 facoltativo: senza risposta i frame restano invariati.",
   "review.questions": "{n} domande",
   "review.questions.one": "1 domanda",
-  "review.inHand.label": "Modifiche da applicare",
+  "review.inHand.label": "Le modifiche da applicare",
   "review.inHand.word": "modifiche da applicare",
   "review.inHand.word.one": "modifica da applicare",
   "review.merge.warning": "Include un'unione di strumenti:",
   "review.merge.warning.rest": "non \u00e8 reversibile.",
+  "review.merge.show": "mostra l'avviso",
   "review.applying": "Applicazione in corso\u2026",
-  "review.empty": "Nessun frame in archivio. Le domande compaiono dopo la scansione delle cartelle.",
+  "review.empty.title": "Nessun frame in archivio.",
+  "review.empty.text": "Le domande compaiono dopo la scansione.",
   "review.empty.how": "Aggiungi cartelle",
   "review.none.title": "Niente da confermare",
   "review.none.text": "Nessuna domanda aperta.",
@@ -211,8 +215,6 @@ export const it = {
   "review.phone.case": "caso {k} di {n}",
   "review.phone.before": "Caso prima",
   "review.phone.after": "Caso dopo",
-  "review.phone.typeBefore": "Tipo prima: {nome}",
-  "review.phone.typeAfter": "Tipo dopo: {nome}",
   "review.answer": "Rispondi",
   "review.change": "Cambia",
   "review.reopen": "Riapri",
@@ -237,6 +239,10 @@ export const it = {
   // girata cosi' si legge bene con ogni numero
   "review.applied": "{n} modifiche applicate, {frame} frame da rielaborare",
   "review.applied.one": "1 modifica applicata, {frame} frame da rielaborare",
+  "review.applied.only": "{n} modifiche applicate",
+  "review.applied.only.one": "1 modifica applicata",
+  "review.applied.noneFilter": "«Nessun filtro» c'era già in Attrezzatura: i frame usano quello.", // glifo-ok: le parole della tavola
+  "review.applied.queued": "La rielaborazione è in coda: parte dopo, i numeri si aggiornano da soli.", // glifo-ok: la è della tavola
   "review.apply.failed": "Modifiche non applicate",
   "review.apply.unknownTarget":
     "Oggetto non presente nel catalogo. Nessuna modifica salvata.",
@@ -247,6 +253,8 @@ export const it = {
     "Unione non possibile. Nessuna modifica salvata.",
   "review.apply.nameTaken":
     "Nome gi\u00e0 usato da un altro strumento. Nessuna modifica salvata.",
+  "review.apply.contradictsBands":
+    "Il modello scelto non ha le bande indicate. Scegli un altro modello o un filtro nuovo. Nessuna modifica salvata.",
   "review.models.failed": "Elenco dei modelli non disponibile",
   "review.loading": "Caricamento\u2026",
   "review.failed": "Da confermare non disponibile",

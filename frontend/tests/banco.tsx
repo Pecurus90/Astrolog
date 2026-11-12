@@ -313,10 +313,10 @@ export async function vaiASezione(nome: RegExp) {
   vai("/da-confermare")
   // Una sezione con tutte le risposte e' chiusa in una riga: la si riapre, come fa chi la usa.
   await waitFor(() => {
-    if (!document.querySelector(".as-conferma__conta")) throw new Error("la pagina non c'e' ancora")
+    if (!document.querySelector(".al-conf__colonna-11")) throw new Error("la pagina non c'e' ancora")
   })
-  const chiusa = [...document.querySelectorAll<HTMLElement>(".as-conferma-chiusa")].find((c) =>
-    nome.test(c.querySelector(".as-conferma-chiusa__nome")?.textContent ?? ""),
+  const chiusa = [...document.querySelectorAll<HTMLElement>(".al-conf__riga-9")].find((c) =>
+    nome.test(c.querySelector(".al-conf__blocco-7")?.textContent ?? ""),
   )
   if (chiusa) fireEvent.click(within(chiusa).getByRole("button"))
   return screen.findByRole("region", { name: nome })

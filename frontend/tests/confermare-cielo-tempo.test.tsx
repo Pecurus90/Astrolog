@@ -125,7 +125,7 @@ async function mandato() {
 }
 
 const applicaSpento = () =>
-  expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+  expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
 
 const scelte = (dove: HTMLElement) =>
   within(dove)
@@ -283,7 +283,8 @@ it("le sezioni senza domande non si vedono", async () => {
   aperta({ ...PAGINA, unclear: [], mosaics: [] })
   await disegna()
   vai("/da-confermare")
-  await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
+  // il conto, o "niente da confermare" se non resta nessuna sezione
+  await waitFor(() => expect(document.querySelector(".al-conf__riga-1, .al-c-avviso__blocco-1")).not.toBeNull())
   for (const nome of [/frame senza sito/i, /mosaici/i]) {
     expect(screen.queryByRole("region", { name: nome })).toBeNull()
   }

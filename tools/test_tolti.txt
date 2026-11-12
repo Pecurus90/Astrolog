@@ -593,4 +593,17 @@ test_the_grid_starts_on_monday - step 33, Dashboard D: the v37 square per day gi
 un anno senza notti non ha la media a notte: lo dice con un trattino, non con zero - step 33, Dashboard D: the v37 square per day gives way to the board v79 bars and filters ring (anno.test, test_year)
 un quadretto per giorno da lunedi', col livello delle sue ore e i giorni che verranno - step 33, Dashboard D: the v37 square per day gives way to the board v79 bars and filters ring (anno.test, test_year)
 l'anno che non risponde lo dice, e il resto della pagina c'e' - step 33, board v80 state K: renamed l'anno che non risponde lo dice nella sua carta, con Riprova, e il resto della pagina c'e'
+con sole domande di sezioni non ancora disegnate non dice che non c'e' niente - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+in cima il conto e la regola, a sinistra l'indice, e una carta per sezione - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+l'esito si legge anche quando l'Applica ha svuotato la pagina - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+mentre applica la pagina si ferma e il comando lo dice; applicato, l'esito si chiude - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+mentre legge mostra lo scheletro, non una riga di testo - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+ogni sezione e' una carta, dentro la colonna misurata della pagina - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+prima i tipi: ognuno dice quante risposte ha, e in che stato - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+scelto un tipo si vede un caso solo, aperto, col nome del tipo e il suo perche' - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+senza nessun frame dice da dove si comincia: niente conto e niente piede - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+senza niente da chiedere lo dice: niente indice e niente piede - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+si va di caso in caso, e ai due capi di tipo in tipo - step 33, To confirm D1: the board v82 has Caso prima and Caso dopo only, off at the ends
+sopra i 900 la pagina resta quella larga: sezioni e indice - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+una voce dell'indice porta alla sua sezione - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
 test_a_second_no_filter_row_is_refused_with_its_code - step 33, To confirm A: board v82 says a second "no filter" joins the row already there; replaced by test_a_second_no_filter_joins_the_one_already_there_and_says_so

@@ -73,7 +73,7 @@ async function mandate() {
   return corpo?.gear
 }
 
-const applicaSpento = () => expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+const applicaSpento = () => expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
 const prova = (dove: HTMLElement) =>
   [...dove.querySelectorAll("dl.as-domanda-prova > div")].map(
     (r) => `${r.querySelector("dt")?.textContent}=${r.querySelector("dd")?.textContent}`,

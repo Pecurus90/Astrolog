@@ -148,7 +148,7 @@ describe("Da confermare -- gli oggetti gia' a posto", () => {
     ])
     expect(within(scheda).getByRole("radio", { name: "M 3" })).toHaveProperty("checked", true)
     // aperta senza toccare niente non e' una modifica
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
     // una cosa aperta alla volta: la domanda di sopra si e' chiusa
     expect(sezione.querySelectorAll("article.as-domanda")).toHaveLength(1)
   })
@@ -180,7 +180,7 @@ describe("Da confermare -- gli oggetti gia' a posto", () => {
     expect(scheda.querySelector(".as-risposta")?.textContent).toBe("da applicare")
     fireEvent.change(campo, { target: { value: "C/2023 A3" } })
     expect(scheda.querySelector(".as-risposta")).toBeNull()
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
   })
 
   it("senza domande aperte la sezione c'e' lo stesso: gli oggetti a posto si correggono da li'", async () => {

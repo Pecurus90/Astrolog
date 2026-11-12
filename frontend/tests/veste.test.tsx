@@ -148,13 +148,13 @@ describe("una riga di Da confermare", () => {
     expect(fuoriDaiMattoni()).toEqual([])
   })
 
-  it("ogni sezione e' una carta, dentro la colonna misurata della pagina", async () => {
-    // Le soglie del foglio (l'indice a sinistra sopra 900) si misurano su `.as-pagina`: fuori
-    // da lei la pagina non cambia forma, e non si vede finche' qualcuno non allarga la finestra.
+  it("ogni sezione e' una carta, nella colonna delle sezioni della pagina portata", async () => {
+    // La pagina sta nella colonna del telaio (`app-pagina`), col guscio della tavola v82.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
     expect(sezione.className).toBe("as-carta as-conferma-sezione")
-    expect(sezione.closest(".as-conferma")?.parentElement?.className).toBe("as-pagina")
+    expect(sezione.parentElement?.className).toBe("al-conf__colonna-11")
+    expect(sezione.closest(".al-conf__blocco-1")?.parentElement?.className).toBe("app-cornice app-pagina")
   })
 })
 

@@ -57,7 +57,7 @@ async function mandato() {
 }
 
 const applicaSpento = () =>
-  expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+  expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
 
 describe("Da confermare -- i file che non dicono che file sono", () => {
   it("una domanda per cartella, e niente e' gia' scelto", async () => {
@@ -94,7 +94,7 @@ describe("Da confermare -- i file che non dicono che file sono", () => {
     expect(risposta.querySelector(".as-risposta")?.textContent).toBe("salvata")
     expect(within(risposta).getByLabelText("Light")).toHaveProperty("checked", true)
     fireEvent.click(within(risposta).getByLabelText("Calibrazione"))
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", false)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBeNull()
     fireEvent.click(within(risposta).getByLabelText("Light"))
     applicaSpento()
   })

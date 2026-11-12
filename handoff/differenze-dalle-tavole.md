@@ -304,3 +304,33 @@ il 12/11. Restano diverse dalla tavola:
 - **Progetti finiti** (tavola 232-245): fuori fino ai Progetti (passo 44.1).
 - **«Nessun filtro» c'era già**: tavola, esito di Applica; prima l'app rifiutava con un 409.
   Ora i frame passano alla riga che c'e' (contratto `docs/domini/spina.md`).
+
+## Da confermare -- Il guscio (passo 33, commit D1, 12/11)
+
+- **Cornice della sezione aperta.** Tavola: `al-conf__colonna-12` con testata `al-conf__colonna-13`
+  (`Da confermare.dc.html` 47-48), e sul telefono «← Tutti i tipi · caso k di n» (`al-conf__riga-8`,
+  42). App: la sezione disegna ancora la sua carta, testata e perche' (`Sezione.tsx`). Perche':
+  avvolgerla darebbe due h2 e due ancore; arriva col D2, con le sezioni.
+- **Caso prima / Caso dopo.** Tavola: `al-conf__griglia-1` sotto la colonna delle sezioni (85).
+  App: stessa griglia, dentro la carta del caso. Perche': come sopra, fino al D2.
+- **Rifiuto di Applica.** Tavola: esito `role="status"` (35). App: `role="alert"`. Perche': un
+  rifiuto annulla tutte le risposte, si annuncia subito.
+- **Guasto di lettura ed elenco dei modelli che non risponde.** Prima: `alert`. App: `status`.
+  Perche': passano dall'`Avviso` comune, che e' sempre `status`.
+- **Stati vuoti** (caricamento, errore, zero frame, niente da confermare). Tavola: griglia a due
+  colonne, colonna sinistra nascosta (`L.cols` resta `300px` tranne che in caricamento, 293). App:
+  una colonna. Perche': l'avviso finirebbe nella cella da 300 px.
+- **«La rielaborazione è in coda».** Tavola: con ogni frame da rifare (289). App: solo con frame da
+  rifare e lavoro non partito. Perche': l'API manda `run_started` falso anche senza niente in coda,
+  e con lavoro partito la coda non c'e'.
+- **Pagina ferma durante Applica.** Tavola: opacita' .45 e niente clic su indice e sezioni (`fz`,
+  181). App: in piu' `inert`, anche sui tipi del telefono. Perche': cosi' anche la tastiera non
+  tocca risposte che andrebbero perse.
+- **Un tipo sul telefono.** Tavola: si apre sulla prima domanda senza risposta (`vaiSez`, 167-169).
+  App: sul primo caso, come prima. Perche': il D1 non cambia il giro del telefono.
+- **`?sezione=senza-data`.** Tavola: apre «Frame senza data» (103). App: la sezione non ha ancora
+  domande a schermo, non si apre niente. Perche': la domanda arriva col D2.
+- **Rifiuto `model_contradicts_bands`.** Tavola: «Il filtro scelto per «O3» ha la banda Hα, i frame
+  dicono OIII...» (358). App: «Il modello scelto non ha le bande indicate. Scegli un altro modello o
+  un filtro nuovo. Nessuna modifica salvata.» Perche': l'API manda solo il codice, senza filtro ne'
+  banda.

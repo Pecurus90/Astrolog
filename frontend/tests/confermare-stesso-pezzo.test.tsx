@@ -76,7 +76,7 @@ describe("Da confermare -- strumenti duplicati", () => {
     const sezione = await vaiASezione(/strumenti duplicati/i)
     const atr = riga(sezione, "ATR 2600M")
     expect(within(atr).getAllByRole("radio").some((r) => (r as HTMLInputElement).checked)).toBe(false)
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
     fireEvent.click(within(atr).getByRole("radio", { name: /unisci a ATR2600M\(USB2\.0\)/i }))
     expect((await mandato()).lookalikes).toEqual([{ id: 7, into_id: 4, same: true }])
   })
@@ -108,7 +108,8 @@ describe("Da confermare -- strumenti duplicati", () => {
     aperta({ ...PAGINA, lookalikes: [] })
     await disegna()
     vai("/da-confermare")
-    await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
+    // il conto, o "niente da confermare" se non resta nessuna sezione
+    await waitFor(() => expect(document.querySelector(".al-conf__riga-1, .al-c-avviso__blocco-1")).not.toBeNull())
     expect(screen.queryByRole("region", { name: /strumenti duplicati/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /strumenti/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /setup/i })).toBeNull()

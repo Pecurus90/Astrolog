@@ -1,10 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Bottone } from "./Bottone"
 import { Fragment, type ReactNode, useEffect, useMemo, useState } from "react"
-import { useLocation } from "react-router"
+import { useLocation, useNavigate, useSearchParams } from "react-router"
 
-import { Avviso } from "./Avviso"
-import { DomandaAperta, Risposta, UnCaso } from "./Domanda"
+import { Avviso } from "./componenti/Avviso"
+import { useFormato } from "./componenti/formato"
+import { Pagina } from "./componenti/Pagina"
+import { Scheletro } from "./componenti/Scheletro"
+import type { Formato } from "./componenti/Tema"
+import {
+  CartaDelConto,
+  CasoAccanto,
+  Esito,
+  Guscio,
+  Indice,
+  MISURE,
+  Piede,
+  SCHELETRO,
+  SezioneChiusa,
+  type StatoRisposta,
+  TipiDiDomanda,
+  spenta,
+  statoDi,
+} from "./ConfermareGuscio"
+import { DomandaAperta, UnCaso } from "./Domanda"
 import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
 import { SezioneAttrezzatura } from "./SezioneAttrezzatura"
 import { SezioneFiltri } from "./SezioneFiltri"
@@ -13,7 +31,6 @@ import { SezioneMosaici } from "./SezioneMosaici"
 import { SezioneOggetti } from "./SezioneOggetti"
 import { SezioneSenzaTipo } from "./SezioneSenzaTipo"
 import { api } from "./api/client"
-import { useColonnaStretta } from "./colonna"
 import { motivo } from "./api/motivo"
 import { useRevisione } from "./api/revisione"
 import type { components } from "./api/schema"
@@ -44,33 +61,51 @@ const VUOTO: Accumulo = {
   mosaics: {},
 }
 
+// `?sezione=` coi nomi dei collegamenti delle altre pagine (tavola v82, `componentDidMount`)
+const PER_NOME: Record<string, QualeSezione> = { siti: "unclear", "senza-data": "undated" }
+const TUTTE = Object.keys(SEZIONI) as QualeSezione[]
+
+/** La sezione chiesta dall'indirizzo: l'ancora nell'hash, o `?sezione=`. */
+function sezioneChiesta(hash: string, chiesta: string | null): QualeSezione | null {
+  const perAncora = (a: string) => TUTTE.find((s) => SEZIONI[s].ancora === a)
+  if (hash) return perAncora(hash.slice(1)) ?? null
+  if (!chiesta) return null
+  return PER_NOME[chiesta] ?? perAncora(chiesta) ?? null
+}
+
 /**
- * Da confermare: le domande che l'app ha su cio' che ha letto, e le risposte.
+ * Da confermare: le domande che l'app ha su cio' che ha letto, e le risposte (tavola v82).
  *
  * Tre regole che valgono per tutta la pagina (Marco, 14/9/2026):
  *
  * - **le risposte si accumulano** e partono con un solo *Applica*: una sola attesa e un solo
  *   ricalcolo, invece di uno per risposta;
- * - le **sezioni vuote si nascondono**, con in cima quante ne hanno domande: una pagina di undici
- *   titoli vuoti sembra rotta, e il giorno che hai finito vuoi vederlo;
+ * - le **sezioni vuote si nascondono**, col conto in cima: una pagina di undici titoli vuoti
+ *   sembra rotta, e il giorno che hai finito vuoi vederlo;
  * - dopo *Applica* **si ricarica dicendo cosa e' cambiato**, coi numeri della ricevuta: l'elenco
  *   di prima direbbe cose non piu' vere, perche' la risposta rifa' il lavoro sui frame toccati.
  *
  * *Applica* scrive solo le risposte: una domanda guardata e lasciata li' resta aperta (ADR 0014).
  */
 export function Confermare() {
-  // La colonna si misura: sotto la soglia la pagina ha un'altra forma, non un'altra veste.
-  const [stretta, misura] = useColonnaStretta()
+  const formato = useFormato()
   return (
-    <div className="as-pagina" ref={misura}>
-      <LaPagina stretta={stretta} />
-    </div>
+    <Pagina formato={formato}>
+      <LaPagina formato={formato} />
+    </Pagina>
   )
 }
 
-function LaPagina({ stretta }: { stretta: boolean }) {
+function LaPagina({ formato }: { formato: Formato }) {
+  const tel = formato === "telefono"
+  const m = MISURE[formato]
+  const vaiA = useNavigate()
+  // Rispondi of the frame lands on its section: the router does not follow a hash
+  const { hash } = useLocation()
+  const [indirizzo] = useSearchParams()
+  const chiesta = sezioneChiesta(hash, indirizzo.get("sezione"))
   // Sul telefono: il tipo scelto (`null` = l'elenco dei tipi), il caso, e cio' che si apre fuori dal caso.
-  const [tipo, setTipo] = useState<QualeSezione | null>(null)
+  const [tipo, setTipo] = useState<QualeSezione | null>(chiesta)
   const [caso, setCaso] = useState(0)
   const [fuoriCaso, setFuoriCaso] = useState<string | undefined>(undefined)
   const [accumulo, setAccumulo] = useState<Accumulo>(VUOTO)
@@ -80,7 +115,7 @@ function LaPagina({ stretta }: { stretta: boolean }) {
   // La domanda aperta, una in tutta la pagina: `undefined` finche' non si sceglie, e allora e'
   // la prima senza risposta. E le sezioni finite che l'utente ha riaperto.
   const [scelta, setScelta] = useState<string | undefined>(undefined)
-  const [riaperte, setRiaperte] = useState<readonly QualeSezione[]>([])
+  const [riaperte, setRiaperte] = useState<readonly QualeSezione[]>(chiesta ? [chiesta] : [])
   // L'esito dell'ultimo Applica si chiude: non deve restare a schermo fino al prossimo.
   const [esitoChiuso, setEsitoChiuso] = useState(false)
   const cache = useQueryClient()
@@ -101,12 +136,11 @@ function LaPagina({ stretta }: { stretta: boolean }) {
   }, [])
 
   const pagina = useRevisione()
-  // Rispondi of the frame lands on its section: the router does not follow a hash
-  const { hash } = useLocation()
   const pronta = pagina.isSuccess
+  const meta = hash ? hash.slice(1) : chiesta ? SEZIONI[chiesta].ancora : null
   useEffect(() => {
-    if (pronta && hash) document.getElementById(hash.slice(1))?.scrollIntoView?.({ block: "start" })
-  }, [pronta, hash])
+    if (pronta && meta) document.getElementById(meta)?.scrollIntoView?.({ block: "start" })
+  }, [pronta, meta])
   const modelli = useQuery({
     queryKey: ["filter-models"],
     queryFn: async () => {
@@ -132,7 +166,11 @@ function LaPagina({ stretta }: { stretta: boolean }) {
           objects: Object.values(accumulo.objects),
         },
       })
-      if (error) throw new Error(t(motivo(error, RIFIUTI, "review.apply.failed")))
+      if (error) {
+        // il titolo dice gia' "non applicate": un rifiuto senza nome non aggiunge testo
+        const perche = motivo(error, RIFIUTI, "review.apply.failed")
+        throw new Error(perche === "review.apply.failed" ? "" : t(perche))
+      }
       return data
     },
     onSuccess: async () => {
@@ -148,29 +186,36 @@ function LaPagina({ stretta }: { stretta: boolean }) {
     },
   })
 
-  if (pagina.isPending) return <InLettura />
+  if (pagina.isPending) {
+    return (
+      <Guscio m={m}>
+        <Scheletro
+          carte={SCHELETRO[formato]}
+          griglia={tel ? "minmax(0,1fr)" : MISURE.desktop.colonne}
+          gap={m.stacco}
+          testo={t("review.loading")}
+          formato={formato}
+        />
+      </Guscio>
+    )
+  }
   if (pagina.error) {
     return (
-      <div className="as-conferma">
+      <Guscio m={m}>
         <Avviso
-          azioni={
-            <Bottone verso="primario" onClick={() => void pagina.refetch()}>
-              {t("action.retry")}
-            </Bottone>
-          }
-          esito="allarme"
-          pagina
-        >
-          {pagina.error.message}
-        </Avviso>
-      </div>
+          tipo="pagina"
+          formato={formato}
+          segno="!"
+          titolo={t("review.failed")}
+          azione={t("action.retry")}
+          onAzione={() => void pagina.refetch()}
+        />
+      </Guscio>
     )
   }
 
   const dati = pagina.data
   const inMano = Object.values(accumulo).reduce((quante, r) => quante + Object.keys(r).length, 0)
-  // Quante domande di ogni sezione aspettano ancora: senza risposta salvata e senza una in mano.
-  // Dipende da cio' che l'utente ha appena scelto, quindi si conta qui e non nell'API.
   // Per ogni sezione, le sue domande come le vede la pagina: la chiave, e se ha una risposta
   // salvata. Nell'ordine dell'API, che e' quello in cui si disegnano.
   const domande: Record<QualeSezione, { chiave: string; salvata: boolean }[]> = {
@@ -183,21 +228,32 @@ function LaPagina({ stretta }: { stretta: boolean }) {
     unclear: (dati.unclear ?? []).map((p) => ({ chiave: p.key, salvata: p.site !== null })),
     // la domanda la disegna la pagina sulla tavola v82: fino ad allora la sezione non c'e'
     undated: [],
-    mosaics: (dati.mosaics ?? []).map((m) => ({ chiave: m.key, salvata: m.answer !== null })),
+    mosaics: (dati.mosaics ?? []).map((x) => ({ chiave: x.key, salvata: x.answer !== null })),
   }
-  const tutte = Object.keys(SEZIONI) as QualeSezione[]
   const inManoDi = (s: QualeSezione) => accumulo[s] as Record<string, unknown>
   const senzaRisposta = (s: QualeSezione) => domande[s].filter((d) => !d.salvata && !inManoDi(s)[d.chiave])
   // Oggetti c'e' anche senza domande: gli oggetti a posto si correggono da li'.
   const soloAPosto = domande.objects.length === 0 && dati.settled_objects > 0
-  const presenti = tutte.filter((s) => domande[s].length > 0 || (s === "objects" && soloAPosto))
-  const aspettano = Object.fromEntries(tutte.map((s) => [s, senzaRisposta(s).length])) as Record<QualeSezione, number>
-  // Aperta e' quella scelta; finche' nessuno sceglie, la prima che aspetta una risposta.
+  const presenti = TUTTE.filter((s) => domande[s].length > 0 || (s === "objects" && soloAPosto))
+  // Quante domande di ogni sezione aspettano ancora: senza risposta salvata e senza una in mano.
+  // Dipende da cio' che l'utente ha appena scelto, quindi si conta qui e non nell'API.
+  const aspettano = Object.fromEntries(TUTTE.map((s) => [s, senzaRisposta(s).length])) as Record<QualeSezione, number>
+  // Il conto vivo: cio' che aspetta qui, piu' le sezioni che la pagina non disegna ancora (dall'API).
+  const nonDisegnate = (dati.sections ?? [])
+    .filter((x) => domande[x.key].length === 0)
+    .reduce((a, x) => a + x.count, 0)
+  const conto = TUTTE.reduce((a, s) => a + aspettano[s], 0) + nonDisegnate
+  const primaDi = (s: QualeSezione) => {
+    const d = senzaRisposta(s)[0] ?? domande[s][0]
+    return d ? `${s}:${d.chiave}` : null
+  }
+  // Aperta e' quella scelta; finche' nessuno sceglie, la prima che aspetta (o quella dell'indirizzo).
   const prima = presenti.flatMap((s) => senzaRisposta(s).map((d) => `${s}:${d.chiave}`))[0] ?? null
-  const aperta = scelta ?? prima
+  const partenza = (giro === 0 && chiesta && presenti.includes(chiesta) ? primaDi(chiesta) : null) ?? prima
+  const aperta = scelta ?? partenza
   // Fissata al primo disegno: se seguisse "la prima che aspetta", rispondendo salterebbe alla
   // domanda dopo e la sezione si chiuderebbe sotto le mani.
-  if (scelta === undefined && prima !== null) setScelta(prima)
+  if (scelta === undefined && partenza !== null) setScelta(partenza)
   // Una sezione con tutte le risposte si chiude in una riga, al suo posto. Non quella su cui si
   // sta lavorando: si chiuderebbe sotto le mani.
   const chiusa = (s: QualeSezione) =>
@@ -205,97 +261,70 @@ function LaPagina({ stretta }: { stretta: boolean }) {
     aspettano[s] === 0 &&
     !riaperte.includes(s) &&
     !(aperta?.startsWith(`${s}:`) ?? false)
-  const conta = (
-    <p className="as-conferma__conta">
-      <b>{numero(dati.to_confirm)}</b> {t("review.count.word", { n: dati.to_confirm })}
-    </p>
-  )
+  const statoDelle = (s: QualeSezione): StatoRisposta[] =>
+    domande[s].map((d) => statoDi(d.salvata, Boolean(inManoDi(s)[d.chiave])))
 
-  // L'esito sta fuori dai due rami: l'Applica che risponde alle ultime domande svuota la pagina.
+  // L'esito sta fuori dai rami: l'Applica che risponde alle ultime domande svuota la pagina.
+  const fatto = applica.data
   const esiti = (
     <>
-      {applica.data && !esitoChiuso && (
-        <Avviso
-          azioni={
-            <Bottone piccolo verso="nudo" onClick={() => setEsitoChiuso(true)}>
-              {t("frame.close")}
-            </Bottone>
+      {fatto && !esitoChiuso && (
+        <Esito
+          segno={"✓" /* glifo-ok: segno della tavola */}
+          m={m}
+          titolo={
+            fatto.requeued > 0
+              ? t("review.applied", { n: numero(fatto.changed), frame: numero(fatto.requeued) })
+              : t("review.applied.only", { n: numero(fatto.changed) })
           }
-          esito="buono"
-          pagina
-          ruolo="status"
-        >
-          {t("review.applied", {
-            n: numero(applica.data.changed),
-            frame: numero(applica.data.requeued),
-          })}
-        </Avviso>
+          testo={[
+            fatto.none_filter_existed ? t("review.applied.noneFilter") : "",
+            // senza frame da rifare il lavoro non parte, e non c'e' niente in coda
+            fatto.requeued > 0 && !fatto.run_started ? t("review.applied.queued") : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          onChiudi={() => setEsitoChiuso(true)}
+        />
       )}
-      {applica.error && (
-        <Avviso esito="allarme" pagina>
-          {applica.error.message}
-        </Avviso>
-      )}
+      {applica.error && <Esito segno="!" m={m} titolo={t("review.apply.failed")} testo={applica.error.message} />}
     </>
   )
 
-  // "Niente" si dice solo se il conto e' zero: lo decide l'API, non le sezioni a schermo.
+  // "Niente" si dice solo se il conto dell'API e' zero, non per le sezioni a schermo.
   const niente = dati.to_confirm === 0 && (
-    <Avviso esito="buono" pagina ruolo="status" titolo={t("review.none.title")}>
-      {t("review.none.text")}
-    </Avviso>
+    <Avviso
+      tipo="pagina"
+      formato={formato}
+      segno={"✓" /* glifo-ok: segno della tavola */}
+      titolo={t("review.none.title")}
+      testo={t("review.none.text")}
+    />
   )
   // Primo avvio: non c'e' niente da chiedere perche' non c'e' ancora niente. Senza conto e senza piede.
   // Solo senza domande: risposte ripristinate su un archivio nuovo ne portano anche a zero frame.
   if (dati.empty && presenti.length === 0) {
     return (
-      <div className="as-conferma">
-        <div className="as-vuoto">
-          <p className="as-vuoto__testo">{t("review.empty")}</p>
-          <div className="as-vuoto__azioni">
-            <Bottone a="/impostazioni/cartelle" verso="primario">
-              {t("review.empty.how")}
-            </Bottone>
-          </div>
-        </div>
-      </div>
+      <Guscio m={m}>
+        <Avviso
+          tipo="pagina"
+          formato={formato}
+          segno="?"
+          titolo={t("review.empty.title")}
+          testo={t("review.empty.text")}
+          azione={t("review.empty.how")}
+          onAzione={() => void vaiA("/impostazioni/cartelle")}
+        />
+      </Guscio>
     )
   }
-  // Lo stato in cui la pagina sta quasi sempre: niente indice e niente piede, non c'e' da fare.
-  if (presenti.length === 0) {
+  // Lo stato in cui la pagina sta quasi sempre: niente conto, indice e piede, non c'e' da fare.
+  if (presenti.length === 0 && dati.to_confirm === 0) {
     return (
-      <div className="as-conferma">
-        <div className="as-conferma__colonna">
-          <div className="as-conferma__testa">{conta}</div>
-          {esiti}
-          {niente}
-        </div>
-      </div>
-    )
-  }
-
-  /** La riga di una sezione chiusa: il nome, quante risposte e in che stato, e come si riapre.
-   *  Porta l'ancora della sezione, che da chiusa non e' montata: l'indice arriva qui. */
-  const chiusaDi = (s: QualeSezione) => {
-    // tutte quelle in mano, anche la correzione di un oggetto a posto, che non e' una domanda
-    const mie = Object.keys(inManoDi(s)).length
-    return (
-      <div className="as-carta as-conferma-chiusa" id={SEZIONI[s].ancora} key={s}>
-        <h2 className="as-conferma-chiusa__nome">{t(SEZIONI[s].titolo)}</h2>
-        <Risposta inMano={mie > 0} salvata={mie === 0}>
-          {mie > 0
-            ? t("review.closed.inHand", { n: numero(mie) })
-            : t("review.closed.saved", { n: numero(domande[s].length) })}
-        </Risposta>
-        <Bottone
-          nome={`${t("review.reopen")}: ${t(SEZIONI[s].titolo)}`}
-          piccolo
-          verso="nudo"
-          onClick={() => setRiaperte((prima) => [...prima, s])}
-        >
-          {t("review.reopen")}
-        </Bottone>
-      </div>
+      <Guscio m={m}>
+        {esiti}
+        {niente}
+      </Guscio>
     )
   }
 
@@ -333,209 +362,129 @@ function LaPagina({ stretta }: { stretta: boolean }) {
     undated: null,
     mosaics: <SezioneMosaici mosaici={dati.mosaics} risposte={accumulo.mosaics} onRisposta={scrivi("mosaics")} />,
   }
-  const piede = (
-    <div className="as-conferma-tutto" role="region" aria-label={t("review.inHand.label")}>
-      <p className="as-conferma-tutto__conta" aria-live="polite">
-        <b>{numero(inMano)}</b> {t("review.inHand.word", { n: inMano })}
-      </p>
-      {unisce && (
-        <p className="as-conferma-avverte">
-          <span>
-            <b>{t("review.merge.warning")}</b> {t("review.merge.warning.rest")}
-          </span>
-        </p>
-      )}
-      <Bottone
-        occupato={ferma}
-        verso="primario"
-        onClick={() => {
-          setEsitoChiuso(false)
-          applica.mutate()
-        }}
-        disabled={ferma || inMano === 0}
-      >
-        {ferma ? t("review.applying") : t("review.apply")}
-      </Bottone>
-    </div>
+  // Il piede resta in vista e dice **cosa si sta per mandare**: il conto e' dello stato in mano.
+  const piede = presenti.length > 0 && (
+    <Piede
+      inMano={inMano}
+      unisce={unisce}
+      ferma={ferma}
+      formato={formato}
+      onApplica={() => {
+        setEsitoChiuso(false)
+        applica.mutate()
+      }}
+    />
   )
   const avvisi = (
     <>
       {esiti}
       {/* senza domande la pagina c'e' solo per gli oggetti a posto: che non c'e' da fare si dice lo stesso */}
       {presenti.every((s) => domande[s].length === 0) && niente}
-      {/* **Una coda che non si e' potuta leggere non e' una coda vuota.** Senza questa riga, se
-          l'elenco dei modelli cade la tendina diventa un catalogo vuoto: chi cerca il suo filtro
-          non lo trova, conclude che in commercio non c'e', e lo scrive a mano per sempre. E' il
-          principio portato da `old/`, ed e' la bugia piu' costosa di questa pagina. */}
-      {modelli.error && <Avviso esito="allarme">{modelli.error.message}</Avviso>}
+      {/* **Una coda che non si e' potuta leggere non e' una coda vuota**: senza questa riga la
+          tendina dei modelli sarebbe un catalogo vuoto, e il filtro si scriverebbe a mano. */}
+      {modelli.error && <Avviso tipo="riga" formato={formato} segno="!" titolo={modelli.error.message} />}
     </>
   )
+  const tacche = presenti.flatMap(statoDelle)
+  const vado = (s: QualeSezione | null, k = 0) => {
+    setTipo(s)
+    setCaso(k)
+    setFuoriCaso(undefined)
+  }
+  // Dopo un Applica il tipo scelto puo' non esserci piu': si torna ai tipi.
+  const qui = tel && tipo !== null && presenti.includes(tipo) ? tipo : null
+  const cartaConto = <CartaDelConto conto={conto} tacche={tacche} regola={conto > 0 && qui === null} m={m} />
 
-  if (stretta) {
-    const vado = (s: QualeSezione | null, k = 0) => {
-      setTipo(s)
-      setCaso(k)
-      setFuoriCaso(undefined)
-    }
-    // Dopo un Applica il tipo scelto puo' non esserci piu': si torna ai tipi.
-    const qui = tipo !== null && presenti.includes(tipo) ? tipo : null
+  if (tel) {
     if (qui === null) {
       // Quante risposte di un tipo stanno in ognuno dei quattro stati, nell'ordine in cui si leggono.
       const stati = (s: QualeSezione) => {
         // in mano anche cio' che non e' una domanda: la correzione di un oggetto a posto
         const fuori = Object.keys(inManoDi(s)).filter((c) => !domande[s].some((d) => d.chiave === c)).length
-        const conto = (salvata: boolean, mia: boolean) =>
-          domande[s].filter((d) => d.salvata === salvata && Boolean(inManoDi(s)[d.chiave]) === mia).length +
-          (!salvata && mia ? fuori : 0)
-        return (
-          [
-            { chiave: "review.type.open", salvata: false, inMano: false },
-            { chiave: "review.type.inHand", salvata: false, inMano: true },
-            { chiave: "review.type.saved", salvata: true, inMano: false },
-            { chiave: "review.type.changed", salvata: true, inMano: true },
-          ] as const
-        )
-          .map((v) => ({ ...v, n: conto(v.salvata, v.inMano) }))
+        const tutti = statoDelle(s)
+        return (["dare", "ora", "salvata", "cambiata"] as const)
+          .map((stato) => ({ stato, n: tutti.filter((x) => x === stato).length + (stato === "ora" ? fuori : 0) }))
           .filter((v) => v.n > 0)
       }
       return (
-        <div className={ferma ? "as-conferma as-conferma--ferma" : "as-conferma"}>
-          <div className="as-conferma__colonna" inert={ferma}>
-            <div className="as-conferma__testa">
-              {conta}
-              <p className="as-conferma__regola">{t("review.rule")}</p>
-            </div>
-            {avvisi}
-            <div className="as-carta">
-              <ul className="as-conferma-tipi" aria-label={t("review.types")}>
-                {presenti.map((s) => (
-                  <li key={s}>
-                    <button className="as-conferma-tipo" type="button" onClick={() => vado(s)}>
-                      <span className="as-conferma-tipo__nome">{t(SEZIONI[s].titolo)}</span>
-                      <span className="as-conferma-tipo__stati">
-                        {stati(s).map((v) => (
-                          <Risposta inMano={v.inMano} key={v.chiave} salvata={v.salvata}>
-                            {t(v.chiave, { n: numero(v.n) })}
-                          </Risposta>
-                        ))}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+        <Guscio m={m} sinistra={cartaConto}>
+          {avvisi}
+          {presenti.length > 0 && (
+            <TipiDiDomanda voci={presenti.map((s) => ({ sezione: s, stati: stati(s) }))} ferma={ferma} m={m} onTipo={vado} />
+          )}
           {piede}
-        </div>
+        </Guscio>
       )
     }
     const casi = domande[qui]
     const k = Math.min(caso, Math.max(0, casi.length - 1))
-    const prima = presenti[presenti.indexOf(qui) - 1]
-    const dopo = presenti[presenti.indexOf(qui) + 1]
     const idCaso = casi[k] ? `${qui}:${casi[k].chiave}` : null
-    // senza un caso accanto ne' un altro tipo non c'e' dove andare: niente fascia vuota
-    const vai = (k > 0 || k < casi.length - 1 || prima || dopo) && (
-      <div className="as-conferma-caso__vai">
-        {k > 0 ? (
-          <Bottone onClick={() => vado(qui, k - 1)}>{t("review.phone.before")}</Bottone>
-        ) : (
-          prima && <Bottone onClick={() => vado(prima)}>{t("review.phone.typeBefore", { nome: t(SEZIONI[prima].titolo) })}</Bottone>
-        )}
-        {k < casi.length - 1 ? (
-          <Bottone onClick={() => vado(qui, k + 1)}>{t("review.phone.after")}</Bottone>
-        ) : (
-          dopo && <Bottone onClick={() => vado(dopo)}>{t("review.phone.typeAfter", { nome: t(SEZIONI[dopo].titolo) })}</Bottone>
-        )}
-      </div>
-    )
     return (
-      <div className={ferma ? "as-conferma as-conferma--ferma" : "as-conferma"}>
-        <div className="as-conferma__colonna" inert={ferma}>
-          {avvisi}
+      <Guscio m={m} sinistra={cartaConto}>
+        {avvisi}
+        <div className="al-conf__colonna-11" aria-disabled={ferma ? "true" : undefined} inert={ferma} style={{ gap: m.stacco, ...spenta(ferma) }}>
           {/* Aperto e' il caso; un oggetto a posto che si corregge lo chiude, come sulla pagina larga. */}
           <DomandaAperta.Provider value={{ aperta: fuoriCaso ?? idCaso, apri: setFuoriCaso }}>
-            <UnCaso.Provider value={{ caso: k, indietro: () => vado(null), vai }}>
+            <UnCaso.Provider
+              value={{ caso: k, indietro: () => vado(null), vai: <CasoAccanto k={k} n={casi.length} onVai={(j) => vado(qui, j)} /> }}
+            >
               <Fragment key={`${giro}:${qui}:${k}`}>{sezioni[qui]}</Fragment>
             </UnCaso.Provider>
           </DomandaAperta.Provider>
         </div>
         {piede}
-      </div>
+      </Guscio>
     )
   }
 
-  return (
-    <div className={ferma ? "as-conferma as-conferma--indice as-conferma--ferma" : "as-conferma as-conferma--indice"}>
-      {/* Only above 900 of column: the sheet keeps the index sticky at every width, and in a
-          single column it would stay over the questions and take their clicks. */}
-      <nav className="as-conferma-indice as-solo-largo" aria-label={t("review.index")} inert={ferma}>
-        <ol>
-          {presenti.map((s) => (
-            <li key={s}>
-              <a href={`#${SEZIONI[s].ancora}`}>
-                <span>{t(SEZIONI[s].titolo)}</span>
-                {aspettano[s] === 0 ? (
-                  <span className="as-conferma-indice__fatto" aria-label={t("review.index.done")}>
-                    {"\u2713"}
-                  </span>
-                ) : (
-                  <span
-                    className="as-conferma-indice__n"
-                    aria-label={t("review.index.open", { n: numero(aspettano[s]) })}
-                  >
-                    {numero(aspettano[s])}
-                  </span>
-                )}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-
-      <div className="as-conferma__colonna" inert={ferma}>
-      <div className="as-conferma__testa">
-        {conta}
-        <p className="as-conferma__regola">{t("review.rule")}</p>
-      </div>
-
-      {avvisi}
-
-      {/* L'ordine delle sezioni e' fisso: prima i pezzi, poi come si montano insieme, poi il
-          dove e il quando, poi il cielo. Una sezione che si sposta a seconda di cosa contiene non
-          si ritrova. */}
-      <DomandaAperta.Provider value={{ aperta, apri: setScelta }}>
-      <Fragment key={giro}>
-        {presenti.map((s) => (chiusa(s) ? chiusaDi(s) : <Fragment key={s}>{sezioni[s]}</Fragment>))}
-      </Fragment>
-      </DomandaAperta.Provider>
-      </div>
-
-      {/* Il piede resta in vista e dice **cosa si sta per mandare**: le risposte si accumulano
-          scorrendo le sezioni, e un Applica che non dice quante ne porta chiede un salto nel buio.
-          Il conto e' dello stato in mano all'utente, non dell'API. */}
-      {piede}
-    </div>
+  /** Dall'indice: apre la sezione (anche se chiusa) sulla prima che aspetta, e ci scorre. */
+  const vaiSez = (s: QualeSezione) => {
+    const id = primaDi(s)
+    if (id) setScelta(id)
+    setRiaperte((prima) => (prima.includes(s) ? prima : [...prima, s]))
+    window.setTimeout(() => document.getElementById(SEZIONI[s].ancora)?.scrollIntoView?.({ block: "start", behavior: "smooth" }), 60)
+  }
+  const sinistra = (
+    <>
+      {cartaConto}
+      {presenti.length > 0 && (
+        <Indice
+          voci={presenti.map((s) => ({ sezione: s, aspettano: aspettano[s], corrente: aperta?.startsWith(`${s}:`) ?? false }))}
+          ferma={ferma}
+          m={m}
+          onVai={vaiSez}
+        />
+      )}
+    </>
   )
-}
-
-/** Mentre legge: lo scheletro tiene il posto dell'indice, del conto e delle sezioni. */
-function InLettura() {
   return (
-    <div className="as-conferma as-conferma--indice" aria-busy="true" aria-label={t("review.loading")}>
-      <div className="as-conferma-indice as-solo-largo" aria-hidden="true">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <span key={n} className="as-scheletro as-conferma__sk-voce" />
-        ))}
+    <Guscio m={m} sinistra={sinistra}>
+      {avvisi}
+      {/* L'ordine delle sezioni e' fisso: prima i pezzi, poi come si montano insieme, poi il
+          dove e il quando, poi il cielo. Una sezione che si sposta non si ritrova. */}
+      <div className="al-conf__colonna-11" aria-disabled={ferma ? "true" : undefined} inert={ferma} style={{ gap: m.stacco, ...spenta(ferma) }}>
+        <DomandaAperta.Provider value={{ aperta, apri: setScelta }}>
+          <Fragment key={giro}>
+            {presenti.map((s) =>
+              chiusa(s) ? (
+                <SezioneChiusa
+                  key={s}
+                  sezione={s}
+                  // tutte quelle in mano, anche la correzione di un oggetto a posto
+                  inMano={Object.keys(inManoDi(s)).length}
+                  salvate={domande[s].length}
+                  m={m}
+                  onRiapri={() => setRiaperte((prima) => [...prima, s])}
+                />
+              ) : (
+                <Fragment key={s}>{sezioni[s]}</Fragment>
+              ),
+            )}
+          </Fragment>
+        </DomandaAperta.Provider>
       </div>
-      <div className="as-conferma__colonna" aria-hidden="true">
-        <span className="as-scheletro as-conferma__sk-conto" />
-        <span className="as-scheletro as-conferma__sk-frase" />
-        <span className="as-scheletro as-conferma__sk-chiusa" />
-        <span className="as-scheletro as-conferma__sk-carta" />
-        <span className="as-scheletro as-conferma__sk-chiusa" />
-      </div>
-    </div>
+      {piede}
+    </Guscio>
   )
 }
 
@@ -543,7 +492,7 @@ function InLettura() {
  *
  * Non e' una cortesia: `POST /review/apply` e' **una transazione sola**, quindi uno qualunque di
  * questi annulla anche le risposte buone. Un "non ha funzionato" generico lascerebbe l'utente
- * senza sapere ne' cosa e' stato scritto ne' cosa riparare -- e le tre riparazioni sono diverse:
+ * senza sapere ne' cosa e' stato scritto ne' cosa riparare -- e le riparazioni sono diverse:
  * si cambia bersaglio, si ricarica la pagina, si aspetta. */
 const RIFIUTI: Record<string, Chiave> = {
   unknown_target: "review.apply.unknownTarget",
@@ -551,4 +500,5 @@ const RIFIUTI: Record<string, Chiave> = {
   worker_busy: "review.apply.busy",
   name_taken: "review.apply.nameTaken",
   merge_refused: "review.apply.mergeRefused",
+  model_contradicts_bands: "review.apply.contradictsBands",
 }

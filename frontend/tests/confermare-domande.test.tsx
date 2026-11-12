@@ -43,7 +43,7 @@ async function apri(pagina: unknown = PAGINA) {
   })
   await disegna()
   vai("/da-confermare")
-  await screen.findByRole("region", { name: "Modifiche da applicare" })
+  await screen.findByRole("region", { name: "Le modifiche da applicare" })
 }
 
 const aperte = () => [...document.querySelectorAll("article.as-domanda")]
@@ -143,10 +143,10 @@ describe("Da confermare -- una domanda aperta alla volta", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Rispondi: D:/Astro/dark" }))
     expect(screen.queryByRole("region", { name: "Strumenti duplicati" })).toBeNull()
-    const riga = document.querySelector(".as-conferma-chiusa") as HTMLElement
-    expect(riga.querySelector(".as-conferma-chiusa__nome")?.textContent).toBe("Strumenti duplicati")
-    expect(stato(riga).className).toBe("as-risposta as-risposta--ora")
-    expect(stato(riga).textContent).toBe("1 risposta da applicare")
+    const riga = document.querySelector(".al-conf__riga-9") as HTMLElement
+    expect(riga.querySelector(".al-conf__blocco-7")?.textContent).toBe("Strumenti duplicati")
+    // la pillola dice lo stato col segno e la parola, non col colore da solo
+    expect(riga.querySelector(".al-conf__riga-7")?.textContent).toBe("●1 risposta da applicare")
     // resta prima di Frame senza tipo: non sale e non scende
     expect(riga.nextElementSibling?.getAttribute("aria-labelledby")).toBe("frame-senza-tipo-nome")
     // la voce dell'indice porta ancora qui: l'ancora della sezione sta sulla riga chiusa
@@ -154,15 +154,14 @@ describe("Da confermare -- una domanda aperta alla volta", () => {
 
     fireEvent.click(within(riga).getByRole("button", { name: "Riapri: Strumenti duplicati" }))
     expect(screen.getByRole("region", { name: "Strumenti duplicati" })).toBeDefined()
-    expect(document.querySelector(".as-conferma-chiusa")).toBeNull()
+    expect(document.querySelector(".al-conf__riga-9")).toBeNull()
   })
 
   it("una sezione chiusa con sole risposte salvate lo dice", async () => {
     await apri({ ...PAGINA, typeless: [{ key: "D:/Astro/M51", frames: 30, answer: "light" }] })
-    const riga = document.querySelector(".as-conferma-chiusa") as HTMLElement
-    expect(riga.querySelector(".as-conferma-chiusa__nome")?.textContent).toBe("Frame senza tipo")
-    expect(stato(riga).className).toBe("as-risposta as-risposta--salvata")
-    expect(stato(riga).textContent).toBe("1 risposta salvata")
+    const riga = document.querySelector(".al-conf__riga-9") as HTMLElement
+    expect(riga.querySelector(".al-conf__blocco-7")?.textContent).toBe("Frame senza tipo")
+    expect(riga.querySelector(".al-conf__riga-7")?.textContent).toBe("\u27131 risposta salvata")
   })
   it("i dati che aiutano a rispondere stanno in una tabellina: la parola, e il dato", async () => {
     // In riga, uno dopo l'altro, si leggevano male: "46.10,12.00 52 frame Oggetti: ... notti: ...".

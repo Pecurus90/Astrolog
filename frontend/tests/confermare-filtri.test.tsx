@@ -126,10 +126,10 @@ describe("Da confermare -- i filtri", () => {
     modo(suH, /^filtro esistente$/i)
     expect(within(suH).queryByLabelText(/cerca fra i modelli/i)).toBeNull()
     fireEvent.change(within(suH).getByLabelText(/filtro esistente: H$/i), { target: { value: "9" } })
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", false)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBeNull()
     // un'altra strada non si somma a quella di prima
     modo(suH, /^modello da catalogo$/i)
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
   })
 
   it("una ricerca che non trova niente lo dice, e dice dove andare", async () => {
@@ -278,7 +278,7 @@ describe("Da confermare -- i filtri", () => {
     const tendina = within(suH).getByLabelText(/filtro esistente: H$/i)
     fireEvent.change(tendina, { target: { value: "9" } })
     fireEvent.change(tendina, { target: { value: "" } })
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
   })
 
   it("passare a mano toglie uno dei miei, anche senza scrivere niente", async () => {
@@ -289,7 +289,7 @@ describe("Da confermare -- i filtri", () => {
     modo(suH, /^filtro esistente$/i)
     fireEvent.change(within(suH).getByLabelText(/filtro esistente: H$/i), { target: { value: "9" } })
     modo(suH, /^nuovo filtro$/i)
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
   })
 
   it("scelto uno dei miei e poi scritto a mano, parte il nome scritto e non l'unione", async () => {
@@ -343,7 +343,7 @@ describe("Da confermare -- i filtri", () => {
       "/api/health": { stato: 200, corpo: SALUTE },
     })
     await vaiAConfermare()
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText("Elenco dei modelli non disponibile")).toBeDefined()
   })
 
   it("se Applica fallisce, lo dice", async () => {
@@ -371,7 +371,8 @@ describe("Da confermare -- i filtri", () => {
     aperta({ ...PAGINA, filters: [], to_confirm: 0 })
     await disegna()
     vai("/da-confermare")
-    await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
+    // il conto, o "niente da confermare" se non resta nessuna sezione
+    await waitFor(() => expect(document.querySelector(".al-conf__riga-1, .al-c-avviso__blocco-1")).not.toBeNull())
     expect(screen.queryByRole("region", { name: /filtri/i })).toBeNull()
   })
 
@@ -409,7 +410,7 @@ describe("Da confermare -- i filtri", () => {
       expect(chiamate().filter((u) => /\/api\/v1\/review($|\?)/.test(u)).length).toBeGreaterThan(1),
     )
     // e l'Applica torna spento, perche' non c'e' piu' niente in mano
-    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
   })
 
   it("un clic sbagliato si corregge: si sceglie un altro modello, o un altro modo", async () => {
