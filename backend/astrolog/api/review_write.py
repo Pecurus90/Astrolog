@@ -3,6 +3,7 @@
 import sqlite3
 from collections.abc import Collection, Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass, field
 
 from fastapi import HTTPException
 
@@ -40,11 +41,19 @@ _CONSTRAINT_CODES = {
 }
 
 
-def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tuple[int, set[int]]:
+@dataclass(slots=True)
+class Applied:
+    changed: int = 0
+    requeued: set[int] = field(default_factory=set)
+    none_filter_existed: bool = False  # a "no filter" answer joined the row already there
+
+
+def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> Applied:
     """Group answers first, then merges (which delete rows), then filters and objects: a merge in
     the same Apply carries the answer along instead of leaving it looking for a vanished name."""
+    out = Applied()
     changed = 0
-    requeued: set[int] = set()
+    requeued = out.requeued
     # the rigs and filters to choose from do not change inside Apply: read once
     choices = (
         ({c.id: c for c in page.rig_choices(conn)}, {f.id: f for f in page.filter_choices(conn)})
@@ -65,6 +74,12 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
     requeued.update(lookalike.answer_all(conn, body.lookalikes, now))
     changed += len(body.lookalikes)
     for edit in body.filters:
+        if edit.is_none and (none_id := _other_none_filter(conn, edit.id)) is not None:
+            # board v82: not a refusal, the frames use the row already there
+            requeued.update(gear.merge_filter(conn, edit.id, none_id, now, into_none=True))
+            out.none_filter_existed = True
+            changed += 1
+            continue
         filter_requeued, written = answer_filter(conn, edit.id, edit, now)
         requeued.update(filter_requeued)
         changed += int(written)
@@ -80,7 +95,15 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
     for edit in body.unclear:
         requeued.update(_answer_where(conn, edit, now))
         changed += 1
-    return changed, requeued
+    out.changed = changed
+    return out
+
+
+def _other_none_filter(conn: sqlite3.Connection, filter_id: int) -> int | None:
+    row = conn.execute(
+        "SELECT id FROM filters WHERE is_none = 1 AND id <> ?", (filter_id,)
+    ).fetchone()
+    return None if row is None else row["id"]
 
 
 def answer_filter(

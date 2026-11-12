@@ -337,14 +337,25 @@ def test_review_says_when_a_name_is_taken(client):
     assert by_name(review(client)["filters"], "N")["name"] == "N"
 
 
-def test_a_second_no_filter_row_is_refused_with_its_code(client):
-    """One "no filter" row only: a second is the 409 the contract names, and nothing is written."""
+def test_a_second_no_filter_joins_the_one_already_there_and_says_so(client):
+    """Una riga "nessun filtro" sola. La tavola v82 (Da confermare, esito di Applica): dire
+    "Nessun filtro" quando c'e' gia' non e' un rifiuto -- «"Nessun filtro" c'era già in
+    Attrezzatura: i frame usano quello.» --, quindi i frame passano alla riga che c'e'."""
     page = review(client)
     osc, h = _filtro(page, "OSC"), by_name(page["filters"], "N")
     apply(client, filters=[{"id": osc["id"], "name": "Nessun filtro", "is_none": True}])
     r = client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], "is_none": True}]})
-    assert (r.status_code, r.json()["detail"]["code"]) == (409, "none_filter_exists")
-    assert by_name(review(client)["filters"], "N")["is_none"] is False
+    assert r.status_code == 200, r.text
+    assert r.json()["none_filter_existed"] is True
+    assert "N" not in {f["name"] for f in review(client)["filters"]}
+    with db(client) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM filters WHERE is_none = 1").fetchone()[0] == 1
+        assert (
+            conn.execute("SELECT COUNT(*) FROM frames WHERE filter_id = ?", (h["id"],)).fetchone()[
+                0
+            ]
+            == 0
+        )
 
 
 def test_apply_writes_every_answer_or_none(client):

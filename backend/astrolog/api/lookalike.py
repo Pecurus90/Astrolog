@@ -59,6 +59,9 @@ def lookalikes(conn: sqlite3.Connection) -> list[LookalikeOut]:
                 into_id=kept["id"],
                 into_name=kept["name"],
                 into_frames=kept["frames"],
+                width_px=p.get("width_px"),
+                height_px=p.get("height_px"),
+                pixel_um=p["pixel_size_um"],
             )
             for p in group
             if p is not kept and frozenset((p["name"], kept["name"])) not in distinct

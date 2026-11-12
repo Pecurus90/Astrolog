@@ -3,12 +3,12 @@ are written by identify, since the catalog cone is costly; the rest is composed 
 
 import sqlite3
 from dataclasses import asdict
-from typing import Final
+from typing import Any, Final
 
 from ..place import by_distance, distance_km
 from ..site_of import known_sites
 from ..spine import coordinates as places
-from ..spine import filters_used, gear, object_answer, rigs, unnamed
+from ..spine import filters_used, frame_proofs, gear, object_answer, rigs, unnamed
 from ..spine import objects as obj
 from ..spine.group import GroupReason
 from ..spine.identify_decide import DOUBT
@@ -19,7 +19,13 @@ from .models_review import (
     ObjectCard,
     RigChoice,
 )
-from .models_review_groups import SiteCandidate, UnclearCoordinates, UnnamedGroup
+from .models_review_groups import (
+    FrameRig,
+    SiteCandidate,
+    Subject,
+    UnclearCoordinates,
+    UnnamedGroup,
+)
 
 # The head of a card's key says which kind of group it is: one answer, two writers.
 OBJECT_KEY: Final = "object:"
@@ -128,19 +134,27 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
     put_out = object_answer.out_of_archive(conn)
     linked_out = object_answer.linked_out(conn)
     candidates = _sky_candidates(conn)
+    common = _common_names(conn)
+    proofs = frame_proofs.of(conn, "f.object_id")
+    waiting = frame_proofs.waiting_for_sky(conn)
     out: list[ObjectCard] = []
     for row in obj.listing(conn):
         object_key = obj.stable_key(row)
         extra = put_out.pop(object_key, None)
         # every frame answered "not an object", the ones still waiting for `identify` included
         all_out = row["frames"] and linked_out.get(row["id"], 0) == row["frames"]
+        seen = proofs.get(row["id"], frame_proofs.Proofs())
         out.append(
             ObjectCard(
                 key=OBJECT_KEY + object_key,
                 name=obj.display_name(row),
                 slug=row["catalog_slug"],
+                common_name=common.get(row["catalog_slug"]),
                 method=row["identity_method"],
                 confidence=row["identity_confidence"],
+                searched=row["id"] not in waiting,
+                nights=seen.nights,
+                rigs=[FrameRig(**asdict(r)) for r in seen.rigs],
                 group=None,
                 frames=row["frames"] + (extra.frames if extra else 0),
                 integration_s=row["integration_s"] + (extra.integration_s if extra else 0.0),
@@ -155,8 +169,12 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
                 key=OBJECT_KEY + object_key,
                 name=totals.name or object_key,
                 slug=object_key if totals.name else None,
+                common_name=common.get(object_key) if totals.name else None,
                 method=None,
                 confidence=None,
+                searched=True,  # put out by an answer: nothing is asked of the sky
+                nights=[],
+                rigs=[],
                 group=None,
                 frames=totals.frames,
                 integration_s=totals.integration_s,
@@ -175,8 +193,12 @@ def _group_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
             key=FRAMES_KEY + g.key,
             name=None,
             slug=None,
+            common_name=None,
             method=None,
             confidence=None,
+            searched=True,  # a group is asked only once the sky has looked (`unnamed._BY_GROUP`)
+            nights=[],  # the group carries its night, camera and telescope
+            rigs=[],
             group=UnnamedGroup(**asdict(g)),
             frames=g.frames,
             integration_s=g.integration_s,
@@ -186,6 +208,35 @@ def _group_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
         )
         for g in unnamed.by_group(conn)
     ]
+
+
+def subjects_by(
+    conn: sqlite3.Connection, owner: str, where: str, args: tuple[Any, ...]
+) -> dict[Any, list[Subject]]:
+    """The objects in the field per `owner` (a column of `frames f`), the most taken first: the
+    same names and order as the other groups' subjects (`objects.subjects`)."""
+    groups: dict[Any, dict[str, Any]] = {}
+    for r in conn.execute(
+        f"SELECT {owner} AS owner, f.object_id, COUNT(*) AS n FROM frames f"  # noqa: S608
+        f" WHERE f.copy_of IS NULL AND f.object_id IS NOT NULL {where}"
+        " GROUP BY owner, f.object_id",
+        args,
+    ):
+        obj.count_subject(groups.setdefault(r["owner"], {}), r["object_id"], r["n"])
+    obj.subjects(conn, groups.values())
+    return {k: [Subject(**s) for s in g["subjects"]["found"]] for k, g in groups.items()}
+
+
+def _common_names(conn: sqlite3.Connection) -> dict[str, str]:
+    """Only the slugs the archive uses: the catalog has twenty thousand entries."""
+    return {
+        r["slug"]: r["common_name"]
+        for r in conn.execute(
+            "SELECT e.slug, e.common_name FROM catalog_entries e WHERE e.common_name IS NOT NULL"
+            " AND e.slug IN (SELECT catalog_slug FROM objects WHERE catalog_slug IS NOT NULL"
+            "  UNION SELECT slug FROM object_candidates)"
+        )
+    }
 
 
 def _sky_candidates(conn: sqlite3.Connection) -> dict[str, list[ObjectCandidate]]:

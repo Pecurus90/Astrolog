@@ -302,14 +302,21 @@ def filter_mergeable(src: Row, dst: Row) -> bool:
 
 
 def merge_filter(
-    conn: sqlite3.Connection, from_id: int, into_id: int, now: str | None = None
+    conn: sqlite3.Connection,
+    from_id: int,
+    into_id: int,
+    now: str | None = None,
+    *,
+    into_none: bool = False,
 ) -> list[int]:
+    """`into_none`: the answer "no filter" given when that row exists, the spelling joins it."""
     by_id = "SELECT id, name, is_none, passband FROM filters WHERE id = ?"
     src = conn.execute(by_id, (from_id,)).fetchone()
     dst = conn.execute(by_id, (into_id,)).fetchone()
     if src is None or dst is None:
         raise LookupError(f"filtro {from_id if src is None else into_id}")
-    if not filter_mergeable(src, dst):
+    joins_none = into_none and dst["is_none"] and not src["is_none"]
+    if not (joins_none or filter_mergeable(src, dst)):
         raise MergeRefusedError("si unisce un filtro vero in un altro, con la banda nota")
     rename(conn, "filter", src["name"], dst["name"], now)
     signature.follow_filter(conn, src["name"], dst["name"])  # "the same filter" there too

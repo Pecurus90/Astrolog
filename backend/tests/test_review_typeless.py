@@ -77,10 +77,35 @@ def test_a_question_per_folder_about_which_files_they_are(pagina):
     test-tolto: test_a_question_per_folder_with_the_largest_first -- rinominato: allora quel nome
     ce l'aveva un altro test, e con due omonimi una promessa resterebbe verde per merito
     dell'altro."""
-    assert review(pagina)["typeless"] == [
-        {"key": _chiave(pagina, DARK), "frames": 3, "answer": None},
-        {"key": _chiave(pagina, M51), "frames": 1, "answer": None},
-    ]
+    gruppi = review(pagina)["typeless"]
+    for g in gruppi:
+        del g["nights"]  # la notte dei dark viene dall'ora del file: la prova sta qui sotto
+    assert gruppi == [
+        {"key": _chiave(pagina, DARK), "frames": 3, "integration_s": 900.0, "untimed": 0,
+         "answer": None},
+        {"key": _chiave(pagina, M51), "frames": 1, "integration_s": 300.0, "untimed": 0,
+         "answer": None},
+    ]  # fmt: skip
+
+
+def test_the_question_carries_the_night_and_the_frames_without_a_time(pagina):
+    """Le prove della tavola v82 (Da confermare, Frame senza tipo): la notte, e la durata che manca
+    detta a parte. Un frame senza `EXPTIME` non vale zero: si conta."""
+    m51 = _gruppi(pagina)[_chiave(pagina, M51)]
+    assert (m51["nights"], m51["integration_s"], m51["untimed"]) == (["2026-03-14"], 300.0, 0)
+    with db(pagina) as conn:
+        conn.execute(
+            "UPDATE frames SET exposure_s = NULL"
+            " WHERE image_type = 'unknown' AND object_raw = 'M 51'"
+        )
+        typeless_folders.write(conn)
+    m51 = _gruppi(pagina)[_chiave(pagina, M51)]
+    assert (m51["nights"], m51["integration_s"], m51["untimed"]) == (["2026-03-14"], 0.0, 1)
+    with db(pagina) as conn:  # un bias dura zero e la sua notte resta
+        conn.execute("UPDATE frames SET exposure_s = 0 WHERE image_type = 'unknown'")
+        typeless_folders.write(conn)
+    m51 = _gruppi(pagina)[_chiave(pagina, M51)]
+    assert (m51["nights"], m51["integration_s"], m51["untimed"]) == (["2026-03-14"], 0.0, 0)
 
 
 def test_those_frames_are_not_asked_among_the_unnamed_ones(pagina):

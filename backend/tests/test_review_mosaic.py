@@ -163,6 +163,11 @@ def test_the_question_asks_what_the_mosaic_is_of_and_the_answer_names_it(pagina)
     assert (_mosaici(pagina)[0]["answer"], _mosaici(pagina)[0]["answer_name"]) == ("yes", "IC 405")
 
 
+def test_the_question_carries_the_nights_of_the_panels(pagina):
+    """La prova «Notte» della tavola v82: le notti dei pannelli, in ordine, una volta sola."""
+    assert _mosaici(pagina)[0]["nights"] == ["2026-03-14"]
+
+
 def test_the_answer_is_written_on_the_poses_of_the_mosaic_only(pagina):
     """Dopo il si' le otto pose dei pannelli portano il mosaico, le due riprese altrove no."""
     _risposta(pagina, _mosaici(pagina)[0], "yes")

@@ -19,7 +19,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.spine import stages, unnamed
 from astrolog.spine.identify import identify_frames
-from conftest import apply, by_name, db, populate, review, write_fits
+from conftest import apply, by_name, db, populate, review, settled, write_fits
 
 ROSETTA, M81 = "2024-03-12_Rosetta/LIGHT", "2024-04-01_M81"
 PUNTA = {ROSETTA: (98.0, 4.9), M81: (149.0, 69.0)}
@@ -179,6 +179,17 @@ def test_the_card_of_frames_put_out_keeps_the_sky_candidates(col_cielo):
 
     apply(col_cielo, objects=[{"key": "object:m-81", "slug": "m-81"}])
     assert _stato(col_cielo, frame_id) == ("m-81", "done", None)
+
+
+def test_a_found_card_carries_the_common_name_of_its_catalog_entry(col_cielo):
+    """La tavola v82 scrive l'oggetto a posto col suo nome comune («M 81 · Bode's Galaxy»): lo
+    porta la scheda, dal catalogo. Un gruppo senza nome non ne ha."""
+    _col_cielo(col_cielo, M81, "m_0.fits", 148.888, 69.065)
+    tutte = settled(col_cielo) + review(col_cielo)["objects"]
+    m81 = next(s for s in tutte if s["key"] == "object:m-81")
+    assert m81["common_name"] == "Bode's Galaxy"
+    gruppo = next(s for s in tutte if s["group"] is not None)
+    assert gruppo["common_name"] is None
 
 
 def test_not_an_object_said_for_a_group_does_not_reach_a_frame_the_sky_recognised(col_cielo):

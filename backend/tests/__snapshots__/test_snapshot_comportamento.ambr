@@ -2643,6 +2643,19 @@
         'model': None,
         'name': 'N',
         'passband': 'UNKNOWN',
+        'rigs': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'frames': 1,
+            'optics': 'Askar 103Apo',
+          }),
+        ]),
+        'subjects': list([
+          dict({
+            'frames': 1,
+            'name': 'NGC 6888',
+          }),
+        ]),
       }),
       dict({
         'bands': list([
@@ -2655,6 +2668,19 @@
         'model': None,
         'name': 'X',
         'passband': 'UNKNOWN',
+        'rigs': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'frames': 1,
+            'optics': 'Askar 103Apo',
+          }),
+        ]),
+        'subjects': list([
+          dict({
+            'frames': 1,
+            'name': 'NGC 6888',
+          }),
+        ]),
       }),
     ]),
     'gear': list([
@@ -2716,11 +2742,14 @@
     'lookalikes': list([
       dict({
         'frames': 1,
+        'height_px': 3,
         'id': 9,
         'into_frames': 7,
         'into_id': 6,
         'into_name': 'ATR2600M(USB2.0)',
         'name': 'ATR2600M',
+        'pixel_um': 3.76,
+        'width_px': 4,
       }),
     ]),
     'mosaics': list([
@@ -2730,6 +2759,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': 'low',
         'frames': 5,
         'group': None,
@@ -2737,6 +2767,23 @@
         'key': 'object:M 31',
         'method': 'exact_name',
         'name': 'M 31',
+        'nights': list([
+          '2024-10-31',
+          '2024-11-01',
+        ]),
+        'rigs': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'frames': 4,
+            'optics': 'Askar 103Apo',
+          }),
+          dict({
+            'camera': 'ATR2600M',
+            'frames': 1,
+            'optics': 'Askar 103Apo',
+          }),
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),
@@ -2744,6 +2791,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': 'low',
         'frames': 2,
         'group': None,
@@ -2751,6 +2799,17 @@
         'key': 'object:NGC 6888',
         'method': 'exact_name',
         'name': 'NGC 6888',
+        'nights': list([
+          '2024-07-14',
+        ]),
+        'rigs': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'frames': 2,
+            'optics': 'Askar 103Apo',
+          }),
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),
@@ -2758,6 +2817,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': 'low',
         'frames': 1,
         'group': None,
@@ -2765,6 +2825,17 @@
         'key': 'object:IC 1396',
         'method': 'exact_name',
         'name': 'IC 1396',
+        'nights': list([
+          '2024-08-02',
+        ]),
+        'rigs': list([
+          dict({
+            'camera': 'Canon EOS 700D',
+            'frames': 1,
+            'optics': None,
+          }),
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),
@@ -2772,6 +2843,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': 'low',
         'frames': 1,
         'group': None,
@@ -2779,6 +2851,17 @@
         'key': 'object:M 42',
         'method': 'exact_name',
         'name': 'M 42',
+        'nights': list([
+          '2024-12-20',
+        ]),
+        'rigs': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'frames': 1,
+            'optics': 'Askar 103Apo',
+          }),
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),
@@ -2786,6 +2869,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': 'low',
         'frames': 1,
         'group': None,
@@ -2793,6 +2877,17 @@
         'key': 'object:M 51',
         'method': 'exact_name',
         'name': 'M 51',
+        'nights': list([
+          '2024-04-05',
+        ]),
+        'rigs': list([
+          dict({
+            'camera': 'QHY268M',
+            'frames': 1,
+            'optics': 'RC8',
+          }),
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),
@@ -2800,6 +2895,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': 'low',
         'frames': 1,
         'group': None,
@@ -2807,6 +2903,17 @@
         'key': 'object:Sh2 155',
         'method': 'exact_name',
         'name': 'Sh2 155',
+        'nights': list([
+          '2024-09-19',
+        ]),
+        'rigs': list([
+          dict({
+            'camera': 'ASI2600MM Pro',
+            'frames': 1,
+            'optics': 'TS 130 APO',
+          }),
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),
@@ -2814,6 +2921,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': None,
         'frames': 1,
         'group': dict({
@@ -2829,6 +2937,11 @@
         'key': 'frames:["2024-03-12", "canon eos 700d", "eqmod mount", null, null]',
         'method': None,
         'name': None,
+        'nights': list([
+        ]),
+        'rigs': list([
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),
@@ -2836,6 +2949,7 @@
         'answer': None,
         'candidates': list([
         ]),
+        'common_name': None,
         'confidence': None,
         'frames': 1,
         'group': dict({
@@ -2851,6 +2965,11 @@
         'key': 'frames:["2024-03-12", "canon eos 700d", "zwo am3", null, null]',
         'method': None,
         'name': None,
+        'nights': list([
+        ]),
+        'rigs': list([
+        ]),
+        'searched': True,
         'slug': None,
         'untimed': 0,
       }),

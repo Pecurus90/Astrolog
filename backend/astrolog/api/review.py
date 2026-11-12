@@ -1,5 +1,6 @@
 """Apply writes only the answers: seeing a question does not close it (ADR 0014, S4)."""
 
+import json
 import sqlite3
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict
@@ -8,6 +9,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Request
 
 from ..clock import now_iso
+from ..spine import frame_proofs
 from ..spine import mosaic_proposals as mosaic_reader
 from ..spine import signature_page as gear_reader
 from ..spine import typeless as typeless_reader
@@ -27,7 +29,7 @@ from .models_review import (
     SettledObjects,
 )
 from .models_review_apply import ReviewApplied, ReviewApply
-from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder
+from .models_review_groups import FrameRig, GearSignature, MosaicCandidate, TypelessFolder
 from .scan import sky_follows
 
 router = APIRouter(prefix="/api/v1", tags=["review"])
@@ -57,6 +59,10 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     # the most used first
     rows = conn.execute(_FILTERS, (Passband.UNKNOWN,)).fetchall()
     rows.sort(key=lambda r: (-r["frames"], r["name"]))
+    asked = json.dumps([r["id"] for r in rows])
+    narrow = ("AND f.filter_id IN (SELECT value FROM json_each(?))", (asked,))
+    proofs = frame_proofs.of(conn, "f.filter_id", where=narrow[0], args=narrow[1])
+    subjects = page.subjects_by(conn, "f.filter_id", *narrow)
     filters = [
         FilterOut(
             id=r["id"],
@@ -68,6 +74,8 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
             is_none=bool(r["is_none"]),
             bands=bands.get(r["id"], []),
             frames=r["frames"],
+            subjects=subjects.get(r["id"], []),
+            rigs=[FrameRig(**asdict(g)) for g in proofs.get(r["id"], frame_proofs.Proofs()).rigs],
         )
         for r in rows
     ]
@@ -133,18 +141,23 @@ def apply(
     409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
     longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
     rig the page does not offer; 422 `merge_refused`; 422 `model_contradicts_bands` for a filter
-    model with bands not its own; 409 `name_taken` or `none_filter_exists` if
-    a filter answer collides with another filter."""
+    model with bands not its own; 409 `name_taken` if a filter answer collides with another
+    filter's name. "No filter" said when that row exists joins it (`none_filter_existed`)."""
     state = request.app.state
     work.busy(state)
     now = now_iso()
     with write.writing(conn):
-        changed, requeued = write.apply_answers(conn, body, now)
+        done = write.apply_answers(conn, body, now)
     if body.unclear:  # "these coordinates are that site": its sky from the frames follows
         sky_follows(request)
     # without frames to redo the worker is not taken for nothing
-    started = bool(requeued) and work.after(state, _stages_touched(body))
-    return ReviewApplied(changed=changed, requeued=len(requeued), run_started=started)
+    started = bool(done.requeued) and work.after(state, _stages_touched(body))
+    return ReviewApplied(
+        changed=done.changed,
+        requeued=len(done.requeued),
+        run_started=started,
+        none_filter_existed=done.none_filter_existed,
+    )
 
 
 def _stages_touched(body: ReviewApply) -> set[StageName]:

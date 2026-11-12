@@ -99,8 +99,12 @@ def _scheda(key, ra_deg, dec_deg, frames, answer):
         "key": key,
         "name": None,
         "slug": None,
+        "common_name": None,
         "method": None,
         "confidence": None,
+        "searched": True,
+        "nights": [],
+        "rigs": [],
         "group": {
             "night": "2024-03-12",
             "camera": "Canon EOS 700D",

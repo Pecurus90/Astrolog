@@ -829,6 +829,10 @@ CREATE TABLE typeless_folders (
   root     TEXT NOT NULL,
   sub      TEXT NOT NULL,
   frames   INTEGER NOT NULL,
+  -- le prove della domanda: le notti (JSON, in ordine) e la durata, coi frame che non la dicono
+  nights        TEXT NOT NULL DEFAULT '[]',
+  integration_s REAL NOT NULL DEFAULT 0,
+  untimed       INTEGER NOT NULL DEFAULT 0,
   position INTEGER NOT NULL
 ) STRICT;
 

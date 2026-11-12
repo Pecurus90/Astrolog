@@ -6,8 +6,10 @@ from pydantic import BaseModel, Field
 
 from .models_page import Page
 from .models_review_groups import (
+    FrameRig,
     GearSignature,
     MosaicCandidate,
+    Subject,
     TypelessFolder,
     UnclearCoordinates,
     UnnamedGroup,
@@ -82,6 +84,8 @@ class FilterOut(BaseModel):
     is_none: bool
     bands: list[BandOut]
     frames: int
+    subjects: list[Subject] = Field(description="The objects in the field, the most taken first.")
+    rigs: list[FrameRig] = Field(description="Optics and camera of its frames, most used first.")
 
 
 class RigChoice(BaseModel):
@@ -107,6 +111,9 @@ class LookalikeOut(BaseModel):
     into_id: int
     into_name: str
     into_frames: int
+    width_px: int | None = Field(description="The sensor of `id`, the proof they are one camera.")
+    height_px: int | None
+    pixel_um: float | None
 
 
 class ObjectCandidate(BaseModel):
@@ -144,8 +151,15 @@ class ObjectCard(BaseModel):
     )
     name: str | None
     slug: str | None
+    common_name: str | None = Field(description="The catalog entry's common name, if it has one.")
     method: IdentityMethod | None
     confidence: IdentityConfidence | None
+    searched: bool = Field(
+        description='The sky has looked at every frame: false is "not searched yet", which is '
+        'not "no object found".'
+    )
+    nights: list[str] = Field(description="The nights of a found object's frames, in order.")
+    rigs: list[FrameRig] = Field(description="Optics and camera of its frames, most used first.")
     group: UnnamedGroup | None = Field(
         description="Where and when, for frames with no name and no sky; empty otherwise."
     )

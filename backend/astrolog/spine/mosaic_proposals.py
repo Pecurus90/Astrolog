@@ -4,7 +4,7 @@ geometry out. The answer goes by mosaic key, stable across a camera change."""
 import sqlite3
 from dataclasses import dataclass
 
-from . import counts, object_answer
+from . import counts, frame_proofs, object_answer
 from . import declarations as decl
 from . import objects as obj
 
@@ -48,6 +48,7 @@ class Proposal:
     frames: int
     integration_s: float
     untimed: int
+    nights: list[str]
     answer: str | None
     answer_name: str | None
     names: list[str]
@@ -58,6 +59,7 @@ def candidates(conn: sqlite3.Connection) -> list[Proposal]:
     """Oldest first, with the answer given and the name the user said; an answered one stays, so
     one can change one's mind."""
     subjects = obj.subjects_of(conn.execute(_SUBJECTS))
+    proofs = frame_proofs.of(conn, "p.mosaic_id", source=PANEL_FRAMES, where=f"AND {COUNTING}")
     rows = []
     for r in conn.execute(_MOSAICS, (decl.EntityType.MOSAIC, decl.MOSAIC_FIELD)):
         value = r["value"]
@@ -74,6 +76,7 @@ def candidates(conn: sqlite3.Connection) -> list[Proposal]:
                 frames=r["frames"],
                 integration_s=r["integration_s"],
                 untimed=r["untimed"],
+                nights=proofs[r["id"]].nights if r["id"] in proofs else [],
                 answer=word,
                 answer_name=None if said is None else said.name,
                 names=sorted({*names, r["proposed"]} - {""}),

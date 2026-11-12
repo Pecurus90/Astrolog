@@ -1,6 +1,7 @@
 """Frames whose header does not say what file they are, asked per folder only where the sky cannot
 tell (solved is a photo, starless is a calibration). Until answered they wait before the object."""
 
+import json
 import sqlite3
 from typing import Any
 
@@ -14,7 +15,8 @@ ANSWERS = tuple(decl.TypeAnswer)
 
 
 _WRITTEN = f"""
-SELECT t.key, t.root, t.sub, t.frames, dc.value AS answer FROM typeless_folders t
+SELECT t.key, t.root, t.sub, t.frames, t.nights, t.integration_s, t.untimed, dc.value AS answer
+FROM typeless_folders t
 LEFT JOIN declarations dc ON dc.entity_type = '{decl.EntityType.FOLDER}'
   AND dc.field = '{decl.FOLDER_TYPE}' AND dc.entity_key = t.key
 """  # noqa: S608 - `declarations` constants, not a user value
@@ -27,7 +29,8 @@ def by_folder(conn: sqlite3.Connection, only: str | None = None) -> list[dict[st
     rows = conn.execute(_WRITTEN + where + " ORDER BY t.position", args)
     return [
         {"key": r["key"], "root": r["root"], "sub": r["sub"], "frames": r["frames"],
-         "answer": r["answer"] if r["answer"] in ANSWERS else None}
+         "nights": json.loads(r["nights"]), "integration_s": r["integration_s"],
+         "untimed": r["untimed"], "answer": r["answer"] if r["answer"] in ANSWERS else None}
         for r in rows
     ]  # fmt: skip
 

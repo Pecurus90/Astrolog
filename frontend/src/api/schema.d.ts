@@ -1031,8 +1031,8 @@ export interface paths {
          *     409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
          *     longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
          *     rig the page does not offer; 422 `merge_refused`; 422 `model_contradicts_bands` for a filter
-         *     model with bands not its own; 409 `name_taken` or `none_filter_exists` if
-         *     a filter answer collides with another filter.
+         *     model with bands not its own; 409 `name_taken` if a filter answer collides with another
+         *     filter's name. "No filter" said when that row exists joins it (`none_filter_existed`).
          */
         post: operations["apply"];
         delete?: never;
@@ -2283,6 +2283,16 @@ export interface components {
             bands: components["schemas"]["BandOut"][];
             /** Frames */
             frames: number;
+            /**
+             * Subjects
+             * @description The objects in the field, the most taken first.
+             */
+            subjects: components["schemas"]["Subject"][];
+            /**
+             * Rigs
+             * @description Optics and camera of its frames, most used first.
+             */
+            rigs: components["schemas"]["FrameRig"][];
         };
         /**
          * FilterUsed
@@ -2555,6 +2565,18 @@ export interface components {
             angle_axis: ("ra" | "dec") | null;
             /** Measures */
             measures: components["schemas"]["MeasureOut"][];
+        };
+        /**
+         * FrameRig
+         * @description Optics and camera of some of a group's frames, as the user calls them, and how many.
+         */
+        FrameRig: {
+            /** Optics */
+            optics: string | null;
+            /** Camera */
+            camera: string | null;
+            /** Frames */
+            frames: number;
         };
         /**
          * GearAnswer
@@ -3074,6 +3096,15 @@ export interface components {
             into_name: string;
             /** Into Frames */
             into_frames: number;
+            /**
+             * Width Px
+             * @description The sensor of `id`, the proof they are one camera.
+             */
+            width_px: number | null;
+            /** Height Px */
+            height_px: number | null;
+            /** Pixel Um */
+            pixel_um: number | null;
         };
         /** MeasureOut */
         MeasureOut: {
@@ -3555,6 +3586,11 @@ export interface components {
              * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
              */
             untimed: number;
+            /**
+             * Nights
+             * @description The nights of the panels, YYYY-MM-DD, in order.
+             */
+            nights: string[];
             /** Answer */
             answer: ("yes" | "no") | null;
             /**
@@ -4019,10 +4055,30 @@ export interface components {
             name: string | null;
             /** Slug */
             slug: string | null;
+            /**
+             * Common Name
+             * @description The catalog entry's common name, if it has one.
+             */
+            common_name: string | null;
             /** Method */
             method: ("coord_confirmed" | "coord_review" | "exact_name" | "historic_name" | "user") | null;
             /** Confidence */
             confidence: ("certain" | "high" | "low" | "user") | null;
+            /**
+             * Searched
+             * @description The sky has looked at every frame: false is "not searched yet", which is not "no object found".
+             */
+            searched: boolean;
+            /**
+             * Nights
+             * @description The nights of a found object's frames, in order.
+             */
+            nights: string[];
+            /**
+             * Rigs
+             * @description Optics and camera of its frames, most used first.
+             */
+            rigs: components["schemas"]["FrameRig"][];
             /** @description Where and when, for frames with no name and no sky; empty otherwise. */
             group: components["schemas"]["UnnamedGroup"] | null;
             /** Frames */
@@ -4351,6 +4407,12 @@ export interface components {
              * @description False if the worker was busy: the work stays in the queue.
              */
             run_started: boolean;
+            /**
+             * None Filter Existed
+             * @description "No filter" was already in Gear: the frames answered so use that row.
+             * @default false
+             */
+            none_filter_existed: boolean;
         };
         /**
          * ReviewApply
@@ -5343,6 +5405,21 @@ export interface components {
             key: string;
             /** Frames */
             frames: number;
+            /**
+             * Nights
+             * @description The nights of those frames, YYYY-MM-DD, in order.
+             */
+            nights: string[];
+            /**
+             * Integration S
+             * @description The sum of their time; on screen in hours.
+             */
+            integration_s: number;
+            /**
+             * Untimed
+             * @description How many do not tell their time: counted, not zero.
+             */
+            untimed: number;
             /** Answer */
             answer: ("light" | "calibration") | null;
         };

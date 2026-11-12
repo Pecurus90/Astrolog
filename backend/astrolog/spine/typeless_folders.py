@@ -1,6 +1,7 @@
 """The typeless question's folders, written so the review page reads them instead of composing
 every typeless frame's folder at each opening. An answer does not rewrite them: counts stay."""
 
+import json
 import sqlite3
 
 from ..astap import Reason
@@ -21,7 +22,18 @@ WHERE f.image_type = '{FrameType.UNKNOWN}'
 GROUP BY root, sub
 """  # noqa: S608 - constants from frame_folder, astap and frame_type, not a user value
 
-_COLUMNS = ("key", "root", "sub", "frames", "position")
+# The proofs next to the question, per folder and night: the skip above is per folder, so apart.
+_PROOFS = f"""
+SELECT {folder.COLUMNS}, f.local_night AS night,
+       COALESCE(SUM(f.exposure_s) FILTER (WHERE f.copy_of IS NULL), 0) AS secs,
+       SUM(f.copy_of IS NULL AND f.exposure_s IS NULL) AS untimed,
+       SUM(f.copy_of IS NULL) AS originals
+FROM frames f {folder.JOIN}
+WHERE f.image_type = '{FrameType.UNKNOWN}'
+GROUP BY root, sub, night
+"""  # noqa: S608 - constants from frame_folder and frame_type, not a user value
+
+_COLUMNS = ("key", "root", "sub", "frames", "nights", "integration_s", "untimed", "position")
 
 # Answered folders inside a live registered root, the deepest root first.
 _ANSWERED = f"""
@@ -51,5 +63,22 @@ def write(conn: sqlite3.Connection) -> None:
         inside = r["key"][len(r["root_key"]) + 1 :]
         groups.append({"key": r["key"], "root": r["root"], "sub": inside and inside + "/",
                        "frames": 0})  # fmt: skip
-    rows = [(g["key"], g["root"], g["sub"], g["frames"], i) for i, g in enumerate(groups)]
+    proofs = _proofs(conn)
+    rows = []
+    for i, g in enumerate(groups):
+        nights, secs, untimed = proofs.get(g["key"], (set(), 0.0, 0))
+        rows.append((g["key"], g["root"], g["sub"], g["frames"],
+                     json.dumps(sorted(nights)), secs, untimed, i))  # fmt: skip
     replace_rows(conn, "typeless_folders", _COLUMNS, rows)
+
+
+def _proofs(conn: sqlite3.Connection) -> dict[str, tuple[set[str], float, int]]:
+    """`{folder key: (nights, seconds, untimed)}`; a copy's night is its original's."""
+    out: dict[str, tuple[set[str], float, int]] = {}
+    for r in conn.execute(_PROOFS):
+        key = folder.folder_key(r["root"], r["sub"])
+        nights, secs, untimed = out.get(key, (set(), 0.0, 0))
+        if r["night"] and r["originals"]:  # a bias lasts zero and still has its night
+            nights.add(r["night"])
+        out[key] = (nights, secs + r["secs"], untimed + (r["untimed"] or 0))
+    return out

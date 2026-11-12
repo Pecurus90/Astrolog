@@ -17,6 +17,14 @@ class Subject(BaseModel):
     frames: int
 
 
+class FrameRig(BaseModel):
+    """Optics and camera of some of a group's frames, as the user calls them, and how many."""
+
+    optics: str | None
+    camera: str | None
+    frames: int
+
+
 class Subjects(BaseModel):
     """What you took in that group, to remember it without going by memory: the objects, the most
     taken on top, and the frames of the two blanks -- which are not the same: `not_yet` is the sky
@@ -95,6 +103,9 @@ class TypelessFolder(BaseModel):
 
     key: str = Field(description="The folder path: it is the key one answers with.")
     frames: int
+    nights: list[str] = Field(description="The nights of those frames, YYYY-MM-DD, in order.")
+    integration_s: float = Field(description="The sum of their time; on screen in hours.")
+    untimed: int = Field(description="How many do not tell their time: counted, not zero.")
     answer: TypelessAnswer | None
 
 
@@ -174,6 +185,7 @@ class MosaicCandidate(BaseModel):
         description="How many of those frames do not tell their time: they are not worth zero, "
         "they are counted here."
     )
+    nights: list[str] = Field(description="The nights of the panels, YYYY-MM-DD, in order.")
     answer: MosaicAnswer | None
     answer_name: str | None = Field(
         description="What the mosaic is of, as the user said it; only with yes."

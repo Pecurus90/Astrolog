@@ -175,3 +175,7 @@ class ReviewApplied(BaseModel):
     run_started: bool = Field(
         description="False if the worker was busy: the work stays in the queue."
     )
+    none_filter_existed: bool = Field(
+        False,
+        description='"No filter" was already in Gear: the frames answered so use that row.',
+    )
