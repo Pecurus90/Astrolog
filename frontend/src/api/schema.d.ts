@@ -5503,8 +5503,8 @@ export interface components {
         };
         /**
          * UndatedFolder
-         * @description The frames that do not say when they were taken, grouped by **folder** (board v82, Marco
-         *     6/11/2026). The date of the file on disk is the copy's, not the shot's: it is a proof
+         * @description The frames that do not say when they were taken, grouped by **folder**. The date of the
+         *     file on disk is the copy's, not the shot's: it is a proof
          *     (`file_nights`), never an answer. One answers with the evening -- the night's date on the site
          *     -- written or chosen among the nights of the same setup. An answered group stays on the page,
          *     so one can change one's mind.
