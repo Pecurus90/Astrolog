@@ -205,6 +205,27 @@ describe("Da confermare -- i filtri", () => {
     expect(await filtriMandati()).toEqual([{ id: 7, name: "Il mio Ha", bands: [{ band: "HA" }] }])
   })
 
+  it("passando i 700 px e tornando la risposta data e la domanda aperta restano (Issue #61)", async () => {
+    // Il telaio cambia forma sotto 700 px: la pagina sotto non deve rinascere, o perde cio'
+    // che hai in mano (una finestra stretta e poi riallargata, un tablet girato).
+    aperta()
+    const h = await suH()
+    modo(h, "Nuovo filtro")
+    fireEvent.change(within(h).getByLabelText("Nome"), { target: { value: "Il mio Ha" } })
+    fireEvent.click(scelta(within(h).getByRole("group", { name: "Bande" }), "Hα"))
+    const largo = window.innerWidth
+    try {
+      for (const lato of [500, largo]) {
+        window.innerWidth = lato
+        fireEvent(window, new Event("resize"))
+      }
+    } finally {
+      window.innerWidth = largo
+    }
+    const dopo = riga(await screen.findByRole("region", { name: /^filtri$/i }), "H")
+    expect((within(dopo).getByLabelText("Nome") as HTMLInputElement).value).toBe("Il mio Ha")
+  })
+
   it("un filtro nuovo con due bande e una larghezza manda le bande nell'ordine dell'elenco", async () => {
     aperta()
     const h = await suH()

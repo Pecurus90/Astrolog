@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
+import { type CSSProperties, useEffect, useState } from "react"
 import { Link, useLocation } from "react-router"
 
 import { Menu } from "./Menu"
@@ -14,7 +14,8 @@ import { PAGINE, paginaDi } from "./pagine"
 
 /**
  * Il telaio del telefono (Telaio v76, righe 42-68): la testa col titolo e il sito che apre
- * Stanotte, Da confermare e Cerca; il corpo; il menu Altro; la bolla di vetro in basso.
+ * Stanotte, Da confermare e Cerca; sotto il corpo (che tiene `Layout`) il menu Altro e la bolla
+ * di vetro in basso.
  *
  * - **La bolla chiusa e' la pagina**: toccata si allarga sulle cinque schede (Dashboard, Notti,
  *   Archivio, Meteo, Altro); una pagina fuori dalle cinque e' la sesta. Mentre si scorre si chiude.
@@ -187,8 +188,9 @@ function Bolla({ comandi }: { comandi: Comandi }) {
   )
 }
 
-/** Il telefono: testa, Stanotte sotto la testa, corpo, menu Altro e bolla di vetro. */
-export function TelaioTelefono({ comandi, children }: { comandi: Comandi; children: ReactNode }) {
+/** Il telefono sopra il corpo: testa, Cerca e Stanotte sotto la testa. Il corpo e' del telaio
+ *  (`Layout`), nello stesso posto del desktop: cambiare forma non rimonta la pagina (Issue #61). */
+export function TestaTelefono({ comandi }: { comandi: Comandi }) {
   const dove = useLocation()
   const qui = paginaDi(dove.pathname)
   const quante = useRevisione().data?.to_confirm ?? 0
@@ -237,7 +239,7 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
   )
   const aria = t("frame.with", { nome: titolo, stato: pastiglia.aria })
   return (
-    <div className="al-c-telaio__colonna-2" data-formato="telefono" style={{ minHeight: "100vh" }}>
+    <>
       <Tema>
         <header className="al-c-telaio__riga-11 app-telaio">
           <span className="al-c-telaio__tondo-5" role="img" aria-label={t("app.title")}>
@@ -299,11 +301,15 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
           <PannelloStanotte telefono />
         </Tema>
       )}
-      <main className="al-c-telaio__colonna-3 app-corpo" id="contenuto" tabIndex={-1}>
-        <h1 className="as-solo-lettori">{titolo}</h1>
-        {children}
-      </main>
-      {aperto === "altro" && (
+    </>
+  )
+}
+
+/** Il telefono sotto il corpo: menu Altro e bolla di vetro. */
+export function CodaTelefono({ comandi }: { comandi: Comandi }) {
+  return (
+    <>
+      {comandi.aperto === "altro" && (
         <Tema>
           <Menu tipo="altro telefono" />
         </Tema>
@@ -311,6 +317,6 @@ export function TelaioTelefono({ comandi, children }: { comandi: Comandi; childr
       <Tema>
         <Bolla comandi={comandi} />
       </Tema>
-    </div>
+    </>
   )
 }
