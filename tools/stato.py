@@ -113,6 +113,20 @@ def _alerts(run: Run, kind: str) -> str:
         return "non so"
 
 
+def _proposals_line(run: Run, now: dt.datetime) -> str:
+    # patch and minor merge by themselves (ADR 0040): one still open is a major, a defect
+    args = ["pr", "list", "--state", "open", "--app", "dependabot", "--limit", "1000"]
+    args += ["--json", "createdAt"]
+    try:
+        prs = json.loads(run(args))
+    except _FAILED:
+        return "Proposte di Dependabot aperte: non so"
+    if not prs:
+        return "Proposte di Dependabot aperte: nessuna"
+    oldest = max(_hours(p["createdAt"], now) for p in prs) // 24
+    return f"Proposte di Dependabot aperte: {len(prs)} (la piu' vecchia {oldest} g)"
+
+
 def github_lines(run: Run, now: dt.datetime) -> list[str]:
     """Each line stands alone: one failing call says 'non so', never hides a red already read."""
     try:
@@ -128,6 +142,7 @@ def github_lines(run: Run, now: dt.datetime) -> list[str]:
         lines.append(_issues_line(json.loads(run(args)), now))
     except _FAILED:
         lines.append("Issue aperte: non so")
+    lines.append(_proposals_line(run, now))
     dependabot, codeql = _alerts(run, "dependabot"), _alerts(run, "code-scanning")
     lines.append(f"Avvisi di sicurezza: Dependabot {dependabot}, CodeQL {codeql}")
     return lines

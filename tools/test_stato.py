@@ -32,6 +32,7 @@ GREEN = {
     "workflow AstroLog": [{"conclusion": "success", "status": "completed", "createdAt": _ago(1)}],
     "workflow Nightly": [{"conclusion": "success", "status": "completed", "createdAt": _ago(5)}],
     "issue list": [],
+    "pr list": [],
     "dependabot": [],
     "code-scanning": [],
 }
@@ -43,6 +44,21 @@ def test_all_green_says_so():
     assert righe[1] == "Nightly: verde (ultima 5 h fa)"
     assert "Issue aperte: nessuna" in righe
     assert "Avvisi di sicurezza: Dependabot 0, CodeQL 0" in righe
+    assert "Proposte di Dependabot aperte: nessuna" in righe
+
+
+def test_open_dependabot_proposals_are_counted_with_the_oldest_age():
+    # patch and minor merge by themselves (ADR 0040): one still open is a major, a defect
+    risposte = dict(GREEN)
+    risposte["pr list"] = [{"createdAt": _ago(24 * 20)}, {"createdAt": _ago(30)}]
+    righe = stato.github_lines(_fake(risposte), NOW)
+    assert "Proposte di Dependabot aperte: 2 (la piu' vecchia 20 g)" in righe
+
+
+def test_proposals_unreadable_say_so():
+    risposte = dict(GREEN)
+    risposte["pr list"] = OSError("gh failed")
+    assert "Proposte di Dependabot aperte: non so" in stato.github_lines(_fake(risposte), NOW)
 
 
 def test_red_ci_says_since_when():
