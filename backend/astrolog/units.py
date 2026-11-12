@@ -105,6 +105,10 @@ def scale_arcsec_px(pixel_um: float | None, focal_mm: float | None) -> float | N
 # different optical setups. [P ADR 0016]
 FOCAL_TOLERANCE = 0.05
 
+# The full Moon beside the rigs' fields, for scale.
+# [C NASA NSSDC Moon Fact Sheet: apparent diameter 1896 seconds of arc, mean at opposition]
+MOON_DIAMETER_DEG = 1896 / 3600
+
 
 def known_focal(value: Any) -> float | None:
     """`True` in JSON is an integer, and a zero or negative focal is not a focal: unknown, never

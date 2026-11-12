@@ -18,9 +18,6 @@ SEEING_PER_SCALE = (2.0, 3.0)
 GUIDE_SCALE_RANGE = (0.5, 4.0)
 # [C Dawes limit, astronomy.tools/calculators/telescope_capabilities: 116 / aperture mm]
 DAWES_ARCSEC_MM = 116.0
-# The full Moon beside the rigs' fields, for scale.
-# [C NASA NSSDC Moon Fact Sheet: apparent diameter 1896 seconds of arc, mean at opposition]
-MOON_DIAMETER_DEG = 1896 / 3600
 # Only the percentage, a warning above the payload: no maker publishes a margin. [P ADR 0021]
 FULL_LOAD_PERCENT = 100.0
 

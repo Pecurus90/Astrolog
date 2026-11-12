@@ -747,7 +747,6 @@ Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | SEEING_PER_SCALE | `(2.0, 3.0)` | C astronomy.tools/calculators/ccd_suitability: Nyquist, 0.67-2"/px with 2-4" seeing |
 | GUIDE_SCALE_RANGE | `(0.5, 4.0)` | U Waddington, PHD2: "preferred range is roughly between 0.5 and 4 arc-sec/px", 2022 |
 | DAWES_ARCSEC_MM | `116.0` | C Dawes limit, astronomy.tools/calculators/telescope_capabilities: 116 / aperture mm |
-| MOON_DIAMETER_DEG | `1896 / 3600` | C NASA NSSDC Moon Fact Sheet: apparent diameter 1896 seconds of arc, mean at opposition |
 | FULL_LOAD_PERCENT | `100.0` | P ADR 0021 |
 
 ### spine/scan.py
@@ -793,6 +792,7 @@ Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | ARCSEC_PER_RAD_PER_1000 | `206.265` | C 648000/pi |
 | MAD_TO_SIGMA | `1.4826` | C Rousseeuw & Croux, JASA 88:1273, 1993 |
 | FOCAL_TOLERANCE | `0.05` | P ADR 0016 |
+| MOON_DIAMETER_DEG | `1896 / 3600` | C NASA NSSDC Moon Fact Sheet: apparent diameter 1896 seconds of arc, mean at opposition |
 | NATURAL_SKY_CD_M2 | `174e-6` | C Falchi 2016: "22.0 mag/arcsec2, corresponding to 174 ucd/m2" |
 | GARSTANG_OFFSET_MAG | `12.603` | C Garstang 1986 via Cinzano 2005: "V = 12.603 - 2.5 log10 L" |
 | BORTLE_FLOORS | `BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.80), (5...` | **senza fonte** |

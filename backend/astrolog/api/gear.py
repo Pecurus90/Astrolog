@@ -5,7 +5,8 @@ import sqlite3
 
 from fastapi import APIRouter, Depends
 
-from ..spine import gear, inventory, rig_numbers
+from ..spine import gear, inventory
+from ..units import MOON_DIAMETER_DEG
 from . import instrument_answer
 from .deps import get_db
 from .models_gear import GearList
@@ -35,6 +36,6 @@ def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
             # The api, not the spine, knows which fields a kind's card asks for: the same table
             # with which the answer rejects a field that kind does not have.
             "cards": instrument_answer.CARD,
-            "moon_deg": rig_numbers.MOON_DIAMETER_DEG,
+            "moon_deg": MOON_DIAMETER_DEG,
         }
     )
