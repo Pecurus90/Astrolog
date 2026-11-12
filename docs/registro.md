@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 365; senza fonte: 1.
-Fonti: C norma: 184; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 85.
+Valori: 369; senza fonte: 1.
+Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 86.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -42,6 +42,8 @@ Fonti: C norma: 184; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | add_instrument@router.post | `router.post("/gear/instruments", response_model=GearWritten, status...` | C RFC 9110 15.3.2: 201 Created |
 | add_filter@router.post | `router.post("/gear/filters", response_model=GearWritten, status_cod...` | C RFC 9110 15.3.2: 201 Created |
 | add_rig@router.post | `router.post("/gear/rigs", response_model=GearWritten, status_code=201)` | C RFC 9110 15.3.2: 201 Created |
+| delete_instrument@router.delete | `router.delete("/gear/instruments/{instrument_id}", status_code=204)` | C RFC 9110 15.3.5: 204 No Content |
+| delete_filter@router.delete | `router.delete("/gear/filters/{filter_id}", status_code=204)` | C RFC 9110 15.3.5: 204 No Content |
 
 ### api/models_site.py
 
@@ -667,6 +669,12 @@ Fonti: C norma: 184; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 |---|---|---|
 | SAMPLE_FILES | `5` | P ADR 0017 |
 
+### spine/gear_usage.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| BAR_FLOOR_PCT | `3.0` | T |
+
 ### spine/identify.py
 
 | simbolo | valore | fonte |
@@ -739,6 +747,7 @@ Fonti: C norma: 184; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | SEEING_PER_SCALE | `(2.0, 3.0)` | C astronomy.tools/calculators/ccd_suitability: Nyquist, 0.67-2"/px with 2-4" seeing |
 | GUIDE_SCALE_RANGE | `(0.5, 4.0)` | U Waddington, PHD2: "preferred range is roughly between 0.5 and 4 arc-sec/px", 2022 |
 | DAWES_ARCSEC_MM | `116.0` | C Dawes limit, astronomy.tools/calculators/telescope_capabilities: 116 / aperture mm |
+| MOON_DIAMETER_DEG | `1896 / 3600` | C NASA NSSDC Moon Fact Sheet: apparent diameter 1896 seconds of arc, mean at opposition |
 | FULL_LOAD_PERCENT | `100.0` | P ADR 0021 |
 
 ### spine/scan.py

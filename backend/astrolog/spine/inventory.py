@@ -9,7 +9,7 @@ from . import filters_used, gear
 from . import rigs as gear_rigs
 
 _USAGE = """u.frames, u.integration_s, u.untimed, u.nights, u.scale_arcsec_px, u.width_deg,
-       u.height_deg, u.objects_json"""
+       u.height_deg, u.objects_json, u.bar_pct"""
 
 _INSTRUMENTS = f"""
 SELECT i.*, {_USAGE}
@@ -51,6 +51,29 @@ ORDER BY p.rig_id, p.position
 
 _NUMBERS = "SELECT subject_id, numbers_json FROM gear_numbers WHERE subject = ?"
 
+# The rigs holding a piece: as a part (`rig_parts`), or as their optics or camera, with the rig's
+# frames. Whoever deletes reads it before the gesture.
+_IN_RIGS = """
+SELECT 'instrument' AS subject, piece_id AS id, rig_id, frames, chosen FROM rig_parts
+WHERE kind NOT IN ('filter', 'software')
+UNION ALL
+SELECT 'filter', piece_id, rig_id, frames, chosen FROM rig_parts WHERE kind = 'filter'
+UNION ALL
+SELECT 'instrument', p.id, g.id, COALESCE(u.frames, 0), 0
+FROM rigs g JOIN instruments p ON p.id IN (g.optics_id, g.camera_id)
+LEFT JOIN gear_usage u ON u.subject = 'rig' AND u.subject_id = g.id
+ORDER BY 1, 2, 3
+"""
+
+
+def _in_rigs(conn: sqlite3.Connection, subject: str) -> dict[int, list[dict[str, Any]]]:
+    held: dict[int, list[dict[str, Any]]] = {}
+    for r in conn.execute(_IN_RIGS):
+        if r["subject"] == subject:
+            row = {"rig_id": r["rig_id"], "frames": r["frames"], "chosen": bool(r["chosen"])}
+            held.setdefault(r["id"], []).append(row)
+    return held
+
 
 def _numbers(conn: sqlite3.Connection, subject: str) -> dict[int, Any]:
     """What `gear_numbers` wrote: a row not yet written reads as none, never recomputed here."""
@@ -62,12 +85,16 @@ def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     # belongs to the files: the column alone would show what the files say over the user.
     declared = gear.camera_specs(conn)
     numbers = _numbers(conn, "instrument")
+    held = _in_rigs(conn, "instrument")
+    told = gear.files_told(conn)
     return [
         {
             **_row(r),
             **declared.get(r["id"], {}),
             "no_hours": no_hours(r),
             "numbers": numbers.get(r["id"], {}),
+            "in_rigs": held.get(r["id"], []),
+            "from_files": told.get(r["id"], []),
         }
         for r in conn.execute(_INSTRUMENTS).fetchall()
     ]
@@ -107,7 +134,11 @@ def filters(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     bands: dict[int, list[dict[str, Any]]] = {}
     for r in conn.execute(_BANDS):
         bands.setdefault(r["filter_id"], []).append({"band": r["band"], "width_nm": r["width_nm"]})
-    return [{**_row(r), "bands": bands.get(r["id"], [])} for r in conn.execute(_FILTERS).fetchall()]
+    held = _in_rigs(conn, "filter")
+    return [
+        {**_row(r), "bands": bands.get(r["id"], []), "in_rigs": held.get(r["id"], [])}
+        for r in conn.execute(_FILTERS).fetchall()
+    ]
 
 
 def _row(r: sqlite3.Row) -> dict[str, Any]:

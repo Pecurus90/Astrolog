@@ -205,9 +205,16 @@ l'altra, o dopo una correzione continuerebbe a mostrare cio' che dicono i file.
 
 ## Cosa non fa ancora, e con cosa arrivera'
 
-**La pagina della v15 di Design** (Marco, 17/10/2026), al porting: a sinistra l'indice dei setup
-e dei componenti, a destra il dettaglio; niente campo disegnato ne' tessere. Supera la forma
-dell'11/10 (setup in cima, componenti sotto). Un gruppo senza righe non compare. Un filtro
+**La pagina della tavola v82** (congelata 11/11/2026; supera la v15 del 17/10, indice a sinistra
+e "niente campo disegnato ne' tessere"): in testa l'indice a carte, *Setup* (ore, focale, barra,
+le 10 parti a tacche) e *Componenti* (un gruppo per genere), sotto il dettaglio di cio' che scegli;
+titolo grande sul desktop. Un gruppo senza righe non compare. Le barre arrivano dall'API
+(`bar_pct`: ore sul piu' usato del gruppo, mai sotto 3), scritte con l'uso
+(`gear_usage.write_bars`); la Luna piena del campo disegnato e' `moon_deg`, il diametro apparente
+medio della NASA (1896″, 0,527°; la tavola scrive 0,52). La scala del campo dice "arcosecondi per
+pixel · ricavati dal cielo" (DECISIONI v66 10.2): e' la mediana dei frame risolti. Accanto a un
+campo del modulo "dai file" vale solo per i campi che i file dicono (`from_files`: il sensore di
+una camera), ogni altro campo scritto e' "inserito". Un filtro
 scritto a mano si abbina alla lista standard, senza catalogo dei modelli (ADR 0031, 0033); le
 bande si scrivono, anche quelle delle camere a colori.
 
@@ -256,15 +263,19 @@ e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono 
   ottico", "Tolleranza del backfocus (mm)" (ottica e riduttore), "Bias (ADU)" (camera);
 - rifiuti prima di salvare: "Per salvare serve il nome.", "Per salvare serve almeno una banda.",
   "Per salvare servono ottica, camera e focale effettiva."; unione: "L'unione non è reversibile.";
-  mono / a colori cambiato su una camera usata: "{n} frame da rielaborare", anche dopo il
-  salvataggio, che altrimenti chiude il modulo senza messaggio;
+  "{n} frame da rielaborare", anche dopo il salvataggio, che altrimenti chiude il modulo senza
+  messaggio; il numero e' `requeued`: i frame che uno stadio rilegge davvero (mono / a colori di
+  una camera, la banda di un filtro, un'unione, una parte scelta). La tavola (v66 10.3) lo vuole
+  anche per sensore, pixel, risoluzione, focale e fattore: oggi nessuno stadio legge quei campi
+  scritti da te (la risoluzione dei frame viene dai loro header), e un numero che non rielabora
+  niente sarebbe falso; il pixel dovrebbe arrivare al solve dei frame senza `XPIXSZ` (Issue #62),
+  e allora li rimette in coda;
 - scansione in corso: Salva spento con "Scansione in corso: si salva al termine." (non
   "potrai"); oggi c'e' solo il rifiuto dopo ("riprova al termine");
 - non si legge: "Attrezzatura non disponibile" e "Riprova".
 
-Restano senza testo approvato le etichette proposte il 18/10 per i campi nuovi (Raffreddamento,
-Risoluzione, Prisma, Passo, Passi totali, Montato, Per ottiche veloci): Marco le approva sulla
-tavola.
+Le etichette proposte il 18/10 per i campi nuovi (Raffreddamento, Risoluzione, Prisma, Passo,
+Passi totali, Montato, Per ottiche veloci) valgono come la tavola v82 le scrive.
 
 **Un filtro e un setup scritti a mano** (Marco, 21/9/2026) nascono dallo stesso *Aggiungi un
 pezzo*: il filtro col nome e la banda, il setup con ottica, camera e focale obbligatoria -- senza,
@@ -281,8 +292,13 @@ vocabolario da' alla grafia dell'header (`L` diventa `Lum`), e vale dopo il colo
 camera a colori `L` resta OSC.
 
 **Cancellare un pezzo** (Marco, 21/10/2026): si cancella solo un pezzo senza frame. Uno che ne
-tiene si rifiuta, e l'app dice chi lo usa e quanti frame (come `old/backend/astrolog/api/
-instruments.py`): nessuna ora si perde. Oggi il gesto non c'e'; arriva con la pagina della v15.
+tiene si rifiuta, e l'app dice chi lo usa e quanti frame: nessuna ora si perde.
+`DELETE /api/v1/gear/instruments/{id}` e `/gear/filters/{id}` (`spine/gear_delete.py`): 204; 409
+`in_use` coi `frames` e i `rigs` di quei frame; 409 `in_rig` per l'ottica o la camera di un setup
+senza frame, che e' fatto di loro; 409 `worker_busy`; 404. Con lui vanno la sua scheda e le sue
+scelte nei setup: rinato col nome, riparte vuoto. Prima del gesto la pagina legge da ogni pezzo e
+filtro `in_rigs` (setup, frame, scelto), per "Esce anche da {setup}." e "Lo usano {n} frame di
+{setup}".
 
 Restano fuori per scelta: il **valore** dei pezzi e il **registro di manutenzione** (provati e
 scartati nel progetto di prima, e la ragione vale ancora: questa pagina dice come hai ripreso,

@@ -117,6 +117,21 @@ class GearObject(BaseModel):
     integration_s: float
 
 
+BAR = Field(
+    description="Its hours on the most used of its group, 3-100: rigs among rigs, filters among "
+    "filters, a piece among its kind. Never under 3, so a short bar still shows; null without "
+    "known hours."
+)
+
+
+class PieceInRig(BaseModel):
+    """A rig holding a piece or a filter: what the page says before deleting it."""
+
+    rig_id: int
+    frames: int = Field(description="The rig's frames that used it; a chosen part may have none.")
+    chosen: bool = Field(description="You gave it to the rig, instead of the files naming it.")
+
+
 class InstrumentOnPage(BaseModel):
     """A piece of the gear: its card -- the empty fields are those the header cannot tell and the
     user fills in -- plus how much it served and what you took with it."""
@@ -183,6 +198,15 @@ class InstrumentOnPage(BaseModel):
         "or it is a mount, reducer or guide scope no rig carries yet. `None` when the hours "
         "are there."
     )
+    bar_pct: float | None = BAR
+    in_rigs: list[PieceInRig] = Field(
+        description="The rigs holding it, by rig id: as a part, or as their optics or camera "
+        "(`chosen` false). Deleting is refused while any frame uses it."
+    )
+    from_files: list[str] = Field(
+        description='The card fields read from the files ("dai file"); any other filled field '
+        'is yours ("inserito"). Only a camera\'s sensor specs come from the files.'
+    )
 
 
 class RigPart(BaseModel):
@@ -229,6 +253,7 @@ class RigOnPage(BaseModel):
     nights: int | None
     objects: list[GearObject]
     counted: bool
+    bar_pct: float | None = BAR
     scale_arcsec_px: float | None = Field(
         description="Measured on the solved frames, median: null until the solver has solved "
         "one. Named as in the schema (`frame_wcs`), which is where they come from. The same "
@@ -272,6 +297,8 @@ class FilterOnPage(BaseModel):
     mergeable_into: list[int] = Field(
         description="The filters it can be merged into: only those the spine accepts."
     )
+    bar_pct: float | None = BAR
+    in_rigs: list[PieceInRig] = Field(description="The rigs whose frames used it, by rig id.")
 
 
 class GearList(BaseModel):
@@ -283,6 +310,9 @@ class GearList(BaseModel):
         "kind and not per piece** because it also serves to write one of a kind you do not own "
         "yet: there, there is no piece to copy them from. The backend decides them, and the page "
         "keeps no second list."
+    )
+    moon_deg: float = Field(
+        description="The full Moon's apparent diameter, drawn beside the rigs' fields for scale."
     )
 
 

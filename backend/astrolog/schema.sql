@@ -764,6 +764,9 @@ CREATE TABLE gear_usage (
   width_deg       REAL,
   height_deg      REAL,
   objects_json    TEXT NOT NULL DEFAULT '[]',      -- cosa ci hai ripreso, dal piu' ripreso
+  -- la barra delle ore sul piu' usato del gruppo (setup, filtri, pezzi per genere), 3-100;
+  -- NULL senza ore note. La riscrive `gear_usage.write_bars` dopo ogni scrittura dell'uso
+  bar_pct         REAL,
   -- l'ordine dei corredi, dal piu' usato; strumenti per tipo e nome, filtri per banda (inventory)
   position        INTEGER,
   PRIMARY KEY (subject, subject_id),

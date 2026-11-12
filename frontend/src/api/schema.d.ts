@@ -267,7 +267,16 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Instrument
+         * @description A piece without frames, with its card and its choices on the rigs (`in_rigs` says which it
+         *     leaves). One frames carry is refused: no hour is lost, and a spelling of the same piece is
+         *     merged instead.
+         *
+         *     409 `worker_busy`; 404 `not_found`; 409 `in_use` with `frames` and the `rigs` of those frames;
+         *     409 `in_rig` with the `rigs` it is the optics or camera of.
+         */
+        delete: operations["delete_instrument"];
         options?: never;
         head?: never;
         /**
@@ -414,7 +423,12 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Filter
+         * @description A filter without frames. 409 `worker_busy`; 404 `not_found`, also for "no filter"; 409
+         *     `in_use` with `frames` and `rigs`.
+         */
+        delete: operations["delete_filter"];
         options?: never;
         head?: never;
         /**
@@ -2262,6 +2276,16 @@ export interface components {
              * @description The filters it can be merged into: only those the spine accepts.
              */
             mergeable_into: number[];
+            /**
+             * Bar Pct
+             * @description Its hours on the most used of its group, 3-100: rigs among rigs, filters among filters, a piece among its kind. Never under 3, so a short bar still shows; null without known hours.
+             */
+            bar_pct: number | null;
+            /**
+             * In Rigs
+             * @description The rigs whose frames used it, by rig id.
+             */
+            in_rigs: components["schemas"]["PieceInRig"][];
         };
         /** FilterOut */
         FilterOut: {
@@ -2649,6 +2673,11 @@ export interface components {
             cards: {
                 [key: string]: ("brand" | "model" | "optical_design" | "camera_type" | "sensor" | "pixel_size_um" | "width_px" | "height_px" | "adc_bits" | "cooled" | "cooling_c" | "aperture_mm" | "focal_mm" | "image_circle_mm" | "required_backfocus_mm" | "backfocus_tolerance_mm" | "reducer_factor" | "thickness_mm" | "prism_mm" | "filter_size" | "step_um" | "total_steps" | "weight_kg" | "payload_kg" | "payload_no_cw_kg" | "slots" | "notes")[];
             };
+            /**
+             * Moon Deg
+             * @description The full Moon's apparent diameter, drawn beside the rigs' fields for scale.
+             */
+            moon_deg: number;
         };
         /**
          * GearObject
@@ -3031,6 +3060,21 @@ export interface components {
              * @description Why a counted piece has no hours to show: the files do not name that kind, or it is a mount, reducer or guide scope no rig carries yet. `None` when the hours are there.
              */
             no_hours: ("files_silent" | "no_rig") | null;
+            /**
+             * Bar Pct
+             * @description Its hours on the most used of its group, 3-100: rigs among rigs, filters among filters, a piece among its kind. Never under 3, so a short bar still shows; null without known hours.
+             */
+            bar_pct: number | null;
+            /**
+             * In Rigs
+             * @description The rigs holding it, by rig id: as a part, or as their optics or camera (`chosen` false). Deleting is refused while any frame uses it.
+             */
+            in_rigs: components["schemas"]["PieceInRig"][];
+            /**
+             * From Files
+             * @description The card fields read from the files ("dai file"); any other filled field is yours ("inserito"). Only a camera's sensor specs come from the files.
+             */
+            from_files: string[];
         };
         /**
          * Key
@@ -4280,6 +4324,24 @@ export interface components {
             root_path: string;
         };
         /**
+         * PieceInRig
+         * @description A rig holding a piece or a filter: what the page says before deleting it.
+         */
+        PieceInRig: {
+            /** Rig Id */
+            rig_id: number;
+            /**
+             * Frames
+             * @description The rig's frames that used it; a chosen part may have none.
+             */
+            frames: number;
+            /**
+             * Chosen
+             * @description You gave it to the rig, instead of the files naming it.
+             */
+            chosen: boolean;
+        };
+        /**
          * PieceNumbers
          * @description Dawes's resolving power on an optics, the sensor's size on a camera; null on the others.
          */
@@ -4638,6 +4700,11 @@ export interface components {
             objects: components["schemas"]["GearObject"][];
             /** Counted */
             counted: boolean;
+            /**
+             * Bar Pct
+             * @description Its hours on the most used of its group, 3-100: rigs among rigs, filters among filters, a piece among its kind. Never under 3, so a short bar still shows; null without known hours.
+             */
+            bar_pct: number | null;
             /**
              * Scale Arcsec Px
              * @description Measured on the solved frames, median: null until the solver has solved one. Named as in the schema (`frame_wcs`), which is where they come from. The same holds for `width_deg` and `height_deg`.
@@ -6556,6 +6623,35 @@ export interface operations {
             };
         };
     };
+    delete_instrument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instrument_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     edit_instrument: {
         parameters: {
             query?: never;
@@ -6751,6 +6847,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["GearWritten"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_filter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                filter_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

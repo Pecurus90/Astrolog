@@ -124,6 +124,31 @@ GROUP BY f.rig_id, f.filter_id
 _PART_COLUMNS = ("rig_id", "kind", "piece_id", "software", "frames", "chosen", "position")
 
 USAGE = ("frames", "integration_s", "untimed", "nights")
+
+# A bar is never thinner than this, or a short one would vanish. [T] board Attrezzatura, v82
+BAR_FLOOR_PCT = 3.0
+# Rigs and filters each one group, pieces by kind: the board's bars, on the most used of the group.
+_BARS = """
+WITH g AS (
+  SELECT u.subject, u.subject_id, u.integration_s,
+         CASE WHEN u.subject = 'instrument' THEN i.kind ELSE u.subject END AS grp
+  FROM gear_usage u LEFT JOIN instruments i ON u.subject = 'instrument' AND i.id = u.subject_id
+), top AS (SELECT grp, MAX(integration_s) AS most FROM g GROUP BY grp)
+UPDATE gear_usage SET bar_pct = (
+  SELECT CASE WHEN g.integration_s IS NULL THEN NULL
+              WHEN top.most > 0 THEN MAX(:floor, ROUND(100.0 * g.integration_s / top.most, 1))
+              ELSE :floor END
+  FROM g JOIN top ON top.grp = g.grp
+  WHERE g.subject = gear_usage.subject AND g.subject_id = gear_usage.subject_id
+)
+"""
+
+
+def write_bars(conn: sqlite3.Connection) -> None:
+    """After every write of the usage: one row moving changes the bars of its whole group."""
+    conn.execute(_BARS, {"floor": BAR_FLOOR_PCT})
+
+
 _SKY_FIELDS = ("scale_arcsec_px", "width_deg", "height_deg")
 _COLUMNS = ("subject", "subject_id", *USAGE, *_SKY_FIELDS, "objects_json", "position")
 
@@ -151,6 +176,7 @@ def write(conn: sqlite3.Connection) -> None:
     rows = [(*astuple(r), None) for r in (*_instruments(conn), *_filters(conn))]
     rows += [(*astuple(r), n) for n, r in enumerate(_rigs(conn))]
     replace_rows(conn, "gear_usage", _COLUMNS, rows)
+    write_bars(conn)
     write_parts(conn)
 
 
@@ -184,6 +210,7 @@ def write_spacer_usage(conn: sqlite3.Connection) -> None:
         f" VALUES({', '.join('?' * len(_COLUMNS))})",  # segnaposto-ok: the columns, not the rows
         [(*astuple(_row(UsageSubject.INSTRUMENT, r, shot)), None) for r in rows],
     )
+    write_bars(conn)
 
 
 def restore_rigs(conn: sqlite3.Connection, now: str | None = None) -> None:
@@ -239,6 +266,7 @@ def _add_row(conn: sqlite3.Connection, subject: UsageSubject, row_id: int, *, kn
         " (SELECT COALESCE(MAX(position) + 1, 0) FROM gear_usage WHERE subject = 'rig') END)",
         (subject, row_id, *((0, 0.0, 0, 0) if known else (None,) * 4), subject),
     )
+    write_bars(conn)
 
 
 def _with_hours(conn: sqlite3.Connection) -> set[str]:

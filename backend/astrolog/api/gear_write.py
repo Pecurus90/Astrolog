@@ -2,12 +2,12 @@
 the other would be two truths about one piece. Nothing is written while the worker runs."""
 
 import sqlite3
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..clock import now_iso
-from ..spine import gear, gear_create, gear_usage, rigs
+from ..spine import gear, gear_create, gear_delete, gear_usage, rigs
 from ..spine.stages import StageName
 from ..vocab.instruments import InstrumentKind
 from . import instrument_answer, work
@@ -190,6 +190,43 @@ def edit_filter(
     with write.writing(conn):
         requeued, _ = write.answer_filter(conn, filter_id, body, now)
     return _written(request, filter_id, requeued)
+
+
+# [C RFC 9110 15.3.5: 204 No Content]
+@router.delete("/gear/instruments/{instrument_id}", status_code=204)
+def delete_instrument(
+    instrument_id: int, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> None:
+    """A piece without frames, with its card and its choices on the rigs (`in_rigs` says which it
+    leaves). One frames carry is refused: no hour is lost, and a spelling of the same piece is
+    merged instead.
+
+    409 `worker_busy`; 404 `not_found`; 409 `in_use` with `frames` and the `rigs` of those frames;
+    409 `in_rig` with the `rigs` it is the optics or camera of."""
+    work.busy(request.app.state)
+    _deleting(conn, lambda: gear_delete.delete_instrument(conn, instrument_id))
+
+
+# [C RFC 9110 15.3.5: 204 No Content]
+@router.delete("/gear/filters/{filter_id}", status_code=204)
+def delete_filter(
+    filter_id: int, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> None:
+    """A filter without frames. 409 `worker_busy`; 404 `not_found`, also for "no filter"; 409
+    `in_use` with `frames` and `rigs`."""
+    work.busy(request.app.state)
+    _deleting(conn, lambda: gear_delete.delete_filter(conn, filter_id))
+
+
+def _deleting(conn: sqlite3.Connection, act: Callable[[], None]) -> None:
+    try:
+        with write.writing(conn):
+            act()
+    except gear_delete.InUseError as err:
+        detail = {"code": "in_use", "frames": err.frames, "rigs": err.rigs}
+        raise HTTPException(status_code=409, detail=detail) from err
+    except gear_delete.InRigError as err:
+        raise HTTPException(status_code=409, detail={"code": "in_rig", "rigs": err.rigs}) from err
 
 
 def _written(request: Request, row_id: int, requeued: Collection[int]) -> GearWritten:

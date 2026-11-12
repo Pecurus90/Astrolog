@@ -134,6 +134,28 @@ def camera_specs(conn: sqlite3.Connection) -> dict[int, dict[str, Any]]:
     }
 
 
+def files_told(conn: sqlite3.Connection) -> dict[int, list[str]]:
+    """`{camera id: [field]}` the files said and you did not overwrite: only a camera's specs come
+    from the files, every other card field is yours."""
+    declared = {
+        (r["entity_key"], r["field"])
+        for r in conn.execute(
+            "SELECT entity_key, field FROM declarations WHERE entity_type = 'instrument'"
+        )
+    }
+    return {
+        r["id"]: [
+            f
+            for f in CAMERA_SPECS
+            if r[f] is not None and (instrument_key(r["kind"], r["name"]), f) not in declared
+        ]
+        for r in conn.execute(
+            f"SELECT id, kind, name, {', '.join(CAMERA_SPECS)} FROM instruments"  # noqa: S608
+            " WHERE kind = 'camera'"
+        )
+    }
+
+
 def declare_filter(  # noqa: PLR0913
     conn: sqlite3.Connection,
     filter_id: int,
