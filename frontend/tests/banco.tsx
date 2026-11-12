@@ -322,26 +322,220 @@ export async function vaiASezione(nome: RegExp) {
   return screen.findByRole("region", { name: nome })
 }
 
-/** La riga su cui si sta rispondendo.
+/** Le domande di una sezione, aperte (`article`) e chiuse (la riga), in ordine di documento. */
+export function domande(sezione: HTMLElement): HTMLElement[] {
+  return [...sezione.querySelectorAll<HTMLElement>(".al-conf__colonna-16, .al-conf__centro-2")]
+}
+
+/** La domanda aperta su cui si sta rispondendo.
  *
- * Si cerca **dentro la riga** e non in tutta la sezione: un nome compare legittimamente due volte
- * -- il filtro gia' a posto che si chiama come un modello, il candidato che si chiama come
- * l'oggetto -- e una prova che pesca in giro cade su una pagina sana. Le righe annidate (i
- * candidati dentro l'oggetto) non ingannano: `find` torna la prima in ordine di documento, che e'
- * sempre quella che le contiene. */
-export function riga(sezione: HTMLElement, nome: string) {
+ * Si cerca **dentro la domanda** e non in tutta la sezione: un nome compare legittimamente due
+ * volte -- il filtro gia' a posto che si chiama come un modello, il candidato che si chiama come
+ * l'oggetto -- e una prova che pesca in giro cade su una pagina sana. */
+export function riga(sezione: HTMLElement, nome: string): HTMLElement {
   // Una domanda sola e' aperta in tutta la pagina: se quella cercata e' chiusa la si apre col suo
   // gesto, come fa chi usa la pagina, e si torna la scheda coi controlli.
-  const cerca = () =>
-    [...sezione.querySelectorAll<HTMLElement>(".as-domanda, .as-domanda-riga")].find((v) =>
-      v.textContent?.startsWith(nome),
-    )
+  const cerca = () => domande(sezione).find((v) => v.textContent?.startsWith(nome))
   const trovata = cerca()
-  if (!trovata) throw new Error(`nessuna riga che comincia con "${nome}"`)
-  if (!trovata.classList.contains("as-domanda-riga")) return trovata
+  if (!trovata) throw new Error(`nessuna domanda che comincia con "${nome}"`)
+  if (trovata.tagName === "ARTICLE") return trovata
   fireEvent.click(within(trovata).getByRole("button"))
-  return cerca() as HTMLElement
+  const aperta = cerca()
+  if (aperta?.tagName !== "ARTICLE") throw new Error(`la domanda "${nome}" non si e' aperta`)
+  return aperta
 }
+
+const inizio = (nome: string) => new RegExp(`^${nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)
+
+/** La voce di una scelta a risposta (`PillolaScelta forma="risposta"`) il cui nome comincia cosi'.
+ *  Il nome accessibile e' la parola piu' la riga sotto, quindi si guarda come comincia. */
+export function scelta(dentro: HTMLElement, nome: string | RegExp): HTMLElement {
+  const cercato = { name: typeof nome === "string" ? inizio(nome) : nome }
+  // una scelta sola e' un radio; dove se ne scelgono piu' (le bande) e' una casella
+  const [radio] = within(dentro).queryAllByRole("radio", cercato)
+  return radio ?? within(dentro).getByRole("checkbox", cercato)
+}
+
+/** La voce e' scelta. */
+export const scelto = (voce: HTMLElement): boolean => voce.getAttribute("aria-checked") === "true"
+
+/** La voce e' spenta: si vede, non risponde. */
+export const spento = (voce: HTMLElement): boolean => voce.getAttribute("aria-disabled") === "true"
+
+/** Le voci di una o piu' scelte a risposta: la parola, la riga sotto (se c'e'), se e' scelta. */
+export function voci(dentro: HTMLElement): string[] {
+  const tutte = [...within(dentro).queryAllByRole("radio"), ...within(dentro).queryAllByRole("checkbox")]
+  // nell'ordine del documento, radio e caselle insieme
+  tutte.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+  return tutte
+    .map((r) => {
+      const sotto = r.querySelector(".al-scelta__riga")?.textContent
+      const parola = r.querySelector(".al-scelta__testi > span")?.textContent ?? ""
+      return `${scelto(r) ? "[x] " : ""}${parola}${sotto ? ` / ${sotto}` : ""}`
+    })
+}
+
+/** Le prove di una domanda aperta: `parola=dato`, le righe del dato separate da ` | `. */
+export function prove(domanda: HTMLElement): string[] {
+  return [...domanda.querySelectorAll("dl.al-conf__centro-3 > dt")].map((dt) => {
+    const dd = dt.nextElementSibling as HTMLElement
+    return `${dt.textContent}=${[...dd.children].map((r) => r.textContent).join(" | ")}`
+  })
+}
+
+/** La parola di una pillola di stato, senza il segno (che e' `aria-hidden`). */
+export const parolaDi = (pillola: Element | null): string | null => pillola?.lastChild?.textContent ?? null
+
+/** Le parti di una domanda aperta: `capo: stato`, o il capo solo se la parte non ha stato. */
+export function parti(domanda: HTMLElement): string[] {
+  return [...domanda.querySelectorAll(".al-conf__colonna-19")].map((p) => {
+    const stato = parolaDi(p.querySelector(".al-conf__riga-13 > .al-conf__riga-7"))
+    const capo = p.querySelector(".al-conf__testo-13")?.textContent
+    return stato ? `${capo}: ${stato}` : `${capo}`
+  })
+}
+
+/** Lo stato di una domanda, aperta o chiusa: la parola della sua pillola. */
+export const statoDellaDomanda = (domanda: Element): string | null => parolaDi(domanda.querySelector(".al-conf__riga-7"))
+
+type Schema = components["schemas"]
+/** Una fabbrica di dati di prova: il dato vuoto dello schema, e la prova accende cio' che le serve. */
+const fatta =
+  <T,>(vuoto: T) =>
+  (parti: Partial<T> = {}): T => ({ ...vuoto, ...parti })
+
+/** La pagina di *Da confermare* come la manda `GET /api/v1/review`, tipata dallo schema: un campo
+ *  che il backend aggiunge fa rosso qui, non una sezione che cade su `undefined`. */
+export const daConfermare = fatta<Schema["ReviewOut"]>({
+  lookalikes: [],
+  filters: [],
+  rig_choices: [],
+  objects: [],
+  settled_objects: 0,
+  unclear: [],
+  gear: [],
+  filter_choices: [],
+  optics_choices: [],
+  typeless: [],
+  undated: [],
+  mosaics: [],
+  empty: false,
+  to_confirm: 0,
+  sections: [],
+})
+
+export const doppione = fatta<Schema["LookalikeOut"]>({
+  id: 1,
+  name: "",
+  frames: 0,
+  into_id: 2,
+  into_name: "",
+  into_frames: 0,
+  width_px: null,
+  height_px: null,
+  pixel_um: null,
+})
+
+export const filtroIgnoto = fatta<Schema["FilterOut"]>({
+  id: 1,
+  name: "",
+  brand: null,
+  model: null,
+  catalog_id: null,
+  passband: "UNKNOWN",
+  is_none: false,
+  bands: [],
+  frames: 0,
+  subjects: [],
+  rigs: [],
+})
+
+export const schedaAttrezzatura = fatta<Schema["GearSignature"]>({
+  key: "",
+  camera: null,
+  telescope: null,
+  width_px: null,
+  height_px: null,
+  pixel_um: null,
+  frames: 0,
+  asks_camera: false,
+  asks_optics: false,
+  asks_filter: false,
+  optics: null,
+  focal_mm: null,
+  focal_suggested: null,
+  answer: null,
+  complete: false,
+  subjects: SENZA_SOGGETTI,
+})
+
+export const schedaOggetto = fatta<Schema["ObjectCard"]>({
+  key: "",
+  name: null,
+  slug: null,
+  common_name: null,
+  method: null,
+  confidence: null,
+  searched: true,
+  nights: [],
+  rigs: [],
+  group: null,
+  frames: 0,
+  integration_s: 0,
+  untimed: 0,
+  candidates: [],
+  answer: null,
+})
+
+export const cartellaSenzaTipo = fatta<Schema["TypelessFolder"]>({
+  key: "",
+  frames: 0,
+  nights: [],
+  integration_s: 0,
+  untimed: 0,
+  answer: null,
+})
+
+export const postoIgnoto = fatta<Schema["UnclearCoordinates"]>({
+  key: "",
+  latitude: 0,
+  longitude: 0,
+  distance_km: null,
+  frames: 0,
+  nights: [],
+  site: null,
+  candidates: [],
+  subjects: SENZA_SOGGETTI,
+})
+
+export const cartellaSenzaData = fatta<Schema["UndatedFolder"]>({
+  key: "",
+  frames: 0,
+  integration_s: 0,
+  untimed: 0,
+  site: null,
+  file_nights: [],
+  rig_nights: [],
+  subjects: [],
+  rigs: [],
+  answer: null,
+})
+
+export const mosaicoProposto = fatta<Schema["MosaicCandidate"]>({
+  key: "",
+  ra_deg: 0,
+  dec_deg: 0,
+  object: "",
+  panels: 2,
+  frames: 0,
+  integration_s: 0,
+  untimed: 0,
+  nights: [],
+  answer: null,
+  answer_name: null,
+  names: [],
+  proposed: "",
+})
 
 /** Cio' che a schermo **non passa dal suo mattone**: i controlli scritti a mano e i pezzi di un
  * campo lasciati senza involucro.

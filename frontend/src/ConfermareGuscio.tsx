@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode, useState } from "react"
+import { type CSSProperties, type ReactNode, createContext, useState } from "react"
 
 import { gesto } from "./componenti/gesto"
 import type { CartaScheletro } from "./componenti/Scheletro"
@@ -35,6 +35,14 @@ export interface Misure {
   piedeVelo: string
   piedeFondo: string
   piedeNumero: string
+  titolo: string
+  titoloDomanda: string
+  riga: string
+  rigaDentro: string
+  domandaDentro: string
+  prove: string
+  proveStacco: string
+  campi: string
 }
 
 // [T] Da confermare.dc.html `L` (176-177) e `piede` (283): le misure della tavola v82
@@ -59,6 +67,14 @@ export const MISURE: Record<Formato, Misure> = {
     piedeVelo: "none",
     piedeFondo: "var(--carta)",
     piedeNumero: "30px",
+    titolo: "24px",
+    titoloDomanda: "22px",
+    riga: "minmax(0,1fr) minmax(0,1.4fr) 200px 104px",
+    rigaDentro: "12px 12px 12px 18px",
+    domandaDentro: "24px",
+    prove: "max-content minmax(0,1fr)",
+    proveStacco: "6px 20px",
+    campi: "repeat(auto-fit,minmax(220px,1fr))",
   },
   telefono: {
     colonne: "minmax(0,1fr)",
@@ -80,8 +96,19 @@ export const MISURE: Record<Formato, Misure> = {
     piedeVelo: "blur(18px) saturate(1.6)",
     piedeFondo: "color-mix(in srgb, var(--carta) 90%, transparent)",
     piedeNumero: "26px",
+    titolo: "22px",
+    titoloDomanda: "20px",
+    riga: "minmax(0,1fr) auto",
+    rigaDentro: "12px 12px 12px 16px",
+    domandaDentro: "18px",
+    prove: "minmax(0,1fr)",
+    proveStacco: "0",
+    campi: "minmax(0,1fr)",
   },
 }
+
+/** Il formato della pagina, per le domande e le sezioni: una casa, non un ascoltatore per riga. */
+export const FormatoConf = createContext<Formato>("desktop")
 
 // [T] Da confermare.dc.html `SK` (299-300): lo scheletro con le carte della pagina
 export const SCHELETRO: Record<Formato, CartaScheletro[]> = {
@@ -137,21 +164,28 @@ export const SCHELETRO: Record<Formato, CartaScheletro[]> = {
   ],
 }
 
+/** Lo stato di una parte di una domanda: come una risposta, o ancora da indicare. */
+export type StatoParte = StatoRisposta | "indicare"
+
 // [T] Da confermare.dc.html `PL` (178-180): segno e colori di ogni stato, mai il colore da solo
-const PILLOLE: Record<
-  StatoRisposta,
-  { segno: string; fondo: string; testo: string; anello: string }
-> = {
-  dare: { segno: "○", fondo: "transparent", testo: "var(--testo)", anello: "var(--tenue)" }, // glifo-ok: segno della tavola
-  ora: { segno: "●", fondo: "var(--scelta)", testo: "var(--scelta-testo)", anello: "transparent" }, // glifo-ok: segno della tavola
-  salvata: {
-    segno: "✓", // glifo-ok: segno della tavola
-    fondo: "var(--buono-fondo)",
-    testo: "var(--buono-testo)",
-    anello: "transparent",
-  },
-  cambiata: { segno: "◐", fondo: "transparent", testo: "var(--testo)", anello: "var(--accento)" }, // glifo-ok: segno della tavola
-}
+const PILLOLE: Record<StatoParte, { segno: string; fondo: string; testo: string; anello: string }> =
+  {
+    indicare: { segno: "○", fondo: "transparent", testo: "var(--testo)", anello: "var(--tenue)" }, // glifo-ok: segno della tavola
+    dare: { segno: "○", fondo: "transparent", testo: "var(--testo)", anello: "var(--tenue)" }, // glifo-ok: segno della tavola
+    ora: {
+      segno: "\u25cf",
+      fondo: "var(--scelta)",
+      testo: "var(--scelta-testo)",
+      anello: "transparent",
+    }, // glifo-ok: segno della tavola
+    salvata: {
+      segno: "✓", // glifo-ok: segno della tavola
+      fondo: "var(--buono-fondo)",
+      testo: "var(--buono-testo)",
+      anello: "transparent",
+    },
+    cambiata: { segno: "◐", fondo: "transparent", testo: "var(--testo)", anello: "var(--accento)" }, // glifo-ok: segno della tavola
+  }
 
 const TIPI: Record<StatoRisposta, Chiave> = {
   dare: "review.type.open",
@@ -166,7 +200,21 @@ export const spenta = (ferma: boolean): CSSProperties => ({
   pointerEvents: ferma ? "none" : "auto",
 })
 
-export function Pillola({ stato, children }: { stato: StatoRisposta; children: ReactNode }) {
+// [T] Da confermare.dc.html `PL` (178-180): la parola di ogni stato
+const PAROLE: Record<StatoParte, Chiave> = {
+  dare: "review.state.open",
+  ora: "review.state.inHand",
+  salvata: "review.state.saved",
+  cambiata: "review.state.changed",
+  indicare: "review.gear.toGive",
+}
+
+/** La pillola con la parola del suo stato. */
+export const PillolaDi = ({ stato }: { stato: StatoParte }) => (
+  <Pillola stato={stato}>{t(PAROLE[stato])}</Pillola>
+)
+
+export function Pillola({ stato, children }: { stato: StatoParte; children: ReactNode }) {
   const p = PILLOLE[stato]
   return (
     <span

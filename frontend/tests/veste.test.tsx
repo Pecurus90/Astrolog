@@ -16,27 +16,32 @@
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 
-import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { PAGINE } from "../src/pagine"
 import { voceArchivio } from "./archivio-banco"
-import { SALUTE, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga, rispondi, vai, vaiASezione } from "./banco"
+import {
+  SALUTE,
+  STANOTTE,
+  cartellaSenzaData,
+  cartellaSenzaTipo,
+  daConfermare,
+  disegna,
+  fuoriDaiMattoni,
+  impostazioni,
+  mosaicoProposto,
+  pulisci,
+  riga,
+  rispondi,
+  scelta,
+  vai,
+  vaiASezione,
+} from "./banco"
 
 afterEach(pulisci)
 
-const PAGINA = {
-  to_confirm: 0,
-  lookalikes: [],
-  filters: [],
-  objects: [],
-  mosaics: [],
-  unclear: [],
-  filter_choices: [],
-  gear: [],
-  rig_choices: [],
-  typeless: [],
-}
+const PAGINA = daConfermare()
 
 function aperta() {
   rispondi({
@@ -57,11 +62,7 @@ describe("una riga di Da confermare", () => {
       ...STANOTTE,
       "/api/v1/review": {
         stato: 200,
-        corpo: {
-          ...PAGINA,
-          to_confirm: 1,
-          typeless: [{ key: CARTELLA, frames: 120, answer: null }],
-        },
+        corpo: { ...PAGINA, to_confirm: 1, typeless: [cartellaSenzaTipo({ key: CARTELLA, frames: 120, nights: ["2024-05-17"] })] },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/health": { stato: 200, corpo: SALUTE },
@@ -69,52 +70,50 @@ describe("una riga di Da confermare", () => {
     })
   }
 
-  it("il nome viene per primo, e staccato da cio' che lo segue", async () => {
-    // Le prove trovano una riga dal testo con cui comincia, e chi ascolta la riconosce allo
-    // stesso modo. Lo **spazio** e' la meta' che non si vede: col solo `gap` della griglia il
-    // testo della riga sarebbe "D:/Astro/...dark120 frame", e a schermo sembrerebbe a posto.
+  it("il nome viene per primo, in un elemento suo, aperta e chiusa", async () => {
+    // Le prove trovano una domanda dal testo con cui comincia, e chi ascolta la riconosce allo
+    // stesso modo: dal nome. Aperta, il nome e' il titolo e apre il nome per chi ascolta.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const voce = riga(sezione, CARTELLA)
     expect(voce.textContent?.startsWith(CARTELLA)).toBe(true)
-    expect(voce.textContent).toContain(`${CARTELLA} `)
+    expect(voce.querySelector("h3")?.textContent).toBe(CARTELLA)
+    expect(voce.getAttribute("aria-label")?.startsWith(`${CARTELLA}, `)).toBe(true)
   })
 
-  it("la riga a cui hai risposto lo dice con una forma, non con un colore", async () => {
-    // WCAG 2.2, 1.4.1: chi non distingue i colori deve vedere lo stesso quali righe sta per
+  it("la domanda a cui hai risposto lo dice con una forma, non con un colore", async () => {
+    // WCAG 2.2, 1.4.1: chi non distingue i colori deve vedere lo stesso quali domande sta per
     // mandare. Lo stato ha un segno e una parola.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const voce = riga(sezione, CARTELLA)
-    const stato = () => voce.querySelector(".as-risposta")
-    expect(stato()?.className).toBe("as-risposta as-risposta--dare")
-    expect(stato()?.textContent).toBe("senza risposta")
-    fireEvent.click(within(voce).getByLabelText("Calibrazione"))
-    expect(stato()?.className).toBe("as-risposta as-risposta--ora")
-    expect(stato()?.textContent).toBe("da applicare")
+    const stato = () => voce.querySelector(".al-conf__riga-7") as HTMLElement
+    const segno = () => stato().querySelector("[aria-hidden=true]")?.textContent
+    expect(segno()).toBe("\u25CB")
+    expect(stato().lastChild?.textContent).toBe("senza risposta")
+    fireEvent.click(scelta(voce, "Calibrazione"))
+    expect(segno()).toBe("\u25CF")
+    expect(stato().lastChild?.textContent).toBe("da applicare")
   })
 
-  it("cio' che si puo' fare sta nella colonna delle risposte", async () => {
-    // La domanda aperta ha due colonne: di cosa si parla, e i controlli. Un controllo lasciato
-    // fuori dal corpo finirebbe in mezzo ai dati.
+  it("cio' che si puo' fare sta nelle parti della domanda, dopo le prove", async () => {
+    // La domanda aperta dice prima di cosa si parla, poi chiede. Un controllo lasciato fuori
+    // dalla sua parte finirebbe in mezzo ai dati.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const voce = riga(sezione, CARTELLA)
-    const scelta = within(voce).getByLabelText("Calibrazione")
-    expect(scelta.closest(".as-domanda__corpo")).not.toBeNull()
+    const parte = scelta(voce, "Calibrazione").closest(".al-conf__colonna-19")
+    expect(parte).not.toBeNull()
+    expect(voce.querySelector("dl.al-conf__centro-3")?.compareDocumentPosition(parte as Element)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
   })
 
-  it("i campi di due sezioni hanno il loro involucro, anche dietro un clic", async () => {
-    // **Si guarda dopo aver aperto.** Meta' dei campi di questa pagina non esiste finche' non si
-    // preme "Cambia" o "Completa la scheda": un conto fatto sulla pagina appena caricata torna
-    // zero perche' non li vede, non perche' vanno bene -- ed e' cosi' che uno di questi campi e'
-    // passato per due giri di revisione.
-    // **Due sezioni, non tutte**: una pagina piena esiste gia' in `accessibilita.test.tsx`, e
-    // ricopiarne qui la fixture sarebbe il doppione che questa fetta e' nata per togliere. Il
-    // giorno che quella fixture vive nel banco, questa prova le passa davanti tutte (Issue #13).
-    // Senza `.as-campo-modulo` (griglia) l'etichetta e il controllo diventano due elementi affiancati
-    // dentro `.as-riga__risposte`, che e' un flex allineato a destra: lo stesso campo si dispone
-    // in due modi nella stessa pagina.
+  it("i campi di due sezioni hanno il loro mattone e la loro etichetta, anche dietro un clic", async () => {
+    // **Si guarda dopo aver aperto.** I campi di questa pagina non esistono finche' non si
+    // preme "Cambia" o non si sceglie la strada che li apre: un conto fatto sulla pagina appena
+    // caricata torna zero perche' non li vede, non perche' vanno bene.
+    // Il mattone del foglio v82 e' `al-campo`, con l'etichetta della parte sopra (`label[for]`).
     rispondi({
       ...STANOTTE,
       "/api/v1/review": {
@@ -122,11 +121,9 @@ describe("una riga di Da confermare", () => {
         corpo: {
           ...PAGINA,
           to_confirm: 2,
-          typeless: [{ key: "D:/Astro/2024-05-17/dark", frames: 12, answer: null }],
-          // already a yes: its name field is open (the unnamed section left with ADR 0014 S3)
-          mosaics: [
-            { key: "impronta-m42", ra_deg: 83.8, dec_deg: -5.4, object: "M 42", panels: 3, frames: 90, integration_s: 10800, untimed: 0, answer: "yes", answer_name: "M 42", names: ["M 42"], proposed: "M 42" },
-          ],
+          undated: [cartellaSenzaData({ key: "D:/Astro/senza-data", frames: 12 })],
+          // gia' un si': il suo campo del nome e' aperto
+          mosaics: [mosaicoProposto({ key: "impronta-m42", ra_deg: 83.8, dec_deg: -5.4, object: "M 42", panels: 3, frames: 90, answer: "yes", answer_name: "M 42", names: ["M 42"], proposed: "M 42" })],
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -135,24 +132,30 @@ describe("una riga di Da confermare", () => {
     })
     await disegna()
     vai("/da-confermare")
-    await screen.findByRole("region", { name: /frame senza tipo/i })
-    // la sezione gia' risposta e' chiusa in una riga: si riapre, poi si apre la sua domanda. Una
-    // sola e' aperta alla volta, quindi si guarda dopo ogni apertura.
+    await screen.findByRole("region", { name: /frame senza data/i })
+    const campi = () => [...document.querySelectorAll<HTMLInputElement>(".al-conf__colonna-11 input")]
+    const nudi = () =>
+      campi()
+        .filter((c) => !c.classList.contains("al-campo") || document.querySelector(`label[for="${c.id}"]`) === null)
+        .map((c) => c.id || c.outerHTML)
+    // la data si scrive dietro la sua strada
+    fireEvent.click(screen.getByRole("radio", { name: /^Scrivo la data/ }))
+    // che i campi ci siano davvero si guarda prima: un elenco vuoto torna anche su una pagina
+    // senza campi, e questa prova diventerebbe verde per il motivo sbagliato
+    expect(campi()).toHaveLength(1)
+    expect(nudi()).toEqual([])
+    // la sezione gia' risposta e' chiusa in una riga: si riapre, poi si apre la sua domanda
     fireEvent.click(screen.getByRole("button", { name: /^riapri: mosaici/i }))
     fireEvent.click(screen.getByRole("button", { name: /^cambia: M 42/i }))
-    // che i campi ci siano davvero si guarda prima: `fuoriDaiMattoni` torna vuoto anche su una
-    // pagina senza campi, e questa prova diventerebbe verde per il motivo sbagliato
-    expect(document.querySelectorAll(".as-campo-modulo__etichetta, .as-campo-modulo__input").length).toBeGreaterThan(0)
-    expect(fuoriDaiMattoni()).toEqual([])
-    fireEvent.click(screen.getByRole("button", { name: /^rispondi: D:/i }))
-    expect(fuoriDaiMattoni()).toEqual([])
+    expect(campi()).toHaveLength(1)
+    expect(nudi()).toEqual([])
   })
 
   it("ogni sezione e' una carta, nella colonna delle sezioni della pagina portata", async () => {
     // La pagina sta nella colonna del telaio (`app-pagina`), col guscio della tavola v82.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
-    expect(sezione.className).toBe("as-carta as-conferma-sezione")
+    expect(sezione.className).toBe("al-conf__colonna-12")
     expect(sezione.parentElement?.className).toBe("al-conf__colonna-11")
     expect(sezione.closest(".al-conf__blocco-1")?.parentElement?.className).toBe("app-cornice app-pagina")
   })

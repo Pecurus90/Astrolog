@@ -307,12 +307,6 @@ il 12/11. Restano diverse dalla tavola:
 
 ## Da confermare -- Il guscio (passo 33, commit D1, 12/11)
 
-- **Cornice della sezione aperta.** Tavola: `al-conf__colonna-12` con testata `al-conf__colonna-13`
-  (`Da confermare.dc.html` 47-48), e sul telefono «← Tutti i tipi · caso k di n» (`al-conf__riga-8`,
-  42). App: la sezione disegna ancora la sua carta, testata e perche' (`Sezione.tsx`). Perche':
-  avvolgerla darebbe due h2 e due ancore; arriva col D2, con le sezioni.
-- **Caso prima / Caso dopo.** Tavola: `al-conf__griglia-1` sotto la colonna delle sezioni (85).
-  App: stessa griglia, dentro la carta del caso. Perche': come sopra, fino al D2.
 - **Rifiuto di Applica.** Tavola: esito `role="status"` (35). App: `role="alert"`. Perche': un
   rifiuto annulla tutte le risposte, si annuncia subito.
 - **Guasto di lettura ed elenco dei modelli che non risponde.** Prima: `alert`. App: `status`.
@@ -326,11 +320,47 @@ il 12/11. Restano diverse dalla tavola:
 - **Pagina ferma durante Applica.** Tavola: opacita' .45 e niente clic su indice e sezioni (`fz`,
   181). App: in piu' `inert`, anche sui tipi del telefono. Perche': cosi' anche la tastiera non
   tocca risposte che andrebbero perse.
-- **Un tipo sul telefono.** Tavola: si apre sulla prima domanda senza risposta (`vaiSez`, 167-169).
-  App: sul primo caso, come prima. Perche': il D1 non cambia il giro del telefono.
-- **`?sezione=senza-data`.** Tavola: apre «Frame senza data» (103). App: la sezione non ha ancora
-  domande a schermo, non si apre niente. Perche': la domanda arriva col D2.
 - **Rifiuto `model_contradicts_bands`.** Tavola: «Il filtro scelto per «O3» ha la banda Hα, i frame
   dicono OIII...» (358). App: «Il modello scelto non ha le bande indicate. Scegli un altro modello o
   un filtro nuovo. Nessuna modifica salvata.» Perche': l'API manda solo il codice, senza filtro ne'
   banda.
+
+## Da confermare -- Le domande (passo 33, commit D2, 12/11)
+
+Righe, domande, prove e parti sulle classi `al-conf__` (`Da confermare.dc.html` 46-78). Restano
+diverse dalla tavola:
+- **Strumenti duplicati, il titolo.** Tavola: il nome che resta («ZWO ASI2600MM Pro», 318). App: la
+  grafia che se ne va, «Si', unisci a» quella che resta. Perche': la domanda e' su quella grafia;
+  i frame della riga sono i suoi.
+- **Filtri, la ricerca nel catalogo.** Tavola: il campo parte scritto («antlia oiii», `cerca0`,
+  320). App: vuoto. Perche': nella tavola e' simulato; l'app non indovina la marca.
+- **Attrezzatura, l'Ottica accanto ad «Altra camera».** Tavola: sempre (203), anche con la parte
+  Ottica sotto. App: solo se la scheda non chiede l'ottica a parte. Perche': due campi per la
+  stessa ottica, e non si saprebbe quale vale.
+- **Attrezzatura, setup e ottica insieme.** Tavola: non lo dice. App: il setup parte per pezzi
+  scritti (camera, focale, ottica), un Applica solo (Issue #20); un setup senza focale parte da
+  solo, con la sua ottica.
+- **Attrezzatura, scheda a meta'.** Tavola: «senza risposta» finche' tutte le parti non hanno una
+  risposta (`stat`, 380). App: «da applicare» appena una parte e' in mano. Perche': e' lo stesso
+  conto di tacche, indice e piede.
+- **Oggetti, «Perche' l'app dubita».** Tavola: «metodo: nome nei file e plate solving», «fiducia
+  media: il centro del campo cade fra...» (322). App: «metodo: plate solving», «nome nei file» o
+  «nome storico nei file», e «fiducia bassa» o «alta» (Marco, 12/11). Perche': l'API non ha
+  «media», e la frase dopo i due punti e' simulata. A Design.
+- **Oggetti, «Altri frame».** Tavola: non c'e'. App: sotto «Oggetti nel campo», i frame senza
+  oggetti identificati o non risolti, in Attrezzatura e Frame senza sito. Perche': «non lo so» non
+  e' zero.
+- **Oggetti identificati sul telefono.** Tavola: il caso solo, senza elenco (276). App: uguale;
+  l'elenco c'e' solo se Oggetti non ha casi.
+- **Oggetti identificati, l'ordine.** Tavola: per nome (IC 1396, M 31, M 33, 351). App: l'ordine
+  dell'API, piu' frame prima (`review_page.py`). Perche': chi corregge cerca prima gli oggetti
+  con piu' ore; l'ordine e' del backend, la pagina non riordina.
+- **Oggetti identificati, «Vale per il frame».** Tavola: «Vale per tutti i 186 frame» (259). App:
+  con un frame solo «Vale per il frame.».
+- **Mosaici, l'aiuto del nome.** Tavola: «Nome proposto dall'app: l'oggetto con piu' frame nel
+  campo» (228). App: «Nome proposto dall'app: Sadr.». Perche': il backend propone l'oggetto di
+  catalogo al centro, o se non c'e' quello con piu' frame; il nome lo dice senza sbagliare il
+  perche'.
+- **Frame senza data, sito non dichiarato.** Tavola: «sul sito di Casa» (224). App: senza sito
+  «La notte comincia la sera di quel giorno.». Senza notti dello stesso setup «Scelgo una notte»
+  e' spenta.

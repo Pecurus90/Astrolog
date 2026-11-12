@@ -606,4 +606,34 @@ senza niente da chiedere lo dice: niente indice e niente piede - step 33, To con
 si va di caso in caso, e ai due capi di tipo in tipo - step 33, To confirm D1: the board v82 has Caso prima and Caso dopo only, off at the ends
 sopra i 900 la pagina resta quella larga: sezioni e indice - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
 una voce dell'indice porta alla sua sezione - step 33, To confirm D1: the board v82 shell rewrites confermare-pagina.test and confermare-telefono.test
+un oggetto in dubbio mostra cosa c'e' nel campo, e per ogni voce se e' nell'inquadratura - step 33, To confirm D2: board v82 candidates as answer pills with name and common name; rewritten in confermare-oggetti.test
+una correzione parte con le altre risposte, e la riga dice che e' da applicare - step 33, To confirm D2: board v82 settled objects corrected in a card under the row; rewritten in confermare-oggetti-a-posto.test
+Chiudi li toglie di nuovo - step 33, To confirm D2: board v82 settled objects have a toggle, no Close; replaced by the toggle test in confermare-oggetti-a-posto.test
+Correggi apre la scheda dell'oggetto col nome di adesso gia' scelto - step 33, To confirm D2: board v82 card under the row starts on Resta; rewritten in confermare-oggetti-a-posto.test
+anche la sezione %s dice cosa hai ripreso - step 33, To confirm D2: subjects tested per section in confermare-soggetti.test
+aperti sono righe senza stato, col gesto Correggi, venti per pagina - step 33, To confirm D2: board v82 shows 5 then 50 more; rewritten in confermare-oggetti-a-posto.test
+camera data e ottica ancora da dare: la scheda chiede l'ottica da sola - step 33, To confirm D2: board v82 asks optics whenever the card does; rewritten in confermare-attrezzatura.test
+chiusi sono un numero e un gesto, e non disegnano righe - step 33, To confirm D2: rewritten as the closed toggle test in confermare-oggetti-a-posto.test
+cio' che si puo' fare sta nella colonna delle risposte - step 33, To confirm D2: board v82 row layout; rewritten in veste.test
+e la risposta porta il catalog_id del modello scelto - step 33, To confirm D2: merged into the catalog test of confermare-filtri.test
+e' uno dei miei: la risposta e' l'unione, e si puo' tornare indietro - step 33, To confirm D2: board v82 own filters as pills; rewritten in confermare-filtri.test
+i campi di due sezioni hanno il loro involucro, anche dietro un clic - step 33, To confirm D2: board v82 fields are al-campo with label; rewritten in veste.test
+i frame senza nome si chiamano con la loro notte, e dicono camera, puntamento e ore - step 33, To confirm D2: board v82 titles them Frame senza nome, night in the proofs; rewritten in confermare-oggetti.test
+i tre modi sono pillole, se ne vede uno alla volta, e cambiarlo toglie la risposta - step 33, To confirm D2: the answer follows the chosen way, the others stay written; rewritten in confermare-filtri.test
+il filtro: a colori si sceglie solo a camera data, e uno dei propri vuole dire quale - step 33, To confirm D2: board v82 switches off all three until the camera is known; rewritten in confermare-attrezzatura.test
+il nome viene per primo, e staccato da cio' che lo segue - step 33, To confirm D2: the name in an element of its own; rewritten in veste.test
+in fondo dice quanti oggetti sono gia' riconosciuti - step 33, To confirm D2: board v82 says N oggetti identificati; rewritten in confermare-oggetti-a-posto.test
+l'elenco dei modelli e' il mattone del foglio, e si sceglie anche da tastiera - step 33, To confirm D2: board v82 Modelli trovati listbox; rewritten in confermare-filtri.test
+la riga a cui hai risposto lo dice con una forma, non con un colore - step 33, To confirm D2: board v82 state pills with sign and word; rewritten in confermare-domande.test
+la riga dice a chi somiglia, e con quante pose - step 33, To confirm D2: board v82 proofs Simile a, Sensore, Altri frame; rewritten in confermare-stesso-pezzo.test
+la voce vuota toglie la risposta, invece di mandarne una vuota - step 33, To confirm D2: pills have no empty item; replaced by the own filter without choice test in confermare-filtri.test
+le pagine vanno avanti e indietro, e si fermano ai due capi - step 33, To confirm D2: board v82 has no pages of 20, Mostra altri 50 instead
+le scelte fisse sono il mattone del foglio, e la domanda resta per chi ascolta - step 33, To confirm D2: answers are PillolaScelta radiogroups named by the question; rewritten in confermare-domande.test
+lo stato di una risposta ha quattro forme, ognuna con la sua parola - step 33, To confirm D2: rewritten on the board v82 pills in confermare-domande.test
+scelto uno dei miei e poi scritto a mano, parte il nome scritto e non l'unione - step 33, To confirm D2: renamed, the written filter needs a band; in confermare-filtri.test
+scrivendo nella tendina l elenco si restringe - step 33, To confirm D2: board v82 search field, every word matched; rewritten in confermare-filtri.test
+se l elenco dei modelli non risponde, lo dice invece di sembrare vuoto - step 33, To confirm D2: the notice moves into the question, catalog switched off; rewritten in confermare-filtri.test
+senza domande aperte la sezione c'e' lo stesso: gli oggetti a posto si correggono da li' - step 33, To confirm D2: renamed to oggetti identificati in confermare-oggetti-a-posto.test
+un clic sbagliato si corregge: si sceglie un altro modello, o un altro modo - step 33, To confirm D2: renamed with strada, the chosen model stays in view; in confermare-filtri.test
+un oggetto a posto senza sigla (una cometa, un nome scritto) si apre col suo nome nel campo - step 33, To confirm D2: board v82 correction card starts on Resta, no name field
 test_a_second_no_filter_row_is_refused_with_its_code - step 33, To confirm A: board v82 says a second "no filter" joins the row already there; replaced by test_a_second_no_filter_joins_the_one_already_there_and_says_so

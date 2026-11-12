@@ -11,11 +11,17 @@ type Banda = components["schemas"]["BandIn"]["band"]
  * generato: l'elenco sotto lo ripete per l'ordine in cui si leggono, e il compilatore controlla che
  * non ne manchi nessuna e che non ce ne sia una in piu'.
  */
-const BANDE = ["L", "R", "G", "B", "HA", "HB", "OIII", "SII"] as const satisfies readonly Banda[]
+export const BANDE = ["L", "R", "G", "B", "HA", "HB", "OIII", "SII"] as const satisfies readonly Banda[]
 type Mancanti = Exclude<Banda, (typeof BANDE)[number]>
 // se il backend aggiunge una banda, questa riga non compila finche' non entra nell'elenco
 const _tutte: [Mancanti] extends [never] ? true : Mancanti = true
 void _tutte
+
+// [T] Da confermare.dc.html `BANDE` (349): come si scrivono, uguali in ogni lingua
+const SCRITTE: Partial<Record<Banda, string>> = { HA: "H\u03b1", HB: "H\u03b2" }
+
+/** Una banda come si legge: H-alfa con la lettera greca, `OIII` com'e'. */
+export const nomeDellaBanda = (b: Banda): string => SCRITTE[b] ?? b
 
 
 export function TendinaDellaBanda({

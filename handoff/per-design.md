@@ -36,6 +36,17 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
   confermata il 10/11: catalogo.js le ha in italiano; (c) i nomi comuni arrivano dal catalogo in
   inglese («Andromeda Galaxy»); (d) Sole, Sistema solare e Aggiungi oggetto restano fuori finche'
   non c'e' una sorgente (ADR 0019). Allineare la tavola.
+- [da dare] Da confermare, porting delle domande (12/11): (a) «Perche' l'app dubita» dice due
+  righe, «metodo: plate solving» (o «nome nei file», «nome storico nei file») e «fiducia bassa» o
+  «alta» (Marco, 12/11): la fiducia «media» e la frase dopo i due punti non esistono; (b)
+  l'aiuto del mosaico dice il nome proposto («Nome proposto dall'app: Sadr. Si cambia.»): il
+  backend propone l'oggetto di catalogo al centro, non sempre quello con piu' frame; (c) il campo
+  Ottica accanto ad «Altra camera» c'e' solo se la scheda non chiede l'ottica a parte; (d) Frame
+  senza data senza sito dichiarato: «La notte comincia la sera di quel giorno.»; (e) gli oggetti
+  identificati vengono nell'ordine dell'API, piu' frame prima; (f) errore della tavola, uguale
+  nell'app: nella risposta scelta (`al-scelta--risposta`, `aria-checked`) il tondo e la riga
+  sotto quasi spariscono, bordo `rgb(31,20,6)` su fondo `rgb(24,24,28)` (si vede in «Resta M 31»).
+  Allineare la tavola. Dettaglio in `differenze-dalle-tavole.md`.
 ## Date, da controllare alla consegna
 
 - [fatta v82] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un

@@ -49,7 +49,8 @@ di frame senza nome e senza cielo (chiave `frames:` e la chiave del gruppo). La 
 oggetto". In cima le domande -- i gruppi e i dubbi (`identity_confidence = 'low'`) senza
 risposta --, coi **candidati che il cielo ha trovato nel suo campo** da cliccare quando ne ha
 trovati; zero candidati e' una scheda come le altre. Le schede degli oggetti che l'app sa, senza
-niente da scegliere, stanno chiuse e si aprono a pagine, coi conteggi.
+niente da scegliere, stanno chiuse e si aprono a pagine, coi conteggi: a schermo 5, poi 50 alla
+volta, e si correggono a scheda sotto la riga (tavola v82).
 
 **"Non e' un oggetto" vale anche su un oggetto trovato** (Marco, 6/10/2026): uno scatto di prova,
 una messa a fuoco. Si scrive sull'impronta di ogni frame della scheda, fissati al momento della

@@ -18,8 +18,6 @@ src/Campo.tsx
 src/CartaDelParametro.tsx
 src/ChiaveMeteoblue.tsx
 src/CieloDelleNubi.tsx
-src/Confermare.tsx
-src/Domanda.tsx
 src/FiltriUsati.tsx
 src/GestiDelPezzo.tsx
 src/Icons.tsx
@@ -38,15 +36,6 @@ src/ScalaDelCielo.tsx
 src/SchedaDelPezzo.tsx
 src/SchedaDelSito.tsx
 src/Semaforo.tsx
-src/Sezione.tsx
-src/SezioneAttrezzatura.tsx
-src/SezioneFiltri.tsx
-src/SezioneLuoghi.tsx
-src/SezioneMosaici.tsx
-src/SezioneOggetti.tsx
-src/SezioneSenzaTipo.tsx
-src/SezioneStessoPezzo.tsx
-src/Soggetti.tsx
 src/Tendina.tsx
 src/TendinaDellaBanda.tsx
 src/Vuoto.tsx

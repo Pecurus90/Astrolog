@@ -1,11 +1,10 @@
 import { useState } from "react"
-import { CampoConScelte } from "./CampoConScelte"
-import { Scelte } from "./Scelte"
-import { Domanda } from "./Domanda"
+
+import { statoDi } from "./ConfermareGuscio"
+import { Campi, Domanda, Parte, Risposte, righeDelleNotti, rigaDeiFrame, voce } from "./Domanda"
 import { Sezione } from "./Sezione"
 import type { components } from "./api/schema"
-import { TempoDellePose } from "./TempoDellePose"
-import { type Chiave, cielo, numero, t } from "./i18n"
+import { type Chiave, cielo, t } from "./i18n"
 import { testo } from "./scritto"
 
 type Mosaico = components["schemas"]["MosaicCandidate"]
@@ -16,11 +15,9 @@ type Parola = Risposta["answer"]
  * Le regioni riprese a **pannelli affiancati**: l'app le propone come mosaico, **non le fonde**.
  *
  * - **Si risponde con la chiave del mosaico**, che non cambia quando cambia la camera.
- * - **Un no e' una risposta come un si'**, e resta: senza, l'unico modo di far tacere una proposta
- *   sbagliata sarebbe accettarla. Ridare la stessa non manda niente.
- * - **Il si' dice di cosa**: una domanda sola, col campo gia' compilato con la proposta del backend.
- * - **La riga dice la regione**: lo stesso soggetto ripreso in due parti sono due proposte, e senza
- *   il centro sarebbero due righe con lo stesso nome.
+ * - **Un no e' una risposta come un si'**, e resta. Ridare la risposta salvata non manda niente.
+ * - **Il si' dice di cosa**: il campo arriva compilato col nome proposto dal backend.
+ * - **La domanda dice la regione**: lo stesso soggetto in due parti sono due proposte.
  */
 export function SezioneMosaici({
   mosaici,
@@ -32,94 +29,106 @@ export function SezioneMosaici({
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
   return (
-    <Sezione quale="mosaics" domanda={t("review.mosaics.why")}
+    <Sezione
+      quale="mosaics"
+      domanda={t("review.mosaics.why")}
       voci={mosaici}
       chiave={(m) => m.key}
-      riga={(m) => <RigaMosaici mosaico={m} risposta={risposte[m.key]} onRisposta={onRisposta} />}
+      riga={(m, indice) => (
+        <RigaMosaici
+          indice={indice}
+          mosaico={m}
+          risposta={risposte[m.key]}
+          onRisposta={onRisposta}
+        />
+      )}
     />
   )
 }
 
 function RigaMosaici({
+  indice,
   mosaico,
   risposta,
   onRisposta,
 }: {
+  indice: number
   mosaico: Mosaico
   risposta: Risposta | undefined
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
-  const chiave = mosaico.key
   const dove = cielo(mosaico.ra_deg, mosaico.dec_deg)
-  // La scelta e il nome sono della riga e non dell'accumulatore: ridando la risposta gia' salvata
-  // la voce nell'accumulatore si toglie, e un campo che leggesse da li' si svuoterebbe sotto le dita.
+  // Scelta e nome sono della riga: ridando la risposta salvata la voce in mano si toglie, e un
+  // campo che leggesse da li' si svuoterebbe sotto le dita.
   const [scelta, setScelta] = useState<Parola | null>(risposta?.answer ?? mosaico.answer ?? null)
-  // Parte dal nome in mano, se c'e': la sezione si rimonta quando si chiude e si riapre.
   const [nome, setNome] = useState(risposta?.name ?? mosaico.answer_name ?? mosaico.proposed)
-  const idCampo = `mosaico-nome-${chiave}`
 
   const manda = (parola: Parola, scritto: string) => {
     setScelta(parola)
     setNome(scritto)
     const punto = { key: mosaico.key }
     if (parola === "no") {
-      onRisposta(chiave, mosaico.answer === "no" ? null : { ...punto, answer: "no" })
+      onRisposta(mosaico.key, mosaico.answer === "no" ? null : { ...punto, answer: "no" })
       return
     }
     // un si' senza nome non parte: il backend lo rifiuterebbe, e con lui tutto l'Applica
     const detto = testo(scritto, mosaico.answer === "yes" ? mosaico.answer_name : null)
-    onRisposta(chiave, detto ? { ...punto, answer: "yes", name: detto.trim() } : null)
+    onRisposta(mosaico.key, detto ? { ...punto, answer: "yes", name: detto.trim() } : null)
   }
 
-  const detta = risposta?.answer ?? mosaico.answer
-  const dettoDi = risposta?.name ?? mosaico.answer_name ?? ""
-  const si = t(PAROLE.yes)
-  const no = t(PAROLE.no)
+  const detto = (parola: Parola | null, di: string | null) =>
+    parola === "yes"
+      ? di
+        ? t("review.mosaics.yesNamed", { nome: di })
+        : null
+      : parola === "no"
+        ? t(PAROLE.no)
+        : null
+  // In breve la risposta che c'e', in mano o salvata: un si' col nome svuotato non e' una risposta.
+  const breve = risposta
+    ? detto(risposta.answer, risposta.name ?? null)
+    : detto(mosaico.answer, mosaico.answer_name)
+  const domanda = t("review.mosaics.question", { soggetti: mosaico.object, dove })
   return (
     <Domanda
-      id={`mosaics:${chiave}`}
+      id={`mosaics:${mosaico.key}`}
       voce={`${mosaico.object}, ${dove}`}
-      nome={<span className="as-nome-oggetto">{mosaico.object}</span>}
-      frames={mosaico.frames}
-      salvata={mosaico.answer !== null}
-      inMano={risposta !== undefined}
-      era={mosaico.answer ? t(PAROLE[mosaico.answer]) : undefined}
-      // In breve si legge la risposta che c'e' -- in mano o salvata --, non la scelta a meta':
-      // un si' col nome svuotato non e' una risposta.
-      breve={detta ? <b>{detta === "yes" ? `${si}: ${dettoDi}` : no}</b> : `${si} \u00b7 ${no}`}
-      accanto={t("review.mosaics.panels", { n: numero(mosaico.panels) })}
+      nome={mosaico.object}
+      frame={rigaDeiFrame(mosaico.frames, mosaico.integration_s, mosaico.untimed, mosaico.panels)}
+      stato={statoDi(mosaico.answer !== null, risposta !== undefined)}
+      era={detto(mosaico.answer, mosaico.answer_name) ?? undefined}
+      detta={breve !== null}
+      breve={breve ?? RISPOSTE.map(([, parola]) => t(parola)).join(" \u00b7 ")}
       prova={[
-        ...(mosaico.integration_s > 0 || mosaico.untimed > 0
-          ? [
-              {
-                nome: t("review.proof.time"),
-                dato: <TempoDellePose secondi={mosaico.integration_s} senzaTempo={mosaico.untimed} stacco={" \u00b7 "} />,
-              },
-            ]
+        ...(mosaico.names.length > 0
+          ? [{ nome: t("review.proof.inField"), righe: [mosaico.names.join(", ")] }]
           : []),
-        // La regione dice QUALE: lo stesso soggetto ripreso in due parti fa due domande.
-        { nome: t("review.proof.where"), dato: dove },
+        ...(mosaico.nights.length > 0
+          ? [{ nome: t("review.proof.night"), righe: righeDelleNotti(mosaico.nights) }]
+          : []),
       ]}
     >
-      <Scelte
-        domanda={t("review.mosaics.question", { soggetti: mosaico.object, dove })}
-        nome={`mosaico-${chiave}`}
-        opzioni={RISPOSTE.map(([valore, parola]) => ({ valore, etichetta: t(parola) }))}
-        scelta={scelta}
-        onScelta={(valore) => manda(valore, nome)}
-      >
-        {/* Col si' si dice anche DI COSA, e il campo arriva gia' compilato con la proposta. I
-            soggetti dei pannelli sono i suggerimenti. L'etichetta dice quale mosaico. */}
+      <Parte capo={domanda} prima>
+        <Risposte
+          etichetta={domanda}
+          opzioni={RISPOSTE.map(([parola, chiave]) =>
+            voce(scelta === parola, t(chiave), () => manda(parola, nome)),
+          )}
+        />
         {scelta === "yes" && (
-          <CampoConScelte
-            id={idCampo}
-            etichetta={t("review.mosaics.name", { dove })}
-            valore={nome}
-            scelte={mosaico.names}
-            onScrivi={(scritto) => manda("yes", scritto)}
+          <Campi
+            campi={[
+              {
+                id: `mosaico-nome-${indice}`,
+                etichetta: t("review.mosaics.name", { dove }),
+                valore: nome,
+                onValore: (scritto) => manda("yes", scritto),
+                aiuto: t("review.mosaics.proposed", { nome: mosaico.proposed }),
+              },
+            ]}
           />
         )}
-      </Scelte>
+      </Parte>
     </Domanda>
   )
 }

@@ -2,7 +2,22 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, SENZA_SOGGETTI, STANOTTE, cambia, chiamate, disegna, impostazioni, pulisci, rispondi, vai } from "./banco"
+import {
+  SALUTE,
+  STANOTTE,
+  cambia,
+  cartellaSenzaData,
+  cartellaSenzaTipo,
+  chiamate,
+  daConfermare,
+  disegna,
+  doppione,
+  impostazioni,
+  postoIgnoto,
+  pulisci,
+  rispondi,
+  vai,
+} from "./banco"
 
 afterEach(pulisci)
 
@@ -11,25 +26,14 @@ afterEach(pulisci)
  * il piede e l'esito. Cio' che una sezione chiede lo provano i file delle sezioni.
  */
 
-const PAGINA = {
+const PAGINA = daConfermare({
   to_confirm: 2,
-  lookalikes: [
-    { id: 4, name: "ATR2600M(USB2.0)", frames: 38, into_id: 1, into_name: "ATR2600M", into_frames: 412 },
-  ],
-  filters: [],
-  filter_choices: [],
-  objects: [],
-  gear: [],
-  rig_choices: [],
-  optics_choices: [],
-  settled_objects: 0,
-  unclear: [],
-  mosaics: [],
+  lookalikes: [doppione({ id: 4, name: "ATR2600M(USB2.0)", frames: 38, into_id: 1, into_name: "ATR2600M", into_frames: 412 })],
   typeless: [
-    { key: "D:/Astro/dark", frames: 120, answer: null },
-    { key: "D:/Astro/M51", frames: 30, answer: "light" },
+    cartellaSenzaTipo({ key: "D:/Astro/dark", frames: 120 }),
+    cartellaSenzaTipo({ key: "D:/Astro/M51", frames: 30, answer: "light" }),
   ],
-}
+})
 
 const VUOTA = { ...PAGINA, to_confirm: 0, lookalikes: [], typeless: [] }
 const APPLICATO = { changed: 1, requeued: 320, run_started: true, none_filter_existed: false }
@@ -104,10 +108,9 @@ describe("Da confermare -- il guscio della pagina", () => {
     const senzaTipo = screen.getByRole("region", { name: "Frame senza tipo" })
     expect(sezioni.contains(senzaTipo)).toBe(true)
     // accanto al titolo quante domande ha la sezione
-    expect(senzaTipo.querySelector(".as-conferma-sezione__quante")?.textContent).toBe("2 domande")
-    expect(
-      screen.getByRole("region", { name: "Strumenti duplicati" }).querySelector(".as-conferma-sezione__quante")?.textContent,
-    ).toBe("1 domanda")
+    const quante = (s: HTMLElement) => s.querySelector("header .al-conf__riga-11 > .al-conf__testo-10")?.textContent
+    expect(quante(senzaTipo)).toBe("2 domande")
+    expect(quante(screen.getByRole("region", { name: "Strumenti duplicati" }))).toBe("1 domanda")
 
     // il piede: niente in mano, e Applica spento
     expect(piede()?.className).toBe("al-conf__riga-17")
@@ -155,7 +158,7 @@ describe("Da confermare -- il guscio della pagina", () => {
     fireEvent.click(screen.getByRole("radio", { name: /sono distinti/i }))
     fireEvent.click(voce("Frame senza tipo"))
     expect(voce("Frame senza tipo").getAttribute("aria-current")).toBe("true")
-    expect(document.querySelector("article.as-domanda")?.getAttribute("aria-label")).toBe("D:/Astro/dark")
+    expect(document.querySelector("article.al-conf__colonna-16")?.getAttribute("aria-label")).toBe("D:/Astro/dark, senza risposta")
     expect(screen.queryByRole("region", { name: "Strumenti duplicati" })).toBeNull()
     // dall'indice si riapre
     fireEvent.click(voce("Strumenti duplicati"))
@@ -345,12 +348,20 @@ describe("Da confermare -- il guscio della pagina", () => {
     aperta({
       ...PAGINA,
       unclear: [
-        { key: "45.85,11.58", latitude: 45.85, longitude: 11.58, distance_km: 16.2, frames: 391, nights: ["2024-05-17"], site: null, candidates: [{ id: 1, name: "Casa", distance_km: 16.2 }], subjects: SENZA_SOGGETTI },
+        postoIgnoto({ key: "45.85,11.58", latitude: 45.85, longitude: 11.58, distance_km: 16.2, frames: 391, nights: ["2024-05-17"], candidates: [{ id: 1, name: "Casa", distance_km: 16.2 }] }),
       ],
     })
     await apri("/da-confermare?sezione=siti")
     const voce = within(await screen.findByRole("navigation", { name: "Sezioni" })).getByRole("link", { name: /^Frame senza sito/ })
     expect(voce.getAttribute("aria-current")).toBe("true")
-    expect(document.querySelector("article.as-domanda")?.closest("section")?.id).toBe("frame-senza-sito")
+    expect(document.querySelector("article.al-conf__colonna-16")?.closest("section")?.id).toBe("frame-senza-sito")
+  })
+
+  it("dall'indirizzo si entra nei frame senza data: ?sezione=senza-data", async () => {
+    aperta({ ...PAGINA, undated: [cartellaSenzaData({ key: "D:/Astro/senza-data", frames: 12 })] })
+    await apri("/da-confermare?sezione=senza-data")
+    const voce = within(await screen.findByRole("navigation", { name: "Sezioni" })).getByRole("link", { name: /^Frame senza data/ })
+    expect(voce.getAttribute("aria-current")).toBe("true")
+    expect(document.querySelector("article.al-conf__colonna-16")?.closest("section")?.id).toBe(voce.getAttribute("href")?.slice(1))
   })
 })

@@ -1,7 +1,15 @@
 import { memo } from "react"
 
-import { Scelte } from "./Scelte"
-import { Domanda } from "./Domanda"
+import { statoDi } from "./ConfermareGuscio"
+import {
+  Domanda,
+  Parte,
+  provaDellaDurata,
+  Risposte,
+  righeDelleNotti,
+  rigaDeiFrame,
+  voce,
+} from "./Domanda"
 import { type PerGruppo, Sezione } from "./Sezione"
 import type { components } from "./api/schema"
 import { type Chiave, t } from "./i18n"
@@ -14,16 +22,10 @@ type Scelta = Risposta["kind"]
  * I file che non dicono **che file sono**: una domanda per cartella, quella che li contiene. La
  * risposta vale anche per i file che arriveranno li' dentro.
  *
- * - **Due risposte e basta** -- foto del cielo, file di calibrazione -- e sono poche e fisse:
- *   quindi il gruppo di scelte comune (`Scelte`), come le altre sezioni che chiedono "quale di
- *   queste".
- * - **Non c'e' un "non lo so"**: non saperlo e' gia' lo stato di partenza, e una terza scelta non
- *   toglierebbe quei frame da nessuna parte.
- * - **Una cartella risposta resta in pagina** con la sua risposta, e si cambia: basta scegliere
- *   l'altra. Riscegliere quella gia' data toglie la risposta dall'accumulatore, perche'
- *   rimandarla rimetterebbe in coda quei frame per non cambiare niente.
- * - **Cio' che il cielo ha trovato non si mostra**, a differenza delle altre sezioni per gruppo:
- *   su quei frame il cielo non ha saputo dire, e un elenco vuoto sembrerebbe una risposta.
+ * - **Due risposte e basta**, Light e Calibrazione; non c'e' un "non lo so": non saperlo e' gia'
+ *   lo stato di partenza.
+ * - **Una cartella risposta resta in pagina** con la sua risposta, e si cambia scegliendo l'altra.
+ *   Riscegliere quella salvata toglie la risposta in mano: rimandarla non cambierebbe niente.
  * - **E' memorizzata**: ogni risposta, in qualunque sezione, riscrive l'accumulatore della pagina.
  */
 export const SezioneSenzaTipo = memo(function SezioneSenzaTipo({
@@ -32,12 +34,12 @@ export const SezioneSenzaTipo = memo(function SezioneSenzaTipo({
   onRisposta,
 }: PerGruppo<Gruppo, Risposta>) {
   return (
-    <Sezione quale="typeless" domanda={t("review.typeless.why")}
+    <Sezione
+      quale="typeless"
+      domanda={t("review.typeless.why")}
       voci={gruppi}
       chiave={(g) => g.key}
-      riga={(g) => (
-        <RigaSenzaTipo gruppo={g} risposta={risposte[g.key]} onRisposta={onRisposta} />
-      )}
+      riga={(g) => <RigaSenzaTipo gruppo={g} risposta={risposte[g.key]} onRisposta={onRisposta} />}
     />
   )
 })
@@ -51,40 +53,44 @@ function RigaSenzaTipo({
   risposta: Risposta | undefined
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
-  // Cio' che si vede scelto e' la risposta appena data, se c'e', altrimenti quella gia' salvata:
-  // leggendo solo la salvata, chi sceglie non vedrebbe succedere niente finche' non applica.
+  // Si vede scelta la risposta appena data, se c'e', altrimenti quella gia' salvata.
   const scelta = risposta?.kind ?? gruppo.answer
+  const durata = provaDellaDurata(gruppo.integration_s, gruppo.untimed)
+  const domanda = t("review.typeless.question", { cartella: gruppo.key })
   return (
     <Domanda
       id={`typeless:${gruppo.key}`}
       voce={gruppo.key}
       nome={gruppo.key}
-      cifre
-      frames={gruppo.frames}
-      salvata={gruppo.answer !== null}
-      inMano={risposta !== undefined}
+      frame={rigaDeiFrame(gruppo.frames)}
+      stato={statoDi(gruppo.answer !== null, risposta !== undefined)}
       era={gruppo.answer ? t(PAROLE[gruppo.answer]) : undefined}
-      // La risposta e' la scelta stessa, in evidenza: non una parola accanto alle due voci.
-      breve={scelta ? <b>{t(PAROLE[scelta])}</b> : SCELTE.map(([, parola]) => t(parola)).join(" \u00b7 ")}
+      detta={scelta !== null}
+      breve={scelta ? t(PAROLE[scelta]) : SCELTE.map(([, parola]) => t(parola)).join(" \u00b7 ")}
+      prova={[
+        ...(gruppo.nights.length > 0
+          ? [{ nome: t("review.proof.night"), righe: righeDelleNotti(gruppo.nights) }]
+          : []),
+        ...(durata ? [durata] : []),
+      ]}
     >
-      <Scelte
-        domanda={t("review.typeless.question", { cartella: gruppo.key })}
-        nome={`senza-tipo-${gruppo.key}`}
-        opzioni={SCELTE.map(([valore, parola]) => ({ valore, etichetta: t(parola) }))}
-        scelta={scelta}
-        onScelta={(kind) =>
-          onRisposta(gruppo.key, kind === gruppo.answer ? null : { key: gruppo.key, kind })
-        }
-      />
+      <Parte capo={domanda} prima>
+        <Risposte
+          etichetta={domanda}
+          opzioni={SCELTE.map(([kind, parola]) =>
+            voce(scelta === kind, t(parola), () =>
+              onRisposta(gruppo.key, kind === gruppo.answer ? null : { key: gruppo.key, kind }),
+            ),
+          )}
+        />
+      </Parte>
     </Domanda>
   )
 }
 
-/** Le due risposte, sul tipo generato: il giorno che il backend ne aggiunge una, qui non compila
- *  finche' qualcuno non le da' un nome. */
+/** Le due risposte, sul tipo generato: una nuova non compila finche' non ha un nome. */
 const PAROLE: Record<Scelta, Chiave> = {
   light: "review.typeless.light",
   calibration: "review.typeless.calibration",
 }
 const SCELTE = Object.entries(PAROLE) as [Scelta, Chiave][]
-

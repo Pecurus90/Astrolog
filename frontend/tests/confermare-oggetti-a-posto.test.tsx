@@ -2,64 +2,65 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, impostazioni, pulisci, riga, rispondi, scritture, vaiASezione } from "./banco"
+import {
+  SALUTE,
+  STANOTTE,
+  chiamate,
+  daConfermare,
+  impostazioni,
+  pulisci,
+  rispondi,
+  scelta,
+  scelto,
+  schedaOggetto,
+  scritture,
+  vaiASezione,
+  voci,
+} from "./banco"
 
 afterEach(pulisci)
 
 /**
- * Gli **oggetti gia' a posto** di *Da confermare*: quelli che l'app riconosce da sola. Non sono
- * domande: stanno chiusi in fondo alla sezione Oggetti, si aprono a pagine, e da li' si correggono
- * con la stessa scheda di un oggetto in dubbio.
+ * Gli **oggetti identificati** di *Da confermare* (tavola v82, 254-260): quelli che l'app
+ * riconosce da sola. Non sono domande: stanno chiusi in fondo alla sezione Oggetti, si aprono
+ * cinque alla volta e poi cinquanta, e da li' si correggono con una scheda sotto la riga; la
+ * correzione parte con Applica, insieme alle altre risposte.
  */
 
-const aPosto = (n: number) => ({
-  key: `object:m-${n}`,
-  name: `M ${n}`,
-  slug: `m-${n}`,
-  method: "coords",
-  confidence: "high",
-  group: null,
-  frames: 100 + n,
-  integration_s: 3600,
-  untimed: 0,
-  candidates: [],
-  answer: null,
-})
-const TUTTI = Array.from({ length: 45 }, (_, i) => aPosto(i + 1))
-const pagina = (offset: number) => ({ items: TUTTI.slice(offset, offset + 20), total: 45, limit: 20, offset })
+const aPosto = (n: number) =>
+  schedaOggetto({
+    key: `object:m-${n}`,
+    name: `M ${n}`,
+    slug: `m-${n}`,
+    common_name: n === 1 ? "Nebulosa del Granchio" : null,
+    method: "coord_confirmed",
+    confidence: "high",
+    frames: 100 + n,
+    integration_s: 3600,
+  })
+const TOTALE = 60
+const TUTTI = Array.from({ length: TOTALE }, (_, i) => aPosto(i + 1))
+const primi = (quanti: number) => ({ items: TUTTI.slice(0, quanti), total: TOTALE, limit: quanti, offset: 0 })
 
-const DUBBIO = {
-  ...aPosto(0),
+const DUBBIO = schedaOggetto({
   key: "object:ngc-7000",
   name: "NGC 7000",
   slug: "ngc-7000",
   confidence: "low",
+  frames: 64,
   candidates: [{ slug: "ic-5070", name: "IC 5070", common_name: null, in_frame: true }],
-}
+})
 
-const PAGINA = {
-  to_confirm: 1,
-  lookalikes: [],
-  filters: [],
-  filter_choices: [],
-  gear: [],
-  rig_choices: [],
-  optics_choices: [],
-  objects: [DUBBIO],
-  settled_objects: 45,
-  typeless: [],
-  unclear: [],
-  mosaics: [],
-}
+const PAGINA = daConfermare({ to_confirm: 1, objects: [DUBBIO], settled_objects: TOTALE })
 
-function aperta(principale: unknown = PAGINA, prima: unknown = pagina(0)) {
+function aperta(principale: unknown = PAGINA) {
   rispondi({
     ...STANOTTE,
     "/api/v1/vocab/filter-models": { stato: 200, corpo: { items: [] } },
-    "/api/v1/review/apply": { stato: 200, corpo: { changed: 1, requeued: 101, run_started: true } },
-    "/api/v1/review/objects/settled?limit=20&offset=20": { stato: 200, corpo: pagina(20) },
-    "/api/v1/review/objects/settled?limit=20&offset=40": { stato: 200, corpo: pagina(40) },
-    "/api/v1/review/objects/settled": { stato: 200, corpo: prima },
+    "/api/v1/review/apply": { stato: 200, corpo: { changed: 1, requeued: 103, run_started: true } },
+    // prima delle rotte piu' corte: il banco sceglie la prima che l'indirizzo contiene
+    "/api/v1/review/objects/settled?limit=5&offset=0": { stato: 200, corpo: primi(5) },
+    "/api/v1/review/objects/settled?limit=55&offset=0": { stato: 200, corpo: primi(55) },
     "/api/v1/review": { stato: 200, corpo: principale },
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/health": { stato: 200, corpo: SALUTE },
@@ -76,117 +77,133 @@ async function mandati() {
   return corpo?.objects
 }
 
-const piede = (dove: HTMLElement) => dove.querySelector<HTMLElement>(".as-conferma-aposto") as HTMLElement
-const nomi = (dove: HTMLElement) =>
-  [...dove.querySelectorAll(".as-conferma-aposto ~ .as-domanda-riga .as-domanda-riga__nome")].map((n) => n.textContent)
-const dove = (sezione: HTMLElement) => sezione.querySelector(".as-conferma-pagine__dove")?.textContent
+const gesto = (sezione: HTMLElement) => within(sezione).getByRole("button", { name: `${TOTALE} oggetti identificati` })
+const righe = (sezione: HTMLElement) => [...sezione.querySelectorAll<HTMLElement>("li.al-conf__riga-16")]
+const nomi = (sezione: HTMLElement) => righe(sezione).map((r) => r.querySelector(".al-conf__testo-18")?.textContent)
+const correzione = (sezione: HTMLElement) => sezione.querySelector<HTMLElement>("li.al-conf__corr") as HTMLElement
+const piede = () => screen.getByRole("region", { name: "Le modifiche da applicare" }).querySelector(".al-conf__riga-18")?.textContent
 
 async function aperti() {
   const sezione = await vaiASezione(/^oggetti$/i)
-  fireEvent.click(within(piede(sezione)).getByRole("button", { name: "Apri" }))
+  fireEvent.click(gesto(sezione))
   await within(sezione).findByRole("button", { name: "Correggi: M 1" })
   return sezione
 }
 
-describe("Da confermare -- gli oggetti gia' a posto", () => {
-  it("chiusi sono un numero e un gesto, e non disegnano righe", async () => {
+describe("Da confermare -- gli oggetti identificati", () => {
+  it("chiusi sono un numero e un gesto, e non chiedono niente all'API", async () => {
     aperta()
     const sezione = await vaiASezione(/^oggetti$/i)
-    expect(piede(sezione).querySelector("p")?.textContent).toBe("45 oggetti riconosciuti")
-    expect(piede(sezione).classList.contains("as-conferma-aposto--aperto")).toBe(false)
-    expect(nomi(sezione)).toEqual([])
-    expect(sezione.querySelector(".as-conferma-pagine")).toBeNull()
+    expect(gesto(sezione).getAttribute("aria-expanded")).toBe("false")
+    expect(righe(sezione)).toEqual([])
+    expect(chiamate().some((u) => u.includes("/objects/settled"))).toBe(false)
   })
 
-  it("aperti sono righe senza stato, col gesto Correggi, venti per pagina", async () => {
+  it("aperti sono cinque righe senza stato, col gesto Correggi, e poi altri 50", async () => {
     aperta()
     const sezione = await aperti()
-    expect(piede(sezione).classList.contains("as-conferma-aposto--aperto")).toBe(true)
-    expect(nomi(sezione)).toEqual(TUTTI.slice(0, 20).map((o) => o.name))
-    const prima = sezione.querySelector<HTMLElement>(".as-conferma-aposto ~ .as-domanda-riga") as HTMLElement
-    // non e' una domanda: niente stato, e il gesto dice di quale riga
-    expect(prima.querySelector(".as-risposta")).toBeNull()
-    expect(prima.querySelector(".as-domanda-riga__breve")?.textContent).toBe("")
-    expect(within(prima).getByRole("button").getAttribute("aria-label")).toBe("Correggi: M 1")
-    expect(dove(sezione)).toBe("1\u201320 di 45")
-  })
-
-  it("le pagine vanno avanti e indietro, e si fermano ai due capi", async () => {
-    aperta()
-    const sezione = await aperti()
-    const prec = within(sezione).getByRole("button", { name: "Precedenti" })
-    const succ = within(sezione).getByRole("button", { name: "Successivi" })
-    expect(prec).toHaveProperty("disabled", true)
-    fireEvent.click(succ)
-    await within(sezione).findByRole("button", { name: "Correggi: M 21" })
-    expect(dove(sezione)).toBe("21\u201340 di 45")
-    fireEvent.click(succ)
-    await within(sezione).findByRole("button", { name: "Correggi: M 45" })
-    expect(dove(sezione)).toBe("41\u201345 di 45")
-    expect(nomi(sezione)).toHaveLength(5)
-    expect(succ).toHaveProperty("disabled", true)
-    fireEvent.click(prec)
-    await within(sezione).findByRole("button", { name: "Correggi: M 21" })
-  })
-
-  it("Chiudi li toglie di nuovo", async () => {
-    aperta()
-    const sezione = await aperti()
-    fireEvent.click(within(piede(sezione)).getByRole("button", { name: "Chiudi" }))
-    expect(nomi(sezione)).toEqual([])
-    expect(within(piede(sezione)).getByRole("button", { name: "Apri" })).toBeDefined()
-  })
-
-  it("Correggi apre la scheda dell'oggetto col nome di adesso gia' scelto", async () => {
-    aperta()
-    const sezione = await aperti()
-    const scheda = riga(sezione, "M 3")
-    expect(within(scheda).getAllByRole("radio").map((r) => r.closest("label")?.textContent?.replace(/frame di.*/, ""))).toEqual([
-      "M 3",
-      "Altro nome",
-      "Non \u00e8 un oggetto",
+    expect(gesto(sezione).getAttribute("aria-expanded")).toBe("true")
+    expect(chiamate().filter((u) => u.includes("/objects/settled"))).toEqual([
+      expect.stringContaining("/api/v1/review/objects/settled?limit=5&offset=0"),
     ])
-    expect(within(scheda).getByRole("radio", { name: "M 3" })).toHaveProperty("checked", true)
+    expect(nomi(sezione)).toEqual(["M 1", "M 2", "M 3", "M 4", "M 5"])
+    // non e' una domanda: niente stato, e il gesto dice di quale riga
+    const prima = righe(sezione)[0] as HTMLElement
+    expect(prima.querySelector(".al-conf__riga-7")).toBeNull()
+    expect(prima.querySelector(".al-conf__testo-10")?.textContent).toBe("Nebulosa del Granchio · 101 frame")
+    expect(within(prima).getByRole("button").textContent).toBe("Correggi")
+
+    fireEvent.click(within(sezione).getByRole("button", { name: "Mostra altri 50 di 55" }))
+    await within(sezione).findByRole("button", { name: "Correggi: M 55" })
+    expect(chiamate().some((u) => u.includes("/api/v1/review/objects/settled?limit=55&offset=0"))).toBe(true)
+    expect(righe(sezione)).toHaveLength(55)
+    expect(within(sezione).getByRole("button", { name: "Mostra altri 5 di 5" })).toBeDefined()
+  })
+
+  it("il gesto li richiude, e aprirli chiude la domanda aperta: una cosa aperta alla volta", async () => {
+    aperta()
+    const sezione = await vaiASezione(/^oggetti$/i)
+    expect(sezione.querySelector("article.al-conf__colonna-16")).not.toBeNull()
+    fireEvent.click(gesto(sezione))
+    await within(sezione).findByRole("button", { name: "Correggi: M 1" })
+    expect(sezione.querySelector("article.al-conf__colonna-16")).toBeNull()
+    // nessuna domanda aperta: il perche' della sezione non si legge (tavola, `aperta: null`)
+    expect(sezione.querySelector("p.al-conf__blocco-8")).toBeNull()
+    fireEvent.click(gesto(sezione))
+    expect(righe(sezione)).toEqual([])
+    expect(gesto(sezione).getAttribute("aria-expanded")).toBe("false")
+  })
+
+  it("con tutte le domande risposte, aprirli non chiude la sezione: l'elenco si vede al primo clic", async () => {
+    aperta()
+    const sezione = await vaiASezione(/^oggetti$/i)
+    fireEvent.click(scelta(sezione, "IC 5070"))
+    fireEvent.click(gesto(screen.getByRole("region", { name: /^oggetti$/i })))
+    const dopo = screen.getByRole("region", { name: /^oggetti$/i })
+    expect(await within(dopo).findByRole("button", { name: "Correggi: M 1" })).toBeDefined()
+  })
+
+  it("Correggi apre sotto la riga la scheda, col nome di adesso gia' scelto", async () => {
+    aperta()
+    const sezione = await aperti()
+    fireEvent.click(within(sezione).getByRole("button", { name: "Correggi: M 3" }))
+    const scheda = correzione(sezione)
+    // sotto la sua riga, non in fondo
+    expect(scheda.previousElementSibling).toBe(righe(sezione)[2])
+    expect(within(sezione).getByRole("button", { name: "Chiudi: M 3" })).toBeDefined()
+    expect(within(scheda).getByRole("radiogroup").getAttribute("aria-label")).toBe("Che oggetto è M 3?")
+    expect(voci(scheda)).toEqual([
+      "[x] Resta M 3 / come l'ha riconosciuto l'app",
+      "Altro nome",
+      "Non è un oggetto / frame di prova o di messa a fuoco: esclusi dalle ore",
+    ])
+    expect(scheda.textContent).toMatch(/Vale per tutti i 103 frame\. Si salva con Applica, con le altre risposte\./)
     // aperta senza toccare niente non e' una modifica
     expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
-    // una cosa aperta alla volta: la domanda di sopra si e' chiusa
-    expect(sezione.querySelectorAll("article.as-domanda")).toHaveLength(1)
   })
 
-  it("una correzione parte con le altre risposte, e la riga dice che e' da applicare", async () => {
+  it("Non e' un oggetto va nell'Applica, con le altre risposte", async () => {
     aperta()
     const sezione = await aperti()
-    const scheda = riga(sezione, "M 3")
-    fireEvent.click(within(scheda).getByRole("radio", { name: "Altro nome" }))
-    fireEvent.change(within(scheda).getByLabelText("Nome dell'oggetto"), { target: { value: "NGC 5272" } })
-    expect(scheda.querySelector(".as-risposta")?.textContent).toBe("da applicare")
-    // rimesso il nome di adesso, non c'e' piu' niente da mandare
-    fireEvent.click(within(scheda).getByRole("radio", { name: "M 3" }))
-    expect(scheda.querySelector(".as-risposta")).toBeNull()
-    fireEvent.click(within(scheda).getByRole("radio", { name: /^Non \u00e8 un oggetto/ }))
+    fireEvent.click(within(sezione).getByRole("button", { name: "Correggi: M 3" }))
+    fireEvent.click(scelta(correzione(sezione), /^Non è un oggetto/))
+    expect(scelto(scelta(correzione(sezione), /^Non è un oggetto/))).toBe(true)
+    expect(piede()).toBe("1modifica da applicare")
     expect(await mandati()).toEqual([{ key: "object:m-3", not_an_object: true }])
   })
 
-  it("un oggetto a posto senza sigla (una cometa, un nome scritto) si apre col suo nome nel campo", async () => {
-    const cometa = { ...aPosto(1), key: "object:C/2023 A3", name: "C/2023 A3", slug: null }
-    aperta(PAGINA, { items: [aPosto(1), cometa], total: 2, limit: 20, offset: 0 })
+  it("un altro nome si scrive; vuoto, o tornati a Resta, non c'e' niente da mandare", async () => {
+    aperta()
     const sezione = await aperti()
-    const scheda = riga(sezione, "C/2023 A3")
-    expect(within(scheda).getByRole("radio", { name: "Altro nome" })).toHaveProperty("checked", true)
-    const campo = within(scheda).getByLabelText("Nome dell'oggetto")
-    expect(campo).toHaveProperty("value", "C/2023 A3")
-    // cambiato e rimesso il nome di adesso, non c'e' niente da mandare
-    fireEvent.change(campo, { target: { value: "C/2023 A3 Tsuchinshan" } })
-    expect(scheda.querySelector(".as-risposta")?.textContent).toBe("da applicare")
-    fireEvent.change(campo, { target: { value: "C/2023 A3" } })
-    expect(scheda.querySelector(".as-risposta")).toBeNull()
-    expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
+    fireEvent.click(within(sezione).getByRole("button", { name: "Correggi: M 3" }))
+    fireEvent.click(scelta(correzione(sezione), "Altro nome"))
+    const campo = within(correzione(sezione)).getByLabelText("Nome dell'oggetto")
+    expect(piede()).toBe("0modifiche da applicare")
+    fireEvent.change(campo, { target: { value: "  " } })
+    expect(piede()).toBe("0modifiche da applicare")
+    fireEvent.change(campo, { target: { value: " NGC 5272 " } })
+    expect(piede()).toBe("1modifica da applicare")
+    fireEvent.click(scelta(correzione(sezione), /^Resta M 3/))
+    expect(piede()).toBe("0modifiche da applicare")
+    fireEvent.click(scelta(correzione(sezione), "Altro nome"))
+    // il nome scritto e' della riga: torna com'era
+    expect(within(correzione(sezione)).getByLabelText("Nome dell'oggetto")).toHaveProperty("value", " NGC 5272 ")
+    expect(await mandati()).toEqual([{ key: "object:m-3", name: "NGC 5272", not_an_object: false }])
   })
 
-  it("senza domande aperte la sezione c'e' lo stesso: gli oggetti a posto si correggono da li'", async () => {
+  it("il nome di adesso riscritto in Altro nome non e' una correzione", async () => {
+    aperta()
+    const sezione = await aperti()
+    fireEvent.click(within(sezione).getByRole("button", { name: "Correggi: M 3" }))
+    fireEvent.click(scelta(correzione(sezione), "Altro nome"))
+    fireEvent.change(within(correzione(sezione)).getByLabelText("Nome dell'oggetto"), { target: { value: " M 3 " } })
+    expect(piede()).toBe("0modifiche da applicare")
+  })
+
+  it("senza domande aperte la sezione c'e' lo stesso: gli oggetti identificati si correggono da li'", async () => {
     aperta({ ...PAGINA, to_confirm: 0, objects: [] })
     const sezione = await vaiASezione(/^oggetti$/i)
-    expect(within(piede(sezione)).getByRole("button", { name: "Apri" })).toBeDefined()
+    expect(gesto(sezione)).toBeDefined()
     // che non c'e' niente da fare si dice lo stesso
     expect(screen.getByText("Niente da confermare")).toBeDefined()
   })

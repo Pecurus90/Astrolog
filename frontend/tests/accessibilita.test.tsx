@@ -16,14 +16,22 @@ import { afterEach, describe, expect, it } from "vitest"
 import {
   SALUTE,
   SCHEDE,
-  SENZA_SOGGETTI,
   SITO_DI_CASA,
   SPINA,
   STANOTTE,
+  cartellaSenzaData,
+  cartellaSenzaTipo,
+  daConfermare,
   disegna,
+  doppione,
+  filtroIgnoto,
   impostazioni,
+  mosaicoProposto,
+  postoIgnoto,
   pulisci,
   rispondi,
+  schedaAttrezzatura,
+  schedaOggetto,
   vai,
   violazioni,
 } from "./banco"
@@ -185,7 +193,7 @@ describe("l accessibilita della prima pagina", () => {
   })
 
   it("e nemmeno Da confermare, che e la pagina dove si lavora", async () => {
-    // La superficie piu' fitta dell'app: una tendina, un elenco di bottoni, campi e una select.
+    // La superficie piu' fitta dell'app: gruppi di scelte, un elenco da cercare, campi.
     // E' dove un'etichetta orfana o un bottone senza nome fa piu' danno, perche' qui non si
     // guarda e basta -- si risponde.
     rispondi({
@@ -198,34 +206,26 @@ describe("l accessibilita della prima pagina", () => {
           ],
         },
       },
+      // prima della pagina: il banco sceglie la prima rotta che l'indirizzo contiene
+      "/api/v1/review/objects/settled": {
+        stato: 200,
+        corpo: { items: [schedaOggetto({ key: "object:m-1", name: "M 1", slug: "m-1", frames: 40 })], total: 12, limit: 5, offset: 0 },
+      },
       "/api/v1/review": {
         stato: 200,
-        corpo: {
+        corpo: daConfermare({
           to_confirm: 1,
-          filters: [
-            {
-              id: 7,
-              name: "H",
-              brand: null,
-              model: null,
-              catalog_id: null,
-              passband: "UNKNOWN",
-              is_none: false,
-              bands: [],
-              frames: 120,
-            },
-          ],
+          filters: [filtroIgnoto({ id: 7, name: "H", frames: 120 })],
           // due grafie della stessa camera: un gruppo di due scelte che nomina la coppia
-          lookalikes: [
-            { id: 7, name: "ATR 2600M", frames: 432, into_id: 4, into_name: "ATR2600M", into_frames: 6558 },
-          ],
+          lookalikes: [doppione({ id: 7, name: "ATR 2600M", frames: 432, into_id: 4, into_name: "ATR2600M", into_frames: 6558 })],
           rig_choices: [{ id: 2, name: null, optics: "Askar 103Apo", camera: "ATR2600M", focal_mm: 560 }],
-          // **Con un oggetto vero**: la sezione porta liste annidate, un bottone per candidato e
-          // una coppia etichetta/campo per riga -- cioe' tutto cio' che axe deve guardare. Con
-          // `objects: []` la guardia collaudava una pagina che quella roba non ce l'aveva.
-          // The object card waits for its design (ADR 0014 S3): the rows stay for when it lands.
+          // una scheda che chiede camera, ottica e filtro: tre gruppi di scelte in una domanda
+          gear: [schedaAttrezzatura({ key: "firma-1", telescope: "EQ6-R", frames: 214, asks_camera: true, asks_optics: true, asks_filter: true })],
+          // **Con un oggetto vero**: la sezione porta un gruppo di scelte per candidato e una
+          // coppia etichetta/campo -- cioe' tutto cio' che axe deve guardare. Con `objects: []`
+          // la guardia collaudava una pagina che quella roba non ce l'aveva.
           objects: [
-            {
+            schedaOggetto({
               key: "ngc-7023",
               name: "NGC 7023",
               slug: "ngc-7023",
@@ -234,50 +234,35 @@ describe("l accessibilita della prima pagina", () => {
               frames: 60,
               integration_s: 9720,
               untimed: 2,
-              group: null,
-              candidates: [
-                {
-                  slug: "ldn-1174",
-                  name: "LDN 1174",
-                  common_name: null,
-                  in_frame: false,
-                },
-              ],
-              answer: null,
-            },
-            // a group of frames without a name: the object field and the "not an object" box
-            {
+              candidates: [{ slug: "ldn-1174", name: "LDN 1174", common_name: null, in_frame: false }],
+            }),
+            // un gruppo di frame senza nome: il campo dell'oggetto e "non e' un oggetto"
+            schedaOggetto({
               key: 'frames:["2024-06-01", null, null, null, null]',
-              name: null,
-              slug: null,
-              method: null,
-              confidence: null,
               group: { night: "2024-06-01", camera: null, telescope: null, ra_deg: null, dec_deg: null, first_frame: "2024-06-01T22:10:00+02:00", last_frame: "2024-06-02T01:40:00+02:00" },
               frames: 4,
-              integration_s: 0,
               untimed: 4,
-              candidates: [],
-              answer: null,
-            },
+            }),
           ],
+          // gli oggetti identificati: un gesto che apre l'elenco
+          settled_objects: 12,
           // un mosaico e un posto: due gruppi di scelte da guardare. Che ognuno nomini la
           // sua riga axe non lo vede: lo provano i test delle sezioni (confermare-cielo-tempo)
-          mosaics: [
-            { key: "impronta-m42", ra_deg: 83.8, dec_deg: -5.4, object: "M 42", panels: 3, frames: 90, integration_s: 10800, untimed: 0, answer: null },
-          ],
+          mosaics: [mosaicoProposto({ key: "impronta-m42", ra_deg: 83.8, dec_deg: -5.4, object: "M 42", panels: 3, frames: 90, integration_s: 10800, names: ["M 42"], proposed: "M 42" })],
           unclear: [
-            { key: "45.85,11.58", latitude: 45.85, longitude: 11.58, distance_km: 16.2, frames: 391, nights: ["2024-05-17"], site: null, candidates: [{ id: 1, name: "Casa", distance_km: 16.2 }], subjects: SENZA_SOGGETTI },
+            postoIgnoto({ key: "45.85,11.58", latitude: 45.85, longitude: 11.58, distance_km: 16.2, frames: 391, nights: ["2024-05-17"], candidates: [{ id: 1, name: "Casa", distance_km: 16.2 }] }),
           ],
+          // una cartella senza data: la scelta fra scriverla e sceglierla
+          undated: [cartellaSenzaData({ key: "D:/Astro/senza-data", frames: 12, rig_nights: ["2025-08-12"] })],
           filter_choices: [{ id: 3, name: "Lum", passband: "L" }],
-          gear: [],
           optics_choices: ["Askar 103Apo"],
           // una cartella di file che non dicono che file sono: due scelte in un gruppo, una
           // risposta gia' data e una ancora da dare
           typeless: [
-            { key: "D:/Astro/2024-05-17/dark", frames: 120, answer: null },
-            { key: "D:/Astro/2024-06-01/M51", frames: 30, answer: "light" },
+            cartellaSenzaTipo({ key: "D:/Astro/2024-05-17/dark", frames: 120 }),
+            cartellaSenzaTipo({ key: "D:/Astro/2024-06-01/M51", frames: 30, answer: "light" }),
           ],
-        },
+        }),
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/health": { stato: 200, corpo: SALUTE },
@@ -286,7 +271,18 @@ describe("l accessibilita della prima pagina", () => {
     vai("/da-confermare")
     await screen.findByRole("region", { name: /filtri/i })
     expect(await violazioni(container)).toEqual([])
-  })
+    // una domanda sola e' aperta alla volta: i controlli delle altre esistono solo dietro il loro
+    // gesto, quindi si aprono tutte, una per una, e si guarda ogni volta
+    const nomi = screen.queryAllByRole("button", { name: /^Rispondi: / }).map((g) => g.getAttribute("aria-label") as string)
+    expect(nomi.length).toBeGreaterThan(6)
+    for (const nome of nomi) {
+      fireEvent.click(screen.getByRole("button", { name: nome }))
+      expect(await violazioni(container)).toEqual([])
+    }
+    fireEvent.click(screen.getByRole("button", { name: "12 oggetti identificati" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Correggi: M 1" }))
+    expect(await violazioni(container)).toEqual([])
+  }, 30000)
 
   it("e nemmeno l Archivio, con tutte le forme che una riga puo' avere", async () => {
     // Le righe scelte portano ognuna una forma diversa -- col catalogo e coi filtri, senza

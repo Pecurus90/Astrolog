@@ -1,21 +1,19 @@
 import { memo } from "react"
 
-import { Domanda } from "./Domanda"
-import { Scelte } from "./Scelte"
+import { statoDi } from "./ConfermareGuscio"
+import { Domanda, Parte, Risposte, rigaDeiFrame, sensore, voce } from "./Domanda"
 import { type PerGruppo, Sezione } from "./Sezione"
 import type { components } from "./api/schema"
 import { numero, t } from "./i18n"
 
 type Coppia = components["schemas"]["LookalikeOut"]
 type Risposta = components["schemas"]["LookalikeEdit"]
-type Scelta = "same" | "distinct"
 
 /**
- * Due grafie che hanno tutta l'aria di essere la stessa camera: "sono lo stesso pezzo?". L'app non
+ * Due grafie che hanno tutta l'aria di essere lo stesso strumento: "sono lo stesso?". L'app non
  * puo' saperlo -- due camere dello stesso modello sono due pezzi -- quindi chiede.
  *
- * - **Si' unisce, no non la ripropone**: sono le due sole risposte, e tutte e due chiudono la
- *   domanda. Un'unione non si disfa, per questo niente e' preselezionato.
+ * - **Si' unisce, no non la ripropone**; un'unione non si disfa, per questo niente e' preselezionato.
  * - **Quale grafia resta lo dice l'API** (`into_id`, quella con piu' frame): qui non si sceglie.
  * - **E' memorizzata**: ogni risposta, in qualunque sezione, riscrive l'accumulatore della pagina.
  */
@@ -25,7 +23,9 @@ export const SezioneStessoPezzo = memo(function SezioneStessoPezzo({
   onRisposta,
 }: PerGruppo<Coppia, Risposta>) {
   return (
-    <Sezione quale="lookalikes" domanda={t("review.lookalikes.why")}
+    <Sezione
+      quale="lookalikes"
+      domanda={t("review.lookalikes.why")}
       voci={gruppi}
       chiave={(c) => c.id}
       riga={(c) => (
@@ -44,42 +44,53 @@ function RigaStessoPezzo({
   risposta: Risposta | undefined
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
-  const scelta: Scelta | undefined = risposta && (risposta.same ? "same" : "distinct")
   const unisci = t("review.lookalikes.same", { nome: coppia.into_name })
   const distinti = t("review.lookalikes.distinct")
+  const manda = (same: boolean) =>
+    onRisposta(String(coppia.id), { id: coppia.id, into_id: coppia.into_id, same })
+  const sens = sensore(coppia.width_px, coppia.height_px, coppia.pixel_um)
+  const domanda = t("review.lookalikes.question", { nome: coppia.name, altra: coppia.into_name })
   return (
     <Domanda
       id={`lookalikes:${coppia.id}`}
       voce={coppia.name}
       nome={coppia.name}
-      cifre
-      frames={coppia.frames}
-      salvata={false}
-      inMano={risposta !== undefined}
-      breve={scelta ? <b>{scelta === "same" ? unisci : distinti}</b> : `${unisci} \u00b7 ${distinti}`}
+      frame={rigaDeiFrame(coppia.frames)}
+      stato={statoDi(false, risposta !== undefined)}
+      detta={risposta !== undefined}
+      breve={risposta ? (risposta.same ? unisci : distinti) : `${unisci} \u00b7 ${distinti}`}
       prova={[
+        { nome: t("review.proof.like"), righe: [coppia.into_name] },
+        ...(sens ? [{ nome: t("review.proof.sensor"), righe: [sens] }] : []),
         {
-          nome: t("review.proof.like"),
-          dato: `${coppia.into_name} \u00b7 ${t("review.frames", { n: numero(coppia.into_frames) })}`,
+          nome: t("review.proof.others"),
+          righe: [
+            t("review.lookalikes.otherFrames", {
+              frame: t("review.frames", { n: numero(coppia.into_frames) }),
+              nome: coppia.into_name,
+            }),
+          ],
         },
       ]}
     >
-      <Scelte
-        domanda={t("review.lookalikes.question", { nome: coppia.name, altra: coppia.into_name })}
-        nome={`stesso-pezzo-${coppia.id}`}
-        opzioni={[
-          { valore: "same" as const, etichetta: unisci },
-          { valore: "distinct" as const, etichetta: distinti },
-        ]}
-        scelta={scelta}
-        onScelta={(v) =>
-          onRisposta(String(coppia.id), {
-            id: coppia.id,
-            into_id: coppia.into_id,
-            same: v === "same",
-          })
-        }
-      />
+      <Parte capo={domanda} prima>
+        <Risposte
+          etichetta={domanda}
+          opzioni={[
+            voce(
+              risposta?.same === true,
+              unisci,
+              () => manda(true),
+              t("review.lookalikes.same.sub", {
+                nome: coppia.into_name,
+                n: numero(coppia.into_frames),
+                m: numero(coppia.frames),
+              }),
+            ),
+            voce(risposta?.same === false, distinti, () => manda(false)),
+          ]}
+        />
+      </Parte>
     </Domanda>
   )
 }

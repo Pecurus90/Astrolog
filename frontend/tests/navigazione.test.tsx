@@ -14,24 +14,16 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { CASA, SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import { CASA, SALUTE, SPINA, STANOTTE, cartellaSenzaTipo, daConfermare, disegna, impostazioni, pulisci, rispondi } from "./banco"
 
 afterEach(pulisci)
 
 /** La pagina Da confermare con una domanda sola: abbastanza per aprirla davvero. */
-const REVISIONE = {
+const REVISIONE = daConfermare({
   to_confirm: 7,
   sections: [{ key: "typeless", count: 7 }],
-  lookalikes: [],
-  filters: [],
-  objects: [],
-  mosaics: [],
-  unclear: [],
-  filter_choices: [],
-  gear: [],
-  rig_choices: [],
-  typeless: [{ key: "D:/Astro/dark", frames: 7, answer: null }],
-}
+  typeless: [cartellaSenzaTipo({ key: "D:/Astro/dark", frames: 7 })],
+})
 
 /** L'app gia' configurata: il timbro c'e', quindi si naviga. */
 function configurata() {

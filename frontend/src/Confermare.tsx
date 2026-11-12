@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router"
 
 import { Avviso } from "./componenti/Avviso"
 import { useFormato } from "./componenti/formato"
+import { gesto } from "./componenti/gesto"
 import { Pagina } from "./componenti/Pagina"
 import { Scheletro } from "./componenti/Scheletro"
 import type { Formato } from "./componenti/Tema"
@@ -11,6 +12,7 @@ import {
   CartaDelConto,
   CasoAccanto,
   Esito,
+  FormatoConf,
   Guscio,
   Indice,
   MISURE,
@@ -29,6 +31,7 @@ import { SezioneFiltri } from "./SezioneFiltri"
 import { SezioneLuoghi } from "./SezioneLuoghi"
 import { SezioneMosaici } from "./SezioneMosaici"
 import { SezioneOggetti } from "./SezioneOggetti"
+import { SezioneSenzaData } from "./SezioneSenzaData"
 import { SezioneSenzaTipo } from "./SezioneSenzaTipo"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
@@ -91,7 +94,9 @@ export function Confermare() {
   const formato = useFormato()
   return (
     <Pagina formato={formato}>
-      <LaPagina formato={formato} />
+      <FormatoConf.Provider value={formato}>
+        <LaPagina formato={formato} />
+      </FormatoConf.Provider>
     </Pagina>
   )
 }
@@ -126,7 +131,10 @@ function LaPagina({ formato }: { formato: Formato }) {
   const scrivi = useMemo(() => {
     const fatti: Partial<Record<keyof Accumulo, unknown>> = {}
     return <S extends keyof Accumulo>(sezione: S) =>
-      (fatti[sezione] ??= (chiave: string | number, risposta: Accumulo[S][keyof Accumulo[S]] | null) =>
+      (fatti[sezione] ??= (
+        chiave: string | number,
+        risposta: Accumulo[S][keyof Accumulo[S]] | null,
+      ) =>
         setAccumulo((prima) => {
           const voce: Record<string | number, unknown> = { ...prima[sezione] }
           if (risposta) voce[chiave] = risposta
@@ -226,18 +234,21 @@ function LaPagina({ formato }: { formato: Formato }) {
     objects: (dati.objects ?? []).map((o) => ({ chiave: o.key, salvata: o.answer !== null })),
     typeless: (dati.typeless ?? []).map((g) => ({ chiave: g.key, salvata: g.answer !== null })),
     unclear: (dati.unclear ?? []).map((p) => ({ chiave: p.key, salvata: p.site !== null })),
-    // la domanda la disegna la pagina sulla tavola v82: fino ad allora la sezione non c'e'
-    undated: [],
+    undated: (dati.undated ?? []).map((g) => ({ chiave: g.key, salvata: g.answer !== null })),
     mosaics: (dati.mosaics ?? []).map((x) => ({ chiave: x.key, salvata: x.answer !== null })),
   }
   const inManoDi = (s: QualeSezione) => accumulo[s] as Record<string, unknown>
-  const senzaRisposta = (s: QualeSezione) => domande[s].filter((d) => !d.salvata && !inManoDi(s)[d.chiave])
+  const senzaRisposta = (s: QualeSezione) =>
+    domande[s].filter((d) => !d.salvata && !inManoDi(s)[d.chiave])
   // Oggetti c'e' anche senza domande: gli oggetti a posto si correggono da li'.
   const soloAPosto = domande.objects.length === 0 && dati.settled_objects > 0
   const presenti = TUTTE.filter((s) => domande[s].length > 0 || (s === "objects" && soloAPosto))
   // Quante domande di ogni sezione aspettano ancora: senza risposta salvata e senza una in mano.
   // Dipende da cio' che l'utente ha appena scelto, quindi si conta qui e non nell'API.
-  const aspettano = Object.fromEntries(TUTTE.map((s) => [s, senzaRisposta(s).length])) as Record<QualeSezione, number>
+  const aspettano = Object.fromEntries(TUTTE.map((s) => [s, senzaRisposta(s).length])) as Record<
+    QualeSezione,
+    number
+  >
   // Il conto vivo: cio' che aspetta qui, piu' le sezioni che la pagina non disegna ancora (dall'API).
   const nonDisegnate = (dati.sections ?? [])
     .filter((x) => domande[x.key].length === 0)
@@ -249,7 +260,8 @@ function LaPagina({ formato }: { formato: Formato }) {
   }
   // Aperta e' quella scelta; finche' nessuno sceglie, la prima che aspetta (o quella dell'indirizzo).
   const prima = presenti.flatMap((s) => senzaRisposta(s).map((d) => `${s}:${d.chiave}`))[0] ?? null
-  const partenza = (giro === 0 && chiesta && presenti.includes(chiesta) ? primaDi(chiesta) : null) ?? prima
+  const partenza =
+    (giro === 0 && chiesta && presenti.includes(chiesta) ? primaDi(chiesta) : null) ?? prima
   const aperta = scelta ?? partenza
   // Fissata al primo disegno: se seguisse "la prima che aspetta", rispondendo salterebbe alla
   // domanda dopo e la sezione si chiuderebbe sotto le mani.
@@ -287,7 +299,9 @@ function LaPagina({ formato }: { formato: Formato }) {
           onChiudi={() => setEsitoChiuso(true)}
         />
       )}
-      {applica.error && <Esito segno="!" m={m} titolo={t("review.apply.failed")} testo={applica.error.message} />}
+      {applica.error && (
+        <Esito segno="!" m={m} titolo={t("review.apply.failed")} testo={applica.error.message} />
+      )}
     </>
   )
 
@@ -334,12 +348,20 @@ function LaPagina({ formato }: { formato: Formato }) {
 
   // Le sezioni, scritte una volta: la pagina larga le mette in fila, il telefono una alla volta.
   const sezioni: Record<QualeSezione, ReactNode> = {
-    lookalikes: <SezioneStessoPezzo gruppi={dati.lookalikes} risposte={accumulo.lookalikes} onRisposta={scrivi("lookalikes")} />,
+    lookalikes: (
+      <SezioneStessoPezzo
+        gruppi={dati.lookalikes}
+        risposte={accumulo.lookalikes}
+        onRisposta={scrivi("lookalikes")}
+      />
+    ),
     filters: (
       <SezioneFiltri
         filtri={dati.filters}
         miei={dati.filter_choices}
         modelli={modelli.data ?? []}
+        // **Una coda che non si e' potuta leggere non e' una coda vuota**: la domanda lo dice
+        senzaModelli={modelli.isError}
         risposte={accumulo.filters}
         onRisposta={scrivi("filters")}
       />
@@ -355,12 +377,41 @@ function LaPagina({ formato }: { formato: Formato }) {
       />
     ),
     objects: (
-      <SezioneOggetti schede={dati.objects} aPosto={dati.settled_objects} risposte={accumulo.objects} onRisposta={scrivi("objects")} />
+      <SezioneOggetti
+        schede={dati.objects}
+        aPosto={dati.settled_objects}
+        risposte={accumulo.objects}
+        onRisposta={scrivi("objects")}
+      />
     ),
-    typeless: <SezioneSenzaTipo gruppi={dati.typeless} risposte={accumulo.typeless} onRisposta={scrivi("typeless")} />,
-    unclear: <SezioneLuoghi posti={dati.unclear} risposte={accumulo.unclear} onRisposta={scrivi("unclear")} />,
-    undated: null,
-    mosaics: <SezioneMosaici mosaici={dati.mosaics} risposte={accumulo.mosaics} onRisposta={scrivi("mosaics")} />,
+    typeless: (
+      <SezioneSenzaTipo
+        gruppi={dati.typeless}
+        risposte={accumulo.typeless}
+        onRisposta={scrivi("typeless")}
+      />
+    ),
+    unclear: (
+      <SezioneLuoghi
+        posti={dati.unclear}
+        risposte={accumulo.unclear}
+        onRisposta={scrivi("unclear")}
+      />
+    ),
+    undated: (
+      <SezioneSenzaData
+        gruppi={dati.undated}
+        risposte={accumulo.undated}
+        onRisposta={scrivi("undated")}
+      />
+    ),
+    mosaics: (
+      <SezioneMosaici
+        mosaici={dati.mosaics}
+        risposte={accumulo.mosaics}
+        onRisposta={scrivi("mosaics")}
+      />
+    ),
   }
   // Il piede resta in vista e dice **cosa si sta per mandare**: il conto e' dello stato in mano.
   const piede = presenti.length > 0 && (
@@ -380,9 +431,6 @@ function LaPagina({ formato }: { formato: Formato }) {
       {esiti}
       {/* senza domande la pagina c'e' solo per gli oggetti a posto: che non c'e' da fare si dice lo stesso */}
       {presenti.every((s) => domande[s].length === 0) && niente}
-      {/* **Una coda che non si e' potuta leggere non e' una coda vuota**: senza questa riga la
-          tendina dei modelli sarebbe un catalogo vuoto, e il filtro si scriverebbe a mano. */}
-      {modelli.error && <Avviso tipo="riga" formato={formato} segno="!" titolo={modelli.error.message} />}
     </>
   )
   const tacche = presenti.flatMap(statoDelle)
@@ -393,24 +441,40 @@ function LaPagina({ formato }: { formato: Formato }) {
   }
   // Dopo un Applica il tipo scelto puo' non esserci piu': si torna ai tipi.
   const qui = tel && tipo !== null && presenti.includes(tipo) ? tipo : null
-  const cartaConto = <CartaDelConto conto={conto} tacche={tacche} regola={conto > 0 && qui === null} m={m} />
+  const cartaConto = (
+    <CartaDelConto conto={conto} tacche={tacche} regola={conto > 0 && qui === null} m={m} />
+  )
 
   if (tel) {
     if (qui === null) {
       // Quante risposte di un tipo stanno in ognuno dei quattro stati, nell'ordine in cui si leggono.
       const stati = (s: QualeSezione) => {
         // in mano anche cio' che non e' una domanda: la correzione di un oggetto a posto
-        const fuori = Object.keys(inManoDi(s)).filter((c) => !domande[s].some((d) => d.chiave === c)).length
+        const fuori = Object.keys(inManoDi(s)).filter(
+          (c) => !domande[s].some((d) => d.chiave === c),
+        ).length
         const tutti = statoDelle(s)
         return (["dare", "ora", "salvata", "cambiata"] as const)
-          .map((stato) => ({ stato, n: tutti.filter((x) => x === stato).length + (stato === "ora" ? fuori : 0) }))
+          .map((stato) => ({
+            stato,
+            n: tutti.filter((x) => x === stato).length + (stato === "ora" ? fuori : 0),
+          }))
           .filter((v) => v.n > 0)
       }
       return (
         <Guscio m={m} sinistra={cartaConto}>
           {avvisi}
           {presenti.length > 0 && (
-            <TipiDiDomanda voci={presenti.map((s) => ({ sezione: s, stati: stati(s) }))} ferma={ferma} m={m} onTipo={vado} />
+            <TipiDiDomanda
+              voci={presenti.map((s) => ({ sezione: s, stati: stati(s) }))}
+              ferma={ferma}
+              m={m}
+              // un tipo si apre sulla prima domanda che aspetta (tavola `vaiSez`, 167-169)
+              onTipo={(s) => {
+                const d = senzaRisposta(s)[0]
+                vado(s, d ? domande[s].indexOf(d) : 0)
+              }}
+            />
           )}
           {piede}
         </Guscio>
@@ -422,16 +486,37 @@ function LaPagina({ formato }: { formato: Formato }) {
     return (
       <Guscio m={m} sinistra={cartaConto}>
         {avvisi}
-        <div className="al-conf__colonna-11" aria-disabled={ferma ? "true" : undefined} inert={ferma} style={{ gap: m.stacco, ...spenta(ferma) }}>
-          {/* Aperto e' il caso; un oggetto a posto che si corregge lo chiude, come sulla pagina larga. */}
+        {/* [T] Da confermare.dc.html 42: dove si e', sopra la colonna delle sezioni */}
+        <div className="al-conf__riga-8">
+          <a
+            href="#"
+            role="button"
+            onClick={gesto(() => vado(null))}
+            className="al-bottone al-bottone--testo al-bottone--a-filo"
+          >
+            {t("review.phone.all")}
+          </a>
+          {casi.length > 0 && (
+            <span className="al-conf__blocco-6">
+              {t("review.phone.case", { k: numero(k + 1), n: numero(casi.length) })}
+            </span>
+          )}
+        </div>
+        <div
+          className="al-conf__colonna-11"
+          aria-disabled={ferma ? "true" : undefined}
+          inert={ferma}
+          style={{ gap: m.stacco, ...spenta(ferma) }}
+        >
+          {/* Aperto e' il caso; gli oggetti identificati, senza casi, si aprono fuori dal caso. */}
           <DomandaAperta.Provider value={{ aperta: fuoriCaso ?? idCaso, apri: setFuoriCaso }}>
-            <UnCaso.Provider
-              value={{ caso: k, indietro: () => vado(null), vai: <CasoAccanto k={k} n={casi.length} onVai={(j) => vado(qui, j)} /> }}
-            >
+            <UnCaso.Provider value={k}>
               <Fragment key={`${giro}:${qui}:${k}`}>{sezioni[qui]}</Fragment>
             </UnCaso.Provider>
           </DomandaAperta.Provider>
         </div>
+        {/* [T] Da confermare.dc.html 85: come si va avanti, sotto la colonna */}
+        {casi.length > 0 && <CasoAccanto k={k} n={casi.length} onVai={(j) => vado(qui, j)} />}
         {piede}
       </Guscio>
     )
@@ -442,14 +527,24 @@ function LaPagina({ formato }: { formato: Formato }) {
     const id = primaDi(s)
     if (id) setScelta(id)
     setRiaperte((prima) => (prima.includes(s) ? prima : [...prima, s]))
-    window.setTimeout(() => document.getElementById(SEZIONI[s].ancora)?.scrollIntoView?.({ block: "start", behavior: "smooth" }), 60)
+    window.setTimeout(
+      () =>
+        document
+          .getElementById(SEZIONI[s].ancora)
+          ?.scrollIntoView?.({ block: "start", behavior: "smooth" }),
+      60,
+    )
   }
   const sinistra = (
     <>
       {cartaConto}
       {presenti.length > 0 && (
         <Indice
-          voci={presenti.map((s) => ({ sezione: s, aspettano: aspettano[s], corrente: aperta?.startsWith(`${s}:`) ?? false }))}
+          voci={presenti.map((s) => ({
+            sezione: s,
+            aspettano: aspettano[s],
+            corrente: aperta?.startsWith(`${s}:`) ?? false,
+          }))}
           ferma={ferma}
           m={m}
           onVai={vaiSez}
@@ -462,7 +557,12 @@ function LaPagina({ formato }: { formato: Formato }) {
       {avvisi}
       {/* L'ordine delle sezioni e' fisso: prima i pezzi, poi come si montano insieme, poi il
           dove e il quando, poi il cielo. Una sezione che si sposta non si ritrova. */}
-      <div className="al-conf__colonna-11" aria-disabled={ferma ? "true" : undefined} inert={ferma} style={{ gap: m.stacco, ...spenta(ferma) }}>
+      <div
+        className="al-conf__colonna-11"
+        aria-disabled={ferma ? "true" : undefined}
+        inert={ferma}
+        style={{ gap: m.stacco, ...spenta(ferma) }}
+      >
         <DomandaAperta.Provider value={{ aperta, apri: setScelta }}>
           <Fragment key={giro}>
             {presenti.map((s) =>

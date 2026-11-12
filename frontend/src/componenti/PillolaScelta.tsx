@@ -95,6 +95,7 @@ export function PillolaScelta({
   ruolo,
   classe,
   formato = "desktop",
+  multipla = false,
 }: {
   opzioni: OpzioneScelta[]
   forma?: FormaScelta
@@ -108,6 +109,8 @@ export function PillolaScelta({
   /** A class of the place, from the page's own section of the sheet. */
   classe?: string
   formato?: Formato
+  /** Answers only: more than one can be chosen (checkboxes, not radios). */
+  multipla?: boolean
 }) {
   const { modo, accento } = useTema()
   const nome = etichetta || t("ui.choice")
@@ -162,12 +165,12 @@ export function PillolaScelta({
     )
   } else if (forma === "risposta") {
     corpo = (
-      <div role="radiogroup" aria-label={nome} className={`${gruppo}`}>
+      <div role={multipla ? "group" : "radiogroup"} aria-label={nome} className={`${gruppo}`}>
         {voci.map(({ o, sel, no, clic }, i) => (
           <a
             key={i}
             href="#"
-            role="radio"
+            role={multipla ? "checkbox" : "radio"}
             aria-checked={sel}
             aria-disabled={no}
             onClick={clic}

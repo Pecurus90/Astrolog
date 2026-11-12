@@ -2,7 +2,20 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, rispondi, vai as apriPagina } from "./banco"
+import {
+  SALUTE,
+  STANOTTE,
+  vai as apriPagina,
+  cartellaSenzaTipo,
+  daConfermare,
+  disegna,
+  doppione,
+  impostazioni,
+  pulisci,
+  rispondi,
+  scelta,
+  scelto,
+} from "./banco"
 
 afterEach(pulisci)
 
@@ -11,30 +24,21 @@ afterEach(pulisci)
  * domanda, poi **un caso alla volta**. Le domande sono le stesse della pagina larga.
  */
 
-const PAGINA = {
+const PAGINA = daConfermare({
   to_confirm: 2,
-  lookalikes: [{ id: 4, name: "ATR2600M(USB2.0)", frames: 38, into_id: 1, into_name: "ATR2600M", into_frames: 412 }],
-  filters: [],
-  filter_choices: [],
-  objects: [],
-  gear: [],
-  rig_choices: [],
-  optics_choices: [],
-  settled_objects: 0,
-  unclear: [],
-  mosaics: [],
+  lookalikes: [doppione({ id: 4, name: "ATR2600M(USB2.0)", frames: 38, into_id: 1, into_name: "ATR2600M", into_frames: 412 })],
   typeless: [
-    { key: "D:/Astro/dark", frames: 120, answer: null },
-    { key: "D:/Astro/M51", frames: 30, answer: "light" },
+    cartellaSenzaTipo({ key: "D:/Astro/dark", frames: 120 }),
+    cartellaSenzaTipo({ key: "D:/Astro/M51", frames: 30, answer: "light" }),
   ],
-}
+})
 
-async function aperta(dove = "/da-confermare?formato=telefono") {
+async function aperta(dove = "/da-confermare?formato=telefono", pagina: unknown = PAGINA) {
   rispondi({
     ...STANOTTE,
     "/api/v1/vocab/filter-models": { stato: 200, corpo: { items: [] } },
     "/api/v1/review/apply": { stato: 200, corpo: { changed: 1, requeued: 320, run_started: true, none_filter_existed: false } },
-    "/api/v1/review": { stato: 200, corpo: PAGINA },
+    "/api/v1/review": { stato: 200, corpo: pagina },
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/health": { stato: 200, corpo: SALUTE },
   })
@@ -50,7 +54,9 @@ const tipi = () =>
     .map((b) => [b.querySelector(".al-conf__blocco-5")?.textContent, ...[...b.querySelectorAll(".al-conf__riga-7")].map((s) => s.textContent)])
 const tipo = (nome: string) =>
   fireEvent.click(within(elenco() as HTMLElement).getByRole("link", { name: new RegExp(`^${nome}`) }))
-const dove = () => document.querySelector(".as-conferma-caso__quale")?.textContent
+// dove si e' sta sopra la colonna delle sezioni (tavola 42), fuori dalla sezione
+const dove = () => document.querySelector(".al-conf__riga-8 > .al-conf__blocco-6")?.textContent
+const aperte = () => document.querySelectorAll("article.al-conf__colonna-16")
 const gesto = (nome: string) => screen.getByRole("button", { name: nome })
 const spento = (nome: string) => gesto(nome).getAttribute("aria-disabled") === "true"
 const piede = () => screen.getByRole("region", { name: "Le modifiche da applicare" })
@@ -69,7 +75,7 @@ describe("Da confermare -- il telefono", () => {
       ["Frame senza tipo", "\u25CB1 senza risposta", "\u27131 salvata"],
     ])
     // nessuna domanda a schermo finche' non si sceglie un tipo, e niente indice
-    expect(document.querySelector(".as-domanda, .as-domanda-riga")).toBeNull()
+    expect(document.querySelector(".al-conf__colonna-16, .al-conf__centro-2")).toBeNull()
     expect(screen.queryByRole("navigation", { name: "Sezioni" })).toBeNull()
   })
 
@@ -87,14 +93,34 @@ describe("Da confermare -- il telefono", () => {
     tipo("Frame senza tipo")
     expect(dove()).toBe("caso 1 di 2")
     expect(screen.getByRole("heading", { level: 2, name: "Frame senza tipo" })).toBeDefined()
-    expect(document.querySelector(".as-conferma-caso .as-conferma__regola")?.textContent).toMatch(/tipo/i)
-    const aperte = document.querySelectorAll("article.as-domanda")
-    expect(aperte).toHaveLength(1)
-    expect(aperte[0]?.className).toBe("as-domanda as-domanda--prima")
-    expect(aperte[0]?.getAttribute("aria-label")).toBe("D:/Astro/dark")
-    expect(document.querySelector(".as-domanda-riga")).toBeNull()
+    const sezione = screen.getByRole("region", { name: "Frame senza tipo" })
+    expect(sezione.querySelector("p.al-conf__blocco-8")?.textContent).toMatch(/^Tipo di frame non indicato nei file/)
+    expect(aperte()).toHaveLength(1)
+    expect(aperte()[0]?.getAttribute("aria-label")).toBe("D:/Astro/dark, senza risposta")
+    expect(document.querySelector(".al-conf__centro-2")).toBeNull()
+    // dove si e' sta sopra la colonna, come si va avanti sotto: fuori dalla sezione
+    const colonna = document.querySelector(".al-conf__colonna-11") as HTMLElement
+    expect(colonna.previousElementSibling?.className).toBe("al-conf__riga-8")
+    expect(colonna.nextElementSibling?.className).toBe("al-conf__griglia-1")
+    expect(sezione.contains(gesto("Caso dopo"))).toBe(false)
     expect(elenco()).toBeNull()
     expect(screen.getByRole("region", { name: "Il conto" }).querySelector(".al-conf__testo-3")).toBeNull()
+  })
+
+  it("un tipo si apre sulla prima domanda senza risposta, non sempre sul caso 1", async () => {
+    await aperta(
+      "/da-confermare?formato=telefono",
+      daConfermare({
+        ...PAGINA,
+        typeless: [
+          cartellaSenzaTipo({ key: "D:/Astro/M51", frames: 30, answer: "light" }),
+          cartellaSenzaTipo({ key: "D:/Astro/dark", frames: 120 }),
+        ],
+      }),
+    )
+    tipo("Frame senza tipo")
+    expect(dove()).toBe("caso 2 di 2")
+    expect(aperte()[0]?.getAttribute("aria-label")).toBe("D:/Astro/dark, senza risposta")
   })
 
   it("si va di caso in caso, e ai bordi Caso prima e Caso dopo sono spenti", async () => {
@@ -107,7 +133,7 @@ describe("Da confermare -- il telefono", () => {
     expect(dove()).toBe("caso 1 di 2")
     fireEvent.click(gesto("Caso dopo"))
     expect(dove()).toBe("caso 2 di 2")
-    expect(document.querySelector("article.as-domanda")?.getAttribute("aria-label")).toBe("D:/Astro/M51")
+    expect(aperte()[0]?.getAttribute("aria-label")).toBe("D:/Astro/M51, salvata")
     expect(spento("Caso prima")).toBe(false)
     expect(spento("Caso dopo")).toBe(true)
     fireEvent.click(gesto("Caso prima"))
@@ -127,7 +153,7 @@ describe("Da confermare -- il telefono", () => {
   it("una risposta data in un caso si legge tornando ai tipi, e il piede la conta", async () => {
     await aperta()
     tipo("Strumenti duplicati")
-    fireEvent.click(screen.getByRole("radio", { name: /unisci a ATR2600M/i }))
+    fireEvent.click(scelta(document.body, /unisci a ATR2600M/i))
     expect(piede().querySelector(".al-conf__riga-18")?.textContent).toBe("1da applicare")
     // l'unione si dice col tondo, che apre il testo
     const tondo = within(piede()).getByRole("button", { name: /unione di strumenti: mostra l'avviso/ })
@@ -140,7 +166,7 @@ describe("Da confermare -- il telefono", () => {
     expect(tipi()[0]).toEqual(["Strumenti duplicati", "\u25CF1 da applicare"])
     // e tornando sul caso la risposta e' ancora li'
     tipo("Strumenti duplicati")
-    expect(screen.getByRole("radio", { name: /unisci a ATR2600M/i })).toHaveProperty("checked", true)
+    expect(scelto(scelta(document.body, /unisci a ATR2600M/i))).toBe(true)
   })
 
   it("dall'indirizzo si entra nel caso di una sezione", async () => {

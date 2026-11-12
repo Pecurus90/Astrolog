@@ -1,15 +1,25 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useContext, useState } from "react"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { Campo } from "./Campo"
-import { Domanda } from "./Domanda"
-import { Scelte } from "./Scelte"
+import { Avviso } from "./componenti/Avviso"
+import { gesto } from "./componenti/gesto"
+import { FormatoConf, statoDi } from "./ConfermareGuscio"
+import {
+  Campi,
+  Domanda,
+  DomandaAperta,
+  Parte,
+  type Prova,
+  Risposte,
+  righeDelleNotti,
+  rigaDeiFrame,
+  voce,
+} from "./Domanda"
 import { Sezione } from "./Sezione"
+import { provaDegliStrumenti } from "./Soggetti"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { cielo, notte, numero, oraDelSito, ore, t } from "./i18n"
+import { type Chiave, cielo, numero, oraDelSito, t } from "./i18n"
 
 type Scheda = components["schemas"]["ObjectCard"]
 type Risposta = components["schemas"]["ObjectEdit"]
@@ -19,18 +29,14 @@ const ALTRO_NOME = "nome"
 const NON_OGGETTO = "nessuno"
 
 /**
- * **Che oggetto e'**: una scheda per gruppo di frame, sempre uguale (ADR 0014, S3) -- un oggetto
- * su cui l'app ha un dubbio, o frame che non dicono cosa e' stato ripreso e di cui il plate
- * solving non dice niente.
+ * **Che oggetto e'**: una scheda per gruppo di frame (ADR 0014, S3; tavola v82, 210-213) -- un
+ * oggetto su cui l'app ha un dubbio, o frame che non dicono cosa e' stato ripreso e di cui il
+ * plate solving non dice niente.
  *
- * - **Una risposta sola fra tre**: una voce trovata nel campo, un nome scritto, "non e' un
- *   oggetto". Il backend ne rifiuta due insieme, e qui non se ne possono dare due.
- * - **Un nome vuoto non e' una risposta**: Applica direbbe "fatto" senza aver cambiato niente.
- * - **Una scheda risposta resta in pagina**, e ridare la stessa risposta non manda niente.
- * - **Puntamento, camera e ore ci sono solo nei frame senza nome**: per un oggetto in dubbio
- *   l'API non li manda.
- * - **Gli oggetti a posto non sono domande**: stanno chiusi in fondo, si aprono a pagine, e si
- *   correggono con la stessa scheda, col nome di adesso gia' scelto.
+ * - **Una risposta sola fra tre**: una voce trovata nel campo, un nome scritto, "non e' un oggetto".
+ * - **Un nome vuoto non e' una risposta**; ridare la risposta salvata non manda niente.
+ * - **Gli oggetti identificati non sono domande**: chiusi in fondo, nell'ordine dell'API (piu' frame prima), 5 e poi 50 alla volta;
+ *   si correggono a scheda sotto la riga, e la correzione parte con Applica (tavola 254-260).
  */
 export function SezioneOggetti({
   schede,
@@ -51,36 +57,50 @@ export function SezioneOggetti({
       voci={schede}
       chiave={(s) => s.key}
       riga={(s, indice) => (
-        <RigaOggetti indice={indice} scheda={s} risposta={risposte[s.key]} onRisposta={onRisposta} />
+        <RigaOggetti
+          indice={indice}
+          scheda={s}
+          risposta={risposte[s.key]}
+          onRisposta={onRisposta}
+        />
       )}
-      piede={aPosto > 0 && <APosto daIndice={schede.length} quanti={aPosto} risposte={risposte} onRisposta={onRisposta} />}
+      piede={
+        aPosto > 0 && <Identificati quanti={aPosto} risposte={risposte} onRisposta={onRisposta} />
+      }
     />
   )
 }
 
-const PER_PAGINA = 20
+// [T] Da confermare.dc.html `ricN` (254-260): 5 in vista, poi 50 alla volta
+const PRIMI = 5
+const ELENCO = "objects:"
+const ALTRI = 50
 
-function APosto({
+/** Gli oggetti identificati: si aprono, si correggono, una scheda alla volta. */
+function Identificati({
   quanti,
-  daIndice,
   risposte,
   onRisposta,
 }: {
   quanti: number
-  /** Da dove contano gli id dei campi: dopo le schede di sopra, per non ripeterli. */
-  daIndice: number
   risposte: Record<string, Risposta>
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
-  const [aperti, setAperti] = useState(false)
-  const [da, setDa] = useState(0)
+  const formato = useContext(FormatoConf)
+  const { aperta, apri } = useContext(DomandaAperta)
+  const [chiesti, setChiesti] = useState(false)
+  const [quanteVisti, setQuanteVisti] = useState(PRIMI)
+  const [corretto, setCorretto] = useState<string | null>(null)
+  // Una cosa aperta alla volta: aprire una domanda chiude l'elenco.
+  // "objects:" senza chiave: nessuna domanda aperta, ma la sezione e' quella su cui si lavora
+  const aperti = chiesti && aperta === ELENCO
   // Sotto la chiave della pagina: l'Applica che la rilegge rilegge anche questi.
   const pagina = useQuery({
-    queryKey: ["review", "settled", da],
+    queryKey: ["review", "settled", quanteVisti],
     enabled: aperti,
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/review/objects/settled", {
-        params: { query: { limit: PER_PAGINA, offset: da } },
+        params: { query: { limit: quanteVisti, offset: 0 } },
       })
       if (error) throw new Error(t("review.settled.failed"))
       return data
@@ -88,62 +108,244 @@ function APosto({
     placeholderData: keepPreviousData,
   })
   const dati = pagina.data
+  const restano = dati ? dati.total - dati.items.length : 0
   return (
-    <>
-      <div className={aperti ? "as-conferma-aposto as-conferma-aposto--aperto" : "as-conferma-aposto"}>
-        <p>
-          <b>{numero(quanti)}</b> {t("review.objects.settled", { n: quanti })}
-        </p>
-        {aperti ? (
-          <Bottone piccolo verso="nudo" onClick={() => setAperti(false)}>
-            {t("frame.close")}
-          </Bottone>
-        ) : (
-          <Bottone piccolo onClick={() => setAperti(true)}>
-            {t("review.settled.open")}
-          </Bottone>
-        )}
-      </div>
-      {aperti && pagina.error && <Avviso esito="allarme">{pagina.error.message}</Avviso>}
+    <div className="al-conf__colonna-23">
+      <a
+        className="al-conf__riga-15"
+        href="#"
+        role="button"
+        aria-expanded={aperti ? "true" : "false"}
+        onClick={gesto(() => {
+          setChiesti(!aperti)
+          if (!aperti) apri(ELENCO)
+        })}
+      >
+        <span className="al-conf__blocco-15">
+          {t("review.settled.count", { n: numero(quanti) })}
+        </span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d={aperti ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />
+        </svg>
+      </a>
+      {aperti && pagina.error && (
+        <Avviso tipo="riga" formato={formato} segno="!" titolo={pagina.error.message} />
+      )}
       {aperti && dati && (
         <>
-          {dati.items.map((s, i) => (
-            <RigaOggetti aPosto indice={daIndice + i} key={s.key} scheda={s} risposta={risposte[s.key]} onRisposta={onRisposta} />
-          ))}
-          <div className="as-conferma-pagine">
-            <p className="as-conferma-pagine__dove">
-              {t("review.settled.range", {
-                da: numero(dati.offset + 1),
-                a: numero(dati.offset + dati.items.length),
-                n: numero(dati.total),
+          <ul className="al-conf__colonna-9">
+            {dati.items.map((s) => (
+              <Identificato
+                key={s.key}
+                scheda={s}
+                aperta={corretto === s.key}
+                onApri={() => setCorretto(corretto === s.key ? null : s.key)}
+                risposta={risposte[s.key]}
+                onRisposta={onRisposta}
+              />
+            ))}
+          </ul>
+          {restano > 0 && (
+            <a
+              href="#"
+              role="button"
+              onClick={gesto(() => setQuanteVisti(quanteVisti + ALTRI))}
+              className="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--blocco"
+            >
+              {t("review.settled.more", {
+                n: numero(Math.min(ALTRI, restano)),
+                di: numero(restano),
               })}
-            </p>
-            <Bottone disabled={da === 0} piccolo onClick={() => setDa(Math.max(0, da - PER_PAGINA))}>
-              {t("review.settled.before")}
-            </Bottone>
-            <Bottone disabled={da + PER_PAGINA >= dati.total} piccolo onClick={() => setDa(da + PER_PAGINA)}>
-              {t("review.settled.after")}
-            </Bottone>
-          </div>
+            </a>
+          )}
         </>
+      )}
+    </div>
+  )
+}
+
+/** Un oggetto identificato: la riga, e sotto la scheda che lo corregge. */
+function Identificato({
+  scheda,
+  aperta,
+  onApri,
+  risposta,
+  onRisposta,
+}: {
+  scheda: Scheda
+  aperta: boolean
+  onApri: () => void
+  risposta: Risposta | undefined
+  onRisposta: (chiave: string, r: Risposta | null) => void
+}) {
+  const nome = scheda.name ?? scheda.key
+  // Il nome scritto e' della riga: un nome a meta' non sta in mano, e il campo non si svuota.
+  const [scritto, setScritto] = useState(risposta?.name ?? "")
+  const [altro, setAltro] = useState(Boolean(risposta?.name))
+  const scelta = risposta?.not_an_object ? NON_OGGETTO : altro ? ALTRO_NOME : null
+  const frames = t("review.frames", { n: numero(scheda.frames) })
+  const gestoDetto = t(aperta ? "frame.close" : "review.fix")
+  const manda = (quale: string | null, nuovo: string) => {
+    setAltro(quale === ALTRO_NOME)
+    setScritto(nuovo)
+    if (quale === NON_OGGETTO)
+      return onRisposta(scheda.key, { key: scheda.key, not_an_object: true })
+    const pulito = nuovo.trim()
+    // il nome di adesso riscritto non e' una correzione
+    const nuovoNome = quale === ALTRO_NOME && pulito !== "" && pulito !== nome
+    onRisposta(
+      scheda.key,
+      nuovoNome ? { key: scheda.key, name: pulito, not_an_object: false } : null,
+    )
+  }
+  const titolo = t("review.settled.which", { nome })
+  return (
+    <>
+      <li className="al-conf__riga-16">
+        <span className="al-conf__colonna-24">
+          <span className="al-conf__testo-18">{nome}</span>
+          <span className="al-conf__testo-10">
+            {[scheda.common_name, frames].filter(Boolean).join(" \u00b7 ")}
+          </span>
+        </span>
+        <a
+          href="#"
+          role="button"
+          onClick={gesto(onApri)}
+          aria-label={`${gestoDetto}: ${nome}`}
+          className="al-bottone al-bottone--tenue al-bottone--rovescio al-conf__blocco-16"
+        >
+          {gestoDetto}
+        </a>
+      </li>
+      {aperta && (
+        <li className="al-conf__corr">
+          <span className="al-conf__testo-14">{titolo}</span>
+          <Risposte
+            etichetta={titolo}
+            opzioni={[
+              voce(
+                scelta === null,
+                t("review.settled.stays", { nome }),
+                () => manda(null, scritto),
+                t("review.settled.stays.why"),
+              ),
+              voce(scelta === ALTRO_NOME, t("review.objects.other"), () =>
+                manda(ALTRO_NOME, scritto),
+              ),
+              voce(
+                scelta === NON_OGGETTO,
+                t("review.objects.none"),
+                () => manda(NON_OGGETTO, scritto),
+                t("review.objects.none.why"),
+              ),
+            ]}
+          />
+          {scelta === ALTRO_NOME && (
+            <input
+              value={scritto}
+              onChange={(e) => manda(ALTRO_NOME, e.target.value)}
+              aria-label={t("review.objects.name")}
+              placeholder={t("review.settled.hint")}
+              autoComplete="off"
+              spellCheck={false}
+              className="al-campo al-campo--rovescio al-conf__blocco-13"
+            />
+          )}
+          <span className="al-conf__testo-10">
+            {t("review.settled.scope", { n: scheda.frames, frame: frames })}
+          </span>
+        </li>
       )}
     </>
   )
 }
 
-/**
- * Cosa dice una risposta salvata, nella stessa forma di una scelta: una sigla, o una delle due.
- * Una sigla che non e' fra le voci del campo e' stata scritta in "Altro nome": il catalogo
- * l'ha riconosciuta, ma la scelta da mostrare resta il nome.
- */
-function salvataDi(scheda: Scheda, aPosto: boolean): string | null {
-  // Un oggetto a posto non ha risposta: cio' che vale e' il nome che l'app gli ha dato. Senza
-  // sigla (una cometa, un nome scritto) quel nome sta nel campo di "Altro nome".
-  if (aPosto) return scheda.slug ?? (scheda.name ? ALTRO_NOME : null)
+/** Cosa dice una risposta salvata, nella forma di una scelta: una sigla, o una delle due. */
+function salvataDi(scheda: Scheda): string | null {
   const data = scheda.answer
   if (!data) return null
   if (data.kind === "none") return NON_OGGETTO
-  return data.kind === "catalog" && scheda.candidates.some((c) => c.slug === data.value) ? data.value : ALTRO_NOME
+  return data.kind === "catalog" && scheda.candidates.some((c) => c.slug === data.value)
+    ? data.value
+    : ALTRO_NOME
+}
+
+// Come l'app ha deciso, a parole (Marco, 12/11/2026): il metodo, e la fiducia.
+const METODI: Partial<Record<NonNullable<Scheda["method"]>, Chiave>> = {
+  coord_confirmed: "review.objects.method.sky",
+  coord_review: "review.objects.method.sky",
+  exact_name: "review.objects.method.name",
+  historic_name: "review.objects.method.historic",
+}
+const FIDUCIE: Partial<Record<NonNullable<Scheda["confidence"]>, Chiave>> = {
+  low: "review.objects.confidence.low",
+  high: "review.objects.confidence.high",
+  certain: "review.objects.confidence.high",
+}
+
+/** Le prove di una scheda: perche' l'app dubita di un nome, o cosa si sa dei frame senza nome. */
+function proveDi(scheda: Scheda): Prova[] {
+  const gruppo = scheda.group
+  const campo: Prova[] =
+    scheda.candidates.length === 0
+      ? [
+          {
+            nome: t("review.proof.inField"),
+            righe: [t(scheda.searched ? "review.objects.notFound" : "review.objects.notSearched")],
+            tenue: true,
+          },
+        ]
+      : []
+  if (!gruppo) {
+    const metodo = scheda.method ? METODI[scheda.method] : undefined
+    const fiducia = scheda.confidence ? FIDUCIE[scheda.confidence] : undefined
+    const dubbio = [metodo && t(metodo), fiducia && t(fiducia)].filter((x): x is string =>
+      Boolean(x),
+    )
+    return [
+      ...campo,
+      ...(dubbio.length > 0 ? [{ nome: t("review.proof.doubt"), righe: dubbio }] : []),
+      ...(scheda.nights.length > 0
+        ? [{ nome: t("review.proof.night"), righe: righeDelleNotti(scheda.nights) }]
+        : []),
+      ...provaDegliStrumenti(scheda.rigs),
+    ]
+  }
+  const strumenti = [gruppo.camera, gruppo.telescope].filter(Boolean).join(" \u00b7 ")
+  const puntamento =
+    gruppo.ra_deg !== null && gruppo.dec_deg !== null ? cielo(gruppo.ra_deg, gruppo.dec_deg) : null
+  // L'ora e' gia' quella del posto: si legge dalla stringa, senza passare dal fuso di chi guarda.
+  // l'intervallo col lineato delle tavole, come in Dashboard; un frame solo, un'ora sola
+  const [da, a] = [gruppo.first_frame, gruppo.last_frame].map((x) => (x ? oraDelSito(x) : null))
+  const arco = da && a ? (da === a ? da : `${da}\u2013${a}`) : null
+  return [
+    ...campo,
+    gruppo.night
+      ? { nome: t("review.proof.night"), righe: righeDelleNotti([gruppo.night]) }
+      : { nome: t("review.proof.night"), righe: [t("review.unknown.f")], tenue: true },
+    {
+      nome: t("review.proof.gear"),
+      righe: [strumenti || t("review.unknown.mp")],
+      tenue: !strumenti,
+    },
+    {
+      nome: t("review.proof.pointing"),
+      righe: [puntamento ?? t("review.unknown.m")],
+      tenue: puntamento === null,
+    },
+    { nome: t("review.proof.span"), righe: [arco ?? t("review.unknown.mp")], tenue: arco === null },
+  ]
 }
 
 function RigaOggetti({
@@ -151,19 +353,15 @@ function RigaOggetti({
   scheda,
   risposta,
   onRisposta,
-  aPosto = false,
 }: {
   indice: number
   scheda: Scheda
-  /** Un oggetto che l'app riconosce da sola: si corregge, non si risponde. */
-  aPosto?: boolean
   risposta: Risposta | undefined
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
-  const salvata = salvataDi(scheda, aPosto)
-  const nomeSalvato = salvata === ALTRO_NOME ? (scheda.answer?.name ?? (aPosto ? scheda.name : null) ?? "") : ""
-  // La scelta e il nome sono della riga: un nome a meta' non sta nell'accumulo, e senza tenerlo
-  // qui il campo si svuoterebbe sotto le dita. Partono dalla risposta in mano, poi dalla salvata.
+  const salvata = salvataDi(scheda)
+  const nomeSalvato = salvata === ALTRO_NOME ? (scheda.answer?.name ?? "") : ""
+  // La scelta e il nome sono della riga: un nome a meta' non sta nell'accumulo.
   const [scelta, setScelta] = useState<string | null>(
     risposta ? (risposta.not_an_object ? NON_OGGETTO : (risposta.slug ?? ALTRO_NOME)) : salvata,
   )
@@ -173,10 +371,10 @@ function RigaOggetti({
     setScelta(quale)
     setScritto(nome)
     const pulito = nome.trim()
-    // ridare la risposta gia' salvata non manda niente
     const uguale = quale === salvata && (quale !== ALTRO_NOME || pulito === nomeSalvato)
     if (uguale || (quale === ALTRO_NOME && pulito === "")) return onRisposta(scheda.key, null)
-    if (quale === NON_OGGETTO) return onRisposta(scheda.key, { key: scheda.key, not_an_object: true })
+    if (quale === NON_OGGETTO)
+      return onRisposta(scheda.key, { key: scheda.key, not_an_object: true })
     onRisposta(
       scheda.key,
       quale === ALTRO_NOME
@@ -186,101 +384,84 @@ function RigaOggetti({
   }
 
   const gruppo = scheda.group
-  const titolo = scheda.name ?? (gruppo?.night ? notte(gruppo.night) : t("review.objects.unnamed"))
-  const voce = (c: Scheda["candidates"][number]) => (c.common_name ? `${c.name} - ${c.common_name}` : c.name)
-  const durata = [
-    scheda.integration_s > 0 && t("review.objects.hours", { h: ore(scheda.integration_s) }),
-    scheda.untimed > 0 && t("review.objects.untimed", { n: numero(scheda.untimed) }),
-  ]
-    .filter(Boolean)
-    .join(" \u00b7 ")
-  // Cio' che vale adesso: la risposta in mano, o quella salvata. Una scelta a meta' non e' una risposta.
-  // Un oggetto a posto non ripete il suo nome: e' gia' il titolo della riga.
-  const detta = risposta
-    ? risposta.not_an_object
+  const titolo = scheda.name ?? t("review.objects.unnamed")
+  // due gruppi senza nome della stessa notte: chi ascolta li distingue dalla notte e dalla camera
+  const chi = gruppo
+    ? [titolo, gruppo.night && righeDelleNotti([gruppo.night])[0], gruppo.camera]
+        .filter(Boolean)
+        .join(", ")
+    : titolo
+  const etichetta = (c: Scheda["candidates"][number]) =>
+    c.common_name ? `${c.name} \u00b7 ${c.common_name}` : c.name
+  const nomeDi = (r: Risposta) =>
+    r.not_an_object
       ? t("review.objects.none")
-      : (risposta.name ?? scheda.candidates.find((c) => c.slug === risposta.slug)?.name ?? "")
-    : scheda.answer
-      ? scheda.answer.kind === "none"
-        ? t("review.objects.none")
-        : (scheda.answer.name ?? "")
-      : aPosto
-        ? ""
-        : null
-  // La chiave di un gruppo porta spazi e virgolette: un id valido si fa col posto in elenco.
-  const idNome = `oggetto-nome-${indice}`
+      : (r.name ?? scheda.candidates.find((c) => c.slug === r.slug)?.name ?? "")
+  const salvataDetta = scheda.answer
+    ? scheda.answer.kind === "none"
+      ? t("review.objects.none")
+      : (scheda.answer.name ?? "")
+    : null
+  const detta = risposta ? nomeDi(risposta) : salvataDetta
+  const alternative = scheda.candidates.length
+    ? scheda.candidates.map((c) => c.name)
+    : [t("review.objects.other"), t("review.objects.none")]
+  const capo = t("review.objects.question", { nome: titolo })
 
   return (
     <Domanda
       id={`objects:${scheda.key}`}
-      voce={titolo}
-      nome={scheda.name ? <span className="as-nome-oggetto">{scheda.name}</span> : titolo}
-      frames={scheda.frames}
-      accanto={durata || undefined}
-      aPosto={aPosto}
-      salvata={scheda.answer !== null}
-      inMano={risposta !== undefined}
-      era={scheda.answer ? (scheda.answer.kind === "none" ? t("review.objects.none") : (scheda.answer.name ?? undefined)) : undefined}
-      breve={
-        detta !== null ? (
-          <b>{detta}</b>
-        ) : (
-          [...scheda.candidates.map((c) => c.name), t("review.objects.other"), t("review.objects.none")].join(" \u00b7 ")
-        )
-      }
-      prova={
-        gruppo
-          ? [
-              // la notte fa gia' da titolo: si scrive qui solo quando manca
-              ...(gruppo.night ? [] : [{ nome: t("review.proof.night"), dato: t("review.unknown.f") }]),
-              {
-                nome: t("review.proof.gear"),
-                dato: [gruppo.camera, gruppo.telescope].filter(Boolean).join(" \u00b7 ") || t("review.unknown.mp"),
-              },
-              {
-                nome: t("review.proof.pointing"),
-                dato: gruppo.ra_deg !== null && gruppo.dec_deg !== null ? cielo(gruppo.ra_deg, gruppo.dec_deg) : t("review.unknown.m"),
-              },
-              {
-                nome: t("review.proof.span"),
-                // L'ora e' gia' quella del posto: si legge dalla stringa, senza passare dal fuso di chi guarda.
-                dato:
-                  gruppo.first_frame && gruppo.last_frame
-                    ? `${oraDelSito(gruppo.first_frame)} - ${oraDelSito(gruppo.last_frame)}`
-                    : t("review.unknown.mp"),
-              },
-              ...(scheda.candidates.length === 0 ? [{ nome: t("review.proof.inField"), dato: t("review.objects.noCandidates") }] : []),
-            ]
-          : []
-      }
+      voce={chi}
+      nome={titolo}
+      frame={rigaDeiFrame(scheda.frames, scheda.integration_s, scheda.untimed)}
+      stato={statoDi(scheda.answer !== null, risposta !== undefined)}
+      era={salvataDetta ?? undefined}
+      detta={detta !== null}
+      breve={detta ?? alternative.join(" \u00b7 ")}
+      prova={proveDi(scheda)}
     >
-      <Scelte
-        domanda={t("review.objects.question", { nome: titolo })}
-        nome={`oggetto-${scheda.key}`}
-        opzioni={[
-          ...(aPosto && scheda.slug ? [{ valore: scheda.slug, etichetta: scheda.name ?? scheda.slug }] : []),
-          ...scheda.candidates.map((c) => ({
-            valore: c.slug,
-            etichetta: voce(c),
-            sub: t(c.in_frame === null ? "review.objects.frame.unknown" : c.in_frame ? "review.objects.frame.in" : "review.objects.frame.out"),
-          })),
-          { valore: ALTRO_NOME, etichetta: t("review.objects.other") },
-          { valore: NON_OGGETTO, etichetta: t("review.objects.none"), sub: t("review.objects.none.why") },
-        ]}
-        scelta={scelta}
-        onScelta={(quale) => manda(quale, scritto)}
-      >
+      <Parte capo={capo} prima>
+        <Risposte
+          etichetta={capo}
+          opzioni={[
+            ...scheda.candidates.map((c) =>
+              voce(
+                scelta === c.slug,
+                etichetta(c),
+                () => manda(c.slug, scritto),
+                t(
+                  c.in_frame === null
+                    ? "review.objects.frame.unknown"
+                    : c.in_frame
+                      ? "review.objects.frame.in"
+                      : "review.objects.frame.out",
+                ),
+              ),
+            ),
+            voce(scelta === ALTRO_NOME, t("review.objects.other"), () =>
+              manda(ALTRO_NOME, scritto),
+            ),
+            voce(
+              scelta === NON_OGGETTO,
+              t("review.objects.none"),
+              () => manda(NON_OGGETTO, scritto),
+              t("review.objects.none.why"),
+            ),
+          ]}
+        />
         {scelta === ALTRO_NOME && (
-          <Campo id={idNome} etichetta={t("review.objects.name")}>
-            <input
-              className="as-campo-modulo__input"
-              id={idNome}
-              value={scritto}
-              onChange={(e) => manda(ALTRO_NOME, e.target.value)}
-            />
-          </Campo>
+          <Campi
+            campi={[
+              {
+                id: `oggetto-nome-${indice}`,
+                etichetta: t("review.objects.name"),
+                valore: scritto,
+                onValore: (v) => manda(ALTRO_NOME, v),
+              },
+            ]}
+          />
         )}
-      </Scelte>
+      </Parte>
     </Domanda>
   )
 }
