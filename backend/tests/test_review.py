@@ -7,6 +7,7 @@ Oggetti della stessa pagina sta in `test_review_objects.py`, col suo banco misto
 """
 
 import re
+import sqlite3
 import threading
 from unittest import mock
 
@@ -17,6 +18,7 @@ from astrolog.api import review as review_api
 from astrolog.api import review_page
 from astrolog.api.app import create_app
 from astrolog.api.review import unanswered
+from astrolog.api.review_write import constraint_code
 from astrolog.clock import now_iso
 from astrolog.db.connect import connect
 from astrolog.spine import stages
@@ -480,3 +482,17 @@ def test_the_rig_choices_count_the_poses_from_the_index(client):
     with db(client) as conn:
         plan = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + review_page.USED_RIGS))
     assert re.search(r"COVERING INDEX frames_rig\b", plan), plan
+
+
+@pytest.mark.parametrize(
+    ("messaggio", "codice"),
+    [
+        ("UNIQUE constraint failed: filters.name", "name_taken"),
+        ("UNIQUE constraint failed: filters.is_none", "none_filter_exists"),
+        ("CHECK constraint failed: frames", "constraint_violated"),
+    ],
+)
+def test_a_refusal_of_the_database_says_which_rule(messaggio, codice):
+    """Il rifiuto del database diventa la parola che la pagina sa dire; uno che non conosce resta
+    il rifiuto generico, mai il primo della tabella."""
+    assert constraint_code(sqlite3.IntegrityError(messaggio)) == codice

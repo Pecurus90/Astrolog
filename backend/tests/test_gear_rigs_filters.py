@@ -13,8 +13,10 @@ Regole, e il test che le rompe:
 
 import pytest
 
+from astrolog.spine import gear
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
+from astrolog.vocab.filters import Passband
 from conftest import by_name, db, write_light
 
 
@@ -270,3 +272,23 @@ def test_an_answer_on_a_word_the_vocabulary_does_not_know_stays_on_a_colour_came
     with db(client) as conn:
         declarations.learn(conn, "filter", "Filtro1", "Lum")
     assert _scansiona_un_altro(client, tmp_path, "Filtro1", BAYERPAT="RGGB") == "Lum"
+
+
+def _filtro_scritto(conn, nome, banda, is_none=0):
+    return conn.execute(
+        "INSERT INTO filters(name, passband, is_none, created_at) VALUES (?, ?, ?, ?)",
+        (nome, banda, is_none, "2026-11-12T12:00:00+00:00"),
+    ).lastrowid
+
+
+def test_a_merge_that_cannot_be_done_says_why_in_its_error(conn):
+    """Il messaggio dell'errore nomina il filtro che manca, quello di partenza o quello d'arrivo;
+    e un rifiuto dice la regola: e' cio' che si legge nel log."""
+    ha = _filtro_scritto(conn, "Ha", Passband.HA)
+    nessuno = _filtro_scritto(conn, "Nessun filtro", Passband.NO_FILTER, is_none=1)
+    with pytest.raises(LookupError, match=r"^filtro 998$"):
+        gear.merge_filter(conn, 998, ha)
+    with pytest.raises(LookupError, match=r"^filtro 999$"):
+        gear.merge_filter(conn, ha, 999)
+    with pytest.raises(gear.MergeRefusedError, match="con la banda nota"):
+        gear.merge_filter(conn, nessuno, ha)

@@ -568,6 +568,18 @@ def test_the_derived_tables_are_rewritten_once_per_apply(pagina, monkeypatch):
     assert riscritte == [1]
 
 
+def test_each_folder_answered_counts_once(pagina):
+    """Due cartelle nello stesso Applica sono due risposte: la ricevuta le conta tutte e due."""
+    esito = apply(
+        pagina,
+        typeless=[
+            {"key": _chiave(pagina, DARK), "kind": "calibration"},
+            {"key": _chiave(pagina, M51), "kind": "light"},
+        ],
+    )
+    assert esito["changed"] == 2
+
+
 def test_a_folder_that_is_not_there_is_refused(pagina):
     """Una risposta verso una cartella che non chiede niente non si scrive: resterebbe li' per
     sempre senza che nessuno la veda."""
