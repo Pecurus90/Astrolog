@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.clock import now_iso
 from astrolog.db.connect import connect
-from astrolog.spine import rig_card
+from astrolog.spine import gear_usage, inventory, rig_card
 from astrolog.units import MOON_DIAMETER_DEG
 from group_bench import ROMA, attrezzo, corri, filtro, luogo, posa, prepara
 
@@ -74,6 +74,52 @@ def test_the_fields_come_widest_first_on_the_same_frame_with_the_moon(tre_setup)
     assert largo["height_pct"] == pytest.approx(2.25 / (larghezza / 1.5) * 100, abs=0.1)
     assert stretto["width_pct"] == pytest.approx(1.5 / larghezza * 100, abs=0.1)
     assert pagina["moon_pct"] == pytest.approx(MOON_DIAMETER_DEG / larghezza * 100, abs=0.1)
+
+
+def test_the_boxes_and_the_moon_are_written_to_the_hundredth(tre_setup):
+    """Al centesimo, come li scrive `write_fields`: il terzo decimale non arriva alla pagina."""
+    pagina = tre_setup.get("/api/v1/gear").json()
+    rig = _per_focale(pagina)
+    riquadri, luna = rig_card.field_boxes({1: (3.36, 2.25), 2: (1.5, 1.0)}, MOON_DIAMETER_DEG)
+    attesi = [
+        {"rig_id": rig[f]["id"], "width_pct": round(w, 2), "height_pct": round(h, 2)}
+        for f, (w, h) in ((405.0, riquadri[1]), (905.0, riquadri[2]))
+    ]
+    assert pagina["fields"] == attesi
+    assert pagina["moon_pct"] == round(luna, 2)
+
+
+def test_one_rig_alone_has_its_box_and_the_moon(db_path):
+    conn = connect(db_path)
+    try:
+        prepara(conn)
+        luogo(conn, ROMA)
+        camera = attrezzo(conn, "camera", "ASI2600MM", pixel_size_um=3.76, width_px=6248)
+        solo = _rig(conn, attrezzo(conn, "optics", "FRA400"), camera, 405.0)
+        f = posa(conn, quando="2024-05-18T22:00:00Z", esposizione=300)
+        conn.execute("UPDATE frames SET rig_id = ? WHERE id = ?", (solo, f))
+        _risolta(conn, f, 3.0, 2.0)
+        corri(conn)
+        riquadri, luna = inventory.fields(conn)
+    finally:
+        conn.close()
+    assert [b["rig_id"] for b in riquadri] == [solo]
+    # 15,266...: il terzo decimale non e' zero, e non si scrive
+    assert luna == round(MOON_DIAMETER_DEG / (3.0 * 1.15) * 100, 2)
+
+
+@pytest.mark.parametrize(
+    ("frames", "anello"),
+    [
+        ([1, 2], [(0.0, 33.33), (33.33, 100.0)]),
+        ([1, 1, 1], [(0.0, 33.33), (33.33, 66.67), (66.67, 100.0)]),
+        ([0, 0], None),
+        ([], None),
+    ],
+)
+def test_the_ring_cuts_are_to_the_hundredth(frames, anello):
+    """Ogni fetta dal suo inizio alla sua fine in percento, al centesimo; senza frame, niente."""
+    assert gear_usage._ring(frames) == anello
 
 
 def test_a_tiny_field_is_drawn_on_a_frame_of_at_least_nine_tenths_of_a_degree():
