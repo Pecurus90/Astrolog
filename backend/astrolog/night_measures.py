@@ -42,7 +42,7 @@ HAVING MIN(pf.frame_id) IS NOT NULL OR never IS NOT NULL
 # The frames the Nights page counts (spine/counts.py), with their measures if bridged.
 _FRAMES = f"""
 SELECT f.night_id, f.object_id, f.filter_id, f.mosaic_key, f.panel_id, g.optics_id, g.camera_id,
-       b.skip_reason, m.outcome, c.camera, c.gain, c.exposure_s, {VALUES}
+       b.skip_reason, m.outcome, c.camera, c.gain, c.exposure_s, c.pier_side, {VALUES}
 FROM frames f{JOINS}
 LEFT JOIN pipeline_cards c ON c.file_id = m.file_id
 LEFT JOIN rigs g ON g.id = f.rig_id
@@ -68,7 +68,7 @@ _VERDICTS: dict[str, Callable[[float], str | None]] = {
     "hfd_tilt_pct": tilt_level,
     "fwhm_px": sampling_class,
 }
-_GROUP_STATS = ("frames", "pending", "differs", "differs_values")
+_GROUP_STATS = ("frames", "pending", "differs", "differs_values", "pier_east", "pier_west")
 _SETUP = ("camera", "gain", "exposure")  # the same three, or background and noise do not compare
 
 # The columns of `_NIGHT_KEY` or `_OBJECT_KEY`, in their order; None: all
@@ -82,6 +82,7 @@ class _Group:
     setups: set[tuple[object, object, object]] = field(default_factory=set)
     values: dict[str, list[float]] = field(default_factory=lambda: defaultdict(list))  # in time
     filters: dict[str, set[int | None]] = field(default_factory=lambda: defaultdict(set))  # with it
+    pier: dict[str, int] = field(default_factory=lambda: {"east": 0, "west": 0})  # PIERSIDE
 
 
 def rebuild(conn: sqlite3.Connection) -> None:
@@ -155,6 +156,8 @@ def _row_keys_of(row: sqlite3.Row) -> Iterator[GroupKey]:
 
 def _add(group: _Group, row: sqlite3.Row) -> None:
     group.frames += 1
+    if row["pier_side"] is not None:
+        group.pier[row["pier_side"]] += 1
     if row["outcome"] in (None, "unreadable"):  # unreadable now is tried again: it waits
         group.pending += row["skip_reason"] is None
         return
@@ -211,5 +214,6 @@ def _group_rows(groups: dict[GroupKey, _Group]) -> Iterable[tuple[object, ...]]:
     rows = []
     for at, g in groups.items():
         differs = _differs(g.setups)
-        rows.append((*at, g.frames, g.pending, json.dumps(list(differs)), json.dumps(differs)))
+        rows.append((*at, g.frames, g.pending, json.dumps(list(differs)), json.dumps(differs),
+                     g.pier["east"], g.pier["west"]))  # fmt: skip
     return rows

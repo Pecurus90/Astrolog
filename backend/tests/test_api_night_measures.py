@@ -221,6 +221,21 @@ def test_a_solved_frame_says_where_its_sky_is_brighter(conn, db_path, world) -> 
     assert _get(db_path, world.night).json()["series"][0]["gradient_side"] == "E"
 
 
+def test_the_pier_side_written_in_the_header_reaches_frames_and_sets(conn, db_path, world) -> None:
+    """Tavola MisureFrame 248, «a ovest 1 di 2 frame»: il PIERSIDE del file, per frame e contato
+    per insieme quando si scrivono le misure; senza lato, il frame non conta."""
+    world.shot(2.0, start=T1)
+    world.shot(3.0, start=T2)
+    world.shot(4.0)
+    for side, start in (("west", T1), ("east", T2)):
+        conn.execute("UPDATE pipeline_cards SET pier_side = ? WHERE start_utc = ?", (side, start))
+    night_measures.rebuild(conn)
+    conn.commit()
+    body = _get(db_path, world.night).json()
+    assert [f["pier_side"] for f in body["series"]] == ["west", "east", None]
+    assert body["sets"][0]["pier_side"] == {"east": 1, "west": 1}
+
+
 def test_a_night_not_rebuilt_yet_has_no_sets(conn, db_path, world) -> None:
     """Grouped but the measures not written yet: no sets, not an error."""
     world.frame()

@@ -1446,7 +1446,10 @@ CREATE TABLE night_measure_groups (
   differs    TEXT NOT NULL CHECK (json_valid(differs) AND json_type(differs) = 'array'),
   -- per ognuno di differs i valori diversi, i numeri dal piu' grande (tavola MisureFrame `nonConf`)
   differs_values TEXT NOT NULL
-    CHECK (json_valid(differs_values) AND json_type(differs_values) = 'object')
+    CHECK (json_valid(differs_values) AND json_type(differs_values) = 'object'),
+  -- i frame col lato del pilastro scritto (PIERSIDE), a est e a ovest (tavola MisureFrame 248)
+  pier_east  INTEGER NOT NULL CHECK (pier_east >= 0),
+  pier_west  INTEGER NOT NULL CHECK (pier_west >= 0 AND pier_east + pier_west <= frames)
 ) STRICT;
 CREATE UNIQUE INDEX night_measure_groups_key ON night_measure_groups
   (night_id, COALESCE(object_id, -1), COALESCE(filter_id, -1), unfiltered);
@@ -1505,6 +1508,8 @@ CREATE TABLE object_measure_groups (
   differs     TEXT NOT NULL CHECK (json_valid(differs) AND json_type(differs) = 'array'),
   differs_values TEXT NOT NULL
     CHECK (json_valid(differs_values) AND json_type(differs_values) = 'object'),
+  pier_east   INTEGER NOT NULL CHECK (pier_east >= 0),  -- come in night_measure_groups
+  pier_west   INTEGER NOT NULL CHECK (pier_west >= 0 AND pier_east + pier_west <= frames),
   CHECK ((object_id IS NULL) <> (mosaic_key IS NULL)),
   CHECK (panel_id IS NULL OR (mosaic_key IS NOT NULL AND every_production = 1)),
   CHECK (every_production = 0 OR (optics_id IS NULL AND camera_id IS NULL))

@@ -121,6 +121,21 @@ export const TESSERE: Tessera[] = [
 // Le misure che dipendono da camera, guadagno e posa (tavola, `perF`, `mixPo`).
 export const DAL_SETUP = new Set(["background_adu", "noise_adu"])
 
+// Il lato del pilastro: un fatto dell'header, non una misura; niente grafico ne' confronto.
+export const PILASTRO = "pier_side"
+
+/** Il lato del pilastro dell'insieme dai suoi conti (tavola MisureFrame 248). */
+export function latoDelPilastro(s: Insieme | undefined): { v: string; sub: string } {
+  const est = s?.pier_side?.east ?? 0
+  const ovest = s?.pier_side?.west ?? 0
+  if (!est && !ovest) return { v: scritto(PILASTRO, null), sub: t("measures.none") }
+  const lato = est && ovest ? "both" : ovest ? "west" : "east"
+  return {
+    v: t(`measures.pier.${lato}`),
+    sub: t("measures.pier.of", { w: numero(ovest), n: numero(est + ovest) }),
+  }
+}
+
 /** Le altre misure, a gruppi come la tavola (`AMG`), coi nomi tecnici come le tessere. */
 export const ALTRE: { gruppo: Chiave; voci: { chiave: string; nome: string }[] }[] = [
   {
@@ -173,6 +188,7 @@ export const ALTRE: { gruppo: Chiave; voci: { chiave: string; nome: string }[] }
       { chiave: "altitude_deg", nome: "Altitude" },
       { chiave: "azimuth_deg", nome: "Azimuth" },
       { chiave: "hour_angle_h", nome: "Hour Angle" },
+      { chiave: PILASTRO, nome: "Pier Side" },
       { chiave: "zero_point_mag", nome: "Zero Point" },
       { chiave: "calibration_stars", nome: "Calibration Stars" },
       { chiave: "sky_adu", nome: "Sky ADU" },

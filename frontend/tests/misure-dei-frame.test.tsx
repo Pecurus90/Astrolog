@@ -283,6 +283,27 @@ describe("filtro, oggetto e altra misura", () => {
     expect(screen.getByRole("img", { name: /^Ha: FWHM di/ })).toBeTruthy()
   })
 
+  it("il lato del pilastro dice i lati dai conti dell'API e non entra nei grafici (tavola 248)", () => {
+    const misure = {
+      ...MISURE,
+      sets: [
+        set(null, null, 6, TUTTE, { pier_side: { east: 2, west: 1 } }),
+        ...MISURE.sets.slice(1),
+      ],
+    } as unknown as Misure
+    const s = monta(misure)
+    fireEvent.change(within(s).getByRole("combobox", { name: t("measures.other") }), {
+      target: { value: "pier_side" },
+    })
+    expect(parti(tessera(s, "Pier Side"))).toEqual(["est e ovest", "a ovest 1 di 3 frame", null])
+    expect(tessera(s, "Pier Side").getAttribute("aria-pressed")).toBe("false")
+    fireEvent.click(tessera(s, "Pier Side"))
+    expect(tessera(s, "Pier Side").getAttribute("aria-pressed")).toBe("false")
+    expect(screen.getByRole("img", { name: /^Ha: FWHM e Eccentricity/ })).toBeTruthy()
+    const riga = within(screen.getByRole("table")).getAllByRole("row")[1]
+    expect(within(riga!).getAllByRole("cell").at(-1)?.textContent).toBe("—")
+  })
+
   it("all'apertura riprende l'altra misura ricordata", () => {
     localStorage.setItem(RICORDA, "kept")
     const s = monta()

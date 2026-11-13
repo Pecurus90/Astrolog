@@ -14,12 +14,14 @@ import {
   type EsitoDelGruppo,
   type FrameMisurato,
   type Misure,
+  PILASTRO,
   type Scelta,
   type Tipo,
   chiaveIn,
   filtriDi,
   pallinoDi,
   insieme,
+  latoDelPilastro,
   nomeDelGruppo,
   nomeDi,
   posizione,
@@ -490,7 +492,7 @@ function Cella({ id, set }: { id: string; set: ReturnType<typeof insieme> }) {
         style={{ alignItems: "flex-end", textAlign: "right" }}
       >
         <span className="al-c-misure-frame__riga-36" style={{ fontWeight: 400 }}>
-          {scritto(chiave, s?.median)}
+          {id === PILASTRO ? latoDelPilastro(set).v : scritto(chiave, s?.median)}
         </span>
         {tilt && (
           <Pillola

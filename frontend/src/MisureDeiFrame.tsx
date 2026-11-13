@@ -19,6 +19,7 @@ import {
   type EsitoDelGruppo,
   type Insieme,
   type Misure,
+  PILASTRO,
   type Scelta,
   TESSERE,
   type Tessera,
@@ -26,6 +27,7 @@ import {
   diversi,
   filtriDi,
   insieme,
+  latoDelPilastro,
   tintaDi,
   linea,
   nomeDelGruppo,
@@ -116,7 +118,7 @@ export function MisureDeiFrame({
   const sceltaAltra = (e: ChangeEvent<HTMLSelectElement>) => {
     const v = e.target.value || null
     const ora = met.filter((k) => k !== altra)
-    if (v) {
+    if (v && v !== PILASTRO) {
       ora.push(v)
       if (ora.length > 2) ora.shift()
     }
@@ -174,7 +176,7 @@ export function MisureDeiFrame({
                 set={set}
                 perFiltro={statistica(set, x.chiave)?.per_filter === true}
                 posto={met.indexOf(x.id)}
-                onTocca={() => tocca(x.id)}
+                onTocca={() => x.id !== PILASTRO && tocca(x.id)}
               />
             ))}
             <div className="al-c-misure-frame__altre">
@@ -285,8 +287,9 @@ function UnaTessera({
 }) {
   const { v: v0, chiave } = valore(x, set)
   const s = statistica(set, chiave)
-  let v = v0
-  let sub = sotto(x, set, chiave)
+  const lato = x.id === PILASTRO ? latoDelPilastro(set) : null
+  let v = lato?.v ?? v0
+  let sub = lato?.sub ?? sotto(x, set, chiave)
   // tessera vuota: il perche' dall'API (tavola: "non c'e' per questi frame")
   if (!sub && s?.median == null && s?.silent)
     sub = t(s.silent === "measuring" ? "measures.pending" : "measures.none")

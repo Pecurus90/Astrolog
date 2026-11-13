@@ -3266,6 +3266,8 @@ export interface components {
             differs_values?: {
                 [key: string]: (string | number)[];
             };
+            /** @description Frames per pier side; both zero: no frame writes it (ASIAIR never does). */
+            pier_side?: components["schemas"]["PierCount"];
             /**
              * Measures
              * @description Every measure, in the catalogue's order.
@@ -3383,6 +3385,11 @@ export interface components {
              * @description Where the background is brighter on the sky, of eight points from `gradient_pa_deg`; null: not solved or a flat sky.
              */
             gradient_side?: ("N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW") | null;
+            /**
+             * Pier Side
+             * @description The pier side as the header writes it; null: not written.
+             */
+            pier_side?: ("east" | "west") | null;
             /**
              * Values
              * @description Measure -> value, only those it has; why one is missing: the frame's measures.
@@ -4430,6 +4437,24 @@ export interface components {
         PieceNumbers: {
             dawes?: components["schemas"]["Number"] | null;
             sensor_size?: components["schemas"]["Sides"] | null;
+        };
+        /**
+         * PierCount
+         * @description The set's frames whose header writes the pier side (PIERSIDE, ASCOM), per side.
+         */
+        PierCount: {
+            /**
+             * East
+             * @description Frames on the east side of the pier.
+             * @default 0
+             */
+            east: number;
+            /**
+             * West
+             * @description Frames on the west side of the pier.
+             * @default 0
+             */
+            west: number;
         };
         /** PipelineStatus */
         PipelineStatus: {

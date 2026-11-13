@@ -22,7 +22,9 @@ SELECT f.id, f.object_id, f.night_id, f.filter_id, m.outcome, m.shape, m.tilt_le
        m.sampling_class, k.angle_axis, k.gradient_side,
        (SELECT c.start_utc FROM pipeline_files pf JOIN pipeline_cards c ON c.file_id = pf.id
          WHERE pf.frame_id = b.pipeline_frame_id AND pf.state = 'present'
-         ORDER BY pf.id LIMIT 1) AS start_utc, {VALUES}"""  # noqa: S608 - our columns
+         ORDER BY pf.id LIMIT 1) AS start_utc,
+       (SELECT c.pier_side FROM pipeline_cards c WHERE c.file_id = m.file_id) AS pier_side,
+       {VALUES}"""  # noqa: S608 - our columns
 # Never measured (a program not read, a compressed file): not in the series.
 SERIES_WHERE = """f.copy_of IS NULL AND b.skip_reason IS NULL
   AND m.outcome IS NOT 'not_supported' AND m.outcome IS NOT 'fz_unsupported'"""
@@ -131,6 +133,7 @@ def sets(
             "pending": g["pending"],
             "differs": json.loads(g["differs"]),
             "differs_values": json.loads(g["differs_values"]),
+            "pier_side": {"east": g["pier_east"], "west": g["pier_west"]},
             "measures": [_stat(e, by_at.get((*at, e.key)), measuring) for e in MEASURES],
         })  # fmt: skip
     return out
@@ -169,5 +172,6 @@ def frame(
         "sampling": r["sampling_class"],
         "angle_axis": r["angle_axis"],
         "gradient_side": r["gradient_side"],
+        "pier_side": r["pier_side"],
         "values": {e.key: float(r[e.key]) for e in MEASURES if r[e.key] is not None},
     }

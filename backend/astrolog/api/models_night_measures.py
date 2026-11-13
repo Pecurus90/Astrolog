@@ -43,6 +43,16 @@ class MeasureStat(BaseModel):
     )
 
 
+PierSide = Literal["east", "west"]
+
+
+class PierCount(BaseModel):
+    """The set's frames whose header writes the pier side (PIERSIDE, ASCOM), per side."""
+
+    east: int = Field(default=0, description="Frames on the east side of the pier.")
+    west: int = Field(default=0, description="Frames on the west side of the pier.")
+
+
 class MeasureSet(BaseModel):
     """All the frames, a group, a filter, or a group in a filter: null is all of them."""
 
@@ -61,6 +71,10 @@ class MeasureSet(BaseModel):
         default_factory=dict,
         description="For each of `differs` its values: the cameras' names, the gains and the "
         "exposures in seconds from the largest.",
+    )
+    pier_side: PierCount = Field(
+        default_factory=PierCount,
+        description="Frames per pier side; both zero: no frame writes it (ASIAIR never does).",
     )
     measures: list[MeasureStat] = Field(description="Every measure, in the catalogue's order.")
 
@@ -110,6 +124,9 @@ class MeasuredFrame(BaseModel):
         default=None,
         description="Where the background is brighter on the sky, of eight points from "
         "`gradient_pa_deg`; null: not solved or a flat sky.",
+    )
+    pier_side: PierSide | None = Field(
+        default=None, description="The pier side as the header writes it; null: not written."
     )
     values: dict[str, float] = Field(
         description="Measure -> value, only those it has; why one is missing: the frame's measures."
