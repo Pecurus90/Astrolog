@@ -36,13 +36,16 @@ export function AggiungiUnPezzo({
   schede,
   pezzi,
   onChiudi: chiudi,
+  primo = "optics",
 }: {
   schede: Schede
   pezzi: Pezzo[]
   /** The page opens it from its bar ("Aggiungi strumento") and closes it. */
   onChiudi: () => void
+  /** The kind it opens on: a rig's empty part asks for one of its own ("aggiungine uno"). */
+  primo?: Genere
 }) {
-  const [genere, setGenere] = useState<DaScrivere>("optics")
+  const [genere, setGenere] = useState<DaScrivere>(primo)
   const [nome, setNome] = useState("")
   const [scritta, setScritta] = useState<Scritta>({})
   /** **Cambiando genere si tiene solo cio' che il genere nuovo chiede.** I campi che si

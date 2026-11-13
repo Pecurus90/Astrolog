@@ -53,12 +53,21 @@ class Coverage(BaseModel):
 class GuideScale(BaseModel):
     value: float | None
     in_range: bool | None = Field(description="Within 0.5-4 \"/px, PHD2's preferred range.")
+    range_from: float | None = Field(description="That range, for the page to say it.")
+    range_to: float | None
+    guide: Literal["guide_scope", "oag"] | None = Field(
+        description="What it guides through: an OAG guides with the rig's focal."
+    )
+    guide_name: str | None
     missing: Missing | None
 
 
 class Backfocus(BaseModel):
     """The train's thickness minus the required backfocus: negative is short."""
 
+    train_mm: float | None = Field(description="OAG, wheel, spacers and camera, summed.")
+    required_mm: float | None
+    required_by: Literal["reducer", "optics"] | None
     difference_mm: float | None
     tolerance_mm: float | None
     verdict: Literal["exact", "in_tolerance", "short", "long"] | None = Field(
@@ -70,6 +79,8 @@ class Backfocus(BaseModel):
 class Load(BaseModel):
     percent: float | None = Field(description="Of the mount's highest payload.")
     within: bool | None
+    weight_kg: float | None = Field(description="Every carried piece's weight, summed.")
+    payload_kg: float | None = Field(description="The highest of the mount's two payloads.")
     missing: Missing | None
 
 

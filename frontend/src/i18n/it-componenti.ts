@@ -51,4 +51,8 @@ export const itComponenti = {
   "ui.calendar.fri": "ve",
   "ui.calendar.sat": "sa",
   "ui.calendar.sun": "do",
+  // Il Modulo (v82 `componenti/Modulo`)
+  "ui.form.save": "Salva",
+  "ui.form.saving": "Salvataggio…", // glifo-ok: ellipsis
+  "ui.form.cancel": "Annulla",
 }

@@ -10,7 +10,20 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { CORREDO, FILTRO, MONTATURA, OTTICA, apriAttrezzatura, attrezzatura, vedi } from "./attrezzatura-banco"
+import {
+  CORREDO,
+  FILTRO,
+  MONTATURA,
+  NUMERI,
+  OTTICA,
+  apriAttrezzatura,
+  attrezzatura,
+  campo,
+  carta,
+  parte,
+  parti,
+  vedi,
+} from "./attrezzatura-banco"
 import { SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
 
 afterEach(pulisci)
@@ -21,7 +34,7 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     // il setup piu' usato si apre da solo; i gruppi si scelgono dall'indice
-    expect(await screen.findByRole("list", { name: /setup/i })).toBeDefined()
+    expect(await carta()).toBeDefined()
     const telescopi = await vedi(/telescopi/i)
     expect(within(telescopi).getByText(/TS 130 APO/)).toBeDefined()
     const montature = await vedi(/montature/i)
@@ -51,8 +64,7 @@ describe("l Attrezzatura", () => {
       { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
     )
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /setup/i })
-    fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
+    fireEvent.click(within(await parte("mount")).getByRole("button", { name: /^seleziona montatura$/i }))
     fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "2" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
 
@@ -79,13 +91,9 @@ describe("l Attrezzatura", () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    const corredi = await screen.findByRole("list", { name: /setup/i })
-    const riga = within(corredi).getByRole("listitem")
-    expect(riga.textContent).toContain("M 31")
-    expect(riga.textContent).toContain("120 frame")
-    expect(riga.textContent).toContain("10 h") // 36.000 s, gia' sommate dal backend
-    expect(riga.textContent).toContain("7 notti")
-    // e lo stesso vale per un pezzo e per un filtro, non solo per il corredo
+    // il setup dice le sue ore (tavola v82: il dettaglio non elenca gli oggetti)
+    expect((await carta()).textContent).toContain("10 h") // 36.000 s, gia' sommate dal backend
+    // un pezzo e un filtro dicono cosa ci hai ripreso
     expect((await vedi(/telescopi/i)).textContent).toContain("M 31")
     expect((await vedi(/filtri/i)).textContent).toContain("M 42")
   })
@@ -133,9 +141,66 @@ describe("l Attrezzatura", () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    const corredi = await screen.findByRole("list", { name: /setup/i })
-    expect(corredi.textContent).toContain("0,85")
-    expect(corredi.textContent).toMatch(/1,5/)
+    const sezione = await campo()
+    expect(sezione.textContent).toContain("1,50° × 1,00°")
+    expect(sezione.textContent).toContain("0,85 arcosecondi per pixel · ricavati dal cielo")
+  })
+
+  it("il campo si confronta con gli altri setup e con la Luna, in percento dall'API", async () => {
+    const piccolo = { ...CORREDO, id: 11, name: null, title: "RedCat · ASI2600MM" }
+    attrezzatura({
+      rigs: [CORREDO, piccolo],
+      fields: [
+        { rig_id: 11, width_pct: 87, height_pct: 87.3 },
+        { rig_id: 10, width_pct: 38.8, height_pct: 38.8 },
+      ],
+      moon_pct: 13.6,
+    })
+    await apriAttrezzatura()
+
+    const confronto = within(await campo()).getByRole("img", {
+      name: "Il campo di Il grande a confronto con gli altri setup e la Luna piena",
+    })
+    const riquadri = [...confronto.querySelectorAll<HTMLElement>(".al-attr__strato-1")]
+    expect(riquadri.map((r) => [r.textContent, r.style.width])).toEqual([
+      ["RedCat · ASI2600MM", "87%"],
+      ["Il grande", "38.8%"],
+    ])
+    expect(confronto.querySelector<HTMLElement>(".al-attr__strato-3")?.style.width).toBe("13.6%")
+    expect(confronto.textContent).toContain("Luna piena, per misura")
+  })
+
+  it("i dati del setup dicono ogni conto, o cosa gli manca", async () => {
+    attrezzatura({ rigs: [{ ...CORREDO, numbers: NUMERI }] })
+    await apriAttrezzatura()
+
+    const dati = await screen.findByRole("region", { name: /^dati del setup$/i })
+    const riga = (k: string) => dati.querySelector(`[data-conto="${k}"]`)?.textContent ?? ""
+    expect(riga("focal_ratio")).toBe("Rapporto focalef/7focale effettiva 910 mm")
+    expect(riga("sampling")).toContain("0,85″/px")
+    expect(riga("sampling")).toContain("ottimo con seeing fra 1,7 e 2,4″")
+    // due decimali, che cadono solo se sono zero (tavola `VG`): 4,40 e non 4,4
+    expect(riga("field")).toContain("4,40° × 2,99°")
+    expect(riga("sensor_size")).toContain("manca la risoluzione della camera")
+    expect(riga("coverage")).toContain("manca il cerchio d'immagine dell'ottica")
+    expect(riga("guide_scale")).toContain("manca la guida")
+    expect(riga("backfocus")).toContain("55,5 mm")
+    expect(riga("backfocus")).toContain("+0,5 mm, in tolleranza")
+    expect(riga("backfocus")).toContain("richiesto 55 mm dall'ottica · tolleranza ±1 mm")
+    expect(riga("load")).toContain("manca la montatura")
+  })
+
+  it("l anello dei filtri e' in proporzione ai frame, coi nomi accanto", async () => {
+    const filtro = (name: string, passband: string, ring_from: number, ring_to: number) => ({
+      kind: "filter", id: 3, name, frames: 1, chosen: false, passband, ring_from, ring_to,
+    })  // prettier-ignore
+    attrezzatura({ rigs: [{ ...CORREDO, parts: [filtro("Ha", "HA", 0, 75), filtro("OIII", "OIII", 75, 100)] }] })
+    await apriAttrezzatura()
+
+    const sezione = await screen.findByRole("region", { name: /^filtri$/i })
+    const anello = within(sezione).getByRole("img", { name: "Filtri, in proporzione ai frame: Ha, OIII" })
+    expect(anello.style.background).toContain("conic-gradient")
+    expect(anello.textContent).toBe("2filtri")
   })
 
   it("un setup di cui non si sa quanto inquadra non scrive una scala", async () => {
@@ -159,9 +224,9 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
 
-    const corredi = await screen.findByRole("list", { name: /setup/i })
-    expect(corredi.textContent).toMatch(/campo non ancora disponibile/i)
-    expect(corredi.textContent).not.toMatch(/arcosecondi/i)
+    const sezione = await campo()
+    expect(sezione.textContent).toMatch(/campo non ancora disponibile/i)
+    expect(sezione.textContent).not.toMatch(/arcosecondi/i)
   })
 
   it("scelgo la montatura di un setup dalla sua scheda", async () => {
@@ -170,9 +235,8 @@ describe("l Attrezzatura", () => {
       { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
     )
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /setup/i })
-    fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
-    // la tendina, non la regione: anche la scheda ora si chiama "Montatura di ..."
+    fireEvent.click(within(await parte("mount")).getByRole("button", { name: /^seleziona montatura$/i }))
+    // la tendina, non la regione: anche il modulo si chiama "Montatura di ..."
     fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "2" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
@@ -193,29 +257,42 @@ describe("l Attrezzatura", () => {
             { kind: "software", id: null, name: "ASIAIR", frames: 1, chosen: false },
             { kind: "filter", id: 3, name: "Ha 3nm", frames: 60, chosen: false },
           ],
+          // le tacche le scrive l'API dalle parti
+          slots: CORREDO.slots.map((s) => ({
+            ...s,
+            filled: s.filled || ["filter_wheel", "focuser", "software"].includes(s.kind),
+          })),
         },
       ],
     })
     await apriAttrezzatura()
-    const corredi = await screen.findByRole("list", { name: /setup/i })
-    const parti = [...corredi.querySelectorAll("[data-parte]")].map((p) => p.textContent?.trim())
-    // tutte, nell'ordine dell'API: due ruote e due programmi restano due
-    expect(parti).toEqual([
-      "ruota portafiltri: ZWO EFW (100 frame)",
-      "ruota portafiltri: Ruota vecchia (20 frame)",
-      "focheggiatore: EAF (120 frame)",
-      "programma di ripresa: N.I.N.A. (119 frame)",
-      "programma di ripresa: ASIAIR (1 frame)",
-      "filtro: Ha 3nm (60 frame)",
-    ])
+    // tutte, nell'ordine dell'API: due ruote e due programmi restano due; i filtri stanno
+    // nell'anello, non fra le parti
+    expect((await parte("filter_wheel")).textContent).toBe(
+      "ruota portafiltriZWO EFW ↗100 frameRuota vecchia ↗20 frameSeleziona",
+    )
+    expect((await parte("focuser")).textContent).toContain("EAF ↗120 frame")
+    // il programma non e' un pezzo: non si apre, e lo dicono solo i file
+    const programma = await parte("software")
+    expect(programma.textContent).toBe("programma di ripresaN.I.N.A.119 frameASIAIR1 frame")
+    expect(within(programma).queryByRole("link")).toBeNull()
+    expect(within(programma).queryByRole("button")).toBeNull()
+    expect((await parti()).textContent).not.toContain("Ha 3nm")
   })
 
-  it("la montatura che hai scelto non si ripete fra le parti", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 120, chosen: true }] }] })
+  it("una parte vuota dice da indicare, e le parti che mancano si contano", async () => {
+    attrezzatura()
     await apriAttrezzatura()
-    const corredi = await screen.findByRole("list", { name: /setup/i })
-    expect(corredi.textContent).toContain("su EQ6-R")
-    expect(corredi.querySelectorAll("[data-parte]")).toHaveLength(0)
+    expect((await parti()).querySelector("header")?.textContent).toBe("Parti○8 da indicare")
+    expect((await parte("mount")).textContent).toContain("○da indicare")
+  })
+
+  it("un pezzo di una parte si apre fra i componenti, la sua riga segnata", async () => {
+    attrezzatura()
+    await apriAttrezzatura()
+    fireEvent.click(within(await parte("optics")).getByRole("link", { name: "Apri TS 130 APO fra i componenti" }))
+    const telescopi = await screen.findByRole("list", { name: /telescopi/i })
+    expect(within(telescopi).getByText(/TS 130 APO/).closest("li")?.getAttribute("aria-current")).toBe("true")
   })
 
   it("una parte che hai scelto tu dice che e' scelta, al posto dei frame", async () => {
@@ -232,11 +309,14 @@ describe("l Attrezzatura", () => {
       ],
     })
     await apriAttrezzatura()
-    const corredi = await screen.findByRole("list", { name: /setup/i })
-    const parti = [...corredi.querySelectorAll("[data-parte]")].map((p) => p.textContent?.trim())
-    expect(parti).toEqual(["montatura: EQ6-R (120 frame)", "riduttore: 0,8x (tua scelta)", "ottica di guida: 30 mm f/4 (tua scelta)"])
-    // una montatura letta dai file non e' "la tua": la tendina parte vuota
-    expect(corredi.textContent).not.toContain("su EQ6-R")
+    expect((await parte("mount")).textContent).toContain("EQ6-R ↗120 frame")
+    expect((await parte("reducer")).textContent).toContain("0,8x ↗(scelta a mano)")
+    expect((await parte("guide")).textContent).toContain("30 mm f/4 ↗(scelta a mano)")
+    // la montatura letta dai file dice su cosa sta il setup (tavola `mont`, 310)
+    expect((await carta()).textContent).toContain("su EQ6-R")
+    // ma non e' "la tua": la tendina parte vuota
+    fireEvent.click(within(await parte("mount")).getByRole("button", { name: /^seleziona montatura$/i }))
+    expect((screen.getByRole("combobox", { name: /^montatura/i }) as HTMLSelectElement).value).toBe("")
   })
 
   it("un setup dice su che montatura sta, e la voce vuota torna ai file", async () => {
@@ -245,20 +325,96 @@ describe("l Attrezzatura", () => {
       { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
     )
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /setup/i })
-    expect(elenco.textContent).toContain("su EQ6-R")
-    fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
+    expect((await carta()).textContent).toContain("su EQ6-R")
+    fireEvent.click(within(await parte("mount")).getByRole("button", { name: /^seleziona montatura$/i }))
     fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
     expect(scritture()[0]?.corpo).toEqual({ piece_id: null })
   })
 
-  it("senza montature da scegliere il setup non offre il gesto", async () => {
+  it("senza montature da scegliere il modulo propone di aggiungerne una", async () => {
     attrezzatura({ instruments: [OTTICA] })
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /setup/i })
-    expect(within(elenco).queryByRole("button", { name: /^seleziona montatura$/i })).toBeNull()
+    fireEvent.click(within(await parte("mount")).getByRole("button", { name: /^seleziona montatura$/i }))
+    const modulo = screen.getByRole("group", { name: "Montatura di Il grande" })
+    // niente da salvare: solo Annulla e la via per scriverne una
+    expect(within(modulo).queryByRole("button", { name: /salva/i })).toBeNull()
+    fireEvent.click(within(modulo).getByRole("button", { name: /aggiungine uno/i }))
+    expect(((await screen.findByLabelText(/^tipo$/i)) as HTMLSelectElement).value).toBe("mount")
+  })
+
+  it("i distanziali si scelgono insieme, e partono tutti", async () => {
+    const distanziale = { ...MONTATURA, id: 40, kind: "spacer", name: "M42 0,5 mm" }
+    attrezzatura(
+      { instruments: [OTTICA, MONTATURA, distanziale, { ...distanziale, id: 41, name: "M48 7,5 mm" }] },
+      { "PUT /api/v1/gear/rigs/10/spacers": { stato: 200, corpo: { id: 10, requeued: 0, run_started: false } } },
+    )
+    await apriAttrezzatura()
+    fireEvent.click(within(await parte("spacer")).getByRole("button", { name: /^seleziona distanziali$/i }))
+    fireEvent.click(screen.getByRole("checkbox", { name: /M42 0,5 mm/ }))
+    fireEvent.click(screen.getByRole("checkbox", { name: /M48 7,5 mm/ }))
+    fireEvent.click(screen.getByRole("button", { name: /salva/i }))
+    await waitFor(() => expect(scritture()).toHaveLength(1))
+    expect(scritture()[0]?.corpo).toEqual({ piece_ids: [40, 41] })
+  })
+
+  it("la guida si sceglie fra ottiche di guida e guide fuori asse, col tipo del pezzo", async () => {
+    const cercatore = { ...MONTATURA, id: 50, kind: "guide_scope", name: "30 mm f/4" }
+    const oag = { ...MONTATURA, id: 51, kind: "oag", name: "OAG-L" }
+    const scritto = { stato: 200, corpo: { id: 10, requeued: 0, run_started: false } }
+    attrezzatura(
+      {
+        instruments: [OTTICA, cercatore, oag],
+        rigs: [{ ...CORREDO, parts: [{ kind: "guide_scope", id: 50, name: "30 mm f/4", frames: 0, chosen: true }] }],
+      },
+      { "PUT /api/v1/gear/rigs/10/parts/guide_scope": scritto, "PUT /api/v1/gear/rigs/10/parts/oag": scritto },
+    )
+    await apriAttrezzatura()
+    fireEvent.click(within(await parte("guide")).getByRole("button", { name: /^seleziona guida$/i }))
+    // il riduttore e la guida non li nomina nessun file: niente «vuoto: dai file»
+    fireEvent.change(screen.getByRole("combobox", { name: /^guida$/i }), { target: { value: "51" } })
+    fireEvent.click(screen.getByRole("button", { name: /salva/i }))
+    // una scrittura: l'altra guida la toglie il backend
+    await waitFor(() => expect(scritture()).toHaveLength(1))
+    expect(scritture().map((s) => [s.url.split("/").pop(), s.corpo])).toEqual([["oag", { piece_id: 51 }]])
+  })
+
+  it("svuotata, la guida che avevi scelto torna ai file", async () => {
+    const cercatore = { ...MONTATURA, id: 50, kind: "guide_scope", name: "30 mm f/4" }
+    attrezzatura(
+      {
+        instruments: [OTTICA, cercatore],
+        rigs: [{ ...CORREDO, parts: [{ kind: "guide_scope", id: 50, name: "30 mm f/4", frames: 0, chosen: true }] }],
+      },
+      { "PUT /api/v1/gear/rigs/10/parts/guide_scope": { stato: 200, corpo: { id: 10, requeued: 0, run_started: false } } },
+    )
+    await apriAttrezzatura()
+    fireEvent.click(within(await parte("guide")).getByRole("button", { name: /^seleziona guida$/i }))
+    fireEvent.change(screen.getByRole("combobox", { name: /^guida$/i }), { target: { value: "" } })
+    fireEvent.click(screen.getByRole("button", { name: /salva/i }))
+    await waitFor(() => expect(scritture()).toHaveLength(1))
+    expect(scritture()[0]?.url).toContain("/parts/guide_scope")
+    expect(scritture()[0]?.corpo).toEqual({ piece_id: null })
+  })
+
+  it("senza cambiare niente Salva chiude, e non rimanda i frame a rielaborare", async () => {
+    attrezzatura({ rigs: [{ ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 0, chosen: true }] }] })
+    await apriAttrezzatura()
+    fireEvent.click(within(await parte("mount")).getByRole("button", { name: /^seleziona montatura$/i }))
+    fireEvent.click(screen.getByRole("button", { name: /salva/i }))
+    await waitFor(() => expect(screen.queryByRole("group", { name: /^montatura di/i })).toBeNull())
+    expect(scritture()).toHaveLength(0)
+  })
+
+  it("rinomina senza nome non salva, e dice perche'", async () => {
+    attrezzatura({ rigs: [{ ...CORREDO, name: null, title: "TS 130 APO · ASI2600MM" }] })
+    await apriAttrezzatura()
+    const nome = await carta(/TS 130 APO · ASI2600MM/)
+    fireEvent.click(within(nome).getByRole("button", { name: /^rinomina/i }))
+    const modulo = screen.getByRole("group", { name: "Nome di TS 130 APO · ASI2600MM" })
+    expect(within(modulo).getByRole("button", { name: /salva/i }).getAttribute("aria-disabled")).toBe("true")
+    expect(modulo.textContent).toContain("Per salvare serve il nome.")
   })
 
   it("una montatura portata dalle pose ha le sue ore", async () => {
@@ -439,8 +595,8 @@ describe("i gesti sull attrezzatura", () => {
       { "PATCH /api/v1/gear/rigs/10": { stato: 200, corpo: { id: 10, requeued: 0, run_started: false } } },
     )
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /setup/i })
-    fireEvent.click(within(elenco).getByRole("button", { name: /^rinomina$/i }))
+    const nome = await carta()
+    fireEvent.click(within(nome).getByRole("button", { name: "Rinomina Il grande" }))
     // la casella, non la regione: anche la scheda ora si chiama "Nome di ..."
     fireEvent.change(screen.getByRole("textbox", { name: /^nome/i }), { target: { value: "Il piccolo" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
@@ -495,15 +651,15 @@ describe("l Attrezzatura sul telefono", () => {
     // la prima schermata e' l'indice, senza niente di segnato e senza dettaglio
     const indice = await screen.findByRole("navigation", { name: /indice dell'attrezzatura/i })
     expect(indice.querySelectorAll('[aria-current="true"]')).toHaveLength(0)
-    expect(screen.queryByRole("list", { name: /setup/i })).toBeNull()
+    expect(screen.queryByRole("region", { name: /^parti$/i })).toBeNull()
 
     fireEvent.click(within(indice).getByRole("link", { name: /il grande/i }))
-    expect(await screen.findByRole("list", { name: /setup/i })).toBeDefined()
+    expect(await parti()).toBeDefined()
     expect(screen.queryByRole("navigation", { name: /indice dell'attrezzatura/i })).toBeNull()
 
     fireEvent.click(screen.getByRole("button", { name: /attrezzatura/i }))
     expect(await screen.findByRole("navigation", { name: /indice dell'attrezzatura/i })).toBeDefined()
-    expect(screen.queryByRole("list", { name: /setup/i })).toBeNull()
+    expect(screen.queryByRole("region", { name: /^parti$/i })).toBeNull()
   })
 })
 

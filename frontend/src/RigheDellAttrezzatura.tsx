@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import { Bottone } from "./Bottone"
-import { CorreggiIlFiltro, CorreggiIlPezzo, MontaturaDelCorredo, NomeDelCorredo } from "./CorreggiLeRighe"
+import { CorreggiIlFiltro, CorreggiIlPezzo } from "./CorreggiLeRighe"
 import { Dettaglio, Riga } from "./Riga"
 import { TempoDellePose } from "./TempoDellePose"
 import type { components } from "./api/schema"
@@ -136,97 +136,6 @@ export function UnPezzo({
         </Bottone>
       )}
     </Riga>
-  )
-}
-
-/** Come si chiama una parte del corredo: i pezzi col nome del loro genere, e le due che non lo sono. */
-const PARTE: Record<Corredo["parts"][number]["kind"], Chiave> = {
-  mount: "review.kind.mount",
-  filter_wheel: "review.kind.filter_wheel",
-  focuser: "review.kind.focuser",
-  guide_camera: "review.kind.guide_camera",
-  reducer: "review.kind.reducer",
-  guide_scope: "review.kind.guide_scope",
-  oag: "review.kind.oag",
-  spacer: "review.kind.spacer",
-  software: "gear.part.software",
-  filter: "gear.part.filter",
-}
-
-export function UnCorredo({ corredo, montature }: { corredo: Corredo; montature: Pezzo[] }) {
-  const [apro, setApro] = useState<"nome" | "montatura" | null>(null)
-  const montata = corredo.parts.find((p) => p.kind === "mount" && p.chosen)
-  const fatto = t("gear.rig", {
-    ottica: corredo.optics ?? t("gear.rig.noOptics"),
-    camera: corredo.camera ?? t("gear.rig.noCamera"),
-  })
-  return (
-    <Riga
-      nome={corredo.name ?? fatto}
-      dettagli={
-        <>
-          {corredo.name && <Dettaglio>{fatto}</Dettaglio>}{" "}
-          {corredo.focal_mm !== null && (
-            <Dettaglio>{t("gear.focal", { mm: numero(corredo.focal_mm) })}</Dettaglio>
-          )}{" "}
-          {montata && <Dettaglio>{t("gear.rig.mount", { nome: montata.name })}</Dettaglio>}{" "}
-          {/* le parti, tutte; la montatura scelta e' gia' scritta qui sopra. Una parte scelta dice
-              che lo e', al posto dei frame: appena scelta non ne ha ancora */}
-          {corredo.parts
-            .filter((p) => p !== montata)
-            .map((p) => (
-              <span data-parte={p.kind} key={`${p.kind}:${p.id ?? p.name}`}>
-                <Dettaglio>
-                  {p.chosen
-                    ? t("gear.part.chosen", { parte: t(PARTE[p.kind]), nome: p.name })
-                    : t("gear.part", { parte: t(PARTE[p.kind]), nome: p.name, frame: t("gear.frames", { n: numero(p.frames) }) })}
-                </Dettaglio>{" "}
-              </span>
-            ))}
-          <Uso pezzo={corredo} /> <Ripreso oggetti={corredo.objects} />{" "}
-          <QuantoInquadra corredo={corredo} />
-        </>
-      }
-      comparsa={
-        (apro === "nome" && <NomeDelCorredo corredo={corredo} come={fatto} onChiudi={() => setApro(null)} />) ||
-        (apro === "montatura" && (
-          <MontaturaDelCorredo corredo={corredo} come={fatto} montature={montature} onChiudi={() => setApro(null)} />
-        ))
-      }
-    >
-      {apro === null && (
-        <>
-          <Bottone piccolo onClick={() => setApro("nome")}>
-            {t("gear.write.rig")}
-          </Bottone>{" "}
-          {/* senza montature da scegliere il bottone non si offre: la si scrive con "Aggiungi" */}
-          {montature.length > 0 && (
-            <Bottone piccolo onClick={() => setApro("montatura")}>
-              {t("gear.write.mount")}
-            </Bottone>
-          )}
-        </>
-      )}
-    </Riga>
-  )
-}
-
-/** Quanto cielo inquadra un corredo, **misurato** sui suoi frame. Chi non ha ancora ripreso non
- *  ce l'ha, e lo dice invece di prendersi il numero che la scheda direbbe. */
-function QuantoInquadra({ corredo }: { corredo: Corredo }) {
-  if (corredo.scale_arcsec_px === null) return <Dettaglio>{t("gear.noScale")}</Dettaglio>
-  return (
-    <>
-      <Dettaglio>{t("gear.scale", { n: numero(corredo.scale_arcsec_px) })}</Dettaglio>{" "}
-      {corredo.width_deg !== null && corredo.height_deg !== null && (
-        <Dettaglio>
-          {t("gear.field", {
-            larghezza: numero(corredo.width_deg),
-            altezza: numero(corredo.height_deg),
-          })}
-        </Dettaglio>
-      )}
-    </>
   )
 }
 

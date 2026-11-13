@@ -47,6 +47,15 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
   nell'app: nella risposta scelta (`al-scelta--risposta`, `aria-checked`) il tondo e la riga
   sotto quasi spariscono, bordo `rgb(31,20,6)` su fondo `rgb(24,24,28)` (si vede in «Resta M 31»).
   Allineare la tavola. Dettaglio in `differenze-dalle-tavole.md`.
+- [da dare] Attrezzatura, porting del dettaglio del setup (13/11): (a) le schede scrivono i numeri
+  col punto («pixel 3.76 µm», `vir`): la virgola, come il resto; (b) una parte scelta a mano sta
+  accanto ai pezzi che i file nominano, ognuno coi suoi frame (fuori dalla montatura la scelta vale
+  solo dove il file tace); (c) il programma di ripresa non ha «Seleziona»: lo dicono solo i file;
+  (d) cio' che manca a un conto e' il primo dato che manca («manca il pixel della camera» anche
+  nel rapporto guida/ripresa); (e) nel confronto dei campi l'etichetta e' il `title` dell'API
+  (nome, modello o nome senza la marca scritta sul pezzo, senza lista di marche): un nome lungo
+  («Askar 103Apo · ATR2600M») esce dal riquadro piccolo e copre la Luna. Disegnare l'etichetta
+  lunga su un campo stretto. Allineare la tavola. Dettaglio in `differenze-dalle-tavole.md`.
 ## Date, da controllare alla consegna
 
 - [fatta v82] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un

@@ -196,6 +196,12 @@ export function decimali(n: number, d: number): string {
   return formatta(n, { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
+/** Un numero con `d` decimali, che cadono solo se sono tutti zero: `4,40`, `5,6`, `55`. I conti
+ *  del setup (tavola Attrezzatura v82, `VG`). */
+export function alPiu(n: number, d: number): string {
+  return decimali(n, d).replace(/[.,]0+$/, "")
+}
+
 /** Un numero con un decimale fisso, all'italiana: `4,0`. Le ore di posa (tavola v76, `posaN`). */
 export function unDecimale(n: number): string {
   return decimali(n, 1)

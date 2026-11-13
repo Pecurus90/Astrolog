@@ -767,6 +767,11 @@ CREATE TABLE gear_usage (
   -- la barra delle ore sul piu' usato del gruppo (setup, filtri, pezzi per genere), 3-100;
   -- NULL senza ore note. La riscrive `gear_usage.write_bars` dopo ogni scrittura dell'uso
   bar_pct         REAL,
+  -- solo i corredi col cielo misurato: il loro campo e la Luna piena sulla cornice del confronto,
+  -- in percento (`rig_card.field_boxes`); li riscrive `gear_usage.write_fields` con l'uso
+  field_w_pct     REAL,
+  field_h_pct     REAL,
+  moon_pct        REAL,
   -- l'ordine dei corredi, dal piu' usato; strumenti per tipo e nome, filtri per banda (inventory)
   position        INTEGER,
   PRIMARY KEY (subject, subject_id),
@@ -789,6 +794,9 @@ CREATE TABLE rig_parts (
   -- La parte l'hai scelta tu sul corredo; una scelta che nessuna posa porta ancora ha zero frame.
   chosen   INTEGER NOT NULL DEFAULT 0 CHECK (chosen IN (0, 1)),
   position INTEGER NOT NULL,                       -- l'ordine della scheda: genere, poi uso
+  -- solo i filtri: la loro fetta dell'anello, in percento dei frame coi filtri del corredo
+  ring_from REAL,
+  ring_to   REAL,
   PRIMARY KEY (rig_id, position),
   CHECK ((kind = 'software') = (piece_id IS NULL) AND (kind = 'software') = (software IS NOT NULL))
 ) STRICT;

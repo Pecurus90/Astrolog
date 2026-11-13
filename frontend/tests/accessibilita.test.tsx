@@ -35,6 +35,7 @@ import {
   vai,
   violazioni,
 } from "./banco"
+import { NUMERI } from "./attrezzatura-banco"
 import { CRITERI, INTERO, apriArchivioSu, archivio } from "./archivio-banco"
 
 afterEach(pulisci)
@@ -567,6 +568,7 @@ describe("l accessibilita della prima pagina", () => {
       slots: null,
       backfocus_mm: null,
       notes: null,
+      numbers: {},
       detected: true,
       mergeable_into: [] as number[],
       frames: 120,
@@ -602,6 +604,9 @@ describe("l accessibilita della prima pagina", () => {
             {
               id: 10,
               name: "Il grande",
+              optics_id: 1,
+              camera_id: null,
+              numbers: NUMERI,
               optics: "TS 130 APO",
               camera: "ASI2600MM",
               focal_mm: 910,
@@ -639,6 +644,9 @@ describe("l accessibilita della prima pagina", () => {
             },
           ],
           cards: SCHEDE,
+          moon_deg: 0.527,
+          fields: [],
+          moon_pct: null,
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -648,8 +656,10 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     vai("/attrezzatura")
-    await screen.findByRole("list", { name: /setup/i })
-    // l'indice e il setup aperto, poi un gruppo
+    await screen.findByRole("region", { name: /^parti$/i })
+    // l'indice e il setup aperto, poi una parte da selezionare, poi un gruppo
+    expect(await violazioni(container)).toEqual([])
+    fireEvent.click(screen.getByRole("button", { name: /^seleziona montatura$/i }))
     expect(await violazioni(container)).toEqual([])
     fireEvent.click(screen.getByRole("link", { name: /telescopi/i }))
     // Anche **i due gesti aperti**: una scheda che si corregge e una che nasce sono campi con le

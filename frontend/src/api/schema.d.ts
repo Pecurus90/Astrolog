@@ -1789,6 +1789,15 @@ export interface components {
          * @description The train's thickness minus the required backfocus: negative is short.
          */
         Backfocus: {
+            /**
+             * Train Mm
+             * @description OAG, wheel, spacers and camera, summed.
+             */
+            train_mm: number | null;
+            /** Required Mm */
+            required_mm: number | null;
+            /** Required By */
+            required_by: ("reducer" | "optics") | null;
             /** Difference Mm */
             difference_mm: number | null;
             /** Tolerance Mm */
@@ -2100,6 +2109,22 @@ export interface components {
          * @enum {string}
          */
         Family: "galaxy" | "nebula" | "cluster" | "star" | "other" | "unknown";
+        /**
+         * FieldBox
+         * @description A rig's measured field on the comparison frame: the widest plus 15%, never under 0.9
+         *     degrees, two thirds as tall (board v82 `confronto`).
+         */
+        FieldBox: {
+            /** Rig Id */
+            rig_id: number;
+            /** Width Pct */
+            width_pct: number;
+            /**
+             * Height Pct
+             * @description Never over 100: a tall field stops at the frame.
+             */
+            height_pct: number;
+        };
         /** FileNotRead */
         FileNotRead: {
             /**
@@ -2678,6 +2703,16 @@ export interface components {
              * @description The full Moon's apparent diameter, drawn beside the rigs' fields for scale.
              */
             moon_deg: number;
+            /**
+             * Fields
+             * @description The measured rigs' fields on one comparison frame, widest first: the board draws them one over the other. Empty until a rig has a solved frame.
+             */
+            fields: components["schemas"]["FieldBox"][];
+            /**
+             * Moon Pct
+             * @description The full Moon's width on that frame, in percent; null without fields.
+             */
+            moon_pct: number | null;
         };
         /**
          * GearObject
@@ -2774,6 +2809,20 @@ export interface components {
              * @description Within 0.5-4 "/px, PHD2's preferred range.
              */
             in_range: boolean | null;
+            /**
+             * Range From
+             * @description That range, for the page to say it.
+             */
+            range_from: number | null;
+            /** Range To */
+            range_to: number | null;
+            /**
+             * Guide
+             * @description What it guides through: an OAG guides with the rig's focal.
+             */
+            guide: ("guide_scope" | "oag") | null;
+            /** Guide Name */
+            guide_name: string | null;
             missing: components["schemas"]["Missing"] | null;
         };
         /** HTTPValidationError */
@@ -3107,6 +3156,16 @@ export interface components {
             percent: number | null;
             /** Within */
             within: boolean | null;
+            /**
+             * Weight Kg
+             * @description Every carried piece's weight, summed.
+             */
+            weight_kg: number | null;
+            /**
+             * Payload Kg
+             * @description The highest of the mount's two payloads.
+             */
+            payload_kg: number | null;
             missing: components["schemas"]["Missing"] | null;
         };
         /**
@@ -4679,6 +4738,13 @@ export interface components {
              * @description The name you gave it, if you gave it one.
              */
             name: string | null;
+            /**
+             * Optics Id
+             * @description Its optics among `instruments`; `camera_id` too.
+             */
+            optics_id: number | null;
+            /** Camera Id */
+            camera_id: number | null;
             /** Optics */
             optics: string | null;
             /** Camera */
@@ -4764,6 +4830,18 @@ export interface components {
              * @description You gave it to the rig, instead of the files naming it. A mount you choose goes on every frame; any other kind only where the file names none.
              */
             chosen: boolean;
+            /**
+             * Passband
+             * @description Only a filter: its canonical passband, which gives the colour.
+             */
+            passband: string | null;
+            /**
+             * Ring From
+             * @description Only a filter: where its slice of the rig's ring starts, in percent of the rig's filtered frames; `ring_to` where it ends, the next one's start.
+             */
+            ring_from: number | null;
+            /** Ring To */
+            ring_to: number | null;
         };
         /**
          * RigPartChoice

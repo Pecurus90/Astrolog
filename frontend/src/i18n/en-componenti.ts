@@ -51,4 +51,7 @@ export const enComponenti = {
   "ui.calendar.fri": "Fr",
   "ui.calendar.sat": "Sa",
   "ui.calendar.sun": "Su",
+  "ui.form.save": "Save",
+  "ui.form.saving": "Saving…", // glifo-ok: ellipsis
+  "ui.form.cancel": "Cancel",
 }

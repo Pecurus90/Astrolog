@@ -32,6 +32,7 @@ def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
     rigs = inventory.rigs(conn)
     for r in rigs:
         _card(r)
+    boxes, moon_pct = inventory.fields(conn)
     return GearList.model_validate(
         {
             "instruments": pieces,
@@ -41,6 +42,8 @@ def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
             # with which the answer rejects a field that kind does not have.
             "cards": instrument_answer.CARD,
             "moon_deg": MOON_DIAMETER_DEG,
+            "fields": boxes,
+            "moon_pct": moon_pct,
         }
     )
 

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 369; senza fonte: 1.
-Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 86.
+Valori: 372; senza fonte: 1.
+Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 89.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -739,6 +739,14 @@ Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | simbolo | valore | fonte |
 |---|---|---|
 | MARK_WEIGHT | `{None: 0, RewriteMark.REWRITTEN: 1, RewriteMark.CALIBRATED: 2}` | P docs/domini/glossario.md |
+
+### spine/rig_card.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| FRAME_MARGIN | `1.15` | T |
+| FRAME_MIN_DEG | `0.9` | T |
+| FRAME_ASPECT | `1.5` | T |
 
 ### spine/rig_numbers.py
 

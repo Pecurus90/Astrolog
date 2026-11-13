@@ -1,9 +1,15 @@
-"""A rig's card in the Gear index (board v82): its short title and its ten slots, from what the
-rig already holds. Pure: the read hands it the rows, nothing is stored."""
+"""Rig card on Gear page (board v82): title, ten slots, field box on comparison frame.
+Pure; boxes depend on every rig, so counter writes them (`gear_usage.write_fields`)."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+
+# The comparison frame: the widest field plus 15%, never under 0.9 deg, two thirds as tall.
+# [T] board Attrezzatura v82, `confronto` 323
+FRAME_MARGIN = 1.15
+FRAME_MIN_DEG = 0.9  # [T] board `confronto`
+FRAME_ASPECT = 1.5  # [T] board `confronto`
 
 
 class Slot(StrEnum):
@@ -52,6 +58,19 @@ def slots(optics: str | None, camera: str | None, part_kinds: Iterable[str]) -> 
     if camera:
         held.add(Slot.CAMERA)
     return {s: s in held for s in Slot}
+
+
+def field_boxes(
+    fields: Mapping[int, tuple[float, float]], moon_deg: float
+) -> tuple[dict[int, tuple[float, float]], float | None]:
+    """Each rig's field (width, height in degrees) as a box on one frame, in percent, and the full
+    Moon on that frame. A box never taller than the frame; no fields, no frame."""
+    if not fields:
+        return {}, None
+    width = max(FRAME_MIN_DEG, *(w for w, _ in fields.values())) * FRAME_MARGIN
+    height = width / FRAME_ASPECT
+    boxes = {k: (w / width * 100, min(100.0, h / height * 100)) for k, (w, h) in fields.items()}
+    return boxes, moon_deg / width * 100
 
 
 def short(piece: Piece) -> str:

@@ -174,3 +174,39 @@ def test_the_load_names_the_mount_then_the_piece_without_weight():
     }  # fmt: skip
     conti = rn.numbers(setup(mount=MONTATURA, wheel={**RUOTA, "weight_kg": None}))
     assert conti["load"]["missing"] == {"kind": "filter_wheel", "field": "weight_kg"}
+
+
+def test_the_load_says_the_weight_and_the_payload_it_divides():
+    """La tavola scrive «3,6 kg su 13» sotto la percentuale (`conti`, 361)."""
+    conti = rn.numbers(setup(mount=MONTATURA, guide=CERCATORE, guide_camera=GUIDA))
+    assert conti["load"]["weight_kg"] == pytest.approx(2.6 + 0.7 + 0.2 + 0.06)
+    assert conti["load"]["payload_kg"] == 13.0
+
+
+def test_the_backfocus_says_the_train_and_who_requires_it():
+    """La tavola scrive il treno intero e «richiesto 55 mm dal riduttore» (`conti`, 356)."""
+    riduttore = {"kind": "reducer", "required_backfocus_mm": 55.0}
+    conti = rn.numbers(setup(reducer=riduttore, wheel=RUOTA, spacers=(DIST,)))
+    assert conti["backfocus"]["train_mm"] == pytest.approx(20.0 + 10.0 + 17.5)
+    assert conti["backfocus"]["required_mm"] == 55.0
+    assert conti["backfocus"]["required_by"] == "reducer"
+    ottica = {**OTTICA, "required_backfocus_mm": 55.0}
+    assert rn.numbers(setup(optics=ottica))["backfocus"]["required_by"] == "optics"
+
+
+def test_the_guide_scale_says_which_guide_it_used():
+    """«con ZWO 30 mm f/4» o «fuori asse, con la focale del setup» (`conti`, 352)."""
+    cercatore = {**CERCATORE, "name": "ZWO 30 mm f/4"}
+    conti = rn.numbers(setup(guide=cercatore, guide_camera=GUIDA))
+    assert conti["guide_scale"]["guide"] == "guide_scope"
+    assert (conti["guide_scale"]["range_from"], conti["guide_scale"]["range_to"]) == (0.5, 4.0)
+    assert conti["guide_scale"]["guide_name"] == "ZWO 30 mm f/4"
+    oag = {"kind": "oag", "name": "OAG-L"}
+    assert rn.numbers(setup(guide=oag, guide_camera=GUIDA))["guide_scale"]["guide"] == "oag"
+
+
+def test_the_guide_ratio_names_the_sampling_first():
+    """Come la tavola (353): senza il pixel della camera manca il campionamento, non la guida."""
+    camera = {**CAMERA, "pixel_size_um": None}
+    conti = rn.numbers(setup(camera=camera))
+    assert conti["guide_ratio"]["missing"] == {"kind": "camera", "field": "pixel_size_um"}

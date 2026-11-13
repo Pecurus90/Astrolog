@@ -128,11 +128,20 @@ def _coverage(rig: RigCard) -> Number:
 def _guide_scale_number(rig: RigCard) -> Number:
     scale = _guide_scale(rig)
     low, high = GUIDE_SCALE_RANGE
-    return {"value": scale, "in_range": low <= scale <= high}
+    guide = _need(rig.guide, "guide")
+    return {
+        "value": scale,
+        "in_range": low <= scale <= high,
+        "range_from": low,
+        "range_to": high,
+        "guide": guide.get("kind"),
+        "guide_name": guide.get("name"),
+    }
 
 
 def _guide_ratio(rig: RigCard) -> Number:
-    return {"value": _guide_scale(rig) / _sampling(rig)}
+    imaging = _sampling(rig)  # the board names the sampling first (`conti`, 353)
+    return {"value": _guide_scale(rig) / imaging}
 
 
 def _train(rig: RigCard) -> list[tuple[Card | None, str]]:
@@ -150,9 +159,13 @@ def _train(rig: RigCard) -> list[tuple[Card | None, str]]:
 def _backfocus(rig: RigCard) -> Number:
     by, kind = _back_end(rig)
     required = _need(by, kind, "required_backfocus_mm")
-    difference = sum(_need(card, k, "thickness_mm") for card, k in _train(rig)) - required
+    train = sum(_need(card, k, "thickness_mm") for card, k in _train(rig))
+    difference = train - required
     tolerance = by.get("backfocus_tolerance_mm")
     return {
+        "train_mm": train,
+        "required_mm": required,
+        "required_by": kind,
         "difference_mm": difference,
         "tolerance_mm": tolerance,
         "verdict": _backfocus_verdict(difference, tolerance),
@@ -186,8 +199,14 @@ def _load(rig: RigCard) -> Number:
     if not payloads:
         raise _MissingError("mount", "payload_kg")
     weight = sum(_need(card, kind, "weight_kg") for card, kind in _carried(rig))
-    percent = weight / max(payloads) * 100
-    return {"percent": percent, "within": percent <= FULL_LOAD_PERCENT}
+    payload = max(payloads)
+    percent = weight / payload * 100
+    return {
+        "percent": percent,
+        "within": percent <= FULL_LOAD_PERCENT,
+        "weight_kg": weight,
+        "payload_kg": payload,
+    }
 
 
 _EMPTY = {
@@ -196,10 +215,17 @@ _EMPTY = {
     "field": ("width", "height"),
     "sensor_size": ("width", "height"),
     "coverage": ("diagonal_mm", "circle_mm", "covers"),
-    "guide_scale": ("value", "in_range"),
+    "guide_scale": ("value", "in_range", "range_from", "range_to", "guide", "guide_name"),
     "guide_ratio": ("value",),
-    "backfocus": ("difference_mm", "tolerance_mm", "verdict"),
-    "load": ("percent", "within"),
+    "backfocus": (
+        "train_mm",
+        "required_mm",
+        "required_by",
+        "difference_mm",
+        "tolerance_mm",
+        "verdict",
+    ),  # fmt: skip
+    "load": ("percent", "within", "weight_kg", "payload_kg"),
     "dawes": ("value",),
 }
 

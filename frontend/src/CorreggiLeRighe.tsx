@@ -13,13 +13,12 @@ type Pezzo = components["schemas"]["InstrumentOnPage"]
 type Schede = components["schemas"]["GearList"]["cards"]
 type Scritta = components["schemas"]["InstrumentCorrection"]
 type Genere = Pezzo["kind"]
-type Corredo = components["schemas"]["RigOnPage"]
 type Filtro = components["schemas"]["FilterOnPage"]
 type SchedaDelFiltro = components["schemas"]["FilterCorrection"]
 
 /**
- * I gesti dell'Attrezzatura che **correggono una riga che c'e' gia'**: la scheda di un pezzo, il
- * nome di un corredo, la scheda di un filtro, e "e' lo stesso di". Il gesto che ne scrive uno
+ * I gesti dell'Attrezzatura che **correggono una riga che c'e' gia'**: la scheda di un pezzo, la
+ * scheda di un filtro, e "e' lo stesso di". Il gesto che ne scrive uno
  * nuovo, e i pezzi comuni dei moduli, stanno in `GestiDelPezzo`.
  */
 
@@ -121,88 +120,6 @@ export function CorreggiIlPezzo({
           ))
       }
     />
-  )
-}
-
-export function NomeDelCorredo({
-  corredo,
-  come,
-  onChiudi,
-}: {
-  corredo: Corredo
-  /** Come si legge il corredo quando non ha un nome: i suoi pezzi. */
-  come: string
-  onChiudi: () => void
-}) {
-  const [nome, setNome] = useState(corredo.name ?? "")
-  const scrivi = useScrittura(async () => {
-    const { data, error } = await api.PATCH("/api/v1/gear/rigs/{rig_id}", {
-      params: { path: { rig_id: corredo.id } },
-      body: { name: nome.trim() },
-    })
-    if (error) throw error
-    return data
-  }, onChiudi)
-  return (
-    <Modulo
-      base={`corredo-${corredo.id}`}
-      titolo={t("gear.write.rig.title", { nome: corredo.name ?? come })}
-      onManda={() => scrivi.mutate()}
-      onAnnulla={onChiudi}
-      salvando={scrivi.isPending}
-      valido={nome.trim() !== ""}
-      errore={scrivi.error}
-    >
-      <NomeDelPezzo
-        id={`corredo-${corredo.id}-name`}
-        {...(corredo.name ? { cheCera: corredo.name } : {})}
-        onNome={(n) => setNome(n ?? "")}
-      />
-    </Modulo>
-  )
-}
-
-/** La montatura con cui usi un corredo, fra quelle che possiedi. La voce vuota toglie la tua parola:
- *  allora i frame prendono quella che i file nominano, dove la nominano. */
-export function MontaturaDelCorredo({
-  corredo,
-  come,
-  montature,
-  onChiudi,
-}: {
-  corredo: Corredo
-  come: string
-  montature: { id: number; name: string }[]
-  onChiudi: () => void
-}) {
-  const montata = corredo.parts.find((p) => p.kind === "mount" && p.chosen)?.id ?? null
-  const [scelta, setScelta] = useState(montata ?? undefined)
-  const scrivi = useScrittura(async () => {
-    const { data, error } = await api.PUT("/api/v1/gear/rigs/{rig_id}/parts/{kind}", {
-      params: { path: { rig_id: corredo.id, kind: "mount" } },
-      body: { piece_id: scelta ?? null },
-    })
-    if (error) throw error
-    return data
-  }, onChiudi)
-  return (
-    <Modulo
-      base={`montatura-${corredo.id}`}
-      titolo={t("gear.write.mount.title", { nome: corredo.name ?? come })}
-      onManda={() => scrivi.mutate()}
-      onAnnulla={onChiudi}
-      salvando={scrivi.isPending}
-      valido={(scelta ?? null) !== montata}
-      errore={scrivi.error}
-    >
-      <TendinaDiScelta
-        id={`montatura-${corredo.id}-scelta`}
-        etichetta={t("gear.write.mount.field")}
-        altri={montature}
-        valore={scelta}
-        onScelta={setScelta}
-      />
-    </Modulo>
   )
 }
 

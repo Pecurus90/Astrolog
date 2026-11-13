@@ -64,6 +64,11 @@ export function con<S extends object>(scritta: S, campo: string, valore: unknown
   return dopo as S
 }
 
+/** The refusal in words, for the delivery's Modulo; null without one. */
+export function rifiutoDetto(errore: unknown): string | null {
+  return errore ? t(motivo(errore, RIFIUTI, "gear.write.failed")) : null
+}
+
 function Rifiuto({ errore }: { errore: unknown }) {
   if (!errore) return null
   return <Avviso esito="allarme">{t(motivo(errore, RIFIUTI, "gear.write.failed"))}</Avviso>

@@ -235,6 +235,14 @@ class RigPart(BaseModel):
         description="You gave it to the rig, instead of the files naming it. A mount you choose "
         "goes on every frame; any other kind only where the file names none."
     )
+    passband: str | None = Field(
+        description="Only a filter: its canonical passband, which gives the colour."
+    )
+    ring_from: float | None = Field(
+        description="Only a filter: where its slice of the rig's ring starts, in percent of the "
+        "rig's filtered frames; `ring_to` where it ends, the next one's start."
+    )
+    ring_to: float | None
 
 
 class RigSlot(BaseModel):
@@ -249,6 +257,8 @@ class RigOnPage(BaseModel):
 
     id: int
     name: str | None = Field(description="The name you gave it, if you gave it one.")
+    optics_id: int | None = Field(description="Its optics among `instruments`; `camera_id` too.")
+    camera_id: int | None
     optics: str | None
     camera: str | None
     focal_mm: float | None
@@ -318,6 +328,15 @@ class FilterOnPage(BaseModel):
     in_rigs: list[PieceInRig] = Field(description="The rigs whose frames used it, by rig id.")
 
 
+class FieldBox(BaseModel):
+    """A rig's measured field on the comparison frame: the widest plus 15%, never under 0.9
+    degrees, two thirds as tall (board v82 `confronto`)."""
+
+    rig_id: int
+    width_pct: float
+    height_pct: float = Field(description="Never over 100: a tall field stops at the frame.")
+
+
 class GearList(BaseModel):
     instruments: list[InstrumentOnPage]
     rigs: list[RigOnPage]
@@ -330,6 +349,13 @@ class GearList(BaseModel):
     )
     moon_deg: float = Field(
         description="The full Moon's apparent diameter, drawn beside the rigs' fields for scale."
+    )
+    fields: list[FieldBox] = Field(
+        description="The measured rigs' fields on one comparison frame, widest first: the board "
+        "draws them one over the other. Empty until a rig has a solved frame."
+    )
+    moon_pct: float | None = Field(
+        description="The full Moon's width on that frame, in percent; null without fields."
     )
 
 

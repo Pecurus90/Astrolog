@@ -919,6 +919,8 @@
         'notes',
       ]),
     }),
+    'fields': list([
+    ]),
     'filters': list([
       dict({
         'bands': list([
@@ -2187,10 +2189,12 @@
       }),
     ]),
     'moon_deg': 0.5266666666666666,
+    'moon_pct': None,
     'rigs': list([
       dict({
         'bar_pct': 100.0,
         'camera': 'ATR2600M(USB2.0)',
+        'camera_id': 6,
         'counted': True,
         'focal_mm': 560.0,
         'frames': 7,
@@ -2206,7 +2210,10 @@
               'field': 'required_backfocus_mm',
               'kind': 'optics',
             }),
+            'required_by': None,
+            'required_mm': None,
             'tolerance_mm': None,
+            'train_mm': None,
             'verdict': None,
           }),
           'coverage': dict({
@@ -2238,11 +2245,15 @@
             'value': None,
           }),
           'guide_scale': dict({
+            'guide': None,
+            'guide_name': None,
             'in_range': None,
             'missing': dict({
               'field': None,
               'kind': 'guide',
             }),
+            'range_from': None,
+            'range_to': None,
             'value': None,
           }),
           'load': dict({
@@ -2250,7 +2261,9 @@
               'field': None,
               'kind': 'mount',
             }),
+            'payload_kg': None,
             'percent': None,
+            'weight_kg': None,
             'within': None,
           }),
           'sampling': dict({
@@ -2286,6 +2299,7 @@
           }),
         ]),
         'optics': 'Askar 103Apo',
+        'optics_id': 5,
         'parts': list([
           dict({
             'chosen': False,
@@ -2293,6 +2307,9 @@
             'id': 7,
             'kind': 'filter_wheel',
             'name': 'ASCOM ToupTek FilterWheel',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2300,6 +2317,9 @@
             'id': 8,
             'kind': 'focuser',
             'name': 'ASCOM ToupTek AAF',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2307,6 +2327,9 @@
             'id': None,
             'kind': 'software',
             'name': 'N.I.N.A.',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2314,6 +2337,9 @@
             'id': 3,
             'kind': 'filter',
             'name': 'Lum',
+            'passband': 'L',
+            'ring_from': 0.0,
+            'ring_to': 50.0,
           }),
           dict({
             'chosen': False,
@@ -2321,6 +2347,9 @@
             'id': 4,
             'kind': 'filter',
             'name': 'N',
+            'passband': 'UNKNOWN',
+            'ring_from': 50.0,
+            'ring_to': 66.67,
           }),
           dict({
             'chosen': False,
@@ -2328,6 +2357,9 @@
             'id': 5,
             'kind': 'filter',
             'name': 'R',
+            'passband': 'R',
+            'ring_from': 66.67,
+            'ring_to': 83.33,
           }),
           dict({
             'chosen': False,
@@ -2335,6 +2367,9 @@
             'id': 6,
             'kind': 'filter',
             'name': 'X',
+            'passband': 'UNKNOWN',
+            'ring_from': 83.33,
+            'ring_to': 100.0,
           }),
         ]),
         'scale_arcsec_px': None,
@@ -2388,6 +2423,7 @@
       dict({
         'bar_pct': 57.9,
         'camera': 'Canon EOS 700D',
+        'camera_id': 1,
         'counted': True,
         'focal_mm': 560.0,
         'frames': 3,
@@ -2403,7 +2439,10 @@
               'field': None,
               'kind': 'optics',
             }),
+            'required_by': None,
+            'required_mm': None,
             'tolerance_mm': None,
+            'train_mm': None,
             'verdict': None,
           }),
           'coverage': dict({
@@ -2435,11 +2474,15 @@
             'value': None,
           }),
           'guide_scale': dict({
+            'guide': None,
+            'guide_name': None,
             'in_range': None,
             'missing': dict({
               'field': None,
               'kind': 'guide',
             }),
+            'range_from': None,
+            'range_to': None,
             'value': None,
           }),
           'load': dict({
@@ -2447,7 +2490,9 @@
               'field': 'payload_kg',
               'kind': 'mount',
             }),
+            'payload_kg': None,
             'percent': None,
+            'weight_kg': None,
             'within': None,
           }),
           'sampling': dict({
@@ -2471,6 +2516,7 @@
           }),
         ]),
         'optics': None,
+        'optics_id': None,
         'parts': list([
           dict({
             'chosen': False,
@@ -2478,6 +2524,9 @@
             'id': 3,
             'kind': 'mount',
             'name': 'EQMod Mount',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2485,6 +2534,9 @@
             'id': 4,
             'kind': 'mount',
             'name': 'ZWO AM3',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2492,6 +2544,9 @@
             'id': 2,
             'kind': 'guide_camera',
             'name': 'ZWO ASI120MM-S',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2499,6 +2554,9 @@
             'id': None,
             'kind': 'software',
             'name': 'ASIAIR',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2506,6 +2564,9 @@
             'id': 1,
             'kind': 'filter',
             'name': 'OSC',
+            'passband': 'OSC',
+            'ring_from': 0.0,
+            'ring_to': 66.67,
           }),
           dict({
             'chosen': False,
@@ -2513,6 +2574,9 @@
             'id': 2,
             'kind': 'filter',
             'name': 'L-eXtreme',
+            'passband': 'DUO_HAOIII',
+            'ring_from': 66.67,
+            'ring_to': 100.0,
           }),
         ]),
         'scale_arcsec_px': None,
@@ -2566,6 +2630,7 @@
       dict({
         'bar_pct': 52.6,
         'camera': 'ASI2600MM Pro',
+        'camera_id': 13,
         'counted': True,
         'focal_mm': 910.0,
         'frames': 1,
@@ -2581,7 +2646,10 @@
               'field': 'required_backfocus_mm',
               'kind': 'optics',
             }),
+            'required_by': None,
+            'required_mm': None,
             'tolerance_mm': None,
+            'train_mm': None,
             'verdict': None,
           }),
           'coverage': dict({
@@ -2610,17 +2678,21 @@
           }),
           'guide_ratio': dict({
             'missing': dict({
-              'field': None,
-              'kind': 'guide',
+              'field': 'pixel_size_um',
+              'kind': 'camera',
             }),
             'value': None,
           }),
           'guide_scale': dict({
+            'guide': None,
+            'guide_name': None,
             'in_range': None,
             'missing': dict({
               'field': None,
               'kind': 'guide',
             }),
+            'range_from': None,
+            'range_to': None,
             'value': None,
           }),
           'load': dict({
@@ -2628,7 +2700,9 @@
               'field': None,
               'kind': 'mount',
             }),
+            'payload_kg': None,
             'percent': None,
+            'weight_kg': None,
             'within': None,
           }),
           'sampling': dict({
@@ -2658,6 +2732,7 @@
           }),
         ]),
         'optics': 'TS 130 APO',
+        'optics_id': 12,
         'parts': list([
           dict({
             'chosen': False,
@@ -2665,6 +2740,9 @@
             'id': None,
             'kind': 'software',
             'name': 'Voyager',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2672,6 +2750,9 @@
             'id': 7,
             'kind': 'filter',
             'name': 'Hα',
+            'passband': 'HA',
+            'ring_from': 0.0,
+            'ring_to': 100.0,
           }),
         ]),
         'scale_arcsec_px': None,
@@ -2725,6 +2806,7 @@
       dict({
         'bar_pct': 21.1,
         'camera': 'QHY268M',
+        'camera_id': 11,
         'counted': True,
         'focal_mm': 1624.0,
         'frames': 1,
@@ -2740,7 +2822,10 @@
               'field': 'required_backfocus_mm',
               'kind': 'optics',
             }),
+            'required_by': None,
+            'required_mm': None,
             'tolerance_mm': None,
+            'train_mm': None,
             'verdict': None,
           }),
           'coverage': dict({
@@ -2769,17 +2854,21 @@
           }),
           'guide_ratio': dict({
             'missing': dict({
-              'field': None,
-              'kind': 'guide',
+              'field': 'pixel_size_um',
+              'kind': 'camera',
             }),
             'value': None,
           }),
           'guide_scale': dict({
+            'guide': None,
+            'guide_name': None,
             'in_range': None,
             'missing': dict({
               'field': None,
               'kind': 'guide',
             }),
+            'range_from': None,
+            'range_to': None,
             'value': None,
           }),
           'load': dict({
@@ -2787,7 +2876,9 @@
               'field': None,
               'kind': 'mount',
             }),
+            'payload_kg': None,
             'percent': None,
+            'weight_kg': None,
             'within': None,
           }),
           'sampling': dict({
@@ -2817,6 +2908,7 @@
           }),
         ]),
         'optics': 'RC8',
+        'optics_id': 10,
         'parts': list([
           dict({
             'chosen': False,
@@ -2824,6 +2916,9 @@
             'id': None,
             'kind': 'software',
             'name': 'Sequence Generator Pro',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2831,6 +2926,9 @@
             'id': 5,
             'kind': 'filter',
             'name': 'R',
+            'passband': 'R',
+            'ring_from': 0.0,
+            'ring_to': 100.0,
           }),
         ]),
         'scale_arcsec_px': None,
@@ -2884,6 +2982,7 @@
       dict({
         'bar_pct': 10.5,
         'camera': 'ATR2600M',
+        'camera_id': 9,
         'counted': True,
         'focal_mm': 560.0,
         'frames': 1,
@@ -2899,7 +2998,10 @@
               'field': 'required_backfocus_mm',
               'kind': 'optics',
             }),
+            'required_by': None,
+            'required_mm': None,
             'tolerance_mm': None,
+            'train_mm': None,
             'verdict': None,
           }),
           'coverage': dict({
@@ -2931,11 +3033,15 @@
             'value': None,
           }),
           'guide_scale': dict({
+            'guide': None,
+            'guide_name': None,
             'in_range': None,
             'missing': dict({
               'field': None,
               'kind': 'guide',
             }),
+            'range_from': None,
+            'range_to': None,
             'value': None,
           }),
           'load': dict({
@@ -2943,7 +3049,9 @@
               'field': None,
               'kind': 'mount',
             }),
+            'payload_kg': None,
             'percent': None,
+            'weight_kg': None,
             'within': None,
           }),
           'sampling': dict({
@@ -2967,6 +3075,7 @@
           }),
         ]),
         'optics': 'Askar 103Apo',
+        'optics_id': 5,
         'parts': list([
           dict({
             'chosen': False,
@@ -2974,6 +3083,9 @@
             'id': 7,
             'kind': 'filter_wheel',
             'name': 'ASCOM ToupTek FilterWheel',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2981,6 +3093,9 @@
             'id': 8,
             'kind': 'focuser',
             'name': 'ASCOM ToupTek AAF',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2988,6 +3103,9 @@
             'id': None,
             'kind': 'software',
             'name': 'N.I.N.A.',
+            'passband': None,
+            'ring_from': None,
+            'ring_to': None,
           }),
           dict({
             'chosen': False,
@@ -2995,6 +3113,9 @@
             'id': 3,
             'kind': 'filter',
             'name': 'Lum',
+            'passband': 'L',
+            'ring_from': 0.0,
+            'ring_to': 100.0,
           }),
         ]),
         'scale_arcsec_px': None,

@@ -9,14 +9,16 @@ import { gesto } from "./componenti/gesto"
 import { Pagina as Cornice } from "./componenti/Pagina"
 import { type CartaScheletro, Scheletro } from "./componenti/Scheletro"
 import type { Formato } from "./componenti/Tema"
+import { DettaglioSetup } from "./DettaglioSetup"
 import { AggiungiUnPezzo } from "./GestiDelPezzo"
 import { Rielaborati } from "./ModuloDelGesto"
-import { UnCorredo, UnFiltro, UnPezzo } from "./RigheDellAttrezzatura"
+import { UnFiltro, UnPezzo } from "./RigheDellAttrezzatura"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { numero, t } from "./i18n"
 
 type Pagina = components["schemas"]["GearList"]
+type Genere = components["schemas"]["InstrumentOnPage"]["kind"]
 
 // [T] Attrezzatura.dc.html `L` (210-213): the page measures per format
 const MISURE: Record<Formato, { stacco: string; angolo: string; barra: string; titolo: string }> = {
@@ -60,7 +62,7 @@ export function Attrezzatura() {
   const tel = formato === "telefono"
   const m = MISURE[formato]
   const vai = useNavigate()
-  const [indirizzo] = useSearchParams()
+  const [indirizzo, setIndirizzo] = useSearchParams()
   const cercato = indirizzo.get("pezzo")
   const elenco = useQuery({
     queryKey: ["gear"],
@@ -72,7 +74,9 @@ export function Attrezzatura() {
   })
   const pagina = elenco.data
   const [scelta, setScelta] = useState<Scelta | null>(null)
-  const [aggiungo, setAggiungo] = useState(false)
+  // the add form, and the kind it opens on (null: the bar's button, from the first kind)
+  const [aggiungo, setAggiungoDi] = useState<{ genere: Genere | null } | null>(null)
+  const setAggiungo = (si: boolean, genere: Genere | null = null) => setAggiungoDi(si ? { genere } : null)
   const [dettaglio, setDettaglio] = useState(cercato !== null)
   const [rielab, setRielab] = useState<number | null>(null)
 
@@ -90,13 +94,24 @@ export function Attrezzatura() {
         : (sceltaDa(pagina, cercato) ?? primaScelta(pagina))
   // a `?pezzo=` gone from the page (merged, removed) opens the index, not the first rig
   const trovato = scelta !== null || pagina === undefined || sceltaDa(pagina, cercato) !== null
-  const aperto = tel ? (dettaglio && trovato) || aggiungo : true
+  const aperto = tel ? (dettaglio && trovato) || aggiungo !== null : true
   const sopra = () => window.scrollTo?.({ top: 0, behavior: "smooth" })
   const scegli = (s: Scelta) => {
     setScelta(s)
     setAggiungo(false)
     setDettaglio(true)
     if (tel) sopra()
+  }
+  // a piece named in a rig's detail opens among the components, its row marked (`vaiComp`)
+  const vaiAlPezzo = (id: number) => {
+    const p = pagina?.instruments.find((x) => x.id === id)
+    if (!p) return
+    scegli({ gruppo: p.kind })
+    setIndirizzo({ pezzo: `strumento-${id}` }, { replace: true })
+  }
+  const aggiungiDi = (genere: Genere | null) => {
+    setAggiungo(true, genere)
+    sopra()
   }
 
   let corpo: ReactNode = null
@@ -107,7 +122,7 @@ export function Attrezzatura() {
   } else if (vuota && !aggiungo) {
     corpo = <Avviso tipo="pagina" formato={formato} segno="?" titolo={t("gear.empty")} testo={t("gear.empty.why")} azione={t("gear.empty.how")} onAzione={() => void vai("/impostazioni/cartelle")} />
   }
-  const pieno = pagina !== undefined && (corpo === null || aggiungo)
+  const pieno = pagina !== undefined && (corpo === null || aggiungo !== null)
 
   return (
     <Cornice formato={formato}>
@@ -158,10 +173,18 @@ export function Attrezzatura() {
           {pieno && (
             <div className="al-attr__colonna-1" style={{ gap: m.stacco }}>
               {aggiungo && (tel ? aperto : true) && (
-                <AggiungiUnPezzo schede={pagina.cards} pezzi={pagina.instruments} onChiudi={() => setAggiungo(false)} />
+                <AggiungiUnPezzo
+                  key={aggiungo.genere ?? ""}
+                  schede={pagina.cards}
+                  pezzi={pagina.instruments}
+                  onChiudi={() => setAggiungo(false)}
+                  {...(aggiungo.genere ? { primo: aggiungo.genere } : {})}
+                />
               )}
               {!vuota && (!tel || !aperto) && <Indice pagina={pagina} scelta={aggiungo ? null : qui} formato={formato} onScegli={scegli} />}
-              {aperto && !aggiungo && qui !== null && <Dettaglio pagina={pagina} scelta={qui} cercato={cercato} />}
+              {aperto && !aggiungo && qui !== null && (
+                <Dettaglio pagina={pagina} scelta={qui} cercato={cercato} formato={formato} onVai={vaiAlPezzo} onAggiungi={aggiungiDi} />
+              )}
             </div>
           )}
         </div>
@@ -171,10 +194,24 @@ export function Attrezzatura() {
 }
 
 /**
- * The detail of what is chosen. Until the board's detail lands (step 33, Gear commits C and D) it
- * shows the rows of today, one group or one rig.
+ * The detail of what is chosen: a rig as the board draws it; a group, until its board lands
+ * (step 33, Gear commit D), with the rows of today.
  */
-function Dettaglio({ pagina, scelta, cercato }: { pagina: Pagina; scelta: Scelta; cercato: string | null }) {
+function Dettaglio({
+  pagina,
+  scelta,
+  cercato,
+  formato,
+  onVai,
+  onAggiungi,
+}: {
+  pagina: Pagina
+  scelta: Scelta
+  cercato: string | null
+  formato: Formato
+  onVai: (pezzo: number) => void
+  onAggiungi: (genere: Genere | null) => void
+}) {
   // the searched row comes into view once, when the page is there
   useEffect(() => {
     if (cercato) document.getElementById(`pezzo-${cercato}`)?.scrollIntoView?.({ block: "center" })
@@ -183,11 +220,7 @@ function Dettaglio({ pagina, scelta, cercato }: { pagina: Pagina; scelta: Scelta
   if ("setup" in scelta) {
     const r = pagina.rigs.find((x) => x.id === scelta.setup)
     return r ? (
-      <ul aria-label={t("gear.rigs")}>
-        <li>
-          <UnCorredo corredo={r} montature={pagina.instruments.filter((p) => p.kind === "mount")} />
-        </li>
-      </ul>
+      <DettaglioSetup key={r.id} pagina={pagina} setup={r} formato={formato} onVai={onVai} onAggiungi={onAggiungi} />
     ) : null
   }
   if (scelta.gruppo === "filter") {

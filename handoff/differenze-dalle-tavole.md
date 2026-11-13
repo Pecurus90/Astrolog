@@ -399,3 +399,37 @@ classi `al-attr__` (`Attrezzatura.dc.html` 19-49). Restano diverse dalla tavola:
   schermo non cambia niente.
 - **Riga dei frame da rielaborare.** Tavola: `role="status"` (26). App: `aria-live="polite"`, si
   annuncia uguale. Perche': `status` a mano e' solo dell'`Avviso` comune, che non ha il segno ↻.
+
+## Attrezzatura -- Il dettaglio del setup (passo 33, commit C1, 13/11)
+
+Carta col nome e Rinomina, Parti con Seleziona, Campo col confronto e la Luna, Dati del setup,
+anello dei Filtri, sulle classi `al-attr__` (`Attrezzatura.dc.html` 51-97) e sul Modulo comune.
+Restano diverse dalla tavola:
+- **Treno ottico.** Tavola: l'esploso dopo la carta (63-66, `treno` 447). App: non c'e' ancora.
+  Perche': arriva col commit C2.
+- **Una parte scelta a mano e quelle dei file.** Tavola: la scelta sola, «(scelta a mano)»
+  (`parte`, 305). App: la scelta e anche i pezzi che i file nominano, ognuno coi suoi frame.
+  Perche': fuori dalla montatura la scelta vale solo dove il file non nomina niente, e i frame che
+  nominano un altro pezzo restano suoi.
+- **Programma di ripresa senza «Seleziona».** Tavola: Seleziona con N.I.N.A. e ASIAIR (320, 563).
+  App: nessun bottone. Perche': il programma lo dicono solo i file e l'API non ha una scelta del
+  programma; e' fuori.
+- **Salva senza cambiare niente.** Tavola: scrive la stessa scelta. App: chiude il modulo senza
+  scrivere. Perche': ogni scelta rimanda i frame del setup a rielaborare.
+- **Cio' che manca a un conto.** Tavola: «manca il campionamento» nel rapporto guida/ripresa (353).
+  App: il primo dato che manca, «manca il pixel della camera». Le frasi si compongono dal campo e
+  dal pezzo che l'API nomina (`missing`), anche per casi che la tavola non scrive («manca la focale
+  del setup»).
+- **Dati del setup di un setup appena nato.** Tavola: sempre. App: la sezione non c'e' finche' i
+  conti non sono scritti (`numbers` nullo, fine del giro).
+- **Etichette del confronto dei campi.** Tavola: `corto` (444), il nome o le due parole senza una
+  marca di una lista fissa (ZWO, Askar...), solo la prima parola («103APO · ASI2600MM»). App: il
+  `title` dell'API, il nome o il modello del pezzo, altrimenti il nome senza la marca scritta sul
+  pezzo, intero. Perche': niente lista di marche (principio 1). Un pezzo senza marca ne' modello
+  porta il nome intero («Askar 103Apo · ATR2600M»), che col foglio (`strato-2`, nowrap) esce da un
+  riquadro piccolo e copre la Luna: come stare in un riquadro stretto e' chiesto a Design.
+- **Numeri delle schede col punto.** Tavola: «pixel 3.76 µm», «backfocus 55 mm ± 1» (`vir`, 550).
+  App: la virgola, «pixel 3,76 µm». Errore della tavola (virgola decimale, Marco 6/11): a Design.
+- **Intervallo della scala di guida.** Tavola: «consigliata fra 0,5 e 4″/px» scritto nel testo
+  (352). App: uguale a schermo, ma i due numeri arrivano dall'API (`range_from`, `range_to`), che
+  ha la soglia con la sua fonte.

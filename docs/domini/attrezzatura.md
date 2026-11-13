@@ -19,6 +19,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 |---|---|
 | Apro Attrezzatura e vedo i pezzi che possiedo, raccolti per genere | `test_the_page_lists_the_gear_you_own`; *elenca i pezzi che possiedi, raccolti per genere* |
 | In testa l'indice: i setup a carte con ore, focale, barra e le 10 parti a tacche ("{n} da indicare"), i componenti un gruppo per genere; sul telefono l'indice e' la prima schermata e il dettaglio si apre a pagina intera (tavola v82) | `test_a_rig_without_a_name_is_titled_by_its_pieces_without_the_brand`, `test_a_named_rig_is_titled_by_its_name`, `test_the_ten_slots_come_in_the_card_order_and_say_what_is_missing`, `test_a_chosen_part_fills_its_slot`; *l indice mostra i setup a carte, con ore, focale e le parti da indicare*, *prima l indice, poi il dettaglio a pagina intera e la via per tornare* |
+| Scelgo un setup e vedo com'e' fatto: le parti coi loro pezzi e «Seleziona», il campo a confronto con gli altri setup e la Luna, i nove conti o cio' che manca, l'anello dei filtri (tavola v82) | `test_the_fields_come_widest_first_on_the_same_frame_with_the_moon`, `test_the_filter_ring_is_in_proportion_to_the_frames`, `test_the_backfocus_says_the_train_and_who_requires_it`, `test_the_load_says_the_weight_and_the_payload_it_divides`, `test_the_guide_scale_says_which_guide_it_used`; *il campo si confronta con gli altri setup e con la Luna, in percento dall'API*, *i dati del setup dicono ogni conto, o cosa gli manca*, *l anello dei filtri e' in proporzione ai frame, coi nomi accanto*, *i distanziali si scelgono insieme, e partono tutti* |
 | Dopo un salvataggio che rimette dei frame in coda la pagina me lo dice ("{n} frame da rielaborare", Chiudi) | *dopo un salvataggio che rimette dei frame in coda, la pagina lo dice e si chiude* |
 | Di ogni setup, parte e filtro vedo **solo le ore** (Marco, 11/10 e 24/10/2026); frame, notti e oggetti che la pagina vecchia mostra ancora vanno via al porting | `test_a_piece_says_how_much_you_shot_with_it`, `test_the_hours_of_a_piece_come_from_its_rigs` |
 | Uno stesso pezzo montato su due setup non mi raddoppia le ore | `test_a_piece_on_two_rigs_does_not_count_its_hours_twice` |
@@ -215,8 +216,19 @@ il titolo della pagina e' quello della cornice (la tavola lo nasconde col foglio
 e le 10 parti (`slots`, `slots_missing`) arrivano dall'API (`spine/rig_card.py`): il titolo e'
 il nome dato, se no ottica e camera col modello, o il nome senza la marca scritta sul pezzo, e
 «?» al posto del pezzo che manca (come la tavola); la
-guida e' una tacca, ottica o fuori asse. Il dettaglio mostra ancora le righe di prima fino ai
-commit C e D. Le barre arrivano dall'API
+guida e' una tacca, ottica o fuori asse. **Il dettaglio di un setup c'e'** (commit C1, 13/11):
+la carta col nome, «Rinomina», le ore, focale, rapporto e montatura, ottica e camera con le prime
+tre voci della scheda (mai il peso); le Parti, ognuna coi pezzi che i file nominano («N frame») o
+che hai scelto («(scelta a mano)»), e «Seleziona» col modulo nella riga (il programma di ripresa
+lo dicono solo i file: non si seleziona; Salva senza cambiare chiude e non scrive); il Campo
+misurato col confronto fra i setup e la Luna, in percento dall'API (`fields`, `moon_pct`: la
+cornice e' il campo piu' largo piu' il 15%, mai sotto 0,9°, alta due terzi; li scrive
+`gear_usage.write_fields`); i Dati del setup, i nove conti con le parole della tavola o cio' che
+manca («manca il pixel della camera»), dove `numbers` porta anche il treno e chi chiede il
+backfocus, peso e carico, la guida usata e l'intervallo della scala di guida; l'anello dei Filtri
+in proporzione ai frame (`ring_from`, `ring_to`, `passband` sulle parti `filter`). Il treno ottico
+arriva col commit C2, il gruppo e il modulo di un pezzo col D, che fino ad allora mostrano le
+righe di prima. Le barre arrivano dall'API
 (`bar_pct`: ore sul piu' usato del gruppo, mai sotto 3), scritte con l'uso
 (`gear_usage.write_bars`); la Luna piena del campo disegnato e' `moon_deg`, il diametro apparente
 medio della NASA (1896″, 0,527°; la tavola scrive 0,52). La scala del campo dice "arcosecondi per

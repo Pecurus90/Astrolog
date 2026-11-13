@@ -9,11 +9,11 @@ import { Carta } from "./componenti/Carta"
 import type { Formato } from "./componenti/Tema"
 import { nomeDelFiltro } from "./FiltriUsati"
 import { mesiBrevi, mesiIniziali, numero, oreEMinuti, t, unDecimale } from "./i18n"
+import { anello, tinte } from "./anelloDeiFiltri"
 import { pallinoDi } from "./MisureDati"
 
 type Anno = components["schemas"]["YearOut"]
 type Mese = Anno["months"][number]
-type Filtro = Anno["filters"][number]
 type Riga = Anno["rows"][number]
 
 // board `hatch(t.sparkOff)`: the months still to come
@@ -62,15 +62,8 @@ function barra(m: Mese) {
   }
 }
 
-// a gradient is not a colour inside conic-gradient: the colour stripes become three slices
-const A_COLORI = ["var(--filtro-r)", "var(--filtro-g)", "var(--filtro-b)"]
-
-/** I colori del pezzo d'anello: senza filtro un grigio (nel pallino e' un filo), a colori R, G, B. */
-function tinte(banda: string): string[] {
-  const p = pallinoDi(banda)
-  if (p.border) return ["var(--ignoto-tratteggio)"]
-  return p.background === "var(--filtro-a-colori)" ? A_COLORI : [p.background]
-}
+// [T] Dashboard `filterRing`: the paper thread between two slices, in percent
+const FILO = 0.6
 
 /** Il pallino di una riga; "altri N filtri" e' una torta del primo colore di ognuno (tavola v81). */
 function pallinoDellaRiga(r: Riga): CSSProperties {
@@ -86,20 +79,6 @@ function nomeDellaRiga(r: Riga): string {
     : nomeDelFiltro(r.name)
 }
 
-/** L'anello dei filtri (tavola `filterRing`): i pezzi dall'API, separati da un filo di carta. */
-function anello(filtri: Filtro[]): string {
-  const pezzi = filtri.map((f) => {
-    const fine = Math.max(f.ring_from, f.ring_to - 0.6)
-    const colori = tinte(f.passband)
-    const passo = (fine - f.ring_from) / colori.length
-    const fette = colori.map((c, i) => {
-      const da = f.ring_from + i * passo
-      return `${c} ${da}% ${i === colori.length - 1 ? fine : da + passo}%`
-    })
-    return `${fette.join(", ")}, var(--carta) ${fine}% ${f.ring_to}%`
-  })
-  return `conic-gradient(${pezzi.join(", ")})`
-}
 
 function Statistiche() {
   return (
@@ -183,7 +162,7 @@ function Anello({ anno, telefono }: { anno: Anno; telefono: boolean }) {
     <span
       className={telefono ? "al-dash__tondo-15" : "al-dash__tondo-10"}
       data-anim="1"
-      style={{ ...VIA, background: anello(anno.filters) }}
+      style={{ ...VIA, background: anello(anno.filters, FILO) }}
     >
       <span className={telefono ? "al-dash__tondo-16" : "al-dash__tondo-11"}>
         <span className={telefono ? "al-dash__testo-41" : "al-dash__testo-26"}>

@@ -20,7 +20,8 @@ ORDER BY i.kind, i.name COLLATE NOCASE, i.id
 
 # The order the counter wrote (`position`, most used first); a row not yet counted goes last.
 _RIGS = f"""
-SELECT g.id, g.focal_mm, o.name AS optics, c.name AS camera, o.brand AS optics_brand,
+SELECT g.id, g.focal_mm, g.optics_id, g.camera_id, o.name AS optics, c.name AS camera,
+       o.brand AS optics_brand,
        o.model AS optics_model, c.brand AS camera_brand, c.model AS camera_model, {_USAGE}
 FROM rigs g LEFT JOIN instruments o ON o.id = g.optics_id
             LEFT JOIN instruments c ON c.id = g.camera_id
@@ -41,8 +42,8 @@ _BANDS = "SELECT filter_id, band, width_nm FROM filter_bands ORDER BY filter_id,
 
 # The name is the piece's now, not the one it had when counted: a rename reads at once.
 _PARTS = """
-SELECT p.rig_id, p.kind, p.piece_id AS id, p.frames, p.chosen,
-       COALESCE(p.software, x.name, i.name) AS name
+SELECT p.rig_id, p.kind, p.piece_id AS id, p.frames, p.chosen, p.ring_from, p.ring_to,
+       COALESCE(p.software, x.name, i.name) AS name, x.passband
 FROM rig_parts p
 LEFT JOIN filters x ON p.kind = 'filter' AND x.id = p.piece_id
 LEFT JOIN instruments i ON p.kind NOT IN ('filter', 'software') AND i.id = p.piece_id
@@ -118,7 +119,10 @@ def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     for p in conn.execute(_PARTS):
         # a piece merged away since the count has no name until the next one: left out, not blank
         if p["name"] is not None:
-            part = {k: p[k] for k in ("kind", "id", "name", "frames")}
+            part = {
+                k: p[k]
+                for k in ("kind", "id", "name", "frames", "passband", "ring_from", "ring_to")
+            }
             parts.setdefault(p["rig_id"], []).append({**part, "chosen": bool(p["chosen"])})
     return [
         {
@@ -129,6 +133,21 @@ def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
         }
         for r in conn.execute(_RIGS).fetchall()
     ]
+
+
+# Widest first: on the frame the narrow boxes sit over the wide ones.
+_FIELDS = """
+SELECT subject_id AS rig_id, field_w_pct AS width_pct, field_h_pct AS height_pct, moon_pct
+FROM gear_usage WHERE subject = 'rig' AND field_w_pct IS NOT NULL
+ORDER BY field_w_pct DESC, subject_id
+"""
+
+
+def fields(conn: sqlite3.Connection) -> tuple[list[dict[str, Any]], float | None]:
+    """The rigs' boxes on the comparison frame and the Moon on it, as `write_fields` wrote them."""
+    rows = conn.execute(_FIELDS).fetchall()
+    boxes = [{k: r[k] for k in ("rig_id", "width_pct", "height_pct")} for r in rows]
+    return boxes, rows[0]["moon_pct"] if rows else None
 
 
 def filters(conn: sqlite3.Connection) -> list[dict[str, Any]]:

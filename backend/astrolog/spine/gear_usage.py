@@ -10,9 +10,9 @@ from typing import Any
 
 from ..db import idlist
 from ..db.replace_table import replace_rows
-from ..units import hundredths, median
+from ..units import MOON_DIAMETER_DEG, hundredths, median
 from ..vocab.instruments import InstrumentKind
-from . import counts, gear_numbers, rigs
+from . import counts, gear_numbers, rig_card, rigs
 from . import objects as obj
 
 
@@ -121,7 +121,10 @@ WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL
 GROUP BY f.rig_id, f.filter_id
 """,
 )
-_PART_COLUMNS = ("rig_id", "kind", "piece_id", "software", "frames", "chosen", "position")
+_PART_COLUMNS = (
+    "rig_id", "kind", "piece_id", "software", "frames", "chosen", "position",
+    "ring_from", "ring_to",
+)  # fmt: skip
 
 USAGE = ("frames", "integration_s", "untimed", "nights")
 
@@ -177,7 +180,24 @@ def write(conn: sqlite3.Connection) -> None:
     rows += [(*astuple(r), n) for n, r in enumerate(_rigs(conn))]
     replace_rows(conn, "gear_usage", _COLUMNS, rows)
     write_bars(conn)
+    write_fields(conn)
     write_parts(conn)
+
+
+_FIELDS = """SELECT subject_id, width_deg, height_deg FROM gear_usage
+WHERE subject = 'rig' AND width_deg IS NOT NULL AND height_deg IS NOT NULL"""
+
+
+def write_fields(conn: sqlite3.Connection) -> None:
+    """The rigs' fields on the comparison frame: one rig measured anew moves every box."""
+    fields = {r[0]: (r[1], r[2]) for r in conn.execute(_FIELDS)}
+    boxes, moon = rig_card.field_boxes(fields, MOON_DIAMETER_DEG)
+    conn.execute("UPDATE gear_usage SET field_w_pct = NULL, field_h_pct = NULL, moon_pct = NULL")
+    conn.executemany(
+        "UPDATE gear_usage SET field_w_pct = ?, field_h_pct = ?, moon_pct = ?"
+        " WHERE subject = 'rig' AND subject_id = ?",
+        [(round(w, 2), round(h, 2), round(moon or 0, 2), k) for k, (w, h) in boxes.items()],
+    )
 
 
 def write_parts(conn: sqlite3.Connection) -> None:
@@ -237,12 +257,27 @@ def _parts(conn: sqlite3.Connection) -> list[tuple[Any, ...]]:
             listed = list(counted.get((rig["id"], kind), []))
             if kind in mine and mine[kind] not in [piece for piece, _, _ in listed]:
                 listed.append((mine[kind], None, 0))
-            for piece, software, frames in listed:
+            ring = _ring([f for _, _, f in listed]) if kind == "filter" else None
+            for n, (piece, software, frames) in enumerate(listed):
                 # asked by kind first: the software has no id, and no id is not a choice
                 chosen = kind == InstrumentKind.SPACER or (kind in mine and mine[kind] == piece)
-                rows.append((rig["id"], kind, piece, software, frames, int(chosen), position))
+                cut = ring[n] if ring else (None, None)
+                rows.append((rig["id"], kind, piece, software, frames, int(chosen), position, *cut))
                 position += 1
     return rows
+
+
+def _ring(frames: Sequence[int]) -> list[tuple[float, float]] | None:
+    """Each filter's slice of the rig's ring, in percent of its filtered frames; none without."""
+    total = sum(frames)
+    if not total:
+        return None
+    cuts, start = [], 0.0
+    for n in frames:
+        end = start + n / total * 100
+        cuts.append((round(start, 2), round(end, 2)))
+        start = end
+    return cuts
 
 
 def add_piece(conn: sqlite3.Connection, instrument_id: int, kind: InstrumentKind) -> None:
