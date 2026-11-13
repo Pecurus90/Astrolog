@@ -128,8 +128,11 @@ Scelte diverse dalla tavola:
   (della camera, non del frame), la scala di luminosita' (serve la trasparenza di serie, passo
   40) e zenit, angoli, centro, tilt e curvatura dalla FWHM, curvatura in ″ (gia' in Frame per frame,
   Il frame e Tilt e curvatura).
-- **Lato del pilastro, Trasparenza, Nuvole, SNR dei pixel.** Tavola: fra le Altre misure. App:
-  assenti. Perche': la pipeline non le misura per frame.
+- **Lato del pilastro, Trasparenza, Nuvole.** Tavola: fra le Altre misure. App: assenti. Perche':
+  la pipeline non le misura per frame.
+- **SNR dei pixel.** Tavola: fra le Altre misure, accanto alla tessera SNR. App: e' la tessera SNR
+  (`snr`, ImageAnalysis eq. 16), non ripetuta fra le Altre misure. Perche': l'SNR della tessera
+  della tavola non ha una misura sua (Issue #73).
 - **Setup, titolo.** Tavola: «Setup» o «Due setup». App: anche «Tre setup»... «Nove setup», poi
   «10 setup». Perche': la tavola non dice il caso; in lettere fino a nove, Marco 9/11.
 - **Setup, link a Progetti e «simulato».** Tavola: ↗ Progetti accanto all'oggetto, «simulato»
