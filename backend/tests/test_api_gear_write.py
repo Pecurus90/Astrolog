@@ -210,7 +210,7 @@ def test_a_new_pixel_sends_the_frames_without_one_back_to_the_solve(archivio):
         uguale = correggi(archivio, id_camera, pixel_size_um=3.8)
 
     assert cambiato.json()["requeued"] == 2
-    assert riparte.call_args_list[0].args[1] == {"solve"}
+    assert riparte.call_args_list[0].args[1] == {"normalize", "solve"}
     assert uguale.json()["requeued"] == 0
     conn = connect(archivio.app.state.db_path)
     try:
@@ -234,7 +234,22 @@ def test_a_merge_that_brings_a_pixel_sends_the_frames_back_to_the_solve(archivio
     assert unita.status_code == 200, unita.text
     assert pezzo(archivio, "camera", "ASI2600MM")["pixel_size_um"] == 3.9
     assert unita.json()["requeued"] == 2
-    assert riparte.call_args_list[0].args[1] == {"solve"}
+    assert riparte.call_args_list[0].args[1] == {"normalize", "solve"}
+
+
+def test_the_frames_of_the_absorbed_camera_are_solved_again_with_the_kept_pixel(archivio):
+    """Unita a una camera dal pixel diverso, i frame della grafia assorbita senza `XPIXSZ`
+    rimisurano la focale col pixel della tenuta, anche se quello non cambia (Issue #64)."""
+    grafia = pezzo(archivio, "camera", "ASI2600MM")["id"]
+    correggi(archivio, grafia, pixel_size_um=3.76)
+    tenuta = crea(archivio, kind="camera", name="ASI 2600", pixel_size_um=3.9).json()["id"]
+
+    with mock.patch.object(work, "after", return_value=True) as riparte:
+        unita = correggi(archivio, grafia, merge_into=tenuta)
+
+    assert unita.status_code == 200, unita.text
+    assert unita.json()["requeued"] == 2
+    assert riparte.call_args_list[0].args[1] == {"normalize", "solve"}
 
 
 def test_the_same_guard_holds_on_the_correction(archivio):

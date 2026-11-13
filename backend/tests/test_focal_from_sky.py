@@ -5,14 +5,16 @@ riduttore dentro, che `FOCALLEN` spesso non dice. Il corredo nasce dall'header p
 il cielo lo corregge quando la misura non e' quella del corredo.
 """
 
+from astrolog.api import instrument_answer
 from astrolog.db.connect import connect
-from astrolog.spine import gear
+from astrolog.spine import gear, gear_create
 from astrolog.spine import run as run_mod
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
 from astrolog.spine.stages import StageName
 from astrolog.units import focal_from_scale
+from astrolog.vocab.instruments import InstrumentKind
 from conftest import add_folder, write_light
 from test_solve import solver
 
@@ -143,6 +145,33 @@ def test_without_xpixsz_the_camera_card_pixel_times_the_binning_measures(db_path
     list(normalize_frames(conn))
     assert [r[0] for r in conn.execute("SELECT focal_mm FROM frame_wcs")] == [560] * 3
     assert _focali(conn) == [560] * 3
+
+
+def test_merged_into_a_camera_with_another_pixel_the_frames_measure_with_it(
+    db_path, tmp_path, monkeypatch
+):
+    """Unita la camera dei frame a una dal pixel 3,9, la coda che la rotta fa ripartire li
+    riaggancia al setup e poi li risolve col 3,9 (Issue #64)."""
+    conn = connect(db_path)
+    list(scan_folder(conn, add_folder(conn, _archivio(tmp_path, FOCALLEN=700.0, XBINNING=1))))
+    list(normalize_frames(conn))
+    grafia = conn.execute("SELECT id FROM instruments WHERE kind = 'camera'").fetchone()[0]
+    gear.declare_instrument(conn, grafia, {"pixel_size_um": PIXEL})
+    now = "2024-06-01T12:00:00+00:00"
+    tenuta = gear_create.instrument(conn, InstrumentKind.CAMERA, "ASI 2600", now, detected=False)
+    gear.declare_instrument(conn, tenuta, {"pixel_size_um": 3.9})
+    requeued = instrument_answer.merge(conn, grafia, tenuta, now)
+    stages = instrument_answer.restart_stages(conn, requeued)
+    conn.commit()
+    fake = solver({i: _ini(560.0, pixel_um=3.9) for i in range(9)})
+    monkeypatch.setattr(
+        run_mod,
+        "solve_frames",
+        lambda c: solve_frames(c, exe="astap", run=fake, cache=tmp_path / "c"),
+    )
+    for _, factory in run_mod.queue(db_path, stages):
+        list(factory())
+    assert [r[0] for r in conn.execute("SELECT focal_mm FROM frame_wcs")] == [560] * 3
 
 
 def test_the_pixel_you_write_on_the_camera_measures_too(db_path, tmp_path):

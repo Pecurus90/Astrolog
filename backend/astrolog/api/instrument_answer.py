@@ -92,13 +92,25 @@ def solve_again(conn: sqlite3.Connection, camera_id: int, now: str) -> list[int]
     frames = [
         r[0]
         for r in conn.execute(
-            "SELECT f.id FROM frames f JOIN rigs r ON r.id = f.rig_id"
-            " WHERE r.camera_id = ? AND f.pixel_size_um IS NULL",
+            "SELECT f.id FROM frames f JOIN rigs r ON r.id = f.rig_id WHERE r.camera_id = ?",
             (camera_id,),
         )
     ]
-    invalidate(conn, frames, StageName.SOLVE, now=now)
-    return frames
+    return _solve_without_pixel(conn, frames, now)
+
+
+def _solve_without_pixel(conn: sqlite3.Connection, frames: Collection[int], now: str) -> list[int]:
+    """Of these frames, the ones without `XPIXSZ` go back to the solve."""
+    with idlist.holding(conn, frames) as listed:
+        bare = [
+            r[0]
+            for r in conn.execute(
+                f"SELECT id FROM frames WHERE id IN {listed}"  # noqa: S608
+                " AND pixel_size_um IS NULL"
+            )
+        ]
+    invalidate(conn, bare, StageName.SOLVE, now=now)
+    return bare
 
 
 def _pixel(conn: sqlite3.Connection, instrument_id: int) -> float | None:
@@ -110,23 +122,30 @@ def merge(conn: sqlite3.Connection, instrument_id: int, into_id: int, now: str) 
     """The merge of two spellings. Returns the frames to requeue."""
     colour_before = _colour(conn, into_id)
     pixel_before = _pixel(conn, into_id)
-    requeued = set(gear.merge_instrument(conn, instrument_id, into_id, now))
+    absorbed_pixel = _pixel(conn, instrument_id)
+    merged = gear.merge_instrument(conn, instrument_id, into_id, now)
+    requeued = set(merged)
     # the absorbed camera's answer passes to the kept one: its frames feel it if it changes
     if _colour(conn, into_id) != colour_before:
         requeued.update(unfiltered_reader.requeue(conn, into_id))
-    if _pixel(conn, into_id) != pixel_before:
+    pixel = _pixel(conn, into_id)
+    if pixel != pixel_before:
         requeued.update(solve_again(conn, into_id, now))
+    # the absorbed camera's frames, already off their rigs, now read the kept pixel (Issue #64)
+    if pixel != absorbed_pixel:
+        requeued.update(_solve_without_pixel(conn, merged, now))
     return requeued
 
 
-def first_stage(conn: sqlite3.Connection, frames: Collection[int]) -> StageName:
-    """Where the work restarts: the solve if some requeued frame waits for it."""
+def restart_stages(conn: sqlite3.Connection, frames: Collection[int]) -> set[StageName]:
+    """Where the work restarts: `normalize` as always, and the solve too if some requeued frame
+    waits for it; the queue runs `normalize` first, which puts merged frames back on a rig."""
     with idlist.holding(conn, frames) as listed:
         waiting = conn.execute(
             f"SELECT 1 FROM frame_stages WHERE frame_id IN {listed}"  # noqa: S608
             " AND stage = 'solve' AND status = 'pending' LIMIT 1"
         ).fetchone()
-    return StageName.SOLVE if waiting else StageName.NORMALIZE
+    return {StageName.NORMALIZE, StageName.SOLVE} if waiting else {StageName.NORMALIZE}
 
 
 def _kind(conn: sqlite3.Connection, instrument_id: int) -> InstrumentKind | None:

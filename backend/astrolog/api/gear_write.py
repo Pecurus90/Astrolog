@@ -79,8 +79,8 @@ def edit_instrument(
     with write.writing(conn):
         requeued = instrument_answer.answer(conn, instrument_id, body, now)
         # a camera's pixel, written or merged, sends frames back to the solve
-        stage = instrument_answer.first_stage(conn, requeued)
-    return _written(request, instrument_id, requeued, stage)
+        stages = instrument_answer.restart_stages(conn, requeued)
+    return _written(request, instrument_id, requeued, stages)
 
 
 @router.patch("/gear/rigs/{rig_id}", response_model=GearWritten)
@@ -235,8 +235,8 @@ def _written(
     request: Request,
     row_id: int,
     requeued: Collection[int],
-    stage: StageName = StageName.NORMALIZE,
+    stages: Collection[StageName] = (StageName.NORMALIZE,),
 ) -> GearWritten:
     """The work restarts only if some frame has to be redone."""
-    started = bool(requeued) and work.after(request.app.state, {stage})
+    started = bool(requeued) and work.after(request.app.state, set(stages))
     return GearWritten(id=row_id, requeued=len(requeued), run_started=started)
