@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from "react"
 
 import { Campo } from "./Campo"
-import { Modulo, NomeDelPezzo, con, useScrittura } from "./ModuloDelGesto"
+import { Modulo, NomeDelPezzo, type Scritto, con, useScrittura } from "./ModuloDelGesto"
 import { CampoDellaScheda, sulModulo } from "./SchedaDelPezzo"
 import { TendinaDiScelta } from "./TendinaDiScelta"
 import { api } from "./api/client"
@@ -41,15 +41,16 @@ export function CorreggiUnaRiga<S extends { merge_into?: number | null }>({
   /** In cosa si puo' unire: solo cio' che l'API dice (`mergeable_into`). */
   unibili: { id: number; name: string }[]
   etichettaUnione: string
-  manda: (corpo: S) => Promise<{ error?: unknown }>
+  manda: (corpo: S) => Promise<{ data?: Scritto; error?: unknown }>
   onChiudi: () => void
   campi: (scritta: S, cambia: (campo: string, valore: unknown) => void) => ReactNode
 }) {
   const [scritta, setScritta] = useState<S>({} as S)
   const unione = scritta.merge_into
   const scrivi = useScrittura(async () => {
-    const { error } = await manda(unione != null ? ({ merge_into: unione } as S) : scritta)
+    const { data, error } = await manda(unione != null ? ({ merge_into: unione } as S) : scritta)
     if (error) throw error
+    return data
   }, onChiudi)
   const cambia = (campo: string, valore: unknown) => setScritta((s) => con(s, campo, valore))
   return (
@@ -135,11 +136,12 @@ export function NomeDelCorredo({
 }) {
   const [nome, setNome] = useState(corredo.name ?? "")
   const scrivi = useScrittura(async () => {
-    const { error } = await api.PATCH("/api/v1/gear/rigs/{rig_id}", {
+    const { data, error } = await api.PATCH("/api/v1/gear/rigs/{rig_id}", {
       params: { path: { rig_id: corredo.id } },
       body: { name: nome.trim() },
     })
     if (error) throw error
+    return data
   }, onChiudi)
   return (
     <Modulo
@@ -176,11 +178,12 @@ export function MontaturaDelCorredo({
   const montata = corredo.parts.find((p) => p.kind === "mount" && p.chosen)?.id ?? null
   const [scelta, setScelta] = useState(montata ?? undefined)
   const scrivi = useScrittura(async () => {
-    const { error } = await api.PUT("/api/v1/gear/rigs/{rig_id}/parts/{kind}", {
+    const { data, error } = await api.PUT("/api/v1/gear/rigs/{rig_id}/parts/{kind}", {
       params: { path: { rig_id: corredo.id, kind: "mount" } },
       body: { piece_id: scelta ?? null },
     })
     if (error) throw error
+    return data
   }, onChiudi)
   return (
     <Modulo

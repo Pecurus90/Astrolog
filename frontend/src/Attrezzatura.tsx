@@ -1,67 +1,65 @@
 import { useQuery } from "@tanstack/react-query"
-import { type ReactNode, useEffect } from "react"
-import { Link, useSearchParams } from "react-router"
+import { type ReactNode, useEffect, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router"
 
-import { Avviso } from "./Avviso"
+import { GRUPPI, Indice, type Scelta, esiste, primaScelta } from "./AttrezzaturaIndice"
+import { Avviso } from "./componenti/Avviso"
+import { useFormato } from "./componenti/formato"
+import { gesto } from "./componenti/gesto"
+import { Pagina as Cornice } from "./componenti/Pagina"
+import { type CartaScheletro, Scheletro } from "./componenti/Scheletro"
+import type { Formato } from "./componenti/Tema"
 import { AggiungiUnPezzo } from "./GestiDelPezzo"
+import { Rielaborati } from "./ModuloDelGesto"
 import { UnCorredo, UnFiltro, UnPezzo } from "./RigheDellAttrezzatura"
-import { AzioniDelVuoto, Vuoto } from "./Vuoto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { type Chiave, t } from "./i18n"
+import { numero, t } from "./i18n"
 
-type Pezzo = components["schemas"]["InstrumentOnPage"]
 type Pagina = components["schemas"]["GearList"]
 
-// Come si chiama ogni genere **al plurale**: qui si intitola un gruppo, non un pezzo (quello lo
-// fa `GENERE`). **Un `Record` e non un elenco**: i generi li decide lo schema, e il tipo generato
-// dall'OpenAPI li porta tutti -- cosi' il giorno che ne nasce uno questo file non compila, invece
-// di far sparire quei pezzi dalla pagina in silenzio.
-const TITOLO: Record<Pezzo["kind"], Chiave> = {
-  optics: "gear.kind.optics",
-  camera: "gear.kind.camera",
-  mount: "gear.kind.mount",
-  reducer: "gear.kind.reducer",
-  filter_wheel: "gear.kind.filter_wheel",
-  guide_scope: "gear.kind.guide_scope",
-  guide_camera: "gear.kind.guide_camera",
-  focuser: "gear.kind.focuser",
-  oag: "gear.kind.oag",
-  spacer: "gear.kind.spacer",
+// [T] Attrezzatura.dc.html `L` (210-213): the page measures per format
+const MISURE: Record<Formato, { stacco: string; angolo: string; barra: string; titolo: string }> = {
+  desktop: { stacco: "16px", angolo: "28px", barra: "4px 8px 0", titolo: "34px" },
+  telefono: { stacco: "12px", angolo: "24px", barra: "4px 4px 0", titolo: "26px" },
 }
 
-// L'ordine in cui si guardano: prima cio' che fa la foto, poi cio' che la tiene ferma, poi il
-// contorno. Chi non e' nominato qui non sparisce -- va in fondo.
-const ORDINE: readonly Pezzo["kind"][] = [
-  "optics",
-  "camera",
-  "mount",
-  "reducer",
-  "filter_wheel",
-  "guide_scope",
-  "guide_camera",
-  "focuser",
-]
+// [T] Attrezzatura.dc.html `SK` (404-405): the loading skeleton
+const SCHELETRO: Record<Formato, CartaScheletro[]> = {
+  desktop: [
+    { col: "1", h: "420px", blocchi: [{ h: "14px", w: "80px" }, { h: "56px", r: "18px" }, { h: "56px", r: "18px" }, { h: "56px", r: "18px" }, { flex: "1" }] },
+    { col: "2", h: "420px", blocchi: [{ riga: [{ h: "30px", w: "320px" }, t("gear.loading")], tra: true }, { h: "64px", w: "200px" }, { riga: [{ h: "36px", w: "90px", r: "999px" }, { h: "36px", w: "90px", r: "999px" }, { h: "36px", w: "160px", r: "999px" }], gap: "8px" }] },
+    { col: "1", h: "440px", blocchi: [{ h: "14px", w: "100px" }, { flex: "1" }] },
+    { col: "2", h: "440px", blocchi: [{ h: "24px", w: "120px" }, { h: "52px", r: "18px" }, { h: "52px", r: "18px" }, { h: "52px", r: "18px" }, { h: "52px", r: "18px" }] },
+  ],
+  telefono: [
+    { h: "360px", blocchi: [{ riga: [{ h: "14px", w: "80px" }, t("gear.loading")], tra: true }, { h: "64px", r: "18px" }, { h: "64px", r: "18px" }, { h: "64px", r: "18px" }, { flex: "1" }] },
+    { h: "420px", blocchi: [{ h: "14px", w: "100px" }, { flex: "1" }] },
+  ],
+}
 
-function generiDi(pezzi: Pezzo[]): Pezzo["kind"][] {
-  const dentro = [...new Set(pezzi.map((p) => p.kind))]
-  const posto = (k: Pezzo["kind"]) => (ORDINE.indexOf(k) + 1 || ORDINE.length + 1) - 1
-  return dentro.sort((a, b) => posto(a) - posto(b))
+// `?pezzo=strumento-12` / `?pezzo=filtro-3` (search): the group that holds it
+function sceltaDa(pagina: Pagina, cercato: string | null): Scelta | null {
+  const [chi, id] = cercato?.split("-") ?? []
+  if (chi === "filtro" && pagina.filters.some((f) => String(f.id) === id)) return { gruppo: "filter" }
+  const pezzo = chi === "strumento" ? pagina.instruments.find((p) => String(p.id) === id) : undefined
+  return pezzo ? { gruppo: pezzo.kind } : null
 }
 
 /**
- * L'**Attrezzatura**: con cosa hai ripreso, e quanto -- e i gesti per correggerla.
+ * **Attrezzatura** (board v82): what you shot with, and how much. The index on top (*Setup* as
+ * cards, *Componenti* as pills), the detail of what you choose below; on the phone the index is
+ * the first screen and the detail opens full page, with the way back to it.
  *
- * - **Un genere senza pezzi non si mostra affatto**: otto titoli vuoti sarebbero un elenco di
- *   cose che non hai. E un genere **nuovo** non puo' sparire: i titoli stanno in un `Record` sul
- *   tipo generato dall'API, quindi se lo schema ne aggiunge uno questo file smette di compilare.
- * - **Scrivere un pezzo sta in cima**, fuori dai gruppi: a mani vuote non c'e' nessun gruppo, ed
- *   e' proprio li' che serve.
- * - **Niente paginazione**: l'attrezzatura di chiunque sta in una schermata.
- * - **Un pezzo si apre dall'indirizzo** (`?pezzo=strumento-12`, `?pezzo=filtro-3`, la usa la
- *   ricerca): la sua riga e' segnata (`aria-current`) e la pagina ci scorre.
+ * - **No pagination**: anyone's gear fits in one screen.
+ * - **"Aggiungi strumento" stays on top** even with nothing: empty-handed is when it serves most.
+ * - **A piece opens from the address** (`?pezzo=`, used by search): its group, its row marked.
  */
 export function Attrezzatura() {
+  const formato = useFormato()
+  const tel = formato === "telefono"
+  const m = MISURE[formato]
+  const vai = useNavigate()
   const [indirizzo] = useSearchParams()
   const cercato = indirizzo.get("pezzo")
   const elenco = useQuery({
@@ -73,90 +71,147 @@ export function Attrezzatura() {
     },
   })
   const pagina = elenco.data
+  const [scelta, setScelta] = useState<Scelta | null>(null)
+  const [aggiungo, setAggiungo] = useState(false)
+  const [dettaglio, setDettaglio] = useState(cercato !== null)
+  const [rielab, setRielab] = useState<number | null>(null)
+
   const vuota =
-    pagina &&
+    pagina !== undefined &&
     pagina.instruments.length === 0 &&
     pagina.rigs.length === 0 &&
     pagina.filters.length === 0
+  // a choice gone from the page (merged, emptied) falls back to the first, as the board does
+  const qui =
+    pagina === undefined
+      ? null
+      : scelta !== null && esiste(pagina, scelta)
+        ? scelta
+        : (sceltaDa(pagina, cercato) ?? primaScelta(pagina))
+  // a `?pezzo=` gone from the page (merged, removed) opens the index, not the first rig
+  const trovato = scelta !== null || pagina === undefined || sceltaDa(pagina, cercato) !== null
+  const aperto = tel ? (dettaglio && trovato) || aggiungo : true
+  const sopra = () => window.scrollTo?.({ top: 0, behavior: "smooth" })
+  const scegli = (s: Scelta) => {
+    setScelta(s)
+    setAggiungo(false)
+    setDettaglio(true)
+    if (tel) sopra()
+  }
+
+  let corpo: ReactNode = null
+  if (elenco.isPending) {
+    corpo = <Scheletro formato={formato} carte={SCHELETRO[formato]} testo={t("gear.loading")} griglia={tel ? "minmax(0,1fr)" : "320px minmax(0,1fr)"} gap={m.stacco} />
+  } else if (!pagina) {
+    corpo = <Avviso tipo="pagina" formato={formato} segno="!" titolo={t("gear.failed")} azione={t("gear.retry")} onAzione={() => void elenco.refetch()} />
+  } else if (vuota && !aggiungo) {
+    corpo = <Avviso tipo="pagina" formato={formato} segno="?" titolo={t("gear.empty")} testo={t("gear.empty.why")} azione={t("gear.empty.how")} onAzione={() => void vai("/impostazioni/cartelle")} />
+  }
+  const pieno = pagina !== undefined && (corpo === null || aggiungo)
 
   return (
-    <div className="as-pagina">
+    <Cornice formato={formato}>
+      <Rielaborati.Provider value={setRielab}>
+        <div className="al-attr__colonna-1" style={{ gap: m.stacco }}>
+          <div className="al-attr__riga-1" style={{ padding: m.barra }}>
+            {tel && aperto && pieno && (
+              <a href="#" role="button" onClick={gesto(() => { setDettaglio(false); setAggiungo(false) })} className="al-bottone al-bottone--testo al-bottone--a-filo">
+                <span aria-hidden="true">←</span> {t("gear.title")}{/* glifo-ok: freccia della tavola */}
+              </a>
+            )}
+            {/* the board's h1 is hidden by the sheet: the frame's h1 (Layout) already says it */}
+            <span className="al-attr__blocco-2" />
+            <a
+              className="al-attr__riga-2"
+              href="#"
+              role="button"
+              aria-expanded={aggiungo ? "true" : "false"}
+              onClick={gesto(() => {
+                setAggiungo(!aggiungo)
+                if (!aggiungo) sopra()
+              })}
+              style={{
+                background: aggiungo ? "var(--scelta)" : "var(--carta)",
+                color: aggiungo ? "var(--scelta-testo)" : "var(--testo)",
+                boxShadow: `inset 0 0 0 1.5px ${aggiungo ? "transparent" : "var(--linea)"}`,
+              }}
+            >
+              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M12 6v12M6 12h12" />
+              </svg>
+              {t("gear.write.add")}
+            </a>
+          </div>
 
-      {elenco.isPending && <p>{t("app.loading")}</p>}
-      {elenco.error && <Avviso esito="allarme">{elenco.error.message}</Avviso>}
+          {rielab !== null && (
+            <div className="al-attr__riga-3" aria-live="polite" style={{ borderRadius: m.angolo }}>
+              <span className="al-attr__tondo-1" aria-hidden="true">↻</span>{/* glifo-ok: segno della tavola */}
+              <span className="al-attr__blocco-3">{t("gear.rework", { n: numero(rielab) })}</span>
+              <a href="#" role="button" onClick={gesto(() => setRielab(null))} className="al-bottone al-bottone--contorno">
+                {t("gear.rework.close")}
+              </a>
+            </div>
+          )}
 
-      {pagina && <AggiungiUnPezzo schede={pagina.cards} pezzi={pagina.instruments} />}
+          {corpo}
 
-      {vuota && (
-        <Vuoto sotto={1} titolo="gear.empty" perche="gear.empty.why">
-          <AzioniDelVuoto>
-            <Link to="/impostazioni">{t("gear.empty.how")}</Link>
-          </AzioniDelVuoto>
-        </Vuoto>
-      )}
-
-      {pagina && <Posseduto pagina={pagina} cercato={cercato} />}
-    </div>
+          {pieno && (
+            <div className="al-attr__colonna-1" style={{ gap: m.stacco }}>
+              {aggiungo && (tel ? aperto : true) && (
+                <AggiungiUnPezzo schede={pagina.cards} pezzi={pagina.instruments} onChiudi={() => setAggiungo(false)} />
+              )}
+              {!vuota && (!tel || !aperto) && <Indice pagina={pagina} scelta={aggiungo ? null : qui} formato={formato} onScegli={scegli} />}
+              {aperto && !aggiungo && qui !== null && <Dettaglio pagina={pagina} scelta={qui} cercato={cercato} />}
+            </div>
+          )}
+        </div>
+      </Rielaborati.Provider>
+    </Cornice>
   )
 }
 
-function Posseduto({ pagina, cercato }: { pagina: Pagina; cercato: string | null }) {
-  // la riga cercata si porta in vista una volta, quando la pagina c'e'
+/**
+ * The detail of what is chosen. Until the board's detail lands (step 33, Gear commits C and D) it
+ * shows the rows of today, one group or one rig.
+ */
+function Dettaglio({ pagina, scelta, cercato }: { pagina: Pagina; scelta: Scelta; cercato: string | null }) {
+  // the searched row comes into view once, when the page is there
   useEffect(() => {
     if (cercato) document.getElementById(`pezzo-${cercato}`)?.scrollIntoView?.({ block: "center" })
   }, [cercato])
   const segno = (chiave: string) => ({ id: `pezzo-${chiave}`, "aria-current": chiave === cercato ? ("true" as const) : undefined })
-  return (
-    <>
-      {generiDi(pagina.instruments).map((genere) => (
-        <Gruppo
-          key={genere}
-          titolo={TITOLO[genere]}
-          quanti={pagina.instruments.filter((p) => p.kind === genere).length}
-        >
-          {pagina.instruments
-            .filter((p) => p.kind === genere)
-            .map((p) => (
-              <li key={p.id} {...segno(`strumento-${p.id}`)}>
-                <UnPezzo pezzo={p} campi={pagina.cards[genere] ?? []} tutti={pagina.instruments} />
-              </li>
-            ))}
-        </Gruppo>
-      ))}
-      <Gruppo titolo="gear.rigs" quanti={pagina.rigs.length}>
-        {pagina.rigs.map((r) => (
-          <li key={r.id}>
-            <UnCorredo corredo={r} montature={pagina.instruments.filter((p) => p.kind === "mount")} />
-          </li>
-        ))}
-      </Gruppo>
-      <Gruppo titolo="gear.filters" quanti={pagina.filters.length}>
+  if ("setup" in scelta) {
+    const r = pagina.rigs.find((x) => x.id === scelta.setup)
+    return r ? (
+      <ul aria-label={t("gear.rigs")}>
+        <li>
+          <UnCorredo corredo={r} montature={pagina.instruments.filter((p) => p.kind === "mount")} />
+        </li>
+      </ul>
+    ) : null
+  }
+  if (scelta.gruppo === "filter") {
+    return (
+      <ul aria-label={t("gear.filters")}>
         {pagina.filters.map((f) => (
           <li key={f.id} {...segno(`filtro-${f.id}`)}>
             <UnFiltro filtro={f} tutti={pagina.filters} />
           </li>
         ))}
-      </Gruppo>
-    </>
-  )
-}
-
-/** Un gruppo di pezzi col suo titolo. **Vuoto non si disegna**: un titolo senza righe sarebbe
- *  l'elenco di cio' che non possiedi. */
-function Gruppo({
-  titolo,
-  quanti,
-  children,
-}: {
-  titolo: Chiave
-  quanti: number
-  children: ReactNode
-}) {
-  if (quanti === 0) return null
+      </ul>
+    )
+  }
+  const genere = scelta.gruppo
+  const titolo = GRUPPI.find((g) => g.kind === genere)?.titolo ?? "gear.components"
   return (
-    <>
-      <h2>{t(titolo)}</h2>
-      <ul aria-label={t(titolo)}>{children}</ul>
-    </>
+    <ul aria-label={t(titolo)}>
+      {pagina.instruments
+        .filter((p) => p.kind === genere)
+        .map((p) => (
+          <li key={p.id} {...segno(`strumento-${p.id}`)}>
+            <UnPezzo pezzo={p} campi={pagina.cards[genere] ?? []} tutti={pagina.instruments} />
+          </li>
+        ))}
+    </ul>
   )
 }

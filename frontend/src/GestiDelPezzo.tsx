@@ -1,6 +1,5 @@
 import { useState } from "react"
 
-import { Bottone } from "./Bottone"
 import { Campo } from "./Campo"
 import { Modulo, NomeDelPezzo, con, useScrittura } from "./ModuloDelGesto"
 import { NuovoCorredo, NuovoFiltro } from "./NuovoFiltroOCorredo"
@@ -33,16 +32,19 @@ const ALTRI: Record<"filter" | "rig", Chiave> = {
 /** Scrivere un pezzo che i tuoi file non nominano: una guida, un riduttore, una montatura. Sta in
  *  cima alla pagina e non accanto a un pezzo, perche' **a mani vuote** non c'e' nessun pezzo
  *  accanto a cui metterlo -- ed e' proprio chi non ha ancora scansionato ad averne piu' bisogno. */
-export function AggiungiUnPezzo({ schede, pezzi }: { schede: Schede; pezzi: Pezzo[] }) {
-  const [aperto, setAperto] = useState(false)
+export function AggiungiUnPezzo({
+  schede,
+  pezzi,
+  onChiudi: chiudi,
+}: {
+  schede: Schede
+  pezzi: Pezzo[]
+  /** The page opens it from its bar ("Aggiungi strumento") and closes it. */
+  onChiudi: () => void
+}) {
   const [genere, setGenere] = useState<DaScrivere>("optics")
   const [nome, setNome] = useState("")
   const [scritta, setScritta] = useState<Scritta>({})
-  const chiudi = () => {
-    setAperto(false)
-    setScritta({})
-    setNome("")
-  }
   /** **Cambiando genere si tiene solo cio' che il genere nuovo chiede.** I campi che si
    *  smontano resterebbero nella scritta e partirebbero lo stesso -- una montatura nata con
    *  l'apertura di un telescopio, perche' su quei due campi lo schema non ha nessun CHECK che la
@@ -60,10 +62,11 @@ export function AggiungiUnPezzo({ schede, pezzi }: { schede: Schede; pezzi: Pezz
   }
   const scrivi = useScrittura(async () => {
     if (genere === "filter" || genere === "rig") throw new Error(`${genere} ha il suo modulo`)
-    const { error } = await api.POST("/api/v1/gear/instruments", {
+    const { data, error } = await api.POST("/api/v1/gear/instruments", {
       body: { ...scritta, kind: genere, name: nome },
     })
     if (error) throw error
+    return data
   }, chiudi)
   const scelta = (
     <Campo id="aggiungi-kind" etichetta={t("gear.write.kind")}>
@@ -82,13 +85,6 @@ export function AggiungiUnPezzo({ schede, pezzi }: { schede: Schede; pezzi: Pezz
     </Campo>
   )
 
-  if (!aperto) {
-    return (
-      <div className="as-pagina__azioni">
-        <Bottone onClick={() => setAperto(true)}>{t("gear.write.add")}</Bottone>
-      </div>
-    )
-  }
   if (genere === "filter") return <NuovoFiltro scelta={scelta} onChiudi={chiudi} />
   if (genere === "rig") return <NuovoCorredo scelta={scelta} pezzi={pezzi} onChiudi={chiudi} />
   return (

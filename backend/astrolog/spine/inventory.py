@@ -20,7 +20,8 @@ ORDER BY i.kind, i.name COLLATE NOCASE, i.id
 
 # The order the counter wrote (`position`, most used first); a row not yet counted goes last.
 _RIGS = f"""
-SELECT g.id, g.focal_mm, o.name AS optics, c.name AS camera, {_USAGE}
+SELECT g.id, g.focal_mm, o.name AS optics, c.name AS camera, o.brand AS optics_brand,
+       o.model AS optics_model, c.brand AS camera_brand, c.model AS camera_model, {_USAGE}
 FROM rigs g LEFT JOIN instruments o ON o.id = g.optics_id
             LEFT JOIN instruments c ON c.id = g.camera_id
 LEFT JOIN gear_usage u ON u.subject = 'rig' AND u.subject_id = g.id

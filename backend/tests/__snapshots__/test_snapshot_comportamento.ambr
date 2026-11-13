@@ -2338,6 +2338,50 @@
           }),
         ]),
         'scale_arcsec_px': None,
+        'slots': list([
+          dict({
+            'filled': True,
+            'kind': 'optics',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'camera',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'reducer',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'filter_wheel',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'spacer',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'mount',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'focuser',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide_camera',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'software',
+          }),
+        ]),
+        'slots_missing': 5,
+        'title': 'Askar 103Apo · ATR2600M(USB2.0)',
         'untimed': 0,
         'width_deg': None,
       }),
@@ -2472,6 +2516,50 @@
           }),
         ]),
         'scale_arcsec_px': None,
+        'slots': list([
+          dict({
+            'filled': False,
+            'kind': 'optics',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'camera',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'reducer',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'filter_wheel',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'spacer',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'mount',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'focuser',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'guide_camera',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'software',
+          }),
+        ]),
+        'slots_missing': 6,
+        'title': '? · Canon EOS 700D',
         'untimed': 0,
         'width_deg': None,
       }),
@@ -2587,6 +2675,50 @@
           }),
         ]),
         'scale_arcsec_px': None,
+        'slots': list([
+          dict({
+            'filled': True,
+            'kind': 'optics',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'camera',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'reducer',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'filter_wheel',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'spacer',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'mount',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'focuser',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide_camera',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'software',
+          }),
+        ]),
+        'slots_missing': 7,
+        'title': 'TS 130 APO · ASI2600MM Pro',
         'untimed': 0,
         'width_deg': None,
       }),
@@ -2702,6 +2834,50 @@
           }),
         ]),
         'scale_arcsec_px': None,
+        'slots': list([
+          dict({
+            'filled': True,
+            'kind': 'optics',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'camera',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'reducer',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'filter_wheel',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'spacer',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'mount',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'focuser',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide_camera',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'software',
+          }),
+        ]),
+        'slots_missing': 7,
+        'title': 'RC8 · QHY268M',
         'untimed': 0,
         'width_deg': None,
       }),
@@ -2822,6 +2998,50 @@
           }),
         ]),
         'scale_arcsec_px': None,
+        'slots': list([
+          dict({
+            'filled': True,
+            'kind': 'optics',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'camera',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'reducer',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'filter_wheel',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'spacer',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'mount',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'focuser',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide',
+          }),
+          dict({
+            'filled': False,
+            'kind': 'guide_camera',
+          }),
+          dict({
+            'filled': True,
+            'kind': 'software',
+          }),
+        ]),
+        'slots_missing': 5,
+        'title': 'Askar 103Apo · ATR2600M',
         'untimed': 0,
         'width_deg': None,
       }),

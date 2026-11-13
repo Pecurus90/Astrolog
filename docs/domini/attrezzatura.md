@@ -18,6 +18,8 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | richiesta | prova |
 |---|---|
 | Apro Attrezzatura e vedo i pezzi che possiedo, raccolti per genere | `test_the_page_lists_the_gear_you_own`; *elenca i pezzi che possiedi, raccolti per genere* |
+| In testa l'indice: i setup a carte con ore, focale, barra e le 10 parti a tacche ("{n} da indicare"), i componenti un gruppo per genere; sul telefono l'indice e' la prima schermata e il dettaglio si apre a pagina intera (tavola v82) | `test_a_rig_without_a_name_is_titled_by_its_pieces_without_the_brand`, `test_a_named_rig_is_titled_by_its_name`, `test_the_ten_slots_come_in_the_card_order_and_say_what_is_missing`, `test_a_chosen_part_fills_its_slot`; *l indice mostra i setup a carte, con ore, focale e le parti da indicare*, *prima l indice, poi il dettaglio a pagina intera e la via per tornare* |
+| Dopo un salvataggio che rimette dei frame in coda la pagina me lo dice ("{n} frame da rielaborare", Chiudi) | *dopo un salvataggio che rimette dei frame in coda, la pagina lo dice e si chiude* |
 | Di ogni setup, parte e filtro vedo **solo le ore** (Marco, 11/10 e 24/10/2026); frame, notti e oggetti che la pagina vecchia mostra ancora vanno via al porting | `test_a_piece_says_how_much_you_shot_with_it`, `test_the_hours_of_a_piece_come_from_its_rigs` |
 | Uno stesso pezzo montato su due setup non mi raddoppia le ore | `test_a_piece_on_two_rigs_does_not_count_its_hours_twice` |
 | Un setup mi dice ottica, camera e focale, e **quanto cielo inquadra davvero** | `test_a_rig_says_the_sky_it_really_frames`, `test_the_sky_of_a_rig_is_the_middle_value_not_the_average`, `test_a_frame_that_did_not_say_its_field_does_not_drag_the_others`; *un setup dice quanto cielo inquadra* |
@@ -208,7 +210,13 @@ l'altra, o dopo una correzione continuerebbe a mostrare cio' che dicono i file.
 **La pagina della tavola v82** (congelata 11/11/2026; supera la v15 del 17/10, indice a sinistra
 e "niente campo disegnato ne' tessere"): in testa l'indice a carte, *Setup* (ore, focale, barra,
 le 10 parti a tacche) e *Componenti* (un gruppo per genere), sotto il dettaglio di cio' che scegli;
-titolo grande sul desktop. Un gruppo senza righe non compare. Le barre arrivano dall'API
+il titolo della pagina e' quello della cornice (la tavola lo nasconde col foglio). Un gruppo senza righe non compare. **Il guscio c'e'** (commit B,
+13/11): barra, indice, frame da rielaborare, stati, telefono. Il titolo di una carta senza nome
+e le 10 parti (`slots`, `slots_missing`) arrivano dall'API (`spine/rig_card.py`): il titolo e'
+il nome dato, se no ottica e camera col modello, o il nome senza la marca scritta sul pezzo, e
+«?» al posto del pezzo che manca (come la tavola); la
+guida e' una tacca, ottica o fuori asse. Il dettaglio mostra ancora le righe di prima fino ai
+commit C e D. Le barre arrivano dall'API
 (`bar_pct`: ore sul piu' usato del gruppo, mai sotto 3), scritte con l'uso
 (`gear_usage.write_bars`); la Luna piena del campo disegnato e' `moon_deg`, il diametro apparente
 medio della NASA (1896″, 0,527°; la tavola scrive 0,52). La scala del campo dice "arcosecondi per

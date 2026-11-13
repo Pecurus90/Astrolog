@@ -2,7 +2,7 @@
  * Il banco della pagina **Attrezzatura**: le righe di fabbrica che manda l'API e la strada con cui
  * l'utente ci arriva. Lo usano le prove della pagina e quelle dei gesti che scrivono qualcosa.
  */
-import { fireEvent, screen } from "@testing-library/react"
+import { fireEvent, screen, within } from "@testing-library/react"
 
 import { SALUTE, SCHEDE, SPINA, STANOTTE, disegna, impostazioni, rispondi } from "./banco"
 
@@ -66,6 +66,13 @@ export const CORREDO = {
   width_deg: 1.5,
   height_deg: 1,
   parts: [] as { kind: string; id: number | null; name: string; frames: number; chosen: boolean }[],
+  bar_pct: 100,
+  title: "Il grande",
+  // ottica e camera ci sono, le altre otto parti da indicare
+  slots: ["optics", "camera", "reducer", "filter_wheel", "spacer", "mount", "focuser", "guide", "guide_camera", "software"].map(
+    (kind, i) => ({ kind, filled: i < 2 }),
+  ),
+  slots_missing: 8,
 }
 
 export const FILTRO = {
@@ -102,6 +109,14 @@ export function attrezzatura(corpo: Record<string, unknown> = {}, porte: Record<
     "/api/health": { stato: 200, corpo: SALUTE },
     ...SPINA,
   })
+}
+
+/** Sceglie un gruppo dall'indice (tavola v82: il dettaglio mostra solo cio' che scegli) e torna il
+ *  suo elenco. `lista` serve dove il nome del gruppo e' contenuto in quello della pillola. */
+export async function vedi(gruppo: RegExp, lista: RegExp = gruppo) {
+  const indice = await screen.findByRole("navigation", { name: /indice dell'attrezzatura/i })
+  fireEvent.click(within(indice).getByRole("link", { name: gruppo }))
+  return screen.findByRole("list", { name: lista })
 }
 
 /** Apre l'app e va su Attrezzatura **dal menu Altro**: e' la strada dell'utente, e prova anche

@@ -6,6 +6,15 @@
  */
 export const itAttrezzatura = {
   "gear.failed": "Attrezzatura non disponibile",
+  "gear.retry": "Riprova",
+  "gear.loading": "Caricamento…", // glifo-ok: ellipsis
+  // Il guscio della tavola v82: indice a carte, poi il dettaglio di cio' che scegli.
+  "gear.title": "Attrezzatura",
+  "gear.index": "Indice dell'attrezzatura",
+  "gear.components": "Componenti",
+  "gear.slotsMissing": "{n} da indicare",
+  "gear.rework": "{n} frame da rielaborare",
+  "gear.rework.close": "Chiudi",
   // I generi, come si chiamano a schermo. Sono quelli che lo schema conosce: un genere nuovo
   // nasce li' e passa di qui, o resterebbe senza nome.
   "gear.kind.optics": "Telescopi e obiettivi",

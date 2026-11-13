@@ -7,6 +7,14 @@
  */
 export const enAttrezzatura = {
   "gear.failed": "Equipment not available",
+  "gear.retry": "Retry",
+  "gear.loading": "Loading…", // glifo-ok: ellipsis
+  "gear.title": "Equipment",
+  "gear.index": "Equipment index",
+  "gear.components": "Components",
+  "gear.slotsMissing": "{n} to specify",
+  "gear.rework": "{n} frames to reprocess",
+  "gear.rework.close": "Close",
   "gear.kind.optics": "Telescopes and lenses",
   "gear.kind.camera": "Cameras",
   "gear.kind.mount": "Mounts",

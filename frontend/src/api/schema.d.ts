@@ -4721,6 +4721,21 @@ export interface components {
             parts: components["schemas"]["RigPart"][];
             /** @description From the cards of its pieces: the chosen part, else the most used. Null only for a rig born after the last write of the numbers. */
             numbers: components["schemas"]["RigNumbers"] | null;
+            /**
+             * Title
+             * @description The index card's title: your name for it, else optics and camera short (model, else the name without its brand). Null only without either piece.
+             */
+            title: string | null;
+            /**
+             * Slots
+             * @description The ten parts of the card in its order, each held or still to say; the guide slot holds a guide scope or an OAG. Filters are not a slot.
+             */
+            slots: components["schemas"]["RigSlot"][];
+            /**
+             * Slots Missing
+             * @description How many of `slots` are still to say.
+             */
+            slots_missing: number;
         };
         /**
          * RigPart
@@ -4758,6 +4773,15 @@ export interface components {
         RigPartChoice: {
             /** Piece Id */
             piece_id: number | null;
+        };
+        /**
+         * RigSlot
+         * @description One of the ten parts of a rig's card.
+         */
+        RigSlot: {
+            kind: components["schemas"]["Slot"];
+            /** Filled */
+            filled: boolean;
         };
         /**
          * RigSpacers
@@ -5319,6 +5343,12 @@ export interface components {
             /** Altitude Deg */
             altitude_deg: number;
         };
+        /**
+         * Slot
+         * @description The ten parts of a rig, in the card's order (board v82 `PARTI`).
+         * @enum {string}
+         */
+        Slot: "optics" | "camera" | "reducer" | "filter_wheel" | "spacer" | "mount" | "focuser" | "guide" | "guide_camera" | "software";
         /**
          * SolverOut
          * @description Where the app takes the solver from, and **what** it deduced that from.

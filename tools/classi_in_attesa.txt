@@ -42,7 +42,6 @@ as-elenco
 as-impostazioni
 as-impostazioni__corpo
 as-impostazioni__lato
-as-pagina__azioni
 as-riga--errore
 as-riga--risposta
 as-riga__conteggio

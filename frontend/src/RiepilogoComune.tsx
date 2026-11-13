@@ -14,6 +14,7 @@ import type { CartaScheletro } from "./componenti/Scheletro"
 import { type Formato, useTema } from "./componenti/Tema"
 import { varianteDi } from "./FiltriUsati"
 import { type Chiave, decimali, numero, oreEMinuti, t } from "./i18n"
+import { ICONE } from "./iconeDeiPezzi"
 
 type Setup = components["schemas"]["NightRig"]
 
@@ -158,27 +159,6 @@ export function CroceDegliStati({ onChiudi }: { onChiudi: () => void }) {
       <Croce onChiudi={onChiudi} />
     </div>
   )
-}
-
-// Le icone dei pezzi, le stesse della tavola di Attrezzatura (`ICR`, Riepilogo:171).
-const ICONE = {
-  ottica:
-    "M2.8 11.2l12.6-4.4 1.4 4-12.6 4.4zM15.4 6.8l3.6-1.2 1.9 5.3-3.6 1.3M2.4 11.4l-.6.2.9 2.6.6-.2M9 13.6l-2.6 7.2M10.6 13l3 7.8M5.6 20.8h9",
-  riduttore:
-    "M12 3.5c2.6 2.4 2.6 14.6 0 17-2.6-2.4-2.6-14.6 0-17zM4 8.5h5M4 15.5h5M15 8.5h5M15 15.5h5M4 8.5v7M20 8.5v7",
-  ruota:
-    "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M10 6.6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M15.1 10.3a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M13.2 16.4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M6.8 16.4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M4.9 10.3a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M11.2 12a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0",
-  camera:
-    "M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0M6 12a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M9.9 9.8h4.2a0.5 0.5 0 0 1 0.5 0.5v3.4a0.5 0.5 0 0 1 -0.5 0.5h-4.2a0.5 0.5 0 0 1 -0.5 -0.5v-3.4a0.5 0.5 0 0 1 0.5 -0.5zM12 1.8v1.7M12 20.5v1.7",
-  montatura:
-    "M12 21.5V15M6.5 21.5L12 15l5.5 6.5M10.2 8.5h3.6a1.2 1.2 0 0 1 1.2 1.2v4.1a1.2 1.2 0 0 1 -1.2 1.2h-3.6a1.2 1.2 0 0 1 -1.2 -1.2v-4.1a1.2 1.2 0 0 1 1.2 -1.2zM15 11.5l4.8-6.3M9 12l-4 4.4M2.7 17.3a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0",
-  focheggiatore:
-    "M4.6 7h7.3a1.6 1.6 0 0 1 1.6 1.6v6.8a1.6 1.6 0 0 1 -1.6 1.6h-7.3a1.6 1.6 0 0 1 -1.6 -1.6v-6.8a1.6 1.6 0 0 1 1.6 -1.6zM5.8 12a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0 -4.8 0M13.5 10h3M13.5 14h3M16.4 12a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0M19 8.4v1M19 14.6v1M15.4 12h1M21.6 12h1",
-  guida:
-    "M3 11.5l9.4-3.3 1.1 3.1-9.4 3.3zM12.4 8.2l2.6-.9 1.4 4-2.6.9M14.3 17.5a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0 -6.4 0M17.5 13v1.4M17.5 20.6V22M13 17.5h1.4M20.6 17.5H22",
-  programma:
-    "M5 4.5h14a2 2 0 0 1 2 2v11a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2zM3 8.5h18M6.5 15.5l2.5-3 2 2 3-4 3.5 5",
-  campo: "M3 6h18v12H3zM3 10h18M9 6v12",
 }
 
 type Parte = Setup["parts"][number]["kind"]

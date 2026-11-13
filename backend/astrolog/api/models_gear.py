@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from ..spine.rig_card import Slot
 from .models_gear_numbers import PieceNumbers, RigNumbers
 from .models_review import BandOut, CameraType, CardField, FilterSize, InstrumentKind, OpticalDesign
 from .models_review_apply import BandIn, FilterSpecs
@@ -236,6 +237,13 @@ class RigPart(BaseModel):
     )
 
 
+class RigSlot(BaseModel):
+    """One of the ten parts of a rig's card."""
+
+    kind: Slot
+    filled: bool
+
+
 class RigOnPage(BaseModel):
     """A rig: how it is made, how much it served, and **how much sky it really frames**."""
 
@@ -271,6 +279,15 @@ class RigOnPage(BaseModel):
         description="From the cards of its pieces: the chosen part, else the most used. Null "
         "only for a rig born after the last write of the numbers."
     )
+    title: str | None = Field(
+        description="The index card's title: your name for it, else optics and camera short "
+        "(model, else the name without its brand). Null only without either piece."
+    )
+    slots: list[RigSlot] = Field(
+        description="The ten parts of the card in its order, each held or still to say; the "
+        "guide slot holds a guide scope or an OAG. Filters are not a slot."
+    )
+    slots_missing: int = Field(description="How many of `slots` are still to say.")
 
 
 class FilterOnPage(BaseModel):

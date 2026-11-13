@@ -26,7 +26,7 @@ export function NuovoFiltro({ scelta, onChiudi }: { scelta: ReactNode; onChiudi:
   const [marca, setMarca] = useState("")
   const [modello, setModello] = useState("")
   const scrivi = useScrittura(async () => {
-    const { error } = await api.POST("/api/v1/gear/filters", {
+    const { data, error } = await api.POST("/api/v1/gear/filters", {
       body: {
         name: nome.trim(),
         bands: banda ? [{ band: banda }] : [],
@@ -35,6 +35,7 @@ export function NuovoFiltro({ scelta, onChiudi }: { scelta: ReactNode; onChiudi:
       },
     })
     if (error) throw error
+    return data
   }, onChiudi)
   return (
     <Modulo
@@ -80,10 +81,11 @@ export function NuovoCorredo({
     if (ottica === undefined || camera === undefined || focale === undefined) {
       throw new Error("il corredo vuole ottica, camera e focale")
     }
-    const { error } = await api.POST("/api/v1/gear/rigs", {
+    const { data, error } = await api.POST("/api/v1/gear/rigs", {
       body: { optics_id: ottica, camera_id: camera, focal_mm: focale },
     })
     if (error) throw error
+    return data
   }, onChiudi)
   return (
     <Modulo

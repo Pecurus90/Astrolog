@@ -615,6 +615,12 @@ describe("l accessibilita della prima pagina", () => {
               width_deg: null,
               height_deg: null,
               parts: [{ kind: "focuser", id: 9, name: "EAF", frames: 120 }],
+              bar_pct: 100,
+              title: "Il grande",
+              slots: ["optics", "camera", "reducer", "filter_wheel", "spacer", "mount", "focuser", "guide", "guide_camera", "software"].map(
+                (kind) => ({ kind, filled: ["optics", "camera", "focuser"].includes(kind) }),
+              ),
+              slots_missing: 7,
             },
           ],
           filters: [
@@ -643,9 +649,14 @@ describe("l accessibilita della prima pagina", () => {
     const { container } = await disegna()
     vai("/attrezzatura")
     await screen.findByRole("list", { name: /setup/i })
+    // l'indice e il setup aperto, poi un gruppo
+    expect(await violazioni(container)).toEqual([])
+    fireEvent.click(screen.getByRole("link", { name: /telescopi/i }))
     // Anche **i due gesti aperti**: una scheda che si corregge e una che nasce sono campi con le
-    // loro etichette, ed e' li' che un modulo senza nomi farebbe danno a chi ascolta.
-    fireEvent.click(screen.getAllByRole("button", { name: /^modifica$/i })[0] as HTMLElement)
+    // loro etichette, ed e' li' che un modulo senza nomi farebbe danno a chi ascolta. Uno alla
+    // volta: aprire *Aggiungi strumento* chiude il dettaglio (tavola v82).
+    fireEvent.click((await screen.findAllByRole("button", { name: /^modifica$/i }))[0] as HTMLElement)
+    expect(await violazioni(container)).toEqual([])
     fireEvent.click(screen.getByRole("button", { name: /^aggiungi strumento$/i }))
 
     expect(await violazioni(container)).toEqual([])

@@ -377,3 +377,25 @@ diverse dalla tavola:
 - **Elimina l'ottica o la camera di un setup senza frame.** Tavola: non lo prevede (la sua ottica
   di un setup ha sempre frame). App: rifiutato (409 `in_rig`), il setup e' fatto di loro. Il testo
   a schermo arriva col commit D.
+
+## Attrezzatura -- Il guscio (passo 33, commit B, 13/11)
+
+Barra con «Aggiungi strumento», indice a carte (Setup e Componenti), riga dei frame da
+rielaborare, Scheletro, Avviso, vuota, telefono indice e dettaglio con «← Attrezzatura», sulle
+classi `al-attr__` (`Attrezzatura.dc.html` 19-49). Restano diverse dalla tavola:
+- **Titolo di un setup senza nome.** Tavola: ottica e camera senza una marca di una lista fissa
+  (ZWO, Askar, ...) e solo la prima parola, «RedCat · ASI2600MM» (`corto`, 444). App: il modello
+  del pezzo se scritto, se no il nome senza la marca scritta sul pezzo, se no il nome intero,
+  «FRA400 · ASI2600MM Pro» (`title` dall'API). Perche': una lista di marche vale per l'archivio di
+  chi l'ha scritta (principio 1), e la prima parola fa uguali due ottiche diverse («EdgeHD 8» e
+  «EdgeHD 11»). Il pezzo che manca resta «?» come nella tavola, «? · EOS 700D».
+- **Il dettaglio sotto l'indice.** Tavola: carta del setup, Parti, Campo, Dati del setup, Filtri,
+  Treno ottico; il gruppo a righe con Modifica (51-117). App: le righe di prima (`UnCorredo`,
+  `UnPezzo`, `UnFiltro`) del setup o del gruppo scelto. Perche': arrivano coi commit C e D.
+- **Il modulo di «Aggiungi strumento».** Tavola: il Modulo in testa con i tipi a icone (32). App:
+  il modulo di prima. Perche': arriva col commit D.
+- **Il titolo grande «Attrezzatura».** Tavola: un h1 che il foglio nasconde (`al-attr__testo-1`).
+  App: nessun h1 nella pagina. Perche': lo porta gia' il telaio per chi legge con la voce; a
+  schermo non cambia niente.
+- **Riga dei frame da rielaborare.** Tavola: `role="status"` (26). App: `aria-live="polite"`, si
+  annuncia uguale. Perche': `status` a mano e' solo dell'`Avviso` comune, che non ha il segno ↻.

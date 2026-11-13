@@ -10,7 +10,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { CORREDO, FILTRO, MONTATURA, OTTICA, apriAttrezzatura, attrezzatura } from "./attrezzatura-banco"
+import { CORREDO, FILTRO, MONTATURA, OTTICA, apriAttrezzatura, attrezzatura, vedi } from "./attrezzatura-banco"
 import { SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
 
 afterEach(pulisci)
@@ -20,12 +20,47 @@ describe("l Attrezzatura", () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    const telescopi = await screen.findByRole("list", { name: /telescopi/i })
+    // il setup piu' usato si apre da solo; i gruppi si scelgono dall'indice
+    expect(await screen.findByRole("list", { name: /setup/i })).toBeDefined()
+    const telescopi = await vedi(/telescopi/i)
     expect(within(telescopi).getByText(/TS 130 APO/)).toBeDefined()
-    const montature = screen.getByRole("list", { name: /montature/i })
+    const montature = await vedi(/montature/i)
     expect(within(montature).getByText(/EQ6-R/)).toBeDefined()
-    expect(screen.getByRole("list", { name: /setup/i })).toBeDefined()
-    expect(screen.getByRole("list", { name: /filtri/i })).toBeDefined()
+    expect(await vedi(/filtri/i)).toBeDefined()
+  })
+
+  it("l indice mostra i setup a carte, con ore, focale e le parti da indicare", async () => {
+    attrezzatura()
+    await apriAttrezzatura()
+
+    const indice = await screen.findByRole("navigation", { name: /indice dell'attrezzatura/i })
+    const carta = within(indice).getByRole("link", { name: /il grande/i })
+    expect(carta.textContent).toContain("10 h") // 36.000 s
+    expect(carta.textContent).toContain("910 mm")
+    expect(carta.textContent).toContain("8 da indicare")
+    // dieci tacche, due piene: ottica e camera
+    expect(carta.querySelectorAll("[data-pieno]")).toHaveLength(10)
+    expect(carta.querySelectorAll('[data-pieno="true"]')).toHaveLength(2)
+    // il setup aperto e' segnato nell'indice, non a colori soltanto
+    expect(carta.getAttribute("aria-current")).toBe("true")
+  })
+
+  it("dopo un salvataggio che rimette dei frame in coda, la pagina lo dice e si chiude", async () => {
+    attrezzatura(
+      {},
+      { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
+    )
+    await apriAttrezzatura()
+    const elenco = await screen.findByRole("list", { name: /setup/i })
+    fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
+    fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "2" } })
+    fireEvent.click(screen.getByRole("button", { name: /salva/i }))
+
+    const detto = await screen.findByText("120 frame da rielaborare")
+    const riga = detto.closest("[aria-live]") as HTMLElement
+    expect(riga.getAttribute("aria-live")).toBe("polite")
+    fireEvent.click(within(riga).getByRole("button", { name: /^chiudi$/i }))
+    expect(screen.queryByText(/frame da rielaborare/)).toBeNull()
   })
 
   it("un genere senza pezzi non compare affatto", async () => {
@@ -34,9 +69,10 @@ describe("l Attrezzatura", () => {
     attrezzatura({ instruments: [OTTICA] })
     await apriAttrezzatura()
 
-    expect(await screen.findByRole("list", { name: /telescopi/i })).toBeDefined()
-    expect(screen.queryByRole("list", { name: /montature/i })).toBeNull()
-    expect(screen.queryByRole("list", { name: /focheggiatori/i })).toBeNull()
+    const indice = await screen.findByRole("navigation", { name: /indice dell'attrezzatura/i })
+    expect(within(indice).getByRole("link", { name: /telescopi/i })).toBeDefined()
+    expect(within(indice).queryByRole("link", { name: /montature/i })).toBeNull()
+    expect(within(indice).queryByRole("link", { name: /focheggiatori/i })).toBeNull()
   })
 
   it("un pezzo dice cosa ci hai ripreso", async () => {
@@ -50,9 +86,8 @@ describe("l Attrezzatura", () => {
     expect(riga.textContent).toContain("10 h") // 36.000 s, gia' sommate dal backend
     expect(riga.textContent).toContain("7 notti")
     // e lo stesso vale per un pezzo e per un filtro, non solo per il corredo
-    const telescopi = screen.getByRole("list", { name: /telescopi/i })
-    expect(telescopi.textContent).toContain("M 31")
-    expect(screen.getByRole("list", { name: /filtri/i }).textContent).toContain("M 42")
+    expect((await vedi(/telescopi/i)).textContent).toContain("M 31")
+    expect((await vedi(/filtri/i)).textContent).toContain("M 42")
   })
 
   it("un pezzo non ancora contato dice che si sta contando, non che i file tacciono", async () => {
@@ -67,10 +102,10 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
 
-    const telescopi = await screen.findByRole("list", { name: /telescopi/i })
+    const telescopi = await vedi(/telescopi/i)
     expect(telescopi.textContent).toMatch(/conteggio in corso/)
     expect(telescopi.textContent).not.toMatch(/non indicato nei file/)
-    expect(screen.getByRole("list", { name: /ruote/i }).textContent).toMatch(/non indicato nei file/)
+    expect((await vedi(/ruote/i)).textContent).toMatch(/non indicato nei file/)
   })
 
   it("il pixel ricavato dal cielo si dice ricavato, e quello dei file vince", async () => {
@@ -85,7 +120,7 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
 
-    const camere = await screen.findByRole("list", { name: /camere/i })
+    const camere = await vedi(/^camere/i)
     expect(within(camere).getByText(/ATR2600M/).closest("li")?.textContent).toMatch(
       /pixel 3,8 \u00b5m \(calcolato\)/,
     )
@@ -231,7 +266,7 @@ describe("l Attrezzatura", () => {
       instruments: [OTTICA, { ...MONTATURA, frames: 120, integration_s: 36000, untimed: 0, nights: 7, no_hours: null }],
     })
     await apriAttrezzatura()
-    const montature = await screen.findByRole("list", { name: /montature/i })
+    const montature = await vedi(/montature/i)
     expect(montature.textContent).not.toMatch(/non associata a un setup/i)
     expect(montature.textContent).toMatch(/10 h/)
   })
@@ -239,7 +274,7 @@ describe("l Attrezzatura", () => {
   it("una montatura che nessuna posa porta, in un archivio dove altre ce l'hanno, non dice zero", async () => {
     attrezzatura({ instruments: [OTTICA, { ...MONTATURA, frames: 0, integration_s: 0, untimed: 0, nights: 0 }] })
     await apriAttrezzatura()
-    const montature = await screen.findByRole("list", { name: /montature/i })
+    const montature = await vedi(/montature/i)
     expect(montature.textContent).toMatch(/non associata a un setup/i)
   })
 
@@ -252,16 +287,16 @@ describe("l Attrezzatura", () => {
       ],
     })
     await apriAttrezzatura()
-    const riduttori = await screen.findByRole("list", { name: /riduttori/i })
+    const riduttori = await vedi(/riduttori/i)
     expect(riduttori.textContent).toMatch(/non associato a un setup/i)
-    expect(screen.getByRole("list", { name: /^guide$/i }).textContent).toMatch(/non associata a un setup/i)
+    expect((await vedi(/^guide\s*\d/i, /^guide$/i)).textContent).toMatch(/non associata a un setup/i)
   })
 
   it("la montatura dice perche' non ha ore", async () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    const montature = await screen.findByRole("list", { name: /montature/i })
+    const montature = await vedi(/montature/i)
     expect(montature.textContent).toMatch(/non associata a un setup/i)
     expect(montature.textContent).not.toMatch(/\b0 h\b/)
     expect(montature.textContent).toContain("20") // la scheda pero' si legge: carico 20 kg
@@ -272,7 +307,9 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     expect(await screen.findByText(/^nessuna attrezzatura$/i)).toBeDefined()
-    expect(screen.getByRole("link", { name: /^aggiungi cartella$/i })).toBeDefined()
+    expect(screen.getByRole("button", { name: /^aggiungi cartella$/i })).toBeDefined()
+    // «Aggiungi strumento» resta sopra anche a mani vuote (tavola v82, stato Vuota)
+    expect(screen.getByRole("button", { name: /^aggiungi strumento$/i })).toBeDefined()
   })
 
   it("se l attrezzatura non si legge lo dice, invece di sembrare vuota", async () => {
@@ -287,6 +324,7 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     expect(await screen.findByText(/attrezzatura non disponibile/i)).toBeDefined()
+    expect(screen.getByRole("button", { name: /^riprova$/i })).toBeDefined()
   })
 })
 
@@ -294,7 +332,7 @@ describe("i gesti sull attrezzatura", () => {
   /** Apre la scheda di un pezzo dalla sua riga: e' la strada dell'utente, che vede l'errore
    *  mentre guarda il pezzo e lo corregge li'. */
   async function apriLaScheda(genere: RegExp, nomeDelPezzo: RegExp) {
-    const elenco = await screen.findByRole("list", { name: genere })
+    const elenco = await vedi(genere)
     const riga = within(elenco)
       .getAllByRole("listitem")
       .find((l) => nomeDelPezzo.test(l.textContent ?? ""))
@@ -343,7 +381,7 @@ describe("i gesti sull attrezzatura", () => {
       instruments: [{ ...OTTICA, id: 4, kind: "camera", name: "ASI2600MM", camera_type: null }],
     })
     await apriAttrezzatura()
-    await apriLaScheda(/camere/i, /ASI2600MM/)
+    await apriLaScheda(/^camere/i, /ASI2600MM/)
 
     const colore = screen.getByLabelText(/tipo di sensore/i)
     fireEvent.change(colore, { target: { value: "mono" } })
@@ -448,6 +486,27 @@ describe("i gesti sull attrezzatura", () => {
   })
 })
 
+describe("l Attrezzatura sul telefono", () => {
+  it("prima l indice, poi il dettaglio a pagina intera e la via per tornare", async () => {
+    attrezzatura()
+    window.history.pushState({}, "", "/attrezzatura?formato=telefono")
+    await disegna()
+
+    // la prima schermata e' l'indice, senza niente di segnato e senza dettaglio
+    const indice = await screen.findByRole("navigation", { name: /indice dell'attrezzatura/i })
+    expect(indice.querySelectorAll('[aria-current="true"]')).toHaveLength(0)
+    expect(screen.queryByRole("list", { name: /setup/i })).toBeNull()
+
+    fireEvent.click(within(indice).getByRole("link", { name: /il grande/i }))
+    expect(await screen.findByRole("list", { name: /setup/i })).toBeDefined()
+    expect(screen.queryByRole("navigation", { name: /indice dell'attrezzatura/i })).toBeNull()
+
+    fireEvent.click(screen.getByRole("button", { name: /attrezzatura/i }))
+    expect(await screen.findByRole("navigation", { name: /indice dell'attrezzatura/i })).toBeDefined()
+    expect(screen.queryByRole("list", { name: /setup/i })).toBeNull()
+  })
+})
+
 describe("l Attrezzatura, un pezzo dall'indirizzo", () => {
   it("con ?pezzo= la riga di quel pezzo e' segnata, e nessun'altra", async () => {
     attrezzatura()
@@ -457,7 +516,11 @@ describe("l Attrezzatura, un pezzo dall'indirizzo", () => {
     const telescopi = await screen.findByRole("list", { name: /telescopi/i })
     const riga = within(telescopi).getByText(/TS 130 APO/).closest("li") as HTMLElement
     expect(riga.getAttribute("aria-current")).toBe("true")
-    expect(document.querySelectorAll('[aria-current="true"]')).toHaveLength(1)
+    expect(telescopi.querySelectorAll('[aria-current="true"]')).toHaveLength(1)
+    // nell'indice e' segnato il suo gruppo, e nient'altro
+    const indice = screen.getByRole("navigation", { name: /indice dell'attrezzatura/i })
+    const segnati = [...indice.querySelectorAll('[aria-current="true"]')].map((x) => x.textContent)
+    expect(segnati).toEqual([expect.stringMatching(/^Telescopi/)])
   })
 
   it("un filtro si apre allo stesso modo", async () => {
