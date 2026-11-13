@@ -20,7 +20,9 @@ from conftest import best_of
 real_path = bundle.path
 
 BASELINE = Path(__file__).with_name("perf_baseline.json")
-TOLLERANZA = 3.0  # una CI e' piu' lenta di un portatile, ma non tre volte
+# Shared CI runner measured up to 3.2x the laptop baseline with unchanged code (Issue #63);
+# 4x of 0.234 s stays under the second the design forbids.
+TOLLERANZA = 4.0
 
 
 @pytest.mark.lento
