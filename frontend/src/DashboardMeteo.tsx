@@ -18,6 +18,7 @@ import {
   oreDellaNotte,
   ripresaDellaNotte,
 } from "./DashboardDati"
+import { useCalendario } from "./DashboardLuna"
 import {
   type Chiave,
   fa,
@@ -28,6 +29,7 @@ import {
   oraDelSito,
   orario,
   t,
+  alPiu,
 } from "./i18n"
 import { useAggiorna } from "./Meteo"
 
@@ -472,9 +474,48 @@ export function ProssimeNotti({
 }) {
   const tel = formato === "telefono"
   const [aperte, setAperte] = useState(false)
-  const notti = mancanzaDelMeteo(meteo) ? [] : meteo.nights.slice(1, 4)
-  if (!notti.length) return null
+  const calendario = useCalendario().data
+  const manca = mancanzaDelMeteo(meteo)
+  const notti = manca ? [] : meteo.nights.slice(1, 4)
+  // without a forecast the nights stay with the dark the Moon round wrote (board 526)
+  const oggi = calendario?.today
+  const buie = manca && oggi ? calendario.nights.filter((g) => g.date > oggi).slice(0, 3) : []
+  const tante = notti.length || buie.length
+  if (!tante) return null
   const titolo = t("dashboard.next.title")
+  const senzaMeteo = (g: { date: string; dark_s: number }) => {
+    const giorno = maiuscola(giornoENumero(g.date))
+    const ore = t("dashboard.next.dark", { ore: alPiu(g.dark_s / 3600, 1) })
+    const pillola = (
+      <Pillola
+        esito="mancante"
+        testo={t("dashboard.night.noWeather")}
+        fondo="carta"
+        dimensione={tel ? "minima" : "media"}
+      />
+    )
+    const cielo = t("dashboard.next.needsForecast")
+    if (tel) {
+      return (
+        <div key={g.date} className="al-dash__colonna-29">
+          <span className="al-dash__riga-15">
+            <b className="al-dash__testo-7">{giorno}</b>
+            {pillola}
+          </span>
+          <span className="al-dash__testo-41">{ore}</span>
+          <span className="al-dash__testo-13">{cielo}</span>
+        </div>
+      )
+    }
+    return (
+      <div key={g.date} className="al-dash__griglia-11">
+        <b className="al-dash__testo-20">{giorno}</b>
+        <span className="al-dash__riga-26">{pillola}</span>
+        <span className="al-dash__blocco-8">{ore}</span>
+        <span className="al-dash__blocco-9">{cielo}</span>
+      </div>
+    )
+  }
   const voce = (n: NotteMeteo) => {
     const rip = ripresaDellaNotte(n)
     const es = esitoDellaNotte(n)
@@ -514,12 +555,13 @@ export function ProssimeNotti({
       </div>
     )
   }
+  const righe = notti.length ? notti.map(voce) : buie.map(senzaMeteo)
   if (tel) {
-    const altre = notti.length - 1
+    const altre = righe.length - 1
     return (
       <Carta formato="telefono" etichetta={titolo} ritardo={300} padding="20px" gap="14">
         <span className="al-dash__testo-29">{titolo}</span>
-        {(aperte ? notti : notti.slice(0, 1)).map(voce)}
+        {aperte ? righe : righe.slice(0, 1)}
         {altre > 0 && (
           <a
             className="al-bottone al-bottone--testo al-bottone--a-filo"
@@ -545,7 +587,7 @@ export function ProssimeNotti({
       <div className="al-dash__riga-15">
         <span className="al-dash__testo-1">{titolo}</span>
       </div>
-      {notti.map(voce)}
+      {righe}
     </Carta>
   )
 }

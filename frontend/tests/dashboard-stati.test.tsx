@@ -62,7 +62,11 @@ describe("gli stati della Dashboard", () => {
     expect(screen.getByText("Buio stanotte, calcolato")).toBeDefined()
     expect(screen.getByText("? senza meteo")).toBeDefined()
     expect(screen.getAllByText("? Non disponibile")).toHaveLength(6)
-    expect(screen.queryByText("Le prossime 3 notti")).toBeNull()
+    // tavola 526: le tre notti restano, col buio dal calendario della Luna (#66)
+    expect(await screen.findByText("Le prossime 3 notti")).toBeDefined()
+    expect(screen.getAllByText("9 ore di buio")).toHaveLength(3)
+    expect(screen.getAllByText("Nuvole non disponibili: serve la previsione")).toHaveLength(3)
+    expect(testo()).toContain("Giovedì 1")
   })
 
   it("Riprova ora chiede la previsione subito", async () => {

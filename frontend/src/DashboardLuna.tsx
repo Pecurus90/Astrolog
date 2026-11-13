@@ -30,7 +30,7 @@ type Calendario = components["schemas"]["MoonCalendarOut"]
 type GiornoDetto = Calendario["nights"][number]
 
 /** This month and the next as the background round wrote them; empty until it has run. */
-function useCalendario() {
+export function useCalendario() {
   return useQuery({
     queryKey: ["moon-calendar"],
     queryFn: async () => {

@@ -124,7 +124,7 @@ export function calendario(vuoto = false) {
     : Array.from({ length: 61 }, (_, i) => {
         const d = new Date(Date.UTC(2026, 8, 1 + i)).toISOString().slice(0, 10)
         return {
-          date: d, phase_key: "waxing_crescent", illumination_pct: 10, moonless_dark_s: 4 * 3600, lit_side: "right", good: true,
+          date: d, phase_key: "waxing_crescent", illumination_pct: 10, dark_s: 9 * 3600, moonless_dark_s: 4 * 3600, lit_side: "right", good: true,
           event: d === "2026-09-09" ? "new" : d === "2026-09-24" ? "full" : null,
           level: d < "2026-09-15" ? "go" : d < "2026-09-20" ? "marginal" : "nogo",
           shots: d === "2026-09-19" ? [{ night_id: 7, site: "Casa", objects: ["M 31", "M 33"], frames: 180, integration_s: 15120, untimed: 0 }] : [],

@@ -144,7 +144,8 @@ def _next(conn: sqlite3.Connection, site: Site, night: str, kind: str) -> str | 
 @router.get("/moon/calendar", response_model=MoonCalendarOut)
 def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut:
     """The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
-    this month and the next, each night with its Moon, the dark hours without it and whether it is
+    this month and the next, each night with its Moon, its dark hours, those without the Moon (the
+    next nights say them even without a forecast) and whether it is
     good for broadband by the two thresholds in the settings, which travel along for the legend,
     its step on the Meteo's Moon scale, and the nights shot that day from any site (SQL sums).
     Nothing is computed here: before the round has run, `nights` is empty."""
@@ -168,6 +169,7 @@ def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut
                 date=r["night_date"],
                 phase_key=r["phase_key"],
                 illumination_pct=r["illumination_pct"],
+                dark_s=r["dark_s"],
                 moonless_dark_s=r["moonless_dark_s"],
                 event=r["event"],
                 lit_side=moon.lit_side(r["phase_key"], home.latitude) if home else "right",

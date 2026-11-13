@@ -201,9 +201,12 @@ def test_the_routes_read_what_the_round_wrote(db_path, scritto_oggi):
         luna = c.get("/api/v1/tonight").json()["moon"]
     assert (cal["max_pct"], cal["min_dark_h"]) == (25, 4)
     assert len(cal["nights"]) >= 59
-    assert {"date", "phase_key", "illumination_pct", "moonless_dark_s", "event", "good"} <= set(
-        cal["nights"][0]
-    )
+    keys = {"date", "phase_key", "illumination_pct", "dark_s", "moonless_dark_s", "event", "good"}
+    assert keys <= set(cal["nights"][0])
+    # il buio come il giro l'ha scritto: le prossime notti lo dicono anche senza previsione (#66)
+    scritti = dict(scritto_oggi.execute("SELECT night_date, dark_s FROM moon_nights").fetchall())
+    assert all(n["dark_s"] == scritti[n["date"]] for n in cal["nights"])
+    assert all(n["moonless_dark_s"] <= n["dark_s"] for n in cal["nights"])
     assert luna["next_new"] and luna["next_full"]
     assert 0 <= luna["age_days"] <= 30
     assert 356000 <= luna["distance_km"] <= 407000

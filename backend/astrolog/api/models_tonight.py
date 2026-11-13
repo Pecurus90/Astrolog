@@ -41,6 +41,7 @@ class MoonCalendarNightOut(BaseModel):
     date: str
     phase_key: "PhaseKey"
     illumination_pct: int
+    dark_s: int = Field(description="Astronomical dark of the night, Moon or not.")
     moonless_dark_s: int
     event: Literal["new", "full"] | None
     lit_side: Literal["left", "right"] = Field(

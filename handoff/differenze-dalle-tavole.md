@@ -267,8 +267,9 @@ Diverse dalla tavola:
   ore senza Luna contano per la banda larga (Marco, 13/11, #65).
 - **La Ripresa delle prossime notti.** Tavola: dalla Luna ora per ora (509). App: dalle ore di
   posa divise per banda («3,1 in banda larga, 1,5 stretta»), che il backend scrive per notte.
-- **Prossime notti senza previsione.** Tavola: le tre notti restano, con le ore di buio (526). App:
-  la carta non c'e'. Perche': senza previsione la risposta non ha le notti dopo stanotte.
+- **Prossime notti senza previsione.** Tavola: le tre notti restano, con le ore di buio e la
+  Ripresa dalla Luna (526). App: le tre notti restano col buio dal calendario della Luna, senza la
+  Ripresa (13/11, #66). Perche': la Ripresa dell'app viene dalle ore di posa della previsione.
 - **Da riprendere.** Tavola: le domande una per una («Due siti lo stesso giorno», «Filtro
   sconosciuto», 588). App: «Da confermare, N» con Rispondi e i frame fuori dai conti. Perche':
   l'elenco tipizzato delle domande arriva col passo 33.4.

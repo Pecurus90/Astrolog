@@ -158,6 +158,8 @@ export const enDashboard = {
   "dashboard.next.none": "no hours of exposure",
   "dashboard.next.trend": "{ore} hours of dark \u00b7 trend",
   "dashboard.next.noClouds": "Clouds not available",
+  "dashboard.next.dark": "{ore} hours of dark",
+  "dashboard.next.needsForecast": "Clouds not available: the forecast is needed",
   "dashboard.next.pct": " \u00b7 {pct}%",
   "dashboard.next.transparency": "mean transparency in the dark",
   "dashboard.next.transparency.value": "{v}/100",

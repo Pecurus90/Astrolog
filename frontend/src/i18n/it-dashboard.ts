@@ -160,6 +160,8 @@ export const itDashboard = {
   "dashboard.next.none": "nessuna ora di posa",
   "dashboard.next.trend": "{ore} ore di buio \u00b7 tendenza",
   "dashboard.next.noClouds": "Nuvole non disponibili",
+  "dashboard.next.dark": "{ore} ore di buio",
+  "dashboard.next.needsForecast": "Nuvole non disponibili: serve la previsione",
   "dashboard.next.pct": " \u00b7 {pct}%",
   "dashboard.next.transparency": "trasparenza media nel buio",
   "dashboard.next.transparency.value": "{v}/100",
