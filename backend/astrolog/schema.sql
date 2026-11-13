@@ -1315,6 +1315,8 @@ CREATE TABLE pipeline_sky (
   angle_pa_deg  REAL CHECK (angle_pa_deg >= 0 AND angle_pa_deg < 180),
   angle_axis    TEXT CHECK (angle_axis IN ('ra', 'dec')),
   gradient_pa_deg REAL CHECK (gradient_pa_deg >= 0 AND gradient_pa_deg < 360),  -- lato chiaro
+  -- lo stesso lato in otto punti, scritto qui perche' una lettura non calcola
+  gradient_side TEXT CHECK (gradient_side IN ('N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW')),
   -- Image Analysis par. 2.1.1, a meta' posa. Centro: da Nord verso Est; angolo orario in ore,
   -- negativo prima del transito, posto di data. NULL: centro, sito o ora ignoti
   azimuth_deg   REAL CHECK (azimuth_deg >= 0 AND azimuth_deg < 360),

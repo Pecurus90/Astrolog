@@ -11,7 +11,7 @@ from astrolog.pipeline.airmass import airmass_of, apparent_altitude, at_zenith
 from astrolog.pipeline.altitude import observed
 from astrolog.pipeline.footprint import position_angle
 from astrolog.pipeline.measure import measure_root
-from astrolog.pipeline.sky_measure import mid_exposure, sky_axis, sky_root
+from astrolog.pipeline.sky_measure import mid_exposure, sky_axis, sky_root, sky_side
 from astrolog.pipeline.solve import forget
 from conftest import LATER
 from test_pipeline_measure import _light, _scanned
@@ -121,6 +121,24 @@ def test_the_shape_and_the_bright_side_turn_with_the_sky(conn, tmp_path):
     assert row["angle_pa_deg"] == pytest.approx(position_angle(_CD, 10.0) % 180)
     assert row["angle_axis"] == sky_axis(row["angle_pa_deg"])
     assert row["gradient_pa_deg"] == pytest.approx(position_angle(_CD, 200.0))
+    assert row["gradient_side"] == sky_side(row["gradient_pa_deg"])
+
+
+def test_a_flat_sky_has_no_bright_side_word(conn, tmp_path):
+    root = _measured(conn, tmp_path, *_CARDS)
+    _solve(conn)
+    sky_root(conn, root, LATER)
+    assert _sky(conn)[0]["gradient_side"] is None
+
+
+@pytest.mark.parametrize(
+    ("pa", "lato"),
+    [(0, "N"), (22.4, "N"), (22.6, "NE"), (90, "E"), (180, "S"), (270, "W"), (337.6, "N")],
+)
+def test_the_bright_side_is_a_point_of_the_compass(pa, lato):
+    """L'angolo di posizione va da nord verso est (`footprint.position_angle`): 90 e' est. Otto
+    punti di 45 gradi, ognuno centrato sulla sua direzione."""
+    assert sky_side(pa) == lato
 
 
 def test_without_a_site_there_is_no_altitude_but_the_arcseconds_stay(conn, tmp_path):

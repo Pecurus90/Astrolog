@@ -19,7 +19,7 @@ _NIGHT = "SELECT s.timezone FROM nights n JOIN sites s ON s.id = n.site_id WHERE
 # The columns of a frame of the series, `f` through the bridge; the caller adds FROM and WHERE.
 SERIES = f"""
 SELECT f.id, f.object_id, f.night_id, f.filter_id, m.outcome, m.shape, m.tilt_level,
-       m.sampling_class, k.angle_axis,
+       m.sampling_class, k.angle_axis, k.gradient_side,
        (SELECT c.start_utc FROM pipeline_files pf JOIN pipeline_cards c ON c.file_id = pf.id
          WHERE pf.frame_id = b.pipeline_frame_id AND pf.state = 'present'
          ORDER BY pf.id LIMIT 1) AS start_utc, {VALUES}"""  # noqa: S608 - our columns
@@ -167,5 +167,6 @@ def frame(
         "tilt_level": r["tilt_level"],
         "sampling": r["sampling_class"],
         "angle_axis": r["angle_axis"],
+        "gradient_side": r["gradient_side"],
         "values": {e.key: float(r[e.key]) for e in MEASURES if r[e.key] is not None},
     }

@@ -207,6 +207,19 @@ def test_a_frame_says_which_way_its_stars_stretch(conn, db_path, world) -> None:
     assert _get(db_path, world.night).json()["series"][0]["angle_axis"] == "ra"
 
 
+def test_a_solved_frame_says_where_its_sky_is_brighter(conn, db_path, world) -> None:
+    """Tavola MisureFrame 357, «piu' chiaro verso est»: la rotta manda il lato scritto."""
+    spine = world.shot(3.0)
+    night_measures.rebuild(conn)
+    conn.execute(
+        "INSERT INTO pipeline_sky (frame_id, solved, gradient_pa_deg, gradient_side, computed_at)"
+        " SELECT pipeline_frame_id, 1, 95, 'E', ? FROM night_measure_frames WHERE frame_id = ?",
+        ("2026-10-13T10:00:00+00:00", spine),
+    )
+    conn.commit()
+    assert _get(db_path, world.night).json()["series"][0]["gradient_side"] == "E"
+
+
 def test_a_night_not_rebuilt_yet_has_no_sets(conn, db_path, world) -> None:
     """Grouped but the measures not written yet: no sets, not an error."""
     world.frame()

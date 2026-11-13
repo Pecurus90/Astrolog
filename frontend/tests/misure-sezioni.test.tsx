@@ -112,6 +112,11 @@ describe("il frame", () => {
     expect(grande?.textContent).toBe("2,4″ · 1,3 px")
   })
 
+  it("il gradiente dice verso dove il cielo e' piu' chiaro (tavola 357)", () => {
+    const { tessere } = ilFrame([{ ...PIENO, gradient_side: "E" } as FrameMisurato])
+    expect(tessere[7]).toBe(`Gradient1,2 ${RUMORE}più chiaro verso est`)
+  })
+
   it("un frame con poco: le quattro tessere fisse, in pixel senza scala, e la sua nota", () => {
     const { sezione, tessere } = ilFrame([frame(1, "measured", { fwhm_px: 1.24 })])
     expect(tessere).toEqual(["FWHM1,2 px", "HFD—", "Stars—", "Background—"])

@@ -110,9 +110,6 @@ Scelte diverse dalla tavola:
 - **Eccentricita', l'asse.** Tavola: «in AR» o «in Dec» solo da 0,40 in su (MisureFrame 242,
   355). App: l'asse quando il frame ne ha uno (stelle non tonde e risolte). Perche': ADR 0039 ha
   tolto le soglie fisse dell'eccentricita'.
-- **Gradiente, il lato chiaro.** Tavola: «piu' chiaro verso est» fisso nel frame (357). App:
-  niente riga sotto. Perche': testo simulato; il lato vero e' fra le Altre misure, in gradi (passo
-  32.1).
 - **Luminosita' del cielo senza valore.** Tavola: «nessun frame L o a colori in questa notte» o
   «serve il bias della camera» (235). App: «non c'e' per questi frame». Perche': l'API non manda
   ancora il motivo per l'insieme, solo per frame.

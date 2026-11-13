@@ -97,7 +97,11 @@ function riquadri(f: FrameMisurato, tipo: Tipo): Riquadro[] {
         : {}),
     })
   if (v.gradient_noise !== undefined)
-    r.push({ k: nomeDi("gradient"), v: scritto("gradient_noise", v.gradient_noise) })
+    r.push({
+      k: nomeDi("gradient"),
+      v: scritto("gradient_noise", v.gradient_noise),
+      ...(f.gradient_side ? { sub: t(`measures.brighter.${f.gradient_side}`) } : {}),
+    })
   if (v.hfd_tilt_pct !== undefined)
     r.push({
       k: nomeDi("tilt"),

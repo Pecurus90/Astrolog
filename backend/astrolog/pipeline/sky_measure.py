@@ -10,6 +10,7 @@ from typing import Any
 
 from ..db.transaction import transaction
 from ..ephemeris.frames import MoonAndSun, moon_and_sun
+from ..measure_list import SIDES, SkySide
 from .airmass import airmass_of, apparent_altitude, at_zenith
 from .altitude import Observed, observed
 from .footprint import position_angle
@@ -36,7 +37,7 @@ LIGHT = ("moon_altitude_deg", "moon_separation_deg", "moon_illumination", "sun_a
 _COLUMNS = (
     "solved", "mid_utc", "altitude_deg", "airmass", "hfd_arcsec", "fwhm_arcsec", "off_axis_arcsec",
     "hfd_zenith_arcsec", "fwhm_zenith_arcsec", "angle_pa_deg", "angle_axis", "gradient_pa_deg",
-    "azimuth_deg", "hour_angle_h", *LIGHT, "computed_at",
+    "gradient_side", "azimuth_deg", "hour_angle_h", *LIGHT, "computed_at",
 )  # fmt: skip
 UPSERT = (
     f"INSERT INTO pipeline_sky (frame_id, {', '.join(_COLUMNS)})"  # noqa: S608 - our names
@@ -79,6 +80,12 @@ def mid_exposure(start_utc: str | None, exposure_s: float | None) -> str | None:
     )
 
 
+def sky_side(position_deg: float) -> SkySide:
+    """A position angle (North toward East, footprint.position_angle) as one of eight points,
+    each 45 degrees wide and centred on its direction."""
+    return SIDES[int(((position_deg + 22.5) % 360) // 45)]
+
+
 def sky_axis(position_deg: float) -> str:
     """'ra' along East-West, 'dec' along North-South: the nearer one."""
     return "ra" if abs(position_deg % 180.0 - 90.0) < AXIS_SPLIT_DEG else "dec"
@@ -90,13 +97,15 @@ def _on_sky(row: sqlite3.Row, now: str) -> dict[str, object]:
     cd = (row["cd1_1"], row["cd1_2"], row["cd2_1"], row["cd2_2"])
     axis = _turned(cd, row["angle_deg"])
     angle = None if axis is None else axis % 180.0
+    bright = _turned(cd, row["gradient_angle_deg"])
     return {
         "frame_id": row["frame_id"], "solved": int(row["ra_deg"] is not None),
         "mid_utc": mid_exposure(row["start_utc"], row["exposure_s"]),
         "hfd_arcsec": _arcsec(row["hfd_px"], scale), "fwhm_arcsec": _arcsec(row["fwhm_px"], scale),
         "off_axis_arcsec": _arcsec(row["off_axis_px"], scale),
         "angle_pa_deg": angle, "angle_axis": None if angle is None else sky_axis(angle),
-        "gradient_pa_deg": _turned(cd, row["gradient_angle_deg"]),
+        "gradient_pa_deg": bright,
+        "gradient_side": None if bright is None else sky_side(bright),
         "altitude_deg": None, "airmass": None, "computed_at": now,
     }  # fmt: skip
 

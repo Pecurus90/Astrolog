@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ..measure_list import Group, Unit
+from ..measure_list import Group, SkySide, Unit
 
 FrameState = Literal["measured", "estimated", "too_few_stars", "pending"]
 TiltLevel = Literal["go", "marginal", "nogo"]
@@ -100,6 +100,11 @@ class MeasuredFrame(BaseModel):
     )
     angle_axis: Literal["ra", "dec"] | None = Field(
         description="The stars' long axis on the sky; null: round stars or not solved."
+    )
+    gradient_side: SkySide | None = Field(
+        default=None,
+        description="Where the background is brighter on the sky, of eight points from "
+        "`gradient_pa_deg`; null: not solved or a flat sky.",
     )
     values: dict[str, float] = Field(
         description="Measure -> value, only those it has; why one is missing: the frame's measures."

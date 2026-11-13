@@ -3372,6 +3372,11 @@ export interface components {
              */
             angle_axis: ("ra" | "dec") | null;
             /**
+             * Gradient Side
+             * @description Where the background is brighter on the sky, of eight points from `gradient_pa_deg`; null: not solved or a flat sky.
+             */
+            gradient_side?: ("N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW") | null;
+            /**
              * Values
              * @description Measure -> value, only those it has; why one is missing: the frame's measures.
              */

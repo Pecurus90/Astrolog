@@ -3,6 +3,7 @@ writes them and the app that reads them, so neither imports the other (ADR 0030)
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Literal
 
 # Brightness ladder (pipeline/transparency.py): windows of 50 ranks by decreasing flux, from these.
 STARTS = (1, 51, 101, 201, 401, 801, 1601, 3201, 6401)  # [C ImageAnalysis par. 2.1.7; software-ok]
@@ -183,6 +184,11 @@ MEASURES: tuple[Entry, ...] = (
     ),
 )
 
+# Where a frame's sky is brighter, clockwise from North (pipeline/sky_measure.sky_side).
+SkySide = Literal["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+SIDES: tuple[SkySide, ...] = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+
+
 # Columns that are no measure: keys, outcomes, words, times; the route sends the words apart.
 NOT_MEASURES: dict[Table, frozenset[str]] = {
     _M: frozenset(
@@ -197,7 +203,7 @@ NOT_MEASURES: dict[Table, frozenset[str]] = {
             "measured_at",
         }
     ),  # fmt: skip
-    _K: frozenset({"frame_id", "solved", "mid_utc", "angle_axis", "computed_at"}),
+    _K: frozenset({"frame_id", "solved", "mid_utc", "angle_axis", "gradient_side", "computed_at"}),
     _Q: frozenset(
         {"frame_id", "file_id", "outcome", "catalogue", "colour", "duration_s", "computed_at"}
     ),  # fmt: skip
