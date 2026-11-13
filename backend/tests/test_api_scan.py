@@ -77,6 +77,15 @@ def test_the_last_scan_says_today_by_the_home_site_clock(app):
     assert detto["worker"]["ended_day"] == "today", detto["worker"]
 
 
+def test_the_scan_says_the_folder_it_reads(app):
+    """La prima scansione dice la cartella in lettura (tavola Dashboard 583, «Cartella
+    Dati/Astro»): la rotta la manda col progresso, la pagina non la cerca."""
+    client, fid, root = app
+    client.post(f"/api/v1/folders/{fid}/scan")
+    assert wait_until(lambda: finished(client))
+    assert status(client)["scan"]["folder_path"] == str(root)
+
+
 def test_a_scan_feeds_the_new_pipeline_behind_the_scenes(app, db_path, monkeypatch):
     """Dopo la lettura la pipeline nuova legge la stessa cartella sul suo thread: intanto l'app e'
     libera (Avvia, una seconda scansione accettata), e senza ASTAP (il recinto) non rompe niente."""

@@ -202,6 +202,8 @@ export const itDashboard = {
   "dashboard.start.folder.how": "Scegli la cartella",
   "dashboard.start.scan.title": "Prima scansione in corso",
   "dashboard.start.scan.text": "Si pu\u00f2 usare AstroLog intanto; si ferma dall'ingranaggio.",
+  "dashboard.start.scan.textFolder":
+    "Cartella {cartella}. Si pu\u00f2 usare AstroLog intanto; si ferma dall'ingranaggio.",
   "dashboard.start.scan.files": "file letti {fatti} su {su}",
   "dashboard.start.scan.files.eta": "file letti {fatti} su {su} \u00b7 ancora circa {quanto}",
   "dashboard.start.scan.starting": "la lettura sta partendo",

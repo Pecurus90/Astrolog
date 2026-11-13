@@ -164,7 +164,13 @@ def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None
         receipt=run_out(row) if row is not None else None,
         remaining_s=None if finished else _remaining(last),
         first=is_first_scan(conn, state.scan_runs),
+        folder_path=_folder_path(conn, last["folder_id"] if last else folder_id),
     )
+
+
+def _folder_path(conn: sqlite3.Connection, folder_id: int) -> str | None:
+    row = conn.execute("SELECT root_path FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    return row["root_path"] if row else None
 
 
 @router.get("/pipeline/status", response_model=PipelineStatus)

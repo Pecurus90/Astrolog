@@ -273,6 +273,11 @@ class ScanProgress(BaseModel):
         description="No folder had ever ended a reading before this gesture: the archive is being "
         "read for the first time, and its counts are still growing.",
     )
+    folder_path: str | None = Field(
+        default=None,
+        description="The root of the folder being read (of the last event, else of the last "
+        "started); `None` once the folder is gone.",
+    )
 
 
 PipelineAction = Literal["start", "stop", "resume"]

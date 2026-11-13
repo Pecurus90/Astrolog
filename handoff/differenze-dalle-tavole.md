@@ -271,9 +271,9 @@ Diverse dalla tavola:
 - **Da riprendere.** Tavola: le domande una per una («Due siti lo stesso giorno», «Filtro
   sconosciuto», 588). App: «Da confermare, N» con Rispondi e i frame fuori dai conti. Perche':
   l'elenco tipizzato delle domande arriva col passo 33.4.
-- **Prima scansione.** Tavola: «Cartella Dati/Astro» e «in lettura: il 2024» (583). App: file
-  letti su quanti e quanto manca. Perche': lo stato della scansione non dice cartella e anno in
-  lettura.
+- **Prima scansione.** Tavola: «in lettura: il 2024» (583). App: la cartella, file letti su quanti
+  e quanto manca, senza l'anno. Perche': l'anno in lettura e' una scelta di prodotto (data del
+  file o della ripresa), Issue #69.
 - **Il dettaglio della Luna.** Tavola: «(le soglie stanno nelle Impostazioni, gruppo Luna)» (596).
   App: la frase senza la parentesi. Perche': la regola della Luna non e' ancora nelle Impostazioni
   (passo 10); 25 e 65 vengono dalla scala della Luna del Meteo.

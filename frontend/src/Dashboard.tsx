@@ -422,7 +422,9 @@ export function Dashboard() {
           ? [
               {
                 titolo: t("dashboard.start.scan.title"),
-                testo: t("dashboard.start.scan.text"),
+                testo: scan?.folder_path
+                  ? t("dashboard.start.scan.textFolder", { cartella: scan.folder_path })
+                  : t("dashboard.start.scan.text"),
                 barra: {
                   pct: scan?.last_event?.total
                     ? Math.round((scan.last_event.current / scan.last_event.total) * 100)

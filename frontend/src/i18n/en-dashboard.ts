@@ -200,6 +200,7 @@ export const enDashboard = {
   "dashboard.start.folder.how": "Choose the folder",
   "dashboard.start.scan.title": "First scan in progress",
   "dashboard.start.scan.text": "You can use AstroLog meanwhile; stop it from the gear.",
+  "dashboard.start.scan.textFolder": "Folder {cartella}. You can use AstroLog meanwhile; stop it from the gear.",
   "dashboard.start.scan.files": "files read {fatti} of {su}",
   "dashboard.start.scan.files.eta": "files read {fatti} of {su} \u00b7 about {quanto} left",
   "dashboard.start.scan.starting": "reading is starting",

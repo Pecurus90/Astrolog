@@ -4990,6 +4990,11 @@ export interface components {
              * @default false
              */
             first: boolean;
+            /**
+             * Folder Path
+             * @description The root of the folder being read (of the last event, else of the last started); `None` once the folder is gone.
+             */
+            folder_path?: string | null;
         };
         /** ScanRunList */
         ScanRunList: {

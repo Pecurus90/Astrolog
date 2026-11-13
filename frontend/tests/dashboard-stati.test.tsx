@@ -52,6 +52,19 @@ describe("gli stati della Dashboard", () => {
     expect(screen.getByRole("progressbar", { name: "Prima scansione" }).getAttribute("aria-valuenow")).toBe("19")
   })
 
+  it("prima scansione: dice la cartella in lettura (tavola 583)", async () => {
+    await montaDashboard({
+      altre: {
+        "/api/v1/pipeline/status": { stato: 200, corpo: {
+          worker: { state: "running" },
+          scan: { first: true, state: "running", last_event: { current: 1, total: 9 }, folder_path: "D:\\Dati\\Astro" },
+        } },
+      },
+    })
+    await screen.findByText("Prima scansione in corso")
+    expect(testo()).toContain("Cartella D:\\Dati\\Astro. Si può usare AstroLog intanto; si ferma dall'ingranaggio.")
+  })
+
   it("meteo che non risponde: l'avviso con Riprova ora, le carte mancanti, il buio calcolato", async () => {
     await montaDashboard({
       previsione: { fetched_at: null, nights: [], last_request: { at: "2026-09-30T12:05:00.000Z", status: "unreachable" } },
