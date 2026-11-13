@@ -442,9 +442,9 @@ describe("A confronto", () => {
     const [a, b] = [riga(carta, 0), riga(carta, 1)]
     expect(a.getAttribute("aria-pressed")).toBe("false")
     expect(b.getAttribute("aria-pressed")).toBe("true")
-    expect(a.style.background).toBe("transparent")
+    expect(a.style.backgroundColor).toBe("transparent")
     expect(b.style.background).toBe("var(--carta-2)")
-    expect(a.style.boxShadow).toBe("inset 0 0 0 2px transparent")
+    expect(a.style.boxShadow).toBe("transparent 0px 0px 0px 2px inset")
     expect(b.style.boxShadow).toBe("inset 0 0 0 2px var(--accento)")
     expect(una(b, ".al-pillola").className).toContain("al-pillola--su-carta")
     expect(una(a, ".al-pillola").className).not.toContain("al-pillola--su-carta")

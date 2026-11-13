@@ -394,7 +394,7 @@ describe("per filtro", () => {
     ])
     expect(t0.style.minWidth).toBe("748px")
     expect(t0.style.gridTemplateColumns).toBe(
-      "minmax(92px,1.1fr) minmax(84px,1.3fr) minmax(64px,1fr) minmax(64px,1fr) minmax(64px,1fr) minmax(64px,1fr) minmax(64px,1fr) minmax(64px,1fr) minmax(84px,1.3fr) minmax(64px,1fr)",
+      "minmax(92px, 1.1fr) minmax(84px, 1.3fr) minmax(64px, 1fr) minmax(64px, 1fr) minmax(64px, 1fr) minmax(64px, 1fr) minmax(64px, 1fr) minmax(64px, 1fr) minmax(84px, 1.3fr) minmax(64px, 1fr)",
     )
     cleanup()
     expect(tabella().t0.style.minWidth).toBe("676px")

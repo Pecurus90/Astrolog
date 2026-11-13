@@ -285,11 +285,11 @@ describe("il grafico della Notte", () => {
   it("il fuoco si vede", async () => {
     await montaDashboard()
     const c = await cursore()
-    expect(c.style.outline).toBe("none")
+    expect(c.style.outlineStyle).toBe("none")
     fireEvent.focus(c)
     expect(c.style.outline).toBe("2px solid var(--prot-testo)")
     fireEvent.blur(c)
-    expect(c.style.outline).toBe("none")
+    expect(c.style.outlineStyle).toBe("none")
   })
 
   it("la striscia della ripresa: ogni tratto al suo posto, il nome corto se non ci sta", async () => {
@@ -307,12 +307,12 @@ describe("il grafico della Notte", () => {
     )
     expect(tratti.map((s) => s.textContent)).toEqual(["larga", "solo banda stretta"])
     expect((tratti[0] as HTMLElement).style.left).toBe("calc(17.6923% + 0px)")
-    expect((tratti[0] as HTMLElement).style.width).toBe("calc(5.38462% - 0px)")
+    expect((tratti[0] as HTMLElement).style.width).toBe("calc(5.38462% + 0px)")
     expect((tratti[1] as HTMLElement).style.left).toBe("calc(23.0769% + 2px)")
     expect((tratti[0] as HTMLElement).style.background).toBe("var(--prot-traccia)")
     expect((tratti[1] as HTMLElement).style.background).toContain("repeating-linear-gradient")
     expect(stile(tratti[1]?.firstElementChild)).toContain("background: var(--prot-fondo)")
-    expect(stile(tratti[0]?.firstElementChild)).toContain("background: transparent")
+    expect((tratti[0]?.firstElementChild as HTMLElement).style.backgroundColor).toBe("transparent")
   })
 
   it("senza tratti di ripresa la striscia non c'e'", async () => {

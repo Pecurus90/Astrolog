@@ -157,7 +157,7 @@ describe("Filtri", () => {
     expect(screen.queryByText("Mostra 6 notti")).toBeNull()
     expect(screen.queryByRole("textbox")).toBeNull()
     const griglia = document.querySelector(".al-c-filtri__centro-1") as HTMLElement
-    expect(griglia.style.gridTemplateColumns).toBe("repeat(3,minmax(0,1fr))")
+    expect(griglia.style.gridTemplateColumns).toBe("repeat(3, minmax(0px, 1fr))")
   })
 })
 
@@ -280,7 +280,7 @@ describe("Striscia", () => {
     render(<Striscia notti={notti.map((n) => ({ ...n, on: scegli }))} etichetta="Le notti" />)
     const lista = screen.getByRole("tablist", { name: "Le notti" })
     expect(lista.className).toBe("al-c-striscia__blocco-2")
-    expect(lista.style.gridTemplateColumns).toBe("repeat(2,minmax(0,1fr))")
+    expect(lista.style.gridTemplateColumns).toBe("repeat(2, minmax(0px, 1fr))")
     // v78: under 1000 px the sheet keeps 150 px tiles from --n and scrolls inside the card
     expect(lista.style.getPropertyValue("--n")).toBe("2")
     expect(lista.querySelector(".al-c-striscia__testo-4")?.getAttribute("title")).toBe("Cima Ekar")
@@ -304,7 +304,7 @@ describe("Striscia", () => {
   it("a trend night not chosen is dashed and bare", () => {
     render(<Striscia notti={[{ ...notti[0]!, tend: true }]} />)
     const scheda = screen.getByRole("tab")
-    expect(scheda.style.background).toBe("transparent")
+    expect(scheda.style.backgroundColor).toBe("transparent")
     expect(scheda.style.border).toBe("1.5px dashed var(--linea)")
     expect(screen.getByRole("tablist").getAttribute("aria-label")).toBe("le sette notti")
   })

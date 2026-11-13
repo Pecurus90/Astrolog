@@ -82,7 +82,7 @@ describe("Da confermare -- il guscio della pagina", () => {
     await apri()
     await screen.findByRole("region", { name: "Le modifiche da applicare" })
     const griglia = document.querySelector(".al-conf__blocco-1 > .al-conf__centro-1") as HTMLElement
-    expect(griglia.style.gridTemplateColumns).toBe("300px minmax(0,1fr)")
+    expect(griglia.style.gridTemplateColumns).toBe("300px minmax(0px, 1fr)")
     expect(griglia.style.gap).toBe("16px")
     const sinistra = griglia.querySelector(":scope > .al-conf__colonna-1") as HTMLElement
     expect(sinistra.style.position).toBe("sticky")

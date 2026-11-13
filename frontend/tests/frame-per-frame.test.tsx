@@ -163,9 +163,9 @@ describe("un grafico per filtro", () => {
     )
     expect(primo?.style.left).toBe("3.8%")
     expect(primo?.style.top).toBe("88.09%")
-    expect(primo?.style.transform).toBe("translate(-100%,-50%)")
+    expect(primo?.style.transform).toBe("translate(-100%, -50%)")
     expect(quarto?.style.left).toBe("96.2%")
-    expect(quarto?.style.transform).toBe("translate(0,-50%)")
+    expect(quarto?.style.transform).toBe("translate(0px, -50%)")
   })
 
   it("le barre: stimata, accesa sul frame aperto, tratteggiata la seconda misura", () => {

@@ -274,7 +274,7 @@ describe("l'Archivio, produzioni, mosaici e frame senza oggetto", () => {
     const [carta] = await carte()
     const griglia = carta?.querySelector<HTMLElement>(".al-arch__foto-griglia")
     expect(griglia?.querySelectorAll(".al-arch__foto-parte")).toHaveLength(5)
-    expect(griglia?.style.gridTemplateColumns).toBe("repeat(3,minmax(0,1fr))")
+    expect(griglia?.style.gridTemplateColumns).toBe("repeat(3, minmax(0px, 1fr))")
   })
 
   it("la carta di un mosaico dice mosaico e quanti pannelli, e si sente", async () => {

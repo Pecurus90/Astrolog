@@ -65,7 +65,7 @@ describe("Da confermare -- il telefono", () => {
   it("prima i tipi: ognuno dice quante risposte ha, e in che stato; sopra il conto con la regola", async () => {
     await aperta()
     const griglia = document.querySelector(".al-conf__centro-1") as HTMLElement
-    expect(griglia.style.gridTemplateColumns).toBe("minmax(0,1fr)")
+    expect(griglia.style.gridTemplateColumns).toBe("minmax(0px, 1fr)")
     expect(griglia.style.gap).toBe("12px")
     const conto = screen.getByRole("region", { name: "Il conto" })
     expect((conto.querySelector(".al-conf__testo-1") as HTMLElement).style.fontSize).toBe("48px")
