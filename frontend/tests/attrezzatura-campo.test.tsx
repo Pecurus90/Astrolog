@@ -38,7 +38,9 @@ describe("il campo del setup", () => {
     })
     await apriAttrezzatura()
 
-    const [altro, mio] = riquadri(within(await campo()).getByRole("img"))
+    const tutti = riquadri(within(await campo()).getByRole("img"))
+    expect(tutti).toHaveLength(2)
+    const [altro, mio] = tutti as [HTMLElement, HTMLElement]
     expect(mio.style.border).toBe("2px solid var(--accento)")
     expect(mio.style.background).toBe("color-mix(in srgb, var(--accento) 16%, transparent)")
     expect(mio.style.zIndex).toBe("2")
