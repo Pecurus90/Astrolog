@@ -29,6 +29,7 @@ import {
   type Misure,
   type Scelta,
   diversi,
+  diversiCoiValori,
   filtriDi,
   insieme,
   nomeDelGruppo,
@@ -477,8 +478,13 @@ function nota(set: ReturnType<typeof insieme>, chiavi: string[]): string {
   const fondo = chiavi.some((k) => k === "background_adu" || k === "noise_adu")
   if (fondo && set?.differs.length) {
     const solo = set.differs.every((x) => x === "exposure")
+    const coi = diversiCoiValori(set.differs, set.differs_values)
     parti.push(
-      t(solo ? "chart.not.comparable.rate" : "chart.not.comparable", { r: diversi(set.differs) }),
+      coi
+        ? t(solo ? "chart.not.comparable.values.rate" : "chart.not.comparable.values", { r: coi })
+        : t(solo ? "chart.not.comparable.rate" : "chart.not.comparable", {
+            r: diversi(set.differs),
+          }),
     )
   }
   return parti.join(" \u00B7 ")

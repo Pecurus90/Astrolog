@@ -159,6 +159,10 @@ export const itMisure = {
   "chart.not.comparable": "frame con {r} diversi: fondo e rumore non si confrontano fra loro",
   "chart.not.comparable.rate":
     "frame con {r} diversi: fondo e rumore non si confrontano fra loro; il fondo al secondo s\u00EC",
+  "chart.not.comparable.values":
+    "frame non confrontabili, {r}: fondo e rumore non si confrontano fra loro",
+  "chart.not.comparable.values.rate":
+    "frame non confrontabili, {r}: fondo e rumore non si confrontano fra loro; il fondo al secondo s\u00EC",
   "chart.moon.below": "sotto l\u2019orizzonte",
   "chart.window": "frame {a}\u2013{b} di {n}",
   "chart.window.label": "Tratto dei frame in vista",

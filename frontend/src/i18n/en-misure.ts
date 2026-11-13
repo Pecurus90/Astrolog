@@ -151,6 +151,9 @@ export const enMisure = {
   "chart.not.comparable": "frames with different {r}: background and noise do not compare",
   "chart.not.comparable.rate":
     "frames with different {r}: background and noise do not compare; background per second does",
+  "chart.not.comparable.values": "frames not comparable, {r}: background and noise do not compare",
+  "chart.not.comparable.values.rate":
+    "frames not comparable, {r}: background and noise do not compare; background per second does",
   "chart.moon.below": "below the horizon",
   "chart.window": "frames {a}2013{b} of {n}",
   "chart.window.label": "Stretch of frames in view",

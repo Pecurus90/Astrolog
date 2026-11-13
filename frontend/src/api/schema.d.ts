@@ -3260,6 +3260,13 @@ export interface components {
              */
             differs: ("camera" | "gain" | "exposure")[];
             /**
+             * Differs Values
+             * @description For each of `differs` its values: the cameras' names, the gains and the exposures in seconds from the largest.
+             */
+            differs_values?: {
+                [key: string]: (string | number)[];
+            };
+            /**
              * Measures
              * @description Every measure, in the catalogue's order.
              */

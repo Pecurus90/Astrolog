@@ -362,6 +362,19 @@ describe("la nota accanto al filtro", () => {
       t("chart.not.comparable.rate", { r: "tempo di posa" }),
     )
     cleanup()
+    // coi valori dall'API, le parole della tavola (MisureFrame 312): «tempo di posa (300 s e 180 s)»
+    const coi = {
+      ...MISURE,
+      sets: [
+        insieme(null),
+        { ...insieme("Ha", MISURE_HA, ["exposure"]), differs_values: { exposure: [300, 180] } },
+      ],
+    } as unknown as Misure
+    const terzo = monta(coi, ["noise"])
+    expect(terzo.container.textContent).toContain(
+      "frame non confrontabili, tempo di posa (300 s e 180 s): fondo e rumore non si confrontano fra loro; il fondo al secondo sì",
+    )
+    cleanup()
     const fwhm = monta(camera, ["fwhm"])
     expect(fwhm.container.querySelector(".al-c-misure-frame__testo-2")).toBeNull()
   })

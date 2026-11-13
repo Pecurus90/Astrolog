@@ -44,6 +44,7 @@ def test_a_night_with_its_objects_filters_sets_and_frames(conn, db_path, world) 
     assert body["filters"] == [{"name": "L", "passband": "L", "frames": 3}]
     whole = next(s for s in body["sets"] if s["group"] is None and s["filter"] is None)
     assert (whole["frames"], whole["pending"], whole["differs"]) == (3, 1, [])
+    assert whole["differs_values"] == {}
     assert [m["key"] for m in whole["measures"]] == [e.key for e in MEASURES]
     hfd = next(m for m in whole["measures"] if m["key"] == "hfd_px")
     assert (hfd["measured"], hfd["median"], hfd["q1"], hfd["q3"], hfd["silent"]) == (

@@ -130,6 +130,7 @@ def sets(
             "frames": g["frames"],
             "pending": g["pending"],
             "differs": json.loads(g["differs"]),
+            "differs_values": json.loads(g["differs_values"]),
             "measures": [_stat(e, by_at.get((*at, e.key)), measuring) for e in MEASURES],
         })  # fmt: skip
     return out

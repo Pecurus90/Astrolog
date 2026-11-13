@@ -294,6 +294,8 @@ def test_what_differs_among_the_measured_frames(conn, world) -> None:
     world.file(rel, measured=2.0, exp=120.0)
     night_measures.rebuild(conn)
     assert json.loads(_group(conn, world.night)["differs"]) == ["exposure"]
+    # MisureFrame 200 (`nonConf`): «tempo di posa (120 s e 60 s)», dal piu' lungo
+    assert json.loads(_group(conn, world.night)["differs_values"]) == {"exposure": [120.0, 60.0]}
 
 
 def test_background_and_sky_brightness_compare_per_filter(conn, world) -> None:

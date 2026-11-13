@@ -295,6 +295,26 @@ export function diversi(differs: Insieme["differs"]): string {
   return t("measures.differs.and", { a: parole.slice(0, -1).join(", "), b: parole.at(-1) ?? "" })
 }
 
+/** Cosa cambia coi suoi valori (tavola MisureFrame `nonConf`); null se un valore manca. */
+export function diversiCoiValori(
+  differs: Insieme["differs"],
+  valori: Insieme["differs_values"],
+): string | null {
+  const parti = differs.map((d) => {
+    const v = valori?.[d]
+    if (!v || v.length < 2) return null
+    const scritti = v.map((x) =>
+      typeof x === "string" ? x : d === "exposure" ? `${numero(x)} s` : numero(x),
+    )
+    const elenco = t("measures.differs.and", {
+      a: scritti.slice(0, -1).join(", "),
+      b: scritti.at(-1) ?? "",
+    })
+    return `${t(`measures.differs.${d}`)} (${elenco})`
+  })
+  return parti.every((p) => p !== null) && parti.length ? parti.join(", ") : null
+}
+
 /**
  * FWHM e SNR mediani in testa alla finestra (tavola, Riepilogo 165): la FWHM in secondi d'arco,
  * in pixel solo senza scala; con piu' produzioni insieme ne' l'SNR ne' i pixel (ADR 0022).

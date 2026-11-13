@@ -57,6 +57,11 @@ class MeasureSet(BaseModel):
         description="What changes among the measured frames: background and noise compare only "
         "when it is empty; the background per second also across exposures."
     )
+    differs_values: dict[str, list[str | float]] = Field(
+        default_factory=dict,
+        description="For each of `differs` its values: the cameras' names, the gains and the "
+        "exposures in seconds from the largest.",
+    )
     measures: list[MeasureStat] = Field(description="Every measure, in the catalogue's order.")
 
 

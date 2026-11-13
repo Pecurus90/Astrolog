@@ -29,6 +29,7 @@ import {
   chiaveDi,
   chiaveIn,
   diversi,
+  diversiCoiValori,
   filtriDi,
   insieme,
   linea,
@@ -254,6 +255,14 @@ describe("nomi, chiavi e insiemi", () => {
     expect(diversi(["camera"])).toBe("camera")
     expect(diversi(["camera", "gain"])).toBe("camera e guadagno")
     expect(diversi(["camera", "gain", "exposure"])).toBe("camera, guadagno e tempo di posa")
+    // tavola MisureFrame `nonConf`: coi valori, separati da virgole
+    expect(
+      diversiCoiValori(["camera", "exposure"], {
+        camera: ["ASI2600MM", "ASI533MC"],
+        exposure: [300, 180],
+      }),
+    ).toBe("camera (ASI2600MM e ASI533MC), tempo di posa (300 s e 180 s)")
+    expect(diversiCoiValori(["gain"], {})).toBeNull()
   })
 })
 

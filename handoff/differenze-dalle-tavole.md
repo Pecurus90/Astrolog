@@ -147,9 +147,6 @@ Scelte diverse dalla tavola:
 - **Nota della luminosita' del cielo nel grafico.** Tavola: «c'e' solo con L, nessun filtro e a
   colori» o «serve il bias della camera» (310). App: «non c'e' per questi frame». Perche': l'API
   non manda il motivo per l'insieme, solo per frame.
-- **Fondo e rumore non confrontabili nel grafico.** Tavola: cita i valori («tempo di posa (300 s e
-  180 s)», 311). App: «frame con tempo di posa diversi». Perche': l'API dice cosa cambia, non i
-  valori.
 - **Tilt e curvatura del sensore.** Tavola: ricalcolati dalle mediane di angoli e centro (339).
   App: la mediana del tilt dei frame (ASTAP, col giudizio) e quella dell'aberrazione fuori asse,
   in px e in ″. Perche': una lettura non calcola; sono le stesse misure delle tessere (ADR 0044).

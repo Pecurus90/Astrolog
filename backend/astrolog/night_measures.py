@@ -68,7 +68,7 @@ _VERDICTS: dict[str, Callable[[float], str | None]] = {
     "hfd_tilt_pct": tilt_level,
     "fwhm_px": sampling_class,
 }
-_GROUP_STATS = ("frames", "pending", "differs")
+_GROUP_STATS = ("frames", "pending", "differs", "differs_values")
 _SETUP = ("camera", "gain", "exposure")  # the same three, or background and noise do not compare
 
 # The columns of `_NIGHT_KEY` or `_OBJECT_KEY`, in their order; None: all
@@ -194,9 +194,22 @@ def _trend(in_time: list[float]) -> str | None:
     return json.dumps(points)
 
 
-def _differs(setups: set[tuple[object, object, object]]) -> list[str]:
-    return [name for i, name in enumerate(_SETUP) if len({s[i] for s in setups}) > 1]
+def _differs(setups: set[tuple[object, object, object]]) -> dict[str, list[object]]:
+    """What changes, with its values: numbers from the largest, names in order."""
+    out = {}
+    for i, name in enumerate(_SETUP):
+        seen = {s[i] for s in setups if s[i] is not None}
+        if len({s[i] for s in setups}) > 1:
+            if all(isinstance(v, int | float) for v in seen):
+                out[name] = sorted((float(v) for v in seen), reverse=True)  # type: ignore[arg-type]
+            else:
+                out[name] = sorted(str(v) for v in seen)
+    return out
 
 
 def _group_rows(groups: dict[GroupKey, _Group]) -> Iterable[tuple[object, ...]]:
-    return [(*at, g.frames, g.pending, json.dumps(_differs(g.setups))) for at, g in groups.items()]
+    rows = []
+    for at, g in groups.items():
+        differs = _differs(g.setups)
+        rows.append((*at, g.frames, g.pending, json.dumps(list(differs)), json.dumps(differs)))
+    return rows
