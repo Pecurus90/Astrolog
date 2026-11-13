@@ -73,6 +73,17 @@ describe("la Luna stanotte", () => {
     expect(screen.queryByRole("region", { name: "La Luna, in dettaglio" })).toBeNull()
   })
 
+  it("il dettaglio dice da dove vengono le soglie: la scala della Luna del Meteo (Marco, 13/11)", async () => {
+    await montaDashboard()
+    fireEvent.click(await screen.findByRole("link", { name: "La Luna in dettaglio" }))
+    const det = await screen.findByRole("region", { name: "La Luna, in dettaglio" })
+    expect(det.querySelector(".al-dash__testo-16")?.textContent).toBe(
+      "Tre gradini: banda larga buona con la Luna fino al 25%, al limite fino al 65%, poi solo banda" +
+        " stretta. Accanto, le ore di buio con la Luna sotto l'orizzonte (le soglie vengono dalla" +
+        " scala della Luna del Meteo).",
+    )
+  })
+
   it("una Luna che non sorge stanotte, a un giorno, senza piena", async () => {
     await montaDashboard({
       ...luna({ rise: null, rise_compass: null, age_days: 1, next_full: null }),

@@ -13,6 +13,11 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Dashboard, dettaglio della Luna (Dashboard 624, Issue #70): la parentesi «(le soglie
+  stanno nelle Impostazioni, gruppo Luna)» non e' vera. I gradini 25/65 del calendario vengono
+  dalla scala della Luna del Meteo, fissa; le Impostazioni (25% o 4 h senza Luna) decidono solo la
+  notte buona per la banda larga, che la Dashboard non mostra. Marco 13/11: l'app scrive «(le
+  soglie vengono dalla scala della Luna del Meteo)»; la tavola si allinea.
 - [fatta v82] Dopo la v81 (Marco, 11/11: tutto IAU): i nomi delle stelle della Carta del cielo
   con i nomi propri IAU (WGSN: Polaris, Sirius, Arcturus), uguali in ogni lingua come le
   costellazioni latine; anche nella descrizione della scala di Bortle del Primo avvio

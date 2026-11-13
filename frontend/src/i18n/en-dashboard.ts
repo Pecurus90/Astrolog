@@ -94,7 +94,7 @@ export const enDashboard = {
   "dashboard.moon.detail.open": "The Moon in detail",
   "dashboard.moon.detail.close": "Close the detail",
   "dashboard.moon.detail.legend":
-    "Three steps: good for broadband with the Moon up to {buona}%, marginal up to {limite}%, then narrowband only. Beside it, the hours of dark with the Moon below the horizon.",
+    "Three steps: good for broadband with the Moon up to {buona}%, marginal up to {limite}%, then narrowband only. Beside it, the hours of dark with the Moon below the horizon (the thresholds come from the Meteo's Moon scale).",
   "dashboard.moon.age": "age",
   "dashboard.moon.age.value": "{n} days",
   "dashboard.moon.age.value.one": "1 day",

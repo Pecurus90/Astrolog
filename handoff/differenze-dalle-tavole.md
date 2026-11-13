@@ -272,8 +272,9 @@ Diverse dalla tavola:
   e quanto manca, senza l'anno. Perche': l'anno in lettura e' una scelta di prodotto (data del
   file o della ripresa), Issue #69.
 - **Il dettaglio della Luna.** Tavola: «(le soglie stanno nelle Impostazioni, gruppo Luna)» (596).
-  App: la frase senza la parentesi. Perche': la regola della Luna non e' ancora nelle Impostazioni
-  (passo 10); 25 e 65 vengono dalla scala della Luna del Meteo.
+  App: «(le soglie vengono dalla scala della Luna del Meteo)». Perche': i gradini 25/65 sono della
+  scala del Meteo, fissa; le Impostazioni decidono solo la notte buona, che la Dashboard non
+  mostra (Marco, 13/11, Issue #70). A Design.
 - **Carta del meteo «Non disponibile».** Tavola: «Non tutti i modelli danno la visibilità.» App:
   «La previsione non la dà per stanotte.» per ogni misura senza ore (Marco, 11/11, Issue #59).
   Perche': la riga della tavola vale solo per la visibilità. A Design.

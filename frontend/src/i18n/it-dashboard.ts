@@ -96,7 +96,7 @@ export const itDashboard = {
   "dashboard.moon.detail.open": "La Luna in dettaglio",
   "dashboard.moon.detail.close": "Chiudi il dettaglio",
   "dashboard.moon.detail.legend":
-    "Tre gradini: banda larga buona con la Luna fino al {buona}%, al limite fino al {limite}%, poi solo banda stretta. Accanto, le ore di buio con la Luna sotto l'orizzonte.",
+    "Tre gradini: banda larga buona con la Luna fino al {buona}%, al limite fino al {limite}%, poi solo banda stretta. Accanto, le ore di buio con la Luna sotto l'orizzonte (le soglie vengono dalla scala della Luna del Meteo).",
   "dashboard.moon.age": "et\u00e0",
   "dashboard.moon.age.value": "{n} giorni",
   "dashboard.moon.age.value.one": "1 giorno",
