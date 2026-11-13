@@ -66,6 +66,29 @@ def _moon_by_hour(site: Site, instants: Sequence[str]) -> dict[str, int | None]:
     }
 
 
+def _moon_night(site: Site, summary: verdict.Summary) -> dict[str, Any]:
+    """The Moon over the drawn hours, every quarter hour, and its first crossing: up at the start
+    it sets or stays (`up`), down it rises or stays (`down`)."""
+    if summary.shown_from is None or summary.shown_until is None:
+        return {"moon_event": None, "moon_event_at": None, "moon_track": []}
+    start = datetime.fromisoformat(summary.shown_from)
+    hours = (datetime.fromisoformat(summary.shown_until) - start).total_seconds() / 3600
+    night = moon.night_track(start, site.latitude, site.longitude, hours=hours)
+    up = night.grid[0].altitude_deg > RISESET_DEG
+    at = night.set if up else night.rise
+    track = [
+        {"at": p.at.isoformat(timespec="minutes"), "altitude_deg": p.altitude_deg}
+        for p in night.track
+    ]
+    if at is None:
+        return {"moon_event": "up" if up else "down", "moon_event_at": None, "moon_track": track}
+    return {
+        "moon_event": "set" if up else "rise",
+        "moon_event_at": at.isoformat(timespec="minutes"),
+        "moon_track": track,
+    }
+
+
 def _tenths(value: float | None) -> float | None:
     return None if value is None else round(value, 1)
 
@@ -121,6 +144,7 @@ def _rows(
                 1 for h in w.hours if h.sky == Sky.DARK and h.values.get("moon_pct") is None
             ),
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary)],
+            **_moon_night(site, w.summary),
         }
         rows.append(
             (

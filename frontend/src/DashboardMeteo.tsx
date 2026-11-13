@@ -281,8 +281,9 @@ export function MeteoDellaNotte({ meteo, formato }: { meteo: Meteo; formato: For
   )
 }
 
-/** A next night's line: its Transparency and dark without the Moon, then, where the forecast has
- *  hours, the small chart with the sky by hour, the dark's edges and midnight. */
+/** A next night's line: its Transparency, dark without the Moon and the Moon's rise or set, then,
+ *  where the forecast has hours, the small chart with the sky and the Moon by hour, the dark's
+ *  edges and midnight. */
 function Curva({ notte: n }: { notte: NotteMeteo }) {
   const ore = n.hours.filter((o) => o.shown)
   const passo = 1000 / (ore.length || 1)
@@ -292,6 +293,15 @@ function Curva({ notte: n }: { notte: NotteMeteo }) {
   )
   const linea = noti
     .map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)} ${y(p.v).toFixed(1)}`)
+    .join(" ")
+  // the Moon on the same scale as the board: 90 degrees at the top, below the horizon on the floor
+  const t0 = Date.parse(ore[0]?.at ?? "")
+  const luna = (n.moon_track ?? [])
+    .map((p, i) => {
+      const x = ((Date.parse(p.at) - t0) / 3_600_000 + 0.5) * passo
+      const v = p.altitude_deg < 0 ? -1 : (p.altitude_deg / 90) * 100
+      return `${i ? "L" : "M"}${x.toFixed(1)} ${y(v).toFixed(1)}`
+    })
     .join(" ")
   const id = `dash-mq-${n.night}`
   const buio = ore.findIndex((o) => o.sky === "dark")
@@ -322,10 +332,31 @@ function Curva({ notte: n }: { notte: NotteMeteo }) {
             </>
           )}
         </span>
-        <span>
-          {n.moonless_dark_hours != null
-            ? t("dashboard.next.moonless", { n: numero(n.moonless_dark_hours) })
-            : ""}
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            columnGap: 5,
+            flexWrap: "wrap",
+          }}
+        >
+          {n.moonless_dark_hours != null && (
+            <span>
+              {t("dashboard.next.moonless", { n: numero(n.moonless_dark_hours) })}
+              {n.moon_event != null && " \u00b7"}
+            </span>
+          )}
+          {n.moon_event != null && (
+            <span
+              style={{ display: "inline-flex", alignItems: "center", gap: 5, whiteSpace: "nowrap" }}
+            >
+              <i style={{ width: 12, borderTop: "2px dashed var(--luna-linea)" }} />
+              {t(`dashboard.next.moon.${n.moon_event}`, {
+                ora: oraDelSito(n.moon_event_at ?? ""),
+              })}
+            </span>
+          )}
         </span>
       </div>
       {ore.length > 0 && (
@@ -380,6 +411,16 @@ function Curva({ notte: n }: { notte: NotteMeteo }) {
                 <path
                   d={`M${noti[0]?.x ?? 0} 46 ${linea.replace(/^M/, "L")} L${noti[noti.length - 1]?.x ?? 0} 46 Z`}
                   fill={`url(#${id})`}
+                />
+              )}
+              {luna.includes("L") && (
+                <path
+                  d={luna}
+                  fill="none"
+                  stroke="var(--luna-linea)"
+                  strokeWidth={1.5}
+                  strokeDasharray="5 4"
+                  vectorEffect="non-scaling-stroke"
                 />
               )}
               {noti.length > 1 && (

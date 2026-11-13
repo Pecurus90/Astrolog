@@ -77,6 +77,13 @@ class WeatherHourOut(BaseModel):
     )
 
 
+class WeatherMoonPointOut(BaseModel):
+    """The Moon at a local instant, altitude in degrees to the tenth."""
+
+    at: str
+    altitude_deg: float
+
+
 class WeatherSpanOut(BaseModel):
     """The hours with one word: from the first to the end of the last, and how many."""
 
@@ -205,6 +212,17 @@ class WeatherBriefOut(WeatherSkyOut):
     )
     moonless_dark_hours: int | None = Field(
         default=None, description="Hours of dark with the Moon below the horizon."
+    )
+    moon_event: Literal["rise", "set", "up", "down"] | None = Field(
+        default=None,
+        description="The Moon over the shown hours: up at the first, it `set`s at "
+        "`moon_event_at` or stays `up`; down, it `rise`s or stays `down`. `None` without them.",
+    )
+    moon_event_at: str | None = None
+    moon_track: list[WeatherMoonPointOut] = Field(
+        default_factory=list,
+        description="The Moon's altitude every quarter hour over the shown hours, both ends "
+        "included, for the dashed line; empty without them.",
     )
 
 

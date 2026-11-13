@@ -261,9 +261,10 @@ Diverse dalla tavola:
 - **«La prossima notte buona».** Tavola: a notte coperta la testa dice «la prossima notte buona e'
   venerdi' 2, con 8,4 ore di posa» (418). App: non lo dice ancora. Perche': il backend non la
   scrive; arriva col passo 33.4.
-- **Le curvette delle prossime notti senza la Luna.** Tavola: la linea tratteggiata della Luna e
-  «Luna 00:10» (517, 523). App: la Trasparenza ora per ora e le ore di buio senza Luna. Perche':
-  la previsione non porta l'altezza della Luna ora per ora.
+- **La Luna sopra le curvette delle prossime notti.** Tavola: «Luna 00:10» (523). App: «5 h di
+  buio senza Luna · Luna sorge 00:10», o «tramonta», «tutta la notte», «non sorge»; la linea
+  tratteggiata come la tavola, ogni 15 minuti. Perche': l'ora sola non dice se sorge o tramonta, e le
+  ore senza Luna contano per la banda larga (Marco, 13/11, #65).
 - **La Ripresa delle prossime notti.** Tavola: dalla Luna ora per ora (509). App: dalle ore di
   posa divise per banda («3,1 in banda larga, 1,5 stretta»), che il backend scrive per notte.
 - **Prossime notti senza previsione.** Tavola: le tre notti restano, con le ore di buio (526). App:

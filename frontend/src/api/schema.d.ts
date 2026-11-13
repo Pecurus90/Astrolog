@@ -5891,6 +5891,18 @@ export interface components {
              * @description Hours of dark with the Moon below the horizon.
              */
             moonless_dark_hours?: number | null;
+            /**
+             * Moon Event
+             * @description The Moon over the shown hours: up at the first, it `set`s at `moon_event_at` or stays `up`; down, it `rise`s or stays `down`. `None` without them.
+             */
+            moon_event?: ("rise" | "set" | "up" | "down") | null;
+            /** Moon Event At */
+            moon_event_at?: string | null;
+            /**
+             * Moon Track
+             * @description The Moon's altitude every quarter hour over the shown hours, both ends included, for the dashed line; empty without them.
+             */
+            moon_track?: components["schemas"]["WeatherMoonPointOut"][];
         };
         /**
          * WeatherHourOut
@@ -6050,6 +6062,16 @@ export interface components {
             known_to_end: boolean;
         };
         /**
+         * WeatherMoonPointOut
+         * @description The Moon at a local instant, altitude in degrees to the tenth.
+         */
+        WeatherMoonPointOut: {
+            /** At */
+            at: string;
+            /** Altitude Deg */
+            altitude_deg: number;
+        };
+        /**
          * WeatherNightOut
          * @description A forecast night: the summary, its measures in order of importance (the clouds, then the
          *     worst word earliest first, then the neutral ones), and its hours from noon to noon. `shown_*`
@@ -6121,6 +6143,18 @@ export interface components {
              * @description Hours of dark with the Moon below the horizon.
              */
             moonless_dark_hours?: number | null;
+            /**
+             * Moon Event
+             * @description The Moon over the shown hours: up at the first, it `set`s at `moon_event_at` or stays `up`; down, it `rise`s or stays `down`. `None` without them.
+             */
+            moon_event?: ("rise" | "set" | "up" | "down") | null;
+            /** Moon Event At */
+            moon_event_at?: string | null;
+            /**
+             * Moon Track
+             * @description The Moon's altitude every quarter hour over the shown hours, both ends included, for the dashed line; empty without them.
+             */
+            moon_track?: components["schemas"]["WeatherMoonPointOut"][];
             /** Night */
             night: string;
             /** Trend */

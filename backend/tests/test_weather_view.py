@@ -2,8 +2,11 @@
 ogni misura giudicata, l'accordo dei modelli contato. Le scrive chi scrive, chi legge non conta.
 """
 
+import itertools
 import json
+from datetime import datetime
 
+from astrolog.ephemeris import RISESET_DEG
 from astrolog.weather import forecast, rounds, view
 from test_weather_forecast import (  # noqa: F401 - `db` e' una fixture
     ADESSO,
@@ -100,6 +103,49 @@ def test_the_moon_up_brings_its_lit_part_and_down_brings_nothing(db):  # noqa: F
     su = {o["moon_pct"] for o in ore if o["sky"] == "dark"}
     assert None in su
     assert any(v is not None and 0 < v < 100 for v in su)
+
+
+def notte_di_ottobre(db):  # noqa: F811
+    adesso = ADESSO.replace(month=10, day=3)
+    forecast.refresh(db, SITO, fetch=Finto(risposta(inizio="2026-10-02T00:00")), now=adesso)
+    view.rebuild(db, SITO)
+    return notte_di(db, "2026-10-03")
+
+
+def test_each_night_carries_the_moon_every_quarter_hour_over_the_drawn_hours(db):  # noqa: F811
+    """La linea tratteggiata della Luna delle prossime notti, ogni 15 minuti come la tavola (#65):
+    la notte del 3/10/2026 sotto l'orizzonte all'inizio, sopra alla fine."""
+    detto = riassunto(notte_di_ottobre(db))
+    traccia = detto["moon_track"]
+    assert (traccia[0]["at"][:16], traccia[-1]["at"][:16]) == (
+        detto["shown_from"][:16],
+        detto["shown_until"][:16],
+    )
+    passi = {
+        (datetime.fromisoformat(b["at"]) - datetime.fromisoformat(a["at"])).total_seconds()
+        for a, b in itertools.pairwise(traccia)
+    }
+    assert passi == {15 * 60}
+    assert traccia[0]["altitude_deg"] < RISESET_DEG < traccia[-1]["altitude_deg"]
+
+
+def test_each_night_says_when_the_moon_rises_inside_the_drawn_hours(db):  # noqa: F811
+    """«Luna sorge 00:10» sopra la curvetta (#65): la notte del 3/10/2026 sorge verso le 00."""
+    detto = riassunto(notte_di_ottobre(db))
+    assert detto["moon_event"] == "rise"
+    assert detto["shown_from"] < detto["moon_event_at"] < detto["shown_until"]
+    assert detto["moon_event_at"][11:13] in {"22", "23", "00", "01"}
+
+
+def test_the_moon_event_follows_the_moon_at_the_first_drawn_hour(db):  # noqa: F811
+    """Su all'inizio: tramonta o resta tutta la notte; giu': sorge o non sorge."""
+    scritta(db, Finto(risposta()))
+    for riga in vista(db):
+        detto = riassunto(riga)
+        prima = detto["moon_track"][0]["altitude_deg"]
+        attesi = {"set", "up"} if prima > RISESET_DEG else {"rise", "down"}
+        assert detto["moon_event"] in attesi, riga["night_date"]
+        assert (detto["moon_event_at"] is None) == (detto["moon_event"] in {"up", "down"})
 
 
 def test_every_hour_carries_the_judgement_of_each_judged_measure(db):  # noqa: F811
