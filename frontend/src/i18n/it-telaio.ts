@@ -68,6 +68,8 @@ export const itTelaio = {
   "frame.scan.stopped.aria": "scansione interrotta",
   "frame.scan.blocked.aria": "scansione bloccata",
   "frame.scan.when": "{giorno}, {ora}",
+  "frame.scan.today": "oggi",
+  "frame.scan.yesterday": "ieri",
   "frame.scan.read": "file letti {fatti} su {su}",
   "frame.scan.left": "{letti} \u{00b7} ancora circa {tempo}",
   "frame.scan.stopped.read": "Interrotta a mano: {fatti} file letti su {su}.",

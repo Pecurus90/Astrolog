@@ -189,9 +189,21 @@ export function SegnoDellaScansione({
   )
 }
 
+type Relativo = components["schemas"]["LastScanOut"]["ended_day"]
+
+/** Oggi o ieri come li dice l'API (fuso del sito), se no la data. */
+function giornoDetto(istante: string, relativo: Relativo | undefined): string {
+  if (relativo === "today") return t("frame.scan.today")
+  if (relativo === "yesterday") return t("frame.scan.yesterday")
+  return giorno(istante)
+}
+
 /** La riga sotto *Scansiona* a riposo: quando, quanti file nuovi, e se qualcuno non si e' letto. */
 function rigaUltima(ultima: components["schemas"]["LastScanOut"]): string {
-  const quando = { giorno: giorno(ultima.ended_at), ora: orario(ultima.ended_at) }
+  const quando = {
+    giorno: giornoDetto(ultima.ended_at, ultima.ended_day),
+    ora: orario(ultima.ended_at),
+  }
   const nuovi =
     ultima.new === 0 ? t("frame.scan.new.none") : t("frame.scan.new", { n: numero(ultima.new) })
   return ultima.not_read === 0
@@ -236,7 +248,12 @@ function detto(dati: Stato, stato: Exclude<StatoScansione, "ferma">) {
   const corrente = dati.worker.stages.find((s) => s.name === dati.worker.stage)
   const conti = letti(dati)
   const finita = dati.worker.ended_at
-  const quando = finita ? t("frame.scan.when", { giorno: giorno(finita), ora: orario(finita) }) : ""
+  const quando = finita
+    ? t("frame.scan.when", {
+        giorno: giornoDetto(finita, dati.worker.ended_day),
+        ora: orario(finita),
+      })
+    : ""
   if (stato === "bloccata") {
     // Il worker va in errore anche per solve/identify/db: la cartella si incolpa solo se la lettura e' caduta.
     const perche = dati.scan?.state === "error" ? t("scan.lostFolder") : t("scan.blocked.why")

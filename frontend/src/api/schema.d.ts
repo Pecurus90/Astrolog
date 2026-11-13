@@ -3140,6 +3140,11 @@ export interface components {
         LastScanOut: {
             /** Ended At */
             ended_at: string;
+            /**
+             * Ended Day
+             * @description `ended_at`'s civil day by the home site's clock, when it is today or yesterday; `None` for older days or without a site, and the page writes the date.
+             */
+            ended_day?: ("today" | "yesterday") | null;
             /** New */
             new: number;
             /**
@@ -6336,6 +6341,11 @@ export interface components {
             started_at: string | null;
             /** Ended At */
             ended_at: string | null;
+            /**
+             * Ended Day
+             * @description `ended_at`'s day by the home site's clock, as in `LastScanOut`; written only by `/pipeline/status`, `None` in the replies of the gestures.
+             */
+            ended_day?: ("today" | "yesterday") | null;
             /** Stages */
             stages: components["schemas"]["StageRecord"][];
         };

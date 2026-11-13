@@ -59,6 +59,8 @@ export const enTelaio = {
   "frame.scan.stopped.aria": "scan stopped",
   "frame.scan.blocked.aria": "scan blocked",
   "frame.scan.when": "{giorno}, {ora}",
+  "frame.scan.today": "today",
+  "frame.scan.yesterday": "yesterday",
   "frame.scan.read": "files read {fatti} of {su}",
   "frame.scan.left": "{letti} \u{00b7} about {tempo} left",
   "frame.scan.stopped.read": "Stopped by hand: {fatti} files read of {su}.",

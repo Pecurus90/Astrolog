@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from ..clock import RelativeDay
 from .models_page import Page
 
 
@@ -224,6 +225,11 @@ class WorkerSnapshot(BaseModel):
         description="None until it has ever started: never an invented instant."
     )
     ended_at: str | None
+    ended_day: RelativeDay | None = Field(
+        default=None,
+        description="`ended_at`'s day by the home site's clock, as in `LastScanOut`; written only "
+        "by `/pipeline/status`, `None` in the replies of the gestures.",
+    )
     # no `error`: the exception's words go to the log; the page says `state: error` in its own
     stages: list[StageRecord]
 
@@ -277,6 +283,11 @@ class LastScanOut(BaseModel):
     (Telaio v76)."""
 
     ended_at: str
+    ended_day: RelativeDay | None = Field(
+        default=None,
+        description="`ended_at`'s civil day by the home site's clock, when it is today or "
+        "yesterday; `None` for older days or without a site, and the page writes the date.",
+    )
     new: int
     not_read: int = Field(description="Files the readings could not read (`errors`).")
 

@@ -11,8 +11,9 @@ from typing import Any, cast
 from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.datastructures import State
 
-from ..clock import parse_iso
+from ..clock import parse_iso, relative_day
 from ..db.row import Row
+from ..site_of import home_site
 from ..spine.run import ORDER, queue
 from ..spine.scan_store import last_gesture, run_outcomes, run_row
 from ..spine.stages import StageName, count_pending, pending_by_stage
@@ -46,10 +47,20 @@ def _shown(snapshot: Snapshot) -> WorkerSnapshot:
     return out
 
 
-def _last_scan(conn: sqlite3.Connection) -> LastScanOut | None:
+def _home_zone(conn: sqlite3.Connection) -> str | None:
+    home = home_site(conn)
+    return home.timezone if home else None
+
+
+def _last_scan(conn: sqlite3.Connection, zone: str | None) -> LastScanOut | None:
     row = last_gesture(conn)
     return (
-        LastScanOut(ended_at=row["ended_at"], new=row["new"], not_read=row["not_read"])
+        LastScanOut(
+            ended_at=row["ended_at"],
+            ended_day=relative_day(row["ended_at"], zone),
+            new=row["new"],
+            not_read=row["not_read"],
+        )
         if row
         else None
     )
@@ -168,9 +179,12 @@ def status(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Pipe
     `null` and the state is the worker's (`not_run` when the worker has no record of the scan)."""
     state = request.app.state
     snapshot = state.worker.snapshot()
+    zone = _home_zone(conn)
+    worker = _shown(snapshot)
+    worker.ended_day = relative_day(worker.ended_at, zone)
     return PipelineStatus(
-        last_scan=_last_scan(conn),
-        worker=_shown(snapshot),
+        last_scan=_last_scan(conn, zone),
+        worker=worker,
         scan=scan_progress(state, conn),
         # the stages that run: one in the graph without work would stay "to do" for ever
         pending=pending_by_stage(conn, [s for s in ORDER if s != StageName.SCAN]),

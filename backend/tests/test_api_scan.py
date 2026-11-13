@@ -61,6 +61,22 @@ def test_the_new_run_is_visible_before_the_worker_starts(app):
     assert wait_until(lambda: finished(client))
 
 
+def test_the_last_scan_says_today_by_the_home_site_clock(app):
+    """La riga dell'ultima scansione dice «oggi» (tavola Menu 36-41): il giorno relativo nel fuso
+    del sito di casa arriva dall'API, per la scansione finita e per il worker."""
+    client, fid, _ = app
+    corpo = {"name": "Vicenza", "latitude": 45.5, "longitude": 11.5, "is_default": True}
+    corpo |= {"timezone": "Europe/Rome", "elevation_m": 40}
+    assert client.post("/api/v1/sites", json=corpo).status_code == 201
+    client.post(f"/api/v1/folders/{fid}/scan")
+    assert wait_until(
+        lambda: status(client)["last_scan"] is not None and status(client)["worker"]["ended_at"]
+    )
+    detto = status(client)
+    assert detto["last_scan"]["ended_day"] == "today", detto["last_scan"]
+    assert detto["worker"]["ended_day"] == "today", detto["worker"]
+
+
 def test_a_scan_feeds_the_new_pipeline_behind_the_scenes(app, db_path, monkeypatch):
     """Dopo la lettura la pipeline nuova legge la stessa cartella sul suo thread: intanto l'app e'
     libera (Avvia, una seconda scansione accettata), e senza ASTAP (il recinto) non rompe niente."""

@@ -2,7 +2,24 @@
 `DATE-OBS` e' UTC, e la regola la dice il contratto, `docs/domini/spina-group.md`.
 """
 
-from astrolog.clock import elapsed_s, midnight_of, night_date
+from astrolog.clock import elapsed_s, midnight_of, night_date, relative_day
+
+
+def test_the_day_of_an_instant_is_today_or_yesterday_by_the_site_clock():
+    """Il giorno civile, non la notte: a mezzanotte e un minuto e' gia' oggi. Lo dice l'orologio
+    del sito: le 23:30 UTC a Roma sono gia' il giorno dopo."""
+    adesso = "2026-11-13T09:00:00.000Z"
+    assert relative_day("2026-11-13T00:01:00Z", "Europe/Rome", adesso) == "today"
+    assert relative_day("2026-11-12T23:30:00Z", "Europe/Rome", adesso) == "today"
+    assert relative_day("2026-11-12T08:00:00Z", "Europe/Rome", adesso) == "yesterday"
+    assert relative_day("2026-11-11T08:00:00Z", "Europe/Rome", adesso) is None
+    # a New York le 03:00 UTC del 13 sono ancora la sera del 12
+    assert relative_day("2026-11-13T03:00:00Z", "America/New_York", adesso) == "yesterday"
+
+
+def test_without_a_zone_there_is_no_relative_day():
+    assert relative_day("2026-11-13T08:00:00Z", None, "2026-11-13T09:00:00.000Z") is None
+    assert relative_day(None, "Europe/Rome", "2026-11-13T09:00:00.000Z") is None
 
 
 def test_how_long_a_run_took_is_a_number_the_screen_can_show():

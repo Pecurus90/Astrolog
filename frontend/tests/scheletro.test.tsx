@@ -231,6 +231,20 @@ describe("l'ingranaggio e la scansione", () => {
     expect(within(menu).queryByText(/modo automatico/i)).toBeNull()
   })
 
+  it("l'ultima scansione di oggi dice «oggi» (tavola Menu 36-41)", async () => {
+    app({ ...FERMO, last_scan: { ended_at: "2026-09-30T05:12:00Z", ended_day: "today", new: 214, not_read: 0 } })
+    await disegna()
+    const menu = await apriIngranaggio()
+    expect(within(menu).getAllByRole("menuitem")[0]?.textContent).toMatch(/^Scansionaultima scansione oggi, \d\d:\d\d · /)
+  })
+
+  it("interrotta ieri: «ieri» con l'ora", async () => {
+    app({ ...INTERROTTA, worker: { ...INTERROTTA.worker, ended_day: "yesterday" } })
+    await disegna()
+    const riquadro = within(await apriIngranaggio()).getByRole("group", { name: "Scansione" })
+    expect(riquadro.querySelector(".al-c-menu__testo-2")?.textContent).toMatch(/^ieri, \d\d:\d\d$/)
+  })
+
   it("l'ultima scansione senza file nuovi e con file non letti lo dice", async () => {
     app({ ...FERMO, last_scan: { ended_at: "2026-09-30T05:12:00Z", new: 0, not_read: 1 } })
     await disegna()

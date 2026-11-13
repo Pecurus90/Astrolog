@@ -32,8 +32,6 @@ Fuori per ora (esiti della lista fissa):
 Scelte diverse dalla tavola:
 - **La scelta del sito in Stanotte.** Tavola v67: i siti coi bottoni; v70: *Cambia ↗*. App: *Cambia ↗*
   verso Impostazioni › Sito. Perche': v70 vince. Il ricordo aperto/chiuso di Stanotte esce con lei.
-- **Il giorno dell'ultima scansione e dell'interruzione.** Tavola: «oggi, 07:12» (Menu 36-41).
-  App: «30 set 2026, 07:12». Perche': il giorno relativo non arriva dall'API.
 - **La riga della scansione in corso senza la lettura dei file.** Tavola: sempre «file letti X su Y».
   App: in una fase dopo la lettura «{fatti} su {su}» della fase. Perche': i file letti esistono
   solo nella lettura.

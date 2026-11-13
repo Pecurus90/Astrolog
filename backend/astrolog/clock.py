@@ -3,6 +3,7 @@
 
 import zoneinfo
 from datetime import UTC, date, datetime, time, timedelta
+from typing import Literal
 
 
 def iso_z(instant: datetime) -> str:
@@ -89,6 +90,23 @@ def local_iso(instant_iso: object, tz_name: str | None = None) -> str | None:
     zone."""
     moment = _in_zone(instant_iso, tz_name or "UTC")
     return None if moment is None else moment.isoformat(timespec="seconds")
+
+
+RelativeDay = Literal["today", "yesterday"]
+
+
+def relative_day(
+    instant_iso: object, tz_name: str | None, now: str | None = None
+) -> RelativeDay | None:
+    """The civil day of an instant by the site's clock, said as today or yesterday; None for older
+    days or without a zone. Civil, not `night_date`: past midnight it is today."""
+    if not tz_name:
+        return None
+    moment, current = _in_zone(instant_iso, tz_name), _in_zone(now or now_iso(), tz_name)
+    if moment is None or current is None:
+        return None
+    gap = (current.date() - moment.date()).days
+    return "today" if gap == 0 else "yesterday" if gap == 1 else None
 
 
 def _in_zone(instant_iso: object, tz_name: str | None) -> datetime | None:
