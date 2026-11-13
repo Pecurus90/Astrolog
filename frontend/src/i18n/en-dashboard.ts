@@ -13,6 +13,8 @@ export const enDashboard = {
   "dashboard.head.polar.pill": "? no dark",
   "dashboard.head.polar.sub":
     "At this latitude the Sun does not go below \u221218\u00b0: no hours of astronomical dark, no hours of exposure.",
+  "dashboard.head.polar.subUntil":
+    "At this latitude the Sun does not go below \u221218\u00b0 until {data}: no hours of astronomical dark, no hours of exposure.",
   "dashboard.head.noZone.pill": "? no time zone",
   "dashboard.head.noZone.sub": "The hours of the night are computed with the site's time zone.",
   "dashboard.head.solar": "Highest tonight, in the Solar system",

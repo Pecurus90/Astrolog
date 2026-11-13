@@ -5575,6 +5575,11 @@ export interface components {
              * @description Of `dark_s`, the narrowband stretches together.
              */
             narrowband_dark_s?: number | null;
+            /**
+             * Dark Returns
+             * @description When `dark_s` is 0 (midnight sun, white nights): the first night (`YYYY-MM-DD`) with astronomical dark again. `None` when tonight has dark, or no night.
+             */
+            dark_returns?: string | null;
         };
         /**
          * TypelessFolder

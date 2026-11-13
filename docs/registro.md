@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 372; senza fonte: 1.
-Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 89.
+Valori: 374; senza fonte: 1.
+Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 91.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -198,6 +198,8 @@ Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | simbolo | valore | fonte |
 |---|---|---|
 | _HALF_HOUR | `dt.timedelta(minutes=30)` | T |
+| _YEAR | `366` | T |
+| _AROUND_MIDNIGHT | `range(-30, 31, 10)` | T |
 | _HAIR | `1e-9` | T |
 
 ### fits/header_read.py

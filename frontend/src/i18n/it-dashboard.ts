@@ -15,6 +15,8 @@ export const itDashboard = {
   "dashboard.head.polar.pill": "? senza buio",
   "dashboard.head.polar.sub":
     "A questa latitudine il Sole non scende sotto \u221218\u00b0: nessuna ora di buio astronomico, nessuna ora di posa.",
+  "dashboard.head.polar.subUntil":
+    "A questa latitudine il Sole non scende sotto \u221218\u00b0 fino al {data}: nessuna ora di buio astronomico, nessuna ora di posa.",
   "dashboard.head.noZone.pill": "? senza fuso orario",
   "dashboard.head.noZone.sub": "Le ore della notte si calcolano col fuso orario del sito.",
   "dashboard.head.solar": "Pi\u00f9 alto stanotte, nel Sistema solare",

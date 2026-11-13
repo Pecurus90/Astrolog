@@ -263,3 +263,8 @@ class TonightOut(BaseModel):
     narrowband_dark_s: int | None = Field(
         default=None, description="Of `dark_s`, the narrowband stretches together."
     )
+    dark_returns: str | None = Field(
+        default=None,
+        description="When `dark_s` is 0 (midnight sun, white nights): the first night "
+        "(`YYYY-MM-DD`) with astronomical dark again. `None` when tonight has dark, or no night.",
+    )

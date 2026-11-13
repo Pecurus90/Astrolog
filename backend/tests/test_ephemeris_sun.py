@@ -12,6 +12,7 @@ import datetime as dt
 
 import pytest
 
+from astrolog.clock import night_window
 from astrolog.ephemeris import ASTRO_DEG, CIVIL_DEG, NAUTICAL_DEG, RISESET_DEG, bodies
 from astrolog.ephemeris.grid import night_grid
 from astrolog.ephemeris.sun import (
@@ -19,6 +20,7 @@ from astrolog.ephemeris.sun import (
     SkyBand,
     altitudes,
     chart_window,
+    dark_returns,
     night_bands,
     sky_at,
     sky_bands,
@@ -309,3 +311,33 @@ def test_the_chart_ends_in_the_column_that_holds_the_sunrise(alba, fine):
     assert volta is not None
     assert volta.starts_at == MEZZOGIORNO.replace(hour=15, minute=30)
     assert volta.ends_at == giorno.replace(hour=fine[0], minute=fine[1])
+
+
+def _ha_buio(notte, lat, lon, fuso):
+    inizio, ore = night_window(notte, fuso)
+    return Sky.DARK in quali(night_bands(inizio, lat, lon, ore))
+
+
+@pytest.mark.parametrize(
+    ("dove", "lat", "lon", "fuso", "notte"),
+    [
+        ("Edimburgo", 55.95, -3.19, "Europe/London", "2027-06-10"),
+        ("Tromso", 69.65, 18.96, "Europe/Oslo", "2027-05-01"),
+    ],
+)
+def test_without_dark_the_first_night_it_returns_is_found(dove, lat, lon, fuso, notte):
+    """Nei giorni senza buio astronomico (notti bianche, sole di mezzanotte) la notte in cui il
+    buio torna e' la prima con una fascia di buio: la dicono le fasce campionate, notte per notte,
+    non la scorciatoia della mezzanotte del Sole."""
+    assert not _ha_buio(notte, lat, lon, fuso), dove
+
+    torna = dark_returns(notte, lat, lon)
+
+    assert torna is not None and torna > notte
+    prima = (dt.date.fromisoformat(torna) - dt.timedelta(days=1)).isoformat()
+    assert _ha_buio(torna, lat, lon, fuso), torna
+    assert not _ha_buio(prima, lat, lon, fuso), prima
+
+
+def test_with_dark_tonight_the_dark_returns_tonight():
+    assert dark_returns("2026-11-13", 45.55, 11.55) == "2026-11-13"

@@ -228,7 +228,9 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
     span = sun.chart_window(bands)
     shooting = _shooting(spans, moon_phase.illumination_pct)
     planets_out = [_planet(p, span) for p in tracks]
+    dark_s = round(sum(seconds_between(a, b) for a, b in dark))
     return TonightOut(
+        dark_returns=None if dark_s else sun.dark_returns(the_night, home.latitude, home.longitude),
         highest_planet=_highest_planet(planets_out),
         shooting=shooting,
         broadband_dark_s=sum(s.seconds for s in shooting if s.band == "broadband"),
@@ -246,7 +248,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         site=_site_sky(home),
         weather=weather.brief_of(conn, home.id, the_night),
         sky_bands=[_sky_band(f) for f in bands],
-        dark_s=round(sum(seconds_between(a, b) for a, b in dark)),
+        dark_s=dark_s,
         moonless_dark=[
             DarkStretchOut(starts_at=a.isoformat(), ends_at=b.isoformat())
             for a, b in spans.moonless

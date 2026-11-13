@@ -279,8 +279,6 @@ Diverse dalla tavola:
 - **Il dettaglio della Luna.** Tavola: «(le soglie stanno nelle Impostazioni, gruppo Luna)» (596).
   App: la frase senza la parentesi. Perche': la regola della Luna non e' ancora nelle Impostazioni
   (passo 10); 25 e 65 vengono dalla scala della Luna del Meteo.
-- **Giorni polari.** Tavola: «fino al 12 agosto» (427). App: senza la data. Perche': il backend
-  non scrive quando il buio torna.
 - **Carta del meteo «Non disponibile».** Tavola: «Non tutti i modelli danno la visibilità.» App:
   «La previsione non la dà per stanotte.» per ogni misura senza ore (Marco, 11/11, Issue #59).
   Perche': la riga della tavola vale solo per la visibilità. A Design.

@@ -81,6 +81,31 @@ def chart_window(bands: Sequence[SkyBand]) -> ChartWindow | None:
     )
 
 
+_YEAR = 366  # [T] any latitude gets dark within a year, poles included
+_AROUND_MIDNIGHT = range(-30, 31, 10)  # [T] minutes; equation of time stays within 17
+
+
+def dark_returns(night: str, latitude: float, longitude: float) -> str | None:
+    """The first night from `night` on with astronomical dark: the Sun's lowest point is near
+    solar midnight, sampled around it. None if it never comes within a year."""
+    first = dt.date.fromisoformat(night)
+    nights = [first + dt.timedelta(days=i) for i in range(_YEAR)]
+    shift = dt.timedelta(hours=longitude / 15)
+    instants = [
+        dt.datetime.combine(d + dt.timedelta(days=1), dt.time(), dt.UTC)
+        - shift
+        + dt.timedelta(minutes=m)
+        for d in nights
+        for m in _AROUND_MIDNIGHT
+    ]
+    alts = altitudes(instants, latitude, longitude)
+    per_night = len(_AROUND_MIDNIGHT)
+    for i, d in enumerate(nights):
+        if _band_of(min(alts[i * per_night : (i + 1) * per_night])) == Sky.DARK:
+            return d.isoformat()
+    return None
+
+
 def sky_at(instants: Sequence[dt.datetime], latitude: float, longitude: float) -> list[Sky]:
     """The band of each instant, without paying for a sampled night."""
     return [_band_of(a) for a in altitudes(instants, latitude, longitude)]

@@ -61,6 +61,7 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
         "broadband_dark_s": None,
         "narrowband_dark_s": None,
         "highest_planet": None,
+        "dark_returns": None,
     }
 
 
@@ -110,6 +111,20 @@ def test_the_night_is_the_one_of_the_site_not_of_the_server(client_vuoto, monkey
 
     assert qui["night"] == "2026-07-14", qui
     assert la["night"] == "2026-07-15", la
+
+
+def test_a_night_without_dark_says_when_the_dark_returns(client_vuoto, monkeypatch):
+    """A Tromso a maggio il Sole non scende sotto -18 gradi: la rotta dice la notte in cui il buio
+    torna, la tavola la scrive ("fino al 12 agosto"). Con il buio stanotte non dice niente."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2027-05-01T16:00:00.000Z")
+    crea_sito(client_vuoto, "Tromso", 69.65, 18.96)
+    polare = client_vuoto.get("/api/v1/tonight").json()
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+    qui = client_vuoto.get("/api/v1/tonight").json()
+
+    assert polare["dark_s"] == 0, polare["dark_s"]
+    assert polare["dark_returns"] is not None and polare["dark_returns"] > "2027-07-01"
+    assert qui["dark_s"] > 0 and qui["dark_returns"] is None
 
 
 def test_the_window_lasts_the_real_night_not_a_fixed_day(client_vuoto, monkeypatch):

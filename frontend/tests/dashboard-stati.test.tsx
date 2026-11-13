@@ -101,6 +101,16 @@ describe("gli stati della Dashboard", () => {
     expect(screen.getByText("Nessun buio")).toBeDefined()
   })
 
+  it("giorni polari col buio che torna: la data nella frase (tavola, 427)", async () => {
+    await montaDashboard({ stanotte: { dark_s: 0, weather: null, dark_returns: "2027-08-12" } })
+    await screen.findByText("? senza buio")
+    expect(
+      screen.getByText(
+        "A questa latitudine il Sole non scende sotto −18° fino al 12 agosto: nessuna ora di buio astronomico, nessuna ora di posa.",
+      ),
+    ).toBeDefined()
+  })
+
   it("calendario non ancora scritto: una riga che lo dice", async () => {
     await montaDashboard({ altre: calendario(true) })
     expect(await screen.findByText("Il calendario della Luna non è ancora scritto: si scrive da solo dopo il primo avvio.")).toBeDefined()

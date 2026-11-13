@@ -14,7 +14,7 @@ import {
   ripresaDiStanotte,
   sottoDellaNotte,
 } from "./DashboardDati"
-import { numero, oraDelSito, oreEMinuti, t } from "./i18n"
+import { giornoDelMese, numero, oraDelSito, oreEMinuti, t } from "./i18n"
 import { buioDellaNotte } from "./Stanotte"
 
 /**
@@ -78,7 +78,9 @@ function testaDellaNotte(s: Stanotte, w: Breve | null): Testa {
       value: t("weather.verdict.noNight"),
       pill: t("dashboard.head.polar.pill"),
       tinta: NEUTRA,
-      sub: t("dashboard.head.polar.sub"),
+      sub: s.dark_returns
+        ? t("dashboard.head.polar.subUntil", { data: giornoDelMese(s.dark_returns) })
+        : t("dashboard.head.polar.sub"),
     }
   }
   if (!w || !w.verdict || w.exposure_hours == null) {
