@@ -126,8 +126,10 @@ Scelte diverse dalla tavola:
   (della camera, non del frame), la scala di luminosita' (serve la trasparenza di serie, passo
   40) e zenit, angoli, centro, tilt e curvatura dalla FWHM, curvatura in ″ (gia' in Frame per frame,
   Il frame e Tilt e curvatura).
-- **Trasparenza, Nuvole.** Tavola: fra le Altre misure. App: assenti. Perche': la pipeline non le
-  misura per frame.
+- **Trasparenza, Nuvole.** Tavola: fra le Altre misure. App: assenti. Perche': nella tavola le
+  stima la serie dei frame (`serie: 1`, 208), come la trasparenza del passo 40; entrano insieme li'
+  (Marco 14/11, Issue #74). Il CLOUDCVR del file e' un'altra misura: N.I.N.A. lo scrive solo con un
+  sensore di nuvole collegato.
 - **Lato del pilastro.** Tavola: «a ovest N di M frame, prima del meridiano» (248), tessera che
   entra nei grafici. App: «a ovest N di M frame»; la tessera non si sceglie per i grafici ne' per A
   confronto. Perche': e' il `PIERSIDE` dell'header, un fatto e non una misura; ovest non vuol dire
