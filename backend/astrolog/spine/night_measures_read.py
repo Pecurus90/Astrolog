@@ -142,7 +142,7 @@ def sets(
 def _stat(entry: Entry, row: sqlite3.Row | None, measuring: bool) -> dict[str, Any]:
     out: dict[str, Any] = {"key": entry.key, "unit": entry.unit, "group": entry.group}
     if row is None or row["median"] is None:
-        silent = "measuring" if measuring else "no_value"
+        silent = "measuring" if measuring else (row and row["silent"]) or "no_value"
         measured = 0 if row is None else row["measured"]
         return out | {"measured": measured, "median": None, "q1": None, "q3": None, "low": None,
                       "high": None, "trend": None, "verdict": None, "silent": silent,

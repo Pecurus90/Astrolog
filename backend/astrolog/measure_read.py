@@ -56,10 +56,7 @@ def frame_measures(conn: sqlite3.Connection, frame_id: int) -> FrameMeasures | N
     """None: no such frame."""
     if conn.execute("SELECT 1 FROM pipeline_frames WHERE id = ?", (frame_id,)).fetchone() is None:
         return None
-    rows = {
-        table: conn.execute(f"SELECT * FROM {table} WHERE frame_id = ?", (frame_id,)).fetchone()  # noqa: S608 - our names
-        for table in Table
-    }
+    rows = _rows(conn, frame_id)
     m, k, q = rows[Table.MEASURES], rows[Table.SKY], rows[Table.SQM]
     whole = {
         Table.MEASURES: _measure_silent(m),
@@ -78,6 +75,20 @@ def frame_measures(conn: sqlite3.Connection, frame_id: int) -> FrameMeasures | N
         angle_axis=None if k is None else k["angle_axis"],
         values=values,
     )
+
+
+def sqm_silent(conn: sqlite3.Connection, frame_id: int) -> Silent | None:
+    """Why the frame has no sky brightness, as its measures say it; None with a value."""
+    rows = _rows(conn, frame_id)
+    m, k, q = rows[Table.MEASURES], rows[Table.SKY], rows[Table.SQM]
+    return _value(_BY_KEY["sqm"], q, _sqm_silent(conn, frame_id, m, k, q), m).silent
+
+
+def _rows(conn: sqlite3.Connection, frame_id: int) -> dict[Table, sqlite3.Row | None]:
+    return {
+        table: conn.execute(f"SELECT * FROM {table} WHERE frame_id = ?", (frame_id,)).fetchone()  # noqa: S608 - our names
+        for table in Table
+    }
 
 
 def _measure_silent(m: sqlite3.Row | None) -> Silent | None:

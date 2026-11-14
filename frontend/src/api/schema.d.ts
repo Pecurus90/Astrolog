@@ -3319,9 +3319,9 @@ export interface components {
             verdict: ("go" | "marginal" | "nogo" | "severe_under" | "under" | "ideal" | "over") | null;
             /**
              * Silent
-             * @description Why `median` is null: frames still to be measured, or none of the measured has it (each frame's reason is in its own measures). Null with a median.
+             * @description Why `median` is null: frames still to be measured, or none of the measured has it. Sky brightness says why when its measured frames do: none is L or colour, or colour frames need the camera's bias (MisureFrame 236). Other reasons are in each frame's measures. Null with a median.
              */
-            silent: ("measuring" | "no_value") | null;
+            silent: ("measuring" | "no_value" | "sqm_not_this_filter" | "needs_camera_bias") | null;
             /**
              * Per Filter
              * @description Background, noise or sky brightness from more than one filter: each filter has its own scale, so the set's median does not compare; show it per filter.

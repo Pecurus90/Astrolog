@@ -69,6 +69,10 @@ export const itMisure = {
   "measures.pending": "misura in corso",
   "measures.only": "solo {n} \u00D7",
   "measures.none": "non c\u2019\u00E8 per questi frame",
+  // [T] MisureFrame.dc.html 236
+  "measures.sqm.notThisFilter": "nessun frame L o a colori in questa notte",
+  "measures.sqm.noLOrColour": "nessun frame L o a colori",
+  "measures.sqm.needsBias": "serve il bias della camera \u00B7 Bias (ADU) in Attrezzatura",
   "measures.other": "Altre misure",
   "measures.other.pick": "Scegli una misura",
   "measures.other.none": "Nessuna altra misura",
@@ -160,6 +164,9 @@ export const itMisure = {
   "chart.label": "{f}: {m} di {n} frame",
   "chart.and": " e ",
   "chart.sqm.direction": "il valore cambia anche con la direzione del cielo",
+  "chart.sqm.onlyL":
+    "la luminosit\u00E0 del cielo c\u2019\u00E8 solo con L, nessun filtro e a colori",
+  "chart.sqm.needsBias": "serve il bias della camera",
   "chart.not.comparable": "frame con {r} diversi: fondo e rumore non si confrontano fra loro",
   "chart.not.comparable.rate":
     "frame con {r} diversi: fondo e rumore non si confrontano fra loro; il fondo al secondo s\u00EC",

@@ -9,7 +9,7 @@ import { PillolaScelta } from "./componenti/PillolaScelta"
 import { gesto } from "./componenti/gesto"
 import type { Formato } from "./componenti/Tema"
 import { nomeDelFiltro } from "./FiltriUsati"
-import { numero, oraDelSito, t } from "./i18n"
+import { type Chiave, numero, oraDelSito, t } from "./i18n"
 import {
   type Disegno,
   type Geometria,
@@ -470,11 +470,26 @@ function UnGrafico({
   )
 }
 
+// [T] MisureFrame.dc.html 311: perche' manca la luminosita' del cielo
+const SQM_TACE: Partial<
+  Record<NonNullable<NonNullable<ReturnType<typeof statistica>>["silent"]>, Chiave>
+> = {
+  sqm_not_this_filter: "chart.sqm.onlyL",
+  needs_camera_bias: "chart.sqm.needsBias",
+}
+
 /** La nota accanto al filtro: la luminosita' del cielo, fondo e rumore non confrontabili. */
 function nota(set: ReturnType<typeof insieme>, chiavi: string[]): string {
   const parti: string[] = []
+  const sqm = statistica(set, "sqm")
   if (chiavi.includes("sqm"))
-    parti.push(t(statistica(set, "sqm")?.median == null ? "measures.none" : "chart.sqm.direction"))
+    parti.push(
+      t(
+        sqm?.median != null
+          ? "chart.sqm.direction"
+          : ((sqm?.silent && SQM_TACE[sqm.silent]) ?? "measures.none"),
+      ),
+    )
   const fondo = chiavi.some((k) => k === "background_adu" || k === "noise_adu")
   if (fondo && set?.differs.length) {
     const solo = set.differs.every((x) => x === "exposure")

@@ -236,6 +236,56 @@ def test_the_pier_side_written_in_the_header_reaches_frames_and_sets(conn, db_pa
     assert body["sets"][0]["pier_side"] == {"east": 1, "west": 1}
 
 
+def _solved(conn, spine: int, *, colour_without_bias: bool = False) -> None:
+    """The frame solved; with `colour_without_bias` its sky brightness measured on the 2x2 blocks
+    of a camera whose bias is not declared, so it has no value."""
+    pframe = conn.execute(
+        "SELECT pipeline_frame_id FROM night_measure_frames WHERE frame_id = ?", (spine,)
+    ).fetchone()[0]
+    conn.execute(
+        "INSERT INTO pipeline_sky (frame_id, solved, computed_at) VALUES (?, 1, ?)", (pframe, T1)
+    )
+    if colour_without_bias:
+        conn.execute(
+            "INSERT INTO pipeline_sqm (frame_id, outcome, catalogue, zero_point_mag,"
+            " calibration_stars, sky_adu, colour, computed_at)"
+            " VALUES (?, 'measured', 'd50', 21.0, 40, 900, 1, ?)",
+            (pframe, T1),
+        )
+
+
+def _sqm(body: dict) -> dict:
+    return next(m for m in body["sets"][0]["measures"] if m["key"] == "sqm")
+
+
+def test_sky_brightness_of_a_set_without_l_or_colour_frames_says_so(conn, db_path, world) -> None:
+    """Tavola MisureFrame 236: «nessun frame L o a colori in questa notte». Mono frames behind no
+    filter written are not for sky brightness (ADR 0022): the set says it, not "no value"."""
+    spines = [world.shot(2.0, start=T1), world.shot(3.0, start=T2)]
+    night_measures.rebuild(conn)
+    for spine in spines:
+        _solved(conn, spine)
+    night_measures.rebuild(conn)
+    conn.commit()
+    sqm = _sqm(_get(db_path, world.night).json())
+    assert (sqm["median"], sqm["silent"]) == (None, "sqm_not_this_filter")
+
+
+def test_sky_brightness_of_colour_frames_without_bias_says_it_needs_it(
+    conn, db_path, world
+) -> None:
+    """Tavola MisureFrame 236: «serve il bias della camera», also when other frames of the set are
+    not for sky brightness at all."""
+    spines = [world.shot(2.0, start=T1), world.shot(3.0, start=T2)]
+    night_measures.rebuild(conn)
+    _solved(conn, spines[0], colour_without_bias=True)
+    _solved(conn, spines[1])
+    night_measures.rebuild(conn)
+    conn.commit()
+    sqm = _sqm(_get(db_path, world.night).json())
+    assert (sqm["median"], sqm["silent"]) == (None, "needs_camera_bias")
+
+
 def test_a_night_not_rebuilt_yet_has_no_sets(conn, db_path, world) -> None:
     """Grouped but the measures not written yet: no sets, not an error."""
     world.frame()

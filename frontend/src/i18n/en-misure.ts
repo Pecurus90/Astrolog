@@ -64,6 +64,9 @@ export const enMisure = {
   "measures.pending": "measuring",
   "measures.only": "only {n} \u00D7",
   "measures.none": "not there for these frames",
+  "measures.sqm.notThisFilter": "no L or colour frame this night",
+  "measures.sqm.noLOrColour": "no L or colour frame",
+  "measures.sqm.needsBias": "needs the camera bias \u00B7 Bias (ADU) in Gear",
   "measures.other": "Other measures",
   "measures.other.pick": "Pick a measure",
   "measures.other.none": "No other measures",
@@ -152,6 +155,8 @@ export const enMisure = {
   "chart.label": "{f}: {m} of {n} frames",
   "chart.and": " and ",
   "chart.sqm.direction": "the value also changes with the direction in the sky",
+  "chart.sqm.onlyL": "sky brightness is there only with L, no filter and colour",
+  "chart.sqm.needsBias": "needs the camera bias",
   "chart.not.comparable": "frames with different {r}: background and noise do not compare",
   "chart.not.comparable.rate":
     "frames with different {r}: background and noise do not compare; background per second does",

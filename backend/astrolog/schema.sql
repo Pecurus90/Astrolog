@@ -1427,6 +1427,9 @@ CREATE TABLE night_measures (
     'severe_under', 'under', 'ideal', 'over')),
   -- 1: fondo, rumore, SQM con valori da piu' filtri: si confrontano solo per filtro (MisureFrame 236)
   per_filter INTEGER NOT NULL CHECK (per_filter IN (0, 1)),
+  -- perche' lo SQM manca all'insieme, se i frame misurati lo dicono (MisureFrame 236); NULL: altro
+  silent    TEXT CHECK (silent IN ('sqm_not_this_filter', 'needs_camera_bias')),
+  CHECK (silent IS NULL OR (key = 'sqm' AND median IS NULL)),
   CHECK ((median IS NULL) = (measured = 0) AND (median IS NULL) = (q1 IS NULL)
     AND (q1 IS NULL) = (q3 IS NULL) AND (q1 IS NULL) = (low IS NULL)
     AND (low IS NULL) = (high IS NULL) AND (median IS NOT NULL OR verdict IS NULL))
@@ -1480,6 +1483,8 @@ CREATE TABLE object_measures (
   verdict     TEXT CHECK (verdict IN ('go', 'marginal', 'nogo',
     'severe_under', 'under', 'ideal', 'over')),
   per_filter  INTEGER NOT NULL CHECK (per_filter IN (0, 1)),
+  silent      TEXT CHECK (silent IN ('sqm_not_this_filter', 'needs_camera_bias')),  -- come sopra
+  CHECK (silent IS NULL OR (key = 'sqm' AND median IS NULL)),
   CHECK ((object_id IS NULL) <> (mosaic_key IS NULL)),
   CHECK (panel_id IS NULL OR (mosaic_key IS NOT NULL AND every_production = 1)),
   CHECK (every_production = 0 OR (optics_id IS NULL AND camera_id IS NULL)),

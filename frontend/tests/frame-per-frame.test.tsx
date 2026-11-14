@@ -345,6 +345,21 @@ describe("la nota accanto al filtro", () => {
     expect(altro.container.textContent).toContain(t("measures.none"))
   })
 
+  it("l'SQM che manca all'insieme dice perche' con le parole della tavola (MisureFrame 311)", () => {
+    const tace = (silent: string) =>
+      ({
+        ...MISURE,
+        sets: [insieme(null), insieme("Ha", [{ ...stat("sqm", 20, 21, null), silent } as never])],
+      }) as unknown as Misure
+    expect(monta(tace("sqm_not_this_filter"), ["sqm"]).container.textContent).toContain(
+      "la luminosità del cielo c’è solo con L, nessun filtro e a colori",
+    )
+    cleanup()
+    expect(monta(tace("needs_camera_bias"), ["sqm"]).container.textContent).toContain(
+      "serve il bias della camera",
+    )
+  })
+
   it("fondo e rumore fra setup diversi non si confrontano; solo la posa, al secondo", () => {
     const camera = {
       ...MISURE,

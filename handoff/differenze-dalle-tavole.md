@@ -111,8 +111,9 @@ Scelte diverse dalla tavola:
   355). App: l'asse quando il frame ne ha uno (stelle non tonde e risolte). Perche': ADR 0039 ha
   tolto le soglie fisse dell'eccentricita'.
 - **Luminosita' del cielo senza valore.** Tavola: «nessun frame L o a colori in questa notte» o
-  «serve il bias della camera» (235). App: «non c'e' per questi frame». Perche': l'API non manda
-  ancora il motivo per l'insieme, solo per frame.
+  «serve il bias della camera» (235). App: le stesse frasi (Issue #75, 14/11); nella finestra
+  dell'oggetto «nessun frame L o a colori», senza «in questa notte»; «non c'e' per questi frame»
+  quando i frame misurati dicono motivi diversi o qualcuno e' ancora da misurare.
 - **SQM col Bortle.** Tavola: il giudizio dello SQM col Bortle. App: solo il numero. Perche':
   nessuna convenzione pubblica (principio 1, ADR 0039).
 - **Nomi delle misure.** Tavola: in italiano («Fondo cielo», «Massa d'aria», «Gradiente del
@@ -149,8 +150,8 @@ Scelte diverse dalla tavola:
 - **Seleziona i frame ↗.** Tavola: il tondo accanto a «Frame per frame» (36). App: assente.
   Perche': Selezione dei frame non e' ancora portata.
 - **Nota della luminosita' del cielo nel grafico.** Tavola: «c'e' solo con L, nessun filtro e a
-  colori» o «serve il bias della camera» (310). App: «non c'e' per questi frame». Perche': l'API
-  non manda il motivo per l'insieme, solo per frame.
+  colori» o «serve il bias della camera» (310). App: le stesse frasi (Issue #75, 14/11); «non c'e'
+  per questi frame» con motivi diversi o frame ancora da misurare.
 - **Tilt e curvatura del sensore.** Tavola: ricalcolati dalle mediane di angoli e centro (339).
   App: la mediana del tilt dei frame (ASTAP, col giudizio) e quella dell'aberrazione fuori asse,
   in px e in ″. Perche': una lettura non calcola; sono le stesse misure delle tessere (ADR 0044).

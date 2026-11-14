@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 from .db.replace_table import replace_rows
 from .db.transaction import transaction
 from .levels import sampling_class, tilt_level
-from .measure_list import MEASURES, Table
+from .measure_list import MEASURES, Silent, Table
+from .measure_read import sqm_silent
 from .units import quantile
 
 TREND = 24  # points of the line under each tile [D tavola v76, MisureFrame:226]
@@ -42,7 +43,8 @@ HAVING MIN(pf.frame_id) IS NOT NULL OR never IS NOT NULL
 # The frames the Nights page counts (spine/counts.py), with their measures if bridged.
 _FRAMES = f"""
 SELECT f.night_id, f.object_id, f.filter_id, f.mosaic_key, f.panel_id, g.optics_id, g.camera_id,
-       b.skip_reason, m.outcome, c.camera, c.gain, c.exposure_s, c.pier_side, {VALUES}
+       b.skip_reason, b.pipeline_frame_id, m.outcome, c.camera, c.gain, c.exposure_s,
+       c.pier_side, {VALUES}
 FROM frames f{JOINS}
 LEFT JOIN pipeline_cards c ON c.file_id = m.file_id
 LEFT JOIN rigs g ON g.id = f.rig_id
@@ -52,8 +54,14 @@ ORDER BY c.start_utc IS NULL, c.start_utc, f.id
 
 _STATS = (
     "key", "frames", "measured", "median", "q1", "q3", "low", "high", "trend", "verdict",
-    "per_filter",
+    "per_filter", "silent",
 )  # fmt: skip
+# Why a set has no sky brightness, in the board's order: no frame for it, then the bias
+# [D tavola v76, MisureFrame:236]
+_SQM_SET_SILENT = (
+    (frozenset({Silent.SQM_NOT_THIS_FILTER}), Silent.SQM_NOT_THIS_FILTER),
+    (frozenset({Silent.SQM_NOT_THIS_FILTER, Silent.NEEDS_CAMERA_BIAS}), Silent.NEEDS_CAMERA_BIAS),
+)
 _NIGHT_KEY = ("night_id", "object_id", "filter_id", "unfiltered")
 # An Archive row (object outside mosaics, mosaic, or panel), its production or all, night, filter
 _OBJECT_KEY = (
@@ -83,6 +91,7 @@ class _Group:
     values: dict[str, list[float]] = field(default_factory=lambda: defaultdict(list))  # in time
     filters: dict[str, set[int | None]] = field(default_factory=lambda: defaultdict(set))  # with it
     pier: dict[str, int] = field(default_factory=lambda: {"east": 0, "west": 0})  # PIERSIDE
+    sqm_silent: set[Silent | None] = field(default_factory=set)  # measured frames' reasons
 
 
 def rebuild(conn: sqlite3.Connection) -> None:
@@ -93,11 +102,12 @@ def rebuild(conn: sqlite3.Connection) -> None:
         replace_rows(conn, "night_measure_frames", bridge, _bridge(conn))
         nights: dict[GroupKey, _Group] = defaultdict(_Group)
         rows: dict[GroupKey, _Group] = defaultdict(_Group)
-        for row in conn.execute(_FRAMES):
+        for row in conn.execute(_FRAMES).fetchall():
+            why = _sqm_why(conn, row)
             for key in _keys_of(row["night_id"], row["object_id"], row["filter_id"]):
-                _add(nights[key], row)
+                _add(nights[key], row, why)
             for key in _row_keys_of(row):
-                _add(rows[key], row)
+                _add(rows[key], row, why)
         for table, columns, groups in (
             ("night_measure", _NIGHT_KEY, nights),
             ("object_measure", _OBJECT_KEY, rows),
@@ -154,13 +164,25 @@ def _row_keys_of(row: sqlite3.Row) -> Iterator[GroupKey]:
                 yield *target, *production, night, *filtered
 
 
-def _add(group: _Group, row: sqlite3.Row) -> None:
+def _waits(row: sqlite3.Row) -> bool:
+    return row["outcome"] in (None, "unreadable")  # unreadable now is tried again: it waits
+
+
+def _sqm_why(conn: sqlite3.Connection, row: sqlite3.Row) -> Silent | None:
+    """The frame's own reason, read once for all its sets; None with a value or still waiting."""
+    if _waits(row) or row["sqm"] is not None:
+        return None
+    return sqm_silent(conn, row["pipeline_frame_id"])
+
+
+def _add(group: _Group, row: sqlite3.Row, sqm_why: Silent | None = None) -> None:
     group.frames += 1
     if row["pier_side"] is not None:
         group.pier[row["pier_side"]] += 1
-    if row["outcome"] in (None, "unreadable"):  # unreadable now is tried again: it waits
+    if _waits(row):
         group.pending += row["skip_reason"] is None
         return
+    group.sqm_silent.add(sqm_why)
     if row["outcome"] == "measured":  # a file read badly has no setup to compare
         group.setups.add((row["camera"], row["gain"], row["exposure_s"]))
     for key in _KEYS:
@@ -174,14 +196,22 @@ def _measure_rows(groups: dict[GroupKey, _Group]) -> Iterator[tuple[object, ...]
         for key in _KEYS:
             in_time = group.values.get(key, [])
             if not in_time:
-                yield *at, key, group.frames, 0, *(None,) * 7, 0
+                silent = _set_silent(group) if key == "sqm" else None
+                yield *at, key, group.frames, 0, *(None,) * 7, 0, silent
                 continue
             values = sorted(in_time)
             q1, median, q3 = (quantile(values, p) for p in (0.25, 0.5, 0.75))
             verdict = _VERDICTS[key](median) if key in _VERDICTS else None
             per_filter = key in PER_FILTER and len(group.filters[key]) > 1
             yield (*at, key, group.frames, len(values), median, q1, q3, values[0], values[-1],
-                   _trend(in_time), verdict, int(per_filter))  # fmt: skip
+                   _trend(in_time), verdict, int(per_filter), None)  # fmt: skip
+
+
+def _set_silent(group: _Group) -> Silent | None:
+    """A frame still waiting may be the one with a value: no reason for the set yet."""
+    if group.pending:
+        return None
+    return next((why for seen, why in _SQM_SET_SILENT if group.sqm_silent <= seen), None)
 
 
 def _trend(in_time: list[float]) -> str | None:

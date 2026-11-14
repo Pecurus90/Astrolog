@@ -11,7 +11,7 @@ import { PillolaScelta, type OpzioneScelta } from "./componenti/PillolaScelta"
 import { gesto } from "./componenti/gesto"
 import type { Formato } from "./componenti/Tema"
 import { nomeDelFiltro } from "./FiltriUsati"
-import { numero, t } from "./i18n"
+import { type Chiave, numero, t } from "./i18n"
 import {
   ALTRE,
   DAL_SETUP,
@@ -176,6 +176,7 @@ export function MisureDeiFrame({
                 set={set}
                 perFiltro={statistica(set, x.chiave)?.per_filter === true}
                 posto={met.indexOf(x.id)}
+                tipo={tipo}
                 onTocca={() => x.id !== PILASTRO && tocca(x.id)}
               />
             ))}
@@ -272,17 +273,29 @@ function sotto(x: Tessera, set: Insieme | undefined, chiave: string): string {
   return q
 }
 
+type Tace = NonNullable<NonNullable<ReturnType<typeof statistica>>["silent"]>
+
+// la tavola dice "in questa notte": nella finestra dell'oggetto la frase resta senza il luogo
+const TACE: Record<Tace, Record<Tipo, Chiave>> = {
+  measuring: { notte: "measures.pending", oggetto: "measures.pending" },
+  no_value: { notte: "measures.none", oggetto: "measures.none" },
+  sqm_not_this_filter: { notte: "measures.sqm.notThisFilter", oggetto: "measures.sqm.noLOrColour" },
+  needs_camera_bias: { notte: "measures.sqm.needsBias", oggetto: "measures.sqm.needsBias" },
+}
+
 function UnaTessera({
   tessera: x,
   set,
   perFiltro,
   posto,
+  tipo,
   onTocca,
 }: {
   tessera: Tessera
   set: Insieme | undefined
   perFiltro: boolean
   posto: number
+  tipo: Tipo
   onTocca: () => void
 }) {
   const { v: v0, chiave } = valore(x, set)
@@ -290,9 +303,8 @@ function UnaTessera({
   const lato = x.id === PILASTRO ? latoDelPilastro(set) : null
   let v = lato?.v ?? v0
   let sub = lato?.sub ?? sotto(x, set, chiave)
-  // tessera vuota: il perche' dall'API (tavola: "non c'e' per questi frame")
-  if (!sub && s?.median == null && s?.silent)
-    sub = t(s.silent === "measuring" ? "measures.pending" : "measures.none")
+  // tessera vuota: il perche' dall'API (tavola MisureFrame 236)
+  if (!sub && s?.median == null && s?.silent) sub = t(TACE[s.silent][tipo])
   if (perFiltro) {
     v = t("measures.per.filter")
     sub = t("measures.per.filter.why")

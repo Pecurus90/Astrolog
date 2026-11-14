@@ -128,6 +128,25 @@ describe("le tessere", () => {
     expect(parti(tessera(s, "FWHM"))).toEqual(["—", null, null])
   })
 
+  it("lo SQM che manca all'insieme dice perche' con le parole della tavola (MisureFrame 236)", () => {
+    const senza = (silent: string) =>
+      ({
+        ...MISURE,
+        sets: [set(null, null, 6, [stat("sqm", null, { silent })])],
+      }) as unknown as Misure
+    expect(parti(tessera(monta(senza("sqm_not_this_filter")), "SQM"))[1]).toBe(
+      "nessun frame L o a colori in questa notte",
+    )
+    cleanup()
+    expect(parti(tessera(monta(senza("sqm_not_this_filter"), "oggetto"), "SQM"))[1]).toBe(
+      "nessun frame L o a colori",
+    )
+    cleanup()
+    expect(parti(tessera(monta(senza("needs_camera_bias")), "SQM"))[1]).toBe(
+      "serve il bias della camera · Bias (ADU) in Attrezzatura",
+    )
+  })
+
   it("per filtro o fra setup diversi, la tessera lo dice al posto del valore", () => {
     const misto = {
       ...MISURE,

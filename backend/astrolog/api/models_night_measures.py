@@ -33,9 +33,13 @@ class MeasureStat(BaseModel):
         description="The median judged by the frame's own rule: `hfd_tilt_pct` the tilt (ADR "
         "0044), `fwhm_px` the sampling (ADR 0022); null for the others."
     )
-    silent: Literal["measuring", "no_value"] | None = Field(
-        description="Why `median` is null: frames still to be measured, or none of the measured "
-        "has it (each frame's reason is in its own measures). Null with a median."
+    silent: Literal["measuring", "no_value", "sqm_not_this_filter", "needs_camera_bias"] | None = (
+        Field(
+            description="Why `median` is null: frames still to be measured, or none of the "
+            "measured has it. Sky brightness says why when its measured frames do: none is L or "
+            "colour, or colour frames need the camera's bias (MisureFrame 236). Other reasons "
+            "are in each frame's measures. Null with a median."
+        )
     )
     per_filter: bool = Field(
         description="Background, noise or sky brightness from more than one filter: each filter "
