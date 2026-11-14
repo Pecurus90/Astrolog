@@ -25,6 +25,9 @@ const SENZA_SETUP: Partial<Record<Pezzo["kind"], Chiave>> = {
   spacer: "gear.noHours.spacer",
 }
 
+// only a real band is shown as one: UNKNOWN, OSC, DUO_HAOIII are codes, not words
+const BANDE_VERE = ["L", "R", "G", "B", "HA", "HB", "OIII", "SII"]
+
 interface VoceConPallino extends Voce {
   pallino?: CSSProperties
 }
@@ -32,7 +35,8 @@ interface VoceConPallino extends Voce {
 /** The filter's card in one row: the bands with their colour, then its sheet (board `voce`). */
 function vociDelFiltro(f: Filtro): VoceConPallino[] {
   // no band written: the one its name gives, as the board shows every filter with its band
-  const scritte = f.bands.length || !f.passband ? f.bands : [{ band: f.passband, width_nm: null }]
+  const nome = f.passband && BANDE_VERE.includes(f.passband) ? f.passband : null
+  const scritte = f.bands.length || !nome ? f.bands : [{ band: nome, width_nm: null }]
   const voci: VoceConPallino[] = scritte.map((b) => ({
     v:
       b.width_nm === null
