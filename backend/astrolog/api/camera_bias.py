@@ -8,9 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..clock import now_iso
 from ..pipeline.sqm_measure import biases, declare_bias
+from ..spine import inventory
 from . import work
 from .deps import get_db
-from .models_gear import CameraBiasIn, CameraBiasOut
+from .models_gear import CameraBiasIn, CameraBiasOut, OffsetBias, OffsetBiasIn
 
 router = APIRouter(prefix="/api/v1", tags=["gear"])
 
@@ -49,3 +50,22 @@ def declare_camera_bias(
     declare_bias(conn, body.camera, body.offset, body.bias_adu, now_iso())
     row = next(r for r in biases(conn) if (r["camera"], r["offset"]) == (body.camera, body.offset))
     return CameraBiasOut(**dict(row))
+
+
+@router.put("/gear/instruments/{camera_id}/biases", response_model=OffsetBias)
+def declare_offset_bias(
+    camera_id: int, body: OffsetBiasIn, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> OffsetBias:
+    """The bias of a camera of the page at one offset: it goes to every way its files write that
+    camera, and their shots' sky brightness is written again.
+
+    404 `offset_not_found`: none of its light frames writes that offset. 409 `worker_busy` while
+    the worker runs."""
+    work.busy(request.app.state)
+    spellings = [c for c, o in inventory.camera_spellings(conn, camera_id) if o == body.offset]
+    if not spellings:
+        raise HTTPException(status_code=404, detail={"code": "offset_not_found"})
+    for camera in spellings:
+        declare_bias(conn, camera, body.offset, body.bias_adu, now_iso())
+    row = next(b for b in inventory.camera_biases(conn, camera_id) if b["offset"] == body.offset)
+    return OffsetBias(**row)

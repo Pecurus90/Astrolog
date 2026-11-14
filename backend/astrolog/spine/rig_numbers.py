@@ -272,11 +272,19 @@ def _dawes(optics: Card) -> Number:
     return {"value": DAWES_ARCSEC_MM / _need(optics, "optics", "aperture_mm")}
 
 
+def _native_ratio(optics: Card) -> Number:
+    return {"value": _need(optics, "optics", "focal_mm") / _need(optics, "optics", "aperture_mm")}
+
+
 def piece_numbers(card: Card) -> dict[str, Number]:
-    """The numbers on a piece's own card: Dawes on an optics, the sensor on a camera."""
+    """The numbers on a piece's own card: Dawes and the native focal ratio on an optics, the
+    sensor on a camera."""
     kind = card.get("kind")
     if kind == "optics":
-        return {"dawes": _one("dawes", _dawes, card)}
+        return {
+            "dawes": _one("dawes", _dawes, card),
+            "focal_ratio": _one("focal_ratio", _native_ratio, card),
+        }
     if kind in ("camera", "guide_camera"):
         return {"sensor_size": _one("sensor_size", _sensor_size, card, kind)}
     return {}

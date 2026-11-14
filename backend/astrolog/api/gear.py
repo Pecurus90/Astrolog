@@ -32,6 +32,11 @@ def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
     rigs = inventory.rigs(conn)
     for r in rigs:
         _card(r)
+    # the rig where "Seleziona montatura" opens: the most used still without a mount
+    wanting = next((r["id"] for r in rigs if not _holds(r, "mount")), None)
+    for p in pieces:
+        if p["kind"] == "mount" and p["no_hours"] == "no_rig" and not p["in_rigs"]:
+            p["rig_for_mount"] = wanting
     boxes, moon_pct = inventory.fields(conn)
     return GearList.model_validate(
         {
@@ -44,8 +49,13 @@ def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
             "moon_deg": MOON_DIAMETER_DEG,
             "fields": boxes,
             "moon_pct": moon_pct,
+            "brands": inventory.brands(conn),
         }
     )
+
+
+def _holds(rig: dict[str, Any], kind: str) -> bool:
+    return any(s["kind"] == kind and s["filled"] for s in rig["slots"])
 
 
 def _card(rig: dict[str, Any]) -> None:

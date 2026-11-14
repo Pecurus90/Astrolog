@@ -133,6 +133,30 @@ class PieceInRig(BaseModel):
     chosen: bool = Field(description="You gave it to the rig, instead of the files naming it.")
 
 
+class DeleteRefused(BaseModel):
+    """Why Delete is off before the gesture: the same refusal the DELETE gives."""
+
+    code: Literal["in_use", "in_rig"] = Field(
+        description="`in_use`: frames use it. `in_rig`: the optics or camera of a rig without "
+        "frames, which is made of it."
+    )
+    frames: int
+    rigs: list[int] = Field(description="`in_use`: the rigs of those frames; `in_rig`: the rigs.")
+
+
+class OffsetBias(BaseModel):
+    """A camera's bias at one offset its files write (ADR 0022): it gives the sky brightness."""
+
+    offset: int | None = Field(description="Null: the files do not write the offset.")
+    bias_adu: float | None = Field(description="Null: not declared yet.")
+    frames: int = Field(description="Its light frames with that offset.")
+
+
+class OffsetBiasIn(BaseModel):
+    offset: int | None = Field(ge=0)
+    bias_adu: float = Field(gt=0, description="A bias of zero is no bias: it is not declared.")
+
+
 class InstrumentOnPage(BaseModel):
     """A piece of the gear: its card -- the empty fields are those the header cannot tell and the
     user fills in -- plus how much it served and what you took with it."""
@@ -207,6 +231,18 @@ class InstrumentOnPage(BaseModel):
     from_files: list[str] = Field(
         description='The card fields read from the files ("dai file"); any other filled field '
         'is yours ("inserito"). Only a camera\'s sensor specs come from the files.'
+    )
+    delete_refused: DeleteRefused | None = Field(
+        description="Null: it can be deleted. Counted frames only: one not yet counted is "
+        "refused by the DELETE itself."
+    )
+    rig_for_mount: int | None = Field(
+        description="A mount no rig carries: the first rig still without a mount, where "
+        '"Seleziona montatura" opens the choice. Null on any other piece.'
+    )
+    biases: list[OffsetBias] = Field(
+        description="A camera's offsets as its files write them, each with its bias; empty on "
+        "the other pieces."
     )
 
 
@@ -310,6 +346,7 @@ class FilterOnPage(BaseModel):
     name: str
     brand: str | None
     model: str | None
+    passband: str | None = Field(description="Its canonical passband: it gives the colour.")
     bands: list[BandOut]
     filter_size: FilterSize | None
     thickness_mm: float | None
@@ -329,6 +366,7 @@ class FilterOnPage(BaseModel):
     )
     bar_pct: float | None = BAR
     in_rigs: list[PieceInRig] = Field(description="The rigs whose frames used it, by rig id.")
+    delete_refused: DeleteRefused | None = Field(description="Null: it can be deleted.")
 
 
 class FieldBox(BaseModel):
@@ -359,6 +397,9 @@ class GearList(BaseModel):
     )
     moon_pct: float | None = Field(
         description="The full Moon's width on that frame, in percent; null without fields."
+    )
+    brands: list[str] = Field(
+        description='The makers already written on pieces and filters: "altra" adds a new one.'
     )
 
 

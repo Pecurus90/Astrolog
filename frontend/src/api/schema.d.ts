@@ -207,6 +207,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gear/instruments/{camera_id}/biases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Declare Offset Bias
+         * @description The bias of a camera of the page at one offset: it goes to every way its files write that
+         *     camera, and their shots' sky brightness is written again.
+         *
+         *     404 `offset_not_found`: none of its light frames writes that offset. 409 `worker_busy` while
+         *     the worker runs.
+         */
+        put: operations["declare_offset_bias"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gear": {
         parameters: {
             query?: never;
@@ -2091,6 +2115,25 @@ export interface components {
              */
             verdict: ("go" | "marginal" | "nogo") | null;
         };
+        /**
+         * DeleteRefused
+         * @description Why Delete is off before the gesture: the same refusal the DELETE gives.
+         */
+        DeleteRefused: {
+            /**
+             * Code
+             * @description `in_use`: frames use it. `in_rig`: the optics or camera of a rig without frames, which is made of it.
+             * @enum {string}
+             */
+            code: "in_use" | "in_rig";
+            /** Frames */
+            frames: number;
+            /**
+             * Rigs
+             * @description `in_use`: the rigs of those frames; `in_rig`: the rigs.
+             */
+            rigs: number[];
+        };
         /** Distance */
         Distance: {
             /**
@@ -2272,6 +2315,11 @@ export interface components {
             brand: string | null;
             /** Model */
             model: string | null;
+            /**
+             * Passband
+             * @description Its canonical passband: it gives the colour.
+             */
+            passband: string | null;
             /** Bands */
             bands: components["schemas"]["BandOut"][];
             /** Filter Size */
@@ -2312,6 +2360,8 @@ export interface components {
              * @description The rigs whose frames used it, by rig id.
              */
             in_rigs: components["schemas"]["PieceInRig"][];
+            /** @description Null: it can be deleted. */
+            delete_refused: components["schemas"]["DeleteRefused"] | null;
         };
         /** FilterOut */
         FilterOut: {
@@ -2714,6 +2764,11 @@ export interface components {
              * @description The full Moon's width on that frame, in percent; null without fields.
              */
             moon_pct: number | null;
+            /**
+             * Brands
+             * @description The makers already written on pieces and filters: "altra" adds a new one.
+             */
+            brands: string[];
         };
         /**
          * GearObject
@@ -3125,6 +3180,18 @@ export interface components {
              * @description The card fields read from the files ("dai file"); any other filled field is yours ("inserito"). Only a camera's sensor specs come from the files.
              */
             from_files: string[];
+            /** @description Null: it can be deleted. Counted frames only: one not yet counted is refused by the DELETE itself. */
+            delete_refused: components["schemas"]["DeleteRefused"] | null;
+            /**
+             * Rig For Mount
+             * @description A mount no rig carries: the first rig still without a mount, where "Seleziona montatura" opens the choice. Null on any other piece.
+             */
+            rig_for_mount: number | null;
+            /**
+             * Biases
+             * @description A camera's offsets as its files write them, each with its bias; empty on the other pieces.
+             */
+            biases: components["schemas"]["OffsetBias"][];
         };
         /**
          * Key
@@ -4412,6 +4479,37 @@ export interface components {
             size_arcmin: number | null;
             moon: components["schemas"]["BesideTheMoon"] | null;
         };
+        /**
+         * OffsetBias
+         * @description A camera's bias at one offset its files write (ADR 0022): it gives the sky brightness.
+         */
+        OffsetBias: {
+            /**
+             * Offset
+             * @description Null: the files do not write the offset.
+             */
+            offset: number | null;
+            /**
+             * Bias Adu
+             * @description Null: not declared yet.
+             */
+            bias_adu: number | null;
+            /**
+             * Frames
+             * @description Its light frames with that offset.
+             */
+            frames: number;
+        };
+        /** OffsetBiasIn */
+        OffsetBiasIn: {
+            /** Offset */
+            offset: number | null;
+            /**
+             * Bias Adu
+             * @description A bias of zero is no bias: it is not declared.
+             */
+            bias_adu: number;
+        };
         /** PathInfo */
         PathInfo: {
             /**
@@ -4447,10 +4545,12 @@ export interface components {
         };
         /**
          * PieceNumbers
-         * @description Dawes's resolving power on an optics, the sensor's size on a camera; null on the others.
+         * @description Dawes's resolving power and the native focal ratio on an optics, the sensor's size on a
+         *     camera; null on the others.
          */
         PieceNumbers: {
             dawes?: components["schemas"]["Number"] | null;
+            focal_ratio?: components["schemas"]["Number"] | null;
             sensor_size?: components["schemas"]["Sides"] | null;
         };
         /**
@@ -6807,6 +6907,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CameraBiasOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    declare_offset_bias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                camera_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OffsetBiasIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OffsetBias"];
                 };
             };
             /** @description Validation Error */

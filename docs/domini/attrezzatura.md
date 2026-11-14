@@ -322,8 +322,22 @@ tiene si rifiuta, e l'app dice chi lo usa e quanti frame: nessuna ora si perde.
 `in_use` coi `frames` e i `rigs` di quei frame; 409 `in_rig` per l'ottica o la camera di un setup
 senza frame, che e' fatto di loro; 409 `worker_busy`; 404. Con lui vanno la sua scheda e le sue
 scelte nei setup: rinato col nome, riparte vuoto. Prima del gesto la pagina legge da ogni pezzo e
-filtro `in_rigs` (setup, frame, scelto), per "Esce anche da {setup}." e "Lo usano {n} frame di
-{setup}".
+filtro `in_rigs` (setup, frame, scelto), per "Esce anche da {setup}.", e `delete_refused`, lo
+stesso rifiuto del DELETE dai frame contati: Elimina spento con "Lo usano {n} frame di {setup}:
+nessuna ora si perde. Uniscilo a un altro pezzo, se è lo stesso." (`in_use`) o "Fa parte di
+{setup}: un setup è fatto della sua ottica e della sua camera." (`in_rig`, Marco 14/11/2026; la
+tavola non ha il caso). Un pezzo non ancora contato lo rifiuta il DELETE, con le stesse parole.
+
+**Il gruppo di un tipo** (commit D, 14/11/2026): righe con la scheda intera, le ore con la barra,
+"inserito manualmente" sui pezzi dichiarati. Una montatura che nessun setup porta ha "Seleziona
+montatura", che apre la scelta sul setup `rig_for_mount` (il piu' usato ancora senza montatura).
+Il filtro porta `passband`, che da' il colore del disco. Sull'ottica `numbers.focal_ratio` e' il
+rapporto focale nativo (focale su apertura), accanto a Dawes. Il bias di una camera e' uno per
+offset (Marco 14/11/2026: un campo per offset, "Bias (ADU), offset {n}", uno solo senza offset
+diversi): `biases` elenca gli offset che i suoi file scrivono, passando dal ponte dei frame (ADR
+0045), e `PUT /gear/instruments/{id}/biases` lo scrive su ogni grafia dell'header di quella camera
+(404 `offset_not_found`, 409 `worker_busy`). La tendina "Marca" del modulo propone `brands`, le
+marche gia' scritte su pezzi e filtri, una per nome senza badare alle maiuscole.
 
 Restano fuori per scelta: il **valore** dei pezzi e il **registro di manutenzione** (provati e
 scartati nel progetto di prima, e la ragione vale ancora: questa pagina dice come hai ripreso,

@@ -819,6 +819,8 @@
 # ---
 # name: test_the_pages_of_the_synthetic_archive[gear]
   dict({
+    'brands': list([
+    ]),
     'cards': dict({
       'camera': list([
         'brand',
@@ -928,6 +930,14 @@
         'bar_pct': 80.0,
         'brand': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 4,
+          'rigs': list([
+            2,
+            3,
+          ]),
+        }),
         'fast_optics': None,
         'filter_size': None,
         'frames': 4,
@@ -963,6 +973,7 @@
             'name': 'M 31',
           }),
         ]),
+        'passband': 'L',
         'thickness_mm': None,
         'untimed': 0,
       }),
@@ -972,6 +983,14 @@
         'bar_pct': 60.0,
         'brand': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 2,
+          'rigs': list([
+            2,
+            4,
+          ]),
+        }),
         'fast_optics': None,
         'filter_size': None,
         'frames': 2,
@@ -1013,6 +1032,7 @@
             'name': 'M 31',
           }),
         ]),
+        'passband': 'R',
         'thickness_mm': None,
         'untimed': 0,
       }),
@@ -1022,6 +1042,13 @@
         'bar_pct': 100.0,
         'brand': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            5,
+          ]),
+        }),
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
@@ -1052,6 +1079,7 @@
             'name': 'Sh2 155',
           }),
         ]),
+        'passband': 'HA',
         'thickness_mm': None,
         'untimed': 0,
       }),
@@ -1061,6 +1089,13 @@
         'bar_pct': 60.0,
         'brand': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 2,
+          'rigs': list([
+            1,
+          ]),
+        }),
         'fast_optics': None,
         'filter_size': None,
         'frames': 2,
@@ -1085,6 +1120,7 @@
         'nights': 0,
         'objects': list([
         ]),
+        'passband': 'OSC',
         'thickness_mm': None,
         'untimed': 0,
       }),
@@ -1094,6 +1130,13 @@
         'bar_pct': 50.0,
         'brand': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            1,
+          ]),
+        }),
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
@@ -1124,6 +1167,7 @@
             'name': 'IC 1396',
           }),
         ]),
+        'passband': 'DUO_HAOIII',
         'thickness_mm': None,
         'untimed': 0,
       }),
@@ -1133,6 +1177,13 @@
         'bar_pct': 50.0,
         'brand': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            2,
+          ]),
+        }),
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
@@ -1164,6 +1215,7 @@
             'name': 'NGC 6888',
           }),
         ]),
+        'passband': 'UNKNOWN',
         'thickness_mm': None,
         'untimed': 0,
       }),
@@ -1173,6 +1225,13 @@
         'bar_pct': 50.0,
         'brand': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            2,
+          ]),
+        }),
         'fast_optics': None,
         'filter_size': None,
         'frames': 1,
@@ -1204,6 +1263,7 @@
             'name': 'NGC 6888',
           }),
         ]),
+        'passband': 'UNKNOWN',
         'thickness_mm': None,
         'untimed': 0,
       }),
@@ -1214,11 +1274,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 52.6,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            5,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1250,6 +1319,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': dict({
             'height': None,
             'missing': dict({
@@ -1275,6 +1345,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1289,11 +1360,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 10.5,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            3,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1328,6 +1408,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': dict({
             'height': 0.01128,
             'missing': None,
@@ -1350,6 +1431,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1364,11 +1446,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 100.0,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 7,
+          'rigs': list([
+            2,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1403,6 +1494,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': dict({
             'height': 0.01128,
             'missing': None,
@@ -1437,6 +1529,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1451,11 +1544,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 57.9,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': 'color',
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 3,
+          'rigs': list([
+            1,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1491,6 +1593,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': dict({
             'height': 0.012870000000000001,
             'missing': None,
@@ -1513,6 +1616,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1527,11 +1631,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 21.1,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            4,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1563,6 +1676,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': dict({
             'height': None,
             'missing': dict({
@@ -1588,6 +1702,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1602,11 +1717,21 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 100.0,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 8,
+          'rigs': list([
+            2,
+            3,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1639,6 +1764,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': None,
         }),
         'objects': list([
@@ -1669,6 +1795,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1683,11 +1810,21 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 100.0,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 8,
+          'rigs': list([
+            2,
+            3,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1720,6 +1857,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': None,
         }),
         'objects': list([
@@ -1750,6 +1888,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1764,11 +1903,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 100.0,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 3,
+          'rigs': list([
+            1,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1796,6 +1944,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': dict({
             'height': None,
             'missing': dict({
@@ -1821,6 +1970,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1835,11 +1985,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 100.0,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 2,
+          'rigs': list([
+            1,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1868,6 +2027,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': None,
         }),
         'objects': list([
@@ -1886,6 +2046,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1900,11 +2061,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 37.5,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            1,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -1933,6 +2103,7 @@
         'notes': None,
         'numbers': dict({
           'dawes': None,
+          'focal_ratio': None,
           'sensor_size': None,
         }),
         'objects': list([
@@ -1945,6 +2116,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -1959,11 +2131,21 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 100.0,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 8,
+          'rigs': list([
+            2,
+            3,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -2004,6 +2186,13 @@
             }),
             'value': None,
           }),
+          'focal_ratio': dict({
+            'missing': dict({
+              'field': 'focal_mm',
+              'kind': 'optics',
+            }),
+            'value': None,
+          }),
           'sensor_size': None,
         }),
         'objects': list([
@@ -2034,6 +2223,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -2048,11 +2238,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 19.0,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            4,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -2088,6 +2287,13 @@
             }),
             'value': None,
           }),
+          'focal_ratio': dict({
+            'missing': dict({
+              'field': 'focal_mm',
+              'kind': 'optics',
+            }),
+            'value': None,
+          }),
           'sensor_size': None,
         }),
         'objects': list([
@@ -2106,6 +2312,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,
@@ -2120,11 +2327,20 @@
         'aperture_mm': None,
         'backfocus_tolerance_mm': None,
         'bar_pct': 47.6,
+        'biases': list([
+        ]),
         'brand': None,
         'camera_type': None,
         'cooled': None,
         'cooling_c': None,
         'counted': True,
+        'delete_refused': dict({
+          'code': 'in_use',
+          'frames': 1,
+          'rigs': list([
+            5,
+          ]),
+        }),
         'detected': True,
         'filter_size': None,
         'focal_mm': None,
@@ -2160,6 +2376,13 @@
             }),
             'value': None,
           }),
+          'focal_ratio': dict({
+            'missing': dict({
+              'field': 'focal_mm',
+              'kind': 'optics',
+            }),
+            'value': None,
+          }),
           'sensor_size': None,
         }),
         'objects': list([
@@ -2178,6 +2401,7 @@
         'prism_mm': None,
         'reducer_factor': None,
         'required_backfocus_mm': None,
+        'rig_for_mount': None,
         'sensor': None,
         'slots': None,
         'step_um': None,

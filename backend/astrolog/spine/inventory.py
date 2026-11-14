@@ -68,6 +68,78 @@ ORDER BY 1, 2, 3
 """
 
 
+_MAKERS = "SELECT id, optics_id, camera_id FROM rigs ORDER BY id"
+
+# A camera's offsets through the bridge (ADR 0045): the bias belongs to the camera as the files
+# write it, so a camera of the page reaches it through its frames' files.
+_OFFSETS = """
+SELECT g.camera_id, c.camera, c.offset, COUNT(DISTINCT f.id) AS frames
+FROM frames f JOIN rigs g ON g.id = f.rig_id
+JOIN night_measure_frames b ON b.frame_id = f.id
+JOIN pipeline_files pf ON pf.frame_id = b.pipeline_frame_id
+JOIN pipeline_cards c ON c.file_id = pf.id
+WHERE g.camera_id IS NOT NULL AND f.copy_of IS NULL AND c.camera IS NOT NULL
+  AND c.frame_type = 'light'
+GROUP BY g.camera_id, c.camera, c.offset
+ORDER BY g.camera_id, c.camera, c.offset
+"""
+
+_DECLARED_BIAS = "SELECT camera, offset, bias_adu FROM pipeline_camera_bias"
+
+
+def camera_spellings(conn: sqlite3.Connection, camera_id: int) -> list[tuple[str, int | None]]:
+    """The camera and offset pairs its files write: where a bias declared on the page goes."""
+    return [
+        (r["camera"], r["offset"])
+        for r in conn.execute(_OFFSETS).fetchall()
+        if r["camera_id"] == camera_id
+    ]
+
+
+def _biases(conn: sqlite3.Connection) -> dict[int, list[dict[str, Any]]]:
+    declared = {(r[0], r[1]): r[2] for r in conn.execute(_DECLARED_BIAS)}
+    by_camera: dict[int, dict[int | None, dict[str, Any]]] = {}
+    for r in conn.execute(_OFFSETS):
+        row = by_camera.setdefault(r["camera_id"], {}).setdefault(
+            r["offset"], {"offset": r["offset"], "bias_adu": None, "frames": 0}
+        )
+        row["frames"] += r["frames"]
+        bias = declared.get((r["camera"], r["offset"]))
+        row["bias_adu"] = row["bias_adu"] if bias is None else bias
+    return {
+        cam: sorted(rows.values(), key=lambda b: (b["offset"] is not None, b["offset"] or 0))
+        for cam, rows in by_camera.items()
+    }
+
+
+# "ZWO" and "Zwo" are one maker: the first written spelling stands for both
+_BRANDS = """
+SELECT MIN(brand) FROM (
+  SELECT brand FROM instruments WHERE brand IS NOT NULL
+  UNION ALL SELECT brand FROM filters WHERE brand IS NOT NULL AND is_none = 0
+) GROUP BY brand COLLATE NOCASE ORDER BY 1 COLLATE NOCASE
+"""
+
+
+def brands(conn: sqlite3.Connection) -> list[str]:
+    """The makers already written, for "altra" in the card's Marca."""
+    return [r[0] for r in conn.execute(_BRANDS)]
+
+
+def camera_biases(conn: sqlite3.Connection, camera_id: int) -> list[dict[str, Any]]:
+    return _biases(conn).get(camera_id, [])
+
+
+def _refused(row: dict[str, Any], held: list[dict[str, Any]], makes: list[int]) -> Any:
+    """The DELETE's refusal, from the counted frames: `gear_delete` refuses the same way."""
+    if row["frames"]:
+        rigs = sorted({h["rig_id"] for h in held if h["frames"]})
+        return {"code": "in_use", "frames": row["frames"], "rigs": rigs}
+    if makes:
+        return {"code": "in_rig", "frames": 0, "rigs": makes}
+    return None
+
+
 def _in_rigs(conn: sqlite3.Connection, subject: str) -> dict[int, list[dict[str, Any]]]:
     held: dict[int, list[dict[str, Any]]] = {}
     for r in conn.execute(_IN_RIGS):
@@ -89,17 +161,28 @@ def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     numbers = _numbers(conn, "instrument")
     held = _in_rigs(conn, "instrument")
     told = gear.files_told(conn)
-    return [
-        {
-            **_row(r),
-            **declared.get(r["id"], {}),
-            "no_hours": no_hours(r),
-            "numbers": numbers.get(r["id"], {}),
-            "in_rigs": held.get(r["id"], []),
-            "from_files": told.get(r["id"], []),
-        }
-        for r in conn.execute(_INSTRUMENTS).fetchall()
-    ]
+    biases = _biases(conn)
+    makes: dict[int, list[int]] = {}
+    for g in conn.execute(_MAKERS):
+        for piece in {g["optics_id"], g["camera_id"]} - {None}:
+            makes.setdefault(piece, []).append(g["id"])
+    rows = []
+    for r in conn.execute(_INSTRUMENTS).fetchall():
+        row = _row(r)
+        rows.append(
+            {
+                **row,
+                **declared.get(r["id"], {}),
+                "no_hours": no_hours(r),
+                "numbers": numbers.get(r["id"], {}),
+                "in_rigs": held.get(r["id"], []),
+                "from_files": told.get(r["id"], []),
+                "delete_refused": _refused(row, held.get(r["id"], []), makes.get(r["id"], [])),
+                "rig_for_mount": None,
+                "biases": biases.get(r["id"], []),
+            }
+        )
+    return rows
 
 
 def no_hours(r: sqlite3.Row) -> str | None:
@@ -161,10 +244,12 @@ def filters(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     for r in conn.execute(_BANDS):
         bands.setdefault(r["filter_id"], []).append({"band": r["band"], "width_nm": r["width_nm"]})
     held = _in_rigs(conn, "filter")
-    return [
-        {**_row(r), "bands": bands.get(r["id"], []), "in_rigs": held.get(r["id"], [])}
-        for r in conn.execute(_FILTERS).fetchall()
-    ]
+    rows = []
+    for r in conn.execute(_FILTERS).fetchall():
+        row = {**_row(r), "bands": bands.get(r["id"], []), "in_rigs": held.get(r["id"], [])}
+        row["delete_refused"] = _refused(row, row["in_rigs"], [])
+        rows.append(row)
+    return rows
 
 
 def _row(r: sqlite3.Row) -> dict[str, Any]:

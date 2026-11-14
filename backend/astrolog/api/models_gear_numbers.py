@@ -112,7 +112,9 @@ class RigNumbers(BaseModel):
 
 
 class PieceNumbers(BaseModel):
-    """Dawes's resolving power on an optics, the sensor's size on a camera; null on the others."""
+    """Dawes's resolving power and the native focal ratio on an optics, the sensor's size on a
+    camera; null on the others."""
 
     dawes: Number | None = None
+    focal_ratio: Number | None = None
     sensor_size: Sides | None = None
