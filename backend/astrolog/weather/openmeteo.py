@@ -12,7 +12,7 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 
 # The first is Open-Meteo's own pick for the place, and the default. The list lives with the
 # config choices, which refuse a model not asked here.
-MODELS = config.CHOICES["weather_model"]
+MODELS = config.WEATHER_MODELS
 
 # Open-Meteo variable -> our name. Total cloud is the model's, never recomputed from the layers.
 VARIABLES = {

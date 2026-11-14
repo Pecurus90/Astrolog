@@ -3,7 +3,7 @@ the others weigh beside it with their word and their hours, and never change it.
 
 import math
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 
@@ -95,6 +95,12 @@ def spread(h: Hour) -> float | None:
 
 NOGO, MARGINAL, GO = Verdict.NOGO, Verdict.MARGINAL, Verdict.GO
 
+
+def _moon_steps(rule: levels.MoonRule) -> list[Step]:
+    """Both bounds belong to the step above, as in `levels.moon_level`."""
+    return [Step(NOGO, rule.limit_pct, strict=False), Step(MARGINAL, rule.good_pct, strict=False)]
+
+
 _EIGHTHS = [  # okta bounds, source beside them in verdict
     Step(NOGO, CLOUD_MARGINAL_MAX_PCT, strict=True),
     Step(MARGINAL, CLOUD_GO_MAX_PCT, strict=True),
@@ -174,11 +180,8 @@ SCALES: dict[Measure, Scale] = {
         Scale(
             Measure.MOON,
             _field("moon_pct"),
-            # one home with the Moon calendar: `levels.moon_level`
-            [
-                Step(NOGO, levels.MOON_BRIGHT_PCT, strict=False),
-                Step(MARGINAL, levels.MOON_GREY_PCT, strict=False),
-            ],
+            # the factory rule; the user's comes from `table`, as `levels.moon_level` reads it
+            _moon_steps(levels.MoonRule()),
             digits=0,
             axis_top=100.0,  # [T] chart axis, percent
         ),
@@ -276,9 +279,14 @@ def level(scale: Scale, v: float | None) -> Verdict | None:
     return next((s.level for s in scale.steps if _crosses(scale, s, v)), GO)
 
 
-def hour_levels(hour: Hour) -> dict[str, Verdict | None]:
+def table(rule: levels.MoonRule) -> dict[Measure, Scale]:
+    """The scales with the user's Moon rule: the one rule of the calendar and the Nights."""
+    return {**SCALES, Measure.MOON: replace(SCALES[Measure.MOON], steps=_moon_steps(rule))}
+
+
+def hour_levels(hour: Hour, rule: levels.MoonRule) -> dict[str, Verdict | None]:
     """Every judged measure's word for the hour; `None` where the value is missing."""
-    return {code: level(s, s.read(hour)) for code, s in SCALES.items()}
+    return {code: level(s, s.read(hour)) for code, s in table(rule).items()}
 
 
 def _as_bad(scale: Scale, v: float | None, worst: Verdict | None) -> bool:
@@ -409,14 +417,14 @@ def shown_hours(hours: Sequence[Hour], summary: Summary) -> list[Hour]:
     return list(hours[ats.index(summary.shown_from) : ats.index(summary.shown_until) + 1])
 
 
-def measures(hours: Sequence[Hour], summary: Summary) -> list[MeasureNight]:
+def measures(hours: Sequence[Hour], summary: Summary, rule: levels.MoonRule) -> list[MeasureNight]:
     """The clouds and the low clouds first, then the judged measures from the worst word, earliest
     first, then the neutral ones. The Moon is left out when it is never up in the window."""
     night, _ = window(hours)
     shown = shown_hours(hours, summary)
     after = {h.at: n.at for h, n in zip(hours, hours[1:], strict=False)}
     clouds_said = cloud_word(summary.cloud_total_pct)
-    judged = [_night(s, night, shown, after, clouds_said) for s in SCALES.values()]
+    judged = [_night(s, night, shown, after, clouds_said) for s in table(rule).values()]
     judged = [m for m in judged if m.code != Measure.MOON or m.known_hours]
     clouds, rest = judged[:2], judged[2:]
     rest.sort(key=lambda m: (_RANK[m.level] if m.known_hours else len(_RANK), m.since or "~"))
@@ -430,6 +438,6 @@ class ScaleOut:
     lower_is_worse: bool
 
 
-def scales() -> list[ScaleOut]:
+def scales(rule: levels.MoonRule) -> list[ScaleOut]:
     """The thresholds the judgement uses, for the page's scale ticks."""
-    return [ScaleOut(s.code, s.steps, s.lower_is_worse) for s in SCALES.values()]
+    return [ScaleOut(s.code, s.steps, s.lower_is_worse) for s in table(rule).values()]

@@ -23,33 +23,33 @@ async function vaiAllaLuna() {
   await disegna()
   await apriImpostazioni()
   fireEvent.click(await screen.findByRole("link", { name: "Luna" }))
-  return screen.findByRole("region", { name: "Notti buone per la banda larga" })
+  return screen.findByRole("region", { name: "Luna" })
 }
 
 describe("Impostazioni, la Luna", () => {
   it("le due soglie coi valori di fabbrica, e da dove vengono", async () => {
     const sezione = await vaiAllaLuna()
 
-    expect((within(sezione).getByLabelText("Luna sotto il (%)") as HTMLInputElement).value).toBe("25")
-    expect((within(sezione).getByLabelText("oppure almeno (ore di buio senza Luna)") as HTMLInputElement).value).toBe("4")
-    expect(sezione.textContent).toContain("non c'è una soglia pubblica condivisa")
+    expect((within(sezione).getByLabelText("Banda larga buona fino a (%)") as HTMLInputElement).value).toBe("25")
+    expect((within(sezione).getByLabelText("Banda larga al limite fino a (%)") as HTMLInputElement).value).toBe("65")
+    expect(sezione.textContent).toContain("regola di ING")
   })
 
   it("una soglia cambiata si salva lasciando il campo", async () => {
     const sezione = await vaiAllaLuna()
 
-    const pct = within(sezione).getByLabelText("Luna sotto il (%)")
+    const pct = within(sezione).getByLabelText("Banda larga buona fino a (%)")
     fireEvent.change(pct, { target: { value: "20" } })
     fireEvent.blur(pct)
     await waitFor(() =>
       expect(scritture()).toContainEqual(
-        expect.objectContaining({ metodo: "PATCH", corpo: { values: { moon_broadband_max_pct: 20 } } }),
+        expect.objectContaining({ metodo: "PATCH", corpo: { values: { moon_good_pct: 20 } } }),
       ),
     )
   })
 
   it("la misura di ogni soglia la manda il backend", async () => {
-    const corpo = { ...impostazioni(true), ranges: { moon_broadband_max_pct: { min: 0, max: 100 }, moon_broadband_min_dark_h: { min: 0, max: 8 } } }
+    const corpo = { ...impostazioni(true), ranges: { moon_good_pct: { min: 0, max: 100 }, moon_limit_pct: { min: 0, max: 80 } } }
     rispondi({
       ...STANOTTE,
       "/api/v1/settings": { stato: 200, corpo },
@@ -60,22 +60,22 @@ describe("Impostazioni, la Luna", () => {
     await disegna()
     await apriImpostazioni()
     fireEvent.click(await screen.findByRole("link", { name: "Luna" }))
-    const sezione = await screen.findByRole("region", { name: "Notti buone per la banda larga" })
+    const sezione = await screen.findByRole("region", { name: "Luna" })
 
-    const ore = within(sezione).getByLabelText("oppure almeno (ore di buio senza Luna)")
-    expect(ore.getAttribute("max")).toBe("8")
-    fireEvent.change(ore, { target: { value: "10" } })
+    const ore = within(sezione).getByLabelText("Banda larga al limite fino a (%)")
+    expect(ore.getAttribute("max")).toBe("80")
+    fireEvent.change(ore, { target: { value: "90" } })
     fireEvent.blur(ore)
-    expect(await within(sezione).findByText("Un numero da 0 a 8.")).toBeTruthy()
+    expect(await within(sezione).findByText("Un numero da 0 a 80.")).toBeTruthy()
   })
 
   it("un numero fuori misura non parte e lo dice sotto il campo", async () => {
     const sezione = await vaiAllaLuna()
 
-    const ore = within(sezione).getByLabelText("oppure almeno (ore di buio senza Luna)")
-    fireEvent.change(ore, { target: { value: "30" } })
+    const ore = within(sezione).getByLabelText("Banda larga al limite fino a (%)")
+    fireEvent.change(ore, { target: { value: "130" } })
     fireEvent.blur(ore)
-    expect(await within(sezione).findByText("Un numero da 0 a 12.")).toBeTruthy()
+    expect(await within(sezione).findByText("Un numero da 0 a 100.")).toBeTruthy()
     expect(scritture().filter((s) => s.metodo === "PATCH")).toEqual([])
   })
 })

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 375; senza fonte: 0.
-Fonti: C norma: 189; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 91.
+Valori: 376; senza fonte: 0.
+Fonti: C norma: 190; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 91.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -171,9 +171,10 @@ Fonti: C norma: 189; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| KEYS | `25,` | C ING dark time: lit fraction under 0.25 |
-| KEYS | `4,` | P docs/domini/effemeridi.md |
-| RANGES | `{"moon_broadband_max_pct": (0, 100), "moon_broadband_min_dark_h": (...` | T |
+| KEYS | `25,` | C ING Technical Note 127: dark time lit fraction under 0.25 |
+| KEYS | `65,` | C ING Technical Note 127: grey time to 0.65, then bright |
+| MOON_FLOORS | `(-5, 0, 5, 10)` | C Bara et al. 2021, arXiv 2104.10616: TESS, under -5 degrees the Moon is not felt |
+| RANGES | `{"moon_good_pct": (0, 100), "moon_limit_pct": (0, 100)}` | T |
 
 ### ephemeris/__init__.py
 

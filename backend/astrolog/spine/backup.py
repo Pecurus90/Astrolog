@@ -202,6 +202,8 @@ def restore(conn: sqlite3.Connection, data: dict[str, Any], *, this_machine: boo
             # a solver path of another machine (a Windows path inside Docker) would stop the search
             if key != "astap_path" or (value and os.path.exists(value)):
                 config.write(conn, key, None if value is None else config.KEYS[key].kind(value))
+        if not config.moon_rule_holds(config.read(conn)):
+            raise config.OutOfRangeError("moon_limit_pct")
         for site in data.get("sites", []):
             _restore_site(conn, site, now)
         for folder in data.get("folders", []):

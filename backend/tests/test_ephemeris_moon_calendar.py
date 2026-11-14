@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from astrolog.clock import night_date, night_window
-from astrolog.ephemeris import moon
+from astrolog.ephemeris import RISESET_DEG, moon
 
 ROME = ZoneInfo("Europe/Rome")
 CASA = (45.4906, 11.5222)
@@ -79,7 +79,7 @@ def test_the_calendar_names_the_night_of_the_site_not_of_utc(zone, place):
     """Il nome principale va alla notte del sito che contiene l'istante: lontano da UTC una notte
     misurata da mezzogiorno UTC sposta la piena o la nuova di un giorno."""
     dates = [(dt.date(2026, 1, 1) + dt.timedelta(days=g)).isoformat() for g in range(59)]
-    nights = moon.calendar_nights([(d, *night_window(d, zone)) for d in dates], *place)
+    nights = moon.calendar_nights([(d, *night_window(d, zone)) for d in dates], *place, RISESET_DEG)
     start, _ = night_window(dates[0], zone)
     end, _ = night_window(dates[-1], zone)
     events = moon.main_phases(start, end + dt.timedelta(days=1))
@@ -89,7 +89,9 @@ def test_the_calendar_names_the_night_of_the_site_not_of_utc(zone, place):
 
 
 def test_without_the_moon_the_whole_dark_is_moonless_and_with_the_full_moon_none():
-    nights = moon.calendar_nights([(d, *_window(d)) for d in ("2024-12-30", "2025-01-13")], *CASA)
+    nights = moon.calendar_nights(
+        [(d, *_window(d)) for d in ("2024-12-30", "2025-01-13")], *CASA, RISESET_DEG
+    )
     new, full = nights
     assert new.night == "2024-12-30" and full.night == "2025-01-13"
     assert new.dark_s > 0

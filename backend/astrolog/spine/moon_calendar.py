@@ -1,5 +1,5 @@
 """The Moon calendar of the home site, written by the background round: this month and the next,
-each night with its Moon, its dark hours without it, and whether it is good for broadband."""
+each night with its Moon, its dark hours without it, and its step on the Moon rule."""
 
 import calendar
 import datetime as dt
@@ -14,13 +14,8 @@ from ..site_of import Site
 
 COLUMNS = (
     "site_id", "night_date", "latitude", "longitude", "phase_key", "illumination_pct",
-    "dark_s", "moonless_dark_s", "event", "event_at", "broadband_good", "moon_level",
+    "dark_s", "moonless_dark_s", "event", "event_at", "moon_level",
 )  # fmt: skip
-
-# The two settings that judge a night: changing one rewrites the judgement, not the sky.
-THRESHOLDS = frozenset({"moon_broadband_max_pct", "moon_broadband_min_dark_h"})
-
-_GOOD = "(illumination_pct < ? OR moonless_dark_s >= ?)"
 
 
 def nights_of(today: dt.date) -> list[str]:
@@ -29,11 +24,6 @@ def nights_of(today: dt.date) -> list[str]:
     year, month = (today.year + 1, 1) if today.month == 12 else (today.year, today.month + 1)
     last = dt.date(year, month, calendar.monthrange(year, month)[1])
     return [(first + dt.timedelta(days=i)).isoformat() for i in range((last - first).days + 1)]
-
-
-def _thresholds(conn: sqlite3.Connection) -> tuple[int, int]:
-    prefs = config.read(conn)
-    return prefs.moon_broadband_max_pct, prefs.moon_broadband_min_dark_h * 3600
 
 
 def step(conn: sqlite3.Connection, site: Site | None, today: dt.date) -> bool:
@@ -56,7 +46,8 @@ def step(conn: sqlite3.Connection, site: Site | None, today: dt.date) -> bool:
 def rebuild(conn: sqlite3.Connection, site: Site, wanted: list[str]) -> None:
     tz = site.timezone
     windows = [(d, *night_window(d, tz)) for d in wanted]
-    nights = moon.calendar_nights(windows, site.latitude, site.longitude)
+    rule = config.moon_rule(config.read(conn))
+    nights = moon.calendar_nights(windows, site.latitude, site.longitude, rule.floor_deg)
     # true hours on from the start: added in UTC, else the clock-change night gains an hour
     start = windows[0][1]
     end = windows[-1][1].astimezone(dt.UTC) + dt.timedelta(hours=windows[-1][2])
@@ -64,7 +55,6 @@ def rebuild(conn: sqlite3.Connection, site: Site, wanted: list[str]) -> None:
     for e in moon.main_phases(start, end):
         when = e.at.astimezone(start.tzinfo)
         events[night_date(when.isoformat(), tz)] = (e.kind, when.isoformat())
-    max_pct, min_dark_s = _thresholds(conn)
     rows = [
         (
             site.id,
@@ -76,14 +66,23 @@ def rebuild(conn: sqlite3.Connection, site: Site, wanted: list[str]) -> None:
             n.dark_s,
             n.moonless_dark_s,
             *events.get(n.night, (None, None)),
-            int(n.illumination_pct < max_pct or n.moonless_dark_s >= min_dark_s),
-            moon_level(n.illumination_pct),
+            moon_level(n.illumination_pct, rule),
         )  # fmt: skip
         for n in nights
     ]
     replace_rows(conn, "moon_nights", COLUMNS, rows, where="site_id = ?", args=(site.id,))
 
 
-def rejudge(conn: sqlite3.Connection) -> None:
-    """The judgement follows the settings at once: the sky is not recomputed."""
-    conn.execute(f"UPDATE moon_nights SET broadband_good = {_GOOD}", _thresholds(conn))  # noqa: S608
+def refresh(conn: sqlite3.Connection, site: Site | None) -> None:
+    """The Moon rule changed: the same nights again, at once. Its floor moves the dark without the
+    Moon, so the sky is recomputed, not only the steps."""
+    if site is None or not site.timezone:
+        return
+    wanted = [
+        r[0]
+        for r in conn.execute(
+            "SELECT night_date FROM moon_nights WHERE site_id = ? ORDER BY night_date", (site.id,)
+        )
+    ]
+    if wanted:
+        rebuild(conn, site, wanted)

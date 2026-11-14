@@ -109,8 +109,8 @@ alla **mezzanotte della notte nel fuso del sito** (`clock.midnight_of`, il perch
 illuminato che manda l'app, giusto anche a sud.
 
 **La ripresa dice cosa lasciava la Luna** (Ripresa della tavola): *banda larga* tutta la notte
-se la Luna era sotto la soglia delle Impostazioni (25% di fabbrica) o sotto l'orizzonte per tutto
-il buio; *solo banda stretta* se era sopra per tutto il buio; *mista* con le ore di banda larga
+se la Luna era sotto la soglia della buona delle Impostazioni (25% di fabbrica) o sotto l'altezza
+da cui conta (l'orizzonte di fabbrica) per tutto il buio; *solo banda stretta* se era sopra per tutto il buio; *mista* con le ore di banda larga
 accanto. La soglia e' quella del calendario della Luna, una casa sola (ADR 0034).
 
 **Il meteo invece si conserva, perche' non si sa derivare**: lo dice un servizio, si chiede una

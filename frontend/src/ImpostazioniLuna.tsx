@@ -7,17 +7,17 @@ import { api } from "./api/client"
 import { type Chiave, numero, t } from "./i18n"
 import { usePreferenze } from "./preferenze"
 
-type Soglia = "moon_broadband_max_pct" | "moon_broadband_min_dark_h"
+type Soglia = "moon_good_pct" | "moon_limit_pct"
 
 const SOGLIE: { chiave: Soglia; etichetta: Chiave }[] = [
-  { chiave: "moon_broadband_max_pct", etichetta: "settings.moon.maxPct" },
-  { chiave: "moon_broadband_min_dark_h", etichetta: "settings.moon.minDark" },
+  { chiave: "moon_good_pct", etichetta: "settings.moon.goodPct" },
+  { chiave: "moon_limit_pct", etichetta: "settings.moon.limitPct" },
 ]
 type Misura = { min: number; max: number }
 
 /**
- * La sezione **Luna**: le due soglie delle notti buone per la banda larga, che il calendario della
- * Luna della Dashboard segna. Si salvano lasciando il campo; il backend rigiudica le notti subito.
+ * La sezione **Luna**: buona e al limite della regola della Luna, che calendario e Meteo leggono.
+ * Si salvano lasciando il campo; il backend riscrive subito calendario e previsione.
  */
 export function Luna() {
   const preferenze = usePreferenze().data
@@ -55,6 +55,7 @@ function CampoSoglia({ soglia: s, misura, salvato }: { soglia: (typeof SOGLIE)[n
     onSuccess: (data) => {
       dati.setQueryData(["settings"], data)
       void dati.invalidateQueries({ queryKey: ["moon-calendar"] })
+      void dati.invalidateQueries({ queryKey: ["weather"] })
     },
   })
   const lascia = () => {

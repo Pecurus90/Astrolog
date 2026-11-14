@@ -10,13 +10,16 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.responses import Response
 
+from ..db import config
 from ..db.connect import connect
+from ..db.transaction import transaction
 from ..spine import backup
 from .camera_bias import declare_restored
 from .deps import get_db
 from .models_site import BackupCounts, BackupStatus
 from .paths import validate_root
 from .scan import sky_follows
+from .settings import moon_rule_follows
 
 router = APIRouter(prefix="/api/v1", tags=["settings"])
 
@@ -68,6 +71,13 @@ def backup_status(request: Request) -> BackupStatus:
     return _status(request)
 
 
+def _moon_follows(conn: sqlite3.Connection, data: dict[str, Any]) -> None:
+    """A Moon rule from the file judges at once, as from the settings page."""
+    if config.MOON_KEYS & data.get("config", {}).keys():
+        with transaction(conn):
+            moon_rule_follows(conn)
+
+
 @router.post("/backup/restore", response_model=BackupStatus)
 def restore_backup(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> BackupStatus:
     """Puts back the answers of the file beside the database: settings, sites, folders, the
@@ -81,6 +91,7 @@ def restore_backup(request: Request, conn: sqlite3.Connection = Depends(get_db))
     assert data is not None  # the status just said found
     backup.restore(conn, data)
     declare_restored(conn, data)
+    _moon_follows(conn, data)
     sky_follows(request)
     request.app.state.backup_offer = False
     return _status(request)
@@ -126,6 +137,7 @@ def import_backup(
         data = {**data, "folders": _folders_here(data, request.app.state.data_root)}
         backup.restore(conn, data, this_machine=False)
         declare_restored(conn, data)
+        _moon_follows(conn, data)
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         raise HTTPException(status_code=422, detail={"code": "not_a_backup"}) from e
     sky_follows(request)

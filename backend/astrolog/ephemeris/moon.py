@@ -189,17 +189,17 @@ def night_track(start: dt.datetime, latitude: float, longitude: float, hours: fl
 
 
 def moonless_dark_left_s(
-    night: MoonNight, dark: Sequence[tuple[dt.datetime, dt.datetime]]
+    night: MoonNight, dark: Sequence[tuple[dt.datetime, dt.datetime]], floor_deg: float
 ) -> list[int]:
-    """For each track point: dark with the Moon below the rise/set altitude from there to the end.
-    A step with the Moon down counts its exact overlap with the bands, never more than they last."""
+    """For each track point: dark with the Moon below `floor_deg` from there to the end. A step
+    with the Moon down counts its exact overlap with the bands, never more than they last."""
     # in UTC: the hour the clocks repeat has two instants with one wall-clock key
     utc = [(a.astimezone(dt.UTC), b.astimezone(dt.UTC)) for a, b in dark]
     total = 0.0
     left = {night.grid[-1].at.astimezone(dt.UTC): 0}
     for p, after in reversed(list(itertools.pairwise(night.grid))):
         start, end = p.at.astimezone(dt.UTC), after.at.astimezone(dt.UTC)
-        if p.altitude_deg < RISESET_DEG:
+        if p.altitude_deg < floor_deg:
             total += sum(max(0.0, seconds_between(max(start, a), min(end, b))) for a, b in utc)
         left[start] = round(total)
     return [left[p.at.astimezone(dt.UTC)] for p in night.track]
@@ -210,7 +210,7 @@ Stretch = tuple[dt.datetime, dt.datetime]
 
 @dataclass(frozen=True, slots=True)
 class DarkSpans:
-    """The dark split by the Moon: below the rise/set altitude, and above it."""
+    """The dark split by the Moon: below the rule's floor, and above it."""
 
     moonless: list[Stretch]
     moon_up: list[Stretch]
@@ -223,11 +223,13 @@ def _join(spans: list[Stretch], start: dt.datetime, end: dt.datetime) -> None:
         spans.append((start, end))
 
 
-def dark_spans(night: MoonNight, dark: Sequence[tuple[dt.datetime, dt.datetime]]) -> DarkSpans:
+def dark_spans(
+    night: MoonNight, dark: Sequence[tuple[dt.datetime, dt.datetime]], floor_deg: float
+) -> DarkSpans:
     """Each grid step's exact overlap with the bands, as `moonless_dark_left_s` counts it."""
     out = DarkSpans([], [])
     for p, after in itertools.pairwise(night.grid):
-        side = out.moonless if p.altitude_deg < RISESET_DEG else out.moon_up
+        side = out.moonless if p.altitude_deg < floor_deg else out.moon_up
         for a, b in dark:
             start, end = max(p.at, a), min(after.at, b)
             if start < end:
@@ -298,13 +300,16 @@ class CalendarNight:
 
 
 def calendar_nights(
-    nights: Sequence[tuple[str, dt.datetime, float]], latitude: float, longitude: float
+    nights: Sequence[tuple[str, dt.datetime, float]],
+    latitude: float,
+    longitude: float,
+    floor_deg: float,
 ) -> list[CalendarNight]:
     """For each night (date, window start, hours): the Moon at mid-window, and how long the sky is
-    astronomically dark with the Moon below the rise/set altitude. One call per body for all."""
+    astronomically dark with the Moon below `floor_deg`. One call per body for all."""
     if not nights:
         return []
-    darks = dark_seconds(nights, latitude, longitude)
+    darks = dark_seconds(nights, latitude, longitude, floor_deg)
     # Middle found in UTC, asked in site zone: the phase name takes the site's noon-to-noon night.
     middles = phases(
         [
@@ -319,9 +324,12 @@ def calendar_nights(
 
 
 def dark_seconds(
-    nights: Sequence[tuple[str, dt.datetime, float]], latitude: float, longitude: float
+    nights: Sequence[tuple[str, dt.datetime, float]],
+    latitude: float,
+    longitude: float,
+    floor_deg: float,
 ) -> list[tuple[int, int]]:
-    """For each night: seconds of astronomical dark, and of those with the Moon down."""
+    """For each night: seconds of astronomical dark, and of those with the Moon below the floor."""
     grids = [night_grid(start, hours=h, step_min=CALENDAR_STEP_MIN) for _, start, h in nights]
     everything = [i for g in grids for i in g]
     if not everything:
@@ -333,6 +341,6 @@ def dark_seconds(
     for grid in grids:
         span = range(at, at + len(grid) - 1)  # the last sample closes the window
         dark = [k for k in span if suns[k] < ASTRO_DEG]
-        out.append((len(dark) * step_s, sum(1 for k in dark if moons[k] < RISESET_DEG) * step_s))
+        out.append((len(dark) * step_s, sum(1 for k in dark if moons[k] < floor_deg) * step_s))
         at += len(grid)
     return out

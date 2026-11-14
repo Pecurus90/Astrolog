@@ -48,14 +48,15 @@ export function impostazioni(fatto: boolean, manca?: readonly string[]) {
       astap_path: null,
       meteoblue_key: null,
       weather_model: "best_match",
-      moon_broadband_max_pct: 25,
-      moon_broadband_min_dark_h: 4,
+      moon_good_pct: 25,
+      moon_limit_pct: 65,
+      moon_above_deg: 0,
     },
     wizard_done: fatto,
     // Cosa manca si puo' dire, perche' e' la risposta che **una scrittura** restituisce: chi
     // scrive il percorso del solver guarda li' per sapere se ha indovinato.
     missing: manca ?? (fatto ? [] : ["no_active_site"]),
-    ranges: { moon_broadband_max_pct: { min: 0, max: 100 }, moon_broadband_min_dark_h: { min: 0, max: 12 } },
+    ranges: { moon_good_pct: { min: 0, max: 100 }, moon_limit_pct: { min: 0, max: 100 } },
   }
 }
 

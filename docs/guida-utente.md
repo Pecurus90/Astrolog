@@ -165,13 +165,12 @@ Un sito che tiene delle notti **non si rimuove**: l'app te lo dice, e ti dice qu
 Aggiungerne uno lo cerchi per nome, oppure ne scrivi le coordinate a mano -- e la strada a mano e'
 sempre aperta, perche' dove si osserva la rete spesso non c'e'.
 
-Subito dopo c'e' **Luna**: le due soglie delle **notti buone per la banda larga**, quelle che il
-calendario della Luna nella Dashboard colora. Una notte e' buona se la Luna e' illuminata **meno
-del** numero che scrivi (di fabbrica 25%), **oppure** se ha almeno tante **ore di buio senza Luna**
-(di fabbrica 4). Il 25% e' il "buio" dell'osservatorio ING, la stessa soglia del Meteo; le 4 ore
-invece sono una scelta, perche' una regola pubblica per quelle non c'e'. Il numero
-si salva quando lasci il campo, e il calendario si ricolora subito; la percentuale va da 0 a 100,
-le ore da 0 a 12.
+Subito dopo c'e' **Luna**: la regola della **banda larga**, una sola per tutta l'app, quella che
+usano il calendario della Luna nella Dashboard, il Meteo e le Notti. Con la Luna illuminata meno
+della prima soglia (di fabbrica 25%) la banda larga e' **buona**; fino alla seconda (di fabbrica
+65%) e' **al limite**; oltre conviene la **banda stretta**. Sono il "buio" e il "grigio"
+dell'osservatorio ING. La seconda soglia non puo' stare sotto la prima. Il numero si salva quando
+lasci il campo, e calendario e previsione si aggiornano subito; le percentuali vanno da 0 a 100.
 
 La terza e' **ASTAP**: il programma che guarda le stelle inquadrate e dice dove
 punta ogni ripresa. Qui vedi se l'app lo trova, **dove**, e da cosa l'ha capito: perche' gliel'hai

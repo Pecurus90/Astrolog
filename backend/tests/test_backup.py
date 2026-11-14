@@ -303,11 +303,21 @@ def test_a_solver_path_that_is_not_on_this_machine_is_not_restored(conn, tmp_pat
 def test_an_import_obeys_the_rules_of_the_settings_page(client_vuoto):
     """Un file scritto a mano non vale piu' della pagina: un numero fuori scala renderebbe buone
     tutte le notti, o nessuna."""
-    fuori = {"version": backup.VERSION, "config": {"moon_broadband_max_pct": "500"}}
+    fuori = {"version": backup.VERSION, "config": {"moon_good_pct": "500"}}
     r = client_vuoto.post("/api/v1/backup/import", json=fuori)
     assert (r.status_code, r.json()["detail"]["code"]) == (422, "not_a_backup")
     impostazioni = client_vuoto.get("/api/v1/settings").json()
     assert "500" not in json.dumps(impostazioni)
+
+
+def test_an_import_with_the_moon_marginal_under_good_is_refused(client_vuoto):
+    """La regola della Luna come la pagina: 'al limite' mai sotto 'buona'."""
+    rovescia = {"moon_good_pct": "70", "moon_limit_pct": "50"}
+    r = client_vuoto.post(
+        "/api/v1/backup/import", json={"version": backup.VERSION, "config": rovescia}
+    )
+    assert (r.status_code, r.json()["detail"]["code"]) == (422, "not_a_backup")
+    assert client_vuoto.get("/api/v1/settings").json()["values"]["moon_good_pct"] == 25
 
 
 def test_an_import_brings_no_key_and_no_solver_path(client_vuoto, tmp_path):

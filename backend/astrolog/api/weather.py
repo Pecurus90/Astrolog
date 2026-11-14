@@ -54,14 +54,17 @@ FULL_NIGHTS = 3
 # [P docs/domini/meteo.md] the current night and the six after; one more sometimes comes, not shown
 MAX_NIGHTS = 7
 
-SCALES = [
-    WeatherScaleOut(
-        code=cast(JudgedCode, s.code),
-        steps=[WeatherStepOut(**asdict(x)) for x in s.steps],
-        lower_is_worse=s.lower_is_worse,
-    )
-    for s in judge.scales()
-]
+
+def _scales(conn: sqlite3.Connection) -> list[WeatherScaleOut]:
+    """The Moon's steps are the settings' rule, the others fixed: a lookup, not a computation."""
+    return [
+        WeatherScaleOut(
+            code=cast(JudgedCode, s.code),
+            steps=[WeatherStepOut(**asdict(x)) for x in s.steps],
+            lower_is_worse=s.lower_is_worse,
+        )
+        for s in judge.scales(config.moon_rule(config.read(conn)))
+    ]
 
 
 def _night(row: sqlite3.Row, rank: int) -> WeatherNightOut:
@@ -126,7 +129,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
             key=bool(config.read(conn).meteoblue_key), source=None, meteoblue=None
         ),
         sources=[],
-        scales=SCALES,
+        scales=_scales(conn),
         nights=[],
     )
     home = home_site(conn)

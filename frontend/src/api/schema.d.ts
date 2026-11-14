@@ -1265,8 +1265,9 @@ export interface paths {
          *
          *     422 `unknown_setting` with the unknown `keys`; 422 `tried_elsewhere` with the `keys` that are
          *     tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
-         *     their `ranges`; 422 `wrong_type` if a value has the wrong type or is not one of the key's
-         *     allowed choices.
+         *     their `ranges`; 422 `moon_limit_below_good` when the Moon's marginal bound would fall under
+         *     its good one; 422 `wrong_type` if a value has the wrong type or is not one of the key's
+         *     allowed choices. A change of the Moon rule rewrites at once what it judged.
          */
         patch: operations["write_settings"];
         trace?: never;
@@ -1351,9 +1352,8 @@ export interface paths {
          * Moon Calendar
          * @description The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
          *     this month and the next, each night with its Moon, its dark hours, those without the Moon (the
-         *     next nights say them even without a forecast) and whether it is
-         *     good for broadband by the two thresholds in the settings, which travel along for the legend,
-         *     its step on the Meteo's Moon scale, and the nights shot that day from any site (SQL sums).
+         *     next nights say them even without a forecast), its step on the settings' Moon rule, whose two
+         *     bounds travel along for the legend, and the nights shot that day from any site (SQL sums).
          *     Nothing is computed here: before the round has run, `nights` is empty.
          */
         get: operations["moon_calendar"];
@@ -3576,13 +3576,8 @@ export interface components {
              */
             lit_side: "left" | "right";
             /**
-             * Good
-             * @description Good for broadband by the two thresholds in the settings.
-             */
-            good: boolean;
-            /**
              * Level
-             * @description The Moon's step on the Meteo's Moon scale (ING 25/65): broadband good, broadband marginal, narrowband only.
+             * @description The Moon's step on the settings' Moon rule (factory ING 25/65): broadband good, broadband marginal, narrowband only.
              * @enum {string}
              */
             level: "go" | "marginal" | "nogo";
@@ -3600,10 +3595,16 @@ export interface components {
         MoonCalendarOut: {
             /** Today */
             today: string | null;
-            /** Max Pct */
-            max_pct: number;
-            /** Min Dark H */
-            min_dark_h: number;
+            /**
+             * Good Pct
+             * @description The rule's bound of broadband good, for the legend.
+             */
+            good_pct: number;
+            /**
+             * Limit Pct
+             * @description The rule's bound of broadband marginal, for the legend.
+             */
+            limit_pct: number;
             /** Nights */
             nights: components["schemas"]["MoonCalendarNightOut"][];
         };

@@ -170,18 +170,19 @@ minuti dagli istanti dell'USNO (`test_the_main_phases_fall_on_the_published_inst
 **Il calendario della Luna si scrive.** Due mesi di notti costano circa 5 s (campioni ogni
 `CALENDAR_STEP_MIN`, una chiamata per corpo): li scrive il giro in background in `moon_nights`,
 e si rifanno quando manca una notte o il sito si sposta. Il buio senza Luna e' il buio astronomico
-con la Luna sotto `RISESET_DEG`. Cambiare le soglie riscrive il giudizio, non il cielo
-(`test_moon_calendar.py`).
+con la Luna sotto l'altezza da cui conta (regola della Luna). Cambiare la regola riscrive subito
+le stesse notti, cielo compreso: l'altezza sposta il buio senza Luna (`test_moon_calendar.py`).
 
 **La notte del calendario ha i tre gradini del Meteo** (decisione del 24/10/2026, su richiesta di
 Marco delle convenzioni): buia sotto il 25% illuminata, grigia fino al 65%, chiara oltre (ING
 Technical Note 127, come il Meteo; ADR 0034), con le **ore di buio senza
 Luna scritte accanto**. Le soglie sono una casa sola con il Meteo (`meteo.md`), di fabbrica 25 e 65
-dall'orizzonte, e si cambiano nelle Impostazioni (Marco, 24/10/2026). Oggi il codice segna ancora
-"buona per la banda larga" sotto il 25% **o** con almeno 4 ore di buio senza Luna
-(`moon_broadband_max_pct`, `moon_broadband_min_dark_h`). I tre gradini sono scritti dall'11/11/2026
-(`moon_nights.moon_level`, sulla scala della Luna del Meteo, fissa a 25 e 65 finche' la regola
-della Luna non entra nelle Impostazioni): con quella regola escono `good` e le 4 ore. Ogni giorno
+dall'orizzonte, e si cambiano nelle Impostazioni (Marco, 24/10/2026). **La regola della Luna** e'
+una sola per tutta l'app (`levels.MoonRule`, letta da `config.moon_rule`; tavola v82, Impostazioni
+› Luna, 14/11/2026): `moon_good_pct` 25, `moon_limit_pct` 65 (mai sotto la buona: 422
+`moon_limit_below_good`), `moon_above_deg` fra -5 (rete TESS), 0 (quando sorge, -0,833°), 5 e 10.
+La leggono il calendario (`moon_nights.moon_level`), il Meteo (scala, ore, posa per banda), le Notti
+(Ripresa) e Stanotte. Uscite la regola delle 4 ore e `good`. Ogni giorno
 porta anche le notti riprese quel giorno, da ogni sito (`shots`: sito, oggetti, frame, ore), la
 stella della tavola v79 (`test_moon_calendar.py`).
 

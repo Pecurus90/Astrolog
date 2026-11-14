@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 from ..clock import now_iso
+from ..levels import MoonRule
+from ..twilight import RISESET_DEG
 
 
 class Key(NamedTuple):
@@ -43,16 +45,23 @@ KEYS: dict[str, Key] = {
         "best_match",
         "il modello della previsione: di fabbrica quello che Open-Meteo sceglie per il posto",
     ),
-    "moon_broadband_max_pct": Key(
+    "moon_good_pct": Key(
         int,
-        25,  # [C ING dark time: lit fraction under 0.25]
-        "notte buona per la banda larga con la Luna sotto questa percentuale, come il buio"
-        " dell'osservatorio ING (illuminata sotto lo 0,25)",
+        25,  # [C ING Technical Note 127: dark time lit fraction under 0.25]
+        "banda larga buona con la Luna sotto questa percentuale, come il buio dell'osservatorio"
+        " ING (illuminata sotto lo 0,25)",
     ),
-    "moon_broadband_min_dark_h": Key(
+    "moon_limit_pct": Key(
         int,
-        4,  # [P docs/domini/effemeridi.md]
-        "oppure con almeno queste ore di buio senza Luna: scelta di prodotto (Marco, 15/10/2026)",
+        65,  # [C ING Technical Note 127: grey time to 0.65, then bright]
+        "banda larga al limite fino a questa percentuale, poi solo banda stretta: il grigio di"
+        " ING (fino allo 0,65)",
+    ),
+    "moon_above_deg": Key(
+        int,
+        0,  # [C USNO RST_defs: rise and set at -0.833 degrees]
+        "la Luna conta da questa altezza: 0 e' quando sorge (ADR 0034); -5 la rete TESS, che"
+        " sotto non la sente; 5 e 10 nessuna convenzione",
     ),
 }
 
@@ -69,14 +78,34 @@ class Preferences:
     sky_service_key: str | None
     meteoblue_key: str | None
     weather_model: str
-    moon_broadband_max_pct: int
-    moon_broadband_min_dark_h: int
+    moon_good_pct: int
+    moon_limit_pct: int
+    moon_above_deg: int
 
 
 # A weather model outside this list would give an empty page with no reason.
-CHOICES = {"weather_model": ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")}
-# A number outside its range would make every night good, or none. [T] percent, half a day
-RANGES = {"moon_broadband_max_pct": (0, 100), "moon_broadband_min_dark_h": (0, 12)}
+WEATHER_MODELS = ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")
+# [C Bara et al. 2021, arXiv 2104.10616: TESS, under -5 degrees the Moon is not felt]
+MOON_FLOORS = (-5, 0, 5, 10)
+CHOICES: dict[str, tuple[str, ...] | tuple[int, ...]] = {
+    "weather_model": WEATHER_MODELS,
+    "moon_above_deg": MOON_FLOORS,
+}
+# A number outside its range would make every night good, or none. [T] percent
+RANGES = {"moon_good_pct": (0, 100), "moon_limit_pct": (0, 100)}
+# The Moon's rule, read together: a change rewrites what it judged (`moon_rule`).
+MOON_KEYS = frozenset({"moon_good_pct", "moon_limit_pct", "moon_above_deg"})
+
+
+def moon_rule_holds(prefs: Preferences) -> bool:
+    """Marginal never under good, or a night would be marginal and good at once."""
+    return prefs.moon_limit_pct >= prefs.moon_good_pct
+
+
+def moon_rule(prefs: Preferences) -> MoonRule:
+    """Altitude 0 is the rise, where refraction and radius already lift the Moon: -0.833."""
+    floor = RISESET_DEG if prefs.moon_above_deg == 0 else float(prefs.moon_above_deg)
+    return MoonRule(prefs.moon_good_pct, prefs.moon_limit_pct, floor)
 
 
 class OutOfRangeError(ValueError):

@@ -7,6 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ..db.config import moon_rule
 from ..db.config import read as read_settings
 from ..site_of import home_tonight
 from ..spine import night_calendar, nights
@@ -67,7 +68,7 @@ def night_list(  # noqa: PLR0913 - one parameter per criterion of the sheet
                 conn,
                 ids=listed[offset : offset + limit],
                 weather=nights.Observed(history.KIND, history.arrives_on),
-                max_pct=read_settings(conn).moon_broadband_max_pct,
+                rule=moon_rule(read_settings(conn)),
             ),
             "total": len(listed),
             "limit": limit,
@@ -122,6 +123,6 @@ def night_detail(night_id: int, conn: sqlite3.Connection = Depends(get_db)) -> N
         conn,
         ids=[night_id],
         weather=nights.Observed(history.KIND, history.arrives_on),
-        max_pct=read_settings(conn).moon_broadband_max_pct,
+        rule=moon_rule(read_settings(conn)),
     )
     return NightDetail.model_validate({"night": row[0], **found})

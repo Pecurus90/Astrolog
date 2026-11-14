@@ -12,7 +12,8 @@ import pytest
 
 from astrolog.clock import night_window
 from astrolog.db.connect import connect, ensure_database
-from astrolog.ephemeris import moon
+from astrolog.ephemeris import RISESET_DEG, moon
+from astrolog.levels import MoonRule
 from astrolog.weather import history, openmeteo
 from astrolog.weather.fetches import Source
 from test_weather_forecast import Finto
@@ -81,7 +82,7 @@ def test_a_past_night_says_its_exposure_hours_out_of_its_dark(db):
     history.step(db, fetch=Finto(archivio()), now=ADESSO)
     detto = json.loads(scritte(db)[0]["summary_json"])
     inizio, ore = night_window("2026-03-10", "Europe/Rome")
-    (luna,) = moon.calendar_nights([("2026-03-10", inizio, ore)], 45.55, 11.5)
+    (luna,) = moon.calendar_nights([("2026-03-10", inizio, ore)], 45.55, 11.5, RISESET_DEG)
     assert detto["dark_hours"] == pytest.approx(luna.dark_s / 3600, abs=0.1)
     assert detto["exposure_hours"] == pytest.approx(0.9 * detto["dark_hours"], abs=0.1)
     assert (detto["transparency"], detto["without_aerosol"]) == (90.0, True)
@@ -186,7 +187,7 @@ def test_the_nights_page_reads_the_weather_of_each_night_as_written(db):
             db,
             ids=[r[0] for r in db.execute("SELECT id FROM nights")],
             weather=notti.Observed(history.KIND, history.arrives_on),
-            max_pct=25,
+            rule=MoonRule(),
         )
     }
     assert per_data["2026-03-10"]["state"] == "ok"

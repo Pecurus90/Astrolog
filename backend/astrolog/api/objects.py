@@ -5,6 +5,7 @@ import sqlite3
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ..db.config import moon_rule
 from ..db.config import read as read_settings
 from ..spine import archive, nights
 from ..spine import object_detail as object_detail_read
@@ -71,7 +72,7 @@ def object_detail(
         conn,
         ids=list(taken),
         weather=nights.Observed(history.KIND, history.arrives_on),
-        max_pct=read_settings(conn).moon_broadband_max_pct,
+        rule=moon_rule(read_settings(conn)),
     )
     by_id = {n["id"]: n for n in listed}
     return ObjectDetail.model_validate(

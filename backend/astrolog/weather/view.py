@@ -8,9 +8,11 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any
 
+from ..db import config
 from ..db.replace_table import replace_rows
 from ..ephemeris import RISESET_DEG, moon
 from ..ephemeris.sun import Sky
+from ..levels import MoonRule
 from ..site_of import Site
 from . import judge, openmeteo, position, score, verdict
 from .fetches import Source
@@ -55,13 +57,13 @@ def _sky_by_hour(conn: sqlite3.Connection, site_id: int) -> dict[str, dict[str, 
     return by_hour
 
 
-def _moon_by_hour(site: Site, instants: Sequence[str]) -> dict[str, int | None]:
-    """The Moon's lit percentage for the hours it is above the horizon, else `None`."""
+def _moon_by_hour(site: Site, instants: Sequence[str], floor_deg: float) -> dict[str, int | None]:
+    """The Moon's lit percentage for the hours it counts (above the rule's floor), else `None`."""
     times = [datetime.fromisoformat(a) for a in instants]
     alts = moon.altitudes(times, site.latitude, site.longitude)
     lit = moon.phases(times)
     return {
-        a: p.illumination_pct if alt > RISESET_DEG else None
+        a: p.illumination_pct if alt > floor_deg else None
         for a, alt, p in zip(instants, alts, lit, strict=True)
     }
 
@@ -102,7 +104,7 @@ def _agreement(said: Sequence[verdict.Verdict | None], total: int) -> dict[str, 
     return {**counts, "total": total}
 
 
-def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
+def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary, rule: MoonRule) -> str:
     """Each hour with its words, whether the page draws it and whether it is one of the clear hours
     of the night, the same the usable hours count."""
     shown = {h.at for h in judge.shown_hours(hours, summary)}
@@ -113,7 +115,7 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
             {
                 **h.row(),
                 **judge.shown_values({**h.values, "dew_spread_c": judge.spread(h)}),
-                "levels": judge.hour_levels(h),
+                "levels": judge.hour_levels(h, rule),
                 "transparency": _tenths(score.transparency(h)),
                 "shown": h.at in shown,
                 "clear": summary.usable_hours is not None
@@ -126,7 +128,7 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
 
 
 def _rows(
-    site: Site, written: Sequence[_Night], usual: list[float] | None
+    site: Site, written: Sequence[_Night], usual: list[float] | None, rule: MoonRule
 ) -> list[tuple[Any, ...]]:
     rows = []
     for w in written:
@@ -139,11 +141,11 @@ def _rows(
             else None,
             "agreement": _agreement(said, len(openmeteo.MODELS)),
             "sky_word": verdict.sky_word(w.summary.cloud_total_pct),
-            # the dark with the Moon below the horizon: the hours good for broadband
+            # the dark with the Moon below the rule's floor: the hours good for broadband
             "moonless_dark_hours": sum(
                 1 for h in w.hours if h.sky == Sky.DARK and h.values.get("moon_pct") is None
             ),
-            "measures": [asdict(m) for m in judge.measures(w.hours, w.summary)],
+            "measures": [asdict(m) for m in judge.measures(w.hours, w.summary, rule)],
             **_moon_night(site, w.summary),
         }
         rows.append(
@@ -152,7 +154,7 @@ def _rows(
                 w.night,
                 w.model,
                 w.fetched_at,
-                _hours_json(w.hours, w.summary),
+                _hours_json(w.hours, w.summary, rule),
                 json.dumps(summary),
             )
         )
@@ -165,7 +167,8 @@ def rebuild(conn: sqlite3.Connection, site: Site) -> None:
     models = conn.execute(_MODEL_ROWS, (site.id, KIND, *_MODEL_SOURCES)).fetchall()
     series = {(r["night_date"], r["source"]): json.loads(r["hourly_json"]) for r in models}
     instants = sorted({o["at"] for hours in series.values() for o in hours})
-    lit = _moon_by_hour(site, instants) if instants else {}
+    rule = config.moon_rule(config.read(conn))
+    lit = _moon_by_hour(site, instants, rule.floor_deg) if instants else {}
     written = []
     for r in models:
         hours = [
@@ -184,12 +187,13 @@ def rebuild(conn: sqlite3.Connection, site: Site) -> None:
             for o in series[r["night_date"], r["source"]]
         ]
         model = r["source"].removeprefix("open-meteo/")
-        written.append(_Night(r["night_date"], model, r["fetched_at"], hours, score.assess(hours)))
+        summary = score.assess(hours, rule)
+        written.append(_Night(r["night_date"], model, r["fetched_at"], hours, summary))
     replace_rows(
         conn,
         "weather_view",
         COLUMNS,
-        _rows(site, written, position.percentiles(conn, site)),
+        _rows(site, written, position.percentiles(conn, site), rule),
         where="site_id = ?",
         args=(site.id,),
     )

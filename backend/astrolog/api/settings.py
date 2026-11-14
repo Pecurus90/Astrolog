@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
+from ..site_of import home_site
 from ..spine import moon_calendar
 from ..spine.group import GroupReason
 from ..spine.solve import (
@@ -20,6 +21,7 @@ from ..spine.solve import (
     solver_path,
     solver_where,
 )
+from ..weather import view
 from .deps import get_db
 from .models_site import Missing, Range, SettingsOut, SettingsPatch, SolverOut, SolverSource
 
@@ -53,6 +55,25 @@ def _out(conn: sqlite3.Connection) -> SettingsOut:
     )
 
 
+def _moon_rule_changed(conn: sqlite3.Connection) -> None:
+    """A rule that holds (`config.moon_rule_holds`) rewrites at once what it judged: the Moon
+    calendar and the forecast of the home site."""
+    if not config.moon_rule_holds(config.read(conn)):
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "moon_limit_below_good", "keys": ["moon_limit_pct"]},
+        )
+    moon_rule_follows(conn)
+
+
+def moon_rule_follows(conn: sqlite3.Connection) -> None:
+    """What the Moon rule judged, rewritten at once: the settings page and a restored backup."""
+    home = home_site(conn)
+    moon_calendar.refresh(conn, home)
+    if home is not None:
+        view.rebuild(conn, home)
+
+
 @router.get("/settings", response_model=SettingsOut)
 def read_settings(conn: sqlite3.Connection = Depends(get_db)) -> SettingsOut:
     """The preferences as saved, each secret shown only by its hint (`config.hint`), never whole;
@@ -69,8 +90,9 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
 
     422 `unknown_setting` with the unknown `keys`; 422 `tried_elsewhere` with the `keys` that are
     tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
-    their `ranges`; 422 `wrong_type` if a value has the wrong type or is not one of the key's
-    allowed choices."""
+    their `ranges`; 422 `moon_limit_below_good` when the Moon's marginal bound would fall under
+    its good one; 422 `wrong_type` if a value has the wrong type or is not one of the key's
+    allowed choices. A change of the Moon rule rewrites at once what it judged."""
     unknown = sorted(k for k in body.values if k not in config.KEYS)
     if unknown:
         raise HTTPException(status_code=422, detail={"code": "unknown_setting", "keys": unknown})
@@ -90,8 +112,8 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
                 raise HTTPException(
                     status_code=422, detail={"code": "out_of_range", "keys": sorted(outside)}
                 )
-            if moon_calendar.THRESHOLDS & body.values.keys():
-                moon_calendar.rejudge(conn)
+            if config.MOON_KEYS & body.values.keys():
+                _moon_rule_changed(conn)
     except ValueError as err:
         raise HTTPException(status_code=422, detail={"code": "wrong_type"}) from err
     return _out(conn)

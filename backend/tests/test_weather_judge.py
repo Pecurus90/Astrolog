@@ -7,17 +7,18 @@ dove veniva. Il semaforo lo decidono solo le nuvole; le altre misure pesano acca
 
 import pytest
 
+from astrolog.levels import MoonRule
 from astrolog.weather import judge, score
 from test_weather_verdict import notte, ora
 
 
 def livello(misura, **valori):
     """Il giudizio di un'ora sola con questi valori."""
-    return judge.hour_levels(ora("2026-09-25T22:00:00+02:00", **valori)).get(misura)
+    return judge.hour_levels(ora("2026-09-25T22:00:00+02:00", **valori), MoonRule()).get(misura)
 
 
 def misure(ore):
-    return {m.code: m for m in judge.measures(ore, score.assess(ore))}
+    return {m.code: m for m in judge.measures(ore, score.assess(ore), MoonRule())}
 
 
 @pytest.mark.parametrize(
@@ -80,8 +81,8 @@ def test_condensation_comes_under_three_degrees_between_air_and_dew_point():
 
 def test_a_missing_value_has_no_judgement_and_a_neutral_measure_never_has_one():
     assert livello("seeing", seeing_arcsec=None) is None
-    assert "dust" not in judge.hour_levels(ora("2026-09-25T22:00:00+02:00"))
-    assert "cloud" in judge.hour_levels(ora("2026-09-25T22:00:00+02:00"))
+    assert "dust" not in judge.hour_levels(ora("2026-09-25T22:00:00+02:00"), MoonRule())
+    assert "cloud" in judge.hour_levels(ora("2026-09-25T22:00:00+02:00"), MoonRule())
 
 
 def test_the_moon_down_has_no_judgement():
@@ -245,7 +246,7 @@ def test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then
         {"wind_gust_kmh": 30.0, "seeing_arcsec": 1.0},
         {"precip_mm": 0.2, "seeing_arcsec": 1.0},
     )
-    codici = [m.code for m in judge.measures(ore, score.assess(ore))]
+    codici = [m.code for m in judge.measures(ore, score.assess(ore), MoonRule())]
     # le nuvole e le nuvole basse aprono sempre: sono le carte del semaforo
     assert codici[:2] == ["cloud", "cloud_low"]
     assert codici[2:5] == ["gust", "rain", "wind"]
@@ -257,7 +258,7 @@ def test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then
 
 def test_every_scale_is_sent_with_its_steps():
     """Le soglie arrivano dal backend, le stesse del giudizio: la scala a destra le disegna."""
-    passi = {s.code: s.steps for s in judge.scales()}
+    passi = {s.code: s.steps for s in judge.scales(MoonRule())}
     assert passi["wind"] == [
         judge.Step("nogo", 29.0, strict=False),
         judge.Step("marginal", 20.0, strict=False),

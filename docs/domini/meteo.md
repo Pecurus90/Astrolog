@@ -119,7 +119,9 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   - Luna, per la banda larga: buona sotto il 25% illuminata, *banda larga al limite* fino al 65%,
     da li' *consigliata banda stretta*: buio, grigio e chiaro dell'osservatorio ING (ADR 0034); il
     25% esatto e' gia' grigio, come nel calendario. Conta da quando sorge (-0,833 gradi
-    sull'altezza topocentrica, USNO; ADR 0035), come ESO, astroplan e lo scheduler di N.I.N.A. La
+    sull'altezza topocentrica, USNO; ADR 0035), come ESO, astroplan e lo scheduler di N.I.N.A.;
+    i tre numeri sono la regola della Luna delle Impostazioni ([`effemeridi.md`](effemeridi.md)),
+    e cambiarla riscrive subito la previsione del sito di casa. La
     riga dice le ore in cui e' su e cosa resta nelle altre (Marco, 12/10/2026): "Luna al 55% dalle
     23 · banda larga fino alle 23". Il calendario della Luna usa gli stessi tre gradini
     (`effemeridi.md`). Di fabbrica 25 e 65, dall'orizzonte; i due gradini si cambiano nelle

@@ -452,7 +452,7 @@ def test_from_each_point_of_the_curve_how_much_dark_without_the_moon_is_left():
     passo = dt.timedelta(minutes=GRID_STEP_MIN)
     buio = [(notte.grid[5].at, notte.grid[0].at + passo * 40)]
 
-    resta = moon.moonless_dark_left_s(notte, buio)
+    resta = moon.moonless_dark_left_s(notte, buio, RISESET_DEG)
 
     step_s = GRID_STEP_MIN * 60
     assert resta[0] == 15 * step_s  # dal quinto al ventesimo
@@ -469,7 +469,7 @@ def test_the_moonless_dark_left_never_exceeds_the_dark_itself():
     zero = notte.grid[0].at
     buio = [(zero + dt.timedelta(minutes=16.5), zero + dt.timedelta(minutes=48.5))]
 
-    assert moon.moonless_dark_left_s(notte, buio)[0] == 32 * 60
+    assert moon.moonless_dark_left_s(notte, buio, RISESET_DEG)[0] == 32 * 60
 
 
 def test_the_dark_splits_into_moonless_and_moon_up_stretches():
@@ -480,7 +480,7 @@ def test_the_dark_splits_into_moonless_and_moon_up_stretches():
     zero, passo = notte.grid[0].at, dt.timedelta(minutes=GRID_STEP_MIN)
     buio = [(zero + passo * 5, zero + passo * 39)]
 
-    tratti = moon.dark_spans(notte, buio)
+    tratti = moon.dark_spans(notte, buio, RISESET_DEG)
 
     assert tratti.moonless == [(zero + passo * 5, zero + passo * 20)]
     assert tratti.moon_up == [(zero + passo * 20, zero + passo * 39)]
@@ -491,21 +491,21 @@ def test_a_moon_down_the_whole_dark_leaves_no_moon_up_stretch():
     zero, passo = notte.grid[0].at, dt.timedelta(minutes=GRID_STEP_MIN)
     buio = [(zero + passo * 1.5, zero + passo * 10.5)]
 
-    tratti = moon.dark_spans(notte, buio)
+    tratti = moon.dark_spans(notte, buio, RISESET_DEG)
 
     assert tratti.moonless == buio
     assert tratti.moon_up == []
 
 
 def test_without_dark_there_are_no_stretches():
-    assert moon.dark_spans(_notte_finta([5.0] * 10), []) == moon.DarkSpans([], [])
+    assert moon.dark_spans(_notte_finta([5.0] * 10), [], RISESET_DEG) == moon.DarkSpans([], [])
 
 
 def test_without_dark_no_moonless_dark_is_left():
     """Senza buio astronomico (l'estate al nord) non resta buio senza Luna da nessun punto."""
     notte = _notte_finta([-10.0] * 10)
 
-    assert moon.moonless_dark_left_s(notte, []) == [0] * 10
+    assert moon.moonless_dark_left_s(notte, [], RISESET_DEG) == [0] * 10
 
 
 def test_the_curve_carries_its_instants_in_the_asked_timezone():

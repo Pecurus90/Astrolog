@@ -124,13 +124,13 @@ export function calendario(vuoto = false) {
     : Array.from({ length: 61 }, (_, i) => {
         const d = new Date(Date.UTC(2026, 8, 1 + i)).toISOString().slice(0, 10)
         return {
-          date: d, phase_key: "waxing_crescent", illumination_pct: 10, dark_s: 9 * 3600, moonless_dark_s: 4 * 3600, lit_side: "right", good: true,
+          date: d, phase_key: "waxing_crescent", illumination_pct: 10, dark_s: 9 * 3600, moonless_dark_s: 4 * 3600, lit_side: "right",
           event: d === "2026-09-09" ? "new" : d === "2026-09-24" ? "full" : null,
           level: d < "2026-09-15" ? "go" : d < "2026-09-20" ? "marginal" : "nogo",
           shots: d === "2026-09-19" ? [{ night_id: 7, site: "Casa", objects: ["M 31", "M 33"], frames: 180, integration_s: 15120, untimed: 0 }] : [],
         }
       })
-  return { "/api/v1/moon/calendar": { stato: 200, corpo: { today: "2026-09-30", max_pct: 25, min_dark_h: 4, nights: giorni } } }
+  return { "/api/v1/moon/calendar": { stato: 200, corpo: { today: "2026-09-30", good_pct: 25, limit_pct: 65, nights: giorni } } }
 }
 
 export const SCALA_DELLA_LUNA = {

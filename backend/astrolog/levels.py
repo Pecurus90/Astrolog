@@ -1,7 +1,10 @@
 """A measure's word, the weather's and a frame's alike (glossario.md, `level`): one home under the
 weather and the pipeline, which do not know each other."""
 
+from dataclasses import dataclass
 from enum import StrEnum
+
+from .twilight import RISESET_DEG
 
 
 class Verdict(StrEnum):
@@ -23,12 +26,22 @@ MOON_GREY_PCT = 25.0  # [C ING Technical Note 127: dark time lit fraction under 
 MOON_BRIGHT_PCT = 65.0  # [C ING Technical Note 127: grey time to 0.65, then bright]
 
 
-def moon_level(lit_pct: float) -> Verdict:
+@dataclass(frozen=True, slots=True)
+class MoonRule:
+    """The broadband Moon rule, one for the app (ADR 0034): good under `good_pct`, marginal under
+    `limit_pct`, then narrowband; counts above `floor_deg`. User's: `config.moon_rule`."""
+
+    good_pct: float = MOON_GREY_PCT
+    limit_pct: float = MOON_BRIGHT_PCT
+    floor_deg: float = RISESET_DEG
+
+
+def moon_level(lit_pct: float, rule: MoonRule) -> Verdict:
     """The Meteo's Moon scale, the hour's and the Moon calendar's night alike: broadband good,
     marginal, narrowband only. Both bounds belong to the step above."""
-    if lit_pct >= MOON_BRIGHT_PCT:
+    if lit_pct >= rule.limit_pct:
         return Verdict.NOGO
-    return Verdict.MARGINAL if lit_pct >= MOON_GREY_PCT else Verdict.GO
+    return Verdict.MARGINAL if lit_pct >= rule.good_pct else Verdict.GO
 
 
 class SamplingClass(StrEnum):

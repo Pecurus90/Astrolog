@@ -1,5 +1,5 @@
 """Il calendario della Luna della Dashboard: lo scrive il giro, chi legge non calcola. Questo mese e
-il prossimo, per il sito di casa, con le notti buone per la banda larga dalle due soglie."""
+il prossimo, per il sito di casa, coi gradini della regola della Luna delle Impostazioni."""
 
 import datetime as dt
 import shutil
@@ -122,13 +122,6 @@ def test_new_and_full_moon_are_marked_on_their_nights(scritto):
     assert eventi["2026-10-25"] == "full"
 
 
-def test_a_good_broadband_night_has_little_moon_or_enough_dark_without_it(scritto):
-    """Di fabbrica: Luna sotto il 25%, oppure almeno 4 ore di buio senza Luna."""
-    for r in righe(scritto):
-        attesa = r["illumination_pct"] < 25 or r["moonless_dark_s"] >= 4 * 3600
-        assert bool(r["broadband_good"]) == attesa, r["night_date"]
-
-
 def test_each_night_has_its_step_on_the_meteo_moon_scale(scritto):
     """I tre gradini della tavola v79 (CalendarioNotti, Luna): fino al 25% banda larga buona, fino
     al 65% al limite, oltre solo banda stretta; la stessa scala della Luna del Meteo (ING)."""
@@ -163,29 +156,88 @@ def test_the_calendar_shows_the_nights_shot_on_its_days(db_path, scritto):
     assert ripresa["night_id"]
 
 
-def test_changing_a_threshold_rejudges_the_nights_at_once(db_path, scritto):
+def test_changing_the_percentages_rewrites_the_steps_at_once(db_path, scritto):
+    """La regola della Luna (tavola v82): buona e al limite cambiano i gradini."""
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
-        r = c.patch("/api/v1/settings", json={"values": {"moon_broadband_min_dark_h": 12}})
+        r = c.patch(
+            "/api/v1/settings", json={"values": {"moon_good_pct": 10, "moon_limit_pct": 50}}
+        )
     assert r.status_code == 200, r.text
-    assert config.read(scritto).moon_broadband_min_dark_h == 12
+    assert (config.read(scritto).moon_good_pct, config.read(scritto).moon_limit_pct) == (10, 50)
     for row in righe(scritto):
-        assert bool(row["broadband_good"]) == (row["illumination_pct"] < 25), row["night_date"]
+        pct = row["illumination_pct"]
+        atteso = "go" if pct < 10 else "marginal" if pct < 50 else "nogo"
+        assert row["moon_level"] == atteso, row["night_date"]
+
+
+def test_a_higher_floor_gives_more_dark_without_the_moon(db_path, scritto):
+    """'La Luna conta sopra' 10 gradi: sotto i 10 non conta, il buio senza Luna cresce."""
+    prima = {r["night_date"]: r["moonless_dark_s"] for r in righe(scritto)}
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.patch("/api/v1/settings", json={"values": {"moon_above_deg": 10}})
+    assert r.status_code == 200, r.text
+    dopo = {r["night_date"]: r["moonless_dark_s"] for r in righe(scritto)}
+    assert dopo.keys() == prima.keys()
+    assert all(dopo[d] >= prima[d] for d in prima)
+    assert any(dopo[d] > prima[d] for d in prima)
+
+
+def test_a_rule_change_rewrites_the_forecast_of_the_home_site(db_path, scritto, monkeypatch):
+    import astrolog.api.settings as impostazioni
+
+    rifatti = []
+    monkeypatch.setattr(impostazioni.view, "rebuild", lambda conn, site: rifatti.append(site.name))
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.patch("/api/v1/settings", json={"values": {"moon_good_pct": 20}})
+    assert r.status_code == 200, r.text
+    assert rifatti == ["Casa"]
+
+
+def test_an_imported_rule_rewrites_the_calendar_at_once(db_path, scritto):
+    """Come dalla pagina: la regola che arriva da un file giudica subito, non al mese dopo."""
+    from astrolog.spine import backup
+
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.post(
+            "/api/v1/backup/import",
+            json={"version": backup.VERSION, "config": {"moon_good_pct": "10"}},
+        )
+    assert r.status_code == 200, r.text
+    for row in righe(scritto):
+        pct = row["illumination_pct"]
+        atteso = "go" if pct < 10 else "marginal" if pct < 65 else "nogo"
+        assert row["moon_level"] == atteso, row["night_date"]
+
+
+def test_the_floor_is_one_of_the_four_choices(db_path):
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.patch("/api/v1/settings", json={"values": {"moon_above_deg": 3}})
+    assert r.status_code == 422 and r.json()["detail"]["code"] == "wrong_type"
+
+
+def test_marginal_never_under_good(db_path, scritto):
+    """La tavola: 'Deve essere almeno N%'. Niente si scrive."""
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.patch("/api/v1/settings", json={"values": {"moon_good_pct": 70}})
+    assert r.status_code == 422
+    assert r.json()["detail"] == {"code": "moon_limit_below_good", "keys": ["moon_limit_pct"]}
+    assert config.read(scritto).moon_good_pct == 25
 
 
 def test_a_threshold_out_of_range_is_refused(db_path):
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
-        r = c.patch("/api/v1/settings", json={"values": {"moon_broadband_max_pct": 140}})
+        r = c.patch("/api/v1/settings", json={"values": {"moon_good_pct": 140}})
         letto = c.get("/api/v1/settings").json()
     # Un numero del tipo giusto ma fuori misura non e' un tipo sbagliato: lo schermo dice la misura.
     assert r.status_code == 422
-    assert r.json()["detail"] == {"code": "out_of_range", "keys": ["moon_broadband_max_pct"]}
+    assert r.json()["detail"] == {"code": "out_of_range", "keys": ["moon_good_pct"]}
     # La misura la manda il backend, una volta: lo schermo non la riscrive.
-    assert letto["ranges"]["moon_broadband_max_pct"] == {"min": 0, "max": 100}
-    assert letto["ranges"]["moon_broadband_min_dark_h"] == {"min": 0, "max": 12}
+    assert letto["ranges"]["moon_good_pct"] == {"min": 0, "max": 100}
+    assert letto["ranges"]["moon_limit_pct"] == {"min": 0, "max": 100}
 
 
 def test_every_threshold_out_of_range_is_named(db_path):
-    valori = {"moon_broadband_max_pct": 140, "moon_broadband_min_dark_h": 99}
+    valori = {"moon_good_pct": 140, "moon_limit_pct": 199}
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         r = c.patch("/api/v1/settings", json={"values": valori})
     # Come unknown_setting e tried_elsewhere: tutte le chiavi, non la prima.
@@ -194,14 +246,14 @@ def test_every_threshold_out_of_range_is_named(db_path):
 
 
 def test_the_routes_read_what_the_round_wrote(db_path, scritto_oggi):
-    """Il calendario esce com'e' scritto, con le due soglie per la legenda; Stanotte dice la
+    """Il calendario esce com'e' scritto, coi limiti della regola per la legenda; Stanotte dice la
     prossima nuova e piena da li', e l'eta', la distanza e da dove sorge la Luna."""
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         cal = c.get("/api/v1/moon/calendar").json()
         luna = c.get("/api/v1/tonight").json()["moon"]
-    assert (cal["max_pct"], cal["min_dark_h"]) == (25, 4)
+    assert (cal["good_pct"], cal["limit_pct"]) == (25, 65)
     assert len(cal["nights"]) >= 59
-    keys = {"date", "phase_key", "illumination_pct", "dark_s", "moonless_dark_s", "event", "good"}
+    keys = {"date", "phase_key", "illumination_pct", "dark_s", "moonless_dark_s", "event", "level"}
     assert keys <= set(cal["nights"][0])
     # il buio come il giro l'ha scritto: le prossime notti lo dicono anche senza previsione (#66)
     scritti = dict(scritto_oggi.execute("SELECT night_date, dark_s FROM moon_nights").fetchall())

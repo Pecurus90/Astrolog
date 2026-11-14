@@ -11,6 +11,7 @@ from typing import Any
 from ..clock import midnight_of, night_window
 from ..db import idlist
 from ..ephemeris import moon
+from ..levels import MoonRule
 from . import counts, filters_used, stages
 from . import objects as obj
 from .group import GroupReason
@@ -122,10 +123,10 @@ def _with_bars(objects: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _shooting(
-    rows: Sequence[sqlite3.Row], moons: dict[int, dict[str, Any]], max_pct: int
+    rows: Sequence[sqlite3.Row], moons: dict[int, dict[str, Any]], rule: MoonRule
 ) -> dict[int, dict[str, Any]]:
-    """Broadband dark the Moon left: all under the calendar's threshold, else the moonless dark.
-    Computed like the Moon, one call per site; none without the Moon or astronomical dark."""
+    """Broadband dark the Moon left: all under the rule's good bound, else the dark with the Moon
+    under its floor. Computed like the Moon, one call per site; none without Moon or dark."""
     by_site: dict[tuple[float, float], list[sqlite3.Row]] = {}
     for r in rows:
         if r["id"] in moons:
@@ -133,11 +134,12 @@ def _shooting(
     out = {}
     for (lat, lon), mine in by_site.items():
         windows = [(r["night_date"], *night_window(r["night_date"], r["timezone"])) for r in mine]
-        for r, (dark_s, moonless_s) in zip(mine, moon.dark_seconds(windows, lat, lon), strict=True):
+        darks = moon.dark_seconds(windows, lat, lon, rule.floor_deg)
+        for r, (dark_s, moonless_s) in zip(mine, darks, strict=True):
             if not dark_s:
                 continue
             lit = moons[r["id"]]["illumination_pct"]
-            free = dark_s if lit < max_pct else moonless_s
+            free = dark_s if lit < rule.good_pct else moonless_s
             kind = "broadband" if free >= dark_s else "narrowband" if not free else "mixed"
             out[r["id"]] = {
                 "kind": kind,
@@ -161,13 +163,13 @@ def objects_of(conn: sqlite3.Connection, ids: Sequence[int]) -> dict[int, list[d
 
 
 def page(
-    conn: sqlite3.Connection, *, ids: Sequence[int], weather: Observed, max_pct: int
+    conn: sqlite3.Connection, *, ids: Sequence[int], weather: Observed, rule: MoonRule
 ) -> list[dict[str, Any]]:
     """The listed nights, most recent first; the criteria chose them (`night_criteria`)."""
     with idlist.holding(conn, ids) as held:
         rows = conn.execute(_PAGE.format(listed=held), (weather.kind,)).fetchall()
     moons = _moons(rows)
-    shooting = _shooting(rows, moons, max_pct)
+    shooting = _shooting(rows, moons, rule)
     night_objects = objects_of(conn, ids)
     filters = filters_used.of(conn, counts.Subject.NIGHT, ids)
     return [

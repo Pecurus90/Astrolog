@@ -642,3 +642,5 @@ test_a_second_no_filter_row_is_refused_with_its_code -step 33, To confirm A: boa
 cio' che scelgo in una scheda resta scelto - step 33, Gear D2: board v82 Tipo di sensore is pills, not a drop-down; replaced by cio' che scelgo in una scheda resta scelto, e parte solo quello
 correggo la marca di un filtro - step 33, Gear D2: board v82 Marca is a drop-down with altra; replaced by correggo la marca di un filtro fra quelle gia' scritte, o ne scrivo una nuova
 un pezzo dice cosa ci hai ripreso - step 33, Gear D2: board v82 rows show only the hours with the bar; replaced by un pezzo e un filtro dicono le loro ore, con la barra
+test_a_good_broadband_night_has_little_moon_or_enough_dark_without_it - step 33, Settings A: board v82 Moon rule has three values, the 4 hours rule is gone (ADR 0034); replaced by test_each_night_has_its_step_on_the_meteo_moon_scale
+test_changing_a_threshold_rejudges_the_nights_at_once - step 33, Settings A: the Moon rule rewrites the nights, sky included; replaced by test_changing_the_percentages_rewrites_the_steps_at_once and test_a_higher_floor_gives_more_dark_without_the_moon

@@ -47,10 +47,9 @@ class MoonCalendarNightOut(BaseModel):
     lit_side: Literal["left", "right"] = Field(
         description="As `MoonOut.lit_side`, for the day's disc."
     )
-    good: bool = Field(description="Good for broadband by the two thresholds in the settings.")
     level: Literal["go", "marginal", "nogo"] = Field(
-        description="The Moon's step on the Meteo's Moon scale (ING 25/65): broadband good, "
-        "broadband marginal, narrowband only.",
+        description="The Moon's step on the settings' Moon rule (factory ING 25/65): broadband "
+        "good, broadband marginal, narrowband only.",
     )
     shots: list[MoonCalendarShotOut] = Field(default=[], description="Empty: nothing shot.")
 
@@ -59,8 +58,8 @@ class MoonCalendarOut(BaseModel):
     """This month and the next as the background round wrote them: empty `nights` until it has."""
 
     today: str | None
-    max_pct: int
-    min_dark_h: int
+    good_pct: int = Field(description="The rule's bound of broadband good, for the legend.")
+    limit_pct: int = Field(description="The rule's bound of broadband marginal, for the legend.")
     nights: list[MoonCalendarNightOut]
 
 

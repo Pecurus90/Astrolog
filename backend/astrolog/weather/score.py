@@ -4,7 +4,7 @@ hours. Lost light multiplies, as DES effective time (Neilsen et al. 2019, arXiv 
 import math
 from collections.abc import Sequence
 
-from ..levels import Verdict
+from ..levels import MoonRule, Verdict, moon_level
 from . import judge
 from .judge import Measure
 from .verdict import Hour, Summary, is_clear, mean_of, shown, weighted, when, window
@@ -17,6 +17,7 @@ UNCERTAIN_FROM = 40.0  # [P ADR 0034]
 # The aerosol scale's "clear" step: the haze starts where its word stops.
 CLEAR_AOD = judge.SCALES[Measure.AEROSOL].steps[-1].bound
 AOD_FACTOR = 2.0  # [P ADR 0034] e^(-2 (AOD - 0.1)), 550 nm at the zenith
+_FACTORY = MoonRule()
 
 
 def transparency(h: Hour) -> float | None:
@@ -32,10 +33,10 @@ def transparency(h: Hour) -> float | None:
     return 100.0 * (1 - clouds / 100) * haze
 
 
-def narrowband_only(h: Hour) -> bool:
-    """The Moon up and from 65% on the Meteo's Moon scale (ING): the hour is narrowband only."""
-    scale = judge.SCALES[Measure.MOON]
-    return judge.level(scale, scale.read(h)) == Verdict.NOGO
+def narrowband_only(h: Hour, rule: MoonRule) -> bool:
+    """The Moon up and past the rule's limit (ING 65% of factory): the hour is narrowband only."""
+    moon_pct = h.values.get("moon_pct")
+    return moon_pct is not None and moon_level(moon_pct, rule) == Verdict.NOGO
 
 
 def _split(kept: float, narrow: float, known: bool) -> dict[str, float | None]:
@@ -58,9 +59,9 @@ def _verdict(value: float | None) -> Verdict | None:
     return Verdict.MARGINAL if value >= UNCERTAIN_FROM else Verdict.NOGO
 
 
-def assess(hours: Sequence[Hour]) -> Summary:
-    """Verdict, Transparency and exposure are `None` unless every window hour has its clouds. The
-    clear hours (`usable_*`) stay the clouds' own, for the pages not yet on score v4."""
+def assess(hours: Sequence[Hour], rule: MoonRule = _FACTORY) -> Summary:
+    """Verdict, Transparency, exposure `None` unless every window hour has clouds. Without the
+    Moon (the history) any rule says the same: the factory one by default."""
     night, span = window(hours)
     after = {h.at: n.at for h, n in zip(hours, hours[1:], strict=False)}
     shares, _ = weighted(hours)
@@ -69,7 +70,7 @@ def assess(hours: Sequence[Hour]) -> Summary:
     dark = sum(w for _, w in shares)
     kept = sum(t * w for t, (_, w) in zip(lights, shares, strict=True) if t is not None)
     narrow = sum(
-        t * w for t, (h, w) in zip(lights, shares, strict=True) if t and narrowband_only(h)
+        t * w for t, (h, w) in zip(lights, shares, strict=True) if t and narrowband_only(h, rule)
     )
     clarity = round(kept / dark, 1) if complete and dark else None
     cover = [h.values.get("cloud_total_pct") for h in night]
