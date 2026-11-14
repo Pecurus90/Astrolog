@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 376; senza fonte: 0.
-Fonti: C norma: 190; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 91.
+Valori: 377; senza fonte: 0.
+Fonti: C norma: 191; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 91.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -55,6 +55,7 @@ Fonti: C norma: 190; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T
 
 | simbolo | valore | fonte |
 |---|---|---|
+| SkyMonthMark.month | `Field(ge=1, le=12)` | C Gregorian calendar |
 | SiteCreate.latitude | `Field(ge=-90, le=90)` | C geographic latitude |
 | SiteCreate.longitude | `Field(ge=-180, le=180)` | C geographic longitude |
 | SiteCreate.bortle | `Field(None, ge=1, le=9)` | C Bortle 2001: nine classes |

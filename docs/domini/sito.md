@@ -70,6 +70,11 @@ coordinate nuove sarebbero indistinguibili da una misura, e nessuno saprebbe piu
 vecchi. Vale anche il verso opposto: **un campo mandato a vuoto e' cancellato**, non
 ricompilato dal servizio -- lo stesso gesto deve voler dire la stessa cosa su ogni campo.
 
+**Anche delle coordinate si registra la provenienza** (`coords_source`, tavola v82): `place`
+quando vengono da un posto trovato per nome, `declared` quando sono scritte a mano. Spostarle
+senza dirlo le fa scritte a mano. La tavola nomina anche «dalle coordinate nei frame»: oggi
+nessun sito nasce cosi', e il valore non c'e'.
+
 **Del cielo si salva la LUMINOSITA'**, in magnitudini per arcosecondo quadrato, con accanto
 **come la si sa**: misurata con lo strumento, chiesta al servizio, o scelta sulla scala.
 La misura vince sulla stima, e la stima su una scelta a occhio. Tre strade, un numero solo:
@@ -234,6 +239,9 @@ tabella `site_sky_measures`). L'app **propone**, l'utente sceglie; mai un cambio
   la pagina puo' leggere la misura di prima; la lettura legge e basta. Si propone quando la classe misurata e' diversa da quella del sito, **anche quando il
   sito il cielo non ce l'ha** (Marco, 5/11/2026: e' il caso in cui serve di piu'); dopo «Lascia»
   (`site_sky_dismissed`, va nel backup col sito) di nuovo solo se la classe misurata cambia.
+- **I 12 mesi** fino all'ultima notte, dal piu' vecchio, con quelli che hanno misure
+  (`measured.month_marks`, scritti con la misura in `site_sky_measures.marks_json`): le 12 tacche
+  della carta «Il cielo del sito» (tavola v82).
 - **«Usa»** scrive la misura nel sito con la provenienza `frames` e le sue notti (`sky_nights`):
   una quarta strada accanto alle tre, perche' sotto il Bortle si legge «misurato su {n} notti» e
   non «scritto a mano». Spostare il sito la svuota, come quella del servizio: era di quel posto, e

@@ -66,6 +66,7 @@ describe("il posto da cui osservi", () => {
         name: "Verona",
         latitude: 45.44,
         longitude: 10.99,
+        coords_source: "place",
         is_default: true,
       })
     })
@@ -162,7 +163,12 @@ describe("il posto da cui osservi", () => {
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
     await waitFor(() => {
       const scritta = scritture().find((s) => s.url.includes("/api/v1/sites"))
-      expect(scritta?.corpo).toMatchObject({ name: "Casa", latitude: 45.8, longitude: 11.5 })
+      expect(scritta?.corpo).toMatchObject({
+        name: "Casa",
+        latitude: 45.8,
+        longitude: 11.5,
+        coords_source: "declared",
+      })
     })
   })
   it("una ricerca caduta porta dentro di se' cosa farci", async () => {

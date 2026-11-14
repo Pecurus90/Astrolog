@@ -217,6 +217,17 @@ def test_editing_the_coordinates_recomputes_the_timezone(client_vuoto, offline):
     assert r.status_code == 200 and r.json()["timezone"] == "America/New_York"
 
 
+def test_the_coordinates_say_where_they_come_from(client_vuoto, offline):
+    """Tavola v82: 'dalla ricerca per nome' o 'scritte a mano'. Spostate senza dirlo: a mano."""
+    site = create(client_vuoto, coords_source="place")
+    assert site["coords_source"] == "place"
+    rinominato = client_vuoto.patch(f"/api/v1/sites/{site['id']}", json={"name": "Asiago 2"})
+    assert rinominato.json()["coords_source"] == "place"
+    spostato = client_vuoto.patch(f"/api/v1/sites/{site['id']}", json={"latitude": 45.9})
+    assert spostato.json()["coords_source"] == "declared"
+    assert create(client_vuoto, name="Casa")["coords_source"] == "declared"
+
+
 def test_a_site_that_is_nowhere_is_not_found(client_vuoto, offline):
     assert client_vuoto.patch("/api/v1/sites/999", json={"name": "x"}).status_code == 404
     assert client_vuoto.delete("/api/v1/sites/999").status_code == 404

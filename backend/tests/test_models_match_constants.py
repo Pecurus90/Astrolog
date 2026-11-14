@@ -275,6 +275,7 @@ def test_the_sources_of_a_site_are_the_same_in_the_models_and_in_place():
     """The routes repeat them as `Literal` on purpose (`models_tonight`): never drifted."""
     assert set(get_args(models_site.SkySource)) == set(place.SkySource)
     assert set(get_args(models_site.ElevationSource)) == set(place.ElevationSource)
+    assert set(get_args(models_site.CoordsSource)) == set(place.CoordsSource)
 
 
 def test_the_word_for_the_missing_solver_is_one_word():

@@ -5423,6 +5423,13 @@ export interface components {
             /** Longitude */
             longitude: number;
             /**
+             * Coords Source
+             * @description `place` when they come from a place found by name.
+             * @default declared
+             * @enum {string}
+             */
+            coords_source: "place" | "declared";
+            /**
              * Elevation M
              * @description If you don't give it, the app asks the service; if you do, yours wins.
              */
@@ -5456,6 +5463,11 @@ export interface components {
             latitude?: number | null;
             /** Longitude */
             longitude?: number | null;
+            /**
+             * Coords Source
+             * @description With moved coordinates; not sent means written by hand.
+             */
+            coords_source?: ("place" | "declared") | null;
             /** Elevation M */
             elevation_m?: number | null;
             /** Sky Sqm */
@@ -5484,6 +5496,11 @@ export interface components {
             latitude: number;
             /** Longitude */
             longitude: number;
+            /**
+             * Coords Source
+             * @enum {string}
+             */
+            coords_source: "place" | "declared";
             /**
              * Elevation M
              * @description None = not provided: zero is sea level, and it is a true value.
@@ -5561,6 +5578,11 @@ export interface components {
              * @description Enough, a class other than the site's, and not the one dismissed.
              */
             propose: boolean;
+            /**
+             * Month Marks
+             * @description The 12 months up to the last night, oldest first: which have measures. Empty while no frame counts.
+             */
+            month_marks: components["schemas"]["SkyMonthMark"][];
         };
         /**
          * SiteSkyOut
@@ -5606,6 +5628,13 @@ export interface components {
              * @enum {string}
              */
             kind: "day" | "civil" | "nautical" | "astronomical" | "dark";
+        };
+        /** SkyMonthMark */
+        SkyMonthMark: {
+            /** Month */
+            month: number;
+            /** Measured */
+            measured: boolean;
         };
         /**
          * SkyPointOut

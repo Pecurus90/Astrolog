@@ -15,6 +15,7 @@ SolverSource = Literal["declared", "env", "path", "known_place"]
 SkySource = Literal["measured", "service", "scale", "frames"]
 SkyMeasuredStatus = Literal["enough", "too_few"]
 ElevationSource = Literal["declared", "service"]
+CoordsSource = Literal["place", "declared"]  # found by name, written by hand
 
 # A null alone does not tell "I don't know" from "I didn't ask": each empty field carries its code.
 Unknown = Literal["site_no_timezone", "site_no_elevation", "site_no_sky"]
@@ -35,6 +36,15 @@ class SiteSkyMeasured(BaseModel):
     propose: bool = Field(
         description="Enough, a class other than the site's, and not the one dismissed."
     )
+    month_marks: list["SkyMonthMark"] = Field(
+        description="The 12 months up to the last night, oldest first: which have measures. "
+        "Empty while no frame counts."
+    )
+
+
+class SkyMonthMark(BaseModel):
+    month: int = Field(ge=1, le=12)  # [C Gregorian calendar]
+    measured: bool
 
 
 class SiteOut(BaseModel):
@@ -42,6 +52,7 @@ class SiteOut(BaseModel):
     name: str
     latitude: float
     longitude: float
+    coords_source: CoordsSource
     elevation_m: float | None = Field(
         description="None = not provided: zero is sea level, and it is a true value."
     )
@@ -74,6 +85,9 @@ class SiteCreate(BaseModel):
     name: str = Field(min_length=1)
     latitude: float = Field(ge=-90, le=90)  # [C geographic latitude]
     longitude: float = Field(ge=-180, le=180)  # [C geographic longitude]
+    coords_source: CoordsSource = Field(
+        default="declared", description="`place` when they come from a place found by name."
+    )
     elevation_m: float | None = Field(
         default=None,
         description="If you don't give it, the app asks the service; if you do, yours wins.",
@@ -90,6 +104,9 @@ class SiteEdit(BaseModel):
     name: str | None = Field(None, min_length=1)
     latitude: float | None = Field(None, ge=-90, le=90)  # [C geographic latitude]
     longitude: float | None = Field(None, ge=-180, le=180)  # [C geographic longitude]
+    coords_source: CoordsSource | None = Field(
+        None, description="With moved coordinates; not sent means written by hand."
+    )
     elevation_m: float | None = None
     sky_sqm: float | None = Field(None, ge=SQM_MIN, le=SQM_MAX)
     bortle: int | None = Field(None, ge=1, le=9)  # [C Bortle 2001: nine classes]

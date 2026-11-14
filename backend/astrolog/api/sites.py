@@ -1,6 +1,7 @@
 """A site is always declared: header coordinates are a hint and create nothing. What coordinates
 yield (zone, elevation, sky) is derived on write and saved, so an opening page never waits."""
 
+import json
 import sqlite3
 from dataclasses import asdict
 from typing import Any, NoReturn
@@ -31,11 +32,11 @@ from .scan import sky_follows
 router = APIRouter(prefix="/api/v1", tags=["sites"])
 
 _SELECT = (
-    "SELECT s.id, s.name, s.latitude, s.longitude, s.elevation_m, s.timezone, s.sky_sqm,"
-    " s.elevation_source, s.sky_source, s.sky_nights, s.is_default,"
+    "SELECT s.id, s.name, s.latitude, s.longitude, s.coords_source, s.elevation_m, s.timezone,"
+    " s.sky_sqm, s.elevation_source, s.sky_source, s.sky_nights, s.is_default,"
     " (SELECT COUNT(*) FROM nights n WHERE n.site_id = s.id) AS nights,"
     " m.nights AS m_nights, m.months AS m_months, m.sqm AS m_sqm, m.first_night AS m_first,"
-    " m.last_night AS m_last, d.bortle AS dismissed"
+    " m.last_night AS m_last, m.marks_json AS m_marks, d.bortle AS dismissed"
     " FROM sites s LEFT JOIN site_sky_measures m ON m.site_id = s.id"
     " LEFT JOIN site_sky_dismissed d ON d.site_id = s.id"
 )
@@ -54,6 +55,7 @@ def _measured(data: dict[str, Any]) -> SiteSkyMeasured:
         propose=bortle is not None
         and bortle != bortle_of(data["sky_sqm"])
         and bortle != dismissed,
+        month_marks=json.loads(marks) if (marks := data.pop("m_marks")) else [],
     )  # fmt: skip
 
 
@@ -153,13 +155,14 @@ def create_site(
             first = conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0] == 0
             site_id = inserted_id(
                 conn.execute(
-                    "INSERT INTO sites(name, latitude, longitude, elevation_m,"
+                    "INSERT INTO sites(name, latitude, longitude, coords_source, elevation_m,"
                     " elevation_source, timezone, sky_sqm, sky_source, is_default, created_at)"
-                    " VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
+                    " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
                     (
                         body.name,
                         body.latitude,
                         body.longitude,
+                        body.coords_source,
                         elevation_m,
                         elevation_source,
                         timezone,
@@ -206,6 +209,8 @@ def edit_site(
     latitude = fields.get("latitude", old["latitude"])
     longitude = fields.get("longitude", old["longitude"])
     moved = (latitude, longitude) != (old["latitude"], old["longitude"])
+    declared = place.CoordsSource.DECLARED
+    coords_source = (fields.get("coords_source") or declared) if moved else old["coords_source"]
 
     timezone = place.timezone_of(latitude, longitude)
     if "elevation_m" in fields:
@@ -234,13 +239,14 @@ def edit_site(
     try:
         with transaction(conn):
             conn.execute(
-                "UPDATE sites SET name = ?, latitude = ?, longitude = ?, elevation_m = ?,"
-                " elevation_source = ?, timezone = ?, sky_sqm = ?, sky_source = ?, sky_nights = ?"
-                " WHERE id = ?",
+                "UPDATE sites SET name = ?, latitude = ?, longitude = ?, coords_source = ?,"
+                " elevation_m = ?, elevation_source = ?, timezone = ?, sky_sqm = ?,"
+                " sky_source = ?, sky_nights = ? WHERE id = ?",
                 (
                     fields.get("name", old["name"]),
                     latitude,
                     longitude,
+                    coords_source,
                     elevation_m,
                     elevation_source,
                     timezone,

@@ -49,6 +49,13 @@ class ElevationSource(StrEnum):
     SERVICE = "service"
 
 
+class CoordsSource(StrEnum):
+    """Where the site's coordinates come from, said beside them (tavola v82, Impostazioni)."""
+
+    PLACE = "place"  # a place found by name (`GET /places`)
+    DECLARED = "declared"  # written by hand
+
+
 @dataclass(frozen=True, slots=True)
 class Place:
     """A place found by name: a candidate, not a site."""

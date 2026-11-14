@@ -1,6 +1,8 @@
 """Il Bortle misurato a schermo (docs/domini/sito.md): l'app propone, l'utente sceglie «Usa» o
 «Lascia»; dopo «Lascia» si ripropone solo se la classe misurata cambia; i dati scarsi si dicono."""
 
+import json
+
 import test_site_sky as sky
 from astrolog.api.deps import get_db
 from astrolog.db.connect import connect, create_database
@@ -16,12 +18,22 @@ def create(client, **body):
     return site
 
 
+_MARKS = json.dumps([{"month": (10 + i) % 12 + 1, "measured": i % 2 == 0} for i in range(12)])
+
+
+def test_the_site_says_its_twelve_months_as_written(client_vuoto, db_path, offline):
+    site = create(client_vuoto, bortle=4)
+    _measured(db_path, site["id"], 21.4)
+    assert _site(client_vuoto, site["id"])["measured"]["month_marks"] == json.loads(_MARKS)
+
+
 def _measured(db_path, site_id, sqm, nights=40, months=10):
     conn = connect(db_path)
     conn.execute(
         "INSERT OR REPLACE INTO site_sky_measures (site_id, nights, months, sqm, first_night,"
-        " last_night, computed_at) VALUES (?, ?, ?, ?, '2025-01-10', '2025-10-20', ?)",
-        (site_id, nights, months, sqm, LATER),
+        " last_night, marks_json, computed_at)"
+        " VALUES (?, ?, ?, ?, '2025-01-10', '2025-10-20', ?, ?)",
+        (site_id, nights, months, sqm, _MARKS, LATER),
     )
     conn.commit()
     conn.close()
@@ -39,6 +51,7 @@ def test_the_measures_propose_another_class(client_vuoto, db_path, offline):
     assert measured == {
         "status": "enough", "nights": 40, "months": 10, "sqm": 21.4, "bortle": 4,
         "first_night": "2025-01-10", "last_night": "2025-10-20", "propose": True,
+        "month_marks": json.loads(_MARKS),
     }  # fmt: skip
 
 
@@ -60,7 +73,7 @@ def test_too_few_data_say_how_many_nights_in_how_many_months(client_vuoto, db_pa
     site = create(client_vuoto, bortle=4)
     assert site["measured"] == {
         "status": "too_few", "nights": 0, "months": 0, "sqm": None, "bortle": None,
-        "first_night": None, "last_night": None, "propose": False,
+        "first_night": None, "last_night": None, "propose": False, "month_marks": [],
     }  # fmt: skip
     _measured(db_path, site["id"], None, nights=5, months=3)
     measured = _site(client_vuoto, site["id"])["measured"]

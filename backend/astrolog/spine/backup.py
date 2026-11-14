@@ -27,7 +27,8 @@ VERSION: Final = 1
 # A camera's file-told fields are columns the next scan rewrites: the user's word is a declaration.
 _INSTRUMENT = ("kind", *gear.INSTRUMENT_FIELDS)
 _SITE = (
-    "name", "latitude", "longitude", "elevation_m", "elevation_source", "sky_sqm", "sky_source",
+    "name", "latitude", "longitude", "coords_source", "elevation_m", "elevation_source",
+    "sky_sqm", "sky_source",
     "sky_nights", "horizon_json", "is_default",
 )  # fmt: skip
 # "Keep Bortle b0" travels with its site: the class not wanted, or nothing

@@ -47,6 +47,8 @@ CREATE TABLE sites (
   name         TEXT NOT NULL,
   latitude     REAL NOT NULL CHECK (latitude BETWEEN -90 AND 90),
   longitude    REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+  -- da dove vengono le coordinate: un posto trovato per nome, o scritte a mano
+  coords_source TEXT NOT NULL DEFAULT 'declared' CHECK (coords_source IN ('place', 'declared')),
   elevation_m  REAL,
   elevation_source TEXT CHECK (elevation_source IN ('declared', 'service')),
   timezone     TEXT,                                 -- IANA; NULL quando non si riconosce un
@@ -1391,6 +1393,8 @@ CREATE TABLE site_sky_measures (
   sqm         REAL,  -- livello annuo; NULL: notti in meno di 4 mesi, o un buco oltre 3
   first_night TEXT NOT NULL,
   last_night  TEXT NOT NULL,
+  -- i 12 mesi fino all'ultima notte, dal piu' vecchio: [{month 1-12, measured}]
+  marks_json  TEXT NOT NULL,
   computed_at TEXT NOT NULL,
   CHECK (first_night <= last_night)
 ) STRICT;

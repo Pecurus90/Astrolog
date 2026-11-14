@@ -52,6 +52,8 @@ export function useCampiDelSito(iniziale?: {
   // veniva -- un servizio, o uno strumento. E il backend, ricevendola, smette di riportare il
   // cielo quando le coordinate si spostano. Si manda solo cio' che l'utente ha toccato.
   const [cieloToccato, setCieloToccato] = useState(false)
+  // coordinate prese da un posto trovato per nome, finche' nessuno le riscrive a mano
+  const [trovate, setTrovate] = useState(false)
 
   const fuoriScala = (scritto: string, asse: Asse, tetto: number) => {
     if (scritto.trim() === "") return undefined
@@ -67,8 +69,14 @@ export function useCampiDelSito(iniziale?: {
     lon,
     cielo,
     setNome,
-    setLat,
-    setLon,
+    setLat: (v: string) => {
+      setTrovate(false)
+      setLat(v)
+    },
+    setLon: (v: string) => {
+      setTrovate(false)
+      setLon(v)
+    },
     setCielo: (c: ClasseDiCielo) => {
       setCieloToccato(true)
       setCielo(c)
@@ -90,12 +98,14 @@ export function useCampiDelSito(iniziale?: {
       name: nome.trim(),
       latitude: coordinataDa(lat, "lat"),
       longitude: coordinataDa(lon, "lon"),
+      coords_source: trovate ? ("place" as const) : ("declared" as const),
       ...(cieloToccato && cielo !== undefined ? { bortle: cielo } : {}),
     }),
     prendiDa: (p: Posto) => {
       setNome(p.name)
       setLat(numeroNelCampo(p.latitude))
       setLon(numeroNelCampo(p.longitude))
+      setTrovate(true)
     },
     /** Dopo un salvataggio riuscito, dove il modulo non si smonta: coi campi pieni lo stesso
      *  sito si offrirebbe di nuovo, e il nome e' unico. */
@@ -105,6 +115,7 @@ export function useCampiDelSito(iniziale?: {
       setLon("")
       setCielo(undefined)
       setCieloToccato(false)
+      setTrovate(false)
     },
   }
 }
