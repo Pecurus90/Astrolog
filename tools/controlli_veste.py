@@ -26,10 +26,11 @@ from controlli_foglio import pavimenti_del_cielo
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
 # Old sheet (as-, v37.3): three tokens renamed `--as-*` while it lives beside the new one (step
-# 33, Marco's exception to ADR 0012). New sheet (al-, v82) in `consegna/`, byte for byte.
+# 33, Marco's exception to ADR 0012); Bortle comment on ASTAP's floors (Issue #28, Marco 14/11:
+# Design no longer has this sheet). New sheet (al-, v82) in `consegna/`, byte for byte.
 CONSEGNA = "consegna/astrolog.css"
 IMPRONTE = {
-    FOGLIO: "5898fc939379f7ba5e46f43a76743dc749cd23e9f539c44c889b7782a0bf2f87",
+    FOGLIO: "bb013a10c969aabb410bee7114543e0a7b1fc9257eefc4c378e6353bdcb7e089",
     CONSEGNA: "478953148b623d0c559999c4210d2760cae1c234ce1838cca7431330c30efd52",
     "consegna/caratteri.css": "edf0e4ef85f0a477a69bb683f68ef01d1264a2176724602ee40e353290c4ba5d",
 }

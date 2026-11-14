@@ -32,3 +32,6 @@ consegnato da Claude Design e mattoni nostri. Marco ridisegna tutte le pagine co
   (v58.6, passo 33) ha tre token rinominati, `--as-raggio-carta`, `--as-durata-breve`,
   `--as-vetro`, perche' non tocchino quelli del nuovo; il nuovo resta alla lettera. Esce col
   vecchio foglio.
+- **Eccezione dichiarata** (Marco, 14/11/2026, Issue #28): il commento di `.as-bortle-letta` nel
+  foglio vecchio cita i pavimenti di ASTAP; Design non ha piu' quel foglio e non lo riconsegna.
+  Esce col vecchio foglio.
