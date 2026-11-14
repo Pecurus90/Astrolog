@@ -94,7 +94,7 @@ export const SENZA_SOGGETTI = { found: [], not_found: 0, not_yet: 0 }
  *  il backend sposta un campo, una delle due resterebbe a dire un'altra cosa. */
 export const SCHEDE: components["schemas"]["GearList"]["cards"] = {
   optics: ["brand", "model", "aperture_mm", "focal_mm", "weight_kg", "notes"],
-  camera: ["brand", "model", "camera_type", "pixel_size_um", "weight_kg", "notes"],
+  camera: ["brand", "model", "sensor", "width_px", "height_px", "pixel_size_um", "camera_type", "adc_bits", "cooled", "cooling_c", "thickness_mm", "weight_kg", "notes"],
   mount: ["brand", "model", "payload_kg", "weight_kg", "notes"],
   reducer: ["brand", "model", "reducer_factor", "weight_kg", "notes"],
   filter_wheel: ["brand", "model", "slots", "weight_kg", "notes"],

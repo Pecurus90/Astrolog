@@ -232,8 +232,8 @@ piu' usata, la guida una sola (`pieces`, scritti con i conti da `gear_numbers`);
 prima che i conti siano scritti non c'e'. L'esploso e' disegno, non dato: la geometria della
 tavola sta in `disegnoDelTreno.ts`, e uno schema ottico non scritto si disegna rifrattore. Se i
 nomi di una riga non entrano, le pillole passano al numero con la legenda (Marco, 14/11). Il
-gruppo e il modulo di un pezzo arrivano col commit D, che fino ad allora mostra le righe di
-prima. Le barre arrivano dall'API
+gruppo e il modulo di un pezzo ci sono (commit D, 14/11): Modifica apre il modulo nella riga, uno
+alla volta. Le barre arrivano dall'API
 (`bar_pct`: ore sul piu' usato del gruppo, mai sotto 3), scritte con l'uso
 (`gear_usage.write_bars`); la Luna piena del campo disegnato e' `moon_deg`, il diametro apparente
 medio della NASA (1896″, 0,527°; la tavola scrive 0,52). La scala del campo dice "arcosecondi per
@@ -282,7 +282,7 @@ e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono 
   campo disegnato "Luna piena, per misura";
 - backfocus con la tolleranza: "esatto", "+0.5 mm, in tolleranza", "corto di …", "lungo di …";
   senza tolleranza solo la differenza ("+0.5 mm"), senza pillola;
-- modulo: "Tipo: … Cambia", i blocchi "chi è" e "dati tecnici" con "{n} di {m} scritti",
+- modulo: "Tipo: … Cambia", i blocchi "nome e modello" e "dati tecnici" (tavola v82) con "{n} di {m} scritti",
   "altra…" / "Nuova marca", "calcolato" / "dai file" / "inserito" accanto al campo, "Quante
   bande", "Larghezza (nm)", "Pixel (µm)", "servono apertura e focale"; campi nuovi "Schema
   ottico", "Tolleranza del backfocus (mm)" (ottica e riduttore), "Bias (ADU)" (camera);
@@ -296,7 +296,8 @@ e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono 
   campi scritti da te (la risoluzione dei frame viene dai loro header), e un numero che non
   rielabora niente sarebbe falso;
 - scansione in corso: Salva spento con "Scansione in corso: si salva al termine." (non
-  "potrai"); oggi c'e' solo il rifiuto dopo ("riprova al termine");
+  "potrai"), ed Elimina spento con "Scansione in corso: si elimina al termine." (commit D, dallo
+  stato del lavoro); se la scansione parte dopo, resta il rifiuto ("riprova al termine");
 - non si legge: "Attrezzatura non disponibile" e "Riprova".
 
 Le etichette proposte il 18/10 per i campi nuovi (Raffreddamento, Risoluzione, Prisma, Passo,

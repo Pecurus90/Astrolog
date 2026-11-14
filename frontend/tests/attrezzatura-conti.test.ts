@@ -52,17 +52,17 @@ describe("la scheda di un pezzo", () => {
         "sensore IMX571",
         "apertura 130 mm",
         "focale 910 mm",
-        "cerchio d'immagine 44,50 mm",
+        "cerchio d'immagine 44,5 mm",
         "600 × 400 px",
         "monocromatica",
         "pixel 3,76 µm",
         "16 bit",
         "carico 20 kg con contrappeso",
-        "12,50 kg senza",
+        "12,5 kg senza",
         "7 posizioni",
         "passo 4,25 µm",
         "900 passi",
-        "spessore 16,50 mm",
+        "spessore 16,5 mm",
         "prisma 8 mm",
         "peso 5,75 kg",
       ].map((v) => ({ v, calc: false })),
@@ -85,7 +85,7 @@ describe("la scheda di un pezzo", () => {
       }),
     ).toEqual([
       { v: "potere risolutore 0,89″", calc: true },
-      { v: "pixel 3,80 µm", calc: true },
+      { v: "pixel 3,8 µm", calc: true },
       { v: "23,5 × 15,7 mm", calc: true },
     ])
   })
@@ -106,7 +106,7 @@ describe("la scheda di un pezzo", () => {
   it("il backfocus con e senza tolleranza", () => {
     expect(testi({ required_backfocus_mm: 55 })).toEqual(["backfocus 55 mm"])
     expect(testi({ required_backfocus_mm: 55, backfocus_tolerance_mm: 0.5 })).toEqual([
-      "backfocus 55 mm ± 0,50",
+      "backfocus 55 mm ± 0,5",
     ])
   })
 
@@ -125,7 +125,7 @@ describe("la scheda di un pezzo", () => {
   it("il fattore: sopra 1 e' una barlow, fino a 1 un riduttore", () => {
     expect(testi({ reducer_factor: 2 })).toEqual(["barlow 2×"])
     expect(testi({ reducer_factor: 1 })).toEqual(["riduzione 1×"])
-    expect(testi({ reducer_factor: 0.8 })).toEqual(["riduzione 0,80×"])
+    expect(testi({ reducer_factor: 0.8 })).toEqual(["riduzione 0,8×"])
   })
 
   it("in breve: le prime tre voci, mai il peso", () => {

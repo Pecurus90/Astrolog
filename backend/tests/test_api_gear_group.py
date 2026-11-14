@@ -92,6 +92,8 @@ def test_a_free_mount_knows_the_rig_still_without_one(archivio):  # noqa: F811
     crea(archivio, kind="mount", name="AM5")
 
     assert pezzo(archivio, "mount", "EQ6-R")["rig_for_mount"] is None
+    # scelta su un setup, non dice piu' "non associata a un setup"
+    assert pezzo(archivio, "mount", "EQ6-R")["no_hours"] is None
     senza = [
         r["id"]
         for r in archivio.get("/api/v1/gear").json()["rigs"]

@@ -461,3 +461,44 @@ tavola, provata alla cifra su un rifrattore, un Newton e uno Schmidt-Cassegrain
   (driver ASCOM, «ASCOM ToupTek AAF») la prima esce a sinistra dal riquadro. App (Marco, 14/11):
   se i nomi di una riga non entrano, quel treno passa alle pillole col numero e alla legenda a
   due colonne, come il telefono; chi rinomina corto torna ai nomi. A Design.
+
+## Attrezzatura -- Il gruppo e il modulo di un pezzo (passo 33, commit D, 14/11)
+
+Il gruppo di un tipo (`grp`, 102-117) e il modulo di modifica (`modulo` k `mod`, 223-301, con
+`componenti/Modulo`): righe con la scheda intera, ore e barra dall'API, Modifica nella riga, nome e
+modello e dati tecnici, Unisci a, Elimina con la conferma. Restano diverse dalla tavola:
+- **«N frame da rielaborare» prima di salvare.** Tavola (v66 10.3, `righe` 273): la riga
+  «cambia il cielo dei frame» appena cambi sensore, pixel, risoluzione, focale, fattore o tipo.
+  App: il numero arriva dopo Salva (`requeued`), e solo per cio' che uno stadio rilegge davvero
+  (contratto attrezzatura.md): prima non si sa, e per sensore, risoluzione, focale e fattore
+  sarebbe falso. Resta la riga dell'unione, «N frame da rielaborare: passano a X», che e' vera.
+- **I calcolati nel modulo.** Tavola: rapporto focale, potere risolutore e sensore in mm cambiano
+  mentre scrivi. App: li scrive il backend (`numbers`), si aggiornano dopo Salva; senza dati
+  «servono apertura e focale». Perche': il frontend non calcola.
+- **Il bias.** Tavola: un campo «Bias (ADU)». App (Marco, 14/11): uno per offset dei file,
+  «Bias (ADU), offset 50»; con un offset solo resta «Bias (ADU)»; senza offset scritto «Bias
+  (ADU), senza offset». Nella scheda «bias 500 ADU, offset 50». A Design.
+- **Elimina dell'ottica o della camera di un setup senza frame.** Tavola: non c'e' il caso
+  (`usato` guarda solo i frame). App (Marco, 14/11): spento con «Fa parte di {setup}: un setup è
+  fatto della sua ottica e della sua camera.», il rifiuto `in_rig` del backend. A Design.
+- **«dai file».** Tavola: anche sul Nome di una camera rilevata (`comp.da`). App: solo sui campi
+  che i file dicono (`from_files`, il sensore della camera), come il contratto; il Nome non ha
+  pillola, gli altri campi scritti «inserito».
+- **Gli oggetti nella riga.** Prima del porting la riga diceva frame, notti e oggetti. App come la
+  tavola: solo le ore con la barra.
+- **«inserito manualmente» sui filtri.** Tavola: anche su un filtro scritto a mano (`man`). App:
+  l'API non dice se un filtro e' nato dai file, la pillola sta solo sui pezzi. A Design se serve.
+- **Scegliere o togliere un'unione** rimette il modulo com'era: una modifica nascosta dai campi
+  che spariscono partirebbe senza vedersi. La tavola tiene i valori scritti.
+- **I numeri della scheda** si scrivono come sono (`vir`: «pixel 3,8 µm», «riduzione 0,8×»);
+  fino al commit C1 l'app li scriveva a due decimali («3,80»). Corretto qui.
+- **Un filtro senza bande scritte** (riconosciuto dal nome, `Lum`): la riga mostra la banda che
+  il nome da' (`passband`) senza larghezza, e il modulo parte da quella; parte solo se la cambi.
+  La tavola non ha filtri senza bande.
+- **Un pezzo senza frame** (scritto a mano, o un setup appena nato) dice «non indicato nei file»,
+  come la tavola per un pezzo scritto a mano, invece di «< 6 min» con la barra al 3%. Una
+  montatura scelta su un setup senza frame non dice piu' «non associata a un setup».
+- **Il rifiuto di Elimina al gesto** (un pezzo non ancora contato) sta fra gli errori del modulo,
+  col «!», come la tavola (`delErr`).
+- **L'ordine dei campi della camera** e' quello della tavola (`TEC`: sensore, risoluzione, pixel,
+  tipo, bit): l'API lo manda cosi' (`instrument_answer.CARD`).

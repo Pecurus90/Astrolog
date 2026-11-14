@@ -39,8 +39,11 @@ export const OTTICA = {
   total_steps: null,
   payload_no_cw_kg: null,
   numbers: {} as Record<string, unknown>,
-  in_rigs: [],
-  from_files: [],
+  in_rigs: [] as { rig_id: number; frames: number; chosen: boolean }[],
+  from_files: [] as string[],
+  delete_refused: null as { code: string; frames: number; rigs: number[] } | null,
+  rig_for_mount: null as number | null,
+  biases: [] as { offset: number | null; bias_adu: number | null; frames: number }[],
   bar_pct: 100,
   notes: null,
   detected: true,
@@ -126,7 +129,15 @@ export const FILTRO = {
   name: "Ha",
   brand: null,
   model: null,
+  passband: "HA",
   bands: [{ band: "HA", width_nm: 3 }],
+  filter_size: null as string | null,
+  thickness_mm: null as number | null,
+  mounted: null as boolean | null,
+  fast_optics: null as boolean | null,
+  in_rigs: [] as { rig_id: number; frames: number; chosen: boolean }[],
+  delete_refused: null as { code: string; frames: number; rigs: number[] } | null,
+  bar_pct: 100,
   frames: 60,
   integration_s: 18000,
   untimed: 0,
@@ -138,7 +149,6 @@ export const FILTRO = {
 
 export function attrezzatura(corpo: Record<string, unknown> = {}, porte: Record<string, unknown> = {}) {
   rispondi({
-    ...(porte as Parameters<typeof rispondi>[0]),
     ...STANOTTE,
     "/api/v1/gear": {
       stato: 200,
@@ -150,6 +160,7 @@ export function attrezzatura(corpo: Record<string, unknown> = {}, porte: Record<
         moon_deg: 0.527,
         fields: [],
         moon_pct: null,
+        brands: [] as string[],
         ...corpo,
       },
     },
@@ -157,6 +168,8 @@ export function attrezzatura(corpo: Record<string, unknown> = {}, porte: Record<
     "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
     "/api/health": { stato: 200, corpo: SALUTE },
     ...SPINA,
+    // last: a test's answer wins over the bench's (the scan running, a write)
+    ...(porte as Parameters<typeof rispondi>[0]),
   })
 }
 

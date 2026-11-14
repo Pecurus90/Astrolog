@@ -571,6 +571,11 @@ describe("l accessibilita della prima pagina", () => {
       numbers: {},
       detected: true,
       mergeable_into: [] as number[],
+      biases: [],
+      in_rigs: [],
+      from_files: [],
+      delete_refused: null,
+      rig_for_mount: null,
       frames: 120,
       integration_s: 36000,
       untimed: 2,
@@ -647,6 +652,7 @@ describe("l accessibilita della prima pagina", () => {
           moon_deg: 0.527,
           fields: [],
           moon_pct: null,
+          brands: [],
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -665,7 +671,7 @@ describe("l accessibilita della prima pagina", () => {
     // Anche **i due gesti aperti**: una scheda che si corregge e una che nasce sono campi con le
     // loro etichette, ed e' li' che un modulo senza nomi farebbe danno a chi ascolta. Uno alla
     // volta: aprire *Aggiungi strumento* chiude il dettaglio (tavola v82).
-    fireEvent.click((await screen.findAllByRole("button", { name: /^modifica$/i }))[0] as HTMLElement)
+    fireEvent.click((await screen.findAllByRole("button", { name: /^modifica /i }))[0] as HTMLElement)
     expect(await violazioni(container)).toEqual([])
     fireEvent.click(screen.getByRole("button", { name: /^aggiungi strumento$/i }))
 

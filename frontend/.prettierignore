@@ -31,7 +31,6 @@ src/NotteDelMeteo.tsx
 src/Notti.tsx
 src/NuovoFiltroOCorredo.tsx
 src/Ricerca.tsx
-src/RigheDellAttrezzatura.tsx
 src/ScalaDelCielo.tsx
 src/SchedaDelPezzo.tsx
 src/SchedaDelSito.tsx

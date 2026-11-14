@@ -17,3 +17,8 @@ export function misura(scritto: string, intero: boolean) {
   const n = Number(scritto)
   return scritto !== "" && n > 0 && (!intero || Number.isInteger(n)) ? n : undefined
 }
+
+/** La stessa misura scritta all'italiana: la virgola e' il punto decimale. */
+export function misuraConVirgola(scritto: string, intero = false) {
+  return misura(scritto.trim().replace(",", "."), intero)
+}

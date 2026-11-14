@@ -32,6 +32,7 @@ export function DettaglioSetup({
   formato,
   onVai,
   onAggiungi,
+  proposta,
 }: {
   pagina: Pagina
   setup: Corredo
@@ -40,9 +41,17 @@ export function DettaglioSetup({
   onVai: (pezzo: number) => void
   /** "aggiungine uno": the add form, of that kind when there is one. */
   onAggiungi: (genere: Genere | null) => void
+  /** "Seleziona montatura" from the group: the part opens with that piece already chosen. */
+  proposta?: { parte: Parte; pezzo: number }
 }) {
   const m = MISURE_DETTAGLIO[formato]
-  const [aperto, setAperto] = useState<Aperto>(null)
+  const [aperto, setAperto] = useState<Aperto>(proposta?.parte ?? null)
+  // the proposal holds for its first opening only: closed, the part reads the rig again
+  const [proposto, setProposto] = useState(proposta?.pezzo)
+  const apri = (x: Aperto) => {
+    setProposto(undefined)
+    setAperto(x)
+  }
   const treno = trenoDelSetup(pagina, setup)
   return (
     <div className="al-attr__centro-2" style={{ gridTemplateColumns: m.griglia, gap: m.stacco }}>
@@ -52,7 +61,7 @@ export function DettaglioSetup({
           setup={setup}
           formato={formato}
           aperto={aperto === "nome"}
-          onApri={(si) => setAperto(si ? "nome" : null)}
+          onApri={(si) => apri(si ? "nome" : null)}
         />
         {treno && (
           <TrenoOttico treno={treno} nome={nomeDelSetup(setup)} formato={formato} onVai={onVai} />
@@ -62,9 +71,10 @@ export function DettaglioSetup({
           setup={setup}
           formato={formato}
           aperto={aperto === "nome" ? null : aperto}
-          onApri={setAperto}
+          onApri={apri}
           onVai={onVai}
           onAggiungi={onAggiungi}
+          {...(proposto !== undefined && aperto === proposta?.parte ? { proposto } : {})}
         />
       </div>
       <div className="al-attr__colonna-1" style={{ gridColumn: m.quattro, gap: m.stacco }}>

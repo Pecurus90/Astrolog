@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { type ReactNode, useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 
-import { GRUPPI, Indice, type Scelta, esiste, primaScelta } from "./AttrezzaturaIndice"
+import { Indice, type Scelta, esiste, primaScelta } from "./AttrezzaturaIndice"
 import { Avviso } from "./componenti/Avviso"
 import { useFormato } from "./componenti/formato"
 import { gesto } from "./componenti/gesto"
@@ -11,14 +11,17 @@ import { type CartaScheletro, Scheletro } from "./componenti/Scheletro"
 import type { Formato } from "./componenti/Tema"
 import { DettaglioSetup } from "./DettaglioSetup"
 import { AggiungiUnPezzo } from "./GestiDelPezzo"
+import { GruppoDellAttrezzatura } from "./GruppoDellAttrezzatura"
 import { Rielaborati } from "./ModuloDelGesto"
-import { UnFiltro, UnPezzo } from "./RigheDellAttrezzatura"
+import { statoDi, useStato } from "./Scansiona"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { numero, t } from "./i18n"
 
 type Pagina = components["schemas"]["GearList"]
 type Genere = components["schemas"]["InstrumentOnPage"]["kind"]
+/** "Seleziona montatura": the rig to open, and the mount its part starts on. */
+type Proposta = { setup: number; pezzo: number }
 
 // [T] Attrezzatura.dc.html `L` (210-213): the page measures per format
 const MISURE: Record<Formato, { stacco: string; angolo: string; barra: string; titolo: string }> = {
@@ -96,11 +99,18 @@ export function Attrezzatura() {
   const trovato = scelta !== null || pagina === undefined || sceltaDa(pagina, cercato) !== null
   const aperto = tel ? (dettaglio && trovato) || aggiungo !== null : true
   const sopra = () => window.scrollTo?.({ top: 0, behavior: "smooth" })
+  const [proposta, setProposta] = useState<Proposta | null>(null)
   const scegli = (s: Scelta) => {
     setScelta(s)
+    setProposta(null)
     setAggiungo(false)
     setDettaglio(true)
     if (tel) sopra()
+  }
+  const montatura = (setup: number, pezzo: number) => {
+    scegli({ setup })
+    setProposta({ setup, pezzo })
+    sopra()
   }
   // a piece named in a rig's detail opens among the components, its row marked (`vaiComp`)
   const vaiAlPezzo = (id: number) => {
@@ -183,7 +193,7 @@ export function Attrezzatura() {
               )}
               {!vuota && (!tel || !aperto) && <Indice pagina={pagina} scelta={aggiungo ? null : qui} formato={formato} onScegli={scegli} />}
               {aperto && !aggiungo && qui !== null && (
-                <Dettaglio pagina={pagina} scelta={qui} cercato={cercato} formato={formato} onVai={vaiAlPezzo} onAggiungi={aggiungiDi} />
+                <Dettaglio pagina={pagina} scelta={qui} cercato={cercato} formato={formato} onVai={vaiAlPezzo} onAggiungi={aggiungiDi} onMontatura={montatura} proposta={proposta} />
               )}
             </div>
           )}
@@ -193,10 +203,7 @@ export function Attrezzatura() {
   )
 }
 
-/**
- * The detail of what is chosen: a rig as the board draws it; a group, until its board lands
- * (step 33, Gear commit D), with the rows of today.
- */
+/** The detail of what is chosen: a rig, or a group with its rows and the one form open. */
 function Dettaglio({
   pagina,
   scelta,
@@ -204,6 +211,8 @@ function Dettaglio({
   formato,
   onVai,
   onAggiungi,
+  onMontatura,
+  proposta,
 }: {
   pagina: Pagina
   scelta: Scelta
@@ -211,40 +220,42 @@ function Dettaglio({
   formato: Formato
   onVai: (pezzo: number) => void
   onAggiungi: (genere: Genere | null) => void
+  onMontatura: (setup: number, montatura: number) => void
+  proposta: Proposta | null
 }) {
+  // the open row belongs to its group: another group opens closed
+  const [riga, setRiga] = useState<{ gruppo: string; chiave: string | null }>({ gruppo: "", chiave: null })
+  const scansione = statoDi(useStato().data) === "in corso"
   // the searched row comes into view once, when the page is there
   useEffect(() => {
     if (cercato) document.getElementById(`pezzo-${cercato}`)?.scrollIntoView?.({ block: "center" })
   }, [cercato])
-  const segno = (chiave: string) => ({ id: `pezzo-${chiave}`, "aria-current": chiave === cercato ? ("true" as const) : undefined })
   if ("setup" in scelta) {
     const r = pagina.rigs.find((x) => x.id === scelta.setup)
+    const qui = proposta?.setup === r?.id ? proposta : null
     return r ? (
-      <DettaglioSetup key={r.id} pagina={pagina} setup={r} formato={formato} onVai={onVai} onAggiungi={onAggiungi} />
+      <DettaglioSetup
+        key={`${r.id}-${qui?.pezzo ?? ""}`}
+        pagina={pagina}
+        setup={r}
+        formato={formato}
+        onVai={onVai}
+        onAggiungi={onAggiungi}
+        {...(qui ? { proposta: { parte: "mount" as const, pezzo: qui.pezzo } } : {})}
+      />
     ) : null
   }
-  if (scelta.gruppo === "filter") {
-    return (
-      <ul aria-label={t("gear.filters")}>
-        {pagina.filters.map((f) => (
-          <li key={f.id} {...segno(`filtro-${f.id}`)}>
-            <UnFiltro filtro={f} tutti={pagina.filters} />
-          </li>
-        ))}
-      </ul>
-    )
-  }
-  const genere = scelta.gruppo
-  const titolo = GRUPPI.find((g) => g.kind === genere)?.titolo ?? "gear.components"
   return (
-    <ul aria-label={t(titolo)}>
-      {pagina.instruments
-        .filter((p) => p.kind === genere)
-        .map((p) => (
-          <li key={p.id} {...segno(`strumento-${p.id}`)}>
-            <UnPezzo pezzo={p} campi={pagina.cards[genere] ?? []} tutti={pagina.instruments} />
-          </li>
-        ))}
-    </ul>
+    <GruppoDellAttrezzatura
+      key={scelta.gruppo}
+      pagina={pagina}
+      gruppo={scelta.gruppo}
+      formato={formato}
+      cercato={cercato}
+      aperto={riga.gruppo === scelta.gruppo ? riga.chiave : null}
+      scansione={scansione}
+      onApri={(chiave) => setRiga({ gruppo: scelta.gruppo, chiave })}
+      onMontatura={onMontatura}
+    />
   )
 }

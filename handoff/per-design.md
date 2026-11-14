@@ -13,6 +13,14 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Attrezzatura, modulo di un pezzo (passo 33 D, Marco 14/11): (a) il bias della camera
+  e' uno per offset dei file: un campo per offset «Bias (ADU), offset 50», «Bias (ADU)» se
+  l'offset e' uno, «Bias (ADU), senza offset» se i file non lo scrivono; nella scheda «bias 500
+  ADU, offset 50». (b) Elimina spento per l'ottica o la camera di un setup senza frame, con «Fa
+  parte di {setup}: un setup è fatto della sua ottica e della sua camera.» (la tavola non ha il
+  caso). (c) Prima di Salva niente riga «N frame da rielaborare: cambia il cielo dei frame»: il
+  numero arriva dopo, ed e' solo quello vero. Dettagli in `differenze-dalle-tavole.md`.
+
 - [da dare] Dashboard, dettaglio della Luna (Dashboard 624, Issue #70): la parentesi «(le soglie
   stanno nelle Impostazioni, gruppo Luna)» non e' vera. I gradini 25/65 del calendario vengono
   dalla scala della Luna del Meteo, fissa; le Impostazioni (25% o 4 h senza Luna) decidono solo la

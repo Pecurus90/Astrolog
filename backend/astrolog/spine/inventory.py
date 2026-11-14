@@ -173,7 +173,8 @@ def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
             {
                 **row,
                 **declared.get(r["id"], {}),
-                "no_hours": no_hours(r),
+                # a part chosen on a rig is carried by it, even before its first frame
+                "no_hours": None if held.get(r["id"]) and no_hours(r) == "no_rig" else no_hours(r),
                 "numbers": numbers.get(r["id"], {}),
                 "in_rigs": held.get(r["id"], []),
                 "from_files": told.get(r["id"], []),

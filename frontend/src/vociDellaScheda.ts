@@ -17,7 +17,8 @@ export interface Voce {
 export function vociDellaScheda(p: Pezzo): Voce[] {
   const voci: Voce[] = []
   const sp = (v: string, calc = false) => voci.push({ v, calc })
-  const n = (x: number) => alPiu(x, 2)
+  // [T] board `vir`: the value as written, no fixed decimals
+  const n = (x: number) => numero(x)
   if (p.optical_design) sp(t(`gear.design.${p.optical_design}`))
   if (p.sensor) sp(t("gear.spec.sensor", { nome: p.sensor }))
   if (p.aperture_mm !== null) sp(t("gear.aperture", { mm: n(p.aperture_mm) }))
@@ -46,6 +47,15 @@ export function vociDellaScheda(p: Pezzo): Voce[] {
     sp(t("gear.n.sensor.value", lati), true)
   }
   if (p.adc_bits !== null) sp(t("gear.spec.adc", { n: numero(p.adc_bits) }))
+  for (const b of p.biases) {
+    if (b.bias_adu === null) continue
+    const adu = numero(b.bias_adu)
+    sp(
+      p.biases.length === 1 || b.offset === null
+        ? t("gear.spec.bias", { n: adu })
+        : t("gear.spec.biasAt", { n: adu, o: numero(b.offset) }),
+    )
+  }
   if (p.cooled) {
     sp(
       p.cooling_c === null ? t("gear.spec.cooled") : t("gear.spec.cooledBy", { c: n(p.cooling_c) }),

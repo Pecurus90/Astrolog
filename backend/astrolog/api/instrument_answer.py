@@ -18,7 +18,8 @@ from .models_gear import InstrumentCorrection
 # are `declarations.CAMERA_SPECS`, kept among the declarations; the guide camera's are not.
 _COMMON = ("brand", "model")
 _ON_EVERY_PIECE = ("weight_kg", "notes")
-_SENSOR = ("sensor", "camera_type", "pixel_size_um", "width_px", "height_px", "adc_bits")
+# [T] board v82 `TEC` camera: sensor, resolution, pixel, mono or colour, ADC
+_SENSOR = ("sensor", "width_px", "height_px", "pixel_size_um", "camera_type", "adc_bits")
 _BACK_END = ("image_circle_mm", "required_backfocus_mm", "backfocus_tolerance_mm")
 CARD: Final[dict[InstrumentKind, tuple[str, ...]]] = {
     kind: (*_COMMON, *own, *_ON_EVERY_PIECE)

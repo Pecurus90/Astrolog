@@ -21,6 +21,7 @@ export const MISURE_DETTAGLIO = {
     parti: "repeat(4,minmax(0,1fr))",
     alta: "160px",
     anello: "140px",
+    voci: "repeat(auto-fill,minmax(280px,1fr))",
   },
   telefono: {
     stacco: "12px",
@@ -37,6 +38,7 @@ export const MISURE_DETTAGLIO = {
     parti: "repeat(2,minmax(0,1fr))",
     alta: "140px",
     anello: "140px",
+    voci: "minmax(0,1fr)",
   },
 } as const satisfies Record<Formato, Record<string, string>>
 

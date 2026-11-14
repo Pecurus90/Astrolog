@@ -550,8 +550,8 @@ fondo.
 
 **Con cosa hai ripreso, e quanto.** I tuoi strumenti raccolti per tipo -- telescopi, camere,
 montature, e quello che ci sta intorno -- piu' i **setup** (l'ottica con la sua camera e la
-focale) e i **filtri**. Di ognuno leggi quante **ore**, quanti **frame** e in quante **notti** ti
-e' servito, e cosa ci hai ripreso. I numeri li conta l'app mentre legge i tuoi file, non quando
+focale) e i **filtri**. Di ogni strumento e di ogni filtro leggi la **scheda** e quante **ore** ti
+e' servito, con una barra che lo confronta col piu' usato dello stesso tipo. I numeri li conta l'app mentre legge i tuoi file, non quando
 apri la pagina, cosi' la pagina si apre subito anche con un archivio grande: uno strumento appena
 trovato, a meta' di una scansione, dice *conteggio in corso* finche' la scansione non finisce.
 
@@ -579,7 +579,26 @@ header e' quello nuovo, cosi' la scansione dopo non ricrea lo strumento com'era.
 vince sui file: resta anche quando l'archivio viene riletto. Se due righe sono lo stesso strumento
 scritto in due modi, nella scheda scegli *Unisci a*: la tendina offre solo quelli dello
 stesso tipo. Lo stesso vale per i filtri, con *Modifica* accanto al filtro (nome, marca, modello,
-o *Unisci a*), e un setup lo chiami come vuoi con *Rinomina*.
+le bande con la loro larghezza, la misura, lo spessore, o *Unisci a*), e un setup lo chiami come
+vuoi con *Rinomina*.
+
+La scheda ha due parti: *nome e modello* e *dati tecnici*, ognuna col conto di quanti campi hai
+scritto. Accanto a ogni campo leggi da dove viene: *dai file* se l'ha scritto il tuo programma,
+*inserito* se l'hai scritto tu. La marca la scegli fra quelle che hai gia' scritto, o con
+*altra…* ne scrivi una nuova. Alcuni valori non li scrivi: il rapporto focale e il potere
+risolutore di un telescopio, la dimensione del sensore di una camera li calcola l'app dai tuoi
+dati e li aggiorna quando salvi; se manca un dato te lo dice (*servono apertura e focale*).
+
+Il **bias** di una camera serve all'app per misurare quanto e' luminoso il cielo dalle foto a
+colori. Il bias cambia con l'offset, quindi ne scrivi uno per ogni offset che i tuoi file usano:
+*Bias (ADU), offset 50*, e cosi' via. Scritto il bias, l'app ricalcola il cielo di quelle foto.
+
+**Uno strumento che non usi piu' lo elimini** dalla sua scheda, con *Elimina* in fondo: l'app ti
+chiede conferma e ti dice da quali setup esce. Si elimina solo uno strumento senza frame, cosi'
+nessuna ora si perde: se dei frame lo usano, *Elimina* e' spento e leggi quanti frame e di quali
+setup; se e' lo stesso di un altro, uniscilo con *Unisci a*. Anche l'ottica o la camera di un
+setup che hai scritto a mano restano, perche' il setup e' fatto di loro. Mentre l'app legge i
+tuoi file, salvare ed eliminare aspettano la fine della scansione.
 
 Se i file di una camera non dicono quanto e' grande il pixel, l'app lo **ricava dal cielo**: dalla
 scala che ha misurato sulle foto risolte e dalla focale del setup. Serve che i file dicano almeno
@@ -609,7 +628,8 @@ scegli fra quelle che possiedi (una montatura che non trovi la scrivi con *Aggiu
 da li' la montatura conta le ore, le notti e cosa ci hai ripreso con quel setup, e la riga del
 setup dice su quale sta. Quello che scegli tu vale anche dove i file dicono altro; lasciando la
 scelta vuota tornano i file. Finche' nessun setup la porta, la riga della montatura te lo dice
-invece di scrivere zero.
+invece di scrivere zero, e accanto trovi *Seleziona montatura*: apre il setup piu' usato che non
+ne ha ancora una, con quella montatura gia' scelta.
 
 **Anche un filtro o un setup li puoi scrivere tu**, dallo stesso *Aggiungi strumento*, prima di
 averci ripreso. Un **filtro** vuole il nome e la **banda** che lascia passare -- e' cio' che l'app

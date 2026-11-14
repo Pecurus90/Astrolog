@@ -79,6 +79,7 @@ export function PartiDelSetup({
   onApri,
   onVai,
   onAggiungi,
+  proposto,
 }: {
   pagina: Pagina
   setup: Corredo
@@ -87,6 +88,8 @@ export function PartiDelSetup({
   onApri: (p: Parte | null) => void
   onVai: (pezzo: number) => void
   onAggiungi: (genere: Genere | null) => void
+  /** The piece the open part starts on ("Seleziona montatura"). */
+  proposto?: number
 }) {
   const m = MISURE_DETTAGLIO[formato]
   const tel = formato === "telefono"
@@ -217,6 +220,7 @@ export function PartiDelSetup({
                   formato={formato}
                   onChiudi={() => onApri(null)}
                   onAggiungi={onAggiungi}
+                  {...(proposto !== undefined ? { proposto } : {})}
                 />
               )}
             </li>
@@ -245,6 +249,7 @@ function Seleziona({
   formato,
   onChiudi,
   onAggiungi,
+  proposto,
 }: {
   pagina: Pagina
   setup: Corredo
@@ -252,10 +257,13 @@ function Seleziona({
   formato: Formato
   onChiudi: () => void
   onAggiungi: (genere: Genere | null) => void
+  proposto?: number
 }) {
   const voci = vociDi(pagina, parte)
   const prima = sceltiDi(r, parte)
-  const [scelti, setScelti] = useState<number[]>(prima.map((p) => p.id ?? 0))
+  const [scelti, setScelti] = useState<number[]>(
+    proposto !== undefined ? [proposto] : prima.map((p) => p.id ?? 0),
+  )
   const cambiato = scelti.join(",") !== prima.map((p) => p.id).join(",")
   const scrivi = useScrittura(() => manda(r, parte, scelti, prima, voci), onChiudi)
   const etichetta = maiuscola(t(`gear.slot.${parte}`))

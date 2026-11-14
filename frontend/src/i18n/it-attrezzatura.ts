@@ -253,4 +253,84 @@ export const itAttrezzatura = {
   "gear.size.36mm": "36 mm",
   "gear.size.2in": "2″", // glifo-ok: board glyph
   "gear.size.50mm_square": "50 mm quadrato",
+  // Il gruppo di un tipo e il modulo di un pezzo (tavola v82 `grp`, `modulo`, `FLD`).
+  "gear.edit.label": "Modifica {nome}",
+  "gear.spec.mounted": "montato",
+  "gear.spec.unmounted": "non montato",
+  "gear.spec.fast": "per ottiche veloci",
+  "gear.spec.bias": "bias {n} ADU",
+  "gear.spec.biasAt": "bias {n} ADU, offset {o}",
+  "gear.mount.select": "Seleziona montatura",
+  "gear.form.who": "nome e modello",
+  "gear.form.tech": "dati tecnici",
+  "gear.form.written": "{n} di {m} scritti",
+  "gear.form.fromFiles": "dai file",
+  "gear.form.declared": "inserito",
+  "gear.form.computed": "calcolato",
+  "gear.form.otherBrand": "altra…", // glifo-ok: board ellipsis
+  "gear.form.yes": "sì", // glifo-ok: board text
+  "gear.form.no": "no",
+  "gear.form.mono": "mono",
+  "gear.form.color": "a colori",
+  "gear.f.brand": "Marca",
+  "gear.f.newBrand": "Nuova marca",
+  "gear.f.model": "Modello",
+  "gear.f.notes": "Note",
+  "gear.f.optical_design": "Schema ottico",
+  "gear.f.aperture_mm": "Apertura (mm)",
+  "gear.f.focal_mm": "Focale nativa (mm)",
+  "gear.f.focal_mm.guide": "Focale (mm)",
+  "gear.f.image_circle_mm": "Cerchio d'immagine (mm)",
+  "gear.f.required_backfocus_mm": "Backfocus richiesto (mm)",
+  "gear.f.backfocus_tolerance_mm": "Tolleranza del backfocus (mm)",
+  "gear.f.reducer_factor": "Fattore",
+  "gear.f.sensor": "Sensore",
+  "gear.f.resolution": "Risoluzione (px), larghezza × altezza", // glifo-ok: board text
+  "gear.f.camera_type": "Tipo di sensore",
+  "gear.f.pixel_size_um": "Pixel (µm)", // glifo-ok: board text
+  "gear.f.adc_bits": "Bit del convertitore",
+  "gear.f.bias": "Bias (ADU)",
+  "gear.f.biasAt": "Bias (ADU), offset {n}",
+  "gear.f.biasNoOffset": "Bias (ADU), senza offset",
+  "gear.f.cooled": "Raffreddata",
+  "gear.f.cooling_c": "Raffreddamento (°C sotto l'ambiente)", // glifo-ok: board text
+  "gear.f.thickness_mm": "Spessore (mm)",
+  "gear.f.thickness_mm.camera": "Spessore fino al sensore (mm)",
+  "gear.f.prism_mm": "Prisma (mm)",
+  "gear.f.payload_kg": "Carico con contrappeso (kg)",
+  "gear.f.payload_no_cw_kg": "Carico senza contrappeso (kg)",
+  "gear.f.slots": "Numero di posizioni",
+  "gear.f.filter_size": "Misura",
+  "gear.f.filter_size.wheel": "Misura dei filtri",
+  "gear.f.step_um": "Passo (µm)", // glifo-ok: board text
+  "gear.f.total_steps": "Passi totali",
+  "gear.f.weight_kg": "Peso (kg)",
+  "gear.f.mounted": "Montato",
+  "gear.f.fast_optics": "Per ottiche veloci",
+  "gear.f.bands": "Quante bande",
+  "gear.f.band": "Banda",
+  "gear.f.bandN": "Banda {n}",
+  "gear.f.width_nm": "Larghezza (nm)",
+  "gear.calc.ratio": "Rapporto focale",
+  "gear.calc.resolving": "Potere risolutore",
+  "gear.calc.sensor": "Dimensione del sensore (mm)",
+  "gear.calc.arcsec": "{n}″", // glifo-ok: board text
+  "gear.calc.needRatio": "servono apertura e focale",
+  "gear.calc.needAperture": "serve l'apertura",
+  "gear.calc.needSensor": "servono risoluzione e pixel",
+  "gear.write.needBand": "Per salvare serve almeno una banda.",
+  "gear.write.scanning": "Scansione in corso: si salva al termine.",
+  "gear.merge.final": "L'unione non è reversibile.", // glifo-ok: board text
+  "gear.merge.moves": "{n} frame da rielaborare: passano a {nome}",
+  "gear.delete": "Elimina",
+  "gear.delete.busy": "Eliminazione…", // glifo-ok: board ellipsis
+  "gear.delete.ask": "Eliminare {nome}? Non tiene frame.",
+  "gear.delete.leaves": "Esce anche da {setup}.",
+  "gear.delete.inUse":
+    "Lo usano {n} frame di {setup}: nessuna ora si perde. Uniscilo a un altro pezzo, se è lo stesso.", // glifo-ok: board text
+  "gear.delete.inUse.noRig":
+    "Lo usano {n} frame: nessuna ora si perde. Uniscilo a un altro pezzo, se è lo stesso.", // glifo-ok: board text
+  "gear.delete.inRig": "Fa parte di {setup}: un setup è fatto della sua ottica e della sua camera.", // glifo-ok: board text
+  "gear.delete.scanning": "Scansione in corso: si elimina al termine.",
+  "gear.list.and": "{a} e {b}",
 }

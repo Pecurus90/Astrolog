@@ -639,3 +639,6 @@ un oggetto a posto senza sigla (una cometa, un nome scritto) si apre col suo nom
 la montatura che hai scelto non si ripete fra le parti - step 33, Gear C1: board v82 shows the chosen mount in Parti as (scelta a mano) and in the card pill; replaced by una parte che hai scelto tu dice che e' scelta, al posto dei frame
 senza montature da scegliere il setup non offre il gesto - step 33, Gear C1: board v82 offers Seleziona with aggiungine uno; replaced by senza montature da scegliere il modulo propone di aggiungerne una
 test_a_second_no_filter_row_is_refused_with_its_code -step 33, To confirm A: board v82 says a second "no filter" joins the row already there; replaced by test_a_second_no_filter_joins_the_one_already_there_and_says_so
+cio' che scelgo in una scheda resta scelto - step 33, Gear D2: board v82 Tipo di sensore is pills, not a drop-down; replaced by cio' che scelgo in una scheda resta scelto, e parte solo quello
+correggo la marca di un filtro - step 33, Gear D2: board v82 Marca is a drop-down with altra; replaced by correggo la marca di un filtro fra quelle gia' scritte, o ne scrivo una nuova
+un pezzo dice cosa ci hai ripreso - step 33, Gear D2: board v82 rows show only the hours with the bar; replaced by un pezzo e un filtro dicono le loro ore, con la barra
