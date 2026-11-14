@@ -53,8 +53,8 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
 - **Estinzione assoluta dal catalogo Gaia** (Marco, 4/11/2026): il punto zero di ogni frame dalle
   stelle Gaia, come lo SQM, dice k e le nuvole senza finestre di stelle; su M51 0,40 contro il
   nostro 0,37 (misure.md, Trasparenza). Altri usi: magnitudine limite, colore.
-- **L'app installabile, una PWA** (Marco, 6/11/2026): col servizio su PC, Mac o NAS la pagina
-  diventa un'app da installare su desktop e telefono (manifest e service worker, stesso
-  frontend). Serve HTTPS in rete di casa, che i browser chiedono per installare: Tailscale serve,
-  o un reverse proxy con un dominio; l'autofirmato no. Offline senza dati, che stanno sul servizio.
-  Col passo 47 (il pacchetto), prima del telefono (48).
+- **L'app installabile, una PWA** (Marco, 6/11/2026): manifest e service worker, stesso frontend,
+  da installare su desktop e telefono. Serve HTTPS in casa (Tailscale o reverse proxy con dominio;
+  l'autofirmato no); offline senza dati. Col passo 47, prima del telefono (48).
+- **Attrezzatura come la tavola v82** (Marco, 14/11/2026): calcolati del modulo a ogni tasto (una
+  rotta dalla bozza); «inserito manualmente» sui filtri (`detected` dall'API).
