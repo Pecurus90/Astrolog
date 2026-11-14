@@ -322,8 +322,11 @@ il 12/11. Restano diverse dalla tavola:
   tocca risposte che andrebbero perse.
 - **Rifiuto `model_contradicts_bands`.** Tavola: «Il filtro scelto per «O3» ha la banda Hα, i frame
   dicono OIII...» (358). App: «Il modello scelto non ha le bande indicate. Scegli un altro modello o
-  un filtro nuovo. Nessuna modifica salvata.» Perche': l'API manda solo il codice, senza filtro ne'
-  banda.
+  un filtro nuovo. Nessuna modifica salvata.» Perche' (rivisto 14/11, Issue #78): la pagina non
+  puo' ricevere quel rifiuto, manda un modello o le bande, mai insieme (`SezioneFiltri.tsx`
+  `manda`); e i filtri chiesti hanno banda sconosciuta (`review.py`, `Passband.UNKNOWN`), quindi
+  nessun frame "dice OIII". Il caso della tavola non esiste nell'app; la frase resta per un client
+  dell'API.
 
 ## Da confermare -- Le domande (passo 33, commit D2, 12/11)
 
