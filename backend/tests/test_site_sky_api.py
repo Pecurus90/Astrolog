@@ -37,7 +37,7 @@ def test_the_measures_propose_another_class(client_vuoto, db_path, offline):
     _measured(db_path, site["id"], 21.4)
     measured = _site(client_vuoto, site["id"])["measured"]
     assert measured == {
-        "status": "enough", "nights": 40, "months": 10, "sqm": 21.4, "bortle": 3,
+        "status": "enough", "nights": 40, "months": 10, "sqm": 21.4, "bortle": 4,
         "first_night": "2025-01-10", "last_night": "2025-10-20", "propose": True,
     }  # fmt: skip
 
@@ -75,7 +75,7 @@ def test_use_writes_the_measure_with_its_nights(client_vuoto, db_path, offline):
     assert r.status_code == 200, r.text
     used = r.json()
     assert (used["sky_sqm"], used["sky_source"], used["sky_nights"]) == (21.4, "frames", 40)
-    assert used["bortle"] == 3 and used["measured"]["propose"] is False
+    assert used["bortle"] == 4 and used["measured"]["propose"] is False
 
 
 def test_use_without_enough_data_is_refused(client_vuoto, db_path, offline):
@@ -95,7 +95,7 @@ def test_dismissed_it_comes_back_only_when_the_class_changes(client_vuoto, db_pa
     assert r.json()["sky_source"] == "scale"  # il sito resta com'era
     _measured(db_path, site["id"], 21.38)  # stessa classe: tace
     assert _site(client_vuoto, site["id"])["measured"]["propose"] is False
-    _measured(db_path, site["id"], 21.0)  # classe 4: di nuovo
+    _measured(db_path, site["id"], 21.0)  # classe 5: di nuovo
     assert _site(client_vuoto, site["id"])["measured"]["propose"] is True
 
 
@@ -126,7 +126,7 @@ def test_use_and_dismiss_survive_a_lost_database(client_vuoto, db_path, tmp_path
         " LEFT JOIN site_sky_dismissed d ON d.site_id = s.id ORDER BY s.name"
     ).fetchall()
     other.close()
-    assert [tuple(r) for r in rows] == [("Asiago", "frames", 40, None), ("Monte", "scale", None, 3)]
+    assert [tuple(r) for r in rows] == [("Asiago", "frames", 40, None), ("Monte", "scale", None, 4)]
 
 
 def test_a_file_without_nights_restores_a_sky_from_the_frames(client_vuoto, db_path, offline):

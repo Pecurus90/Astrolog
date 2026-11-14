@@ -13,11 +13,6 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
-- [da dare] Foglio vecchio, commento di `.as-bortle-letta` (`foglio/48-bortle.css`, Issue #28 e
-  #71): cita ancora i pavimenti di Wikipedia (1 = 21,76 ... 8 = 17,00); le tavole usano ASTAP dal
-  23/10 (`soglie.js`), il foglio no. Va riscritto coi pavimenti di ASTAP e l'esempio «Bortle 4
-  (21,4)»: testo intero in `handoff/design-bortle-astap.md`. Finche' non arriva, l'app non passa
-  alla tabella di ASTAP e lo SQM delle Notti resta senza classe (Marco 14/11: si da' a Design).
 - [da dare] Dashboard, dettaglio della Luna (Dashboard 624, Issue #70): la parentesi «(le soglie
   stanno nelle Impostazioni, gruppo Luna)» non e' vera. I gradini 25/65 del calendario vengono
   dalla scala della Luna del Meteo, fissa; le Impostazioni (25% o 4 h senza Luna) decidono solo la

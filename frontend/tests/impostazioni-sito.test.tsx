@@ -38,7 +38,7 @@ const CASA = {
   name: "Cortina",
   latitude: 46.5405,
   longitude: 12.1357,
-  bortle: 3,
+  bortle: 4,
   sky_sqm: 21.3,
   is_default: true,
 }
@@ -125,7 +125,7 @@ describe("Impostazioni / Siti", () => {
     expect(nome.value).toBe("Cortina")
     expect((screen.getByLabelText(/latitudine/i) as HTMLInputElement).value).toBe("46,5405")
     // E la classe che ha e' gia' quella scelta: ripartire da nessuna la cancellerebbe salvando.
-    expect((screen.getByRole("radio", { checked: true }) as HTMLInputElement).value).toBe("3")
+    expect((screen.getByRole("radio", { checked: true }) as HTMLInputElement).value).toBe("4")
   })
 
   it("il cielo corretto arriva alla rotta, e col verbo che non crea un sito nuovo", async () => {

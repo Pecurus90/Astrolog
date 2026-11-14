@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 374; senza fonte: 1.
-Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 91.
+Valori: 374; senza fonte: 0.
+Fonti: C norma: 188; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 91.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -805,8 +805,8 @@ Fonti: C norma: 187; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | MOON_DIAMETER_DEG | `1896 / 3600` | C NASA NSSDC Moon Fact Sheet: apparent diameter 1896 seconds of arc, mean at opposition |
 | NATURAL_SKY_CD_M2 | `174e-6` | C Falchi 2016: "22.0 mag/arcsec2, corresponding to 174 ucd/m2" |
 | GARSTANG_OFFSET_MAG | `12.603` | C Garstang 1986 via Cinzano 2005: "V = 12.603 - 2.5 log10 L" |
-| BORTLE_FLOORS | `BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.80), (5...` | **senza fonte** |
-| BORTLE_FLOORS | `(7, 18.00), (8, 17.00))` | **senza fonte** |
+| BORTLE_FLOORS | `BORTLE_FLOORS = ((1, 21.99), (2, 21.89), (3, 21.69), (4, 21.25), (5...` | C ASTAP unit_sqm.pas bortle(): 21.99 21.89 21.69 21.25 19.50 18.94 18.38 17.80; software-ok |
+| BORTLE_FLOORS | `(7, 18.38), (8, 17.80))` | C ASTAP unit_sqm.pas bortle(): 21.99 21.89 21.69 21.25 19.50 18.94 18.38 17.80; software-ok |
 | (BORTLE_TOP, BORTLE_BOTTOM) | `22.00, 16.00` | C Falchi 2016: "22.0 mag/arcsec2" |
 | (SQM_MIN, SQM_MAX) | `7.0, 23.0` | C Unihedron SQM-LU FAQ: "about 7 (brightest) to 23 (darkest)" |
 

@@ -39,7 +39,7 @@ const punto = (at: string, altitude_deg: number) => ({ at, altitude_deg })
 
 export const STANOTTE_PIENA = {
   night: "2026-09-30",
-  site: { name: "Cima Ekar", sky_sqm: 21.4, bortle: 3 },
+  site: { name: "Cima Ekar", sky_sqm: 21.4, bortle: 4 },
   moon: {
     phase_key: "waning_gibbous", illumination_pct: 62, rise: H("23:40"), set: D("15:17"), rise_compass: "ENE",
     age_days: 21, distance_km: 371200, next_new: "2026-10-09", next_full: "2026-10-24", lit_side: "left",

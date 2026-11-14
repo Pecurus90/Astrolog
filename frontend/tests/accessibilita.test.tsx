@@ -50,7 +50,7 @@ describe("l accessibilita della prima pagina", () => {
         stato: 200,
         corpo: {
           night: "2026-09-19",
-          site: { name: "Vicenza", sky_sqm: 20.8, bortle: 4 },
+          site: { name: "Vicenza", sky_sqm: 20.8, bortle: 5 },
           moon: {
             phase_key: "waxing_gibbous",
             illumination_pct: 60,
@@ -106,7 +106,7 @@ describe("l accessibilita della prima pagina", () => {
         stato: 200,
         corpo: {
           night: "2026-09-19",
-          site: { name: "Vicenza", sky_sqm: 20.8, bortle: 4 },
+          site: { name: "Vicenza", sky_sqm: 20.8, bortle: 5 },
           moon: {
             phase_key: "waxing_gibbous",
             illumination_pct: 60,

@@ -40,9 +40,9 @@ def test_a_sky_floor_quoted_in_the_sheet_that_drifted_is_blocked(tmp_path):
     """I pavimenti della scala sono un **nostro** fatto scritto in casa loro: il foglio non si
     emenda, quindi il giorno che la nostra tabella cambia quel commento dice il falso e nessuno
     se ne accorge."""
-    storto = _consegna().replace("4 = 20,80", "4 = 20,40", 1)
+    storto = _consegna().replace("4 = 21,25", "4 = 21,40", 1)
     colpe = controlli_foglio.pavimenti_del_cielo(_radice_col_foglio(tmp_path, storto))
-    assert colpe == ["astrolog.css: la scala dice 4 = 20.4, l'app usa 20.8"], colpe
+    assert colpe == ["astrolog.css: la scala dice 4 = 21.4, l'app usa 21.25"], colpe
 
 
 def test_a_sheet_that_stopped_quoting_the_floors_is_said(tmp_path):
@@ -51,14 +51,14 @@ def test_a_sheet_that_stopped_quoting_the_floors_is_said(tmp_path):
     motivo sbagliato."""
     senza = _consegna()
     for classe, pavimento in (
-        ("1", "21,76"),
-        ("2", "21,60"),
-        ("3", "21,30"),
-        ("4", "20,80"),
-        ("5", "19,25"),
-        ("6", "18,50"),
-        ("7", "18,00"),
-        ("8", "17,00"),
+        ("1", "21,99"),
+        ("2", "21,89"),
+        ("3", "21,69"),
+        ("4", "21,25"),
+        ("5", "19,50"),
+        ("6", "18,94"),
+        ("7", "18,38"),
+        ("8", "17,80"),
     ):
         senza = senza.replace(f"{classe} = {pavimento}", "")
     colpe = controlli_foglio.pavimenti_del_cielo(_radice_col_foglio(tmp_path, senza))
@@ -69,9 +69,9 @@ def test_one_missing_sky_floor_is_said_not_only_all_of_them(tmp_path):
     """Il cambio **parziale** e' quello probabile, e una guardia che confronta solo cio' che il
     foglio cita ancora tacerebbe: sparito un pavimento, non c'e' piu' niente da confrontare per
     quella classe."""
-    senza = _consegna().replace("4 = 20,80 \u00b7", "", 1)
+    senza = _consegna().replace("4 = 21,25 \u00b7", "", 1)
     colpe = controlli_foglio.pavimenti_del_cielo(_radice_col_foglio(tmp_path, senza))
-    assert colpe == ["astrolog.css: la scala non cita piu' il pavimento della classe 4 (20.8)"], (
+    assert colpe == ["astrolog.css: la scala non cita piu' il pavimento della classe 4 (21.25)"], (
         colpe
     )
 

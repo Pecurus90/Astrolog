@@ -1531,10 +1531,11 @@ button.as-parametro .as-parametro__sotto { display: block; }
    BORTLE — la classe del cielo, letta (.as-bortle-letta)
    Una riga sola: la fascia del colore, la parola «Bortle», la classe e la
    misura. Il colore non dice mai da solo che classe e': la cifra e' sempre
-   scritta, e la misura sta sempre accanto («Bortle 4 (20,8)»), perche' la
-   scala non ha confini ufficiali in magnitudini. Pavimenti in mag/arcsec²:
-   1 = 21,76 · 2 = 21,60 · 3 = 21,30 · 4 = 20,80 · 5 = 19,25 · 6 = 18,50 ·
-   7 = 18,00 · 8 = 17,00 · 9 = sotto. (v24: la scala estesa e la scala
+   scritta, e la misura sta sempre accanto («Bortle 4 (21,4)»), perche' la
+   scala non ha confini ufficiali in magnitudini. Pavimenti di ASTAP in
+   mag/arcsec², una classe da sopra il suo (Issue #28, 14/11/2026):
+   1 = 21,99 · 2 = 21,89 · 3 = 21,69 · 4 = 21,25 · 5 = 19,50 · 6 = 18,94 ·
+   7 = 18,38 · 8 = 17,80 · 9 = sotto. (v24: la scala estesa e la scala
    intera sono uscite; tornano quando una schermata le chiede.)
    ========================================================================== */
 .as-bortle-letta {

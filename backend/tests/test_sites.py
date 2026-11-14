@@ -159,14 +159,14 @@ def test_the_bortle_is_derived_and_never_stored(client_vuoto, offline):
     """La classe si DERIVA e non si memorizza: non e' una colonna del database, e non compare
     mai da sola -- la misura le sta sempre accanto."""
     site = create(client_vuoto, sky_sqm=20.80)
-    assert site["bortle"] == 4 and site["sky_sqm"] == pytest.approx(20.80)
+    assert site["bortle"] == 5 and site["sky_sqm"] == pytest.approx(20.80)  # ASTAP: 4 da 21,25
 
     with connect(client_vuoto.app.state.db_path) as conn:
         row = conn.execute("SELECT * FROM sites WHERE id = ?", (site["id"],)).fetchone()
     assert "bortle" not in row.keys()  # noqa: SIM118 - Row itera i valori, non le chiavi
 
     client_vuoto.patch(f"/api/v1/sites/{site['id']}", json={"sky_sqm": 18.2})
-    assert client_vuoto.get("/api/v1/sites").json()["items"][0]["bortle"] == 7
+    assert client_vuoto.get("/api/v1/sites").json()["items"][0]["bortle"] == 8  # 8 da 17,80
 
 
 def test_a_sky_brightness_outside_the_scale_is_refused(client_vuoto, offline):

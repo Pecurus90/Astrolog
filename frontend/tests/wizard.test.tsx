@@ -499,7 +499,7 @@ describe("il primo avvio", () => {
 
     const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
     const dati = [...carta.querySelectorAll(".as-conti__dato")].map((v) => v.textContent)
-    expect(dati.slice(0, 2)).toEqual(["Marco", "Vicenza · Bortle 4"])
+    expect(dati.slice(0, 2)).toEqual(["Marco", "Vicenza · Bortle 5"])
   })
 
   it("la chiusura resta finche' non si preme Apri AstroLog, anche a impostazioni rilette", async () => {

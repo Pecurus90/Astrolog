@@ -114,19 +114,18 @@ def test_a_sky_outside_the_scale_is_not_a_sky():
 
 
 def test_bortle_from_sky_brightness():
-    """La classe di cielo si RICAVA dalla luminosita', non si memorizza. I confini sono una
-    consuetudine e il codice lo dice; qui si prova che la scala e' monotona e che cade dove la
-    tabella dei siti di astrofotografia la mette -- e' il numero con cui l'utente confrontera'
-    il nostro, e una scala spostata di due classi glielo farebbe sembrare sbagliato."""
-    assert bortle_of(22.0) == 1 and bortle_of(21.8) == 1
-    assert bortle_of(21.7) == 2 and bortle_of(21.5) == 3
-    assert bortle_of(21.2) == 4 and bortle_of(20.0) == 5
-    assert bortle_of(18.8) == 6 and bortle_of(18.2) == 7
-    assert bortle_of(17.5) == 8 and bortle_of(16.5) == 9
-    # The source's own floors (class 4 from 20.8, 5 from 19.25), and its 4.5 read as 5: never
-    # more generous than the number the user will compare ours with.
-    assert bortle_of(20.8) == 4 and bortle_of(20.79) == 5 and bortle_of(20.5) == 5
-    assert bortle_of(19.25) == 5 and bortle_of(19.24) == 6
+    """La classe di cielo si RICAVA dalla luminosita', non si memorizza. Una tabella sola, quella
+    di ASTAP (`bortle()` in `unit_sqm.pas`; Marco 23/10/2026, ADR 0035): lo SQM dei frame si
+    misura col metodo di ASTAP, e la classe deve cadere dove ASTAP la mette."""
+    assert bortle_of(22.0) == 1 and bortle_of(21.95) == 2
+    assert bortle_of(21.8) == 3 and bortle_of(21.5) == 4
+    assert bortle_of(20.8) == 5 and bortle_of(20.0) == 5
+    assert bortle_of(19.0) == 6 and bortle_of(18.5) == 7
+    assert bortle_of(18.0) == 8 and bortle_of(17.5) == 9
+    # Strictly above the floor, as ASTAP compares; its 4.5 (above 20.49) read as 5: never more
+    # generous than the source.
+    assert bortle_of(21.99) == 2 and bortle_of(21.25) == 5 and bortle_of(20.5) == 5
+    assert bortle_of(19.50) == 6 and bortle_of(17.80) == 9
     classi = [bortle_of(s / 100) for s in range(1600, 2210)]
     assert classi == sorted(classi, reverse=True)  # piu' buio = classe piu' bassa, sempre
     assert bortle_of(None) is None

@@ -87,8 +87,7 @@ ClearDarkSky; Marco, 23/10/2026; ADR 0033 R2, 0035), perche' lo SQM dei frame si
 di ASTAP: una classe vale da sopra il suo pavimento, 1 = 21,99 · 2 = 21,89 · 3 = 21,69 · 4 = 21,25
 · 5 = 19,50 · 6 = 18,94 · 7 = 18,38 · 8 = 17,80 · 9 sotto; la 4,5 di ASTAP (sopra 20,49) si
 legge 5, perche' il nostro numero non sia mai piu' generoso della fonte. La classe 1 si rappresenta
-con 22,00, il cielo naturale (Falchi 2016). Il codice usa ancora la tabella vecchia finche' il
-foglio di Design non porta i pavimenti nuovi (Issue #28). Sta in un posto solo con la sua avvertenza,
+con 22,00, il cielo naturale (Falchi 2016). Sta in un posto solo con la sua avvertenza,
 e a schermo **compare accanto alla misura** -- "Bortle 4 (21.4)" -- tranne nei due posti dove
 la misura non c'e' o non ci sta: il primo avvio, dove si sceglie, e il piede della barra. Chi sceglie il cielo dalla
 scala fa il percorso inverso, e ritrova la stessa classe.

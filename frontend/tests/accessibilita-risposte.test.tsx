@@ -167,7 +167,7 @@ describe("l accessibilita di dove si risponde", () => {
               name: "Cortina",
               latitude: 46.5405,
               longitude: 12.1357,
-              bortle: 3,
+              bortle: 4,
               sky_sqm: 21.3,
               is_default: true,
             },

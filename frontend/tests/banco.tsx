@@ -203,7 +203,7 @@ export const SITO_DI_CASA: components["schemas"]["SiteOut"] = {
     last_night: null,
     propose: false,
   },
-  bortle: 4,
+  bortle: 5,
   is_default: true,
   nights: 0,
   unknown: [],

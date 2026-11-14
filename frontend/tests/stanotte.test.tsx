@@ -32,7 +32,7 @@ const LUNA = {
 
 const NOTTE = {
   night: "2026-09-30",
-  site: { name: "Cima Ekar", sky_sqm: 21.4, bortle: 3 },
+  site: { name: "Cima Ekar", sky_sqm: 21.4, bortle: 4 },
   moon: LUNA,
   sky_bands: [],
   planets: [],
@@ -143,7 +143,7 @@ describe("il pannello di Stanotte", () => {
     const pannello = await apri(/^stanotte a cima ekar/i)
     expect(pannello.querySelector(".al-c-telaio__notte-tit")?.textContent).toBe("Stanotte · mercoledì 30 settembre")
     expect(righe(pannello)).toEqual([
-      ["Sito", "Cima Ekar", "Bortle 3 · il sito predefinito"],
+      ["Sito", "Cima Ekar", "Bortle 4 · il sito predefinito"],
       ["Luna", "◐ 62% · sorge alle 23:40", "dopo le 23:40 la banda larga è al limite"],
       ["Meteo", "✓ notte buona · 7,5 ore di posa", "buio 20:48–05:48 · senza Luna 20:48–23:40"],
     ])
