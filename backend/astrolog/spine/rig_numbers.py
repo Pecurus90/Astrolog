@@ -252,6 +252,22 @@ def numbers(rig: RigCard) -> dict[str, Number]:
     }
 
 
+def pieces(rig: RigCard) -> dict[str, Any]:
+    """The pieces the numbers read, by id: the optical train draws the same ones."""
+    of = lambda card: None if card is None else card["id"]  # noqa: E731
+    return {
+        "optics": of(rig.optics),
+        "camera": of(rig.camera),
+        "reducer": of(rig.reducer),
+        "guide": of(rig.guide),
+        "guide_camera": of(rig.guide_camera),
+        "wheel": of(rig.wheel),
+        "focuser": of(rig.focuser),
+        "mount": of(rig.mount),
+        "spacers": [card["id"] for card in rig.spacers],
+    }
+
+
 def _dawes(optics: Card) -> Number:
     return {"value": DAWES_ARCSEC_MM / _need(optics, "optics", "aperture_mm")}
 

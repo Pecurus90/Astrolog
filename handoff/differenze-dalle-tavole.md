@@ -412,8 +412,6 @@ classi `al-attr__` (`Attrezzatura.dc.html` 19-49). Restano diverse dalla tavola:
 Carta col nome e Rinomina, Parti con Seleziona, Campo col confronto e la Luna, Dati del setup,
 anello dei Filtri, sulle classi `al-attr__` (`Attrezzatura.dc.html` 51-97) e sul Modulo comune.
 Restano diverse dalla tavola:
-- **Treno ottico.** Tavola: l'esploso dopo la carta (63-66, `treno` 447). App: non c'e' ancora.
-  Perche': arriva col commit C2.
 - **Una parte scelta a mano e quelle dei file.** Tavola: la scelta sola, «(scelta a mano)»
   (`parte`, 305). App: la scelta e anche i pezzi che i file nominano, ognuno coi suoi frame.
   Perche': fuori dalla montatura la scelta vale solo dove il file non nomina niente, e i frame che
@@ -440,3 +438,26 @@ Restano diverse dalla tavola:
 - **Intervallo della scala di guida.** Tavola: «consigliata fra 0,5 e 4″/px» scritto nel testo
   (352). App: uguale a schermo, ma i due numeri arrivano dall'API (`range_from`, `range_to`), che
   ha la soglia con la sua fonte.
+
+## Attrezzatura -- Il treno ottico (passo 33, commit C2, 14/11)
+
+L'esploso dopo la carta del setup (`Attrezzatura.dc.html` 63-66, `treno` 447-548), con le
+pillole sopra e sotto, i fili, la legenda numerata sul telefono; la geometria e' quella della
+tavola, provata alla cifra su un rifrattore, un Newton e uno Schmidt-Cassegrain
+(`tests/disegno-treno.test.ts`). Restano diverse dalla tavola:
+- **Quali pezzi.** Tavola: `trenoDi` (332) prende il primo nome di ogni parte. App: i pezzi che i
+  conti leggono, la parte scelta se no la piu' usata, dall'API (`pieces`). Perche': una regola
+  sola fra Dati del setup e treno, e la pagina non sceglie.
+- **Treno di un setup appena nato.** Tavola: sempre, con l'ottica. App: non c'e' finche' i conti
+  non sono scritti (`pieces` nullo, fine del giro), come i Dati del setup.
+- **Schema ottico non disegnato.** Tavola: cinque schemi, quello non scritto e' rifrattore. App:
+  uguale; anche un obiettivo fotografico e «altro» si disegnano rifrattore. A Design.
+- **Il treno che si disegna.** Tavola: `alDraw` in 0,9 s (helmet della pagina). App: l'animazione
+  c'e' ma il foglio non ha `@keyframes alDraw`: il treno compare intero. A Design.
+- **Una pillola senza pezzo.** Tavola: `vaiComp` torna nullo se il nome non e' fra i componenti e
+  la pillola non apre niente. App: ogni pezzo del treno e' fra gli strumenti (lo dice l'API per
+  id), la pillola apre sempre.
+- **Nomi che non entrano.** Tavola: le pillole coi nomi si spingono di lato; con nomi lunghi
+  (driver ASCOM, «ASCOM ToupTek AAF») la prima esce a sinistra dal riquadro. App (Marco, 14/11):
+  se i nomi di una riga non entrano, quel treno passa alle pillole col numero e alla legenda a
+  due colonne, come il telefono; chi rinomina corto torna ai nomi. A Design.

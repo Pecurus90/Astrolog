@@ -84,6 +84,21 @@ class Load(BaseModel):
     missing: Missing | None
 
 
+class RigPieces(BaseModel):
+    """The pieces the numbers read, by id among `instruments`: the chosen part, else the most
+    used. The optical train draws these same ones; null where the rig has none."""
+
+    optics: int | None
+    camera: int | None
+    reducer: int | None
+    guide: int | None = Field(description="A guide scope or an OAG: its `kind` says which.")
+    guide_camera: int | None
+    wheel: int | None
+    focuser: int | None
+    mount: int | None
+    spacers: list[int]
+
+
 class RigNumbers(BaseModel):
     focal_ratio: Number
     sampling: Sampling

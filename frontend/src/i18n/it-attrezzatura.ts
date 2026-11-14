@@ -117,6 +117,12 @@ export const itAttrezzatura = {
   "gear.part.title": "{parte} di {nome}",
   "gear.part.field.files": "{parte} (vuoto: dai file)",
   "gear.part.addOne": "aggiungine uno",
+  // Il treno ottico (tavola v82, 63-66 e `treno` 447).
+  "gear.train": "Treno ottico",
+  "gear.train.note": "Schema non in scala. Seleziona uno strumento per aprirlo.",
+  "gear.train.label": "Treno ottico di {nome}, schema non in scala",
+  "gear.train.piece": "{tipo}: {nome}",
+  "gear.train.open": "{tipo}: {nome}, apri",
   "gear.slot.optics": "ottica",
   "gear.slot.camera": "camera",
   "gear.slot.reducer": "riduttore",

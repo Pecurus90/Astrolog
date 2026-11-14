@@ -19,7 +19,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 |---|---|
 | Apro Attrezzatura e vedo i pezzi che possiedo, raccolti per genere | `test_the_page_lists_the_gear_you_own`; *elenca i pezzi che possiedi, raccolti per genere* |
 | In testa l'indice: i setup a carte con ore, focale, barra e le 10 parti a tacche ("{n} da indicare"), i componenti un gruppo per genere; sul telefono l'indice e' la prima schermata e il dettaglio si apre a pagina intera (tavola v82) | `test_a_rig_without_a_name_is_titled_by_its_pieces_without_the_brand`, `test_a_named_rig_is_titled_by_its_name`, `test_the_ten_slots_come_in_the_card_order_and_say_what_is_missing`, `test_a_chosen_part_fills_its_slot`; *l indice mostra i setup a carte, con ore, focale e le parti da indicare*, *prima l indice, poi il dettaglio a pagina intera e la via per tornare* |
-| Scelgo un setup e vedo com'e' fatto: le parti coi loro pezzi e «Seleziona», il campo a confronto con gli altri setup e la Luna, i nove conti o cio' che manca, l'anello dei filtri (tavola v82) | `test_the_fields_come_widest_first_on_the_same_frame_with_the_moon`, `test_the_filter_ring_is_in_proportion_to_the_frames`, `test_the_backfocus_says_the_train_and_who_requires_it`, `test_the_load_says_the_weight_and_the_payload_it_divides`, `test_the_guide_scale_says_which_guide_it_used`; *il campo si confronta con gli altri setup e con la Luna, in percento dall'API*, *i dati del setup dicono ogni conto, o cosa gli manca*, *l anello dei filtri e' in proporzione ai frame, coi nomi accanto*, *i distanziali si scelgono insieme, e partono tutti* |
+| Scelgo un setup e vedo com'e' fatto: le parti coi loro pezzi e «Seleziona», il campo a confronto con gli altri setup e la Luna, i nove conti o cio' che manca, l'anello dei filtri, il treno ottico che apre i suoi pezzi (tavola v82) | `test_the_train_draws_the_pieces_the_numbers_read`, `test_the_fields_come_widest_first_on_the_same_frame_with_the_moon`, `test_the_filter_ring_is_in_proportion_to_the_frames`, `test_the_backfocus_says_the_train_and_who_requires_it`, `test_the_load_says_the_weight_and_the_payload_it_divides`, `test_the_guide_scale_says_which_guide_it_used`; *il campo si confronta con gli altri setup e con la Luna, in percento dall'API*, *i dati del setup dicono ogni conto, o cosa gli manca*, *l anello dei filtri e' in proporzione ai frame, coi nomi accanto*, *i distanziali si scelgono insieme, e partono tutti*, *toccare un pezzo lo apre fra i componenti* |
 | Dopo un salvataggio che rimette dei frame in coda la pagina me lo dice ("{n} frame da rielaborare", Chiudi) | *dopo un salvataggio che rimette dei frame in coda, la pagina lo dice e si chiude* |
 | Di ogni setup, parte e filtro vedo **solo le ore** (Marco, 11/10 e 24/10/2026); frame, notti e oggetti che la pagina vecchia mostra ancora vanno via al porting | `test_a_piece_says_how_much_you_shot_with_it`, `test_the_hours_of_a_piece_come_from_its_rigs` |
 | Uno stesso pezzo montato su due setup non mi raddoppia le ore | `test_a_piece_on_two_rigs_does_not_count_its_hours_twice` |
@@ -226,9 +226,14 @@ cornice e' il campo piu' largo piu' il 15%, mai sotto 0,9°, alta due terzi; li 
 `gear_usage.write_fields`); i Dati del setup, i nove conti con le parole della tavola o cio' che
 manca («manca il pixel della camera»), dove `numbers` porta anche il treno e chi chiede il
 backfocus, peso e carico, la guida usata e l'intervallo della scala di guida; l'anello dei Filtri
-in proporzione ai frame (`ring_from`, `ring_to`, `passband` sulle parti `filter`). Il treno ottico
-arriva col commit C2, il gruppo e il modulo di un pezzo col D, che fino ad allora mostrano le
-righe di prima. Le barre arrivano dall'API
+in proporzione ai frame (`ring_from`, `ring_to`, `passband` sulle parti `filter`). **Il treno
+ottico c'e'** (commit C2, 14/11): disegna i pezzi che i conti leggono, la parte scelta se no la
+piu' usata, la guida una sola (`pieces`, scritti con i conti da `gear_numbers`); senza ottica o
+prima che i conti siano scritti non c'e'. L'esploso e' disegno, non dato: la geometria della
+tavola sta in `disegnoDelTreno.ts`, e uno schema ottico non scritto si disegna rifrattore. Se i
+nomi di una riga non entrano, le pillole passano al numero con la legenda (Marco, 14/11). Il
+gruppo e il modulo di un pezzo arrivano col commit D, che fino ad allora mostra le righe di
+prima. Le barre arrivano dall'API
 (`bar_pct`: ore sul piu' usato del gruppo, mai sotto 3), scritte con l'uso
 (`gear_usage.write_bars`); la Luna piena del campo disegnato e' `moon_deg`, il diametro apparente
 medio della NASA (1896″, 0,527°; la tavola scrive 0,52). La scala del campo dice "arcosecondi per

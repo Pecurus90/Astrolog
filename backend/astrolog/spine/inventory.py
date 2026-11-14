@@ -124,15 +124,21 @@ def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
                 for k in ("kind", "id", "name", "frames", "passband", "ring_from", "ring_to")
             }
             parts.setdefault(p["rig_id"], []).append({**part, "chosen": bool(p["chosen"])})
-    return [
-        {
-            **_row(r),
-            "name": names.get(gear_rigs.decl_key(r)),
-            "parts": parts.get(r["id"], []),
-            "numbers": numbers.get(r["id"]),
-        }
-        for r in conn.execute(_RIGS).fetchall()
-    ]
+    rows = []
+    for r in conn.execute(_RIGS).fetchall():
+        written = numbers.get(r["id"])
+        # the pieces the numbers read are written with them; on the page they are not a number
+        pieces = written.pop("pieces") if written else None
+        rows.append(
+            {
+                **_row(r),
+                "name": names.get(gear_rigs.decl_key(r)),
+                "parts": parts.get(r["id"], []),
+                "numbers": written,
+                "pieces": pieces,
+            }
+        )
+    return rows
 
 
 # Widest first: on the frame the narrow boxes sit over the wide ones.

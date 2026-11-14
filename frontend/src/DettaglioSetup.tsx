@@ -5,6 +5,7 @@ import { gesto } from "./componenti/gesto"
 import { CampoDelModulo, Modulo } from "./componenti/Modulo"
 import type { Formato } from "./componenti/Tema"
 import { PartiDelSetup, type Parte } from "./PartiDelSetup"
+import { TrenoOttico, trenoDelSetup } from "./TrenoOttico"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { alPiu, numero, oreEMinuti, t } from "./i18n"
@@ -42,6 +43,7 @@ export function DettaglioSetup({
 }) {
   const m = MISURE_DETTAGLIO[formato]
   const [aperto, setAperto] = useState<Aperto>(null)
+  const treno = trenoDelSetup(pagina, setup)
   return (
     <div className="al-attr__centro-2" style={{ gridTemplateColumns: m.griglia, gap: m.stacco }}>
       <div className="al-attr__colonna-1" style={{ gridColumn: m.otto, gap: m.stacco }}>
@@ -52,6 +54,9 @@ export function DettaglioSetup({
           aperto={aperto === "nome"}
           onApri={(si) => setAperto(si ? "nome" : null)}
         />
+        {treno && (
+          <TrenoOttico treno={treno} nome={nomeDelSetup(setup)} formato={formato} onVai={onVai} />
+        )}
         <PartiDelSetup
           pagina={pagina}
           setup={setup}

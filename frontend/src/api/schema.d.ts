@@ -4850,6 +4850,8 @@ export interface components {
             parts: components["schemas"]["RigPart"][];
             /** @description From the cards of its pieces: the chosen part, else the most used. Null only for a rig born after the last write of the numbers. */
             numbers: components["schemas"]["RigNumbers"] | null;
+            /** @description The pieces the numbers read, which the optical train draws; null with them. */
+            pieces: components["schemas"]["RigPieces"] | null;
             /**
              * Title
              * @description The index card's title: your name for it, else optics and camera short (model, else the name without its brand). Null only without either piece.
@@ -4914,6 +4916,34 @@ export interface components {
         RigPartChoice: {
             /** Piece Id */
             piece_id: number | null;
+        };
+        /**
+         * RigPieces
+         * @description The pieces the numbers read, by id among `instruments`: the chosen part, else the most
+         *     used. The optical train draws these same ones; null where the rig has none.
+         */
+        RigPieces: {
+            /** Optics */
+            optics: number | null;
+            /** Camera */
+            camera: number | null;
+            /** Reducer */
+            reducer: number | null;
+            /**
+             * Guide
+             * @description A guide scope or an OAG: its `kind` says which.
+             */
+            guide: number | null;
+            /** Guide Camera */
+            guide_camera: number | null;
+            /** Wheel */
+            wheel: number | null;
+            /** Focuser */
+            focuser: number | null;
+            /** Mount */
+            mount: number | null;
+            /** Spacers */
+            spacers: number[];
         };
         /**
          * RigSlot

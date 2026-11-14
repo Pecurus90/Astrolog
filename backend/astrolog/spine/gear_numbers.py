@@ -78,5 +78,6 @@ def write(conn: sqlite3.Connection) -> None:
     ]
     for rig in conn.execute("SELECT id, focal_mm, optics_id, camera_id FROM rigs"):
         rig_card = _rig_card(rig, cards, used.get(rig["id"], {}), spacers.get(rig["id"], []))
-        rows.append(("rig", rig["id"], json.dumps(rn.numbers(rig_card))))
+        written = {**rn.numbers(rig_card), "pieces": rn.pieces(rig_card)}
+        rows.append(("rig", rig["id"], json.dumps(written)))
     replace_rows(conn, "gear_numbers", ("subject", "subject_id", "numbers_json"), rows)

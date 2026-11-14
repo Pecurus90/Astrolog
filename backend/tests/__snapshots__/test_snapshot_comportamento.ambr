@@ -2372,6 +2372,18 @@
             'ring_to': 100.0,
           }),
         ]),
+        'pieces': dict({
+          'camera': 6,
+          'focuser': 8,
+          'guide': None,
+          'guide_camera': None,
+          'mount': None,
+          'optics': 5,
+          'reducer': None,
+          'spacers': list([
+          ]),
+          'wheel': 7,
+        }),
         'scale_arcsec_px': None,
         'slots': list([
           dict({
@@ -2579,6 +2591,18 @@
             'ring_to': 100.0,
           }),
         ]),
+        'pieces': dict({
+          'camera': 1,
+          'focuser': None,
+          'guide': None,
+          'guide_camera': 2,
+          'mount': 3,
+          'optics': None,
+          'reducer': None,
+          'spacers': list([
+          ]),
+          'wheel': None,
+        }),
         'scale_arcsec_px': None,
         'slots': list([
           dict({
@@ -2755,6 +2779,18 @@
             'ring_to': 100.0,
           }),
         ]),
+        'pieces': dict({
+          'camera': 13,
+          'focuser': None,
+          'guide': None,
+          'guide_camera': None,
+          'mount': None,
+          'optics': 12,
+          'reducer': None,
+          'spacers': list([
+          ]),
+          'wheel': None,
+        }),
         'scale_arcsec_px': None,
         'slots': list([
           dict({
@@ -2931,6 +2967,18 @@
             'ring_to': 100.0,
           }),
         ]),
+        'pieces': dict({
+          'camera': 11,
+          'focuser': None,
+          'guide': None,
+          'guide_camera': None,
+          'mount': None,
+          'optics': 10,
+          'reducer': None,
+          'spacers': list([
+          ]),
+          'wheel': None,
+        }),
         'scale_arcsec_px': None,
         'slots': list([
           dict({
@@ -3118,6 +3166,18 @@
             'ring_to': 100.0,
           }),
         ]),
+        'pieces': dict({
+          'camera': 9,
+          'focuser': 8,
+          'guide': None,
+          'guide_camera': None,
+          'mount': None,
+          'optics': 5,
+          'reducer': None,
+          'spacers': list([
+          ]),
+          'wheel': 7,
+        }),
         'scale_arcsec_px': None,
         'slots': list([
           dict({

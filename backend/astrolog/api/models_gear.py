@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ..spine.rig_card import Slot
-from .models_gear_numbers import PieceNumbers, RigNumbers
+from .models_gear_numbers import PieceNumbers, RigNumbers, RigPieces
 from .models_review import BandOut, CameraType, CardField, FilterSize, InstrumentKind, OpticalDesign
 from .models_review_apply import BandIn, FilterSpecs
 
@@ -288,6 +288,9 @@ class RigOnPage(BaseModel):
     numbers: RigNumbers | None = Field(
         description="From the cards of its pieces: the chosen part, else the most used. Null "
         "only for a rig born after the last write of the numbers."
+    )
+    pieces: RigPieces | None = Field(
+        description="The pieces the numbers read, which the optical train draws; null with them."
     )
     title: str | None = Field(
         description="The index card's title: your name for it, else optics and camera short "

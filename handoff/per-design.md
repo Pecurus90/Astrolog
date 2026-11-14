@@ -61,6 +61,13 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
   (nome, modello o nome senza la marca scritta sul pezzo, senza lista di marche): un nome lungo
   («Askar 103Apo · ATR2600M») esce dal riquadro piccolo e copre la Luna. Disegnare l'etichetta
   lunga su un campo stretto. Allineare la tavola. Dettaglio in `differenze-dalle-tavole.md`.
+- [da dare] Attrezzatura, porting del treno ottico (14/11): (a) `@keyframes alDraw` (il treno che
+  si disegna in 0,9 s) vive solo nell'helmet delle tavole, non in `astrolog.css`: portarlo nel
+  foglio coi movimenti nominati (riga 542 e seguenti), col movimento ridotto; (b) nell'app il
+  disegno legge lo schema ottico della scheda: un obiettivo fotografico o «altro» si disegna
+  rifrattore come uno schema non scritto; se serve un disegno suo, disegnarlo; (c) nomi lunghi
+  (driver ASCOM): la tavola spinge la prima pillola fuori dal riquadro a sinistra; l'app (Marco,
+  14/11) passa ai numeri con la legenda del telefono anche sul desktop. Disegnare lo stato.
 ## Date, da controllare alla consegna
 
 - [fatta v82] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un

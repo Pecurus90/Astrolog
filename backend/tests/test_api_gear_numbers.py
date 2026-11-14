@@ -144,6 +144,37 @@ def test_the_backfocus_counts_the_spacers_against_the_optics(archivio):
     assert (backfocus["difference_mm"], backfocus["verdict"]) == (0.0, "exact")
 
 
+def test_the_train_draws_the_pieces_the_numbers_read(archivio):
+    """Il treno ottico disegna i pezzi che i conti leggono: la parte scelta, la guida una sola."""
+    ottica = pezzo(archivio, "optics", "TS 130 APO")["id"]
+    camera = pezzo(archivio, "camera", "ASI2600MM")["id"]
+    scelti = {
+        "reducer": nuovo(archivio, "reducer", "Riduttore 0,8x", reducer_factor=0.8),
+        "guide_scope": nuovo(archivio, "guide_scope", "Cercatore 30/120", focal_mm=120.0),
+        "guide_camera": nuovo(archivio, "guide_camera", "ASI120MM Mini"),
+        "filter_wheel": nuovo(archivio, "filter_wheel", "EFW 7x36", slots=7),
+        "focuser": nuovo(archivio, "focuser", "EAF"),
+    }
+    for kind, piece_id in scelti.items():
+        assert scegli(archivio, kind, piece_id).status_code == 200
+    lungo = nuovo(archivio, "spacer", "D10", thickness_mm=10.0)
+    corto = nuovo(archivio, "spacer", "D5", thickness_mm=5.0)
+    distanziali(archivio, lungo, corto)
+    setup = il_setup(archivio)
+    assert "pieces" not in setup["numbers"]
+    assert setup["pieces"] == {
+        "optics": ottica,
+        "camera": camera,
+        "reducer": scelti["reducer"],
+        "guide": scelti["guide_scope"],
+        "guide_camera": scelti["guide_camera"],
+        "wheel": scelti["filter_wheel"],
+        "focuser": scelti["focuser"],
+        "mount": None,
+        "spacers": [lungo, corto],
+    }
+
+
 def test_a_filter_carries_its_sheet(archivio):
     risposta = archivio.post(
         "/api/v1/gear/filters",
