@@ -3327,6 +3327,11 @@ export interface components {
              * @description Background, noise or sky brightness from more than one filter: each filter has its own scale, so the set's median does not compare; show it per filter.
              */
             per_filter: boolean;
+            /**
+             * Sky Verdict
+             * @description Sky brightness only: its median's Bortle class (ASTAP) against the night's site, `as_site` or `brighter` (MisureFrame 242); null for other measures, per filter, or without a site sky.
+             */
+            sky_verdict?: ("as_site" | "brighter") | null;
         };
         /** MeasuredFilter */
         MeasuredFilter: {
@@ -3390,6 +3395,11 @@ export interface components {
              * @description The pier side as the header writes it; null: not written.
              */
             pier_side?: ("east" | "west") | null;
+            /**
+             * Sky Verdict
+             * @description Its sky brightness against the night's site class (MisureFrame 358); null without either, and always in an object's window (its nights' sites may differ).
+             */
+            sky_verdict?: ("as_site" | "brighter") | null;
             /**
              * Values
              * @description Measure -> value, only those it has; why one is missing: the frame's measures.
@@ -3933,6 +3943,11 @@ export interface components {
              * @description The site's zone: the times read in it.
              */
             timezone: string | null;
+            /**
+             * Site Bortle
+             * @description The site's Bortle class from its sky (ASTAP); null: the site has no sky, the window says 'senza Bortle del sito' (MisureFrame 358).
+             */
+            site_bortle?: number | null;
         };
         /**
          * NightMonth

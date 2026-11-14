@@ -14,6 +14,7 @@ import { nomeDelFiltro } from "./FiltriUsati"
 import { type Chiave, numero, t } from "./i18n"
 import {
   ALTRE,
+  CIELO,
   DAL_SETUP,
   ESITO,
   type EsitoDelGruppo,
@@ -315,6 +316,7 @@ function UnaTessera({
   const fwhmPx = statistica(set, "fwhm_px")?.verdict
   const tag = x.id === "fwhm" && fwhmPx ? t(`measures.sampling.${fwhmPx as "ideal"}`) : ""
   const tilt = x.id === "tilt" ? s?.verdict : null
+  const cielo = x.id === "sqm" && s?.sky_verdict ? CIELO[s.sky_verdict] : undefined
   const d = perFiltro ? "" : linea(s?.trend)
   const scelta =
     posto === 0
@@ -343,6 +345,11 @@ function UnaTessera({
             dimensione="micro"
             fondo="carta"
           />
+        </span>
+      )}
+      {cielo && (
+        <span className="al-c-misure-frame__riga-8">
+          <Pillola esito={cielo.esito} testo={t(cielo.chiave)} dimensione="micro" fondo="carta" />
         </span>
       )}
       {tag && <span className="al-c-misure-frame__blocco-3">{tag}</span>}

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 374; senza fonte: 0.
-Fonti: C norma: 188; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 91.
+Valori: 375; senza fonte: 0.
+Fonti: C norma: 189; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 91.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -44,6 +44,12 @@ Fonti: C norma: 188; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | add_rig@router.post | `router.post("/gear/rigs", response_model=GearWritten, status_code=201)` | C RFC 9110 15.3.2: 201 Created |
 | delete_instrument@router.delete | `router.delete("/gear/instruments/{instrument_id}", status_code=204)` | C RFC 9110 15.3.5: 204 No Content |
 | delete_filter@router.delete | `router.delete("/gear/filters/{filter_id}", status_code=204)` | C RFC 9110 15.3.5: 204 No Content |
+
+### api/models_night_measures.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| NightMeasures.site_bortle | `le=9,` | C Bortle 2001: nine classes |
 
 ### api/models_site.py
 

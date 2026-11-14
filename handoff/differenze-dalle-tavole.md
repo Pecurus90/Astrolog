@@ -114,8 +114,9 @@ Scelte diverse dalla tavola:
   «serve il bias della camera» (235). App: le stesse frasi (Issue #75, 14/11); nella finestra
   dell'oggetto «nessun frame L o a colori», senza «in questa notte»; «non c'e' per questi frame»
   quando i frame misurati dicono motivi diversi o qualcuno e' ancora da misurare.
-- **SQM col Bortle.** Tavola: il giudizio dello SQM col Bortle. App: solo il numero. Perche':
-  nessuna convenzione pubblica (principio 1, ADR 0039).
+- **SQM col Bortle.** Tavola: «come / piu' chiaro del Bortle del sito» (242, 262, 358). App: lo
+  stesso, classi di ASTAP (Issue #71, 14/11); nella finestra dell'oggetto niente giudizio ne'
+  «senza Bortle del sito», perche' le sue notti possono avere siti diversi.
 - **Nomi delle misure.** Tavola: in italiano («Fondo cielo», «Massa d'aria», «Gradiente del
   fondo», «Peso del segnale · PSF Signal Weight»). App: il nome tecnico inglese dei programmi,
   uguale in ogni lingua («Background», «Airmass», «Gradient», «PSF Signal Weight»). Perche':

@@ -274,6 +274,16 @@ export function posizione(v: number, basso: number, alto: number): string {
 /** L'esito di un giudizio del tilt nella pillola. */
 export const ESITO: Record<string, 0 | 1 | 2> = { go: 0, marginal: 1, nogo: 2 }
 
+/** Lo SQM sul Bortle del sito, dall'API (tavola `MS.cielo`: buono o avviso). */
+export const CIELO: Record<string, { esito: 0 | 1; chiave: Chiave }> = {
+  as_site: { esito: 0, chiave: "measures.sky.asSite" },
+  brighter: { esito: 1, chiave: "measures.sky.brighter" },
+}
+
+/** La classe del sito della notte; `undefined` nella finestra dell'oggetto, che non ne ha una. */
+export const bortleDelSito = (m: Misure): number | null | undefined =>
+  "site_bortle" in m ? (m.site_bortle ?? null) : undefined
+
 /** Il gruppo (oggetto della notte, notte dell'oggetto) e il filtro scelti; `null`: tutti. */
 export interface Scelta {
   gruppo: string | null

@@ -10,6 +10,7 @@ import { nomeDelFiltro } from "./FiltriUsati"
 import { numero, oraDelSito, t } from "./i18n"
 import { MISURATO, frameMostrato } from "./FramePerFrameDati"
 import {
+  CIELO,
   ESITO,
   type EsitoDelGruppo,
   type FrameMisurato,
@@ -21,6 +22,7 @@ import {
   filtriDi,
   pallinoDi,
   insieme,
+  bortleDelSito,
   latoDelPilastro,
   nomeDelGruppo,
   nomeDi,
@@ -46,11 +48,23 @@ interface Riquadro {
   sub?: string
   tag?: string
   tilt?: string | null
+  cielo?: string | null
   grande?: boolean
 }
 
-/** Le tessere di un frame misurato, quelle che il frame ha (tavola, `FX.tiles`). */
-function riquadri(f: FrameMisurato, tipo: Tipo): Riquadro[] {
+function GiudizioDelCielo({ verdetto }: { verdetto: string }) {
+  const g = CIELO[verdetto]
+  if (!g) return null
+  return (
+    <span className="al-c-misure-frame__riga-8">
+      <Pillola esito={g.esito} testo={t(g.chiave)} dimensione="micro" fondo="carta" />
+    </span>
+  )
+}
+
+/** Le tessere di un frame misurato, quelle che il frame ha (tavola, `FX.tiles`). `sito`: la classe
+ *  del sito della notte, `null` se non ne ha; nella finestra dell'oggetto `undefined`, e tace. */
+function riquadri(f: FrameMisurato, tipo: Tipo, sito?: number | null): Riquadro[] {
   const v = f.values
   const stimata = f.state === "estimated"
   const r: Riquadro[] = [
@@ -130,7 +144,13 @@ function riquadri(f: FrameMisurato, tipo: Tipo): Riquadro[] {
     })
   }
   if (v.sqm !== undefined)
-    r.push({ k: nomeDi("sqm"), v: scritto("sqm", v.sqm), sub: t("measures.sqm.unit") })
+    r.push({
+      k: nomeDi("sqm"),
+      v: scritto("sqm", v.sqm),
+      // [T] MisureFrame.dc.html 358
+      sub: t(sito === null ? "measures.sqm.unit.noSite" : "measures.sqm.unit"),
+      cielo: f.sky_verdict ?? null,
+    })
   return r
 }
 
@@ -238,7 +258,7 @@ export function IlFrame({
       )}
       {f && MISURATO.has(f.state) && (
         <div className="al-c-misure-frame__centro-1 al-c-misure-frame__centro-1--frame">
-          {riquadri(f, tipo).map((x) => (
+          {riquadri(f, tipo, bortleDelSito(misure)).map((x) => (
             <div key={x.k} className="al-c-misure-frame__colonna-8">
               <span className="al-c-misure-frame__testo-2">{x.k}</span>
               <span
@@ -257,6 +277,7 @@ export function IlFrame({
                   />
                 </span>
               )}
+              {x.cielo && <GiudizioDelCielo verdetto={x.cielo} />}
               {x.tag && <span className="al-c-misure-frame__blocco-3">{x.tag}</span>}
             </div>
           ))}
@@ -485,6 +506,7 @@ function Cella({ id, set }: { id: string; set: ReturnType<typeof insieme> }) {
   if (id === "background" && s?.median != null && rumore != null)
     sotto = t("perfilter.noise", { n: numero(Math.round(rumore)) })
   const tilt = id === "tilt" ? s?.verdict : null
+  const cielo = id === "sqm" && s?.sky_verdict ? CIELO[s.sky_verdict] : undefined
   return (
     <span className="al-c-misure-frame__colonna-14" role="cell" style={{ alignItems: "flex-end" }}>
       <span
@@ -498,6 +520,16 @@ function Cella({ id, set }: { id: string; set: ReturnType<typeof insieme> }) {
           <Pillola
             esito={ESITO[tilt] ?? 0}
             testo={t(`measures.tilt.${tilt as "go"}`)}
+            acapo
+            allinea="flex-end"
+            dimensione="micro"
+            fondo="carta"
+          />
+        )}
+        {cielo && (
+          <Pillola
+            esito={cielo.esito}
+            testo={t(cielo.chiave)}
             acapo
             allinea="flex-end"
             dimensione="micro"

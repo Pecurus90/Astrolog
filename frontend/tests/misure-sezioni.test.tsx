@@ -112,6 +112,25 @@ describe("il frame", () => {
     expect(grande?.textContent).toBe("2,4″ · 1,3 px")
   })
 
+  it("lo SQM col giudizio sul Bortle del sito, o 'senza Bortle del sito' (tavola 358)", () => {
+    const giudicato = { ...PIENO, sky_verdict: "brighter" } as FrameMisurato
+    const notte = (site_bortle: number | null) =>
+      ({ ...conSerie([giudicato]), site_bortle }) as unknown as Misure
+    const monta = (m: Misure) => {
+      render(<IlFrame misure={m} scelta={TUTTI} sel={null} onSel={vi.fn()} tipo="notte" />)
+      const s = screen.getByRole("region", { name: t("shot.section") })
+      return [...s.querySelectorAll(".al-c-misure-frame__colonna-8")].at(-1)?.textContent
+    }
+    // la pillola d'avviso porta il suo segno davanti al testo
+    expect(monta(notte(4))).toBe(
+      `SQMSQM 21,3${t("measures.sqm.unit")}! ${t("measures.sky.brighter")}`,
+    )
+    cleanup()
+    expect(monta(notte(null))).toBe(
+      `SQMSQM 21,3${t("measures.sqm.unit.noSite")}! ${t("measures.sky.brighter")}`,
+    )
+  })
+
   it("il gradiente dice verso dove il cielo e' piu' chiaro (tavola 357)", () => {
     const { tessere } = ilFrame([{ ...PIENO, gradient_side: "E" } as FrameMisurato])
     expect(tessere[7]).toBe(`Gradient1,2 ${RUMORE}più chiaro verso est`)
@@ -359,6 +378,7 @@ describe("per filtro", () => {
         stat("background_adu", { median: 900 }),
         stat("noise_adu", { median: 12.4 }),
         stat("hfd_tilt_pct", { median: 14, verdict: "nogo" }),
+        stat("sqm", { median: 21.3, sky_verdict: "as_site" }),
         stat("kept", { median: 120 }),
       ]),
       set(
@@ -417,6 +437,7 @@ describe("per filtro", () => {
     expect(celle[5]).toBe(`900 ADU${t("perfilter.noise", { n: "12" })}`)
     expect(celle[6]).toContain("14%")
     expect(celle[6]).toContain(t("measures.tilt.nogo"))
+    expect(celle[8]).toBe(`SQM 21,3✓ ${t("measures.sky.asSite")}`)
     expect(celle[9]).toBe("120")
     const oiii = within(righe[2] as HTMLElement)
       .getAllByRole("cell")

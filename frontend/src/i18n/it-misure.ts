@@ -69,6 +69,10 @@ export const itMisure = {
   "measures.pending": "misura in corso",
   "measures.only": "solo {n} \u00D7",
   "measures.none": "non c\u2019\u00E8 per questi frame",
+  // [T] soglie.js `MS.cielo`, MisureFrame.dc.html 358
+  "measures.sky.asSite": "come il Bortle del sito",
+  "measures.sky.brighter": "pi\u00F9 chiaro del Bortle del sito",
+  "measures.sqm.unit.noSite": "mag/arcsec\u00B2 \u00B7 senza Bortle del sito",
   // [T] MisureFrame.dc.html 236
   "measures.sqm.notThisFilter": "nessun frame L o a colori in questa notte",
   "measures.sqm.noLOrColour": "nessun frame L o a colori",

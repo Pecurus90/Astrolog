@@ -11,6 +11,7 @@ FrameState = Literal["measured", "estimated", "too_few_stars", "pending"]
 TiltLevel = Literal["go", "marginal", "nogo"]
 Sampling = Literal["severe_under", "under", "ideal", "over"]
 MedianVerdict = Literal[TiltLevel, Sampling]
+SkyVerdict = Literal["as_site", "brighter"]
 
 
 class MeasureStat(BaseModel):
@@ -44,6 +45,12 @@ class MeasureStat(BaseModel):
     per_filter: bool = Field(
         description="Background, noise or sky brightness from more than one filter: each filter "
         "has its own scale, so the set's median does not compare; show it per filter."
+    )
+    sky_verdict: SkyVerdict | None = Field(
+        default=None,
+        description="Sky brightness only: its median's Bortle class (ASTAP) against the night's "
+        "site, `as_site` or `brighter` (MisureFrame 242); null for other measures, per filter, "
+        "or without a site sky.",
     )
 
 
@@ -132,6 +139,11 @@ class MeasuredFrame(BaseModel):
     pier_side: PierSide | None = Field(
         default=None, description="The pier side as the header writes it; null: not written."
     )
+    sky_verdict: SkyVerdict | None = Field(
+        default=None,
+        description="Its sky brightness against the night's site class (MisureFrame 358); null "
+        "without either, and always in an object's window (its nights' sites may differ).",
+    )
     values: dict[str, float] = Field(
         description="Measure -> value, only those it has; why one is missing: the frame's measures."
     )
@@ -156,6 +168,13 @@ class NightMeasures(Measures):
 
     night_id: int
     timezone: str | None = Field(description="The site's zone: the times read in it.")
+    site_bortle: int | None = Field(
+        default=None,
+        ge=1,
+        le=9,  # [C Bortle 2001: nine classes]
+        description="The site's Bortle class from its sky (ASTAP); null: the site has no sky, "
+        "the window says 'senza Bortle del sito' (MisureFrame 358).",
+    )
 
 
 class ObjectMeasures(Measures):

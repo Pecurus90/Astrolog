@@ -128,6 +128,20 @@ describe("le tessere", () => {
     expect(parti(tessera(s, "FWHM"))).toEqual(["—", null, null])
   })
 
+  it("lo SQM col giudizio sul Bortle del sito; per filtro niente giudizio (MisureFrame 242)", () => {
+    const con = (extra: Record<string, unknown>) =>
+      ({
+        ...MISURE,
+        sets: [set(null, null, 6, [stat("sqm", 20.9, { sky_verdict: "brighter", ...extra })])],
+      }) as unknown as Misure
+    expect(tessera(monta(con({})), "SQM").textContent).toContain(t("measures.sky.brighter"))
+    cleanup()
+    // per filtro l'API manda il giudizio nullo (MisureFrame 242, `!multi`)
+    expect(
+      tessera(monta(con({ per_filter: true, sky_verdict: null })), "SQM").textContent,
+    ).not.toContain(t("measures.sky.brighter"))
+  })
+
   it("lo SQM che manca all'insieme dice perche' con le parole della tavola (MisureFrame 236)", () => {
     const senza = (silent: string) =>
       ({

@@ -286,6 +286,49 @@ def test_sky_brightness_of_colour_frames_without_bias_says_it_needs_it(
     assert (sqm["median"], sqm["silent"]) == (None, "needs_camera_bias")
 
 
+def _sky(conn, spine: int, sqm: float) -> None:
+    """The frame solved, its sky brightness measured on a mono frame."""
+    _solved(conn, spine)
+    conn.execute(
+        "INSERT INTO pipeline_sqm (frame_id, outcome, catalogue, zero_point_mag,"
+        " calibration_stars, sky_adu, colour, sqm, computed_at)"
+        " SELECT pipeline_frame_id, 'measured', 'd50', 21.0, 40, 900, 0, ?, ?"
+        " FROM night_measure_frames WHERE frame_id = ?",
+        (sqm, T1, spine),
+    )
+
+
+def test_sky_brightness_is_judged_against_the_site_bortle(conn, db_path, world) -> None:
+    """Tavola MisureFrame 242 e 358, `MS.cielo`: «come il Bortle del sito» o «piu' chiaro del
+    Bortle del sito» (docs/domini/sito.md). Casa a 21,40 e' Bortle 4 (ASTAP): 21,30 resta 4, 20,90
+    e' 5, piu' chiaro."""
+    conn.execute("UPDATE sites SET sky_sqm = 21.4, sky_source = 'measured'")
+    spines = [world.shot(2.0, start=T1), world.shot(3.0, start=T2)]
+    night_measures.rebuild(conn)
+    _sky(conn, spines[0], 21.3)
+    _sky(conn, spines[1], 20.9)
+    night_measures.rebuild(conn)
+    conn.commit()
+    body = _get(db_path, world.night).json()
+    assert body["site_bortle"] == 4
+    assert [f["sky_verdict"] for f in body["series"]] == ["as_site", "brighter"]
+    sqm = _sqm(body)
+    assert (sqm["median"], sqm["sky_verdict"]) == (pytest.approx(21.1), "brighter")
+    hfd = next(m for m in body["sets"][0]["measures"] if m["key"] == "hfd_px")
+    assert hfd["sky_verdict"] is None
+
+
+def test_without_a_site_sky_there_is_no_judgement(conn, db_path, world) -> None:
+    spine = world.shot(2.0, start=T1)
+    night_measures.rebuild(conn)
+    _sky(conn, spine, 21.3)
+    night_measures.rebuild(conn)
+    conn.commit()
+    body = _get(db_path, world.night).json()
+    assert body["site_bortle"] is None
+    assert (body["series"][0]["sky_verdict"], _sqm(body)["sky_verdict"]) == (None, None)
+
+
 def test_a_night_not_rebuilt_yet_has_no_sets(conn, db_path, world) -> None:
     """Grouped but the measures not written yet: no sets, not an error."""
     world.frame()

@@ -9,12 +9,15 @@ from typing import Any
 from ..clock import local_iso
 from ..measure_list import MEASURES, Entry
 from ..night_measures import JOINS, VALUES
+from ..units import bortle_of
 from ..vocab.filters import Passband
 from . import filters_used
 from . import objects as obj
 from .night_criteria import NO_FILTER
 
-_NIGHT = "SELECT s.timezone FROM nights n JOIN sites s ON s.id = n.site_id WHERE n.id = ?"
+_NIGHT = (
+    "SELECT s.timezone, s.sky_sqm FROM nights n JOIN sites s ON s.id = n.site_id WHERE n.id = ?"
+)
 
 # The columns of a frame of the series, `f` through the bridge; the caller adds FROM and WHERE.
 SERIES = f"""
@@ -65,8 +68,10 @@ def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | 
     found = conn.execute(_FILTERS, (night_id,)).fetchall()
     names = {r["id"]: r["name"] for r in found if not r["unfiltered"]}
     zone = night["timezone"]
+    site = bortle_of(night["sky_sqm"])  # derived, never stored (docs/domini/sito.md)
     series = [
-        frame(r, keys.get(r["object_id"]), names, zone) for r in conn.execute(_SERIES, (night_id,))
+        frame(r, keys.get(r["object_id"]), names, zone, site)
+        for r in conn.execute(_SERIES, (night_id,))
     ]
     groups = conn.execute(_GROUPS, (night_id,)).fetchall()
     rows = conn.execute(_MEASURES, (night_id,)).fetchall()
@@ -74,6 +79,7 @@ def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | 
     return {
         "night_id": night_id,
         "timezone": zone,
+        "site_bortle": site,
         # not written yet (a scan still running): every frame is still to be measured
         "frames": whole["frames"] if whole else len(series),
         "pending": whole["pending"] if whole else len(series),
@@ -88,7 +94,9 @@ def night_measures(conn: sqlite3.Connection, night_id: int) -> dict[str, Any] | 
             for i, r in objects.items()
         ],  # fmt: skip
         "filters": filters(found),
-        "sets": sets(groups, rows, "object_id", lambda g: keys.get(g["object_id"]), names),
+        "sets": _judge_sky(
+            sets(groups, rows, "object_id", lambda g: keys.get(g["object_id"]), names), site
+        ),
         "series": series,
     }
 
@@ -146,16 +154,39 @@ def _stat(entry: Entry, row: sqlite3.Row | None, measuring: bool) -> dict[str, A
         measured = 0 if row is None else row["measured"]
         return out | {"measured": measured, "median": None, "q1": None, "q3": None, "low": None,
                       "high": None, "trend": None, "verdict": None, "silent": silent,
-                      "per_filter": False}  # fmt: skip
+                      "per_filter": False, "sky_verdict": None}  # fmt: skip
     trend = json.loads(row["trend"]) if row["trend"] else None
     return out | {"measured": row["measured"], "median": row["median"], "q1": row["q1"],
                   "q3": row["q3"], "low": row["low"], "high": row["high"], "trend": trend,
                   "verdict": row["verdict"], "silent": None,
-                  "per_filter": bool(row["per_filter"])}  # fmt: skip
+                  "per_filter": bool(row["per_filter"]), "sky_verdict": None}  # fmt: skip
+
+
+def _judge_sky(sets_: list[dict[str, Any]], site_bortle: int | None) -> list[dict[str, Any]]:
+    """The night's sets: sky brightness against its one site. Per filter the median mixes scales,
+    no judgement (MisureFrame 242, `!multi`)."""
+    for s in sets_:
+        for m in s["measures"]:
+            if not m["per_filter"]:
+                m["sky_verdict"] = sky_verdict(m["key"], m["median"], site_bortle)
+    return sets_
+
+
+def sky_verdict(key: str, value: float | None, site_bortle: int | None) -> str | None:
+    """Sky brightness against the site's class: a class is wide, and a frame out of it has Moon,
+    haze or lights (docs/domini/sito.md). None for other measures or without a site sky."""
+    if key != "sqm" or value is None or site_bortle is None:
+        return None
+    bortle = bortle_of(value)
+    return "as_site" if bortle is not None and bortle <= site_bortle else "brighter"
 
 
 def frame(
-    r: sqlite3.Row, group: str | None, names: dict[int, str], zone: str | None
+    r: sqlite3.Row,
+    group: str | None,
+    names: dict[int, str],
+    zone: str | None,
+    site_bortle: int | None = None,
 ) -> dict[str, Any]:
     """One frame of the series, in its group, its start in the site's zone."""
     if r["outcome"] == "measured" and r["shape"] == "estimated":
@@ -173,5 +204,6 @@ def frame(
         "angle_axis": r["angle_axis"],
         "gradient_side": r["gradient_side"],
         "pier_side": r["pier_side"],
+        "sky_verdict": sky_verdict("sqm", r["sqm"], site_bortle),
         "values": {e.key: float(r[e.key]) for e in MEASURES if r[e.key] is not None},
     }
