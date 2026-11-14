@@ -51,12 +51,21 @@ function vociDelFiltro(f: Filtro): VoceConPallino[] {
 
 /** How much it served (board `usoT`): hours with the bar, or why there are none. */
 function Uso({ cosa, onMontatura }: { cosa: Pezzo | Filtro; onMontatura?: () => void }) {
-  if (!cosa.counted) return <Segno classe="al-attr__tondo-16" testo={t("gear.counting")} />
+  if (!cosa.counted)
+    return (
+      <Segno
+        tondo={<span className="al-attr__tondo-16" aria-hidden="true" />}
+        testo={t("gear.counting")}
+      />
+    )
   const perche = "no_hours" in cosa ? cosa.no_hours : null
   if (perche === "no_rig" && "kind" in cosa) {
     return (
       <>
-        <Segno classe="al-attr__tondo-18" testo={t(SENZA_SETUP[cosa.kind] ?? "gear.noHours")} />
+        <Segno
+          tondo={<span className="al-attr__tondo-18" aria-hidden="true" />}
+          testo={t(SENZA_SETUP[cosa.kind] ?? "gear.noHours")}
+        />
         {onMontatura && (
           <a
             href="#"
@@ -72,7 +81,12 @@ function Uso({ cosa, onMontatura }: { cosa: Pezzo | Filtro; onMontatura?: () => 
   }
   // no frame yet is not an hour (board `ore: 'file'` for a piece written by hand)
   if (perche !== null || cosa.integration_s === null || cosa.frames === 0) {
-    return <Segno classe="al-attr__tondo-17" testo={t("gear.noHours")} />
+    return (
+      <Segno
+        tondo={<span className="al-attr__tondo-17" aria-hidden="true" />}
+        testo={t("gear.noHours")}
+      />
+    )
   }
   return (
     <>
@@ -90,10 +104,10 @@ function Uso({ cosa, onMontatura }: { cosa: Pezzo | Filtro; onMontatura?: () => 
   )
 }
 
-function Segno({ classe, testo }: { classe: string; testo: string }) {
+function Segno({ tondo, testo }: { tondo: ReactNode; testo: string }) {
   return (
     <span className="al-attr__riga-34">
-      <span className={classe} aria-hidden="true" />
+      {tondo}
       {testo}
     </span>
   )

@@ -1,17 +1,9 @@
 import { useState } from "react"
 
-import {
-  BloccoDelModulo,
-  CalcolatoDelModulo,
-  CampoDelModulo,
-  Modulo,
-  type RigaDelModulo,
-  TendinaDelModulo,
-  TestoDelModulo,
-} from "./componenti/Modulo"
+import { CalcolatoDelModulo, CampoDelModulo, TestoDelModulo } from "./componenti/Modulo"
 import { PillolaScelta } from "./componenti/PillolaScelta"
 import type { Formato } from "./componenti/Tema"
-import { EliminaDelModulo } from "./EliminaDelModulo"
+import { ALTRA, ModuloDellaRiga } from "./ModuloDellaRiga"
 import { rifiutoDetto, useScrittura } from "./ModuloDelGesto"
 import type { CampoScheda } from "./SchedaDelPezzo"
 import { api } from "./api/client"
@@ -24,7 +16,6 @@ type Pezzo = components["schemas"]["InstrumentOnPage"]
 type Scritta = components["schemas"]["InstrumentCorrection"]
 type Bozza = Record<string, string>
 
-const ALTRA = "__altra__"
 // [T] Attrezzatura.dc.html `SCHEMI`, `MISURE` (427-428): the pills, in the board's order
 const SCHEMI = ["refractor", "newtonian", "sct", "rc", "maksutov", "camera_lens", "other"] as const
 const MISURE = ["1.25in", "31mm", "36mm", "2in", "50mm_square"] as const
@@ -121,8 +112,6 @@ export function ModuloDelPezzo({
   const [prima] = useState(() => iniziale(p))
   const [b, setB] = useState<Bozza>(prima)
   const [unione, setUnione] = useState("")
-  const [passo, setPasso] = useState<"chi" | "dati" | null>("chi")
-  const [nonEliminato, setNonEliminato] = useState<string | null>(null)
   const metti = (c: string, v: string) => setB((x) => ({ ...x, [c]: v }))
   const campi = (pagina.cards[p.kind] ?? []) as CampoScheda[]
   const tecnici = campi.filter(
@@ -251,98 +240,50 @@ export function ModuloDelPezzo({
     return []
   }
 
-  const marche = [...pagina.brands]
-  const chiScritti = [b.name, b.brand === ALTRA ? b.newBrand : b.brand, b.model, b.notes].filter(
-    (x) => x?.trim(),
-  ).length
+  const marca = b.brand === ALTRA ? b.newBrand : b.brand
   const bias = p.biases.map((x) => `bias:${x.offset}`)
-  const tecScritti = [...tecnici, ...bias].filter((c) => b[c]?.trim()).length
-  const righe: RigaDelModulo[] = []
-  const verso = unibili.find((o) => String(o.id) === unione)
-  if (verso && p.frames)
-    righe.push({
-      segno: "\u21bb",
-      testo: t("gear.merge.moves", { n: numero(p.frames), nome: verso.name }),
-      avviso: false,
-    }) // glifo-ok: board glyph
-  if (verso) righe.push({ segno: "!", testo: t("gear.merge.final"), avviso: true })
-  const perche = scansione
-    ? t("gear.write.scanning")
-    : !verso && !b.name?.trim()
-      ? t("gear.write.needName")
-      : ""
-  const unisciId = unibili.length > 0 ? `${base}-unisci` : null
-
   return (
-    <Modulo
+    <ModuloDellaRiga
+      base={base}
       titolo={p.name}
       formato={formato}
-      dentro
-      blocchi
-      righe={righe}
-      errore={nonEliminato ?? rifiutoDetto(scrivi.error)}
-      salva={{ onSalva: () => scrivi.mutate(), occupato: scrivi.isPending, spento: perche !== "" }}
-      onAnnulla={onChiudi}
-      perche={perche}
-      elimina={
-        <EliminaDelModulo
-          nome={p.name}
-          pagina={pagina}
-          rifiuto={p.delete_refused}
-          inSetup={p.in_rigs}
-          scansione={scansione}
-          salvando={scrivi.isPending}
-          unisci={unisciId}
-          elimina={() =>
-            api.DELETE("/api/v1/gear/instruments/{instrument_id}", {
-              params: { path: { instrument_id: p.id } },
-            })
-          }
-          onFatto={onChiudi}
-          onErrore={setNonEliminato}
-        />
-      }
-    >
-      {!verso && (
-        <BloccoDelModulo
-          titolo={t("gear.form.who")}
-          riassunto={t("gear.form.written", { n: numero(chiScritti), m: "4" })}
-          formato={formato}
-          aperto={passo === "chi"}
-          onApri={(si) => setPasso(si ? "chi" : null)}
-        >
-          <CampoDelModulo id={`${base}-name`} etichetta={t("gear.write.name")} largo>
-            <TestoDelModulo
-              id={`${base}-name`}
-              valore={b.name ?? ""}
-              onValore={(v) => metti("name", v)}
-            />
-          </CampoDelModulo>
-          <CampoDelModulo
-            id={`${base}-brand`}
-            etichetta={t("gear.f.brand")}
-            origine={origine("brand")}
-          >
-            <TendinaDelModulo
-              id={`${base}-brand`}
-              valore={b.brand ?? ""}
-              voci={[
-                { valore: "", l: "--" },
-                ...marche.map((m) => ({ valore: m, l: m })),
-                { valore: ALTRA, l: t("gear.form.otherBrand") },
-              ]}
-              onValore={(v) => metti("brand", v)}
-            />
-          </CampoDelModulo>
-          {b.brand === ALTRA && (
-            <CampoDelModulo id={`${base}-newBrand`} etichetta={t("gear.f.newBrand")}>
-              <TestoDelModulo
-                id={`${base}-newBrand`}
-                valore={b.newBrand ?? ""}
-                onValore={(v) => metti("newBrand", v)}
-              />
-            </CampoDelModulo>
-          )}
+      pagina={pagina}
+      scansione={scansione}
+      nome={b.name ?? ""}
+      onNome={(v) => metti("name", v)}
+      marca={b.brand ?? ""}
+      nuovaMarca={b.newBrand ?? ""}
+      origineMarca={origine("brand")}
+      onMarca={(v) => metti("brand", v)}
+      onNuovaMarca={(v) => metti("newBrand", v)}
+      chi={{ scritti: [b.name, marca, b.model, b.notes].filter((x) => x?.trim()).length, di: 4 }}
+      tecnici={{
+        scritti: [...tecnici, ...bias].filter((c) => b[c]?.trim()).length,
+        di: tecnici.length + bias.length,
+      }}
+      manca=""
+      unibili={unibili}
+      etichettaUnione={t("gear.write.sameAs")}
+      unione={unione}
+      onUnione={(v) => {
+        // choosing or dropping the merge starts over: a hidden edit would leave unseen
+        setUnione(v)
+        setB(prima)
+      }}
+      frame={p.frames}
+      scrittura={{ onSalva: () => scrivi.mutate(), occupato: scrivi.isPending }}
+      rifiuto={rifiutoDetto(scrivi.error)}
+      elimina={{
+        rifiuto: p.delete_refused,
+        inSetup: p.in_rigs,
+        manda: () =>
+          api.DELETE("/api/v1/gear/instruments/{instrument_id}", {
+            params: { path: { instrument_id: p.id } },
+          }),
+      }}
+      onChiudi={onChiudi}
+      campiChi={
+        <>
           {campo("model")}
           <CampoDelModulo
             id={`${base}-notes`}
@@ -356,46 +297,9 @@ export function ModuloDelPezzo({
               onValore={(v) => metti("notes", v)}
             />
           </CampoDelModulo>
-        </BloccoDelModulo>
-      )}
-      {!verso && (
-        <BloccoDelModulo
-          titolo={t("gear.form.tech")}
-          riassunto={t("gear.form.written", {
-            n: numero(tecScritti),
-            m: numero(tecnici.length + bias.length),
-          })}
-          formato={formato}
-          aperto={passo === "dati"}
-          onApri={(si) => setPasso(si ? "dati" : null)}
-        >
-          {tecnici.flatMap((c) => [campo(c), ...dopo(c)])}
-        </BloccoDelModulo>
-      )}
-      {unisciId && (
-        <section
-          className="al-c-modulo__colonna-4"
-          style={{ gridColumn: "1 / -1", background: "transparent", padding: 0 }}
-        >
-          <div className="al-c-modulo__griglia-1">
-            <CampoDelModulo id={unisciId} etichetta={t("gear.write.sameAs")}>
-              <TendinaDelModulo
-                id={unisciId}
-                valore={unione}
-                voci={[
-                  { valore: "", l: "--" },
-                  ...unibili.map((o) => ({ valore: String(o.id), l: o.name })),
-                ]}
-                // choosing or dropping the merge starts over: a hidden edit would leave unseen
-                onValore={(v) => {
-                  setUnione(v)
-                  setB(prima)
-                }}
-              />
-            </CampoDelModulo>
-          </div>
-        </section>
-      )}
-    </Modulo>
+        </>
+      }
+      campiTecnici={tecnici.flatMap((c) => [campo(c), ...dopo(c)])}
+    />
   )
 }
