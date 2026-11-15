@@ -7,9 +7,10 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { TrenoOttico } from "../src/TrenoOttico"
+import { TrenoOttico, trenoDelSetup } from "../src/TrenoOttico"
 import { CORREDO, NUMERI, OTTICA, apriAttrezzatura, attrezzatura } from "./attrezzatura-banco"
 import { pulisci } from "./banco"
+import { impronta } from "./impronta"
 
 afterEach(pulisci)
 
@@ -107,6 +108,76 @@ describe("il treno ottico", () => {
       .getAllByRole("link", { name: /, apri$/ })
       .map((a) => a.textContent)
     expect(pillole.sort()).toEqual(["1", "2", "3"])
+  })
+
+  it("dai pezzi del setup: la guida fuori asse o il cercatore al suo posto, la camera a colori", () => {
+    const s = (id: number, kind: string, extra: Record<string, unknown> = {}) => ({
+      ...OTTICA, id, kind, name: `p${id}`, aperture_mm: null, focal_mm: null, ...extra,
+    }) // prettier-ignore
+    const pagina = {
+      instruments: [
+        s(1, "telescope", { optical_design: "sct", aperture_mm: 203, focal_mm: 2032 }),
+        s(2, "focuser"),
+        s(3, "reducer"),
+        s(4, "oag", { thickness_mm: 16.5 }),
+        s(5, "spacer", { thickness_mm: 10 }),
+        s(6, "filter_wheel", { slots: 7 }),
+        s(7, "camera", { camera_type: "color" }),
+        s(8, "camera", { camera_type: "mono" }),
+        s(9, "guide_scope", { aperture_mm: 30, focal_mm: 120 }),
+      ],
+    } as unknown as Parameters<typeof trenoDelSetup>[0]
+    const setup = (guide: number | null, camera: number) =>
+      ({ pieces: { ...PEZZI, optics: 1, focuser: 2, reducer: 3, guide, wheel: 6, camera,
+        guide_camera: 8, spacers: [5, 99] } }) as unknown as Parameters<typeof trenoDelSetup>[1] // prettier-ignore
+    const conOag = trenoDelSetup(pagina, setup(4, 7))!
+    expect(conOag).toEqual({
+      ott: { id: 1, nome: "p1", ruolo: "optics", schema: "sct", apertura: 203, focale: 2032,
+        spessore: OTTICA.thickness_mm, posizioni: OTTICA.slots, aColori: false }, // prettier-ignore
+      foc: expect.objectContaining({ id: 2, ruolo: "focuser" }),
+      rid: expect.objectContaining({ id: 3, ruolo: "reducer" }),
+      oag: expect.objectContaining({ id: 4, ruolo: "oag", spessore: 16.5 }),
+      gs: undefined,
+      dist: [expect.objectContaining({ id: 5, ruolo: "spacer", spessore: 10 })],
+      ruota: expect.objectContaining({ id: 6, ruolo: "filter_wheel", posizioni: 7 }),
+      cam: expect.objectContaining({ id: 7, ruolo: "camera", aColori: true }),
+      camG: expect.objectContaining({ id: 8, ruolo: "guide_camera", aColori: false }),
+    })
+    const conCercatore = trenoDelSetup(pagina, setup(9, 8))!
+    expect(conCercatore.oag).toBeUndefined()
+    expect(conCercatore.gs).toEqual(expect.objectContaining({ id: 9, ruolo: "guide_scope" }))
+    expect(conCercatore.cam?.aColori).toBe(false)
+  })
+
+  it("ogni tratto, filo e pillola resta quello visto a schermo, spento e acceso", () => {
+    // i pezzi singoli li dicono i test sopra, l'impronta del markup ferma il resto
+    const T = {
+      ott: { id: 1, nome: "TS 130 APO", ruolo: "optics" as const, apertura: 130, focale: 910 },
+      foc: { id: 2, nome: "EAF", ruolo: "focuser" as const },
+      oag: { id: 7, nome: "OAG-L", ruolo: "oag" as const, spessore: 16.5 },
+      dist: [{ id: 5, nome: "D10", ruolo: "spacer" as const, spessore: 10 }],
+      cam: { id: 4, nome: "ASI2600MM", ruolo: "camera" as const },
+      camG: { id: 6, nome: "ASI120", ruolo: "guide_camera" as const },
+    }
+    const visti: string[] = []
+    const vai: number[] = []
+    for (const formato of ["desktop", "telefono"] as const) {
+      const { container, unmount } = render(
+        <TrenoOttico treno={T} nome="Il grande" formato={formato} onVai={(id) => vai.push(id)} />,
+      )
+      visti.push(impronta(container.innerHTML))
+      const pezzo = screen.getByRole("button", { name: "distanziale: D10" })
+      fireEvent.focus(pezzo)
+      visti.push(impronta(container.innerHTML))
+      fireEvent.keyDown(pezzo, { key: "Enter" })
+      fireEvent.keyDown(pezzo, { key: " " })
+      fireEvent.keyDown(pezzo, { key: "a" })
+      fireEvent.blur(pezzo)
+      expect(impronta(container.innerHTML)).toBe(visti[visti.length - 2])
+      unmount()
+    }
+    expect(vai).toEqual([5, 5, 5, 5])
+    expect(visti).toEqual(["31fad9b6", "9044e6c1", "de5c82ae", "956efc45"])
   })
 
   it("sul desktop i nomi che non entrano passano al numero, e la legenda li dice interi", () => {

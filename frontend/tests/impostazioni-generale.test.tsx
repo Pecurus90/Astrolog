@@ -18,6 +18,7 @@ import {
   scritture,
   type Voce,
 } from "./banco"
+import { impronta } from "./impronta"
 
 afterEach(pulisci)
 
@@ -156,6 +157,42 @@ describe("Impostazioni, Generale", () => {
       ),
     )
     expect(container.querySelector(".al-imp__griglia-1")).not.toBeNull()
+  })
+
+  it("sul telefono Salva compare solo per un nome cambiato, e sparisce dopo", async () => {
+    window.history.pushState({}, "", "/impostazioni/generale?formato=telefono")
+    await app({ "PATCH /api/v1/settings": scritte({ user_name: "Elena" }) }, { user_name: "Elena" })
+
+    const campo = await screen.findByRole("textbox", { name: "Nome utente" })
+    expect(screen.queryByText("Salva")).toBeNull()
+    fireEvent.change(campo, { target: { value: " Elena " } })
+    expect(screen.queryByText("Salva")).toBeNull()
+    fireEvent.change(campo, { target: { value: "   " } })
+    expect(screen.queryByText("Salva")).toBeNull()
+    fireEvent.change(campo, { target: { value: "Elena B" } })
+    fireEvent.click(screen.getByText("Salva"))
+    await waitFor(() =>
+      expect(scritture()).toContainEqual(
+        expect.objectContaining({ corpo: { values: { user_name: "Elena B" } } }),
+      ),
+    )
+    await waitFor(() => expect(screen.queryByText("Salva")).toBeNull())
+  })
+
+  it("Generale resta come nella consegna, su desktop e telefono", async () => {
+    // impronta del markup della sezione: classi e misure per formato della tavola v82
+    const visti: string[] = []
+    for (const [indirizzo, classe] of [
+      ["/impostazioni/generale", ".al-imp__griglia-2"],
+      ["/impostazioni/generale?formato=telefono", ".al-imp__colonna-18"],
+    ] as const) {
+      window.history.pushState({}, "", indirizzo)
+      const { container } = await app({}, { user_name: "Elena" })
+      await screen.findByRole("textbox", { name: "Nome utente" })
+      visti.push(impronta(container.querySelector(classe)?.outerHTML ?? ""))
+      pulisci()
+    }
+    expect(visti).toEqual(["78f1ffd4", "eee3e93e"])
   })
 
   it("una sezione non ancora ridisegnata sta nel riquadro del foglio vecchio", async () => {

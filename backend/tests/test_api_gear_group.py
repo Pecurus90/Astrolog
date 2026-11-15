@@ -128,6 +128,61 @@ def camera_con_offset(db_path, conn, tmp_path):
         yield c, camera
 
 
+def _camera_che_scrive(conn, tmp_path, scatti):
+    """Camera della pagina i cui file scrivono `(offset, grafia)`; un bias dichiarato."""
+    mondo = _World(conn, tmp_path / "Acquisizioni")
+    camera = conn.execute(
+        "INSERT INTO instruments (kind, name, created_at) VALUES ('camera', 'ASI2600MM', ?)",
+        (now_iso(),),
+    ).lastrowid
+    rig = conn.execute(
+        "INSERT INTO rigs (camera_id, detected, created_at) VALUES (?, 1, ?)", (camera, now_iso())
+    ).lastrowid
+    for offset, grafia in scatti:
+        frame = mondo.shot(2.0)
+        conn.execute("UPDATE frames SET rig_id = ? WHERE id = ?", (rig, frame))
+        conn.execute(
+            "UPDATE pipeline_cards SET offset = ?, camera = ? WHERE file_id = (SELECT MAX(file_id)"
+            " FROM pipeline_cards)",
+            (offset, grafia),
+        )
+    conn.execute(
+        "INSERT INTO pipeline_camera_bias (camera, offset, bias_adu)"
+        " VALUES ('ZWO ASI2600MM', 50, 480)"
+    )
+    night_measures.rebuild(conn)
+    conn.commit()
+    return camera
+
+
+def test_two_spellings_of_one_camera_add_up_per_offset_and_the_unknown_offset_goes_first(
+    conn, tmp_path
+):
+    """Due grafie dei driver per la stessa camera: un offset, una riga, i frame sommati; il bias
+    dichiarato su una grafia vale per la riga, in qualunque ordine arrivino le grafie."""
+    camera = _camera_che_scrive(
+        conn, tmp_path,
+        [(50, "ZWO ASI2600MM Pro"), (50, "ZWO ASI2600MM"), (50, "ZWO ASI2600MM Pro"),
+         (None, "ZWO ASI2600MM Pro"), (0, "ZWO ASI2600MM Pro")],
+    )  # fmt: skip
+    from astrolog.spine import inventory
+
+    attesi = [
+        {"offset": None, "bias_adu": None, "frames": 1},
+        {"offset": 0, "bias_adu": None, "frames": 1},
+        {"offset": 50, "bias_adu": 480.0, "frames": 3},
+    ]
+    assert inventory.camera_biases(conn, camera) == attesi
+    assert inventory.camera_biases(conn, camera + 99) == []
+    assert sorted(inventory.camera_spellings(conn, camera), key=str) == sorted(
+        [("ZWO ASI2600MM", 50), ("ZWO ASI2600MM Pro", 0), ("ZWO ASI2600MM Pro", 50),
+         ("ZWO ASI2600MM Pro", None)], key=str,
+    )  # fmt: skip
+    assert inventory.camera_spellings(conn, camera + 99) == []
+    pezzo_ = next(p for p in inventory.instruments(conn) if p["id"] == camera)
+    assert pezzo_["biases"] == attesi
+
+
 def _biases(client, camera):
     pagina = client.get("/api/v1/gear").json()
     return next(p for p in pagina["instruments"] if p["id"] == camera)["biases"]

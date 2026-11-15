@@ -13,6 +13,7 @@ import {
   type Ruolo,
   type Treno,
 } from "../src/disegnoDelTreno"
+import { impronta } from "./impronta"
 
 let id = 0
 const pz = (nome: string, ruolo: Ruolo, scheda: Partial<Pezzo> = {}): Pezzo => ({
@@ -62,7 +63,32 @@ const vista = (T: Treno, w: number, tel: boolean) => {
   }
 }
 
+// Tutto il disegno, ogni tratto e ogni pillola, in un'impronta FNV-1a: i prefissi qui sopra li
+// fissa la tavola, il resto e' quello visto da Marco a schermo il 14/11.
+const improntaDel = (d: ReturnType<typeof disegnoDelTreno>): string =>
+  impronta(
+    JSON.stringify(d, (k, v: unknown) =>
+      k === "pezzo" ? (v as Pezzo).nome : typeof v === "number" ? Number(v.toFixed(3)) : v,
+    ),
+  )
+
 describe("il treno ottico disegnato come nella tavola", () => {
+  it("ogni tratto e ogni pillola restano quelli visti a schermo", () => {
+    expect({
+      rifrattore: improntaDel(disegnoDelTreno(RIFRATTORE, 700, false)),
+      telefono: improntaDel(disegnoDelTreno(RIFRATTORE, 330, true)),
+      newton: improntaDel(disegnoDelTreno(NEWTON, 700, false)),
+      sct: improntaDel(disegnoDelTreno(SCT, 700, false)),
+      stretto: improntaDel(disegnoDelTreno(SCT, 420, false)),
+    }).toEqual({
+      rifrattore: "6c18a10c",
+      telefono: "73effd26",
+      newton: "6d7705d1",
+      sct: "68e14b63",
+      stretto: "ebb0b429",
+    })
+  })
+
   it("un rifrattore col riduttore, la guida fuori asse, un distanziale e la ruota", () => {
     expect(vista(RIFRATTORE, 700, false)).toEqual({
       viewBox: "-81.983 -579.989 951.192 700.837",
