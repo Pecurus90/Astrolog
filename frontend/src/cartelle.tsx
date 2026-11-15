@@ -11,7 +11,7 @@ import { type Chiave, numero, t } from "./i18n"
 
 type Probe = components["schemas"]["ProbeOut"]
 
-const RIFIUTI_SPOSTA: Record<string, Chiave> = {
+export const RIFIUTI_SPOSTA: Record<string, Chiave> = {
   not_the_same_folder: "folders.move.notSame",
   folder_exists: "folders.move.exists",
   root_unreachable: "folders.move.unreachable",
@@ -51,7 +51,7 @@ export async function sposta(id: number, percorso: string): Promise<Chiave | und
 export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.folders.failed") {
   const [vista, setVista] = useState<Probe>()
   const [scelto, setScelto] = useState("")
-  const [rotto, setRotto] = useState<"guarda" | "aggiungi">()
+  const [rotto, setRotto] = useState<"guarda" | "aggiungi" | "registrata">()
   const [inCorso, setInCorso] = useState(false)
   const [nonSpostata, setNonSpostata] = useState<Chiave>()
 
@@ -79,23 +79,29 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
       setScelto(quale)
       setVista(data)
     },
-    aggiungi: async () => {
+    /** True when registered. */
+    aggiungi: async (): Promise<boolean> => {
       setInCorso(true)
       const { error } = await api.POST("/api/v1/folders", { body: { root_path: scelto } })
       setInCorso(false)
-      setRotto(error ? "aggiungi" : undefined)
-      if (error) return
+      // 409 folder_exists: the path is already in the list, not a failure
+      const codice = (error as { detail?: { code?: string } } | undefined)?.detail?.code
+      setRotto(!error ? undefined : codice === "folder_exists" ? "registrata" : "aggiungi")
+      if (error) return false
       setVista(undefined)
       void elenco.refetch()
+      return true
     },
-    spostaQui: async (id: number) => {
+    /** True when moved. */
+    spostaQui: async (id: number): Promise<boolean> => {
       setInCorso(true)
       const perche = await sposta(id, scelto)
       setInCorso(false)
       setNonSpostata(perche)
-      if (perche) return
+      if (perche) return false
       setVista(undefined)
       void elenco.refetch()
+      return true
     },
   }
 }
@@ -111,7 +117,7 @@ export function ScriviPercorso({
   onGuarda,
 }: {
   id: string
-  prefisso: "wizard.folders" | "settings.folders" | "settings.folders.move"
+  prefisso: "wizard.folders"
   valore: string
   onScrivi: (v: string) => void
   onGuarda: () => void
@@ -160,9 +166,8 @@ export function VistaDellaSonda({
   /** Al posto di Aggiungi, quando la sonda dice da quale cartella registrata vengono questi file. */
   onSposta: (id: number) => void
   nonSpostata: Chiave | undefined
-  /** Le due superfici hanno le stesse chiavi con due radici diverse. Passando la radice, il tipo
-   *  di `t()` restringe da se': una chiave che una delle due non ha non compila. */
-  prefisso: "wizard.folders" | "settings.folders"
+  /** The first start's keys; the settings draw their own outcome (tavola v82). */
+  prefisso: "wizard.folders"
 }) {
   if (!vista.reachable) {
     return (

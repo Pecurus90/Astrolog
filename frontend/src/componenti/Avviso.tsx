@@ -17,6 +17,9 @@ const TONDI: Record<SegnoAvviso, { background: string; color: string; anello: st
   },
 }
 
+// a path or a name without spaces wraps instead of pushing the page sideways (to Design for the sheet)
+const A_CAPO: CSSProperties = { overflowWrap: "anywhere" }
+
 const misura = (v: number | string): string =>
   typeof v === "number" || /^\d+$/.test(v) ? `${v}px` : v
 
@@ -78,8 +81,14 @@ export function Avviso({
           {segno}
         </span>
         <span className="al-c-avviso__colonna-1">
-          <b className="al-c-avviso__testo-1">{titolo}</b>
-          {testo && <span className="al-c-avviso__testo-2">{testo}</span>}
+          <b className="al-c-avviso__testo-1" style={A_CAPO}>
+            {titolo}
+          </b>
+          {testo && (
+            <span className="al-c-avviso__testo-2" style={A_CAPO}>
+              {testo}
+            </span>
+          )}
         </span>
         {gesto("al-bottone al-bottone--contorno")}
       </div>
@@ -91,9 +100,15 @@ export function Avviso({
           <span className="al-c-avviso__tondo-2" aria-hidden="true" style={tondo}>
             {segno}
           </span>
-          <b className="al-c-avviso__testo-3">{titolo}</b>
+          <b className="al-c-avviso__testo-3" style={A_CAPO}>
+            {titolo}
+          </b>
         </span>
-        {testo && <span className="al-c-avviso__testo-4">{testo}</span>}
+        {testo && (
+          <span className="al-c-avviso__testo-4" style={A_CAPO}>
+            {testo}
+          </span>
+        )}
         {gesto("al-bottone al-bottone--contorno al-bottone--blocco")}
       </div>
     )
@@ -104,8 +119,14 @@ export function Avviso({
           {segno}
         </span>
         <span className="al-c-avviso__colonna-1">
-          <b className="al-c-avviso__testo-5">{titolo}</b>
-          {testo && <span className="al-c-avviso__testo-2">{testo}</span>}
+          <b className="al-c-avviso__testo-5" style={A_CAPO}>
+            {titolo}
+          </b>
+          {testo && (
+            <span className="al-c-avviso__testo-2" style={A_CAPO}>
+              {testo}
+            </span>
+          )}
         </span>
         {gesto("al-bottone al-bottone--contorno")}
       </div>
@@ -117,9 +138,15 @@ export function Avviso({
           <span className="al-c-avviso__tondo-4" aria-hidden="true" style={tondo}>
             {segno}
           </span>
-          <b className="al-c-avviso__testo-6">{titolo}</b>
+          <b className="al-c-avviso__testo-6" style={A_CAPO}>
+            {titolo}
+          </b>
         </span>
-        {testo && <span className="al-c-avviso__testo-7">{testo}</span>}
+        {testo && (
+          <span className="al-c-avviso__testo-7" style={A_CAPO}>
+            {testo}
+          </span>
+        )}
         {gesto("al-bottone al-bottone--contorno al-bottone--blocco")}
       </div>
     )
@@ -129,7 +156,9 @@ export function Avviso({
         <span className="al-c-avviso__tondo-5" aria-hidden="true" style={tondo}>
           {segno}
         </span>
-        <span className="al-c-avviso__blocco-2">{titolo}</span>
+        <span className="al-c-avviso__blocco-2" style={A_CAPO}>
+          {titolo}
+        </span>
         {gesto("al-bottone al-bottone--testo al-bottone--piccolo")}
       </div>
     )
@@ -140,7 +169,9 @@ export function Avviso({
           <span className="al-c-avviso__tondo-6" aria-hidden="true" style={tondo}>
             {segno}
           </span>
-          <span className="al-c-avviso__testo-8">{titolo}</span>
+          <span className="al-c-avviso__testo-8" style={A_CAPO}>
+            {titolo}
+          </span>
         </span>
         {gesto(
           "al-bottone al-bottone--testo al-bottone--blocco al-bottone--a-sinistra al-c-avviso__blocco-3",

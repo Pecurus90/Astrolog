@@ -28,6 +28,7 @@ from .models import (
     FolderMove,
     FolderOut,
     MoveCheck,
+    MoveChecked,
     MovedFrom,
     PathInfo,
     PathProbe,
@@ -246,6 +247,37 @@ def create_folder(
     return _out(conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone())
 
 
+def _same_folder_at(
+    conn: sqlite3.Connection, folder_id: int, root_path: str, request: Request
+) -> tuple[sqlite3.Row, str]:
+    """The folder's row and the canonical `root_path`, if its files are there; else the refusal."""
+    row = conn.execute("SELECT id, retired_at FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail={"code": "folder_not_found"})
+    canonical = validate_root(root_path, request.app.state.data_root)
+    existing = conn.execute("SELECT id FROM folders WHERE root_path = ?", (canonical,)).fetchone()
+    if existing is not None:
+        raise HTTPException(
+            status_code=409, detail={"code": "folder_exists", "folder_id": existing["id"]}
+        )
+    if not root_readable(canonical):
+        raise HTTPException(status_code=409, detail={"code": "root_unreachable", "path": canonical})
+    found = walk_dir(canonical, deadline=time.monotonic() + PROBE_SECONDS)
+    if not folder_move.same_files(conn, folder_id, canonical, found):
+        raise HTTPException(status_code=409, detail={"code": "not_the_same_folder"})
+    return row, canonical
+
+
+@router.post("/folders/{folder_id}/move/check", response_model=MoveChecked)
+def check_move(
+    folder_id: int, body: FolderMove, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> MoveChecked:
+    """Would `move` take this place? Same answer and refusals as `move`, nothing written: the
+    settings' Verifica, before Usa questo percorso."""
+    _, canonical = _same_folder_at(conn, folder_id, body.root_path, request)
+    return MoveChecked(root_path=canonical)
+
+
 @router.post("/folders/{folder_id}/move", response_model=FolderOut)
 def move_folder(
     folder_id: int, body: FolderMove, request: Request, conn: sqlite3.Connection = Depends(get_db)
@@ -257,20 +289,7 @@ def move_folder(
     404 `folder_not_found`; 409 `folder_exists` with its `folder_id` if the path is registered,
     active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when
     the path is refused, with the reason as its code."""
-    row = conn.execute("SELECT id, retired_at FROM folders WHERE id = ?", (folder_id,)).fetchone()
-    if row is None:
-        raise HTTPException(status_code=404, detail={"code": "folder_not_found"})
-    canonical = validate_root(body.root_path, request.app.state.data_root)
-    existing = conn.execute("SELECT id FROM folders WHERE root_path = ?", (canonical,)).fetchone()
-    if existing is not None:
-        raise HTTPException(
-            status_code=409, detail={"code": "folder_exists", "folder_id": existing["id"]}
-        )
-    if not root_readable(canonical):
-        raise HTTPException(status_code=409, detail={"code": "root_unreachable", "path": canonical})
-    found = walk_dir(canonical, deadline=time.monotonic() + PROBE_SECONDS)
-    if not folder_move.same_files(conn, folder_id, canonical, found):
-        raise HTTPException(status_code=409, detail={"code": "not_the_same_folder"})
+    row, canonical = _same_folder_at(conn, folder_id, body.root_path, request)
     folder_move.move(conn, folder_id, canonical)
     retired = row["retired_at"] is not None
     if retired:

@@ -164,6 +164,9 @@ class SettingsOut(BaseModel):
         description="The numeric keys' allowed range, both ends included: a write outside is "
         "`out_of_range`."
     )
+    choices: dict[str, list[str | int]] = Field(
+        description="The closed keys' allowed values, in order: anything else is `wrong_type`."
+    )
 
 
 class SolverOut(BaseModel):

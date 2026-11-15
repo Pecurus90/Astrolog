@@ -27,7 +27,7 @@ import { t } from "./i18n"
 // Dove si prende il solver. Sta qui e non nel dizionario: e' un indirizzo, non un testo da
 // tradurre, e cambiarlo in una lingua sola vorrebbe dire mandare due utenti in due posti. Lo
 // stesso indirizzo e' in `README.md`, dove dice a chi installa da sorgente cosa gli serve.
-const DOVE_SI_SCARICA = "https://www.hnsky.org/astap.htm"
+export const DOVE_SI_SCARICA = "https://www.hnsky.org/astap.htm"
 
 // E dove si prende il **catalogo stellare**, che e' un download a parte e senza il quale ASTAP
 // parte e non riconosce niente. E' la cartella dei cataloghi dell'autore, non un file: quale

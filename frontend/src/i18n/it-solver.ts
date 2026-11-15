@@ -30,10 +30,8 @@ export const itSolver = {
   "solver.databaseWhy":
     "ASTAP richiede un catalogo stellare, che si scarica a parte. Senza catalogo gli oggetti non vengono identificati.",
   "solver.databaseGet": "Scarica il catalogo stellare",
-  // Il consigliato e la sua misura vengono dal sito dell'autore, non a memoria: "The D05 is the
-  // smallest. The D80 is the largest. Using the D80 has no drawback accept it is larger, about
-  // 1.25 gbyte" (hnsky.org/astap.htm). Dove va lo dice la stessa pagina: "as long as all files
-  // are in the same directory".
+  // D50 per ADR 0036 (manuale: copre 0,2-10 gradi); 867 MB da SourceForge star_databases (ADR
+  // 0003). Dove va: "as long as all files are in the same directory" (hnsky.org/astap.htm).
   "solver.databaseWhich":
-    "Catalogo consigliato: D80 (circa 1,25 GB), nella stessa cartella di ASTAP.",
+    "Catalogo consigliato: D50 (circa 870 MB), nella stessa cartella di ASTAP; D80 per i campi molto stretti.",
 }

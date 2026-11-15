@@ -30,5 +30,5 @@ export const enSolver = {
     "ASTAP requires a star catalog, which is downloaded separately. Without a catalog, objects are not identified.",
   "solver.databaseGet": "Download the star catalog",
   "solver.databaseWhich":
-    "Recommended catalog: D80 (about 1.25 GB), in the same folder as ASTAP.",
+    "Recommended catalog: D50 (about 870 MB), in the same folder as ASTAP; D80 for very narrow fields.",
 }

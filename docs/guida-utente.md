@@ -136,10 +136,15 @@ basso, e *Altro* apre un foglio con la scansione e tutte le altre.
 
 Le **Impostazioni** sono una pagina sola con dentro le sue sezioni --
 ognuna col suo indirizzo, quindi ci torni col tasto indietro e il collegamento si manda a
-qualcuno. La prima e' **Cartelle**: quelle che l'app legge, quante ne e' entrato in archivio, se
-al momento si raggiungono. Da li' ne aggiungi una (scrivendo il percorso, o sfogliando se l'app
-gira sul NAS) e ne rimuovi una con *Rimuovi* -- e rimuovere **non cancella niente**: l'app smette di leggerla, e i
-frame gia' entrati restano con la loro storia. Te lo richiede prima, coi numeri davanti.
+qualcuno. La prima con le tue cartelle e' **Cartelle e scansione**: quelle che l'app legge, quanti
+frame ne sono entrati in archivio, se al momento si raggiungono. Da li' ne aggiungi una (scrivendo
+il percorso, o sfogliando le cartelle se l'app gira sul NAS): *Verifica* guarda dentro e ti dice
+quanti file FITS ci sono, senza registrare niente, e *Aggiungi cartella* la registra. Una cartella
+la togli con *Togli* -- e togliere **non cancella niente**: l'app smette di leggerla, e i frame
+gia' entrati restano con la loro storia. Te lo chiede prima, nella riga stessa. Accanto c'e' la
+carta **Scansione**: quando e' stata l'ultima e cosa ha trovato, o quanti file ha letto se sta
+girando, col tasto per avviarla o interromperla -- lo stesso di *Scansiona* nel menu
+dell'ingranaggio.
 
 **Se sposti le foto** -- su un altro disco, perche' il disco ha cambiato lettera, o perche' passi
 al NAS -- non rimuovere la cartella e non aggiungerla di nuovo: le risposte che hai dato in *Da
@@ -147,12 +152,12 @@ confermare* su che file sono resterebbero legate al percorso vecchio. Hai due st
 il posto nuovo, l'app guarda dentro e, se ci trova gli stessi file di una cartella che conosce e
 che non raggiunge piu' (o che avevi rimosso), te lo dice -- *Cartella gia' registrata* -- e
 con *Usa questo percorso* la sposta invece di aggiungerne una nuova. Oppure, su ogni cartella
-dell'elenco, *Cambia percorso*: indichi dove stanno adesso i file e l'app la sposta. In tutti e
-due i casi controlla prima che siano davvero gli stessi file: se non lo sono, te lo dice e non
-cambia niente. Dopo lo spostamento la cartella e' la stessa di prima, con i suoi frame e le tue
+dell'elenco, *Sposta*: scrivi dove stanno adesso i file, *Verifica* controlla che siano gli
+stessi senza cambiare niente, e *Usa questo percorso* la sposta. In tutti e due i casi, se non
+sono gli stessi file, te lo dice e non cambia niente. Dopo lo spostamento la cartella e' la stessa di prima, con i suoi frame e le tue
 risposte, e leggendola di nuovo non entra niente due volte.
 
-La seconda e' **Siti**: da dove osservi. Ci trovi i posti che hai dichiarato, con le loro
+Poi **Siti**: da dove osservi. Ci trovi i posti che hai dichiarato, con le loro
 coordinate e che cielo hanno, e uno segnato **predefinito** -- e' quello da cui l'app calcola le notti
 e l'altezza degli oggetti; gli altri servono alle uscite. Di ognuno puoi modificare nome,
 coordinate e cielo (*Modifica*), impostarlo come predefinito (*Imposta come predefinito*), o
@@ -165,25 +170,24 @@ Un sito che tiene delle notti **non si rimuove**: l'app te lo dice, e ti dice qu
 Aggiungerne uno lo cerchi per nome, oppure ne scrivi le coordinate a mano -- e la strada a mano e'
 sempre aperta, perche' dove si osserva la rete spesso non c'e'.
 
-Subito dopo c'e' **Luna**: la regola della **banda larga**, una sola per tutta l'app, quella che
-usano il calendario della Luna nella Dashboard, il Meteo e le Notti. Con la Luna illuminata meno
-della prima soglia (di fabbrica 25%) la banda larga e' **buona**; fino alla seconda (di fabbrica
-65%) e' **al limite**; oltre conviene la **banda stretta**. Sono il "buio" e il "grigio"
-dell'osservatorio ING. La seconda soglia non puo' stare sotto la prima. Il numero si salva quando
-lasci il campo, e calendario e previsione si aggiornano subito; le percentuali vanno da 0 a 100.
+Poi **Meteo**: su quale pagina si apre il Meteo -- oggi il deep sky; il Sole arriva insieme al
+Sistema solare -- e da dove vengono i dati: Open-Meteo per il meteo, Meteoblue per il seeing. La
+chiave di Meteoblue sta in *Servizi*, e *Apri Servizi* ti ci porta.
 
-La terza e' **ASTAP**: il programma che guarda le stelle inquadrate e dice dove
+Poi **ASTAP**: il programma che guarda le stelle inquadrate e dice dove
 punta ogni ripresa. Qui vedi se l'app lo trova, **dove**, e da cosa l'ha capito: perche' gliel'hai
 detto tu, perche' l'ha detto chi ha avviato l'app (sul NAS lo fa chi lo gestisce), perche' l'ha
 cercato fra i programmi di sistema, o perche' l'ha trovato dove ASTAP si installa di solito --
 quattro strade, e ti dice sempre quale. Sapere **chi ha deciso** conta: se l'app ha pescato da
 sola una copia vecchia rimasta in giro, li' vedi che nessuno gliel'ha detto e che quel percorso
-se l'e' scelto lei. Puoi dirgli tu dove sta, o premere **Cerca ASTAP** e farlo cercare all'app:
-quello che trova te lo **propone**, e lo usa solo se glielo dici. Se il percorso che hai scritto
-non porta a nessun programma, l'app te lo dice subito -- non a scansione finita -- e quel percorso
-resta scritto, cosi' lo correggi invece di ribatterlo.
+se l'e' scelto lei. Puoi dirgli tu dove sta e premere *Verifica percorso*, o premere **Cercalo tu**
+e farlo cercare all'app: quello che trova te lo **propone**, e lo usa solo con *Usa questo
+percorso*. Se il percorso che hai scritto non porta a nessun programma, l'app te lo dice subito --
+non a scansione finita -- e quel percorso resta scritto, cosi' lo correggi invece di ribatterlo.
+ASTAP non e' nel pacchetto di AstroLog: si installa a parte, dal sito del suo autore (hnsky.org).
 
-Nella stessa sezione vedi anche **se ASTAP ha il suo catalogo stellare**, e quale. E' un download a
+Nella stessa sezione vedi anche **i cataloghi stellari di ASTAP**, uno per riga: il **D50** va
+bene per quasi tutti i campi ed e' quello consigliato, il D80 serve ai campi molto stretti. E' un download a
 parte, e senza di lui ASTAP parte e non riconosce niente: la lettura si ferma alla
 prima posa. Se manca, l'app te lo dice e ti da' l'indirizzo per prenderlo -- non lo scarica lei.
 Il catalogo va messo **nella stessa cartella del programma** -- l'autore dice che i file devono
@@ -194,13 +198,22 @@ stessa cosa te la dice il **primo avvio**, che aggiunge il suo quinto passo anch
 l'ha ma senza catalogo: si finisce allo stesso punto -- una scansione che non riconosce niente --
 e conviene saperlo prima.
 
-La quarta e' **Servizi**: le chiavi personali dei servizi che l'app interroga. Oggi c'e' quella di
+Poi **Luna**: la regola della **banda larga**, una sola per tutta l'app, quella che usano il
+calendario della Luna nella Dashboard, il Meteo e le Notti. Con la Luna illuminata meno della prima
+soglia (di fabbrica 25%) la banda larga e' **buona**; fino alla seconda (di fabbrica 65%) e' **al
+limite**; oltre conviene la **banda stretta**. Sono il "buio" e il "grigio" dell'osservatorio ING.
+La seconda soglia non puo' stare sotto la prima. Il terzo valore dice **da quale altezza la Luna
+conta**: dall'orizzonte (di fabbrica), da 5° o 10°, o gia' da -5° sotto l'orizzonte, come la rete
+di misura TESS. Un numero si salva quando lasci il campo, e calendario, previsione e notti si
+aggiornano subito. Sotto un cielo buio la Luna disturba prima: abbassa le percentuali.
+
+Poi **Servizi**: le chiavi personali dei servizi che l'app interroga. Oggi c'e' quella di
 **Meteoblue**: la scrivi, premi *Verifica e salva*, e l'app la prova sul tuo conto prima di tenerla --
 se il conto non la riconosce te lo dice e non la salva. Una chiave salvata non la rivedi mai
 intera: l'app ti mostra come finisce, che basta a sapere se e' quella giusta. Con *Rimuovi chiave*
 il seeing sparisce dal Meteo da stanotte in poi; quello delle notti passate resta, per le statistiche.
 
-La quinta e' **Scansioni**: una per ogni volta che l'app ha letto le tue cartelle. Di
+Poi **Scansioni**: una per ogni volta che l'app ha letto le tue cartelle. Di
 ognuna trovi quale cartella, quando, quanto e' durata, com'e' andata -- e i conti: quanti file ha
 guardato, quanti erano nuovi, quanti erano gia' in archivio. Gli zeri non si scrivono, tranne i
 **nuovi**, che sono la domanda che ti stai facendo. Se qualcosa e' **rimasto fuori** lo apri li'

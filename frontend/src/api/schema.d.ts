@@ -749,6 +749,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/folders/{folder_id}/move/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Move
+         * @description Would `move` take this place? Same answer and refusals as `move`, nothing written: the
+         *     settings' Verifica, before Usa questo percorso.
+         */
+        post: operations["check_move"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/folders/{folder_id}/move": {
         parameters: {
             query?: never;
@@ -3891,6 +3912,14 @@ export interface components {
          * @enum {string}
          */
         MoveCheck: "found" | "none" | "place_unreachable" | "out_of_time";
+        /** MoveChecked */
+        MoveChecked: {
+            /**
+             * Root Path
+             * @description Canonical: the path `move` would write.
+             */
+            root_path: string;
+        };
         /** MovedFrom */
         MovedFrom: {
             /** Id */
@@ -5374,6 +5403,13 @@ export interface components {
              */
             ranges: {
                 [key: string]: components["schemas"]["Range"];
+            };
+            /**
+             * Choices
+             * @description The closed keys' allowed values, in order: anything else is `wrong_type`.
+             */
+            choices: {
+                [key: string]: (string | number)[];
             };
         };
         /**
@@ -7777,6 +7813,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FolderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_move: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folder_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FolderMove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveChecked"];
                 };
             };
             /** @description Validation Error */

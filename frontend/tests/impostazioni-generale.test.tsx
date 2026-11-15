@@ -61,6 +61,7 @@ describe("Impostazioni, il guscio", () => {
       "Generale",
       "Siti",
       "Cartelle e scansione",
+      "Meteo",
       "ASTAP",
       "Luna",
       "Servizi",
@@ -88,7 +89,7 @@ describe("Impostazioni, il guscio", () => {
       expect(voci[1]!.textContent).toContain(`1 sito · ${SITO_DI_CASA.name} predefinito`),
     )
     // le altre col loro riassunto della tavola
-    expect(voci[3]!.textContent).toContain("identificazione degli oggetti")
+    expect(voci[4]!.textContent).toContain("identificazione degli oggetti")
 
     fireEvent.click(voci[0]!)
     expect(await screen.findByRole("textbox", { name: "Nome utente" })).toBeDefined()
@@ -196,10 +197,10 @@ describe("Impostazioni, Generale", () => {
   })
 
   it("una sezione non ancora ridisegnata sta nel riquadro del foglio vecchio", async () => {
-    window.history.pushState({}, "", "/impostazioni/astap")
+    window.history.pushState({}, "", "/impostazioni/servizi")
     const { container } = await app({})
 
-    expect(await screen.findByRole("tab", { name: "ASTAP" })).toBeDefined()
+    expect(await screen.findByRole("tab", { name: "Servizi" })).toBeDefined()
     // under data-modo the old sheet would take the new --inchiostro: `.app-vecchio` gives it back
     expect(screen.getByRole("tablist").closest("[data-modo]")).not.toBeNull()
     expect(container.querySelector(".al-imp__griglia-2 > .app-vecchio")).not.toBeNull()

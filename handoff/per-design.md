@@ -13,6 +13,14 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Impostazioni, Cartelle e ASTAP (passo 33 D, collaudo 15/11): (a) un percorso lungo
+  senza spazi nei testi di `Avviso` («Stessi file in C:\...», il percorso di ASTAP) spinge la pagina
+  di lato sul telefono: serve `overflow-wrap: anywhere` sui testi di `.al-c-avviso__*` e sulla riga
+  «Il nuovo percorso di ...» di `.al-imp__cart-pannello`; l'app lo mette inline finche' il foglio
+  non lo ha. (b) La classe `al-imp__cart` della tavola (righe 111, 310) non c'e' nel foglio. (c) La
+  pillola «5°» della Luna sul telefono e' larga 41 px, sotto i 44. Differenze in
+  `differenze-dalle-tavole.md`, «Impostazioni -- Cartelle e scansione, Meteo, ASTAP, Luna».
+
 - [da dare] Impostazioni, Siti (passo 33 C, collaudo 15/11): sul telefono le quattro vie del cielo
   e le nove classi di Bortle sono alte 36 px (`.al-imp__riga-18`, tavola 274-275): sotto i 44 px.
   L'app le porta uguali alla tavola finche' il foglio non cambia. Le differenze della sezione in

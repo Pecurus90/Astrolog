@@ -52,6 +52,7 @@ def _out(conn: sqlite3.Connection) -> SettingsOut:
         wizard_done=values["onboarding_done_at"] is not None,
         missing=_missing(conn),
         ranges={k: Range(min=lo, max=hi) for k, (lo, hi) in config.RANGES.items()},
+        choices={k: list(v) for k, v in config.CHOICES.items()},
     )
 
 

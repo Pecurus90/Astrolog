@@ -154,6 +154,46 @@ Scelte diverse:
 A Design: sul telefono le vie e le classi sono alte 36 px come nella tavola (`.al-imp__riga-18`),
 sotto i 44 px (`per-design.md`).
 
+## Impostazioni -- Cartelle e scansione, Meteo, ASTAP, Luna (passo 33, Impostazioni commit D, 15/11)
+
+Tavola v82 `Impostazioni.dc.html` (desktop 108-189, telefono 307-398, logica 544-608). Fuori:
+- **«Su questo computer / Sul NAS»** (`car.dove`). App: niente scelta; l'elenco da sfogliare c'e'
+  quando l'app gira sul NAS (`data_root`). Perche': dove sono i file lo sa l'app, non si sceglie.
+- **«il disco «Esterno» non risponde»** nella cartella non raggiungibile. App: «non raggiungibile ·
+  1412 frame restano in archivio». Perche': il backend non conosce il nome del disco.
+- **«Meteo apre su» non si salva**: Deep sky e' l'unica pagina; Sole spento come nella tavola.
+
+Scelte diverse:
+- **Il numero della cartella**: «3180 frame in archivio». Tavola: «1240 file FITS». Perche': l'elenco
+  sa i frame entrati; i file FITS li conta solo *Verifica*, senza registrare.
+- **Conteggio parziale**: «Conteggio interrotto a N: potrebbero essercene altri.» Tavola:
+  «interrotto a 5000». Perche': il conteggio si ferma dopo 10 s, non a un numero di file.
+- **Verifica percorso di ASTAP scrive il percorso** (tavola: verifica e basta). Perche': il backend
+  sa se il programma c'e' solo del percorso salvato; uno sbagliato resta scritto e l'esito lo dice.
+- **L'esito di ASTAP** e' un avviso a blocco col percorso e da dove l'app l'ha preso («· PATH di
+  sistema»); appare anche aprendo la sezione. Tavola: avviso di riga solo dopo *Verifica*. Perche':
+  «trovato» senza da dove non si puo' smentire (`sito.md`).
+- **Cataloghi**: tutti quelli trovati vicino ad ASTAP, con la riga solo per D05, D50, D80 (tavola:
+  solo quei tre). Chi non ha ASTAP non vede la riga dei cataloghi.
+- **Scansione**: mai fatta dice «Nessuna scansione finora · Scansiona legge le cartelle qui accanto.»
+  (Marco 15/11); interrotta e bloccata coi testi del menu dell'ingranaggio (la tavola non le ha).
+- **Luna**: le percentuali si salvano lasciando il campo o con Invio (tavola: a ogni tasto). Le
+  altezze -5, 0, 5, 10 arrivano dall'API (`choices`).
+- **Ruoli**: la domanda di *Togli* e' un `alertdialog`, gli errori sotto i campi `aria-live`
+  (tavola: `role="alert"`), come in Siti. La classe `al-imp__cart` della tavola non c'e' nel foglio:
+  la riga resta un `div` senza classe.
+- **Caricamento ed errore** di cartelle e ASTAP: `Scheletro` e `Avviso` con *Riprova*.
+- **Scansione mai fatta, telefono**: «...le cartelle qui sopra.» (desktop «qui accanto», Marco
+  15/11). Perche': sul telefono la carta Cartelle sta sopra.
+- **Ultima scansione** dice «oggi» e «ieri» solo con un sito di casa (il giorno e' quello del suo
+  fuso); senza, la data.
+- **Aggiungi su una cartella gia' nell'elenco**: «Cartella già registrata · {percorso} è già fra le
+  cartelle qui sopra: i suoi file si leggono già.» La tavola ha il titolo per la cartella spostata.
+- **Verifica percorso di ASTAP**, subito dopo: «ASTAP trovato · Gli oggetti ripresi verranno
+  identificati.» (tavola); riaprendo la sezione, il percorso e da dove viene.
+- **Gli avvisi vanno a capo nelle parole lunghe** (un percorso senza spazi): `overflow-wrap:
+  anywhere` inline in `Avviso`, e nella riga «Il nuovo percorso di ...». A Design per il foglio.
+
 ## Notti -- la pagina fra 700 e 1000 px e il sito lungo (v78, 10/11)
 
 

@@ -53,11 +53,9 @@ export function SfogliaCartelle({
   dove = "wizard",
 }: {
   radice: string
-  /** Il testo del tasto che usa la cartella dove sei: al primo avvio dopo c'e' ancora Aggiungi,
-   *  in Cambia percorso il clic sposta subito, e deve dirlo. */
+  /** The button that uses the folder you are in: at the first start Aggiungi still follows. */
   usa: string
-  /** Prima parte degli id della pagina: il dialogo di Cambia percorso ne apre un secondo accanto a
-   *  quello di Aggiungi, e due id uguali legherebbero un'etichetta all'elenco sbagliato. */
+  /** First part of the page's ids: two lists with the same ids would bind a label wrongly. */
   dove?: string
   /** Guarda dentro la cartella dove si e' arrivati: e' l'altro mestiere, e lo fa chi registra. */
   onGuarda: (percorso: string) => void

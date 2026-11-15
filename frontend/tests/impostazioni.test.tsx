@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 /**
- * Impostazioni: la pagina a sezioni, e la sezione Cartelle.
+ * Impostazioni: la pagina a sezioni, e la sezione Cartelle e scansione (tavola v82).
  *
  * Qui si provano le regole che una lettura del codice non prende: che un **sotto-indirizzo** sia
- * una pagina vera e non un buco, che una sezione non ancora nata non si mostri, e che togliere
- * una cartella passi da un dialogo che dice cosa succede davvero.
+ * una pagina vera e non un buco, che una sezione non ancora nata non si mostri, che togliere una
+ * cartella chieda prima, e che Verifica guardi senza scrivere.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -14,9 +14,10 @@ import { t } from "../src/i18n"
 import { sezioniAperte } from "../src/pagine"
 
 import {
+  FERMO,
+  cambia,
   SALUTE,
   apriImpostazioni,
-  cambia,
   SPINA,
   STANOTTE,
   chiamate,
@@ -25,6 +26,7 @@ import {
   pulisci,
   rispondi,
   scritture,
+  type Voce,
 } from "./banco"
 
 afterEach(pulisci)
@@ -55,27 +57,34 @@ const CARTELLE = {
   offset: 0,
 }
 
-function app(cartelle: unknown = CARTELLE) {
+const VUOTE = { items: [], total: 0, limit: 50, offset: 0 }
+
+function app(altre: Record<string, Voce> = {}, cartelle: unknown = CARTELLE, radice: string | null = null) {
   rispondi({
     ...STANOTTE,
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-    "/api/v1/review": {
-      stato: 200,
-      corpo: { to_confirm: 0 },
-    },
+    "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
     "/api/health": { stato: 200, corpo: SALUTE },
-    "/api/v1/folders/path-info": { stato: 200, corpo: { family: "windows", data_root: null } },
+    "/api/v1/folders/path-info": {
+      stato: 200,
+      corpo: { family: radice ? "posix" : "windows", data_root: radice },
+    },
     "/api/v1/folders": { stato: 200, corpo: cartelle },
     ...SPINA,
+    ...altre,
   })
   return disegna()
 }
 
 /** Apre Impostazioni dalla barra, poi la linguetta Cartelle, come fa chi usa l'app. */
-async function vaiAImpostazioni() {
+async function vaiAlleCartelle() {
   await apriImpostazioni()
   fireEvent.click(await screen.findByRole("tab", { name: /^cartelle e scansione$/i }))
+  return screen.findByRole("region", { name: "Cartelle" })
 }
+
+const scritta = (metodo: string, fine: string) =>
+  scritture().some((s) => s.metodo === metodo && s.url.endsWith(fine))
 
 describe("Impostazioni", () => {
   it("si apre dalla barra, e l indirizzo diventa suo", async () => {
@@ -89,13 +98,11 @@ describe("Impostazioni", () => {
   })
 
   it("un sotto-indirizzo e una pagina vera, non un buco", async () => {
-    // E' la regressione che i sotto-indirizzi aprono: col router piatto,
-    // `/impostazioni/cartelle` dava pagina vuota e titolo "Pagina sconosciuta", perche' la barra
-    // confrontava l'indirizzo **esatto**.
+    // col router piatto `/impostazioni/cartelle` dava pagina vuota e "Pagina sconosciuta"
     window.history.pushState({}, "", "/impostazioni/cartelle")
     await app()
 
-    expect(await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })).toBeDefined()
+    expect(await screen.findByRole("region", { name: "Cartelle" })).toBeDefined()
     // l'ingranaggio non e' una pillola: nessuna pillola si accende su una pagina che non e' sua
     const pillole = await screen.findByRole("navigation", { name: "Navigazione principale" })
     expect(within(pillole).getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page")).toEqual([])
@@ -103,272 +110,271 @@ describe("Impostazioni", () => {
 
   it("nell elenco ci sono le sezioni che esistono, e solo quelle", async () => {
     await app()
-    await vaiAImpostazioni()
+    await vaiAlleCartelle()
 
     const sezioni = await screen.findByRole("tablist", { name: /sezioni/i })
     const voci = within(sezioni).getAllByRole("tab")
-    // L'elenco e' **quello dichiarato**, non un sottoinsieme a caso: contarle e' cio' che fa
-    // cadere questa prova il giorno che una sezione compare senza passare da SEZIONI.
+    // contarle fa cadere la prova il giorno che una sezione compare senza passare da SEZIONI
     expect(voci.map((v) => v.textContent)).toEqual(
       SEZIONI.filter((s) => s.elemento !== undefined).map((s) => t(s.chiave)),
     )
   })
 
   it("una sezione non ancora nata non si mostra", () => {
-    // Stessa regola delle voci di barra: una sezione che si apre su niente e' una promessa che
-    // l'app non mantiene. Si prova sul **meccanismo** e non su quali sezioni esistono oggi:
-    // legata a quelle, la regola smetteva di essere provata il giorno che nascevano tutte -- ed
-    // e' esattamente cio' che e' successo quando il riconoscitore e' nato.
+    // si prova sul meccanismo, non su quali sezioni esistono oggi
     const nate = sezioniAperte([
       { a: "/impostazioni/c", chiave: "settings.folders", elemento: <p /> },
       { a: "/impostazioni/x", chiave: "settings.site" },
     ])
     expect(nate.map((s) => s.a)).toEqual(["/impostazioni/c"])
   })
+})
 
+describe("Cartelle", () => {
   it("ogni cartella dice dove sta, se si raggiunge e cosa ne e entrato", async () => {
     await app()
-    await vaiAImpostazioni()
+    const carta = await vaiAlleCartelle()
 
-    expect(await screen.findByText("D:\\Astro\\2025")).toBeDefined()
-    // il separatore delle migliaia dipende dall'ambiente: qui si guarda la frase, non la
-    // formattazione, che ha gia' la sua prova in formati.test.ts
-    expect(screen.getByText(/180 frame in archivio/)).toBeDefined()
-    // esatto: "Non raggiungibile" contiene "raggiungibile", e senza l ancora la prova
-    // sarebbe verde anche con due righe irraggiungibili
-    expect(screen.getByText(/^Raggiungibile$/)).toBeDefined()
+    expect(await within(carta).findByText("D:\\Astro\\2025")).toBeDefined()
+    expect(within(carta).getByText("2 cartelle")).toBeDefined()
+    // il separatore delle migliaia dipende dall'ambiente: qui si guarda la frase
+    expect(within(carta).getByText(/180 frame in archivio$/)).toBeDefined()
   })
 
-  it("una cartella che non si raggiunge lo dice, e le altre restano", async () => {
-    // Il disco staccato non ferma il resto, e i frame gia' letti non spariscono: e' la differenza
-    // fra un guasto e una cosa da sapere.
+  it("una cartella che non si raggiunge lo dice, e i suoi frame restano", async () => {
     await app()
-    await vaiAImpostazioni()
+    const carta = await vaiAlleCartelle()
 
-    expect(await screen.findByText(/^Non raggiungibile$/)).toBeDefined()
-    expect(screen.getByText(/412 frame restano in archivio/)).toBeDefined()
-    expect(screen.getByText("D:\\Astro\\2025")).toBeDefined()
+    expect(await within(carta).findByText(/^non raggiungibile · 1.?412 frame restano in archivio$/)).toBeDefined()
+    expect(within(carta).getByText("D:\\Astro\\2025")).toBeDefined()
   })
 
-  it("togliere chiede conferma e dice cosa resta, prima di toccare niente", async () => {
+  it("Togli chiede nella riga e dice cosa resta, prima di toccare niente", async () => {
     await app()
-    await vaiAImpostazioni()
-    const righe = await screen.findAllByRole("button", { name: /^rimuovi$/i })
-    fireEvent.click(righe[0]!)
+    const carta = await vaiAlleCartelle()
+    fireEvent.click((await within(carta).findAllByRole("button", { name: "Togli" }))[0]!)
 
-    const dialogo = await screen.findByRole("dialog")
-    expect(within(dialogo).getByText(/frame restano in archivio/)).toBeDefined()
-    expect(within(dialogo).getByText(/180/)).toBeDefined()
-    expect(within(dialogo).getByText(/^i file su disco non vengono modificati$/)).toBeDefined()
-    // il paragrafo introduce l'elenco e non lo ripete: ogni effetto si legge una volta sola
-    expect(within(dialogo).getByText("Effetti della rimozione:")).toBeDefined()
-    expect(within(dialogo).getAllByText(/non vengono modificati/)).toHaveLength(1)
-    expect(within(dialogo).getAllByText(/restano in archivio|vengono conservati/)).toHaveLength(1)
-    // e finche' non si conferma, la rotta non e' stata chiamata
+    const chiede = await within(carta).findByRole("alertdialog")
+    expect(chiede.textContent).toContain("Togliere D:\\Astro\\2025? I frame restano nell'archivio")
     expect(scritture().some((s) => s.metodo === "DELETE")).toBe(false)
-  })
-
-  it("Esc chiude il dialogo e non toglie niente", async () => {
-    // Un dialogo da cui non si esce con Esc e' una trappola: si apre per sbaglio e non si chiude.
-    await app()
-    await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
-    await screen.findByRole("dialog")
-
-    fireEvent.keyDown(document, { key: "Escape" })
-
-    expect(screen.queryByRole("dialog")).toBeNull()
+    fireEvent.click(within(chiede).getByRole("button", { name: "Annulla" }))
+    expect(within(carta).queryByRole("alertdialog")).toBeNull()
     expect(chiamate().some((u) => u.includes("/folders/1"))).toBe(false)
   })
 
-  it("aprendo il dialogo il fuoco ci entra", async () => {
-    // Senza, chi ascolta resta fuori dal dialogo che ha appena chiesto qualcosa, e la prova sul
-    // **ritorno** del fuoco resterebbe verde per caso: il fuoco non si sarebbe mai mosso.
-    await app()
-    await vaiAImpostazioni()
-    const togli = (await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!
-    togli.focus()
-    fireEvent.click(togli)
-
-    const dialogo = await screen.findByRole("dialog")
-    expect(dialogo.contains(document.activeElement)).toBe(true)
-    expect(document.activeElement).not.toBe(togli)
-  })
-
-  it("il dialogo si dichiara modale, e ha un nome", async () => {
-    // Senza aria-modal chi ascolta continua a camminare sulla pagina dietro senza sapere che c e
-    // qualcosa davanti; senza nome, il dialogo si annuncia come "dialogo" e basta.
-    await app()
-    await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
-
-    const dialogo = await screen.findByRole("dialog")
-    expect(dialogo.getAttribute("aria-modal")).toBe("true")
-    expect(dialogo.getAttribute("aria-labelledby")).not.toBeNull()
-  })
-
-  it("se il ritiro non riesce il dialogo resta aperto, e lo dice li dentro", async () => {
-    // Chiuderlo direbbe che e andata: la cartella invece e ancora nell elenco.
-    await app()
-    await vaiAImpostazioni()
-    cambia({
-      ...STANOTTE,
-      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-      "/api/v1/review": {
-        stato: 200,
-        corpo: { to_confirm: 0 },
-      },
-      "/api/health": { stato: 200, corpo: SALUTE },
-      "/api/v1/folders/path-info": { stato: 200, corpo: { family: "windows", data_root: null } },
-      "DELETE /api/v1/folders": { stato: 500, corpo: { detail: { code: "rotto" } } },
-      "/api/v1/folders": { stato: 200, corpo: CARTELLE },
-      ...SPINA,
-    })
-    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
-    const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi cartella$/i }))
-
-    expect(await within(dialogo).findByRole("alert")).toBeDefined()
-    expect(screen.getByRole("dialog")).toBeDefined()
-  })
-
-  it("chiudendo il dialogo il fuoco torna al bottone che l ha aperto", async () => {
-    // Senza, chi naviga da tastiera riparte dall'inizio della pagina ogni volta che annulla: il
-    // dialogo lo ha portato via e non glielo ha restituito.
-    await app()
-    await vaiAImpostazioni()
-    const togli = (await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!
-    togli.focus()
-    fireEvent.click(togli)
-    const dialogo = await screen.findByRole("dialog")
-
-    fireEvent.click(within(dialogo).getByRole("button", { name: /annulla/i }))
-
-    expect(screen.queryByRole("dialog")).toBeNull()
-    expect(document.activeElement).toBe(togli)
-  })
-
   it("confermando si smette di leggerla", async () => {
-    await app()
-    await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
-    const dialogo = await screen.findByRole("dialog")
+    await app({ "DELETE /api/v1/folders/1": { stato: 200, corpo: { folder_id: 1, retired: true, kept_frames: 3180 } } })
+    const carta = await vaiAlleCartelle()
+    fireEvent.click((await within(carta).findAllByRole("button", { name: "Togli" }))[0]!)
+    fireEvent.click(await within(carta).findByRole("button", { name: "Togli la cartella" }))
 
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi cartella$/i }))
-
-    await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })
-    expect(scritture().some((s) => s.metodo === "DELETE" && s.url.includes("/folders/1"))).toBe(
-      true,
-    )
+    await waitFor(() => expect(scritta("DELETE", "/api/v1/folders/1")).toBe(true))
   })
 
-  it("Cambia percorso sposta la cartella dove stanno ora i suoi file", async () => {
-    // Chi cambia lettera al disco o passa al NAS: stessa cartella, posto nuovo, e le risposte
-    // date restano. Registrarla di nuovo le avrebbe lasciate sul percorso vecchio.
-    await app()
-    await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
-    const dialogo = await screen.findByRole("dialog")
+  it("se il ritiro non riesce la domanda resta, e lo dice li dentro", async () => {
+    await app({ "DELETE /api/v1/folders": { stato: 500, corpo: { detail: { code: "rotto" } } } })
+    const carta = await vaiAlleCartelle()
+    fireEvent.click((await within(carta).findAllByRole("button", { name: "Togli" }))[0]!)
+    const chiede = await within(carta).findByRole("alertdialog")
+    fireEvent.click(within(chiede).getByRole("button", { name: "Togli la cartella" }))
 
-    fireEvent.change(within(dialogo).getByLabelText(/^nuovo percorso/i), {
+    expect(await within(chiede).findByText(/la cartella non si è tolta/i)).toBeDefined()
+  })
+
+  it("Verifica di Sposta guarda senza spostare, e Usa questo percorso sposta", async () => {
+    // Chi cambia lettera al disco o passa al NAS: stessa cartella, posto nuovo, risposte che restano.
+    await app({
+      "POST /api/v1/folders/1/move/check": { stato: 200, corpo: { root_path: "E:\\Astro\\2025" } },
+      "POST /api/v1/folders/1/move": { stato: 200, corpo: CARTELLE.items[0] },
+    })
+    const carta = await vaiAlleCartelle()
+    fireEvent.click((await within(carta).findAllByRole("button", { name: "Sposta" }))[0]!)
+    fireEvent.change(within(carta).getByRole("textbox", { name: "Nuovo percorso" }), {
       target: { value: "E:/Astro/2025" },
     })
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^verifica$/i }))
+    fireEvent.click(within(carta).getAllByRole("button", { name: "Verifica" })[0]!)
 
+    expect(await within(carta).findByText("Stessi file in E:\\Astro\\2025")).toBeDefined()
+    expect(scritta("POST", "/api/v1/folders/1/move")).toBe(false)
+    fireEvent.click(within(carta).getByRole("button", { name: "Usa questo percorso" }))
     await waitFor(() =>
       expect(
         scritture().some(
           (s) =>
-            s.metodo === "POST" &&
             s.url.endsWith("/api/v1/folders/1/move") &&
-            (s.corpo as { root_path: string }).root_path === "E:/Astro/2025",
+            (s.corpo as { root_path: string }).root_path === "E:\\Astro\\2025",
         ),
       ).toBe(true),
     )
   })
 
-  it("Invio nel percorso nuovo sposta, come il tasto", async () => {
-    await app()
-    await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
-    const dialogo = await screen.findByRole("dialog")
-    const campo = within(dialogo).getByLabelText(/^nuovo percorso/i)
-
-    fireEvent.change(campo, { target: { value: "E:/Astro/2025" } })
+  it("se li non ci sono gli stessi file lo dice, e non sposta", async () => {
+    await app({
+      "POST /api/v1/folders/1/move/check": { stato: 409, corpo: { detail: { code: "not_the_same_folder" } } },
+    })
+    const carta = await vaiAlleCartelle()
+    fireEvent.click((await within(carta).findAllByRole("button", { name: "Sposta" }))[0]!)
+    const campo = within(carta).getByRole("textbox", { name: "Nuovo percorso" })
+    fireEvent.change(campo, { target: { value: "E:/Altro" } })
     fireEvent.submit(campo)
 
+    expect(await within(carta).findByText(/i file non corrispondono/i)).toBeDefined()
+    expect(scritta("POST", "/api/v1/folders/1/move")).toBe(false)
+  })
+
+  it("Aggiungi guarda dentro, poi registra dal suo esito", async () => {
+    await app({
+      "POST /api/v1/folders/probe": {
+        stato: 200,
+        corpo: { root_path: "E:\\Nuova", reachable: true, fits_count: 12, complete: true, moved_from: null, moved_check: "none" },
+      },
+      "POST /api/v1/folders": { stato: 201, corpo: CARTELLE.items[0] },
+    })
+    const carta = await vaiAlleCartelle()
+    fireEvent.change(within(carta).getByRole("textbox", { name: "Percorso della cartella" }), {
+      target: { value: "E:\\Nuova" },
+    })
+    fireEvent.click(within(carta).getAllByRole("button", { name: "Verifica" }).at(-1)!)
+
+    expect(await within(carta).findByText("12 file FITS · E:\\Nuova")).toBeDefined()
+    expect(scritta("POST", "/api/v1/folders")).toBe(false)
+    fireEvent.click(within(carta).getByRole("button", { name: "Aggiungi cartella" }))
+    await waitFor(() => expect(scritta("POST", "/api/v1/folders")).toBe(true))
+  })
+
+  it("una cartella gia nell elenco lo dice, invece di un errore", async () => {
+    await app({
+      "POST /api/v1/folders/probe": {
+        stato: 200,
+        corpo: { root_path: "D:\\Astro\\2025", reachable: true, fits_count: 3, complete: true, moved_from: null, moved_check: "none" },
+      },
+      "POST /api/v1/folders": { stato: 409, corpo: { detail: { code: "folder_exists", folder_id: 1 } } },
+    })
+    const carta = await vaiAlleCartelle()
+    const campo = within(carta).getByRole("textbox", { name: "Percorso della cartella" })
+    fireEvent.change(campo, { target: { value: "D:\\Astro\\2025" } })
+    fireEvent.keyDown(campo, { key: "Enter" })
+    fireEvent.click(await within(carta).findByRole("button", { name: "Aggiungi cartella" }))
+
+    expect(await within(carta).findByText("Cartella già registrata")).toBeDefined()
+    expect(within(carta).queryByText("Aggiunta non riuscita.")).toBeNull()
+  })
+
+  it("Sposta si chiude con Annulla, senza scrivere", async () => {
+    await app()
+    const carta = await vaiAlleCartelle()
+    fireEvent.click((await within(carta).findAllByRole("button", { name: "Sposta" }))[0]!)
+    fireEvent.click(within(carta).getByRole("button", { name: "Annulla" }))
+
+    expect(within(carta).queryByRole("textbox", { name: "Nuovo percorso" })).toBeNull()
+    expect(scritture()).toEqual([])
+  })
+
+  it("una cartella che non si raggiunge non offre di aggiungerla", async () => {
+    await app({
+      "POST /api/v1/folders/probe": {
+        stato: 200,
+        corpo: { root_path: "F:\\", reachable: false, fits_count: null, complete: true, moved_from: null, moved_check: "place_unreachable" },
+      },
+    })
+    const carta = await vaiAlleCartelle()
+    fireEvent.change(within(carta).getByRole("textbox", { name: "Percorso della cartella" }), {
+      target: { value: "F:\\" },
+    })
+    fireEvent.keyDown(within(carta).getByRole("textbox", { name: "Percorso della cartella" }), { key: "Enter" })
+
+    expect(await within(carta).findByText("Cartella non raggiungibile")).toBeDefined()
+    expect(within(carta).queryByRole("button", { name: "Aggiungi cartella" })).toBeNull()
+  })
+
+  it("sul NAS le cartelle si sfogliano, e si sceglie quella dove sei", async () => {
+    await app(
+      {
+        "GET /api/v1/folders/browse": {
+          stato: 200,
+          corpo: { path: "/data", parent: null, folders: [{ name: "astro", path: "/data/astro" }] },
+        },
+        "POST /api/v1/folders/probe": {
+          stato: 200,
+          corpo: { root_path: "/data", reachable: true, fits_count: 3, complete: true, moved_from: null, moved_check: "none" },
+        },
+      },
+      CARTELLE,
+      "/data",
+    )
+    const carta = await vaiAlleCartelle()
+
+    expect(await within(carta).findByRole("button", { name: /astro/ })).toBeDefined()
+    expect(within(carta).getByText(/percorso interno al container/i)).toBeDefined()
+    fireEvent.click(within(carta).getByRole("button", { name: "Seleziona questa cartella" }))
     await waitFor(() =>
-      expect(
-        scritture().some(
-          (s) =>
-            s.metodo === "POST" &&
-            s.url.endsWith("/api/v1/folders/1/move") &&
-            (s.corpo as { root_path: string }).root_path === "E:/Astro/2025",
-        ),
-      ).toBe(true),
+      expect(scritture().some((s) => s.url.endsWith("/folders/probe") && (s.corpo as { root_path: string }).root_path === "/data")).toBe(true),
     )
   })
 
-  it("sul NAS il tasto del selettore dice che sposta, non che usa", async () => {
-    // Qui il clic sposta subito: "Usa questa cartella" e' il testo del primo avvio, dove dopo
-    // c'e' ancora Aggiungi.
-    rispondi({
-      ...STANOTTE,
-      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
-      "/api/health": { stato: 200, corpo: SALUTE },
-      "/api/v1/folders/path-info": { stato: 200, corpo: { family: "posix", data_root: "/data" } },
-      "/api/v1/folders/browse": {
-        stato: 200,
-        corpo: { path: "/data", parent: null, folders: [] },
-      },
-      "/api/v1/folders": { stato: 200, corpo: CARTELLE },
-      ...SPINA,
-    })
-    await disegna()
-    await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
-    const dialogo = await screen.findByRole("dialog")
+  it("senza cartelle lo dice, invece di un elenco vuoto", async () => {
+    await app({}, VUOTE)
+    const carta = await vaiAlleCartelle()
 
-    expect(await within(dialogo).findByRole("button", { name: /^verifica$/i })).toBeDefined()
-    expect(within(dialogo).queryByRole("button", { name: /seleziona cartella/i })).toBeNull()
+    expect(await within(carta).findByText("Nessuna cartella: l'archivio è vuoto.")).toBeDefined()
+    expect(within(carta).getByText("0 cartelle")).toBeDefined()
+  })
+})
+
+describe("Scansione", () => {
+  const scansione = () => screen.findByRole("region", { name: "Scansione" })
+
+  it("mai scansionato: lo dice, e Scansiona avvia", async () => {
+    await app({ "POST /api/v1/scan": { stato: 202, corpo: { started: [], skipped: [] } } })
+    await vaiAlleCartelle()
+    const carta = await scansione()
+
+    expect(within(carta).getByText("Nessuna scansione finora")).toBeDefined()
+    fireEvent.click(within(carta).getByRole("button", { name: "Scansiona" }))
+    await waitFor(() => expect(scritta("POST", "/api/v1/scan")).toBe(true))
   })
 
-  it("se li non ci sono gli stessi file lo dice, e il dialogo resta aperto", async () => {
-    await app()
-    await vaiAImpostazioni()
+  it("a scansione finita il conto della cartella si rilegge", async () => {
+    await app({
+      "/api/v1/pipeline/status": {
+        stato: 200,
+        corpo: { ...FERMO, worker: { ...FERMO.worker, state: "running", stage: "scan" } },
+      },
+    })
+    const carta = await vaiAlleCartelle()
+    await within(carta).findByText(/180 frame in archivio$/)
+
     cambia({
       ...STANOTTE,
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
       "/api/health": { stato: 200, corpo: SALUTE },
       "/api/v1/folders/path-info": { stato: 200, corpo: { family: "windows", data_root: null } },
-      "POST /api/v1/folders/1/move": {
-        stato: 409,
-        corpo: { detail: { code: "not_the_same_folder" } },
+      "/api/v1/pipeline/status": {
+        stato: 200,
+        corpo: { ...FERMO, worker: { ...FERMO.worker, state: "completed", ended_at: "2026-11-15T15:48:00Z" } },
       },
-      "/api/v1/folders": { stato: 200, corpo: CARTELLE },
-      ...SPINA,
+      "/api/v1/folders": {
+        stato: 200,
+        corpo: { ...CARTELLE, items: [{ ...CARTELLE.items[0]!, frames: 3194 }, CARTELLE.items[1]!] },
+      },
     })
-    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
-    const dialogo = await screen.findByRole("dialog")
-    fireEvent.change(within(dialogo).getByLabelText(/^nuovo percorso/i), {
-      target: { value: "E:/Altro" },
-    })
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^verifica$/i }))
 
-    expect(await within(dialogo).findByText(/i file non corrispondono/i)).toBeDefined()
-    expect(screen.getByRole("dialog")).toBeDefined()
+    // il battito dello stato mentre gira e' 1,5 s
+    expect(await within(carta).findByText(/194 frame in archivio$/, {}, { timeout: 5000 })).toBeDefined()
   })
 
-  it("senza cartelle dice cosa manca, invece di un elenco vuoto", async () => {
-    // E' lo stato di chi ha saltato il primo avvio, ed e' il buco che questa pagina ripara.
-    await app({ items: [], total: 0, limit: 50, offset: 0 })
-    await vaiAImpostazioni()
+  it("l ultima scansione dice quando e cosa ha trovato", async () => {
+    await app({
+      "/api/v1/pipeline/status": {
+        stato: 200,
+        corpo: { ...FERMO, last_scan: { ended_at: "2026-11-15T06:12:00Z", ended_day: "today", new: 214, not_read: 0 } },
+      },
+    })
+    await vaiAlleCartelle()
+    const carta = await scansione()
 
-    const vuoto = await screen.findByText(/^nessuna cartella$/i)
-    const dentro = vuoto.closest(".as-vuoto")
-    expect(dentro).not.toBeNull()
-    expect(within(dentro as HTMLElement).getByText(/i file non vengono spostati/i)).toBeDefined()
+    expect(within(carta).getByText(/^Ultima scansione oggi, /)).toBeDefined()
+    expect(within(carta).getByText("214 file nuovi, nessun problema")).toBeDefined()
   })
 })

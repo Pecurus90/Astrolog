@@ -59,6 +59,7 @@ export function impostazioni(fatto: boolean, manca?: readonly string[]) {
     // scrive il percorso del solver guarda li' per sapere se ha indovinato.
     missing: manca ?? (fatto ? [] : ["no_active_site"]),
     ranges: { moon_good_pct: { min: 0, max: 100 }, moon_limit_pct: { min: 0, max: 100 } },
+    choices: { moon_above_deg: [-5, 0, 5, 10], language: ["it", "en"] },
   }
 }
 

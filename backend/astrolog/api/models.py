@@ -68,6 +68,10 @@ class FolderMove(BaseModel):
     root_path: str = Field(min_length=1)
 
 
+class MoveChecked(BaseModel):
+    root_path: str = Field(description="Canonical: the path `move` would write.")
+
+
 class FolderEntry(BaseModel):
     name: str
     path: str = Field(description="The path to register, as it is.")

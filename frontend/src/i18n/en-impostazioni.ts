@@ -10,10 +10,10 @@ export const enImpostazioni = {
   "settings.services.sub": "the service keys, in one place",
   "settings.readings.sub": "past scans and what was left out", // glifo-ok: testo della tavola
   "settings.backup.sub": "the answers file",
-  "settings.index.general": "{nome} · {modo} mode", // glifo-ok: testo della tavola
+  "settings.index.general": "{nome} \u00b7 {modo} mode", // glifo-ok: testo della tavola
   "settings.index.general.noname": "{modo} mode",
-  "settings.index.sites": "{n} sites · {sito} default", // glifo-ok: testo della tavola
-  "settings.index.sites.one": "1 site · {sito} default", // glifo-ok: testo della tavola
+  "settings.index.sites": "{n} sites \u00b7 {sito} default", // glifo-ok: testo della tavola
+  "settings.index.sites.one": "1 site \u00b7 {sito} default", // glifo-ok: testo della tavola
   "settings.index.sites.nohome": "{n} sites",
   "settings.index.sites.nohome.one": "1 site",
   "settings.saveFailed": "Setting not saved: AstroLog is not responding, try again.",
@@ -25,92 +25,143 @@ export const enImpostazioni = {
   "settings.general.language.why": "The app's words. Names read from the files stay as they are.",
   "settings.general.theme.sub": "how the app looks",
   "settings.folders": "Folders and scan",
+  // Impostazioni.dc.html, Weather (v82)
+  "settings.weather": "Weather",
+  "settings.weather.sub": "the forecast",
+  "settings.weather.card": "Forecast",
+  "settings.weather.opens": "Weather opens on",
+  "settings.weather.deepSky": "Deep sky",
+  "settings.weather.sun": "Sun",
+  "settings.weather.sunOff": "Sun is off: it arrives with the Sun, together with the Solar System.",
+  "settings.weather.sources": "Sources: Open-Meteo for the weather, Meteoblue for the seeing.",
+  "settings.weather.sources.phone":
+    "Sources: Open-Meteo for the weather, Meteoblue for the seeing. The Meteoblue key is in Services.",
+  "settings.weather.key": "The Meteoblue key, for the seeing, is in Services.",
+  "settings.weather.openServices": "Open Services",
+  // Impostazioni.dc.html, ASTAP (v82)
   "settings.solver": "ASTAP",
-  "settings.solver.title": "ASTAP",
-  "settings.solver.what":
-    "ASTAP identifies the field framed in each frame (plate solving).",
-  "settings.solver.here": "found",
+  "settings.solver.loading": "Loading ASTAP",
+  "settings.solver.sub.card": "the program that identifies the field from the stars (plate solving)",
+  "settings.solver.what": "The program that identifies the field from the stars (plate solving).",
+  "settings.solver.from": "Where it comes from",
+  "settings.solver.channel": "installed separately, from hnsky.org",
+  "settings.solver.channel.sub":
+    "ASTAP is not in the AstroLog package: it is installed and updated on its own.",
+  "settings.solver.path": "Program path",
+  "settings.solver.pathHelp":
+    "The path must end with the program (astap_cli). \u201cFind it for me\u201d suggests a path, it does not write it.",
+  "settings.solver.checking": "Checking\u2026",
+  "settings.solver.notThere": "ASTAP not found at this path.",
+  "settings.solver.notThere.why": "The path must end with the program (astap_cli).",
   "settings.solver.none": "ASTAP not found.",
-  "settings.solver.declaredNotThere": "Invalid path:",
+  "settings.solver.foundAt": "{percorso} \u00b7 {come}",
   "settings.solver.from.declared": "path entered manually",
   "settings.solver.from.env": "variable ASTROLOG_ASTAP",
   "settings.solver.from.path": "system PATH",
   "settings.solver.from.known_place": "default install folder",
-  "settings.solver.search": "Search for ASTAP",
-  "settings.solver.searchedFound": "ASTAP found",
+  "settings.solver.search": "Find it for me",
+  "settings.solver.searching": "Searching\u2026",
+  "settings.solver.searchedFound": "Found at {percorso}",
+  "settings.solver.searchedKeeps": "The path does not change until you choose it.",
   "settings.solver.searchedNothing": "ASTAP not found in the PATH or in the default install folders.",
   "settings.solver.adopt": "Use this path",
   "settings.solver.failed": "ASTAP path not available.",
   "settings.solver.searchFailed": "Search failed.",
+  "settings.solver.cat": "Catalog {nome}",
+  "settings.solver.cat.found": "✓ found", // glifo-ok: board text
+  "settings.solver.cat.d05": "small, for wide fields",
+  "settings.solver.cat.d50": "recommended: fine for almost all fields",
+  "settings.solver.cat.d80": "for very narrow fields",
+  "settings.solver.cats": "Catalogs",
+  "settings.solver.cats.none": "? no catalog", // glifo-ok: board text
+  "settings.solver.cats.none.why": "Without a catalog, objects are not identified.",
+  "settings.solver.advice":
+    "D50 recommended, in the ASTAP folder; D80 for very narrow fields. Catalogs are recognized by their file names.",
+  "settings.solver.site": "ASTAP and the catalogs, on the hnsky.org site ↗", // glifo-ok: board text
   "settings.site": "Sites",
+  // Impostazioni.dc.html, Moon (v82); sources in the registry (config.py KEYS and MOON_FLOORS)
   "settings.moon": "Moon",
-  "settings.moon.title": "Moon",
-  "settings.moon.what": "The broadband rule, across the whole app.",
-  "settings.moon.goodPct": "Broadband good up to (%)",
-  "settings.moon.limitPct": "Broadband marginal up to (%)",
-  "settings.moon.source": "Factory values 25% and 65%: the ING rule, dark under 0.25 and grey up to 0.65.",
+  "settings.moon.good": "Broadband good up to",
+  "settings.moon.limit": "Broadband marginal up to",
+  "settings.moon.aria": "{riga}, in percent",
+  "settings.moon.good.source": "ING rule: dark under 0.25",
+  "settings.moon.limit.source": "ING rule: grey up to 0.65",
+  "settings.moon.above": "The Moon counts above",
+  "settings.moon.above.tess": "TESS network: below \u22125\u00b0 the sky does not feel the Moon",
+  "settings.moon.above.horizon": "from the horizon, when it rises",
+  "settings.moon.above.none": "no convention: you choose",
+  "settings.moon.horizon": "the horizon",
+  "settings.moon.deg": "{n}\u00b0",
   "settings.moon.range": "A number from {min} to {max}.",
-  "settings.moon.failed": "The threshold was not saved: the app is not answering.",
+  "settings.moon.atLeast": "It must be at least {n}%.",
+  "settings.moon.dark": "Under a dark sky the Moon interferes sooner: lower the percentages.",
+  "settings.moon.now": "Now: good up to {buona}%, marginal up to {limite}%, counts above {sopra}.",
   "settings.readings": "Scans",
   "settings.services": "Services",
   "settings.services.title": "Services",
   "settings.services.what": "API keys for external services. Optional.",
 
+  // Impostazioni.dc.html, Folders and scan (v82)
   "settings.folders.title": "Folders",
-  "settings.folders.what":
-    "Subfolders are read too. Files are not moved or modified.",
-  "settings.folders.reachable": "Reachable",
-  "settings.folders.unreachable": "Not reachable",
+  "settings.folders.count": "{n} folders",
+  "settings.folders.count.one": "1 folder",
+  "settings.folders.loading": "Loading folders",
   "settings.folders.frames": "{n} frames in the archive",
   "settings.folders.frames.one": "1 frame in the archive",
   "settings.folders.frames.kept": "{n} frames stay in the archive",
   "settings.folders.frames.kept.one": "1 frame stays in the archive",
-  "settings.folders.since": "added on {quando}",
-  "settings.folders.remove": "Remove",
-  "settings.folders.keeps":
-    "Removing a folder does not delete files or frames already in the archive.",
+  "settings.folders.unreachable.line": "not reachable \u00b7 {frame}",
+  "settings.folders.empty": "No folders: the archive is empty.",
   "settings.folders.failed": "Folders not available.",
-
-  "settings.folders.add.title": "Add folder",
-  "settings.folders.add.what": "Enter the folder path.",
-  "settings.folders.add.what.nas": "Select a folder from those available on the NAS.",
-  "settings.folders.label": "Path",
+  "settings.folders.add.title": "Add a folder",
+  "settings.folders.label": "Folder path",
+  "settings.folders.placeholder": "Data/Astro/2026",
+  "settings.folders.help": "Subfolders are read too.",
+  "settings.folders.help.nas":
+    "Path inside the container, not the one on your computer: choose from the list or type it.",
+  "settings.folders.nas.here": "Current folder:",
+  "settings.folders.nas.up": "↑ Parent folder", // glifo-ok: board text
+  "settings.folders.nas.none": "No subfolders.",
+  "settings.folders.nas.select": "Select this folder",
   "settings.folders.look": "Check",
-  "settings.folders.add": "Add",
+  "settings.folders.checking": "Checking\u2026",
+  "settings.folders.add": "Add folder",
   "settings.folders.lookFailed": "Check failed.",
   "settings.folders.addFailed": "Adding failed.",
-  "settings.folders.removeFailed": "Removal failed.",
+  "settings.folders.removeFailed": "The folder was not removed: AstroLog is not responding, try again.",
   "settings.folders.foundTitle": "Files found",
   "settings.folders.found": "{n} FITS files",
   "settings.folders.found.one": "1 FITS file",
+  "settings.folders.found.where": "{file} \u00b7 {percorso}",
   "settings.folders.atLeastTitle": "Partial count",
   "settings.folders.atLeast": "Count stopped at {n}: there may be more.",
   "settings.folders.unreachableTitle": "Folder not reachable",
   "settings.folders.unreachableHelp":
     "Check the path or connect the drive, then try again.",
-
-  "settings.folders.none": "No folders",
-  "settings.folders.none.why":
-    "Add a folder to populate the archive.",
-  "settings.folders.none.safe":
-    "Files are not moved or modified.",
-
-  "settings.folders.confirm": "Remove {percorso}?",
-  "settings.folders.confirm.what":
-    "Effects of removing it:",
-  "settings.folders.confirm.frames": "frames stay in the archive",
-  "settings.folders.confirm.files": "files on disk are not modified",
-  "settings.folders.confirm.stop":
-    "new files in this folder are no longer read",
+  "settings.folders.remove": "Remove",
+  "settings.folders.confirm":
+    "Remove {percorso}? The frames stay in the archive; the folder is no longer included in scans.",
   "settings.folders.cancel": "Cancel",
-  "settings.folders.stop": "Remove folder",
-
-  "settings.folders.move": "Change path",
-  "settings.folders.move.title": "New path of {percorso}",
+  "settings.folders.stop": "Remove the folder",
+  "settings.folders.move": "Move",
   "settings.folders.move.what":
-    "Enter the new path. It is checked that it contains the same files.",
+    "The new path of {percorso}, if the files have moved: the frames stay.",
   "settings.folders.move.label": "New path",
-  "settings.folders.move.look": "Check",
+  "settings.folders.move.placeholder": "Data/Astro/Archive",
+  "settings.folders.already": "{percorso} is already among the folders above: its files are already read.",
+  "settings.folders.move.same": "Same files in {percorso}",
+  "settings.folders.move.keeps":
+    "Only the path changes: the frames, nights and answers stay.",
+  "settings.scan.last": "Last scan {giorno}, {ora}",
+  "settings.scan.last.ok": "{nuovi}, no problems",
+  "settings.scan.last.unread": "{nuovi} \u00b7 {nonLetti}",
+  "settings.scan.never": "No scan so far",
+  "settings.scan.never.how": "Scan reads the folders next to it.",
+  "settings.scan.never.how.phone": "Scan reads the folders above.",
+  "settings.scan.also":
+    "Subfolders are read too. It also starts from Scan, in the gear menu.",
+  "settings.scan.also.phone":
+    "Subfolders are read too. It also starts from Scan, in the More menu.",
   "folders.move.foundTitle": "Folder already registered",
   "folders.move.found":
     "Matches {percorso}: same files. Associated data is kept.",

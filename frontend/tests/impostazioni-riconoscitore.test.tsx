@@ -1,14 +1,13 @@
 // @vitest-environment jsdom
 /**
- * Impostazioni, la sezione *Il riconoscitore*: dove l'app prende ASTAP, e da cosa l'ha dedotto.
+ * Impostazioni, la sezione *ASTAP* (tavola v82): da dove viene, il percorso con Verifica percorso e
+ * Cercalo tu, i cataloghi trovati.
  *
  * Le regole provate qui sono quelle che una lettura del codice non prende: che il **canale** si
- * legga accanto al percorso -- "trovato" da solo non si puo' smentire -- che un percorso scritto
- * e sbagliato **resti a schermo** invece di sparire, e che la ricerca automatica **proponga senza
- * scrivere**, perche' sovrascrivere di nascosto toglierebbe l'unica via d'uscita a chi quella
- * ricerca l'ha vista sbagliare.
+ * legga accanto al percorso -- "trovato" da solo non si puo' smentire -- che un percorso scritto e
+ * sbagliato **resti a schermo**, e che la ricerca **proponga senza scrivere**.
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
@@ -30,240 +29,144 @@ const TROVATO = {
   path: "C:\\Program Files\\astap\\astap_cli.exe",
   source: "declared",
   declared: "C:\\Program Files\\astap\\astap_cli.exe",
-  databases: ["d80"],
+  databases: ["d50"],
 }
+const ASSENTE = { path: null, source: null, declared: null, databases: [] }
 
-function app(solver: unknown = TROVATO, piu: Record<string, unknown> = {}) {
-  rispondi({
+function mappa(solver: unknown, piu: Record<string, unknown> = {}) {
+  return {
     ...STANOTTE,
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-    "/api/v1/review": {
-      stato: 200,
-      corpo: { to_confirm: 0 },
-    },
+    "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
     "/api/health": { stato: 200, corpo: SALUTE },
     ...piu,
     "/api/v1/solver": { stato: 200, corpo: solver },
     ...SPINA,
-  })
-  return disegna()
+  }
 }
 
-/** Apre la sezione come fa chi usa l'app: dalla barra, poi dall'elenco delle sezioni. */
-async function vaiAlRiconoscitore() {
+async function vaiAdASTAP(solver: unknown = TROVATO, piu: Record<string, unknown> = {}) {
+  rispondi(mappa(solver, piu) as never)
+  await disegna()
   await apriImpostazioni()
   fireEvent.click(await screen.findByRole("tab", { name: /^astap$/i }))
+  return screen.findByRole("region", { name: "ASTAP" })
 }
+
+const campo = (c: HTMLElement) => within(c).getByLabelText(/percorso di astap/i) as HTMLInputElement
 
 describe("Impostazioni / ASTAP", () => {
   it("dice dove sta, e da cosa l app l ha dedotto", async () => {
-    await app()
-    await vaiAlRiconoscitore()
+    const carta = await vaiAdASTAP()
 
-    expect(await screen.findByText(/astap_cli\.exe/)).toBeTruthy()
-    // Il canale accanto al percorso: senza, "trovato" non si puo' smentire.
-    const riga = screen.getByText(/percorso inserito manualmente/i)
-    expect(riga).toBeTruthy()
-    // il percorso e la sua origine sono due cose: fra loro c'e' un separatore, non uno spazio
-    expect(riga.textContent).toMatch(/astap_cli\S*\s+\u00b7\s+percorso inserito manualmente/)
+    expect(within(carta).getByText("installato a parte, da hnsky.org")).toBeTruthy()
+    // il percorso e la sua origine sono due cose: fra loro c'e' un separatore
+    expect(within(carta).getByText(/astap_cli\.exe · percorso inserito manualmente$/)).toBeTruthy()
+    expect(campo(carta).value).toBe(TROVATO.path)
   })
 
   it("ogni canale ha la sua frase, e nessuno resta un codice a schermo", async () => {
-    // Quattro rami, e il codice del backend non deve arrivare a schermo in nessuno.
     for (const [source, frase] of [
       ["env", /variabile ASTROLOG_ASTAP/i],
       ["path", /PATH di sistema/i],
       ["known_place", /cartella di installazione predefinita/i],
     ] as const) {
       pulisci()
-      await app({ ...TROVATO, source })
-      await vaiAlRiconoscitore()
-      expect(await screen.findByText(frase), source).toBeTruthy()
-      expect(screen.queryByText(source)).toBeNull()
+      const carta = await vaiAdASTAP({ ...TROVATO, source, declared: null })
+      expect(within(carta).getByText(frase), source).toBeTruthy()
+      expect(within(carta).queryByText(source)).toBeNull()
     }
   })
 
-  it("non trovandolo dice cosa si perde, senza chiamarlo guasto", async () => {
-    await app({ path: null, source: null, declared: null, databases: [] })
-    await vaiAlRiconoscitore()
+  it("non trovandolo dice cosa si perde, e non parla di cataloghi", async () => {
+    const carta = await vaiAdASTAP(ASSENTE)
 
-    expect(await screen.findByText(/^astap non trovato\./i)).toBeTruthy()
-    // Non e' un allarme: manca un programma, non si e' rotto niente.
-    expect(screen.getByText(/^senza astap$/i)).toBeTruthy()
-    expect(screen.getByText(/gli oggetti ripresi non vengono identificati/i)).toBeTruthy()
+    expect(within(carta).getByText("ASTAP non trovato.")).toBeTruthy()
+    expect(within(carta).getByText(/gli oggetti ripresi non vengono identificati/i)).toBeTruthy()
+    expect(within(carta).queryByText(/catalogo/i)).toBeNull()
   })
 
-  it("dice quale catalogo stellare c e", async () => {
-    await app()
-    await vaiAlRiconoscitore()
+  it("ogni catalogo trovato su una riga, D50 consigliato", async () => {
+    const carta = await vaiAdASTAP({ ...TROVATO, databases: ["d05", "d50", "d80"] })
 
-    expect(await screen.findByText(/catalogo stellare: d80/i)).toBeTruthy()
-    expect(screen.queryByText(/catalogo stellare mancante/i)).toBeNull()
+    expect(within(carta).getByText("Catalogo D50")).toBeTruthy()
+    expect(within(carta).getByText("consigliato: va bene per quasi tutti i campi")).toBeTruthy()
+    expect(within(carta).getByText("per i campi molto stretti")).toBeTruthy()
+    expect(within(carta).getAllByText("\u2713 trovato")).toHaveLength(3)
   })
 
-  it("ASTAP senza catalogo lo dice, e porta dove si prende", async () => {
-    // E' l'errore di installazione piu' comune: il programma c'e' e non riconosce niente, e
-    // finora si scopriva da una scansione tornata a mani vuote.
-    await app({ ...TROVATO, databases: [] })
-    await vaiAlRiconoscitore()
+  it("ASTAP senza catalogo lo dice", async () => {
+    const carta = await vaiAdASTAP({ ...TROVATO, databases: [] })
 
-    expect(await screen.findByText(/^catalogo stellare mancante$/i)).toBeTruthy()
-    expect(screen.getByText(/senza catalogo gli oggetti non vengono identificati/i)).toBeTruthy()
-    const dove = screen.getByRole("link", { name: /scarica il catalogo/i })
-    expect(dove.getAttribute("href")).toContain("star_databases")
+    expect(within(carta).getByText("? nessun catalogo")).toBeTruthy()
+    expect(within(carta).getByText(/senza catalogo gli oggetti non vengono identificati/i)).toBeTruthy()
+    const dove = within(carta).getByRole("link", { name: /sul sito di hnsky\.org/i })
+    expect(dove.getAttribute("href")).toContain("hnsky.org")
     expect(dove.getAttribute("rel")).toContain("noopener")
-    // Non e' un allarme: manca un download, non si e' rotto niente.
-    expect(screen.queryByRole("alert")).toBeNull()
-  })
-
-  it("chi non ha ASTAP non si sente dire anche che gli manca il catalogo", async () => {
-    // Due allarmi per un problema solo mandano a cercare due cose: il catalogo e' di ASTAP, e
-    // chi non ha il programma ha una cosa sola da fare.
-    await app({ path: null, source: null, declared: null, databases: [] })
-    await vaiAlRiconoscitore()
-
-    expect(await screen.findByText(/^astap non trovato\./i)).toBeTruthy()
-    expect(screen.queryByText(/catalogo stellare/i)).toBeNull()
   })
 
   it("un percorso scritto e sbagliato resta a schermo", async () => {
-    // E' l'unica cosa che si puo' correggere: nasconderlo lascerebbe "non trovato" senza perche'.
-    await app({ path: null, source: null, declared: "D:\\sbagliato\\astap.exe" })
-    await vaiAlRiconoscitore()
+    const carta = await vaiAdASTAP({ ...ASSENTE, declared: "D:\\sbagliato\\astap.exe" })
 
-    expect(await screen.findByText(/percorso non valido:/i)).toBeTruthy()
-    expect(screen.getByText("D:\\sbagliato\\astap.exe")).toBeTruthy()
-    // e il campo parte da li', cosi' si corregge invece di riscriverlo da capo
-    expect((screen.getByLabelText(/percorso di astap/i) as HTMLInputElement).value).toBe(
-      "D:\\sbagliato\\astap.exe",
-    )
+    expect(within(carta).getByText("ASTAP non trovato in questo percorso.")).toBeTruthy()
+    expect(campo(carta).value).toBe("D:\\sbagliato\\astap.exe")
   })
 
-  it("Cerca ASTAP propone, e non scrive niente finche' non si adotta", async () => {
-    await app(
-      { path: null, source: null, declared: "D:\\sbagliato\\astap.exe" },
-      { "POST /api/v1/solver": { stato: 200, corpo: { ...TROVATO, source: "path" } } },
-    )
-    await vaiAlRiconoscitore()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^cerca astap$/i }))
-    expect(await screen.findByText(/^astap trovato$/i)).toBeTruthy()
-    // La ricerca ha guardato, e **non ha scritto**: nessuna PATCH sulle impostazioni.
-    expect(scritture().some((s) => s.url.includes("/settings"))).toBe(false)
-  })
-
-  it("adottando la proposta, quella diventa la preferenza", async () => {
-    await app(
-      { path: null, source: null, declared: null, databases: [] },
-      {
-        "POST /api/v1/solver": { stato: 200, corpo: { ...TROVATO, source: "path" } },
-        "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-      },
-    )
-    await vaiAlRiconoscitore()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^cerca astap$/i }))
-    fireEvent.click(await screen.findByRole("button", { name: /^usa questo percorso$/i }))
-
-    await waitFor(() => expect(scritture().some((s) => s.metodo === "PATCH")).toBe(true))
-    const scritta = scritture().find((s) => s.metodo === "PATCH")!
-    expect(scritta.corpo).toMatchObject({ values: { astap_path: TROVATO.path } })
-    // E la proposta se ne va: adottata, non e' piu' una proposta -- restando, lo stesso percorso
-    // sarebbe a schermo due volte, una delle quali come domanda.
-    // Si guarda il suo tasto, non il titolo: "ASTAP trovato" lo dice anche l'esito del percorso.
-    await waitFor(() => expect(screen.queryByRole("button", { name: /^usa questo percorso$/i })).toBeNull())
-    expect((screen.getByLabelText(/percorso di astap/i) as HTMLInputElement).value).toBe(TROVATO.path)
-  })
-
-  it("scritto il percorso, la riga di stato lo sa senza ricaricare", async () => {
-    // La risposta della scrittura non porta il canale, quindi dove sta il solver si **richiede**.
-    // Senza, dopo aver adottato la proposta la riga continua a dire "ASTAP non trovato" mentre il
-    // campo sotto mostra il percorso giusto: due verita' sulla stessa cosa, a due centimetri.
-    await app(
-      { path: null, source: null, declared: null, databases: [] },
-      {
-        "POST /api/v1/solver": { stato: 200, corpo: { ...TROVATO, source: "path" } },
-        "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-      },
-    )
-    await vaiAlRiconoscitore()
-    expect(await screen.findByText(/^astap non trovato\./i)).toBeTruthy()
-
-    // dopo la scrittura il backend dice un'altra cosa, e la sezione deve andare a risentirlo
-    cambia({
-      ...STANOTTE,
-      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
-      "/api/health": { stato: 200, corpo: SALUTE },
+  it("Cercalo tu propone, e non scrive niente finche' non si sceglie", async () => {
+    const carta = await vaiAdASTAP(ASSENTE, {
       "POST /api/v1/solver": { stato: 200, corpo: { ...TROVATO, source: "path" } },
       "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-      "/api/v1/solver": { stato: 200, corpo: TROVATO },
-      ...SPINA,
     })
-    fireEvent.click(screen.getByRole("button", { name: /^cerca astap$/i }))
-    fireEvent.click(await screen.findByRole("button", { name: /^usa questo percorso$/i }))
 
-    expect(await screen.findByText(/percorso inserito manualmente/i)).toBeTruthy()
-    expect(screen.queryByText(/^astap non trovato\./i)).toBeNull()
-  })
+    fireEvent.click(within(carta).getByRole("button", { name: "Cercalo tu" }))
+    expect(await within(carta).findByText(`Trovato in ${TROVATO.path}`)).toBeTruthy()
+    expect(within(carta).getByText("Il percorso non cambia finché non lo scegli.")).toBeTruthy()
+    expect(scritture().some((s) => s.url.includes("/settings"))).toBe(false)
 
-  it("lo stesso percorso si scrive una volta sola, da qualunque parte arrivi", async () => {
-    // Premere il tasto **toglie il fuoco dal campo**: senza memoria di cosa si e' gia' mandato,
-    // l'uscita dal campo e il clic mandano la stessa preferenza due volte. Non e' un doppione
-    // innocuo -- sono due scritture sul database per un gesto solo.
-    await app(
-      { path: null, source: null, declared: null, databases: [] },
-      { "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true) } },
+    fireEvent.click(within(carta).getByRole("button", { name: "Usa questo percorso" }))
+    await waitFor(() =>
+      expect(scritture().find((s) => s.metodo === "PATCH")?.corpo).toMatchObject({
+        values: { astap_path: TROVATO.path },
+      }),
     )
-    await vaiAlRiconoscitore()
-
-    const campo = await screen.findByLabelText(/percorso di astap/i)
-    fireEvent.change(campo, { target: { value: "D:/astap/astap_cli.exe" } })
-    fireEvent.blur(campo)
-    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
-
-    await waitFor(() => expect(scritture().some((s) => s.metodo === "PATCH")).toBe(true))
-    expect(scritture().filter((s) => s.metodo === "PATCH")).toHaveLength(1)
-  })
-
-  it("cambiando il percorso, l esito di quello di prima se ne va", async () => {
-    // Un "non c'e'" attaccato a un percorso che nel frattempo e' cambiato accusa la cosa
-    // sbagliata: chi sta correggendo legge un errore su cio' che ha appena riscritto.
-    await app(
-      { path: null, source: null, declared: null, databases: [] },
-      { "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true, ["no_solver"]) } },
-    )
-    await vaiAlRiconoscitore()
-
-    const campo = await screen.findByLabelText(/percorso di astap/i)
-    fireEvent.change(campo, { target: { value: "D:/sbagliato" } })
-    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
-    expect(await screen.findByText(/astap non trovato in questo percorso/i)).toBeTruthy()
-
-    fireEvent.change(campo, { target: { value: "D:/un-altro" } })
-    expect(screen.queryByText(/astap non trovato in questo percorso/i)).toBeNull()
+    await waitFor(() => expect(within(carta).queryByRole("button", { name: "Usa questo percorso" })).toBeNull())
+    expect(campo(carta).value).toBe(TROVATO.path)
   })
 
   it("una ricerca a vuoto lo dice, invece di non rispondere", async () => {
-    await app(
-      { path: null, source: null, declared: null, databases: [] },
-      { "POST /api/v1/solver": { stato: 200, corpo: { path: null, source: null, declared: null, databases: [] } } },
-    )
-    await vaiAlRiconoscitore()
+    const carta = await vaiAdASTAP(ASSENTE, { "POST /api/v1/solver": { stato: 200, corpo: ASSENTE } })
 
-    fireEvent.click(await screen.findByRole("button", { name: /^cerca astap$/i }))
-    expect(await screen.findByText(/astap non trovato nel PATH/i)).toBeTruthy()
+    fireEvent.click(within(carta).getByRole("button", { name: "Cercalo tu" }))
+    expect(await within(carta).findByText(/astap non trovato nel PATH/i)).toBeTruthy()
   })
 
-  it("l app non scarica niente da sola, e lo dice", async () => {
-    // L'unica riga di questa schermata che non si negozia.
-    await app()
-    await vaiAlRiconoscitore()
+  it("Verifica percorso scrive una volta sola, e dice com e andata", async () => {
+    // premere il tasto toglie il fuoco dal campo: senza memoria partirebbero due scritture
+    const carta = await vaiAdASTAP(ASSENTE, {
+      "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true, ["no_solver"]) },
+    })
 
-    const dove = await screen.findByRole("link", { name: /scarica astap/i })
-    expect(dove.getAttribute("href")).toContain("hnsky.org")
-    // e un collegamento che porta fuori si apre altrove, senza dare a quella pagina la nostra
-    expect(dove.getAttribute("rel")).toContain("noopener")
-    expect(screen.getByText(/non scarica n\u00e9 installa astap/i)).toBeTruthy()
+    fireEvent.change(campo(carta), { target: { value: "D:/sbagliato" } })
+    fireEvent.blur(campo(carta))
+    fireEvent.click(within(carta).getByRole("button", { name: "Verifica percorso" }))
+
+    expect(await within(carta).findByText("ASTAP non trovato in questo percorso.")).toBeTruthy()
+    expect(scritture().filter((s) => s.metodo === "PATCH")).toHaveLength(1)
+    // cambiando il percorso l'esito di quello di prima se ne va
+    fireEvent.change(campo(carta), { target: { value: "D:/un-altro" } })
+    expect(within(carta).queryByText("ASTAP non trovato in questo percorso.")).toBeNull()
+  })
+
+  it("scritto il percorso giusto, la carta lo sa senza ricaricare", async () => {
+    const carta = await vaiAdASTAP(ASSENTE, {
+      "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+    })
+    cambia(mappa(TROVATO, { "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true) } }) as never)
+
+    fireEvent.change(campo(carta), { target: { value: TROVATO.path } })
+    fireEvent.click(within(carta).getByRole("button", { name: "Verifica percorso" }))
+
+    expect(await within(carta).findByText("Gli oggetti ripresi verranno identificati.")).toBeTruthy()
+    expect(await within(carta).findByText("Catalogo D50")).toBeTruthy()
   })
 })

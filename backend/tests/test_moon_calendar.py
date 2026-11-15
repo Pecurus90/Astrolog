@@ -234,6 +234,8 @@ def test_a_threshold_out_of_range_is_refused(db_path):
     # La misura la manda il backend, una volta: lo schermo non la riscrive.
     assert letto["ranges"]["moon_good_pct"] == {"min": 0, "max": 100}
     assert letto["ranges"]["moon_limit_pct"] == {"min": 0, "max": 100}
+    # anche le altezze della Luna: la sezione Luna le mostra, non le riscrive
+    assert letto["choices"]["moon_above_deg"] == [-5, 0, 5, 10]
 
 
 def test_every_threshold_out_of_range_is_named(db_path):

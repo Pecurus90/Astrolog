@@ -17,6 +17,7 @@
  * test-tolto: "e nemmeno Il riconoscitore, con la proposta della ricerca aperta"
  * test-tolto: "e nemmeno Le letture, con una ricevuta per ogni esito"
  * test-tolto: "e nemmeno Il riconoscitore con ASTAP ma senza il suo catalogo"
+ * test-tolto: "e nemmeno Impostazioni, col suo dialogo aperto" -- Cartelle senza dialogo (tavola v82)
  */
 import { fireEvent, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -101,10 +102,9 @@ describe("l accessibilita di dove si risponde", () => {
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno Impostazioni, col suo dialogo aperto", async () => {
-    // Due superfici in una: la pagina a sezioni, e il dialogo che chiede conferma -- che e' il
-    // pezzo dove l'accessibilita' si rompe piu' facilmente (un dialogo senza nome, o che non si
-    // dichiara modale, axe lo prende).
+  it("e nemmeno Cartelle e scansione, con Togli e Sposta aperti", async () => {
+    // La pagina a sezioni, poi la domanda di Togli e il campo di Sposta nella riga: un bottone
+    // senza nome o un campo senza etichetta, axe li prende.
     rispondi({
       ...STANOTTE,
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -145,11 +145,30 @@ describe("l accessibilita di dove si risponde", () => {
     await apriImpostazioni()
     expect(await violazioni(container)).toEqual([])
     fireEvent.click(await screen.findByRole("tab", { name: /^cartelle e scansione$/i }))
-    await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })
+    await screen.findByRole("region", { name: "Cartelle" })
     expect(await violazioni(container)).toEqual([])
 
-    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
-    await screen.findByRole("dialog")
+    fireEvent.click((await screen.findAllByRole("button", { name: "Togli" }))[0]!)
+    await screen.findByRole("alertdialog")
+    fireEvent.click((await screen.findAllByRole("button", { name: "Sposta" }))[1]!)
+    await screen.findByRole("textbox", { name: "Nuovo percorso" })
+    expect(await violazioni(container)).toEqual([])
+  })
+
+  it("e nemmeno Meteo e Luna, con le loro scelte", async () => {
+    rispondi({
+      ...STANOTTE,
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+      ...SPINA,
+    })
+    const { container } = await disegna()
+    vai("/impostazioni/meteo")
+    await screen.findByRole("radiogroup", { name: "Meteo apre su" })
+    expect(await violazioni(container)).toEqual([])
+    vai("/impostazioni/luna")
+    await screen.findByRole("radiogroup", { name: "La Luna conta sopra" })
     expect(await violazioni(container)).toEqual([])
   })
 
@@ -211,13 +230,13 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     await apriImpostazioni()
     fireEvent.click(await screen.findByRole("tab", { name: /^astap$/i }))
-    await screen.findByText(/^astap non trovato\./i)
+    await screen.findByText("ASTAP non trovato.")
     expect(await violazioni(container)).toEqual([])
 
     // La proposta porta dentro di se' cosa farci: e' un avviso con un'azione, ed e' la forma
     // dove un nome che manca non si vede a schermo.
-    fireEvent.click(screen.getByRole("button", { name: /^cerca astap$/i }))
-    await screen.findByText(/^astap trovato$/i)
+    fireEvent.click(screen.getByRole("button", { name: "Cercalo tu" }))
+    await screen.findByText("Trovato in /usr/bin/astap_cli")
     expect(await violazioni(container)).toEqual([])
   })
 
@@ -292,7 +311,7 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     await apriImpostazioni()
     fireEvent.click(await screen.findByRole("tab", { name: /^astap$/i }))
-    await screen.findByText(/^catalogo stellare mancante$/i)
+    await screen.findByText("? nessun catalogo")
     expect(await violazioni(container)).toEqual([])
   })
 

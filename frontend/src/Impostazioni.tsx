@@ -11,6 +11,7 @@ import { Cartelle } from "./ImpostazioniCartelle"
 import { Generale, SalvataggioFallito } from "./ImpostazioniGenerale"
 import { Letture } from "./ImpostazioniLetture"
 import { Luna } from "./ImpostazioniLuna"
+import { Meteo } from "./ImpostazioniMeteo"
 import { Riconoscitore } from "./ImpostazioniRiconoscitore"
 import { Servizi } from "./ImpostazioniServizi"
 import { PilloleSiti, Siti } from "./ImpostazioniSiti"
@@ -58,19 +59,25 @@ export const SEZIONI: readonly Sezione[] = [
     a: "/impostazioni/cartelle",
     chiave: "settings.folders",
     sotto: "settings.folders.sub",
-    elemento: vecchia(<Cartelle />),
+    elemento: <Cartelle />,
+  },
+  {
+    a: "/impostazioni/meteo",
+    chiave: "settings.weather",
+    sotto: "settings.weather.sub",
+    elemento: <Meteo />,
   },
   {
     a: "/impostazioni/astap",
     chiave: "settings.solver",
     sotto: "settings.solver.sub",
-    elemento: vecchia(<Riconoscitore />),
+    elemento: <Riconoscitore />,
   },
   {
     a: "/impostazioni/luna",
     chiave: "settings.moon",
     sotto: "settings.moon.sub",
-    elemento: vecchia(<Luna />),
+    elemento: <Luna />,
   },
   {
     a: "/impostazioni/servizi",

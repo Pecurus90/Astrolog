@@ -668,3 +668,29 @@ un sito senza notti si toglie davvero, e il dialogo si chiude - step 33, Setting
 un sito che tiene delle notti non si toglie, e il rifiuto si legge nel dialogo - step 33, Settings C: board v82 turns Elimina off with the reason; replaced by Elimina si spegne su un sito con notti, e dice perche'
 con ?sito= la riga di quel sito e' segnata, e la scheda di correzione resta chiusa - step 33, Settings C: ?sito= now chooses the site pill; covered by un sito senza notti si elimina dopo la conferma
 e nemmeno Siti, con la scheda aperta e la scala del cielo dentro - step 33, Settings C: board v82 Siti; replaced by e nemmeno Siti, con la proposta, le classi e Nuovo sito per coordinate
+ASTAP senza catalogo lo dice, e porta dove si prende - step 33, Settings D: board v82 catalogue rows; replaced by ASTAP senza catalogo lo dice
+Cambia percorso sposta la cartella dove stanno ora i suoi file - step 33, Settings D: board v82 Sposta in the row; replaced by Verifica di Sposta guarda senza spostare, e Usa questo percorso sposta
+Cerca ASTAP propone, e non scrive niente finche' non si adotta - step 33, Settings D: board v82 Cercalo tu; replaced by Cercalo tu propone, e non scrive niente finche' non si sceglie
+Esc chiude il dialogo e non toglie niente - step 33, Settings D: board v82 asks in the row, no dialog; replaced by Togli chiede nella riga e dice cosa resta, prima di toccare niente
+Invio nel percorso nuovo sposta, come il tasto - step 33, Settings D: Enter now checks, it does not move; replaced by se li non ci sono gli stessi file lo dice, e non sposta
+adottando la proposta, quella diventa la preferenza - step 33, Settings D: merged into Cercalo tu propone, e non scrive niente finche' non si sceglie
+aprendo il dialogo il fuoco ci entra - step 33, Settings D: board v82 asks in the row, no dialog
+cambiando il percorso, l esito di quello di prima se ne va - step 33, Settings D: merged into Verifica percorso scrive una volta sola, e dice com e andata
+chi non ha ASTAP non si sente dire anche che gli manca il catalogo - step 33, Settings D: merged into non trovandolo dice cosa si perde, e non parla di cataloghi
+chiudendo il dialogo il fuoco torna al bottone che l ha aperto - step 33, Settings D: board v82 asks in the row, no dialog
+dice quale catalogo stellare c e - step 33, Settings D: board v82 catalogue rows; replaced by ogni catalogo trovato su una riga, D50 consigliato
+e nemmeno Impostazioni, col suo dialogo aperto - step 33, Settings D: no dialog; replaced by e nemmeno Cartelle e scansione, con Togli e Sposta aperti
+il dialogo si dichiara modale, e ha un nome - step 33, Settings D: board v82 asks in the row, no dialog
+l app non scarica niente da sola, e lo dice - step 33, Settings D: board v82 says where ASTAP comes from; replaced by dice dove sta, e da cosa l app l ha dedotto
+le due soglie coi valori di fabbrica, e da dove vengono - step 33, Settings D: three values; replaced by i tre valori di adesso, ognuno con la sua fonte
+lo stesso percorso si scrive una volta sola, da qualunque parte arrivi - step 33, Settings D: replaced by Verifica percorso scrive una volta sola, e dice com e andata
+non trovandolo dice cosa si perde, senza chiamarlo guasto - step 33, Settings D: replaced by non trovandolo dice cosa si perde, e non parla di cataloghi
+scritto il percorso, la riga di stato lo sa senza ricaricare - step 33, Settings D: replaced by scritto il percorso giusto, la carta lo sa senza ricaricare
+se il ritiro non riesce il dialogo resta aperto, e lo dice li dentro - step 33, Settings D: replaced by se il ritiro non riesce la domanda resta, e lo dice li dentro
+se li non ci sono gli stessi file lo dice, e il dialogo resta aperto - step 33, Settings D: replaced by se li non ci sono gli stessi file lo dice, e non sposta
+senza cartelle dice cosa manca, invece di un elenco vuoto - step 33, Settings D: replaced by senza cartelle lo dice, invece di un elenco vuoto
+sul NAS il tasto del selettore dice che sposta, non che usa - step 33, Settings D: board v82 NAS browsing; replaced by sul NAS le cartelle si sfogliano, e si sceglie quella dove sei
+togliere chiede conferma e dice cosa resta, prima di toccare niente - step 33, Settings D: replaced by Togli chiede nella riga e dice cosa resta, prima di toccare niente
+un numero fuori misura non parte e lo dice sotto il campo - step 33, Settings D: replaced by la misura di ogni soglia la manda il backend
+una cartella che non si raggiunge lo dice, e le altre restano - step 33, Settings D: replaced by una cartella che non si raggiunge lo dice, e i suoi frame restano
+una soglia cambiata si salva lasciando il campo - step 33, Settings D: replaced by una percentuale cambiata si salva lasciando il campo

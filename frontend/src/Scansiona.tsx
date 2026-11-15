@@ -84,7 +84,7 @@ export function useStato() {
   })
 }
 
-function useGesto() {
+export function useGesto() {
   const cache = useQueryClient()
   return useMutation({
     mutationKey: GESTO,
@@ -139,7 +139,7 @@ export function useFineDelLavoro() {
   const finita = useStato().data?.worker.ended_at ?? null
   useEffect(() => {
     if (finita === null) return
-    for (const chiave of ["review", "scan-runs", "nights", "year"]) {
+    for (const chiave of ["review", "scan-runs", "nights", "year", "folders"]) {
       void cache.invalidateQueries({ queryKey: [chiave] })
     }
   }, [finita, cache])
@@ -192,7 +192,7 @@ export function SegnoDellaScansione({
 type Relativo = components["schemas"]["LastScanOut"]["ended_day"]
 
 /** Oggi o ieri come li dice l'API (fuso del sito), se no la data. */
-function giornoDetto(istante: string, relativo: Relativo | undefined): string {
+export function giornoDetto(istante: string, relativo: Relativo | undefined): string {
   if (relativo === "today") return t("frame.scan.today")
   if (relativo === "yesterday") return t("frame.scan.yesterday")
   return giorno(istante)
@@ -244,7 +244,7 @@ function letti(dati: Stato): { fatti: string; su: string } | null {
 }
 
 /** Cio' che il riquadro dice in ogni stato acceso: titolo, fase, riga, la parola del bottone. */
-function detto(dati: Stato, stato: Exclude<StatoScansione, "ferma">) {
+export function detto(dati: Stato, stato: Exclude<StatoScansione, "ferma">) {
   const corrente = dati.worker.stages.find((s) => s.name === dati.worker.stage)
   const conti = letti(dati)
   const finita = dati.worker.ended_at

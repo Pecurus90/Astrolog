@@ -154,6 +154,27 @@ def test_moving_to_the_same_files_keeps_everything_and_a_scan_adds_nothing(
     assert _count(db_path, "SELECT COUNT(*) FROM positions WHERE status <> 'present'") == 0
 
 
+def test_checking_a_move_says_same_files_and_writes_nothing(client_vuoto, tmp_path, db_path):
+    """Verifica di Sposta (tavola Impostazioni v82): stessi file, ma il percorso cambia solo con
+    Usa questo percorso. Un posto con altri file ha lo stesso rifiuto dello spostamento."""
+    old, new, other = tmp_path / "D", tmp_path / "E", tmp_path / "vuota"
+    _archive(old)
+    other.mkdir()
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    shutil.copytree(old, new)
+
+    r = client_vuoto.post(f"/api/v1/folders/{f['id']}/move/check", json={"root_path": str(new)})
+
+    assert r.status_code == 200, r.text
+    assert r.json() == {"root_path": os.path.realpath(new)}
+    assert _count(db_path, "SELECT root_path FROM folders") == f["root_path"]
+    r = client_vuoto.post(f"/api/v1/folders/{f['id']}/move/check", json={"root_path": str(other)})
+    assert (r.status_code, r.json()["detail"]["code"]) == (409, "not_the_same_folder")
+    r = client_vuoto.post("/api/v1/folders/99999/move/check", json={"root_path": str(new)})
+    assert r.status_code == 404
+
+
 def test_one_file_in_common_is_not_a_move(client_vuoto, tmp_path):
     """Una cartella di cinque file e un posto che ne ha uno solo di quelli: non e' lei spostata,
     e' un file copiato altrove. Il campione chiede tutti i file che puo' chiedere."""

@@ -21,7 +21,7 @@ export function useScriviImpostazioni(dopo?: () => void) {
   const dati = useQueryClient()
   const fallito = useContext(SalvataggioFallito)
   const scrivi = useMutation({
-    mutationFn: async (values: Record<string, string | null>) => {
+    mutationFn: async (values: Record<string, string | number | null>) => {
       const { data, error } = await api.PATCH("/api/v1/settings", { body: { values } })
       if (error) throw new Error(t("settings.saveFailed"))
       return data
