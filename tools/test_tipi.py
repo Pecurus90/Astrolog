@@ -52,6 +52,25 @@ def test_the_check_is_red_when_the_file_is_missing(tmp_path, monkeypatch, genera
     assert tipi.main(["--check"]) == 1
 
 
+def test_a_non_ascii_docstring_survives_the_generator(monkeypatch):
+    """Issue #82: su Windows l'uscita del generatore si leggeva in cp1252 e «Dalla mappa»
+    arrivava storpiato nei tipi, verde qui e rosso in CI."""
+    schema = {
+        "openapi": "3.1.0",
+        "info": {"title": "t", "version": "1"},
+        "paths": {
+            "/x": {
+                "get": {
+                    "description": "Il cielo «Dalla mappa», 21,4 mag/arcsec²",
+                    "responses": {"200": {"description": "ok"}},
+                }
+            }
+        },
+    }
+    monkeypatch.setattr(tipi.openapi, "schema", lambda: schema)
+    assert "Il cielo «Dalla mappa», 21,4 mag/arcsec²" in tipi.genera()
+
+
 def test_without_the_frontend_dependencies_it_says_what_is_missing(tmp_path, monkeypatch):
     """Senza `frontend/node_modules` non e' il generatore a cadere: manca, e lo dice con il
     comando che lo installa, invece di "il generatore e' fallito"."""
