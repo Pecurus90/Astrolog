@@ -201,7 +201,7 @@ describe("la veste", () => {
 
   it("le pagine col foglio vecchio, sotto il tema, riprendono i loro quattro token", () => {
     // sotto data-modo il foglio nuovo darebbe il suo --inchiostro (scuro) al testo vecchio
-    const vecchio = readFileSync(resolve(process.cwd(), "src", "stili", "astrolog.css"), "utf-8")
+    const vecchio = readFileSync(resolve(process.cwd(), "src", "stili", "app.css"), "utf-8")
     const regola = vecchio.slice(vecchio.indexOf("[data-modo] :is(.as-pagina, .app-vecchio) {"))
     expect(regola.length).toBeLessThan(vecchio.length)
     for (const token of ["--inchiostro:", "--linea:", "--accento:", "--raggio-pillola:", "background:"])

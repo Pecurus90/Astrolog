@@ -304,19 +304,6 @@
 
 }
 
-/* Pages and sections still on this sheet, under the frame's data-modo (step 33, Marco
-   15/11/2026: they stay dark until ported): the four tokens both sheets name, back to the
-   :root values above, on this sheet's own ground. */
-[data-modo] :is(.as-pagina, .app-vecchio) {
-  --inchiostro:     #eef1ff;
-  --linea:          rgb(var(--tinta-velo) / .075);
-  --accento:        #7a5ce0;
-  --raggio-pillola: 999px;
-  background: var(--fondo-app);
-  color: var(--inchiostro);
-  border-radius: 28px;
-}
-
 /* densita': cambia la misura, non la struttura */
 :root[data-densita="compatta"] { --riga-alta: 36px; }
 :root[data-densita="comoda"]   { --riga-alta: 52px; }

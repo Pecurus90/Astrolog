@@ -39,9 +39,6 @@ as-dialogo__perdi
 as-dialogo__testo
 as-dialogo__titolo
 as-elenco
-as-impostazioni
-as-impostazioni__corpo
-as-impostazioni__lato
 as-riga--errore
 as-riga--risposta
 as-riga__conteggio
@@ -51,8 +48,6 @@ as-riga__perche
 as-riga__prova
 as-riga__risposte
 as-riga__testa
-as-sezioni
-as-sezioni__voce
 as-stato--buono
 as-stato--conteggio
 as-vuoto__disegno

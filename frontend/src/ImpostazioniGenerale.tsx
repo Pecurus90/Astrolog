@@ -154,7 +154,11 @@ function Lingua({ formato, lingua }: { formato: Formato; lingua: string }) {
       <span
         role="radiogroup"
         aria-label={t("settings.general.language")}
-        className={`al-scelta al-scelta--segmentato al-scelta--sottili${tel ? " al-scelta--riempie" : ""}`}
+        className={
+          tel
+            ? "al-scelta al-scelta--segmentato al-scelta--sottili al-scelta--riempie"
+            : "al-scelta al-scelta--segmentato al-scelta--sottili"
+        }
       >
         {LINGUE.map((l) => (
           <a

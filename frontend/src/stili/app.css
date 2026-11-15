@@ -3,7 +3,8 @@
 
    Qui dentro non entra veste: nessun colore, nessuno spazio, nessun mattone.
    Solo cio' che riguarda il nodo in cui l'app vive, che e' un fatto della
-   nostra pagina (`frontend/index.html`) e non della consegna.
+   nostra pagina (`frontend/index.html`) e non della consegna. Un'eccezione
+   di passaggio, in fondo: il riquadro delle pagine col foglio vecchio.
 
    Col telaio v76 a scorrere e' il documento: la testa del telefono e la
    bolla di vetro restano attaccate ai bordi con `position: sticky`.
@@ -79,4 +80,16 @@ body {
 :where(.app-cornice, .al-c-finestra-riepilogo__blocco-2) a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Old-sheet pages under the frame's data-modo stay dark until ported: the four tokens both
+   sheets name, back to the old :root values (stili/astrolog.css). Goes with the Tema step. */
+[data-modo] :is(.as-pagina, .app-vecchio) {
+  --inchiostro: #eef1ff;
+  --linea: rgb(var(--tinta-velo) / 0.075);
+  --accento: #7a5ce0;
+  --raggio-pillola: 999px;
+  background: var(--fondo-app);
+  color: var(--inchiostro);
+  border-radius: 28px;
 }
