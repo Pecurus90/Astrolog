@@ -26,7 +26,9 @@ MISSED = {"survived", "no tests", "suspicious", "Survived", "NoCoverage"}
 # Split by package; anything these miss falls into the computed rest shard.
 FIXED = {
     "api": ["astrolog.api.*"],
-    "spine-a-m": ["astrolog.spine.[_a-m]*"],
+    # a-m in one job overran its 120 minutes: 737 mutants never reached (night of 15/11/2026)
+    "spine-a-f": ["astrolog.spine.[_a-f]*"],
+    "spine-g-m": ["astrolog.spine.[g-m]*"],
     "spine-n-z": ["astrolog.spine.[n-z]*"],
 }
 REST = "rest"

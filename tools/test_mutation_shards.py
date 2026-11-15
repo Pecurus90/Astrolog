@@ -46,7 +46,9 @@ def test_every_module_of_the_backend_runs_in_exactly_one_shard():
         ("astrolog.log.x\u01c1JsonLines\u01c1format__mutmut_17", "rest"),
         ("astrolog.weather.forecast.x\u01c1Cadence\u01c1__init____mutmut_2", "rest"),
         ("astrolog.spine.scan.x_scan__mutmut_1", "spine-n-z"),
-        ("astrolog.spine.gear_usage.x_usage__mutmut_1", "spine-a-m"),
+        ("astrolog.spine.gear_usage.x_usage__mutmut_1", "spine-g-m"),
+        ("astrolog.spine.copies.x_decide__mutmut_14", "spine-a-f"),
+        ("astrolog.spine.mosaic.x_place__mutmut_29", "spine-g-m"),
         ("astrolog.api.app.x_health__mutmut_1", "api"),
     ],
 )
@@ -56,7 +58,7 @@ def test_a_real_mutant_name_lands_in_its_shard(name, shard):
 
 def fake_package(root, *files):
     package = root / "astrolog"
-    for file in ("api/app.py", "spine/alpha.py", "spine/zeta.py", *files):
+    for file in ("api/app.py", "spine/alpha.py", "spine/mid.py", "spine/zeta.py", *files):
         (package / file).parent.mkdir(parents=True, exist_ok=True)
         (package / file).write_text("")
     return package
@@ -73,7 +75,12 @@ def test_a_new_module_falls_in_the_rest_without_touching_the_table(tmp_path):
 
 @pytest.mark.parametrize(
     ("shard", "file"),
-    [("api", "api/app.py"), ("spine-a-m", "spine/alpha.py"), ("spine-n-z", "spine/zeta.py")],
+    [
+        ("api", "api/app.py"),
+        ("spine-a-f", "spine/alpha.py"),
+        ("spine-g-m", "spine/mid.py"),
+        ("spine-n-z", "spine/zeta.py"),
+    ],
 )
 def test_a_fixed_shard_left_without_modules_is_refused(tmp_path, shard, file):
     package = fake_package(tmp_path)
@@ -89,7 +96,7 @@ def test_a_rest_shard_left_without_modules_is_refused(tmp_path):
 
 def test_every_fixed_shard_holds_a_real_module():
     table = shards()
-    for shard in ("api", "spine-a-m", "spine-n-z"):
+    for shard in ("api", "spine-a-f", "spine-g-m", "spine-n-z"):
         assert any(owners(n, table) == [shard] for m in modules() for n in probes(m)), shard
 
 
