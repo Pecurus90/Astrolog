@@ -8,7 +8,10 @@ import threading
 import time
 from types import SimpleNamespace
 
+from fastapi.testclient import TestClient
+
 from astrolog.api import folders
+from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.fits.walk import walk_dir
 from astrolog.spine import folder_move, typeless, typeless_folders
@@ -240,6 +243,27 @@ def test_moving_onto_a_registered_folder_is_409(client_vuoto, tmp_path):
         assert r.json()["detail"] == {"code": "folder_exists", "folder_id": owner["id"]}
     r = client_vuoto.post("/api/v1/folders/99999/move", json={"root_path": str(b)})
     assert r.status_code == 404
+
+
+def test_a_place_that_does_not_answer_or_is_outside_the_data_root_is_refused(tmp_path, db_path):
+    """NAS: Sposta verso una cartella sparita dice che non risponde, col percorso; fuori dalla
+    radice dei dati e' rifiutata prima di guardarci. Verifica e Usa danno lo stesso rifiuto."""
+    radice = tmp_path / "library"
+    (radice / "D").mkdir(parents=True)
+    confinata = os.path.realpath(radice)
+    sparita = os.path.join(confinata, "sparita")
+    fuori = tmp_path / "altrove"
+    fuori.mkdir()
+    with TestClient(create_app(db_path, data_root=confinata), base_url="http://localhost") as c:
+        f = _client_folder(c, os.path.join(confinata, "D"))
+        for action in ("move/check", "move"):
+            url = f"/api/v1/folders/{f['id']}/{action}"
+            r = c.post(url, json={"root_path": sparita})
+            assert r.status_code == 409, r.text
+            assert r.json()["detail"] == {"code": "root_unreachable", "path": sparita}
+            r = c.post(url, json={"root_path": str(fuori)})
+            assert r.status_code == 422, r.text
+            assert r.json()["detail"]["code"] == "path_outside_data_root"
 
 
 def _probe(client, root):
