@@ -4,6 +4,7 @@ yield (zone, elevation, sky) is derived on write and saved, so an opening page n
 import json
 import sqlite3
 from dataclasses import asdict
+from datetime import UTC, datetime
 from typing import Any, NoReturn
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -19,6 +20,7 @@ from .deps import get_db
 from .models_site import (
     PlaceList,
     PlaceOut,
+    PointOut,
     SiteCreate,
     SiteDeleted,
     SiteEdit,
@@ -71,6 +73,7 @@ def _out(row: sqlite3.Row) -> SiteOut:
     )
     return SiteOut(
         **data,
+        utc_offset_minutes=place.utc_offset_minutes(data["timezone"], datetime.now(UTC)),
         bortle=bortle_of(data["sky_sqm"]),
         # zero is a real elevation, not an unknown one
         unknown=[code for code, value in blanks if value is None],
@@ -105,6 +108,21 @@ def search_places(q: str = Query(min_length=1)) -> PlaceList:
     It does not touch the database: searching creates nothing, and without network it returns an
     empty list -- the manual way always stays open. No pages: the cap is `place.search`'s."""
     return PlaceList(items=[PlaceOut(**asdict(p)) for p in place.search(q)])
+
+
+@router.get("/places/point", response_model=PointOut)
+def preview_point(
+    latitude: float = Query(ge=-90, le=90),  # [C geographic latitude]
+    longitude: float = Query(ge=-180, le=180),  # [C geographic longitude]
+) -> PointOut:
+    """What a point would be as a site -- its zone, offset and terrain elevation -- for the New
+    site card before saving. Writes nothing; without network the elevation is None."""
+    timezone = place.timezone_of(latitude, longitude)
+    return PointOut(
+        timezone=timezone,
+        utc_offset_minutes=place.utc_offset_minutes(timezone, datetime.now(UTC)),
+        elevation_m=place.elevation_of(latitude, longitude),
+    )
 
 
 @router.get("/sites", response_model=SiteList)
@@ -331,6 +349,29 @@ def use_measured_sky(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -
         conn.execute(
             "UPDATE sites SET sky_sqm = ?, sky_source = ?, sky_nights = ? WHERE id = ?",
             (row["m_sqm"], place.SkySource.FRAMES, row["m_nights"], site_id),
+        )
+    return _out(_row(conn, site_id))
+
+
+@router.post("/sites/{site_id}/sky/service", response_model=SiteOut)
+def ask_service_sky(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+    """From the map (Dalla mappa): the sky service's brightness becomes the site's sky.
+    Returns the site as it now is; on any refusal the sky stays as it was.
+
+    404 `site_not_found`; 409 `sky_service_no_key` without the key (it lives in Servizi);
+    503 `sky_service_unavailable` when the service is silent or answers nonsense."""
+    row = _row(conn, site_id)
+    key = _sky_key(conn)
+    if not key:
+        raise HTTPException(status_code=409, detail={"code": "sky_service_no_key"})
+    sqm = place.sky_sqm_of(row["latitude"], row["longitude"], key)
+    if sqm is None:
+        # [C RFC 9110 15.6.4: 503 Service Unavailable]
+        raise HTTPException(status_code=503, detail={"code": "sky_service_unavailable"})
+    with transaction(conn):
+        conn.execute(
+            "UPDATE sites SET sky_sqm = ?, sky_source = ?, sky_nights = NULL WHERE id = ?",
+            (sqm, place.SkySource.SERVICE, site_id),
         )
     return _out(_row(conn, site_id))
 

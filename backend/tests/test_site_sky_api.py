@@ -18,7 +18,12 @@ def create(client, **body):
     return site
 
 
-_MARKS = json.dumps([{"month": (10 + i) % 12 + 1, "measured": i % 2 == 0} for i in range(12)])
+_MARKS = json.dumps(
+    [
+        {"year": 2024 if i < 2 else 2025, "month": (10 + i) % 12 + 1, "measured": i % 2 == 0}
+        for i in range(12)
+    ]
+)
 
 
 def test_the_site_says_its_twelve_months_as_written(client_vuoto, db_path, offline):

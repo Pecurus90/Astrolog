@@ -109,7 +109,15 @@ installato vorrebbe dire fermarlo li'.
 **Il servizio che stima il cielo vuole una chiave personale**, gratuita, chiesta con una
 email all'autore. Non sta nel wizard: al primo avvio nessuno deve scrivere a uno sconosciuto
 per andare avanti. Vive in Impostazioni, e quando c'e' compare il pulsante "chiedilo tu"
-accanto al sito. Senza chiave l'app funziona: si misura o si sceglie.
+accanto al sito. Senza chiave l'app funziona: si misura o si sceglie. Il gesto e' «Dalla mappa»
+nella carta *Il cielo del sito* (tavola v82): `POST /sites/{id}/sky/service` scrive la risposta con
+la provenienza `service`; senza chiave rifiuta (`sky_service_no_key`, la pagina porta a Servizi),
+e se il servizio tace il cielo resta com'era (`sky_service_unavailable`).
+
+**Il fuso porta il suo scarto di oggi** («Europe/Rome · UTC+1», tavola v82): `utc_offset_minutes`
+si calcola alla lettura perche' cambia con l'ora legale, e una colonna invecchierebbe in sei mesi.
+**Un punto si legge prima di salvarlo**: `GET /places/point` da' fuso, scarto e altitudine del
+modello del terreno per la carta *Nuovo sito*, senza scrivere niente.
 
 **La ricerca del posto per nome passa da un servizio pubblico**, con l'identificazione che la
 sua policy pretende e una richiesta al secondo. **La strada manuale e' sempre aperta**, non
@@ -241,7 +249,7 @@ tabella `site_sky_measures`). L'app **propone**, l'utente sceglie; mai un cambio
   (`site_sky_dismissed`, va nel backup col sito) di nuovo solo se la classe misurata cambia.
 - **I 12 mesi** fino all'ultima notte, dal piu' vecchio, con quelli che hanno misure
   (`measured.month_marks`, scritti con la misura in `site_sky_measures.marks_json`): le 12 tacche
-  della carta «Il cielo del sito» (tavola v82).
+  della carta «Il cielo del sito» (tavola v82), ognuna con l'anno («novembre 2025: nessuna notte»).
 - **«Usa»** scrive la misura nel sito con la provenienza `frames` e le sue notti (`sky_nights`):
   una quarta strada accanto alle tre, perche' sotto il Bortle si legge «misurato su {n} notti» e
   non «scritto a mano». Spostare il sito la svuota, come quella del servizio: era di quel posto, e

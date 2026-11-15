@@ -43,6 +43,7 @@ class SiteSkyMeasured(BaseModel):
 
 
 class SkyMonthMark(BaseModel):
+    year: int
     month: int = Field(ge=1, le=12)  # [C Gregorian calendar]
     measured: bool
 
@@ -60,6 +61,9 @@ class SiteOut(BaseModel):
     timezone: str | None = Field(
         description="None where no time zone is recognised for the coordinates; in open sea it is"
         " the nautical zone (Etc/GMT...)."
+    )
+    utc_offset_minutes: int | None = Field(
+        description="The zone's offset from UTC today, summer time included; None without a zone."
     )
     sky_sqm: float | None
     sky_source: SkySource | None
@@ -124,6 +128,16 @@ class PlaceOut(BaseModel):
     name: str
     latitude: float
     longitude: float
+
+
+class PointOut(BaseModel):
+    """What a point would be as a site, before it is saved: nothing is written."""
+
+    timezone: str | None
+    utc_offset_minutes: int | None
+    elevation_m: float | None = Field(
+        description="From the terrain model; None when the service is silent."
+    )
 
 
 class PlaceList(BaseModel):

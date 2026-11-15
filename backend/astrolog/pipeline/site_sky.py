@@ -53,8 +53,8 @@ class SkyLevel:
     sqm: float | None  # None: too few months, or a hole too long
     first_night: str
     last_night: str
-    # the 12 months up to the last night, oldest first: (calendar month 1-12, measured)
-    marks: tuple[tuple[int, bool], ...]
+    # the 12 months up to the last night, oldest first: (year, calendar month 1-12, measured)
+    marks: tuple[tuple[int, int, bool], ...]
 
 
 def level_of(nights: dict[str, float]) -> SkyLevel:
@@ -68,7 +68,10 @@ def level_of(nights: dict[str, float]) -> SkyLevel:
     return SkyLevel(
         nights=len(kept), months=len(covered), sqm=_annual(kept) if enough else None,
         first_night=min(kept), last_night=max(kept),
-        marks=tuple(((start + i) % 12 + 1, i in covered) for i in range(WINDOW_MONTHS)),
+        marks=tuple(
+            ((start + i) // 12, (start + i) % 12 + 1, i in covered)
+            for i in range(WINDOW_MONTHS)
+        ),
     )  # fmt: skip
 
 
@@ -99,7 +102,7 @@ def rebuild(conn: sqlite3.Connection, now: str) -> None:
     rows = []
     for site_id, nights in _nights_per_site(conn).items():
         level = level_of({d: statistics.median(v) for d, v in nights.items()})
-        marks = json.dumps([{"month": m, "measured": on} for m, on in level.marks])
+        marks = json.dumps([{"year": y, "month": m, "measured": on} for y, m, on in level.marks])
         rows.append((site_id, level.nights, level.months, level.sqm, level.first_night,
                      level.last_night, marks, now))  # fmt: skip
     replace_rows(conn, "site_sky_measures", COLUMNS, rows)

@@ -52,8 +52,10 @@ def test_the_twelve_months_say_which_have_measures():
     """Le 12 tacche della tavola v82 (Il cielo del sito): da novembre 2024 a ottobre 2025."""
     days = [dt.date(2025, m, 10) for m in (1, 4, 7, 10)]
     marks = level_of({d.isoformat(): 21.0 for d in days}).marks
-    assert [m for m, _ in marks] == [11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    assert [m for m, on in marks if on] == [1, 4, 7, 10]
+    assert [m for _, m, _ in marks] == [11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert [m for _, m, on in marks if on] == [1, 4, 7, 10]
+    # l'anno di ogni tacca, per «novembre 2024: nessuna notte»
+    assert [y for y, _, _ in marks] == [2024, 2024] + [2025] * 10
 
 
 def test_a_hole_of_four_months_is_too_much_even_across_the_year():

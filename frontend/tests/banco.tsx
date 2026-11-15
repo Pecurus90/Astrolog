@@ -194,6 +194,7 @@ export const SITO_DI_CASA: components["schemas"]["SiteOut"] = {
   elevation_m: 39,
   elevation_source: "declared",
   timezone: "Europe/Rome",
+  utc_offset_minutes: 60,
   sky_sqm: 20.8,
   sky_source: "measured",
   sky_nights: null,

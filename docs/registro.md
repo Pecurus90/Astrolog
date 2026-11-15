@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 377; senza fonte: 0.
-Fonti: C norma: 191; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 91.
+Valori: 379; senza fonte: 0.
+Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 91.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -131,6 +131,8 @@ Fonti: C norma: 191; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T
 
 | simbolo | valore | fonte |
 |---|---|---|
+| preview_point(latitude=) | `Query(ge=-90, le=90)` | C geographic latitude |
+| preview_point(longitude=) | `Query(ge=-180, le=180)` | C geographic longitude |
 | list_sites(limit=) | `Query(100, ge=1, le=1000)` | T |
 | create_site@router.post | `router.post("/sites", response_model=SiteOut, status_code=201)` | C RFC 9110 15.3.2: 201 Created |
 

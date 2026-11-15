@@ -1101,6 +1101,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/places/point": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview Point
+         * @description What a point would be as a site -- its zone, offset and terrain elevation -- for the New
+         *     site card before saving. Writes nothing; without network the elevation is None.
+         */
+        get: operations["preview_point"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites": {
         parameters: {
             query?: never;
@@ -1209,6 +1230,30 @@ export interface paths {
          *     404 `site_not_found`; 409 `site_sky_not_measured` while the frames are too few.
          */
         post: operations["use_measured_sky"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/sky/service": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask Service Sky
+         * @description From the map (Dalla mappa): the sky service's brightness becomes the site's sky.
+         *     Returns the site as it now is; on any refusal the sky stays as it was.
+         *
+         *     404 `site_not_found`; 409 `sky_service_no_key` without the key (it lives in Servizi);
+         *     503 `sky_service_unavailable` when the service is silent or answers nonsense.
+         */
+        post: operations["ask_service_sky"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4639,6 +4684,21 @@ export interface components {
             /** @description Its top inside the chart's span; `None` without a chart. */
             highest?: components["schemas"]["SkyPointOut"] | null;
         };
+        /**
+         * PointOut
+         * @description What a point would be as a site, before it is saved: nothing is written.
+         */
+        PointOut: {
+            /** Timezone */
+            timezone: string | null;
+            /** Utc Offset Minutes */
+            utc_offset_minutes: number | null;
+            /**
+             * Elevation M
+             * @description From the terrain model; None when the service is silent.
+             */
+            elevation_m: number | null;
+        };
         /** ProbeOut */
         ProbeOut: {
             /** Root Path */
@@ -5513,6 +5573,11 @@ export interface components {
              * @description None where no time zone is recognised for the coordinates; in open sea it is the nautical zone (Etc/GMT...).
              */
             timezone: string | null;
+            /**
+             * Utc Offset Minutes
+             * @description The zone's offset from UTC today, summer time included; None without a zone.
+             */
+            utc_offset_minutes: number | null;
             /** Sky Sqm */
             sky_sqm: number | null;
             /** Sky Source */
@@ -5631,6 +5696,8 @@ export interface components {
         };
         /** SkyMonthMark */
         SkyMonthMark: {
+            /** Year */
+            year: number;
             /** Month */
             month: number;
             /** Measured */
@@ -8113,6 +8180,38 @@ export interface operations {
             };
         };
     };
+    preview_point: {
+        parameters: {
+            query: {
+                latitude: number;
+                longitude: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PointOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_sites: {
         parameters: {
             query?: {
@@ -8276,6 +8375,37 @@ export interface operations {
         };
     };
     use_measured_sky: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ask_service_sky: {
         parameters: {
             query?: never;
             header?: never;

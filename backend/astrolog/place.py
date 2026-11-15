@@ -1,6 +1,7 @@
 """What a place's coordinates tell: time zone, elevation, sky brightness, and search by name. A
 silent service gives `None` or an empty list, never a fallback zero: zero is sea level."""
 
+import datetime
 import math
 import threading
 import time
@@ -142,6 +143,14 @@ def timezone_of(latitude: float | None, longitude: float | None) -> str | None:
         return None
     name = get_tz(longitude, latitude)  # the library wants (longitude, latitude)
     return name if valid_timezone(name) else None
+
+
+def utc_offset_minutes(timezone: str | None, at: datetime.datetime) -> int | None:
+    """The zone's offset on that day: summer time moves it, so it is never a column."""
+    if timezone is None:
+        return None
+    offset = zoneinfo.ZoneInfo(timezone).utcoffset(at)
+    return None if offset is None else int(offset.total_seconds() // 60)
 
 
 def elevation_of(
