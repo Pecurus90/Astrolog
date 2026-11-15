@@ -106,15 +106,53 @@ Tavola v82 `Impostazioni.dc.html` (desktop 14-41, telefono 216-243, logica 441-4
   Perche': Meteo arriva al commit D; le altre quattro fuori dalla lista fissa del 14/11.
 - **Tema, «Automatico».** Tavola: scelta attiva (`SceltaTema`). App: spento (`aria-disabled`).
   Perche': Marco 15/11, arriva col passo Tema (serve l'ora del sole del sito).
-- **Siti, Cartelle, ASTAP, Luna, Servizi, Scansioni, Backup col contenuto di prima.** Tavola: le
+- **Cartelle, ASTAP, Luna, Servizi, Scansioni, Backup col contenuto di prima.** Tavola: le
   sezioni ridisegnate. App: il contenuto vecchio a riga intera, col foglio vecchio, dentro il
-  guscio nuovo. Perche': si portano ai commit C-E del passo 33.
+  guscio nuovo. Perche': si portano ai commit D-E del passo 33 (Siti portata al commit C).
 - **Modo chiaro con le parti vecchie.** Tavola: tutto chiaro. App: cornice e pagine portate
   chiare; Meteo, «in arrivo», la 404 e le sezioni vecchie qui sopra in un riquadro scuro col
   foglio vecchio (`.as-pagina`, `.app-vecchio`). Perche': Marco 15/11, finche' non sono portate.
 - **Caricamento ed errore della pagina.** Tavola: li mostra il Telaio (`appSt`, 441-443). App: li
   mostra l'App (`SiApre`) prima di montare le pagine. Perche': le impostazioni (lingua, tema)
   arrivano prima di ogni pagina.
+
+## Impostazioni -- Siti (passo 33, Impostazioni commit C, 15/11)
+
+Tavola v82 `Impostazioni.dc.html` (desktop 20 e 43-105, telefono 245-305, logica 475-545). Fuori:
+- **L'orizzonte**: la riga della carta *Il sito* e la carta *L'orizzonte a 360°*. Perche': lista
+  fissa del 14/11, arriva col Planner che lo legge. Per lo stesso motivo *Nuovo sito* dice «Il
+  cielo si sceglie dopo, nel sito.» invece di «Il cielo e l'orizzonte si scelgono dopo».
+- **«dalle coordinate nei frame»** (Passo Coe in `SITI0`). App: «dalla ricerca per nome» o
+  «scritte a mano». Perche': nessun sito nasce dalle coordinate dei frame (`sito.md`).
+
+Scelte diverse:
+- **Una via si apre senza scrivere.** Tavola: toccare una via cambia subito «Ora» (anche a
+  «nessuno»). App: «Ora» e' il cielo salvato; scrive il gesto che dice un cielo -- una classe, lo
+  SQM all'uscita dal campo o con Invio, *Dalla mappa* con la chiave, *Dalle misure* quando bastano.
+  Perche': aprire una via per guardarla cancellerebbe il cielo del sito. *Dalle misure* con
+  misure scarse, su un sito che un cielo ce l'ha, non dice «il sito resta senza cielo».
+- **Coordinate** «45,5455 N - 11,5354 E». Tavola: «45,85 N · 11,57 E». Perche': `coordinate()`
+  scrive quattro decimali in tutta l'app (una decina di metri, `i18n/index.ts`).
+- **Testi nuovi** (la tavola non ha il caso): altitudine «non nota · il modello del terreno non ha
+  risposto»; «La mappa del servizio del cielo non ha risposto: il cielo resta com'era.»; la ricerca
+  per nome che non si e' potuta fare, con l'avviso di prima («site.searchFailed»).
+- **I 12 mesi** portano l'anno in ogni nome («gennaio 2026: nessuna notte»; tavola solo il primo e
+  l'ultimo) e non ci sono finche' nessun frame conta (tavola: 12 tacche vuote): l'app non sa quali
+  12 mesi siano.
+- **Nuovo sito**: l'altitudine non e' obbligatoria (tavola: *Salva sito* spento senza); senza rete
+  il sito si salva e l'altitudine resta «non nota». I risultati della ricerca col nome che il
+  servizio da' (tavola: il nome lungo e un nome corto precompilato). Senza nessun sito la sezione
+  apre *Nuovo sito* senza *Annulla* (la tavola non disegna il caso).
+- **Le pillole** (siti, vie, classi, risultati) sono `a role="button"` con `aria-pressed`. Tavola:
+  `a` con `aria-pressed`, che axe rifiuta su un link.
+- **Gli errori sotto i campi e l'esito «✓»** si annunciano con `aria-live`, la conferma di Elimina e'
+  un `alertdialog`. Tavola: `role="alert"` e `role="status"`. Perche': un avviso col suo ruolo passa
+  da `Avviso` (`tools/controlli_veste.py`); qui il segno sta gia' nel testo.
+- **Caricamento ed errore dei siti** nella sezione: `Scheletro` e `Avviso` con *Riprova* (la tavola
+  li lascia al Telaio).
+
+A Design: sul telefono le vie e le classi sono alte 36 px come nella tavola (`.al-imp__riga-18`),
+sotto i 44 px (`per-design.md`).
 
 ## Notti -- la pagina fra 700 e 1000 px e il sito lungo (v78, 10/11)
 

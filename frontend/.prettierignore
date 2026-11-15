@@ -24,7 +24,6 @@ src/Icons.tsx
 src/ImpostazioniCartelle.tsx
 src/ImpostazioniLetture.tsx
 src/ImpostazioniLuna.tsx
-src/ImpostazioniSito.tsx
 src/Meteo.tsx
 src/ModuloDelGesto.tsx
 src/NotteDelMeteo.tsx
@@ -33,7 +32,6 @@ src/NuovoFiltroOCorredo.tsx
 src/Ricerca.tsx
 src/ScalaDelCielo.tsx
 src/SchedaDelPezzo.tsx
-src/SchedaDelSito.tsx
 src/Semaforo.tsx
 src/Tendina.tsx
 src/TendinaDellaBanda.tsx

@@ -57,6 +57,12 @@ def test_a_point_outside_the_world_is_refused(client_vuoto, offline):
     assert r.status_code == 422
 
 
+def test_the_list_says_the_believable_sqm(client_vuoto, offline):
+    """«Un numero da 7 a 23» sotto il campo SQM a mano: gli estremi li dice chi li controlla."""
+    body = client_vuoto.get("/api/v1/sites").json()
+    assert body["sqm_range"] == {"min": 7, "max": 23}
+
+
 def test_the_map_is_asked_only_with_the_key(client_vuoto, offline):
     """«Dalla mappa» senza chiave: la tavola porta a Servizi, il backend dice perche'."""
     site = create(client_vuoto, bortle=4)

@@ -13,7 +13,7 @@ import { Letture } from "./ImpostazioniLetture"
 import { Luna } from "./ImpostazioniLuna"
 import { Riconoscitore } from "./ImpostazioniRiconoscitore"
 import { Servizi } from "./ImpostazioniServizi"
-import { Sito } from "./ImpostazioniSito"
+import { PilloleSiti, Siti } from "./ImpostazioniSiti"
 import { numero, t } from "./i18n"
 import { type Sezione, sezioniAperte } from "./pagine"
 import { usePreferenze } from "./preferenze"
@@ -51,7 +51,8 @@ export const SEZIONI: readonly Sezione[] = [
     a: "/impostazioni/siti",
     chiave: "settings.site",
     sotto: "settings.site.sub",
-    elemento: vecchia(<Sito />),
+    elemento: <Siti />,
+    testa: <PilloleSiti />,
   },
   {
     a: "/impostazioni/cartelle",
@@ -154,6 +155,7 @@ export function Impostazioni() {
                   <span className="al-imp__testo-1 al-solo-voce">{t("nav.settings")}</span>
                   {qui.sotto && <span className="al-imp__testo-2">{t(qui.sotto)}</span>}
                 </span>
+                {qui.testa}
               </div>
               <div
                 role="tablist"

@@ -25,12 +25,14 @@ import {
   LETTURA,
   apriImpostazioni,
   SALUTE,
+  SITO_DI_CASA,
   SPINA,
   STANOTTE,
   disegna,
   impostazioni,
   pulisci,
   rispondi,
+  vai,
   violazioni,
 } from "./banco"
 
@@ -151,9 +153,23 @@ describe("l accessibilita di dove si risponde", () => {
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno Siti, con la scheda aperta e la scala del cielo dentro", async () => {
-    // La scala e' un `radiogroup` scritto a mano, con una fermata sola per il tabulatore: e' il
-    // pezzo che axe prende se un `role` resta spaiato o se un nome manca.
+  it("e nemmeno Siti, con la proposta, le classi e Nuovo sito per coordinate", async () => {
+    // Pillole con aria-pressed, gruppi di vie e di classi, i 12 mesi come immagine: i pezzi che
+    // axe prende se un `role` resta spaiato o se un nome manca.
+    const misurato = {
+      ...SITO_DI_CASA,
+      measured: {
+        status: "enough" as const,
+        nights: 38,
+        months: 10,
+        sqm: 21.4,
+        bortle: 4,
+        first_night: "2025-11-02",
+        last_night: "2026-10-28",
+        propose: true,
+        month_marks: Array.from({ length: 12 }, (_, i) => ({ year: 2026, month: i + 1, measured: i % 2 === 0 })),
+      },
+    }
     rispondi({
       ...STANOTTE,
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -161,41 +177,18 @@ describe("l accessibilita di dove si risponde", () => {
       "/api/health": { stato: 200, corpo: SALUTE },
       "/api/v1/sites": {
         stato: 200,
-        corpo: {
-          items: [
-            // Uno col cielo dichiarato e uno senza: la fascia "ignota" e' un ramo suo.
-            {
-              id: 1,
-              name: "Cortina",
-              latitude: 46.5405,
-              longitude: 12.1357,
-              bortle: 4,
-              sky_sqm: 21.3,
-              is_default: true,
-            },
-            {
-              id: 2,
-              name: "Passo Giau",
-              latitude: 46.4843,
-              longitude: 12.0533,
-              bortle: null,
-              sky_sqm: null,
-              is_default: false,
-            },
-          ],
-          total: 2,
-        },
+        corpo: { items: [misurato], total: 1, limit: 100, offset: 0, sqm_range: { min: 7, max: 23 } },
       },
       ...SPINA,
     })
     const { container } = await disegna()
-    await apriImpostazioni()
-    fireEvent.click(await screen.findByRole("tab", { name: /^siti$/i }))
-    await screen.findByText(/^siti di osservazione$/i)
+    vai("/impostazioni/siti")
+    fireEvent.click(await screen.findByText("Bortle a mano"))
+    await screen.findByRole("group", { name: "Classe di Bortle" })
     expect(await violazioni(container)).toEqual([])
 
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
-    await screen.findByRole("radiogroup")
+    fireEvent.click(screen.getByText("+ Aggiungi sito", { selector: ".al-imp__aggiungi" }))
+    fireEvent.click(await screen.findByRole("radio", { name: "Per coordinate" }))
     expect(await violazioni(container)).toEqual([])
   })
 

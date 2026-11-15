@@ -644,3 +644,27 @@ correggo la marca di un filtro - step 33, Gear D2: board v82 Marca is a drop-dow
 un pezzo dice cosa ci hai ripreso - step 33, Gear D2: board v82 rows show only the hours with the bar; replaced by un pezzo e un filtro dicono le loro ore, con la barra
 test_a_good_broadband_night_has_little_moon_or_enough_dark_without_it - step 33, Settings A: board v82 Moon rule has three values, the 4 hours rule is gone (ADR 0034); replaced by test_each_night_has_its_step_on_the_meteo_moon_scale
 test_changing_a_threshold_rejudges_the_nights_at_once - step 33, Settings A: the Moon rule rewrites the nights, sky included; replaced by test_changing_the_percentages_rewrites_the_steps_at_once and test_a_higher_floor_gives_more_dark_without_the_moon
+ogni sito dice dove sta e che cielo ha, e quello di casa si riconosce - step 33, Settings C: board v82 Siti replaces the old list; replaced by le pillole dei siti, il predefinito acceso, e ogni numero con la sua provenienza
+un cielo mai dichiarato lo dice, invece di passare per uno zero - step 33, Settings C: board v82 Il cielo del sito; replaced by il cielo di ora con la sua fonte, e Bortle a mano scrive la classe scelta
+correggere parte dai valori che il sito ha, non da campi vuoti - step 33, Settings C: board v82 has no edit form, Rinomina and the four ways write in place; replaced by Rinomina: un nome gia' preso si dice sotto il campo, e non si salva
+il cielo corretto arriva alla rotta, e col verbo che non crea un sito nuovo - step 33, Settings C: board v82 four ways; replaced by il cielo di ora con la sua fonte, e Bortle a mano scrive la classe scelta
+il primo sito nasce di casa, uno in piu' no - step 33, Settings C: the backend makes the first site home (test_the_very_first_site_becomes_the_home_one_by_itself); replaced by senza siti si apre Nuovo sito; per coordinate l'anteprima, e l'altitudine del modello non va come scritta a mano
+cambiando sito da correggere, la scheda si rifa' sul sito nuovo - step 33, Settings C: board v82 has no edit form; the cards are keyed by site
+correggere il nome non ridichiara il cielo che si stava solo guardando - step 33, Settings C: board v82 Rinomina sends only the name; replaced by Rinomina: un nome gia' preso si dice sotto il campo, e non si salva
+quando aggiungere fallisce, la scheda resta aperta e lo dice - step 33, Settings C: a failed write goes to the page notice with Riprova (useScriviSito)
+un sito in piu' non si prende il posto di casa - step 33, Settings C: the backend decides home (test_sites_many_and_one_default)
+rendere di casa scrive davvero, e se non riesce lo dice - step 33, Settings C: board v82 Usa come predefinito; replaced by il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no
+rendere di casa riesce, e il piede della barra lo rilegge - step 33, Settings C: replaced by il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no
+rendere di casa non spazza via la scheda che si stava compilando - step 33, Settings C: board v82 has no edit form
+togliere un sito non spazza via la scheda che si stava compilando - step 33, Settings C: board v82 has no edit form
+la scheda che correggeva il sito tolto se ne va con lui - step 33, Settings C: board v82 has no edit form
+aprendo la scheda il fuoco ci entra, e dice quale scheda e' - step 33, Settings C: board v82 has no edit form
+due schede aperte insieme non si rubano i campi - step 33, Settings C: board v82 has no edit form
+senza un sito di casa la sezione lo dice, invece di lasciare l app muta - step 33, Settings C: board v82 Elimina is off on the default site, so the section never loses home
+con un sito di casa l avviso non c e - step 33, Settings C: board v82 has no no-home notice in Siti
+dichiarato il sito, il piede della barra lo sa senza ricaricare la pagina - step 33, Settings C: replaced by il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no
+correggere un sito d uscita non fa rileggere il piede della barra - step 33, Settings C: replaced by il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no
+un sito senza notti si toglie davvero, e il dialogo si chiude - step 33, Settings C: board v82 Elimina in the card; replaced by un sito senza notti si elimina dopo la conferma
+un sito che tiene delle notti non si toglie, e il rifiuto si legge nel dialogo - step 33, Settings C: board v82 turns Elimina off with the reason; replaced by Elimina si spegne su un sito con notti, e dice perche'
+con ?sito= la riga di quel sito e' segnata, e la scheda di correzione resta chiusa - step 33, Settings C: ?sito= now chooses the site pill; covered by un sito senza notti si elimina dopo la conferma
+e nemmeno Siti, con la scheda aperta e la scala del cielo dentro - step 33, Settings C: board v82 Siti; replaced by e nemmeno Siti, con la proposta, le classi e Nuovo sito per coordinate

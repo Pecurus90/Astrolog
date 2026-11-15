@@ -5545,6 +5545,8 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+            /** @description The believable sky brightness, both ends included: outside is a 422. */
+            sqm_range: components["schemas"]["Range"];
         };
         /** SiteOut */
         SiteOut: {

@@ -1,448 +1,160 @@
 // @vitest-environment jsdom
 /**
- * Impostazioni, la sezione *Siti*: l'elenco, la scheda che si compila, e il sito che non si
- * puo' togliere.
- *
- * Le regole provate qui sono quelle che una lettura del codice non prende: che il cielo mai
- * dichiarato **si legga** invece di sembrare uno zero, che correggere parta dai valori che il
- * sito ha davvero, che il primo sito nasca di casa e i successivi no, e che il rifiuto della
- * rotta si legga **dove si e' premuto**.
- *
- * Tre nascono da difetti veri, trovati da una revisione e da una misura, e sono quelle che si
- * romperebbero per prime: la **chiave** sulla scheda che si corregge (senza, i campi restano del
- * sito di prima e il salvataggio li scrive sull'altro); il **cielo mandato solo se scelto adesso**
- * (senza, correggere un nome ridichiara una classe derivata e cancella da dove veniva la misura);
- * e il **piede della barra riletto solo quando cambia il sito di casa**, che passa dalla rotta
- * piu' cara che l'app abbia.
+ * Impostazioni, la sezione *Siti* (tavola v82): le pillole dei siti, *Il sito*, *Il cielo del
+ * sito* e *Nuovo sito*. Si prova cio' che una lettura del codice non prende: da dove viene ogni
+ * numero, che Elimina si spegne col suo perche', che una via scrive solo col gesto che dice un
+ * cielo, e che il nuovo sito non manda come «scritta a mano» l'altitudine del modello.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import {
-  SALUTE,
-  SPINA,
-  STANOTTE,
-  apriImpostazioni,
-  chiamate,
-  disegna,
-  impostazioni,
-  pulisci,
-  rispondi,
-  scritture,
-} from "./banco"
+import type { components } from "../src/api/schema"
+import { SALUTE, SITO_DI_CASA, SPINA, STANOTTE, chiamate, disegna, impostazioni, pulisci, rispondi, scritture, vai } from "./banco"
 
 afterEach(pulisci)
 
-const CASA = {
-  id: 1,
-  name: "Cortina",
-  latitude: 46.5405,
-  longitude: 12.1357,
-  bortle: 4,
-  sky_sqm: 21.3,
-  is_default: true,
-}
-const USCITA = {
-  id: 2,
-  name: "Passo Giau",
-  latitude: 46.4843,
-  longitude: 12.0533,
-  bortle: null,
-  sky_sqm: null,
-  is_default: false,
-}
+type Sito = components["schemas"]["SiteOut"]
 
-function app(siti: unknown[] = [CASA, USCITA], piu: Record<string, unknown> = {}) {
+const CASA: Sito = { ...SITO_DI_CASA, name: "Cima Ekar", coords_source: "place", elevation_m: 1366, elevation_source: "service", nights: 112 }
+const USCITA: Sito = { ...SITO_DI_CASA, id: 2, name: "Monte Grappa", is_default: false, nights: 0, sky_sqm: null, sky_source: null, bortle: null }
+
+const MESI = Array.from({ length: 12 }, (_, i) => ({
+  year: i < 2 ? 2025 : 2026,
+  month: ((10 + i) % 12) + 1,
+  measured: i % 3 !== 2,
+}))
+
+function app(siti: Sito[], piu: Record<string, { stato: number; corpo: unknown }> = {}, chiave: string | null = null) {
+  const valori = impostazioni(true)
   rispondi({
     ...STANOTTE,
-    "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-    "/api/v1/review": {
-      stato: 200,
-      corpo: { to_confirm: 0 },
-    },
-    "/api/health": { stato: 200, corpo: SALUTE },
     ...piu,
-    "/api/v1/sites": { stato: 200, corpo: { items: siti, total: siti.length } },
+    "/api/v1/settings": { stato: 200, corpo: { ...valori, values: { ...valori.values, sky_service_key: chiave } } },
+    "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+    "/api/health": { stato: 200, corpo: SALUTE },
+    "/api/v1/sites": { stato: 200, corpo: { items: siti, total: siti.length, limit: 100, offset: 0, sqm_range: { min: 7, max: 23 } } },
     ...SPINA,
   })
-  return disegna()
 }
 
-/** Apre la sezione come fa chi usa l'app: dalla barra, poi dall'elenco delle sezioni. */
-async function vaiAlSito() {
-  await apriImpostazioni()
-  // Nome esatto: col piede della barra senza sito, "Seleziona sito" porta allo stesso posto.
-  fireEvent.click(await screen.findByRole("tab", { name: /^siti$/i }))
+async function apri(siti: Sito[], indirizzo = "/impostazioni/siti", piu = {}, chiave: string | null = null) {
+  app(siti, piu, chiave)
+  await disegna()
+  vai(indirizzo)
+  return screen.findByRole("group", { name: "Siti" })
 }
 
-/** Riempie la scheda aperta. Sta qui perche' quattro prove fanno gli stessi tre gesti, e scritti
- *  quattro volte sarebbero quattro posti da correggere il giorno che nasce un campo. */
-async function compila(nome: string, lat = "46,4843", lon = "12,0561") {
-  fireEvent.change(await screen.findByLabelText(/nome del sito/i), { target: { value: nome } })
-  fireEvent.change(screen.getByLabelText(/latitudine/i), { target: { value: lat } })
-  fireEvent.change(screen.getByLabelText(/longitudine/i), { target: { value: lon } })
-}
-
-/** Quante volte il piede della barra ha riletto cio' che mostra. */
-const letturaDelPiede = () => chiamate().filter((c) => c.includes("/tonight")).length
+const carta = (nome: string) => screen.findByRole("region", { name: nome })
 
 describe("Impostazioni / Siti", () => {
-  it("ogni sito dice dove sta e che cielo ha, e quello di casa si riconosce", async () => {
-    await app()
-    await vaiAlSito()
-
-    const righe = await screen.findAllByRole("listitem")
-    const cortina = righe.find((r) => r.textContent?.startsWith("Cortina"))!
-    // Le coordinate ci sono, formattate: senza, due siti vicini sono due nomi e basta.
-    expect(cortina.textContent).toMatch(/46,5405/)
-    expect(cortina.textContent).toMatch(/12,1357/)
-    // La classe **e la misura**: qui la misura e' la regola, il piede della barra e' l'eccezione.
-    expect(cortina.textContent).toMatch(/3/)
-    expect(cortina.textContent).toMatch(/21,3/)
-    expect(within(cortina).getByText(/^predefinito$/i)).toBeTruthy()
-    // E solo uno lo e': "predefinito" su due righe vorrebbe dire due fusi per la stessa notte.
-    expect(screen.getAllByText(/^predefinito$/i)).toHaveLength(1)
+  it("le pillole dei siti, il predefinito acceso, e ogni numero con la sua provenienza", async () => {
+    const pillole = await apri([CASA, USCITA])
+    expect((await within(pillole).findByText("Cima Ekar")).getAttribute("aria-pressed")).toBe("true")
+    expect(await screen.findByText("dalla ricerca per nome")).toBeTruthy()
+    expect(screen.getByText("1366 m")).toBeTruthy()
+    expect(screen.getByText("dal modello del terreno")).toBeTruthy()
+    expect(screen.getByText("Europe/Rome · UTC+1")).toBeTruthy()
+    expect(screen.getByText("112 notti")).toBeTruthy()
+    expect(screen.getByText("sì")).toBeTruthy()
   })
 
-  it("un cielo mai dichiarato lo dice, invece di passare per uno zero", async () => {
-    await app()
-    await vaiAlSito()
-
-    const righe = await screen.findAllByRole("listitem")
-    const giau = righe.find((r) => r.textContent?.startsWith("Passo Giau"))!
-    expect(giau.textContent).toMatch(/non dichiarato/i)
-    // E non porta un numero: `bortle: null` letto come cifra diventerebbe uno 0 fuori scala.
-    expect(giau.querySelector(".as-bortle-letta__classe")).toBeNull()
+  it("Elimina si spegne su un sito con notti, e dice perche'", async () => {
+    await apri([CASA, USCITA])
+    const elimina = await screen.findByText("Elimina il sito")
+    expect(elimina.getAttribute("aria-disabled")).toBe("true")
+    expect(screen.getByText("Ha 112 notti: non si elimina. Le notti restano col loro sito.")).toBeTruthy()
   })
 
-  it("correggere parte dai valori che il sito ha, non da campi vuoti", async () => {
-    await app()
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
-
-    const nome = (await screen.findByLabelText(/nome del sito/i)) as HTMLInputElement
-    expect(nome.value).toBe("Cortina")
-    expect((screen.getByLabelText(/latitudine/i) as HTMLInputElement).value).toBe("46,5405")
-    // E la classe che ha e' gia' quella scelta: ripartire da nessuna la cancellerebbe salvando.
-    expect((screen.getByRole("radio", { checked: true }) as HTMLInputElement).value).toBe("4")
+  it("un sito senza notti si elimina dopo la conferma", async () => {
+    await apri([CASA, USCITA], "/impostazioni/siti?sito=2", { "DELETE /api/v1/sites/2": { stato: 200, corpo: { site_id: 2, deleted: true } } })
+    fireEvent.click(await screen.findByText("Elimina il sito"))
+    fireEvent.click(await screen.findByText("Elimina", { selector: "a" }))
+    await waitFor(() => expect(scritture().some((s) => s.metodo === "DELETE" && s.url.endsWith("/api/v1/sites/2"))).toBe(true))
   })
 
-  it("il cielo corretto arriva alla rotta, e col verbo che non crea un sito nuovo", async () => {
-    await app([CASA, USCITA], {
-      "PATCH /api/v1/sites": { stato: 200, corpo: { ...CASA, bortle: 5 } },
+  it("Rinomina: un nome gia' preso si dice sotto il campo, e non si salva", async () => {
+    await apri([CASA, USCITA])
+    fireEvent.click(await screen.findByText("Rinomina"))
+    fireEvent.change(screen.getByRole("textbox", { name: "Nome del sito" }), { target: { value: "Monte Grappa" } })
+    expect(screen.getByText("✕ C'è già un sito con questo nome.")).toBeTruthy()
+    fireEvent.click(screen.getByText("Salva"))
+    expect(scritture().filter((s) => s.metodo === "PATCH")).toEqual([])
+  })
+
+  it("il cielo di ora con la sua fonte, e Bortle a mano scrive la classe scelta", async () => {
+    await apri([CASA], "/impostazioni/siti", { "PATCH /api/v1/sites/1": { stato: 200, corpo: CASA } })
+    expect(await screen.findByText("Bortle 5 – cielo di periferia")).toBeTruthy()
+    expect(screen.getByText("SQM 20,8 scritto a mano")).toBeTruthy()
+    // aprire una via non scrive
+    fireEvent.click(screen.getByText("Bortle a mano"))
+    expect(scritture()).toEqual([])
+    fireEvent.click(within(screen.getByRole("group", { name: "Classe di Bortle" })).getByText("3"))
+    await waitFor(() => expect(scritture()).toContainEqual(expect.objectContaining({ metodo: "PATCH", corpo: { bortle: 3 } })))
+  })
+
+  it("Dalla mappa senza chiave porta a Servizi, e non chiede niente", async () => {
+    await apri([CASA])
+    fireEvent.click(await screen.findByText("Dalla mappa"))
+    expect(screen.getByText("Serve la chiave del servizio del cielo, in Servizi.")).toBeTruthy()
+    expect(screen.getByText("Apri Servizi")).toBeTruthy()
+    expect(scritture()).toEqual([])
+  })
+
+  it("le misure propongono una classe, e Usa la scrive", async () => {
+    const misurato: Sito = {
+      ...CASA,
+      measured: { status: "enough", nights: 38, months: 10, sqm: 21.4, bortle: 4, first_night: "2025-11-02", last_night: "2026-10-28", propose: true, month_marks: MESI },
+    }
+    await apri([misurato], "/impostazioni/siti", { "POST /api/v1/sites/1/sky/use": { stato: 200, corpo: misurato } })
+    expect(await screen.findByText(/Le misure di Cima Ekar dicono Bortle 4 – campagna più chiara \(SQM 21,4, 38 notti in 10 mesi\)\. Nel sito c'è Bortle 5\./)).toBeTruthy()
+    const mesi = screen.getByRole("img", { name: "8 mesi misurati sugli ultimi 12" })
+    expect(mesi.children).toHaveLength(12)
+    expect(mesi.children[0]?.getAttribute("title")).toBe("novembre 2025: misurato")
+    expect(mesi.children[2]?.getAttribute("title")).toBe("gennaio 2026: nessuna notte")
+    fireEvent.click(screen.getByText("Usa Bortle 4"))
+    expect(await screen.findByText("✓ Bortle 4 nel sito, dalle misure.")).toBeTruthy()
+    // la via segue cio' che si e' scritto: «Dalle misure», non la via di prima
+    expect(screen.getByText("Dalle misure").getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByText("SQM a mano").getAttribute("aria-pressed")).toBe("false")
+  })
+
+  it("il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no", async () => {
+    await apri([CASA, USCITA], "/impostazioni/siti?sito=2", {
+      "POST /api/v1/sites/2/default": { stato: 200, corpo: { ...USCITA, is_default: true } },
+      "PATCH /api/v1/sites/2": { stato: 200, corpo: { ...USCITA, name: "Grappa" } },
     })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
-    fireEvent.click(await screen.findByRole("radio", { name: /5/ }))
-    fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
-
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    const scritta = scritture()[0]!
-    expect(scritta.metodo).toBe("PATCH")
-    expect(scritta.url).toMatch(/\/api\/v1\/sites\/1$/)
-    expect(scritta.corpo).toMatchObject({ name: "Cortina", bortle: 5 })
+    await screen.findByText("Usa come predefinito")
+    const stanotte = () => chiamate().filter((u) => u.includes("/api/v1/tonight")).length
+    await waitFor(() => expect(stanotte()).toBeGreaterThan(0))
+    const prima = stanotte()
+    fireEvent.click(screen.getByText("Rinomina"))
+    fireEvent.change(screen.getByRole("textbox", { name: "Nome del sito" }), { target: { value: "Grappa" } })
+    fireEvent.click(screen.getByText("Salva"))
+    await waitFor(() => expect(scritture().some((s) => s.metodo === "PATCH")).toBe(true))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(stanotte()).toBe(prima)
+    fireEvent.click(screen.getByText("Usa come predefinito"))
+    await waitFor(() => expect(stanotte()).toBeGreaterThan(prima))
   })
 
-  it("il primo sito nasce di casa, uno in piu' no", async () => {
-    await app([], { "POST /api/v1/sites": { stato: 200, corpo: CASA } })
-    await vaiAlSito()
-
-    // Senza siti la sezione dice cosa manca, invece di un elenco vuoto.
-    expect(await screen.findByText(/^nessun sito$/i)).toBeTruthy()
-    fireEvent.click(screen.getByRole("button", { name: /^aggiungi sito$/i }))
-
-    await compila("Cortina", "46,5405", "12,1357")
-    fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
-
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    // Di casa **per forza**: senza uno di casa le notti non nascono.
-    expect(scritture()[0]!.corpo).toMatchObject({ name: "Cortina", is_default: true })
-    // E la virgola e' passata per `coordinataDa`: `Number("46,5405")` sarebbe `NaN`.
-    expect(scritture()[0]!.corpo).toMatchObject({ latitude: 46.5405 })
-  })
-
-  it("cambiando sito da correggere, la scheda si rifa' sul sito nuovo", async () => {
-    // I campi nascono dal sito **una volta sola**. Senza una chiave, React tiene lo stesso
-    // componente e a schermo restano i valori del primo: si salverebbe Cortina su Passo Giau.
-    await app()
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
-    expect((await screen.findByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe(
-      "Cortina",
-    )
-    fireEvent.click(screen.getByRole("button", { name: /^modifica Passo Giau$/i }))
+  it("senza siti si apre Nuovo sito; per coordinate l'anteprima, e l'altitudine del modello non va come scritta a mano", async () => {
+    await apri([], "/impostazioni/siti", {
+      "/api/v1/places/point": { stato: 200, corpo: { timezone: "Europe/Rome", utc_offset_minutes: 60, elevation_m: 1775 } },
+      "POST /api/v1/sites": { stato: 201, corpo: USCITA },
+    })
+    const nuovo = await carta("Nuovo sito")
+    expect(within(nuovo).queryByText("Annulla")).toBeNull()
+    fireEvent.click(within(nuovo).getByRole("radio", { name: "Per coordinate" }))
+    fireEvent.change(within(nuovo).getByRole("textbox", { name: "Latitudine" }), { target: { value: "45,87 N" } })
+    fireEvent.change(within(nuovo).getByRole("textbox", { name: "Longitudine" }), { target: { value: "11,80 E" } })
+    expect(await within(nuovo).findByText("dal modello del terreno: si cambia")).toBeTruthy()
+    expect(within(nuovo).getByRole("textbox", { name: "Altitudine, in metri" })).toHaveProperty("value", "1775")
+    fireEvent.change(within(nuovo).getByRole("textbox", { name: "Nome del sito" }), { target: { value: "Monte Grappa" } })
+    fireEvent.click(within(nuovo).getByText("Salva sito"))
     await waitFor(() =>
-      expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe(
-        "Passo Giau",
+      expect(scritture()).toContainEqual(
+        expect.objectContaining({ metodo: "POST", corpo: { name: "Monte Grappa", latitude: 45.87, longitude: 11.8, coords_source: "declared", is_default: false } }),
       ),
     )
-  })
-
-  it("correggere il nome non ridichiara il cielo che si stava solo guardando", async () => {
-    // La classe a schermo e' **derivata** dalla luminosita' salvata. Rimandarla indietro la
-    // farebbe registrare come una risposta, spostando la misura al centro della classe e
-    // cancellando da dove veniva. Si manda solo cio' che l'utente ha toccato adesso.
-    await app([CASA, USCITA], { "PATCH /api/v1/sites": { stato: 200, corpo: CASA } })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
-    fireEvent.change(await screen.findByLabelText(/nome del sito/i), {
-      target: { value: "Cortina d'Ampezzo" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
-
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    const corpo = scritture()[0]!.corpo as Record<string, unknown>
-    expect(corpo["name"]).toBe("Cortina d'Ampezzo")
-    expect("bortle" in corpo).toBe(false)
-  })
-
-  it("quando aggiungere fallisce, la scheda resta aperta e lo dice", async () => {
-    await app([CASA], { "POST /api/v1/sites": { stato: 500, corpo: { detail: "boom" } } })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
-    await compila("Giau")
-    fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
-
-    expect(await screen.findByText(/^salvataggio non riuscito\.$/i)).toBeTruthy()
-    // E cio' che si era scritto e' ancora li': ricominciare da capo dopo un guasto e' la punizione
-    // sbagliata per chi non ha fatto niente.
-    expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe("Giau")
-  })
-
-  it("un sito in piu' non si prende il posto di casa", async () => {
-    // L'altra meta' della regola: il **primo** nasce di casa perche' senza uno le notti non
-    // nascono, ma aggiungerne un altro non deve spostare il fuso di tutte le notti gia' fatte.
-    await app([CASA], { "POST /api/v1/sites": { stato: 200, corpo: USCITA } })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
-    await compila("Giau")
-    fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
-
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    expect(scritture()[0]!.corpo).toMatchObject({ is_default: false })
-  })
-
-  it("rendere di casa scrive davvero, e se non riesce lo dice", async () => {
-    // E' il gesto che decide il fuso di **tutte** le notti: ricaricare l'elenco e basta lo
-    // mostrerebbe identico, e chi ha premuto crederebbe di aver cambiato posto.
-    await app([CASA, USCITA], {
-      "POST /api/v1/sites": { stato: 500, corpo: { detail: "boom" } },
-    })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^imposta Passo Giau come predefinito$/i }))
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    expect(scritture()[0]!.url).toMatch(/\/api\/v1\/sites\/2\/default$/)
-    expect(await screen.findByText(/^modifica del sito predefinito non riuscita\.$/i)).toBeTruthy()
-  })
-
-  it("rendere di casa riesce, e il piede della barra lo rilegge", async () => {
-    // Il gemello della prova sopra: quando **riesce**, il piede deve saperlo -- e' proprio il
-    // caso in cui cio' che mostra cambia, perche' mostra il sito di casa.
-    await app([CASA, USCITA], { "POST /api/v1/sites": { stato: 200, corpo: USCITA } })
-    await vaiAlSito()
-
-    const prima = letturaDelPiede()
-    fireEvent.click(await screen.findByRole("button", { name: /^imposta Passo Giau come predefinito$/i }))
-
-    await waitFor(() => expect(letturaDelPiede()).toBeGreaterThan(prima))
-    expect(screen.queryByText(/^modifica del sito predefinito non riuscita\.$/i)).toBeNull()
-  })
-
-  it("rendere di casa non spazza via la scheda che si stava compilando", async () => {
-    // I tasti dell'elenco restano premibili con una scheda aperta: chiudere cio' che qualcuno
-    // stava scrivendo e' la punizione sbagliata per un gesto che con quella scheda non c'entra.
-    await app([CASA, USCITA], { "POST /api/v1/sites": { stato: 200, corpo: USCITA } })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
-    await compila("Malga")
-    fireEvent.click(screen.getByRole("button", { name: /^imposta Passo Giau come predefinito$/i }))
-
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe("Malga")
-  })
-
-  it("togliere un sito non spazza via la scheda che si stava compilando", async () => {
-    // Il gemello della prova sopra, per l'altra porta: anche *Rimuovi* si preme dall'elenco.
-    await app([CASA, USCITA], {
-      "DELETE /api/v1/sites": { stato: 200, corpo: { site_id: 2, deleted: true } },
-    })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
-    await compila("Malga")
-    fireEvent.click(screen.getByRole("button", { name: /^rimuovi Passo Giau$/i }))
-    const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
-
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-    expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe("Malga")
-  })
-
-  it("la scheda che correggeva il sito tolto se ne va con lui", async () => {
-    // L'eccezione della regola sopra: quella scheda non ha piu' un sito da correggere, e lasciarla
-    // aperta vorrebbe dire un modulo che salva su qualcosa che non c'e'.
-    await app([CASA, USCITA], {
-      "DELETE /api/v1/sites": { stato: 200, corpo: { site_id: 2, deleted: true } },
-    })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Passo Giau$/i }))
-    await screen.findByLabelText(/nome del sito/i)
-    fireEvent.click(screen.getByRole("button", { name: /^rimuovi Passo Giau$/i }))
-    const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
-
-    await waitFor(() => expect(screen.queryByLabelText(/nome del sito/i)).toBeNull())
-  })
-
-  it("aprendo la scheda il fuoco ci entra, e dice quale scheda e'", async () => {
-    // La scheda nasce in fondo alla sezione, fuori dalla vista: senza spostare il fuoco, chi
-    // naviga col tabulatore o ascolta continua a scorrere l'elenco senza sapere che e' comparsa.
-    await app()
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
-    await waitFor(() => {
-      const dove = document.activeElement
-      // Il titolo della scheda, non il corpo: `body.textContent` contiene tutta la pagina e
-      // farebbe passare questa prova anche col fuoco rimasto dov'era.
-      expect(dove?.tagName).toBe("H2")
-      expect(dove?.className).toContain("as-carta__titolo")
-      expect(dove?.textContent).toMatch(/^modifica sito$/i)
-    })
-  })
-
-  it("due schede aperte insieme non si rubano i campi", async () => {
-    // Dall'elenco si puo' premere *Modifica* mentre *Aggiungi sito* e' gia' aperta: due campi con lo
-    // stesso `id` darebbero il fuoco dell'etichetta a quello sbagliato, e uno dei due resterebbe
-    // scollegato dal suo nome per chi ascolta.
-    await app()
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
-
-    const nomi = await screen.findAllByLabelText(/nome del sito/i)
-    expect(nomi).toHaveLength(2)
-    expect(new Set(nomi.map((n) => n.id)).size).toBe(2)
-    // E ognuna resta col suo: la scheda che corregge porta il sito, quella che aggiunge e' vuota.
-    expect(nomi.map((n) => (n as HTMLInputElement).value).sort()).toEqual(["", "Cortina"])
-  })
-
-  it("senza un sito di casa la sezione lo dice, invece di lasciare l app muta", async () => {
-    // La rotta che toglie **non elegge** un altro sito di casa, di proposito: e senza quello
-    // `GET /tonight` non ha niente da dire, cosi' la barra torna a "Nessun sito selezionato"
-    // mentre l'elenco qui e' pieno. E' lo stato in cui si finisce togliendo il sito di casa.
-    await app([{ ...USCITA, is_default: false }])
-    await vaiAlSito()
-
-    expect(await screen.findByText(/^nessun sito predefinito$/i)).toBeTruthy()
-    // E la strada per uscirne sta li': il tasto che elegge quello giusto.
-    expect(screen.getByRole("button", { name: /^imposta Passo Giau come predefinito$/i })).toBeTruthy()
-  })
-
-  it("con un sito di casa l avviso non c e", async () => {
-    await app()
-    await vaiAlSito()
-
-    await screen.findAllByRole("listitem")
-    expect(screen.queryByText(/^nessun sito predefinito$/i)).toBeNull()
-  })
-
-  it("dichiarato il sito, il piede della barra lo sa senza ricaricare la pagina", async () => {
-    await app([], { "POST /api/v1/sites": { stato: 200, corpo: CASA } })
-    await vaiAlSito()
-    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
-    await compila("Cortina", "46,5405", "12,1357")
-
-    const prima = letturaDelPiede()
-    fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
-
-    // Il piede sta **fuori** da questa pagina e tiene la sua risposta per un'ora: senza buttarla
-    // via, chi dichiara il sito qui continua a leggere "Nessun sito selezionato". Visto dal vivo.
-    await waitFor(() =>
-      expect(letturaDelPiede()).toBeGreaterThan(prima),
-    )
-  })
-
-  it("correggere un sito d uscita non fa rileggere il piede della barra", async () => {
-    // L'altra meta' della regola sopra, e **la piu' cara**: il piede mostra il sito di casa, e
-    // rileggerlo rifa' le effemeridi. Correggere un sito che serve alle uscite non sposta una
-    // virgola di cio' che il piede mostra.
-    await app([CASA, USCITA], { "PATCH /api/v1/sites": { stato: 200, corpo: USCITA } })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^modifica Passo Giau$/i }))
-    await compila("Passo Giau 2")
-    const prima = letturaDelPiede()
-    fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
-
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    // Si aspetta che l'elenco sia stato riletto: cosi' il confronto non e' fatto troppo presto.
-    await waitFor(() => expect(screen.queryByLabelText(/nome del sito/i)).toBeNull())
-    expect(letturaDelPiede()).toBe(prima)
-  })
-
-  it("un sito senza notti si toglie davvero, e il dialogo si chiude", async () => {
-    await app([CASA, USCITA], {
-      "DELETE /api/v1/sites": { stato: 200, corpo: { site_id: 2, deleted: true } },
-    })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^rimuovi Passo Giau$/i }))
-    const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
-
-    await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
-    expect(scritture()[0]!.metodo).toBe("DELETE")
-    expect(scritture()[0]!.url).toMatch(/\/api\/v1\/sites\/2$/)
-    // Il dialogo se ne va: restare aperto su un gesto riuscito e' chiedere due volte.
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-  })
-
-  it("un sito che tiene delle notti non si toglie, e il rifiuto si legge nel dialogo", async () => {
-    await app([CASA, USCITA], {
-      "DELETE /api/v1/sites": {
-        stato: 409,
-        corpo: { detail: { code: "site_has_nights", nights: 41 } },
-      },
-    })
-    await vaiAlSito()
-
-    fireEvent.click(await screen.findByRole("button", { name: /^rimuovi Cortina$/i }))
-    const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
-
-    // Quante notte lo tengono si legge **dentro il dialogo**, dove si e' premuto: fuori sarebbe
-    // una frase da cercare mentre si guarda ancora la domanda.
-    await waitFor(() => expect(within(dialogo).getByText(/41/)).toBeTruthy())
-    // E il sito e' ancora li': il dialogo non si chiude su un rifiuto.
-    expect(screen.getByRole("dialog")).toBeTruthy()
-    expect(screen.getAllByRole("listitem").some((r) => r.textContent?.startsWith("Cortina"))).toBe(
-      true,
-    )
-  })
-})
-
-describe("Impostazioni / Siti, dall'indirizzo", () => {
-  it("con ?sito= la riga di quel sito e' segnata, e la scheda di correzione resta chiusa", async () => {
-    window.history.pushState({}, "", `/impostazioni/siti?sito=${USCITA.id}`)
-    await app()
-
-    // il nome sta anche nel pannello di Stanotte: la riga e' quella della sezione
-    await screen.findAllByText("Passo Giau")
-    const riga = document.getElementById(`sito-${USCITA.id}`) as HTMLElement
-    expect(riga.textContent).toContain("Passo Giau")
-    expect(riga.getAttribute("aria-current")).toBe("true")
-    expect(document.querySelectorAll('li[aria-current="true"]')).toHaveLength(1)
-    expect(screen.queryByLabelText(/nome del sito/i)).toBeNull()
   })
 })

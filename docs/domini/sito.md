@@ -268,6 +268,7 @@ tabella `site_sky_measures`). L'app **propone**, l'utente sceglie; mai un cambio
 ## Cosa NON fa
 
 Non crea siti da solo. Non inventa un'altitudine, un fuso o un cielo. Non mostra un Bortle
-senza la misura accanto. Non chiede la chiave del servizio per far partire l'app. Non scarica, non installa e non
+senza la misura accanto, tranne quello scelto a mano: nella carta *Il cielo del sito* (tavola v82)
+si legge «scritto a mano», perche' il suo SQM e' il rappresentante della classe, non una misura. Non chiede la chiave del servizio per far partire l'app. Non scarica, non installa e non
 lancia programmi di sua iniziativa: dice dove si prendono. L'orizzonte
 non e' di questa casella: si importa in Impostazioni, uno per sito (`planner.md`, *L'orizzonte del sito*).

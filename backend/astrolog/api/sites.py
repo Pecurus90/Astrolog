@@ -15,12 +15,13 @@ from ..db import config
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from ..spine import declarations, home_nights, site_requeue
-from ..units import bortle_of
+from ..units import SQM_MAX, SQM_MIN, bortle_of
 from .deps import get_db
 from .models_site import (
     PlaceList,
     PlaceOut,
     PointOut,
+    Range,
     SiteCreate,
     SiteDeleted,
     SiteEdit,
@@ -138,7 +139,10 @@ def list_sites(
         _SELECT + " ORDER BY s.is_default DESC, s.name COLLATE NOCASE, s.id LIMIT ? OFFSET ?",
         (limit, offset),
     ).fetchall()
-    return SiteList(items=[_out(r) for r in rows], total=total, limit=limit, offset=offset)
+    return SiteList(
+        items=[_out(r) for r in rows], total=total, limit=limit, offset=offset,
+        sqm_range=Range(min=int(SQM_MIN), max=int(SQM_MAX)),
+    )  # fmt: skip
 
 
 def _name_taken_or_raise(err: sqlite3.IntegrityError) -> NoReturn:

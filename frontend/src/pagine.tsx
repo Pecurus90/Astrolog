@@ -27,6 +27,8 @@ export type Sezione = {
   /** The line under the name: beside the title, and in the phone's index. */
   sotto?: Chiave
   elemento?: ReactElement
+  /** What the section adds to the desktop's title row (Siti: the pills of the sites). */
+  testa?: ReactElement
 }
 
 /** Dove sta la voce sul desktop: fra le pillole, nel menu Altro, o in un posto suo (la pillola

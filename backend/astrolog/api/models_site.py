@@ -82,7 +82,9 @@ class SiteOut(BaseModel):
 
 
 class SiteList(Page[SiteOut]):
-    pass
+    sqm_range: "Range" = Field(
+        description="The believable sky brightness, both ends included: outside is a 422."
+    )
 
 
 class SiteCreate(BaseModel):

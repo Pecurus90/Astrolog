@@ -13,6 +13,11 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Impostazioni, Siti (passo 33 C, collaudo 15/11): sul telefono le quattro vie del cielo
+  e le nove classi di Bortle sono alte 36 px (`.al-imp__riga-18`, tavola 274-275): sotto i 44 px.
+  L'app le porta uguali alla tavola finche' il foglio non cambia. Le differenze della sezione in
+  `differenze-dalle-tavole.md`, «Impostazioni -- Siti».
+
 - [da dare] Attrezzatura, modulo di un pezzo (passo 33 D, Marco 14/11): (a) il bias della camera
   e' uno per offset dei file: un campo per offset «Bias (ADU), offset 50», «Bias (ADU)» se
   l'offset e' uno, «Bias (ADU), senza offset» se i file non lo scrivono; nella scheda «bias 500
