@@ -51,6 +51,8 @@ export function impostazioni(fatto: boolean, manca?: readonly string[]) {
       moon_good_pct: 25,
       moon_limit_pct: 65,
       moon_above_deg: 0,
+      theme_mode: "scuro",
+      theme_accent: "ambra",
     },
     wizard_done: fatto,
     // Cosa manca si puo' dire, perche' e' la risposta che **una scrittura** restituisce: chi

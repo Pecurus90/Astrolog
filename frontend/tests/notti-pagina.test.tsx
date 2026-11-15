@@ -157,7 +157,7 @@ describe("i modi di non avere notti", () => {
       "Sito mancante",
       "I frame sono stati letti, ma senza un sito non hanno una notte.",
       "Aggiungi sito",
-      "/impostazioni/sito",
+      "/impostazioni/siti",
     ],
     [
       "waiting",

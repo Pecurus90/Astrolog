@@ -310,7 +310,7 @@ describe("l'ingranaggio e la scansione", () => {
     expect(riquadro.querySelector(".al-c-menu__testo-3")?.textContent).toBe(
       "Scansione interrotta da un errore. 3412 file letti su 18 430.",
     )
-    expect(within(riquadro).getByRole("menuitem", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/letture")
+    expect(within(riquadro).getByRole("menuitem", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/scansioni")
     fireEvent.click(within(riquadro).getByRole("menuitem", { name: "Riprova" }))
     await waitFor(() => expect(scritture().some((s) => s.url.endsWith("/api/v1/scan"))).toBe(true))
   })
@@ -332,7 +332,7 @@ describe("l'ingranaggio e la scansione", () => {
     const corpo = await screen.findByRole("main")
     const riga = (await within(corpo).findByText(/Lettura di una cartella non completata/)).closest(".as-avviso") as HTMLElement
     expect(riga.classList.contains("as-avviso--pagina")).toBe(true)
-    expect(within(riga).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/letture")
+    expect(within(riga).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/scansioni")
   })
 
   it("le cartelle saltate si dicono, non si buttano", async () => {

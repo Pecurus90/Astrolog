@@ -65,9 +65,10 @@ telefono. Fuori:
 - **Il gruppo Progetti, "Progetti" nell'aiuto e «Planner ↗» accanto agli oggetti.** Tavola:
   Cerca 109, 115, 138. App: niente. Perche': le pagine Progetti e Planner non ci sono ancora (i
   rimandi restano spenti finche' la pagina non esiste, `navigazione.md`).
-- **Voci delle Impostazioni senza sezione nell'app.** Tavola: Nome utente, Tema, Orizzonte, Meteo
+- **Voci delle Impostazioni che Cerca non trova.** Tavola: Nome utente, Tema, Orizzonte, Meteo
   apre su, Soglie del Planner, Tempi della notte, Tetto e sicurezza (Cerca 87). App: niente.
-  Perche': quelle impostazioni non esistono ancora.
+  Perche': Nome utente e Tema stanno in Generale dal commit B delle Impostazioni e entrano in Cerca
+  a pagina finita (passo 33); le altre impostazioni non esistono ancora.
 - **«dati simulati» nel piede.** Tavola: Cerca 34-35. App: niente. Perche': i dati sono veri.
 
 Scelte diverse dalla tavola:
@@ -96,6 +97,24 @@ Scelte diverse dalla tavola:
   tavola. Perche': la regola dei pezzi e' quella dell'Archivio; cambiarla e' un altro passo.
 - **Le righe sono `div role=option`.** Tavola: `a href="#"`. Perche': un'opzione di un `combobox`
   non entra nel giro del tabulatore; il fuoco resta nel campo.
+
+## Impostazioni -- il guscio e Generale (passo 33, Impostazioni commit B, 15/11)
+
+Tavola v82 `Impostazioni.dc.html` (desktop 14-41, telefono 216-243, logica 441-473). Fuori:
+- **Le linguette Meteo, Planner, Automazione, Selezione dei frame, Diagnostica.** Tavola: `SEZ`
+  (455). App: Generale, Siti, Cartelle e scansione, ASTAP, Luna, Servizi, Scansioni, Backup.
+  Perche': Meteo arriva al commit D; le altre quattro fuori dalla lista fissa del 14/11.
+- **Tema, «Automatico».** Tavola: scelta attiva (`SceltaTema`). App: spento (`aria-disabled`).
+  Perche': Marco 15/11, arriva col passo Tema (serve l'ora del sole del sito).
+- **Siti, Cartelle, ASTAP, Luna, Servizi, Scansioni, Backup col contenuto di prima.** Tavola: le
+  sezioni ridisegnate. App: il contenuto vecchio a riga intera, col foglio vecchio, dentro il
+  guscio nuovo. Perche': si portano ai commit C-E del passo 33.
+- **Modo chiaro con le parti vecchie.** Tavola: tutto chiaro. App: cornice e pagine portate
+  chiare; Meteo, «in arrivo», la 404 e le sezioni vecchie qui sopra in un riquadro scuro col
+  foglio vecchio (`.as-pagina`, `.app-vecchio`). Perche': Marco 15/11, finche' non sono portate.
+- **Caricamento ed errore della pagina.** Tavola: li mostra il Telaio (`appSt`, 441-443). App: li
+  mostra l'App (`SiApre`) prima di montare le pagine. Perche': le impostazioni (lingua, tema)
+  arrivano prima di ogni pagina.
 
 ## Notti -- la pagina fra 700 e 1000 px e il sito lungo (v78, 10/11)
 

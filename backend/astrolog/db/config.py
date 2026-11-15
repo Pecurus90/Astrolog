@@ -63,6 +63,8 @@ KEYS: dict[str, Key] = {
         "la Luna conta da questa altezza: 0 e' quando sorge (ADR 0034); -5 la rete TESS, che"
         " sotto non la sente; 5 e 10 nessuna convenzione",
     ),
+    "theme_mode": Key(str, "scuro", "il modo di partenza del foglio v58: scuro, per la notte"),
+    "theme_accent": Key(str, "ambra", "l'accento di partenza del foglio v58 (AL.PREDEFINITO)"),
 }
 
 
@@ -81,8 +83,15 @@ class Preferences:
     moon_good_pct: int
     moon_limit_pct: int
     moon_above_deg: int
+    theme_mode: str
+    theme_accent: str
 
 
+# The languages the app is translated into (`frontend/src/i18n/lingue.ts`).
+LANGUAGES = ("it", "en")
+# Automatico waits for the Tema step: it needs the home site's sun times.
+THEME_MODES = ("scuro", "chiaro")
+THEME_ACCENTS = ("originale", "ambra", "turchese", "corallo", "ghiaccio")
 # A weather model outside this list would give an empty page with no reason.
 WEATHER_MODELS = ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")
 # [C Bara et al. 2021, arXiv 2104.10616: TESS, under -5 degrees the Moon is not felt]
@@ -90,6 +99,9 @@ MOON_FLOORS = (-5, 0, 5, 10)
 CHOICES: dict[str, tuple[str, ...] | tuple[int, ...]] = {
     "weather_model": WEATHER_MODELS,
     "moon_above_deg": MOON_FLOORS,
+    "language": LANGUAGES,
+    "theme_mode": THEME_MODES,
+    "theme_accent": THEME_ACCENTS,
 }
 # A number outside its range would make every night good, or none. [T] percent
 RANGES = {"moon_good_pct": (0, 100), "moon_limit_pct": (0, 100)}

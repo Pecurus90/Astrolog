@@ -412,7 +412,7 @@ export function Dashboard() {
           {
             titolo: t("dashboard.start.site.title"),
             testo: t("dashboard.start.site.text"),
-            azione: { l: t("dashboard.start.site.how"), a: "/impostazioni/sito" },
+            azione: { l: t("dashboard.start.site.how"), a: "/impostazioni/siti" },
           },
           ...(vuoto ? [cartella] : []),
         ]
@@ -495,7 +495,7 @@ export function Dashboard() {
         titolo={t("dashboard.noZone.title")}
         testo={t("dashboard.noZone.text", { sito: s.site?.name ?? "" })}
         azione={t("dashboard.noZone.how")}
-        onAzione={() => void vai("/impostazioni/sito")}
+        onAzione={() => void vai("/impostazioni/siti")}
       />
     )
     const notte = sito && <DashboardNotte stanotte={s} notte={m?.nights[0]} formato={formato} />

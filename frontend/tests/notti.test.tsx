@@ -179,7 +179,7 @@ describe("le Notti", () => {
     await apriNotti()
     const carta = await protagonista()
     expect(within(carta).getByText("Fuso orario del sito non riconosciuto.")).toBeTruthy()
-    expect(within(carta).getByRole("link", { name: "Modifica sito" }).getAttribute("href")).toBe("/impostazioni/sito")
+    expect(within(carta).getByRole("link", { name: "Modifica sito" }).getAttribute("href")).toBe("/impostazioni/siti")
   })
 
   it("una notte giovane dice il giorno in cui arriva il meteo", async () => {
@@ -278,7 +278,7 @@ describe("le Notti", () => {
     await apriNotti()
     const carta = await screen.findByRole("region", { name: "Tutto l\u2019archivio" })
     expect(within(carta).getByRole("link", { name: /37 da confermare/ }).getAttribute("href")).toBe("/da-confermare")
-    expect(within(carta).getByRole("link", { name: /112 senza sito/ }).getAttribute("href")).toBe("/impostazioni/sito")
+    expect(within(carta).getByRole("link", { name: /112 senza sito/ }).getAttribute("href")).toBe("/impostazioni/siti")
     // la sezione dei frame senza data nasce col porting di Da confermare: fino ad allora si conta
     expect(within(carta).queryByRole("link", { name: /senza data/ })).toBeNull()
     expect(within(carta).getByText("senza data")).toBeTruthy()

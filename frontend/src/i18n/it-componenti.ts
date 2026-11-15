@@ -55,4 +55,17 @@ export const itComponenti = {
   "ui.form.save": "Salva",
   "ui.form.saving": "Salvataggio…", // glifo-ok: ellipsis
   "ui.form.cancel": "Annulla",
+  // SceltaTema.dc.html
+  "theme.label": "Tema",
+  "theme.mode": "Modo",
+  "theme.mode.light": "Chiaro",
+  "theme.mode.dark": "Scuro",
+  "theme.mode.auto": "Automatico",
+  "theme.accent": "Accento",
+  "theme.accent.original": "originale",
+  "theme.accent.amber": "ambra · blu notte", // glifo-ok: testo della tavola
+  "theme.accent.teal": "turchese · petrolio", // glifo-ok: testo della tavola
+  "theme.accent.coral": "corallo · terracotta", // glifo-ok: testo della tavola
+  "theme.accent.ice": "ghiaccio · indaco", // glifo-ok: testo della tavola
+  "theme.swatch": "Avanti",
 }

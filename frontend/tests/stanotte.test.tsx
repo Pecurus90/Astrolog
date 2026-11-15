@@ -116,7 +116,7 @@ describe("la pastiglia", () => {
     await app({ night: null, site: null, moon: null, chart: null, moonless_dark: [], moon_in_dark: null, weather: null })
     const pastiglia = await screen.findByRole("link", { name: "Nessun sito: aggiungine uno nelle Impostazioni" })
     expect(pastiglia.textContent).toBe("Aggiungi sito")
-    expect(pastiglia.getAttribute("href")).toBe("/impostazioni/sito")
+    expect(pastiglia.getAttribute("href")).toBe("/impostazioni/siti")
   })
 
   it("Esc chiude Stanotte e il fuoco torna alla pastiglia; un clic fuori la chiude", async () => {
@@ -147,7 +147,7 @@ describe("il pannello di Stanotte", () => {
       ["Luna", "◐ 62% · sorge alle 23:40", "dopo le 23:40 la banda larga è al limite"],
       ["Meteo", "✓ notte buona · 7,5 ore di posa", "buio 20:48–05:48 · senza Luna 20:48–23:40"],
     ])
-    expect(within(pannello).getByRole("link", { name: "Cambia ↗" }).getAttribute("href")).toBe("/impostazioni/sito")
+    expect(within(pannello).getByRole("link", { name: "Cambia ↗" }).getAttribute("href")).toBe("/impostazioni/siti")
     expect(within(pannello).getByRole("link", { name: "Meteo ↗" }).getAttribute("href")).toBe("/meteo")
     expect(within(pannello).getByRole("link", { name: "Apri il Meteo ↗" }).getAttribute("href")).toBe("/meteo")
     expect(within(pannello).getByRole("link", { name: "Piano della notte ↗" }).getAttribute("href")).toBe("/piano-della-notte")

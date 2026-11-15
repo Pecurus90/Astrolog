@@ -24,6 +24,8 @@ import type { Chiave } from "./i18n"
 export type Sezione = {
   a: string
   chiave: Chiave
+  /** The line under the name: beside the title, and in the phone's index. */
+  sotto?: Chiave
   elemento?: ReactElement
 }
 

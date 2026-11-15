@@ -46,7 +46,7 @@ function app(chiave: string | null, risposta: Voce) {
 
 async function vaiAiServizi() {
   await apriImpostazioni()
-  fireEvent.click(await screen.findByRole("link", { name: /servizi/i }))
+  fireEvent.click(await screen.findByRole("tab", { name: /^servizi$/i }))
 }
 
 describe("Impostazioni / Servizi", () => {

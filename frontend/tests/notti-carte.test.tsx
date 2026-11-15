@@ -217,7 +217,7 @@ describe("la protagonista sul desktop", () => {
     const carta = protagonista(SENZA_FUSO, "desktop")
     expect(una(carta, ".al-pillola").className).toContain("al-pillola--mancante")
     const link = within(carta).getByRole("link", { name: "Modifica sito" })
-    expect(link.getAttribute("href")).toBe("/impostazioni/sito")
+    expect(link.getAttribute("href")).toBe("/impostazioni/siti")
     expect(link.className).toBe("al-bottone al-bottone--pieno al-bottone--piccolo")
     expect(carta.querySelector(".al-notti__barra-posa")).toBeNull()
     expect(carta.querySelector(".al-notti__riga-8")).toBeNull()
@@ -233,7 +233,7 @@ describe("la protagonista sul desktop", () => {
   it("una notte senza meteo ha la pillola mancante e niente link al sito", () => {
     const carta = protagonista({ ...PIENA, weather: { ...METEO, verdict: null } }, "desktop")
     expect(una(carta, ".al-pillola").className).toContain("al-pillola--mancante")
-    expect(carta.querySelector('a[href="/impostazioni/sito"]')).toBeNull()
+    expect(carta.querySelector('a[href="/impostazioni/siti"]')).toBeNull()
   })
 })
 
@@ -512,7 +512,7 @@ const TOTALI: NonNullable<Elenco["totals"]> = {
 
 const FUORI: VoceFuori[] = [
   { chiave: "review", n: 37, a: "/da-confermare" },
-  { chiave: "site", n: 112, a: "/impostazioni/sito" },
+  { chiave: "site", n: 112, a: "/impostazioni/siti" },
   { chiave: "date", n: 9, a: null },
 ]
 
@@ -569,7 +569,7 @@ describe("Tutto l'archivio", () => {
     expect(voci[0]?.getAttribute("aria-label")).toBe(
       "Apri Da confermare: 37 da confermare, aspettano una risposta",
     )
-    expect(voci[1]?.getAttribute("href")).toBe("/impostazioni/sito")
+    expect(voci[1]?.getAttribute("href")).toBe("/impostazioni/siti")
     const freccia = una(voci[0] as HTMLElement, ".al-notti__tondo-1")
     expect(freccia.textContent).toBe("↗")
     expect(freccia.getAttribute("aria-hidden")).toBe("true")

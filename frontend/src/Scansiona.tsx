@@ -341,7 +341,7 @@ export function RiquadroDellaScansione({ formato }: { formato: Formato }) {
       {stato === "bloccata" && (
         <Link
           className="al-c-menu__riga-4"
-          to="/impostazioni/letture"
+          to="/impostazioni/scansioni"
           role="menuitem"
           style={{ minHeight: alto }}
         >
@@ -392,7 +392,7 @@ export function AvvisiDellaScansione() {
       {/* Una cartella caduta MENTRE la si leggeva non sta fra le saltate: senza questa riga
           l'utente leggerebbe "fatto" con una cartella non letta. */}
       {stato.data?.scan?.state === "error" && (
-        <Avviso esito="allarme" pagina ruolo="status" azioni={vedi("/impostazioni/letture")}>
+        <Avviso esito="allarme" pagina ruolo="status" azioni={vedi("/impostazioni/scansioni")}>
           {t("scan.lostFolder")}
         </Avviso>
       )}

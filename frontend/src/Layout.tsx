@@ -33,8 +33,9 @@ import { PAGINE, paginaDi } from "./pagine"
  *   la scansione da `GET /pipeline/status`, Stanotte da `GET /tonight`.
  * - **Un menu aperto alla volta** (`aperto`), come nella tavola: Esc lo chiude e riporta il
  *   fuoco a chi l'ha aperto, il clic fuori lo chiude, le frecce girano fra le voci, Ctrl K apre Cerca.
- * - **Solo la testa porta i token del foglio nuovo** (`Tema`): il corpo tiene le pagine col foglio
- *   vecchio, che sotto `data-modo` prenderebbero il suo `--inchiostro` e il suo `--linea`.
+ * - **Il tema salvato veste tutto il telaio** (`Tema`): le pagine ancora col foglio vecchio
+ *   stanno nel loro riquadro scuro (`.as-pagina`, `.app-vecchio`), che rimette i suoi
+ *   `--inchiostro`, `--linea`, `--accento` e `--raggio-pillola` (Marco 15/11/2026).
  */
 
 // [T] Telaio.dc.html: Ctrl K (Cmd K on a Mac) is the key the Cerca button declares
@@ -130,33 +131,36 @@ export function Layout({ children }: { children: ReactNode }) {
           {t("frame.skip")}
         </a>
         {/* v78: no min-width (with the scrollbar it scrolled 15 px), side margins in the sheet */}
-        <div
-          className={tel ? undefined : "al-c-telaio__blocco-2"}
-          data-cornice={tel ? undefined : "si"}
-          style={
-            tel
-              ? { display: "contents" }
-              : { minHeight: "100vh", background: "var(--pagina)", padding: "40px 0" }
-          }
-        >
+        {/* the saved theme wears the whole frame; old pages sit in `.app-vecchio` (app.css) */}
+        <Tema>
           <div
-            className={tel ? "al-c-telaio__colonna-2" : "al-c-telaio__colonna-1"}
-            data-formato={tel ? "telefono" : undefined}
-            style={tel ? { minHeight: "100vh" } : { boxSizing: "border-box" }}
+            className={tel ? undefined : "al-c-telaio__blocco-2"}
+            data-cornice={tel ? undefined : "si"}
+            style={
+              tel
+                ? { display: "contents" }
+                : { minHeight: "100vh", background: "var(--pagina)", padding: "40px 0" }
+            }
           >
-            {tel ? <TestaTelefono comandi={comandi} /> : <TestaDesktop comandi={comandi} />}
-            <main
-              className={tel ? "al-c-telaio__colonna-3 app-corpo" : "app-corpo"}
-              id="contenuto"
-              tabIndex={-1}
+            <div
+              className={tel ? "al-c-telaio__colonna-2" : "al-c-telaio__colonna-1"}
+              data-formato={tel ? "telefono" : undefined}
+              style={tel ? { minHeight: "100vh" } : { boxSizing: "border-box" }}
             >
-              <h1 className="as-solo-lettori">{titoloDi(dove.pathname, tel)}</h1>
-              <AvvisiDellaScansione />
-              {children}
-            </main>
-            {tel && <CodaTelefono comandi={comandi} />}
+              {tel ? <TestaTelefono comandi={comandi} /> : <TestaDesktop comandi={comandi} />}
+              <main
+                className={tel ? "al-c-telaio__colonna-3 app-corpo" : "app-corpo"}
+                id="contenuto"
+                tabIndex={-1}
+              >
+                <h1 className="as-solo-lettori">{titoloDi(dove.pathname, tel)}</h1>
+                <AvvisiDellaScansione />
+                {children}
+              </main>
+              {tel && <CodaTelefono comandi={comandi} />}
+            </div>
           </div>
-        </div>
+        </Tema>
       </FinestraDellOggetto>
     </>
   )
@@ -230,7 +234,7 @@ function TestaDesktop({ comandi }: { comandi: Comandi }) {
               {pastiglia.senzaSito ? (
                 <Link
                   className="al-c-telaio__riga-7 al-c-telaio__stanotte"
-                  to="/impostazioni/sito"
+                  to="/impostazioni/siti"
                   aria-label={pastiglia.aria}
                 >
                   {pastiglia.etichetta}

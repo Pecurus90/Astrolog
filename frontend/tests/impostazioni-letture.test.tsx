@@ -67,7 +67,7 @@ function app(
 /** Apre la sezione come fa chi usa l'app: dalla barra, poi dall'elenco delle sezioni. */
 async function vaiAlleLetture() {
   await apriImpostazioni()
-  fireEvent.click(await screen.findByRole("link", { name: /^scansioni$/i }))
+  fireEvent.click(await screen.findByRole("tab", { name: /^scansioni$/i }))
 }
 
 describe("Impostazioni / Scansioni", () => {

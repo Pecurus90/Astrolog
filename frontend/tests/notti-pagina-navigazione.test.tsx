@@ -453,7 +453,7 @@ describe("le righe di stato", () => {
   it("il bottone di una riga porta dove si risponde", async () => {
     await apri(rotte(pagina([DICIOTTO], ATTESE)))
     fireEvent.click(await screen.findByRole("button", { name: "Apri le Impostazioni" }))
-    expect(await dove()).toBe("/impostazioni/sito")
+    expect(await dove()).toBe("/impostazioni/siti")
   })
 
   it("le risposte portano a Da confermare", async () => {
@@ -480,7 +480,7 @@ describe("le righe di stato", () => {
       within(carta)
         .getByRole("link", { name: /112 senza sito/ })
         .getAttribute("href"),
-    ).toBe("/impostazioni/sito")
+    ).toBe("/impostazioni/siti")
     expect(within(carta).getByText("9")).toBeTruthy()
   })
 })

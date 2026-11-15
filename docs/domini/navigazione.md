@@ -135,7 +135,10 @@ menu appena aperto porta il fuoco alla sua prima voce. Cambiare pagina chiude tu
 
 **Il tema** (Marco, 17/10/2026): modo Chiaro, Scuro, Automatico e cinque accenti, nel primo avvio
 e in Impostazioni. Il tondo del modo nella testa e "Modo automatico" nell'ingranaggio arrivano col
-passo Tema, quando tutte le pagine sono nel foglio nuovo (Marco, 10/11/2026).
+passo Tema, quando tutte le pagine sono nel foglio nuovo (Marco, 10/11/2026). Chiaro, Scuro e
+gli accenti si salvano da Impostazioni, Generale, e vestono subito tutto il telaio; le pagine
+ancora col foglio vecchio stanno in un riquadro scuro, e Automatico resta spento fino al passo
+Tema (Marco, 15/11/2026). La lingua scelta li' cambia le parole subito.
 
 **La Dashboard** (Marco, 15-16/10/2026): il tempo che manca alla scansione si stima dal ritmo
 finora della cartella in lettura, si dice "circa" e tace nel primo minuto; "prima scansione"
@@ -146,4 +149,4 @@ vuol dire che il gesto legge almeno una cartella mai letta fino in fondo.
 Non decide come le pagine sono fatte dentro: ogni pagina ha il suo contratto. Non calcola niente:
 cio' che il telaio mostra -- il conto e le sezioni da confermare, la fase e la percentuale del
 lavoro, l'ultima scansione, il sito, la Luna e il suo gradino, il buio -- arriva pronto dall'API.
-Non ha ancora il tondo del modo, la lingua al volo ne' il tuo nome.
+Non ha ancora il tondo del modo ne' il tuo nome.

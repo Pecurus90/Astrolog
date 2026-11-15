@@ -7,7 +7,8 @@ import { SiApre } from "./CartaSola"
 import { Layout } from "./Layout"
 import { PaginaCheNonCe } from "./PaginaCheNonCe"
 import { Wizard } from "./Wizard"
-import { t } from "./i18n"
+import { VesteSalvata, vesteDa } from "./componenti/Tema"
+import { t, usaLingua } from "./i18n"
 import { ComingSoon } from "./ComingSoon"
 import { PAGINE, sezioniAperte } from "./pagine"
 import { usePreferenze } from "./preferenze"
@@ -58,8 +59,14 @@ export function App() {
     )
   }
 
+  // Lingua e tema dalle preferenze: cambiata la lingua, `key` rimonta tutto, perche' `t()` non
+  // e' reattivo; il tema lo leggono i `Tema` senza props.
+  const valori = settings.data?.values
+  const lingua = usaLingua(String(valori?.language ?? ""))
+  const veste = vesteDa(valori?.theme_mode, valori?.theme_accent)
   return (
-    <BrowserRouter>
+    <VesteSalvata veste={veste}>
+    <BrowserRouter key={lingua}>
       <Layout>
         <Routes>
           {PAGINE.map((p) => (
@@ -75,5 +82,6 @@ export function App() {
         </Routes>
       </Layout>
     </BrowserRouter>
+    </VesteSalvata>
   )
 }

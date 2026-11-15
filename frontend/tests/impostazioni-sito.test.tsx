@@ -72,7 +72,7 @@ function app(siti: unknown[] = [CASA, USCITA], piu: Record<string, unknown> = {}
 async function vaiAlSito() {
   await apriImpostazioni()
   // Nome esatto: col piede della barra senza sito, "Seleziona sito" porta allo stesso posto.
-  fireEvent.click(await screen.findByRole("link", { name: /^siti$/i }))
+  fireEvent.click(await screen.findByRole("tab", { name: /^siti$/i }))
 }
 
 /** Riempie la scheda aperta. Sta qui perche' quattro prove fanno gli stessi tre gesti, e scritti
@@ -434,7 +434,7 @@ describe("Impostazioni / Siti", () => {
 
 describe("Impostazioni / Siti, dall'indirizzo", () => {
   it("con ?sito= la riga di quel sito e' segnata, e la scheda di correzione resta chiusa", async () => {
-    window.history.pushState({}, "", `/impostazioni/sito?sito=${USCITA.id}`)
+    window.history.pushState({}, "", `/impostazioni/siti?sito=${USCITA.id}`)
     await app()
 
     // il nome sta anche nel pannello di Stanotte: la riga e' quella della sezione

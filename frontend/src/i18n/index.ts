@@ -17,15 +17,23 @@
  */
 import { en } from "./en"
 import { it } from "./it"
-import { LINGUA_SORGENTE, type Lingua } from "./lingue"
+import { LINGUA_SORGENTE, LINGUE, type Lingua } from "./lingue"
 
 export const DIZIONARI: Record<Lingua, Record<string, string>> = { it, en }
 
 export type Chiave = keyof typeof it
 
-// La lingua di adesso. Oggi e' la sorgente e basta: la scelta dell'utente vive fra le
-// preferenze del backend, e arriva quando c'e' una superficie per cambiarla.
-const lingua: Lingua = LINGUA_SORGENTE
+// La lingua di adesso: quella delle preferenze, scelta dall'App prima di montare le pagine.
+let lingua: Lingua = LINGUA_SORGENTE
+
+/** Sceglie la lingua dei testi; una che l'app non ha resta la sorgente. Chi la chiama rimonta
+ *  le pagine (`App`, `key`): `t()` non e' reattivo. */
+export function usaLingua(scelta: string): Lingua {
+  lingua = (LINGUE as readonly string[]).includes(scelta) ? (scelta as Lingua) : LINGUA_SORGENTE
+  // screen readers' voice and the sheet's hyphenation read the page's language
+  if (typeof document !== "undefined") document.documentElement.lang = lingua
+  return lingua
+}
 
 export function t(chiave: Chiave, valori?: Record<string, string | number>): string {
   const testo = singolare(chiave, valori) ?? DIZIONARI[lingua][chiave] ?? it[chiave]

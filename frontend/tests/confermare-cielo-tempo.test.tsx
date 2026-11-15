@@ -185,7 +185,7 @@ describe("Da confermare -- da quale luogo", () => {
     expect(within(posto).queryAllByRole("radio")).toEqual([])
     expect(within(posto).getByText("Per rispondere serve almeno un sito: si aggiunge nelle Impostazioni.")).toBeDefined()
     fireEvent.click(within(posto).getByRole("button", { name: "Apri le Impostazioni" }))
-    await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/sito"))
+    await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/siti"))
   })
 })
 

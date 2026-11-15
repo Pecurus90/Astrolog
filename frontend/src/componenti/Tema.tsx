@@ -15,6 +15,24 @@ export interface Veste {
 const PARTENZA: Veste = { modo: "scuro", accento: "ambra" }
 
 const Contesto = createContext<Veste>(PARTENZA)
+// The user's saved choice (Impostazioni, Tema): what a `Tema` without props wears.
+const Salvata = createContext<Veste>(PARTENZA)
+
+const MODI: readonly Modo[] = ["scuro", "chiaro"]
+export const ACCENTI: readonly Accento[] = ["originale", "ambra", "turchese", "corallo", "ghiaccio"]
+
+/** The saved values as a `Veste`; an unknown one stays the sheet's default. */
+export function vesteDa(modo: unknown, accento: unknown): Veste {
+  return {
+    modo: MODI.find((m) => m === modo) ?? PARTENZA.modo,
+    accento: ACCENTI.find((a) => a === accento) ?? PARTENZA.accento,
+  }
+}
+
+/** The saved mode and accent, for every `Tema` below that does not name its own. */
+export function VesteSalvata({ veste, children }: { veste: Veste; children: ReactNode }) {
+  return <Salvata.Provider value={veste}>{children}</Salvata.Provider>
+}
 
 /** Mode and accent of the nearest `Tema`; dark and amber without one. */
 export function useTema(): Veste {
@@ -26,18 +44,22 @@ export function useTema(): Veste {
  * :root is the old sheet's while both live together (step 33). No box of its own.
  */
 export function Tema({
-  modo = PARTENZA.modo,
-  accento = PARTENZA.accento,
+  modo,
+  accento,
   children,
 }: {
   modo?: Modo
   accento?: Accento
   children: ReactNode
 }) {
-  const veste = useMemo(() => ({ modo, accento }), [modo, accento])
+  const salvata = useContext(Salvata)
+  const veste = useMemo(
+    () => ({ modo: modo ?? salvata.modo, accento: accento ?? salvata.accento }),
+    [modo, accento, salvata],
+  )
   return (
     <Contesto.Provider value={veste}>
-      <div style={{ display: "contents" }} data-modo={modo} data-accento={accento}>
+      <div style={{ display: "contents" }} data-modo={veste.modo} data-accento={veste.accento}>
         {children}
       </div>
     </Contesto.Provider>

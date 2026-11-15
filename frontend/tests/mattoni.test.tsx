@@ -158,14 +158,14 @@ describe("Bottone", () => {
     // classi del foglio finirebbero fuori dal loro mattone, che il cancello vieta.
     render(
       <MemoryRouter>
-        <Bottone a="/impostazioni/sito" piccolo>
+        <Bottone a="/impostazioni/siti" piccolo>
           Scegli il sito
         </Bottone>
       </MemoryRouter>,
     )
     expect(screen.queryByRole("button", { name: /scegli il sito/i })).toBeNull()
     const collegamento = screen.getByRole("link", { name: /scegli il sito/i })
-    expect(collegamento.getAttribute("href")).toBe("/impostazioni/sito")
+    expect(collegamento.getAttribute("href")).toBe("/impostazioni/siti")
     // E la veste e' quella del mattone, coi suoi modificatori.
     expect(collegamento.className).toContain("as-bottone")
     expect(collegamento.className).toContain("as-bottone--piccolo")

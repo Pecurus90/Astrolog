@@ -71,18 +71,21 @@ function app(cartelle: unknown = CARTELLE) {
   return disegna()
 }
 
-/** Apre Impostazioni dalla barra, come fa chi usa l'app. */
+/** Apre Impostazioni dalla barra, poi la linguetta Cartelle, come fa chi usa l'app. */
 async function vaiAImpostazioni() {
   await apriImpostazioni()
+  fireEvent.click(await screen.findByRole("tab", { name: /^cartelle e scansione$/i }))
 }
 
 describe("Impostazioni", () => {
   it("si apre dalla barra, e l indirizzo diventa suo", async () => {
     await app()
-    await vaiAImpostazioni()
+    await apriImpostazioni()
 
     expect(window.location.pathname).toBe("/impostazioni")
-    expect(await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })).toBeDefined()
+    // sul desktop l'indirizzo della pagina apre Generale (tavola v82)
+    expect((await screen.findByRole("tab", { name: "Generale" })).getAttribute("aria-selected")).toBe("true")
+    expect(screen.getByRole("textbox", { name: "Nome utente" })).toBeDefined()
   })
 
   it("un sotto-indirizzo e una pagina vera, non un buco", async () => {
@@ -102,8 +105,8 @@ describe("Impostazioni", () => {
     await app()
     await vaiAImpostazioni()
 
-    const sezioni = await screen.findByRole("navigation", { name: /sezioni/i })
-    const voci = within(sezioni).getAllByRole("link")
+    const sezioni = await screen.findByRole("tablist", { name: /sezioni/i })
+    const voci = within(sezioni).getAllByRole("tab")
     // L'elenco e' **quello dichiarato**, non un sottoinsieme a caso: contarle e' cio' che fa
     // cadere questa prova il giorno che una sezione compare senza passare da SEZIONI.
     expect(voci.map((v) => v.textContent)).toEqual(

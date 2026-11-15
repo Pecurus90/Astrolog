@@ -21,7 +21,7 @@ describe("gli stati della Dashboard", () => {
       altre: { ...cartelle(0), ...notti([]) },
     })
     expect(await screen.findByText("Per cominciare")).toBeDefined()
-    expect(screen.getByRole("link", { name: "Scegli il sito" }).getAttribute("href")).toBe("/impostazioni/sito")
+    expect(screen.getByRole("link", { name: "Scegli il sito" }).getAttribute("href")).toBe("/impostazioni/siti")
     expect(screen.getByRole("link", { name: "Scegli la cartella" }).getAttribute("href")).toBe("/impostazioni/cartelle")
     expect(screen.queryByText("Ore di posa stanotte")).toBeNull()
     expect(screen.getByText("si riempie dopo la prima scansione")).toBeDefined()

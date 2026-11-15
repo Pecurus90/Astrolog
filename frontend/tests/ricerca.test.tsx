@@ -146,7 +146,7 @@ describe("Cerca, la finestra", () => {
     await cerca("bortle")
     const imp = await screen.findByRole("group", { name: /impostazioni/i })
     fireEvent.click(within(imp).getByRole("option", { name: /Bortle.*Siti/ }))
-    await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/sito"))
+    await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/siti"))
 
     fireEvent.click(await screen.findByRole("link", { name: CERCA }))
     fireEvent.change(await screen.findByRole("combobox", { name: CERCA }), { target: { value: "met" } })
@@ -250,7 +250,7 @@ describe("Cerca, la finestra", () => {
     [/4 ott 2026/, "/notti?notte=41"],
     [/ZWO ASI2600MM Pro/, "/attrezzatura?pezzo=strumento-3"],
     [/ZWO Duo-Band/, "/attrezzatura?pezzo=filtro-9"],
-    [/Casa.*64 notti/, "/impostazioni/sito?sito=2"],
+    [/Casa.*64 notti/, "/impostazioni/siti?sito=2"],
   ])("la voce %s apre la pagina che gia' la mostra", async (nome, indirizzo) => {
     conRicerca(TROVATI)
     await cerca("x")

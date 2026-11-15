@@ -513,7 +513,7 @@ interface RigaDiStato {
 function righeDiStato(p: Elenco): RigaDiStato[] {
   const quanti = (dove: string) => p.waiting.find((w) => w.answer_at === dove)?.frames ?? 0
   const righe: RigaDiStato[] = []
-  if (quanti("site")) righe.push({ s: "!", t: t("nights.waiting.site", { n: numero(quanti("site")) }), a: { testo: t("nights.waiting.site.how"), dove: "/impostazioni/sito" } })
+  if (quanti("site")) righe.push({ s: "!", t: t("nights.waiting.site", { n: numero(quanti("site")) }), a: { testo: t("nights.waiting.site.how"), dove: "/impostazioni/siti" } })
   if (quanti("review")) righe.push({ s: "!", t: t("nights.waiting.review", { n: numero(quanti("review")) }), a: { testo: t("nights.waiting.review.how"), dove: "/da-confermare" } })
   if (quanti("date")) righe.push({ s: "?", t: t("nights.waiting.date", { n: numero(quanti("date")) }) })
   if (p.still_reading) righe.push({ s: "?", t: t("nights.reading", { pct: p.reading_done_pct ?? 0 }) })
@@ -524,7 +524,7 @@ function vociFuori(p: Elenco): VoceFuori[] {
   const quanti = (dove: string) => p.waiting.find((w) => w.answer_at === dove)?.frames ?? 0
   const voci: VoceFuori[] = [
     { chiave: "review", n: quanti("review"), a: "/da-confermare" },
-    { chiave: "site", n: quanti("site"), a: "/impostazioni/sito" },
+    { chiave: "site", n: quanti("site"), a: "/impostazioni/siti" },
     // la sezione dei frame senza data nasce col porting di Da confermare
     { chiave: "date", n: quanti("date"), a: null },
   ]
@@ -544,7 +544,7 @@ function Righe({ righe, formato, vai }: { righe: RigaDiStato[]; formato: Formato
 const VUOTI: Record<NonNullable<Elenco["empty"]>, { titolo: Chiave; testo: Chiave; azione?: Chiave; dove?: string }> = {
   no_folders: { titolo: "nights.empty.noFolders", testo: "nights.empty.noFolders.why", azione: "nights.empty.noFolders.how", dove: "/impostazioni/cartelle" },
   no_frames: { titolo: "nights.empty.noFrames", testo: "nights.empty.noFrames.why", azione: "nights.empty.noFrames.how", dove: "/impostazioni/cartelle" },
-  no_site: { titolo: "nights.empty.noSite", testo: "nights.empty.noSite.why", azione: "nights.empty.noSite.how", dove: "/impostazioni/sito" },
+  no_site: { titolo: "nights.empty.noSite", testo: "nights.empty.noSite.why", azione: "nights.empty.noSite.how", dove: "/impostazioni/siti" },
   reading: { titolo: "nights.empty.reading", testo: "nights.empty.reading.why" },
   waiting: { titolo: "nights.empty.waiting", testo: "nights.empty.waiting.why", azione: "nights.empty.waiting.how", dove: "/da-confermare" },
 }

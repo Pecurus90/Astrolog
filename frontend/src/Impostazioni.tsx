@@ -1,58 +1,235 @@
+import { type ReactElement, useCallback, useState } from "react"
 import { Link, useLocation } from "react-router"
 
 import { ImpostazioniBackup } from "./Backup"
+import { Avviso } from "./componenti/Avviso"
+import { useFormato } from "./componenti/formato"
+import { NOMI_MODO } from "./componenti/SceltaTema"
+import { Tema, vesteDa } from "./componenti/Tema"
+import { useSiti } from "./api/siti"
 import { Cartelle } from "./ImpostazioniCartelle"
+import { Generale, SalvataggioFallito } from "./ImpostazioniGenerale"
 import { Letture } from "./ImpostazioniLetture"
 import { Luna } from "./ImpostazioniLuna"
 import { Riconoscitore } from "./ImpostazioniRiconoscitore"
 import { Servizi } from "./ImpostazioniServizi"
 import { Sito } from "./ImpostazioniSito"
-import { t } from "./i18n"
+import { numero, t } from "./i18n"
 import { type Sezione, sezioniAperte } from "./pagine"
+import { usePreferenze } from "./preferenze"
+
+/** A section not yet redrawn (commits C-E of step 33): the old content, on the whole row, in the
+ *  old sheet's dark box (`app-vecchio`, Marco 15/11/2026). */
+const vecchia = (elemento: ReactElement) => (
+  <div className="al-imp__griglia-2">
+    <div className="app-vecchio" style={{ gridColumn: "1 / -1", minWidth: 0 }}>
+      {elemento}
+    </div>
+  </div>
+)
 
 /**
- * Impostazioni: una pagina sola, con dentro le sue sezioni.
+ * **Impostazioni** (tavola v82): one section at a time, under tabs on the desktop and from an
+ * index on the phone.
  *
- * - **Ogni sezione ha il suo indirizzo**, ed e' un indirizzo vero e non un'ancora: il tasto
- *   indietro funziona e il collegamento si manda.
- * - **Una sezione senza `elemento` non esiste**: non e' una rotta e non compare qui.
- * - L'indirizzo della pagina apre la **prima sezione aperta**.
+ * - **Every section has its own address** (`/impostazioni/<key>`, the board's keys): back
+ *   works and the link can be sent. A section without `elemento` does not exist.
+ * - **The page's address** opens Generale on the desktop, the index on the phone.
  */
 export const SEZIONI: readonly Sezione[] = [
-  { a: "/impostazioni/cartelle", chiave: "settings.folders", elemento: <Cartelle /> },
-  { a: "/impostazioni/sito", chiave: "settings.site", elemento: <Sito /> },
-  { a: "/impostazioni/luna", chiave: "settings.moon", elemento: <Luna /> },
-  { a: "/impostazioni/riconoscitore", chiave: "settings.solver", elemento: <Riconoscitore /> },
-  { a: "/impostazioni/servizi", chiave: "settings.services", elemento: <Servizi /> },
-  { a: "/impostazioni/letture", chiave: "settings.readings", elemento: <Letture /> },
-  { a: "/impostazioni/backup", chiave: "settings.backup", elemento: <ImpostazioniBackup /> },
+  {
+    a: "/impostazioni/generale",
+    chiave: "settings.general",
+    sotto: "settings.general.sub",
+    elemento: (
+      <Tema>
+        <Generale />
+      </Tema>
+    ),
+  },
+  {
+    a: "/impostazioni/siti",
+    chiave: "settings.site",
+    sotto: "settings.site.sub",
+    elemento: vecchia(<Sito />),
+  },
+  {
+    a: "/impostazioni/cartelle",
+    chiave: "settings.folders",
+    sotto: "settings.folders.sub",
+    elemento: vecchia(<Cartelle />),
+  },
+  {
+    a: "/impostazioni/astap",
+    chiave: "settings.solver",
+    sotto: "settings.solver.sub",
+    elemento: vecchia(<Riconoscitore />),
+  },
+  {
+    a: "/impostazioni/luna",
+    chiave: "settings.moon",
+    sotto: "settings.moon.sub",
+    elemento: vecchia(<Luna />),
+  },
+  {
+    a: "/impostazioni/servizi",
+    chiave: "settings.services",
+    sotto: "settings.services.sub",
+    elemento: vecchia(<Servizi />),
+  },
+  {
+    a: "/impostazioni/scansioni",
+    chiave: "settings.readings",
+    sotto: "settings.readings.sub",
+    elemento: vecchia(<Letture />),
+  },
+  {
+    a: "/impostazioni/backup",
+    chiave: "settings.backup",
+    sotto: "settings.backup.sub",
+    elemento: vecchia(<ImpostazioniBackup />),
+  },
 ]
 
 export function Impostazioni() {
+  const formato = useFormato()
+  const tel = formato === "telefono"
   const dove = useLocation()
   const aperte = sezioniAperte(SEZIONI)
-  const qui = aperte.find((s) => s.a === dove.pathname) ?? aperte[0]
+  const trovata = aperte.find((s) => s.a === dove.pathname)
+  const qui = trovata ?? aperte[0]
+  // a failed write: its retry, for the page's notice
+  const [riprova, setRiprova] = useState<(() => void) | null>(null)
+  // null: a write went through, and the notice of an older one is no longer true
+  const fallito = useCallback((f: (() => void) | null) => setRiprova(() => f), [])
   if (!qui) return null
+  const indice = tel && trovata === undefined
 
+  const avviso = riprova && (
+    <Avviso
+      tipo="riga"
+      formato={formato}
+      segno="!"
+      titolo={t("settings.saveFailed")}
+      azione={t("settings.retry")}
+      onAzione={() => {
+        setRiprova(null)
+        riprova()
+      }}
+    />
+  )
+  // the shell wears the sheet (Tema); a section brings its own, the old ones none
   return (
-    <div className="as-pagina">
-      <div className="as-impostazioni">
-        <nav className="as-impostazioni__lato as-sezioni" aria-label={t("settings.sections")}>
-          {aperte.map((s) => (
-            // `aria-current="true"`, non `"page"`: lo dichiara il foglio, ed e' anche cio' su cui
-            // accende la voce.
-            <Link
-              aria-current={s.a === qui.a ? "true" : undefined}
-              className="as-sezioni__voce"
-              key={s.a}
-              to={s.a}
-            >
-              {t(s.chiave)}
-            </Link>
-          ))}
-        </nav>
-        <div className="as-impostazioni__corpo">{qui.elemento}</div>
-      </div>
+    <div className="app-cornice app-pagina" data-formato={formato}>
+      <SalvataggioFallito.Provider value={fallito}>
+        {tel ? (
+          <div className="al-imp__colonna-15">
+            <Tema>
+              {avviso}
+              {indice ? (
+                <Indice sezioni={aperte} search={dove.search} />
+              ) : (
+                <>
+                  <Link
+                    className="al-imp__riga-27"
+                    to={{ pathname: "/impostazioni", search: dove.search }}
+                  >
+                    {`← ${t("nav.settings")}` /* glifo-ok: freccia della tavola */}
+                  </Link>
+                  <span className="al-imp__colonna-17">
+                    <span className="al-imp__testo-26">{t(qui.chiave)}</span>
+                    {qui.sotto && <span className="al-imp__testo-5">{t(qui.sotto)}</span>}
+                  </span>
+                </>
+              )}
+            </Tema>
+            {!indice && qui.elemento}
+          </div>
+        ) : (
+          <div className="al-imp__griglia-1">
+            <Tema>
+              {avviso && <div style={{ gridColumn: "1 / -1" }}>{avviso}</div>}
+              <div className="al-imp__riga-1">
+                <span className="al-imp__riga-2">
+                  <span className="al-imp__testo-1 al-solo-voce">{t("nav.settings")}</span>
+                  {qui.sotto && <span className="al-imp__testo-2">{t(qui.sotto)}</span>}
+                </span>
+              </div>
+              <div
+                role="tablist"
+                aria-label={t("settings.sections")}
+                className="al-scelta al-scelta--linguette al-scelta--sottili al-imp__blocco-3"
+              >
+                {aperte.map((s) => (
+                  <Link
+                    key={s.a}
+                    to={{ pathname: s.a, search: dove.search }}
+                    role="tab"
+                    aria-selected={s.a === qui.a ? "true" : "false"}
+                    className="al-scelta__voce"
+                  >
+                    {t(s.chiave)}
+                  </Link>
+                ))}
+              </div>
+            </Tema>
+            {qui.elemento}
+          </div>
+        )}
+      </SalvataggioFallito.Provider>
     </div>
   )
+}
+
+/** The phone's first screen: every section with its line, Generale and Siti with what they hold
+ *  (tavola `RIAS`). */
+function Indice({ sezioni, search }: { sezioni: readonly Sezione[]; search: string }) {
+  const riassunti = useRiassunti()
+  return (
+    <div className="al-imp__colonna-16" role="list">
+      {sezioni.map((s, i) => {
+        const sotto = riassunti[s.a] ?? (s.sotto ? t(s.sotto) : "")
+        return (
+          <Link
+            key={s.a}
+            className="al-imp__riga-26"
+            to={{ pathname: s.a, search }}
+            role="listitem"
+            style={{ borderTop: i ? "1px solid var(--linea)" : "0" }}
+          >
+            <span className="al-imp__colonna-6">
+              <b className="al-imp__testo-25">{t(s.chiave)}</b>
+              <span className="al-imp__blocco-24">{sotto}</span>
+            </span>
+            <span className="al-imp__blocco-25" aria-hidden="true">
+              {"↗" /* glifo-ok: freccia della tavola */}
+            </span>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
+function useRiassunti(): Record<string, string> {
+  const valori = usePreferenze().data?.values
+  const siti = useSiti().data?.items
+  const fuori: Record<string, string> = {}
+  if (valori) {
+    const modo = t(
+      NOMI_MODO[vesteDa(valori.theme_mode, valori.theme_accent).modo],
+    ).toLocaleLowerCase()
+    const nome = String(valori.user_name ?? "").trim()
+    fuori["/impostazioni/generale"] = nome
+      ? t("settings.index.general", { nome, modo })
+      : t("settings.index.general.noname", { modo })
+  }
+  if (siti && siti.length > 0) {
+    const casa = siti.find((s) => s.is_default)
+    const n = numero(siti.length)
+    fuori["/impostazioni/siti"] = casa
+      ? t("settings.index.sites", { n, sito: casa.name })
+      : t("settings.index.sites.nohome", { n })
+  }
+  return fuori
 }

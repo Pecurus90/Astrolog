@@ -139,7 +139,7 @@ export function Protagonista({
   )
   const modifica = c.modificaSito && (
     <Link
-      to="/impostazioni/sito"
+      to="/impostazioni/siti"
       className={
         tel
           ? "al-bottone al-bottone--pieno al-bottone--blocco al-notti__testo-28"

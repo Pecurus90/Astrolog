@@ -52,7 +52,7 @@ function app(solver: unknown = TROVATO, piu: Record<string, unknown> = {}) {
 /** Apre la sezione come fa chi usa l'app: dalla barra, poi dall'elenco delle sezioni. */
 async function vaiAlRiconoscitore() {
   await apriImpostazioni()
-  fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
+  fireEvent.click(await screen.findByRole("tab", { name: /^astap$/i }))
 }
 
 describe("Impostazioni / ASTAP", () => {

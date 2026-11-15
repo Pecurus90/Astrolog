@@ -43,7 +43,7 @@ export function PrimaDellaPrevisione({ meteo, senzaSito }: { meteo: ReturnType<t
       {meteo.data?.site === null && (senzaSito ?? (
         <Vuoto titolo="weather.noSite.title" perche="weather.noSite.why" sotto={1}>
           <AzioniDelVuoto>
-            <Bottone a="/impostazioni/sito">{t("weather.noSite.how")}</Bottone>
+            <Bottone a="/impostazioni/siti">{t("weather.noSite.how")}</Bottone>
           </AzioniDelVuoto>
         </Vuoto>
       ))}
@@ -61,7 +61,7 @@ function SenzaSito() {
         </div>
       </header>
       <Avviso esito="attesa" pagina titolo={t("weather.noSite.title")}
-        azioni={<Bottone verso="primario" a="/impostazioni/sito">{t("weather.noSite.how")}</Bottone>}>
+        azioni={<Bottone verso="primario" a="/impostazioni/siti">{t("weather.noSite.how")}</Bottone>}>
         {t("weather.noSite.why")}
       </Avviso>
     </div>
@@ -153,7 +153,7 @@ export function Meteo() {
         <div className="as-meteo">
           <Testa {...comandi} aggiorna={undefined} detto={detto} />
           <Avviso esito="allarme" pagina titolo={t("weather.noTimezone")}
-            azioni={<Bottone verso="primario" a="/impostazioni/sito">{t("weather.noTimezone.how")}</Bottone>} />
+            azioni={<Bottone verso="primario" a="/impostazioni/siti">{t("weather.noTimezone.how")}</Bottone>} />
         </div>
       )}
       {detto?.site && detto.missing === null && (

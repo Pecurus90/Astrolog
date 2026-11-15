@@ -12,5 +12,9 @@ export const LINGUE = ["it", "en"] as const
 
 export type Lingua = (typeof LINGUE)[number]
 
+/** Each language by its own name, the same in every language: who cannot read the current one
+ *  still finds theirs (Impostazioni, Lingua). */
+export const NOMI_LINGUE: Record<Lingua, string> = { it: "Italiano", en: "English" }
+
 /** La lingua in cui si scrive: i suoi valori sono la sorgente, le altre sono traduzioni. */
 export const LINGUA_SORGENTE: Lingua = "it"

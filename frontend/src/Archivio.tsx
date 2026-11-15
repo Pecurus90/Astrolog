@@ -244,7 +244,7 @@ export function Archivio() {
         </Carta>
 
         {prima.unresolved?.solver_missing && (
-          <Avviso tipo="riga" formato={formato} segno="!" titolo={t("archive.solver.missing", { n: numero(prima.unresolved.frames) })} azione={t("archive.solver.open")} onAzione={() => void vai("/impostazioni/riconoscitore")} />
+          <Avviso tipo="riga" formato={formato} segno="!" titolo={t("archive.solver.missing", { n: numero(prima.unresolved.frames) })} azione={t("archive.solver.open")} onAzione={() => void vai("/impostazioni/astap")} />
         )}
 
         {caduto && (

@@ -97,7 +97,7 @@ function RigaLuoghi({
             segno="?"
             titolo={t("review.unclear.noSites")}
             azione={t("review.unclear.noSites.action")}
-            onAzione={() => void vaiA("/impostazioni/sito")}
+            onAzione={() => void vaiA("/impostazioni/siti")}
           />
         ) : (
           <Risposte

@@ -56,6 +56,24 @@ def test_an_unknown_setting_or_a_wrong_type_is_refused(client_vuoto):
     assert settings(client_vuoto)["values"]["user_name"] is None  # e non ha scritto niente
 
 
+def test_theme_and_language_are_closed_choices(client_vuoto):
+    """Tema e lingua si salvano e si leggono; fuori dalle scelte del foglio e delle lingue attive
+    si respinge. Automatico arriva col passo Tema (Marco 15/11/2026): oggi non si scrive."""
+    values = settings(client_vuoto)["values"]
+    assert (values["theme_mode"], values["theme_accent"]) == ("scuro", "ambra")
+
+    values = patch(client_vuoto, theme_mode="chiaro", theme_accent="corallo", language="en")[
+        "values"
+    ]
+    assert values["theme_mode"] == "chiaro"
+    assert values["theme_accent"] == "corallo"
+    assert values["language"] == "en"
+
+    for key, value in (("theme_mode", "automatico"), ("theme_accent", "viola"), ("language", "de")):
+        r = client_vuoto.patch("/api/v1/settings", json={"values": {key: value}})
+        assert r.status_code == 422 and r.json()["detail"]["code"] == "wrong_type", key
+
+
 def test_a_refused_write_leaves_the_good_keys_alone(client_vuoto):
     """Una scrittura o passa intera o non passa: meta' preferenze scritte sarebbe peggio.
 

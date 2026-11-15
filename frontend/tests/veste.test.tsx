@@ -7,7 +7,7 @@
  * foglio possa funzionare**, e che nessuna pagina nuova se lo dimentichi:
  *
  * - **il telaio esiste ed e' uno**: la testa e il corpo stanno nella colonna del telaio v76, e
- *   solo la testa porta i token del foglio nuovo;
+ *   il tema salvato veste tutto, e le pagine col foglio vecchio riprendono i loro token;
  * - **il corpo e' il contenitore `telaio`** che le pagine col foglio vecchio misurano;
  * - **ogni pagina apre la sua colonna**: `.as-pagina` e' il contenitore `colonna` da cui le righe
  *   e le tabelle sanno di essere strette. Una pagina che nasce senza non si accorge di niente
@@ -192,12 +192,20 @@ describe("la veste", () => {
     const colonna = pillole.closest(".al-c-telaio__colonna-1")
     expect(colonna).not.toBeNull()
     expect(pillole.closest("header")?.className).toContain("al-c-telaio__riga-1")
-    // la testa porta i token del foglio nuovo; il corpo no, o le pagine col foglio vecchio
-    // prenderebbero il suo --inchiostro e il suo --linea
+    // il tema salvato veste tutto il telaio, corpo compreso (Marco 15/11/2026)
     expect(pillole.closest("[data-modo]")).not.toBeNull()
     const corpo = colonna?.querySelector(":scope > main") as HTMLElement
     expect(corpo).not.toBeNull()
-    expect(corpo.closest("[data-modo]")).toBeNull()
+    expect(corpo.closest("[data-modo]")).not.toBeNull()
+  })
+
+  it("le pagine col foglio vecchio, sotto il tema, riprendono i loro quattro token", () => {
+    // sotto data-modo il foglio nuovo darebbe il suo --inchiostro (scuro) al testo vecchio
+    const vecchio = readFileSync(resolve(process.cwd(), "src", "stili", "astrolog.css"), "utf-8")
+    const regola = vecchio.slice(vecchio.indexOf("[data-modo] :is(.as-pagina, .app-vecchio) {"))
+    expect(regola.length).toBeLessThan(vecchio.length)
+    for (const token of ["--inchiostro:", "--linea:", "--accento:", "--raggio-pillola:", "background:"])
+      expect(regola.slice(0, regola.indexOf("}"))).toContain(token)
   })
 
   it("il corpo e' il contenitore che le pagine col foglio vecchio misurano", async () => {
@@ -222,10 +230,13 @@ describe("la veste", () => {
       const corpo = await screen.findByRole("main")
       // il corpo del telaio tiene anche le righe di stato della scansione: la colonna e' la
       // pagina, figlia diretta del corpo
-      // una pagina portata (le Notti) sta sotto il suo `Tema`, nella colonna del telaio
+      // una pagina portata (le Notti) sta sotto il suo `Tema`, nella colonna del telaio;
+      // Impostazioni mette il Tema dentro, sezione per sezione (le vecchie ne restano fuori)
       await waitFor(() =>
         expect(
-          corpo.querySelector(":scope > .as-pagina, :scope > [data-modo] > .app-pagina"),
+          corpo.querySelector(
+            ":scope > .as-pagina, :scope > [data-modo] > .app-pagina, :scope > .app-pagina",
+          ),
           `${p.a} senza colonna`,
         ).not.toBeNull(),
       )

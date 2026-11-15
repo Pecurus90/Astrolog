@@ -141,6 +141,8 @@ describe("l accessibilita di dove si risponde", () => {
     })
     const { container } = await disegna()
     await apriImpostazioni()
+    expect(await violazioni(container)).toEqual([])
+    fireEvent.click(await screen.findByRole("tab", { name: /^cartelle e scansione$/i }))
     await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })
     expect(await violazioni(container)).toEqual([])
 
@@ -188,7 +190,7 @@ describe("l accessibilita di dove si risponde", () => {
     })
     const { container } = await disegna()
     await apriImpostazioni()
-    fireEvent.click(await screen.findByRole("link", { name: /^siti$/i }))
+    fireEvent.click(await screen.findByRole("tab", { name: /^siti$/i }))
     await screen.findByText(/^siti di osservazione$/i)
     expect(await violazioni(container)).toEqual([])
 
@@ -215,7 +217,7 @@ describe("l accessibilita di dove si risponde", () => {
     })
     const { container } = await disegna()
     await apriImpostazioni()
-    fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
+    fireEvent.click(await screen.findByRole("tab", { name: /^astap$/i }))
     await screen.findByText(/^astap non trovato\./i)
     expect(await violazioni(container)).toEqual([])
 
@@ -271,7 +273,7 @@ describe("l accessibilita di dove si risponde", () => {
     })
     const { container } = await disegna()
     await apriImpostazioni()
-    fireEvent.click(await screen.findByRole("link", { name: /^scansioni$/i }))
+    fireEvent.click(await screen.findByRole("tab", { name: /^scansioni$/i }))
     await screen.findAllByRole("listitem")
     // e col pannello aperto: e' il bottone che dichiara cosa governa, e una regione in piu' dentro
     // una riga -- due cose che axe guarda e che chiuso non ci sono
@@ -296,7 +298,7 @@ describe("l accessibilita di dove si risponde", () => {
     })
     const { container } = await disegna()
     await apriImpostazioni()
-    fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
+    fireEvent.click(await screen.findByRole("tab", { name: /^astap$/i }))
     await screen.findByText(/^catalogo stellare mancante$/i)
     expect(await violazioni(container)).toEqual([])
   })

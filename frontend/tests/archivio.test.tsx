@@ -307,7 +307,7 @@ describe("l'Archivio, produzioni, mosaici e frame senza oggetto", () => {
     const avviso = `ASTAP non è installato: ${numero(1204)} frame restano non risolti`
     expect(await screen.findByText((testo) => testo.startsWith(avviso))).toBeDefined()
     fireEvent.click(screen.getByText(/^apri le impostazioni$/i))
-    await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/riconoscitore"))
+    await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/astap"))
   })
 
   it("coi criteri la carta dei frame senza oggetto resta in testa, anche senza oggetti trovati", async () => {

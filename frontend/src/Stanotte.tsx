@@ -151,7 +151,7 @@ function righeDi(notte: Notte, sito: components["schemas"]["SiteSkyOut"]): Riga[
       l: t("frame.tonight.row.site"),
       v: sito.name,
       s: t("frame.tonight.default", { cielo }),
-      a: { l: t("frame.tonight.change"), a: "/impostazioni/sito" },
+      a: { l: t("frame.tonight.change"), a: "/impostazioni/siti" },
     },
     {
       l: t("frame.tonight.row.moon"),

@@ -33,11 +33,11 @@ const PER_GRUPPO = 5
 
 /** Le voci delle Impostazioni che si cercano (tavola, `IMPV`), solo dove l'app ha la sezione. */
 const IMPOSTAZIONI: readonly { nome: Chiave; parole?: Chiave; sezione: string }[] = [
-  { nome: "search.set.coords", sezione: "/impostazioni/sito" },
-  { nome: "search.set.bortle", parole: "search.set.bortle.w", sezione: "/impostazioni/sito" },
-  { nome: "search.set.default", sezione: "/impostazioni/sito" },
+  { nome: "search.set.coords", sezione: "/impostazioni/siti" },
+  { nome: "search.set.bortle", parole: "search.set.bortle.w", sezione: "/impostazioni/siti" },
+  { nome: "search.set.default", sezione: "/impostazioni/siti" },
   { nome: "search.set.folders", parole: "search.set.folders.w", sezione: "/impostazioni/cartelle" },
-  { nome: "search.set.scan", sezione: "/impostazioni/letture" },
+  { nome: "search.set.scan", sezione: "/impostazioni/scansioni" },
   {
     nome: "search.set.meteoblue",
     parole: "search.set.meteoblue.w",
@@ -46,7 +46,7 @@ const IMPOSTAZIONI: readonly { nome: Chiave; parole?: Chiave; sezione: string }[
   {
     nome: "search.set.astap",
     parole: "search.set.astap.w",
-    sezione: "/impostazioni/riconoscitore",
+    sezione: "/impostazioni/astap",
   },
   { nome: "search.set.moon", parole: "search.set.moon.w", sezione: "/impostazioni/luna" },
   {
@@ -160,7 +160,7 @@ function gruppiDellArchivio(trovati: Trovati): Gruppo[] {
       "search.group.sites",
       SEGNI.siti,
       sites.items.map((s) => ({
-        a: `/impostazioni/sito?sito=${s.id}`,
+        a: `/impostazioni/siti?sito=${s.id}`,
         nome: s.name,
         accanto: null,
         dice: t("search.site.nights", { n: numero(s.nights) }),

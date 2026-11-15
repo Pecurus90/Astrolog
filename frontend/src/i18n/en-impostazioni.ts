@@ -1,7 +1,30 @@
 /** Settings texts. */
 export const enImpostazioni = {
-  "settings.sections": "Settings sections",
-  "settings.folders": "Folders",
+  "settings.sections": "Sections",
+  "settings.general": "General",
+  "settings.general.sub": "name, language and theme",
+  "settings.site.sub": "coordinates, sky and horizon, one per site",
+  "settings.folders.sub": "where the files are",
+  "settings.solver.sub": "identifying the objects",
+  "settings.moon.sub": "the broadband rule, across the app",
+  "settings.services.sub": "the service keys, in one place",
+  "settings.readings.sub": "past scans and what was left out", // glifo-ok: testo della tavola
+  "settings.backup.sub": "the answers file",
+  "settings.index.general": "{nome} · {modo} mode", // glifo-ok: testo della tavola
+  "settings.index.general.noname": "{modo} mode",
+  "settings.index.sites": "{n} sites · {sito} default", // glifo-ok: testo della tavola
+  "settings.index.sites.one": "1 site · {sito} default", // glifo-ok: testo della tavola
+  "settings.index.sites.nohome": "{n} sites",
+  "settings.index.sites.nohome.one": "1 site",
+  "settings.saveFailed": "Setting not saved: AstroLog is not responding, try again.",
+  "settings.retry": "Try again",
+  "settings.general.name": "User name",
+  "settings.general.name.placeholder": "Your name",
+  "settings.general.saved": "✓ Saved", // glifo-ok: board sign
+  "settings.general.language": "Language",
+  "settings.general.language.why": "The app's words. Names read from the files stay as they are.",
+  "settings.general.theme.sub": "how the app looks",
+  "settings.folders": "Folders and scan",
   "settings.solver": "ASTAP",
   "settings.solver.title": "ASTAP",
   "settings.solver.what":

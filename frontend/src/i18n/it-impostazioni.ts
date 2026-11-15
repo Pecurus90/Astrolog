@@ -1,7 +1,31 @@
 /** I testi di **Impostazioni**. File suo: `it.ts` e' al tetto di righe, e si spezza per area. */
 export const itImpostazioni = {
-  "settings.sections": "Sezioni delle impostazioni",
-  "settings.folders": "Cartelle",
+  "settings.sections": "Sezioni",
+  // Impostazioni.dc.html `SEZ`: nome e riga di ogni sezione
+  "settings.general": "Generale",
+  "settings.general.sub": "nome, lingua e tema",
+  "settings.site.sub": "coordinate, cielo e orizzonte, uno per sito",
+  "settings.folders.sub": "dove sono i file",
+  "settings.solver.sub": "identificazione degli oggetti",
+  "settings.moon.sub": "la regola della banda larga, in tutta l'app",
+  "settings.services.sub": "le chiavi dei servizi, in un posto solo",
+  "settings.readings.sub": "le scansioni passate e cosa è rimasto fuori", // glifo-ok: testo della tavola
+  "settings.backup.sub": "il file delle risposte",
+  "settings.index.general": "{nome} · modo {modo}", // glifo-ok: testo della tavola
+  "settings.index.general.noname": "modo {modo}",
+  "settings.index.sites": "{n} siti · {sito} predefinito", // glifo-ok: testo della tavola
+  "settings.index.sites.one": "1 sito · {sito} predefinito", // glifo-ok: testo della tavola
+  "settings.index.sites.nohome": "{n} siti",
+  "settings.index.sites.nohome.one": "1 sito",
+  "settings.saveFailed": "Impostazione non salvata: AstroLog non risponde, riprova.",
+  "settings.retry": "Riprova",
+  "settings.general.name": "Nome utente",
+  "settings.general.name.placeholder": "Il tuo nome",
+  "settings.general.saved": "✓ Salvato", // glifo-ok: segno della tavola
+  "settings.general.language": "Lingua",
+  "settings.general.language.why": "Le parole dell'app. I nomi letti dai file restano come sono.",
+  "settings.general.theme.sub": "come si vede l'app",
+  "settings.folders": "Cartelle e scansione",
   "settings.solver": "ASTAP",
   "settings.solver.title": "ASTAP",
   "settings.solver.what":

@@ -22,7 +22,7 @@ async function vaiAllaLuna() {
   })
   await disegna()
   await apriImpostazioni()
-  fireEvent.click(await screen.findByRole("link", { name: "Luna" }))
+  fireEvent.click(await screen.findByRole("tab", { name: "Luna" }))
   return screen.findByRole("region", { name: "Luna" })
 }
 
@@ -59,7 +59,7 @@ describe("Impostazioni, la Luna", () => {
     })
     await disegna()
     await apriImpostazioni()
-    fireEvent.click(await screen.findByRole("link", { name: "Luna" }))
+    fireEvent.click(await screen.findByRole("tab", { name: "Luna" }))
     const sezione = await screen.findByRole("region", { name: "Luna" })
 
     const ore = within(sezione).getByLabelText("Banda larga al limite fino a (%)")

@@ -246,7 +246,7 @@ export function TestaTelefono({ comandi }: { comandi: Comandi }) {
             <span className="al-c-telaio__tondo-6" />
           </span>
           {pastiglia.senzaSito ? (
-            <Link className="al-c-telaio__riga-12" to="/impostazioni/sito" aria-label={aria}>
+            <Link className="al-c-telaio__riga-12" to="/impostazioni/siti" aria-label={aria}>
               {dice}
             </Link>
           ) : (
