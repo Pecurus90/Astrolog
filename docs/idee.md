@@ -54,7 +54,7 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
   stelle Gaia, come lo SQM, dice k e le nuvole senza finestre di stelle; su M51 0,40 contro il
   nostro 0,37 (misure.md, Trasparenza). Altri usi: magnitudine limite, colore.
 - **L'app installabile, una PWA** (Marco, 6/11/2026): manifest e service worker, stesso frontend,
-  da installare su desktop e telefono. Serve HTTPS in casa (Tailscale o reverse proxy con dominio;
-  l'autofirmato no); offline senza dati. Col passo 47, prima del telefono (48).
+  desktop e telefono; HTTPS in casa (Tailscale o proxy con dominio, autofirmato no), passo 47.
 - **Attrezzatura come la tavola v82** (Marco, 14/11/2026): calcolati del modulo a ogni tasto (una
   rotta dalla bozza); «inserito manualmente» sui filtri (`detected` dall'API).
+- **Previsione prima della Luna nel giro** (15/11/2026): calendario 6 s prima, il sito nuovo aspetta.
