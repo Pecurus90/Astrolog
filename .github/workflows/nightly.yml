@@ -51,6 +51,9 @@ jobs:
           if [ -d mutants/astrolog ]; then
             rsync -a --exclude='*.py' astrolog/ mutants/astrolog/
             rm -rf mutants/tests
+            # mutmut maps only new tests to functions: an old test calling a new function stays
+            # unmapped and its mutants survive (_same_folder_at, 15/11/2026); rebuilt, ~10 min
+            rm -f mutants/mutmut-stats.json
             find mutants/astrolog -name '*.py' | while read -r f; do
               [ -f "${f#mutants/}" ] || rm -f "$f" "$f.meta"
             done
