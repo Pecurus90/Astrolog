@@ -6,8 +6,10 @@ chi scrive -- misurato, e' cio' che portava il cancello sopra il suo tetto. Sull
 le prove che la provano davvero: il pulsante, il giro in sottofondo, il servizio muto.
 """
 
+import logging
 import shutil
 import threading
+import time
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -135,11 +137,13 @@ def test_the_forecast_renews_itself_in_the_background(db_path, monkeypatch):
 
 
 def test_a_home_site_declared_later_gets_its_forecast_without_waiting_the_full_round(
-    db_path, monkeypatch
+    db_path, monkeypatch, caplog
 ):
     """Il giro guarda il sito di casa spesso: chi lo dichiara ora non aspetta tre ore."""
     from astrolog.api import app as fabbrica
 
+    # Issue #83: se cade in CI, il log dice cosa ha visto ogni giro e con che esito
+    caplog.set_level(logging.DEBUG, logger="astrolog")
     monkeypatch.setattr(fabbrica, "_WEATHER_TICK_S", 0.05)
     finto = Finto(attorno_ad_adesso())
     monkeypatch.setattr(forecast, "_fetch", finto)
@@ -147,7 +151,9 @@ def test_a_home_site_declared_later_gets_its_forecast_without_waiting_the_full_r
     with TestClient(app, base_url="http://localhost") as c:
         assert c.get("/api/v1/weather").json()["nights"] == []
         metti_casa(db_path)
-        assert wait_until(lambda: c.get("/api/v1/weather").json()["nights"])
+        arrivata = wait_until(lambda: c.get("/api/v1/weather").json()["nights"])
+        logging.getLogger("astrolog").debug("test: attesa finita a %.2f", time.monotonic())
+        assert arrivata
     assert len(finto.chiesti) == 1
 
 

@@ -127,6 +127,7 @@ def _weather_round(db_path: str, cadence: forecast.Cadence) -> None:
     conn = connect(db_path)
     try:
         site = home_site(conn)
+        log.debug("meteo: giro a %.2f, sito %s", time.monotonic(), site.id if site else None)
         try:
             climate.step(conn, site)  # before the forecast, which reads it
         except Exception:
@@ -138,7 +139,9 @@ def _weather_round(db_path: str, cadence: forecast.Cadence) -> None:
         except Exception:
             log.exception("luna: il giro del calendario e' caduto")
         if cadence.due(site, time.monotonic()):
-            cadence.done(site, rounds.refresh(conn, site), time.monotonic())
+            outcome = rounds.refresh(conn, site)
+            log.debug("meteo: previsione a %.2f, esito %s", time.monotonic(), outcome)
+            cadence.done(site, outcome, time.monotonic())
     except Exception:
         log.exception("meteo: il giro della previsione e' caduto")
     try:
