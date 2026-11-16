@@ -80,7 +80,11 @@ def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:
 
 def solver_found() -> tuple[str | None, astap.Source | None]:
     """What the search finds ignoring the preferences; why it only proposes: `api/settings`."""
-    return astap.where_exe(None)
+    found = astap.where_exe(None)
+    if found[0] is None and os.environ.get(astap.ENV_EXE):
+        # a wrong variable stops the run, not the proposal: adopted, the preference beats it
+        found = astap.where_exe(None, {k: v for k, v in os.environ.items() if k != astap.ENV_EXE})
+    return found
 
 
 def solve_frames(

@@ -257,6 +257,23 @@ def test_looking_for_it_ignores_what_is_declared(client, tmp_path, monkeypatch):
     assert visti == [None], visti
 
 
+def test_looking_for_it_goes_past_a_wrong_variable(client, tmp_path, monkeypatch):
+    """Una `ASTROLOG_ASTAP` sbagliata fermava anche *Cercalo tu*, e la pagina dava la colpa al
+    PATH senza averlo guardato (#86): la ricerca prosegue e propone quello che trova."""
+    installato = tmp_path / "astap.exe"
+    installato.write_text("x", encoding="utf-8")
+    monkeypatch.setenv(astap.ENV_EXE, str(tmp_path / "non-c-e.exe"))
+    monkeypatch.setattr(
+        astap,
+        "where_exe",
+        lambda declared=None, env=None: cerca_col_canale(
+            declared, env, which=lambda _n: None, candidates=[installato]
+        ),
+    )
+    proposto = client.post("/api/v1/solver/search").json()
+    assert (proposto["path"], proposto["source"]) == (str(installato), "known_place")
+
+
 def test_the_run_launches_the_path_written_in_settings(db_path, tmp_path, monkeypatch):
     """La corsa lancia **quel** percorso, non uno cercato per conto suo.
 
