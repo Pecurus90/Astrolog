@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 379; senza fonte: 0.
-Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 91.
+Valori: 382; senza fonte: 0.
+Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 94.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -119,6 +119,13 @@ Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T
 | scan@router.post | `router.post("/folders/{folder_id}/scan", response_model=ScanStarted...` | C RFC 9110 15.3.3: 202 Accepted |
 | scan_runs(limit=) | `Query(20, ge=1, le=500)` | T |
 | scan_run_errors(limit=) | `Query(100, ge=1, le=1000)` | T |
+
+### api/scan_history.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| scans(limit=) | `Query(20, ge=1, le=200)` | T |
+| scan_unread(limit=) | `Query(100, ge=1, le=1000)` | T |
 
 ### api/search.py
 
@@ -775,6 +782,12 @@ Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T
 |---|---|---|
 | DEFAULT_MIN_AGE_S | `30` | P docs/domini/spina-scan.md |
 | MTIME_TOLERANCE_S | `0.001` | P docs/domini/spina.md |
+
+### spine/scan_history.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| UNREAD_SHOWN | `5` | T |
 
 ### spine/search.py
 

@@ -694,3 +694,22 @@ togliere chiede conferma e dice cosa resta, prima di toccare niente - step 33, S
 un numero fuori misura non parte e lo dice sotto il campo - step 33, Settings D: replaced by la misura di ogni soglia la manda il backend
 una cartella che non si raggiunge lo dice, e le altre restano - step 33, Settings D: replaced by una cartella che non si raggiunge lo dice, e i suoi frame restano
 una soglia cambiata si salva lasciando il campo - step 33, Settings D: replaced by una percentuale cambiata si salva lasciando il campo
+cosa e rimasto fuori si apre solo se e rimasto fuori qualcosa - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+i file non letti si chiedono al backend solo quando si guardano - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+il tasto che apre dice a chi ascolta cosa governa, e se ora e aperto - step 33, Settings E: board v82 Scansioni has no collapsing box
+quando una lettura finisce, la sua ricevuta compare senza ricaricare - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+senza letture dice cosa fare, invece di un elenco vuoto - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+si chiedono le precedenti solo se ce ne sono - step 33, Settings E: board v82 Scansioni replaces the old readings box
+una cartella lasciata fuori dice perche', a parole - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+una corsa fermata da te non ripete il perche' - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+una corsa fermata da un guasto dice perche', a parole - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+una lettura ancora in corso non dura zero - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+una lettura che non tiene piu l elenco lo dice, invece di un elenco vuoto - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+una lettura dice quale cartella, quando, quanto e com e andata - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+uno zero non e una riga, tranne dove e la risposta - step 33, Settings E: board v82 Scansioni replaces the old readings box; covered by tests/impostazioni-scansioni.test.tsx
+il conto del backup non scrive un plurale sbagliato, e non usa il doppio trattino - step 33, Settings E: board v82 Backup card has no counts line
+in Impostazioni dice dove sta il file e quando e' stato scritto - step 33, Settings E: replaced by in Impostazioni dice dove sta il file, quando e' stato scritto e quanto pesa
+la sezione passa dai mattoni e dalla guardia di accessibilita', con la chiave salvata - step 33, Settings E: replaced by la sezione passa dalla guardia di accessibilita', con una chiave salvata
+una chiave che il conto rifiuta non si salva, e lo dice - step 33, Settings E: replaced by una chiave che il servizio rifiuta non si salva, e lo dice
+una chiave salvata si toglie - step 33, Settings E: replaced by una chiave salvata si toglie, e Cambia apre il campo
+una sezione non ancora ridisegnata sta nel riquadro del foglio vecchio - step 33, Settings E: every section is ported, the old box is gone

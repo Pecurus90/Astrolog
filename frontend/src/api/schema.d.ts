@@ -832,6 +832,10 @@ export interface paths {
          * @description Reads all the registered folders that are not retired, in one run, and replies at once;
          *     the progress is in `GET /pipeline/status`.
          *
+         *     A folder that does not answer is `skipped` and gets a closed receipt `aborted` /
+         *     `root_unreachable` in the gesture, so `GET /scans` says it blocked. With none readable nothing
+         *     starts and no receipt is left: the 409 is said at once.
+         *
          *     409 `no_folders` when there is none; 409 `no_readable_folders` with the `skipped` folders
          *     when none can be started; 409 `worker_busy` when a job runs, also with the `skipped` folders
          *     when some are already being read.
@@ -904,6 +908,74 @@ export interface paths {
          */
         get: operations["scan_run_errors"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scans
+         * @description The scans, newest first: one per gesture (Scansiona reads every folder in one scan).
+         *     Days by the home site's clock.
+         */
+        get: operations["scans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scans/{scan_id}/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scan Unread
+         * @description Every file the scan could not read, each with its reason, in pages.
+         *
+         *     404 `scan_not_found`; 410 `errors_not_kept` when a folder's list is no longer kept (only the
+         *     last scan of each folder keeps it).
+         */
+        get: operations["scan_unread"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/services/sky-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Put Sky Key
+         * @description Tries the key on the sky service (lightpollutionmap.info) and saves it, or removes it when
+         *     sent empty. Spaces and line breaks of a paste are trimmed.
+         *
+         *     **A key the service refuses is not saved**, and the hint stays the previous key's. Only the
+         *     hint (`config.hint`) comes out, never the key.
+         */
+        put: operations["put_sky_key"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1937,6 +2009,16 @@ export interface components {
             unreadable: boolean;
             /** Path */
             path: string;
+            /**
+             * Size Bytes
+             * @description The file's size; None without a readable file.
+             */
+            size_bytes: number | null;
+            /**
+             * Written Day
+             * @description `last.written_at`'s day by the home site's clock, as in `LastScanOut`.
+             */
+            written_day: ("today" | "yesterday") | null;
         };
         /** BandIn */
         BandIn: {
@@ -2199,6 +2281,16 @@ export interface components {
              * @description `in_use`: the rigs of those frames; `in_rig`: the rigs.
              */
             rigs: number[];
+        };
+        /** DirLeftOut */
+        DirLeftOut: {
+            /** Path */
+            path: string;
+            /**
+             * Why
+             * @enum {string}
+             */
+            why: "unreadable" | "hidden" | "linked";
         };
         /** Distance */
         Distance: {
@@ -3285,6 +3377,16 @@ export interface components {
              * @description Files the readings could not read (`errors`).
              */
             not_read: number;
+        };
+        /** LeftOutCount */
+        LeftOutCount: {
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "unchanged" | "duplicates" | "calibration" | "stack" | "still_writing" | "online_only";
+            /** Count */
+            count: number;
         };
         /** Load */
         Load: {
@@ -5235,6 +5337,93 @@ export interface components {
             /** Online Only */
             online_only: number;
         };
+        /** ScanList */
+        ScanList: {
+            /** Items */
+            items: components["schemas"]["ScanOut"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /**
+         * ScanOut
+         * @description One scan as the user made it: a gesture, however many folders it read (Impostazioni,
+         *     Scansioni, tavola v82).
+         */
+        ScanOut: {
+            /**
+             * Id
+             * @description The gesture's first receipt: `GET /scans/{id}/unread`.
+             */
+            id: number;
+            /** Started At */
+            started_at: string;
+            /**
+             * Started Day
+             * @description `started_at`'s day by the home site's clock, as in `LastScanOut`.
+             */
+            started_day: ("today" | "yesterday") | null;
+            /**
+             * Duration S
+             * @description None while it runs or left open.
+             */
+            duration_s: number | null;
+            /**
+             * Outcome
+             * @description `stopped` by the user; `blocked` by a fault, or left open by a process that died. Worst first across the folders.
+             * @enum {string}
+             */
+            outcome: "completed" | "stopped" | "blocked" | "running";
+            /**
+             * Reason
+             * @description Why it is `blocked`; None otherwise.
+             */
+            reason: ("root_unreachable" | "internal_error" | "database_error" | "left_open") | null;
+            /**
+             * Reason Folder
+             * @description The folder the reason is about.
+             */
+            reason_folder: string | null;
+            /** Folders */
+            folders: string[];
+            /**
+             * New
+             * @description Frames that entered.
+             */
+            new: number;
+            /**
+             * Left Out
+             * @description Files found that did not enter; no zeros.
+             */
+            left_out: components["schemas"]["LeftOutCount"][];
+            /** Dirs Left Out */
+            dirs_left_out: components["schemas"]["DirLeftOut"][];
+            /**
+             * Unread
+             * @description Files that could not be read.
+             */
+            unread: number;
+            /**
+             * Unread Files
+             * @description The first ones, folder by folder.
+             */
+            unread_files: components["schemas"]["FileNotRead"][];
+            /**
+             * Unread Kept
+             * @description False when the list of a receipt is no longer kept (only the last scan of each folder keeps it): `unread_files` is then partial and the rest is not asked.
+             */
+            unread_kept: boolean;
+            /** @description While it runs: files read of the folder being read, once it knows its total. */
+            progress: components["schemas"]["ScanProgressOut"] | null;
+            /**
+             * Can Retry
+             * @description The newest scan, blocked, with the worker idle: the page offers Riprova, which is the gear menu's gesture (`PipelineStatus.action`).
+             */
+            can_retry: boolean;
+        };
         /**
          * ScanProgress
          * @description The scan of the current run: what the page shows while it runs and when it ends.
@@ -5267,6 +5456,15 @@ export interface components {
              * @description The root of the folder being read (of the last event, else of the last started); `None` once the folder is gone.
              */
             folder_path?: string | null;
+        };
+        /** ScanProgressOut */
+        ScanProgressOut: {
+            /** Read */
+            read: number;
+            /** Total */
+            total: number;
+            /** Pct */
+            pct: number;
         };
         /** ScanRunList */
         ScanRunList: {
@@ -5731,6 +5929,25 @@ export interface components {
              * @enum {string}
              */
             kind: "day" | "civil" | "nautical" | "astronomical" | "dark";
+        };
+        /** SkyKeyIn */
+        SkyKeyIn: {
+            /** Key */
+            key: string | null;
+        };
+        /**
+         * SkyKeyOut
+         * @description How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
+         *     there now.
+         */
+        SkyKeyOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "removed" | "refused" | "unreachable" | "bad_answer";
+            /** Hint */
+            hint: string | null;
         };
         /** SkyMonthMark */
         SkyMonthMark: {
@@ -8037,6 +8254,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScanErrorList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scans: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_unread: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                scan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanErrorList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_sky_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkyKeyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkyKeyOut"];
                 };
             };
             /** @description Validation Error */

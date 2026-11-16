@@ -72,6 +72,31 @@ def test_every_write_of_the_user_rewrites_the_file_and_a_new_database_gets_it_ba
     assert _dichiarato(db) == prima
 
 
+def test_the_status_says_the_size_and_the_day_of_the_file(tmp_path, offline):
+    """«oggi, 07:14 · 46 KB» (tavola v82, Backup): il giorno dall'orologio del sito di casa."""
+    db = tmp_path / "astrolog.db"
+    with _app(db) as c:
+        mai = c.get("/api/v1/backup").json()
+        assert (mai["size_bytes"], mai["written_day"]) == (None, None)
+        _risposte(c)
+        stato = c.get("/api/v1/backup").json()
+    assert stato["size_bytes"] == _file(db).stat().st_size > 0
+    assert stato["written_day"] == "today"
+
+
+def test_a_sky_key_written_rewrites_the_file(tmp_path, offline, monkeypatch):
+    """La chiave del servizio del cielo e' una risposta: torna da sola dopo un database perso."""
+    from astrolog import place
+
+    monkeypatch.setattr(place, "_fetch", lambda url: "0.12")
+    db = tmp_path / "astrolog.db"
+    with _app(db) as c:
+        assert c.put("/api/v1/services/sky-key", json={"key": "chiave"}).status_code == 200
+    assert json.loads(_file(db).read_text(encoding="utf-8"))["config"]["sky_service_key"] == (
+        "chiave"
+    )
+
+
 def test_a_database_recreated_before_start_is_offered_the_file(tmp_path, offline):
     """`tools/reset_db.py` ricrea il database prima dell'avvio: senza risposte dentro, il file
     accanto si propone."""

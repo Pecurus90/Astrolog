@@ -46,7 +46,9 @@ from . import (
     pipeline,
     review,
     scan,
+    scan_history,
     search,
+    services,
     settings,
     sites,
     tonight,
@@ -311,7 +313,7 @@ def create_app(  # noqa: PLR0913
         )
 
     for routes in (archive, backup, camera_bias, gear, gear_write, measures, night_measures, nights,
-                   objects, folders, scan,
+                   objects, folders, scan, scan_history, services,
                    search, pipeline, review, sites, settings, tonight, vocab, weather,
                    year):  # fmt: skip
         app.include_router(routes.router)

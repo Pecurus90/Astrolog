@@ -102,8 +102,34 @@ export const itImpostazioni = {
   "settings.moon.now": "Ora: buona fino al {buona}%, al limite fino al {limite}%, conta sopra {sopra}.",
   "settings.readings": "Scansioni",
   "settings.services": "Servizi",
-  "settings.services.title": "Servizi",
-  "settings.services.what": "Chiavi API dei servizi esterni. Facoltative.",
+  // SezioneServizi.dc.html, Servizi (v82); "non vanno nel file esportato": Marco 16/11
+  "settings.services.intro":
+    "Le chiavi dei servizi in un posto solo: il Meteo e i Siti le leggono da qui. Si vede solo come finisce ogni chiave; le chiavi non escono dal computer e non vanno nel file esportato.",
+  "settings.services.where": "Dove si prende ↗", // glifo-ok: testo della tavola
+  "settings.services.key": "Chiave",
+  "settings.services.change": "Cambia",
+  "settings.services.remove": "Togli",
+  "settings.services.check": "Verifica",
+  "settings.services.paste": "Incolla la chiave",
+  "settings.services.aria": "Chiave di {servizio}",
+  "settings.services.cancel": "Annulla",
+  "settings.services.loading": "Caricamento dei servizi",
+  "settings.services.failed": "Servizi non disponibili.",
+  "settings.services.meteoblue": "Meteoblue",
+  "settings.services.meteoblue.what": "Il seeing della notte in secondi d'arco, nel Meteo.",
+  "settings.services.meteoblue.without": "Senza la chiave il Meteo non mostra il seeing.",
+  "settings.services.sky": "Servizio del cielo · lightpollutionmap.info", // glifo-ok: testo della tavola
+  "settings.services.sky.what":
+    "Il cielo di un sito dal World Atlas della luce artificiale, senza misure: una delle quattro vie del cielo, in Siti. La chiave è gratuita: si chiede con una email all'autore del sito; vale 500 richieste al giorno.", // glifo-ok: testo della tavola
+  "settings.services.sky.without":
+    "Senza la chiave, in Siti la via «Dalla mappa» si può scegliere ma non dà un cielo finché non la aggiungi; le altre tre funzionano.", // glifo-ok: testo della tavola
+  // Com'e' andata la Verifica: il backend manda il codice, qui la frase.
+  "settings.services.ok": "Chiave valida, salvata.",
+  "settings.services.removed": "Chiave tolta.",
+  "settings.services.refused": "Chiave rifiutata: controlla la chiave sul sito del servizio e incollala di nuovo.",
+  "settings.services.unreachable": "{servizio} non risponde: chiave non verificata e non salvata. Riprova più tardi.", // glifo-ok: testo della tavola
+  "settings.services.bad_answer": "Risposta non valida da {servizio}: chiave non salvata.",
+  "settings.services.sendFailed": "AstroLog non risponde: chiave non inviata. Riprova.",
 
   // Impostazioni.dc.html, Cartelle e scansione (v82)
   "settings.folders.title": "Cartelle",
@@ -305,16 +331,26 @@ export const itImpostazioni = {
   "settings.site.failed": "Siti non disponibili.",
   "settings.site.none": "Nessun sito",
   "settings.backup": "Backup",
-  "backup.title": "Backup",
-  "backup.what":
-    "Il backup contiene i dati inseriti (attrezzatura, oggetti, siti, impostazioni). Non contiene i file FITS.",
+  // SezioneServizi.dc.html, Backup (v82); la nota corretta: le chiavi restano nel file (Marco 16/11)
+  "backup.intro":
+    "Le tue risposte (siti, attrezzatura, quello che hai confermato) e le impostazioni stanno in un file accanto al database: se il database si rovina, si rimettono da l\u00ec.",
   "backup.when": "Ultimo backup: {giorno}, {ora}",
-  "backup.counts": "conferme {risposte}, siti {siti}, cartelle {cartelle}, strumenti e filtri {pezzi}",
-  "backup.none": "Nessun backup.",
-  "backup.unreadable": "File di backup non leggibile: verr\u00e0 ricreato.",
-  "backup.export": "Esporta backup",
-  "backup.import": "Importa backup",
-  "backup.imported": "Backup importato. Scansione avviata.",
+  "backup.file": "File",
+  "backup.written": "Scritto l'ultima volta",
+  "backup.written.when": "{giorno}, {ora} \u00b7 {kb} KB",
+  "backup.written.never": "non ancora: si scrive alla prima risposta",
+  "backup.note":
+    "Il file porta le risposte e le impostazioni. Esporta non porta le chiavi dei servizi n\u00e9 il percorso di ASTAP; Importa fa lo stesso ripristino del primo avvio.",
+  "backup.unreadable.title": "Il file delle risposte non si legge",
+  "backup.unreadable.text":
+    "{file} \u00e8 rovinato o non \u00e8 un file di AstroLog. Il database non cambia: si scrive un file nuovo alla prossima risposta.",
+  "backup.notRestored.title": "Ripristino non riuscito",
+  "backup.notRestored.text":
+    "AstroLog non risponde: nessuna risposta e nessuna impostazione \u00e8 cambiata. Riprova.",
+  "backup.loading": "Caricamento del backup",
+  "backup.export": "Esporta",
+  "backup.import": "Importa",
+  "backup.imported": "Risposte importate: le cartelle si rileggono.",
   "backup.notABackup": "File di backup non valido.",
   "backup.folderRefused": "Nel file c'\u00e8 una cartella che qui non si pu\u00f2 usare: {percorso}. Non ho importato niente.",
   "backup.exportFailed": "Esportazione non riuscita.",

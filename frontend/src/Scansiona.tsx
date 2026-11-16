@@ -139,7 +139,7 @@ export function useFineDelLavoro() {
   const finita = useStato().data?.worker.ended_at ?? null
   useEffect(() => {
     if (finita === null) return
-    for (const chiave of ["review", "scan-runs", "nights", "year", "folders"]) {
+    for (const chiave of ["review", "scans", "nights", "year", "folders"]) {
       void cache.invalidateQueries({ queryKey: [chiave] })
     }
   }, [finita, cache])

@@ -19,6 +19,16 @@ const CONTI = {
   answers: 42,
 }
 
+// written today: the page says «oggi» from `written_day`, the clock of the home site
+const STATO = {
+  offer: "none",
+  last: CONTI,
+  unreadable: false,
+  path: "C:\\dati\\risposte.json",
+  size_bytes: 47104,
+  written_day: "today",
+}
+
 function app(offer: "found" | "none", fatto: boolean) {
   rispondi({
     ...STANOTTE,
@@ -27,7 +37,7 @@ function app(offer: "found" | "none", fatto: boolean) {
     "POST /api/v1/scan": { stato: 202, corpo: {} },
     "/api/v1/backup": {
       stato: 200,
-      corpo: { offer, last: CONTI, unreadable: false, path: "C:\\dati\\risposte.json" },
+      corpo: { ...STATO, offer },
     },
     "/api/v1/settings": { stato: 200, corpo: impostazioni(fatto) },
     "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
@@ -70,7 +80,7 @@ describe("Il backup", () => {
       ...SPINA,
       "POST /api/v1/backup/restore": { stato: 200, corpo: { offer: "none", last: CONTI, unreadable: false, path: "x" } },
       "POST /api/v1/scan": { stato: 202, corpo: {} },
-      "/api/v1/backup": { stato: 200, corpo: { offer: "none", last: CONTI, unreadable: false, path: "x" } },
+      "/api/v1/backup": { stato: 200, corpo: { ...STATO, path: "x" } },
       // le impostazioni arrivano dopo il backup, come dal vivo: per un attimo l'app sa che non
       // c'e' piu' niente da proporre e ha ancora in mano il timbro vecchio
       "/api/v1/settings": {
@@ -92,21 +102,71 @@ describe("Il backup", () => {
     expect(screen.queryByText(/^backup trovato$/i)).toBeNull()
   })
 
-  it("in Impostazioni dice dove sta il file e quando e' stato scritto", async () => {
+  it("in Impostazioni dice dove sta il file, quando e' stato scritto e quanto pesa", async () => {
     window.history.pushState({}, "", "/impostazioni/backup")
     await app("none", true)
-    expect(await screen.findByRole("heading", { name: /^backup$/i })).toBeDefined()
     expect(await screen.findByText("C:\\dati\\risposte.json")).toBeDefined()
+    // 47 104 byte: «46 KB», come la tavola
+    expect(await screen.findByText(/^oggi, \d\d:\d\d · 46 KB$/)).toBeDefined()
+    expect(screen.getByRole("button", { name: /^esporta$/i }).getAttribute("aria-disabled")).toBeNull()
   })
 
-  it("il conto del backup non scrive un plurale sbagliato, e non usa il doppio trattino", async () => {
-    // Un sito solo: "1 siti" era il difetto. Ogni voce dice prima cosa conta, poi quanto.
+  it("un file mai scritto lo dice, ed Esporta e' spento", async () => {
     window.history.pushState({}, "", "/impostazioni/backup")
-    await app("none", true)
-    const riga = (await screen.findByText("C:\\dati\\risposte.json")).closest("p")
-    expect(riga?.textContent).toContain("siti 1")
-    expect(riga?.textContent).not.toMatch(/1 siti/)
-    expect(riga?.textContent).not.toContain("--")
+    rispondi({
+      ...STANOTTE,
+      ...SPINA,
+      "/api/v1/backup": { stato: 200, corpo: { ...STATO, last: null, size_bytes: null, written_day: null } },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+    })
+    await disegna()
+    expect(await screen.findByText("non ancora: si scrive alla prima risposta")).toBeDefined()
+    expect(screen.getByRole("button", { name: /^esporta$/i }).getAttribute("aria-disabled")).toBe("true")
+  })
+
+  it("un file che non si legge lo dice, e il database non cambia", async () => {
+    window.history.pushState({}, "", "/impostazioni/backup")
+    rispondi({
+      ...STANOTTE,
+      ...SPINA,
+      "/api/v1/backup": {
+        stato: 200,
+        corpo: { ...STATO, last: null, unreadable: true, size_bytes: null, written_day: null },
+      },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+    })
+    await disegna()
+    expect(await screen.findByText("Il file delle risposte non si legge")).toBeDefined()
+    // un file c'e': non «non ancora», ed Esporta legge il database
+    expect(screen.queryByText("non ancora: si scrive alla prima risposta")).toBeNull()
+    expect(screen.getByRole("button", { name: /^esporta$/i }).getAttribute("aria-disabled")).toBeNull()
+  })
+
+  it("un'importazione senza risposta dice che niente e' cambiato, e Riprova rimanda lo stesso file", async () => {
+    window.history.pushState({}, "", "/impostazioni/backup")
+    rispondi({
+      ...STANOTTE,
+      ...SPINA,
+      "POST /api/v1/backup/import": { stato: 503, corpo: {} },
+      "/api/v1/backup": { stato: 200, corpo: STATO },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+    })
+    const { container } = await disegna()
+    await screen.findByRole("button", { name: /^importa$/i })
+    const scelta = container.querySelector<HTMLInputElement>('input[type="file"]')!
+    const file = new File(['{"version": 1}'], "risposte.json", { type: "application/json" })
+    fireEvent.change(scelta, { target: { files: [file] } })
+    expect(await screen.findByText("Ripristino non riuscito")).toBeDefined()
+    fireEvent.click(screen.getByText("Riprova"))
+    await waitFor(() =>
+      expect(scritture().filter((s) => s.url.includes("/backup/import"))).toHaveLength(2),
+    )
   })
 
   it("una cartella del file che qui non si puo' usare si nomina: il file non e' guasto", async () => {
@@ -118,13 +178,13 @@ describe("Il backup", () => {
         stato: 422,
         corpo: { detail: { code: "path_outside_data_root", path: "/home/marco/privata" } },
       },
-      "/api/v1/backup": { stato: 200, corpo: { offer: "none", last: CONTI, unreadable: false, path: "x" } },
+      "/api/v1/backup": { stato: 200, corpo: { ...STATO, path: "x" } },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
       "/api/health": { stato: 200, corpo: SALUTE },
     })
     const { container } = await disegna()
-    await screen.findByRole("heading", { name: /^backup$/i })
+    await screen.findByRole("button", { name: /^importa$/i })
     const scelta = container.querySelector<HTMLInputElement>('input[type="file"]')!
     const file = new File(['{"version": 1}'], "risposte.json", { type: "application/json" })
     fireEvent.change(scelta, { target: { files: [file] } })

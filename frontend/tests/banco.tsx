@@ -111,28 +111,23 @@ export const SCHEDE: components["schemas"]["GearList"]["cards"] = {
  *  cambia fa rosso qui invece di passare inosservato. I numeri sono zero e ogni prova accende
  *  quelli che le servono. Sta nel banco perche' la guardano in due -- la prova della sezione e
  *  quella di accessibilita' -- e scritta due volte sarebbe lo stesso pezzo in due case. */
-export const LETTURA: components["schemas"]["ScanRunOut"] = {
+export const SCANSIONE: components["schemas"]["ScanOut"] = {
   id: 3,
-  folder_id: 1,
-  folder_path: "D:\\Astro\\2025",
-  folder_retired: false,
   started_at: "2026-09-20T21:00:00.000Z",
-  ended_at: "2026-09-20T21:02:14.000Z",
+  started_day: null,
   duration_s: 134,
-  status: "ok",
+  outcome: "completed",
   reason: null,
-  found: 0,
+  reason_folder: null,
+  folders: ["D:\\Astro\\2025"],
   new: 0,
-  unchanged: 0,
-  duplicates: 0,
-  missing: 0,
-  skipped: 0,
-  errors: 0,
-  online_only: 0,
-  unreadable_dirs: [],
-  hidden_dirs: [],
-  linked_dirs: [],
-  skipped_by_reason: [],
+  left_out: [],
+  dirs_left_out: [],
+  unread: 0,
+  unread_files: [],
+  unread_kept: true,
+  progress: null,
+  can_retry: false,
 }
 
 /** Le rotte che il banco conosce. Una rotta non prevista **fallisce** come una rete caduta (il client

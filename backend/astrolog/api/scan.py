@@ -17,10 +17,14 @@ from ..spine import backup
 from ..spine.run import ORDER, queue, queue_folders
 from ..spine.scan import root_readable
 from ..spine.scan_store import (
+    COUNTS,
     RECEIPT_LISTS,
     SELECT_RUN,
     FolderNotFoundError,
+    ScanReason,
+    ScanStatus,
     discard_run,
+    finish_run,
     folder_root,
     run_row,
     start_run,
@@ -203,6 +207,22 @@ def _discard_never_begun(
         conn.close()
 
 
+def _unreachable_receipts(
+    conn: sqlite3.Connection, skips: Iterable[FolderSkipped], batch: int
+) -> None:
+    """A folder that did not answer is in the gesture, blocked with its reason (Impostazioni,
+    Scansioni): a closed receipt, as when the root drops while it is read (`spine/scan`)."""
+    for s in skips:
+        if s.reason != "root_unreachable":
+            continue
+        now = now_iso()
+        run_id = start_run(conn, s.folder_id, now, batch)
+        counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
+        finish_run(
+            conn, run_id, ScanStatus.ABORTED, ScanReason.ROOT_UNREACHABLE, counts, {}, [], now
+        )
+
+
 def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
     """A folder that cannot be read is skipped and reported instead of stopping the others: one NAS
     switched off would otherwise stop every scan. The locks are all taken before the start."""
@@ -253,13 +273,14 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
 
         steps = queue_folders(state.db_path, pairs, on_folder=follow)
         _launch(state, pairs, _stages_with_cleanup(state, steps, taken, opened, begun_runs))
-        return ScanAllStarted(started=opened, skipped=skips)
     except Exception as err:
         _forget_start(state, conn, taken, opened)
         state.last_scan, state.scan_runs = previous
         if isinstance(err, WorkerBusyError):
             raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
         raise
+    _unreachable_receipts(conn, skips, opened[0].run_id)
+    return ScanAllStarted(started=opened, skipped=skips)
 
 
 # [C RFC 9110 15.3.3: 202 Accepted]
@@ -267,6 +288,10 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
 def scan_all(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> ScanAllStarted:
     """Reads all the registered folders that are not retired, in one run, and replies at once;
     the progress is in `GET /pipeline/status`.
+
+    A folder that does not answer is `skipped` and gets a closed receipt `aborted` /
+    `root_unreachable` in the gesture, so `GET /scans` says it blocked. With none readable nothing
+    starts and no receipt is left: the 409 is said at once.
 
     409 `no_folders` when there is none; 409 `no_readable_folders` with the `skipped` folders
     when none can be started; 409 `worker_busy` when a job runs, also with the `skipped` folders

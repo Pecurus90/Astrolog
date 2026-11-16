@@ -101,8 +101,32 @@ export const enImpostazioni = {
   "settings.moon.now": "Now: good up to {buona}%, marginal up to {limite}%, counts above {sopra}.",
   "settings.readings": "Scans",
   "settings.services": "Services",
-  "settings.services.title": "Services",
-  "settings.services.what": "API keys for external services. Optional.",
+  "settings.services.intro":
+    "The service keys in one place: Weather and Sites read them from here. You only see how each key ends; keys never leave the computer and are not included in the exported file.",
+  "settings.services.where": "Where to get it ↗", // glifo-ok: board text
+  "settings.services.key": "Key",
+  "settings.services.change": "Change",
+  "settings.services.remove": "Remove",
+  "settings.services.check": "Check",
+  "settings.services.paste": "Paste the key",
+  "settings.services.aria": "{servizio} key",
+  "settings.services.cancel": "Cancel",
+  "settings.services.loading": "Loading services",
+  "settings.services.failed": "Services not available.",
+  "settings.services.meteoblue": "Meteoblue",
+  "settings.services.meteoblue.what": "The night's seeing in arcseconds, in Weather.",
+  "settings.services.meteoblue.without": "Without the key, Weather does not show the seeing.",
+  "settings.services.sky": "Sky service · lightpollutionmap.info", // glifo-ok: board text
+  "settings.services.sky.what":
+    "A site's sky from the World Atlas of artificial light, without measurements: one of the four ways to set the sky, in Sites. The key is free: you ask for it by email from the site's author; it allows 500 requests per day.", // glifo-ok: board text
+  "settings.services.sky.without":
+    "Without the key, in Sites the “From the map” way can be chosen but gives no sky until you add it; the other three work.", // glifo-ok: board text
+  "settings.services.ok": "Key valid, saved.",
+  "settings.services.removed": "Key removed.",
+  "settings.services.refused": "Key refused: check the key on the service's site and paste it again.",
+  "settings.services.unreachable": "{servizio} is not responding: key not checked and not saved. Try again later.", // glifo-ok: board text
+  "settings.services.bad_answer": "Invalid response from {servizio}: key not saved.",
+  "settings.services.sendFailed": "AstroLog is not responding: key not sent. Try again.",
 
   // Impostazioni.dc.html, Folders and scan (v82)
   "settings.folders.title": "Folders",
@@ -302,16 +326,25 @@ export const enImpostazioni = {
   "settings.site.failed": "Sites not available.",
   "settings.site.none": "No sites",
   "settings.backup": "Backup",
-  "backup.title": "Backup",
-  "backup.what":
-    "The backup contains the data you entered (equipment, objects, sites, preferences). It does not contain the FITS files.",
+  "backup.intro":
+    "Your answers (sites, equipment, what you confirmed) and the settings are kept in a file next to the database: if the database gets damaged, they are restored from there.",
   "backup.when": "Last backup: {giorno}, {ora}",
-  "backup.counts": "confirmations {risposte}, sites {siti}, folders {cartelle}, instruments and filters {pezzi}",
-  "backup.none": "No backup.",
-  "backup.unreadable": "Backup file unreadable: it will be recreated.",
-  "backup.export": "Export backup",
-  "backup.import": "Import backup",
-  "backup.imported": "Backup imported. Scan started.",
+  "backup.file": "File",
+  "backup.written": "Last written",
+  "backup.written.when": "{giorno}, {ora} \u00b7 {kb} KB",
+  "backup.written.never": "not yet: it is written at the first answer",
+  "backup.note":
+    "The file holds the answers and the settings. Export does not include the service keys or the ASTAP path; Import does the same restore as the first start.",
+  "backup.unreadable.title": "The answers file cannot be read",
+  "backup.unreadable.text":
+    "{file} is damaged or is not an AstroLog file. The database does not change: a new file is written at the next answer.",
+  "backup.notRestored.title": "Restore failed",
+  "backup.notRestored.text":
+    "AstroLog is not responding: no answer and no setting has changed. Try again.",
+  "backup.loading": "Loading the backup",
+  "backup.export": "Export",
+  "backup.import": "Import",
+  "backup.imported": "Answers imported: the folders are read again.",
   "backup.notABackup": "Invalid backup file.",
   "backup.folderRefused": "The file has a folder that cannot be used here: {percorso}. Nothing was imported.",
   "backup.exportFailed": "Export failed.",

@@ -6,10 +6,7 @@
 as-apertura
 as-apertura--accanto
 as-apertura__azioni
-as-apertura__righe
-as-apertura__testo
 as-apertura__titolo
-as-apertura__voce
 as-bortle-scala__voce--1
 as-bortle-scala__voce--2
 as-bortle-scala__voce--3
@@ -21,15 +18,9 @@ as-bortle-scala__voce--8
 as-bortle-scala__voce--9
 as-bottone--distruttivo
 as-bottone--errore
-as-carta__corpo
-as-carta__corpo--colonna
-as-carta__corpo--stretto
 as-carta__domanda
-as-carta__piede
-as-carta__titolo
 as-dato
 as-dato--ignoto
-as-elenco
 as-riga--errore
 as-riga--risposta
 as-riga__conteggio

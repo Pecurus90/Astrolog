@@ -8,6 +8,7 @@ import zoneinfo
 import pytest
 
 from astrolog import place
+from conftest import rete_giu
 from test_sites import answers, create
 
 
@@ -74,16 +75,41 @@ def test_the_map_is_asked_only_with_the_key(client_vuoto, offline):
 def test_the_map_writes_the_sky_with_its_source(client_vuoto, monkeypatch):
     answers(monkeypatch, {"lightpollutionmap": "0.5", "elevation": {"elevation": [1000.0]}})
     site = create(client_vuoto, bortle=2)
-    client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
+    client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
     r = client_vuoto.post(f"/api/v1/sites/{site['id']}/sky/service")
     assert r.status_code == 200, r.text
     assert r.json()["sky_source"] == "service"
     assert r.json()["sky_sqm"] == pytest.approx(20.51, abs=0.02)
 
 
-def test_a_silent_map_leaves_the_sky_as_it_was(client_vuoto, offline):
+def test_the_sky_key_is_tried_before_it_is_saved(client_vuoto, monkeypatch):
+    """Servizi (tavola v82): Verifica. Una chiave sbagliata riceve 200 con una frase (provato il
+    16/11/2026), e non si salva; quella buona si', e fuori esce solo come finisce."""
+    url = "/api/v1/services/sky-key"
+    answers(monkeypatch, {"lightpollutionmap": "Invalid authentication."})
+    r = client_vuoto.put(url, json={"key": "sbagliata"}).json()
+    assert r == {"status": "refused", "hint": None}
+    answers(monkeypatch, {"lightpollutionmap": "0.04"})
+    r = client_vuoto.put(url, json={"key": " buona1234\n"}).json()
+    assert r["status"] == "ok" and r["hint"] == "...1234"
+    answers(monkeypatch, {"lightpollutionmap": "<html>errore</html>"})
+    r = client_vuoto.put(url, json={"key": "altra"}).json()
+    assert r == {"status": "bad_answer", "hint": "...1234"}
+    assert client_vuoto.get("/api/v1/settings").json()["values"]["sky_service_key"] == "...1234"
+    assert client_vuoto.put(url, json={"key": ""}).json() == {"status": "removed", "hint": None}
+    assert client_vuoto.get("/api/v1/settings").json()["values"]["sky_service_key"] is None
+
+
+def test_a_silent_sky_service_saves_no_key(client_vuoto, offline):
+    r = client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"}).json()
+    assert r == {"status": "unreachable", "hint": None}
+
+
+def test_a_silent_map_leaves_the_sky_as_it_was(client_vuoto, offline, monkeypatch):
     site = create(client_vuoto, bortle=4)
-    client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
+    answers(monkeypatch, {"lightpollutionmap": "0.5"})
+    client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
+    rete_giu(monkeypatch)
     r = client_vuoto.post(f"/api/v1/sites/{site['id']}/sky/service")
     assert r.status_code == 503
     assert r.json()["detail"]["code"] == "sky_service_unavailable"

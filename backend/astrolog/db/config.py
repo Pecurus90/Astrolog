@@ -127,7 +127,7 @@ class OutOfRangeError(ValueError):
 # Service keys leave the app only as a `hint`, never whole.
 SECRETS = frozenset({"sky_service_key", "meteoblue_key"})
 # Written only after a check against the account, by their own route, not by the generic write.
-TRIED_ELSEWHERE = frozenset({"meteoblue_key"})
+TRIED_ELSEWHERE = frozenset({"meteoblue_key", "sky_service_key"})
 
 
 def hint(value: str | None) -> str | None:

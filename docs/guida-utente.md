@@ -207,21 +207,30 @@ conta**: dall'orizzonte (di fabbrica), da 5° o 10°, o gia' da -5° sotto l'ori
 di misura TESS. Un numero si salva quando lasci il campo, e calendario, previsione e notti si
 aggiornano subito. Sotto un cielo buio la Luna disturba prima: abbassa le percentuali.
 
-Poi **Servizi**: le chiavi personali dei servizi che l'app interroga. Oggi c'e' quella di
-**Meteoblue**: la scrivi, premi *Verifica e salva*, e l'app la prova sul tuo conto prima di tenerla --
-se il conto non la riconosce te lo dice e non la salva. Una chiave salvata non la rivedi mai
-intera: l'app ti mostra come finisce, che basta a sapere se e' quella giusta. Con *Rimuovi chiave*
-il seeing sparisce dal Meteo da stanotte in poi; quello delle notti passate resta, per le statistiche.
+Poi **Servizi**: le chiavi personali dei servizi che l'app interroga, ognuna nella sua carta con
+*Dove si prende*. Quella di **Meteoblue** porta il seeing nel Meteo; quella del **servizio del
+cielo** (lightpollutionmap.info) fa funzionare *Dalla mappa* nella carta del cielo di un sito. La
+incolli, premi *Verifica* (o Invio), e l'app la prova prima di tenerla: se il servizio non la
+riconosce, o non risponde, te lo dice e non la salva. Una chiave salvata non la rivedi mai intera:
+l'app ti mostra come finisce, che basta a sapere se e' quella giusta; *Cambia* ne fa provare
+un'altra, *Togli* la toglie. Senza la chiave Meteoblue il seeing sparisce dal Meteo da stanotte in
+poi; quello delle notti passate resta, per le statistiche. Le chiavi restano sul tuo computer: le
+tiene anche il file delle risposte accanto al database, ma non escono in *Esporta*.
 
-Poi **Scansioni**: una per ogni volta che l'app ha letto le tue cartelle. Di
-ognuna trovi quale cartella, quando, quanto e' durata, com'e' andata -- e i conti: quanti file ha
-guardato, quanti erano nuovi, quanti erano gia' in archivio. Gli zeri non si scrivono, tranne i
-**nuovi**, che sono la domanda che ti stai facendo. Se qualcosa e' **rimasto fuori** lo apri li'
-dentro, con *File esclusi*: quanti file ha saltato apposta e perche' (le calibrazioni, le somme, quelli ancora in
-scrittura), quali cartelle non ha guardato e perche', e i file che non e' riuscito a leggere,
-ognuno col suo motivo a parole. L'elenco dei file non leggibili lo tiene **l'ultima scansione di ogni
-cartella**: delle piu' vecchie restano i numeri, e l'app te lo dice invece di mostrarti un elenco
-vuoto. La riga di una scansione appena finita compare **da sola**, senza ricaricare.
+Poi **Scansioni**: una carta per ogni volta che hai premuto *Scansiona*, la piu' recente in alto.
+Ognuna dice quando (oggi, ieri o la data, e l'ora), quanto e' durata e com'e' andata --
+**completata**, **interrotta a mano**, **bloccata** col motivo e la cartella, o **in corso** con
+la barra e *Interrompi*. Poi le cartelle lette, i frame **entrati**, cio' che e' **rimasto fuori**
+e perche' (gia' in archivio, duplicati, calibrazioni, immagini integrate, file ancora in scrittura,
+cartelle lasciate fuori) e i file **non leggibili**, ognuno col suo motivo: i primi cinque, poi
+*Mostra tutti*. L'elenco dei file non leggibili lo tiene **l'ultima scansione di ogni cartella**:
+delle piu' vecchie restano i numeri, e l'app te lo dice. Sulla piu' recente bloccata c'e'
+*Riprova*. Una scansione appena partita compare **da sola**, senza ricaricare.
+
+Poi **Backup**: il file delle tue risposte, dove sta, quando l'app l'ha scritto l'ultima volta e
+quanto pesa. *Esporta* ne scarica una copia da portare su un altro computer, *Importa* rimette le
+risposte di un file esportato. Se il file non si legge, o un'importazione non arriva all'app, la
+sezione te lo dice in testa.
 
 Nella barra compaiono **solo le pagine che esistono**: l'app cresce una pagina alla volta, e una
 voce che si apre su una pagina vuota sarebbe una promessa non mantenuta. Quando una pagina nasce,
@@ -915,9 +924,9 @@ rileggendo le cartelle.
   scritto e cosa contiene (conferme, siti, cartelle, strumenti e filtri) e ti chiede se
   ripristinare i dati (*Ripristina*); poi rilegge le cartelle e ritrovi tutto come prima. Se preferisci
   *Inizia da zero*, il file si riscrive alla tua prima risposta.
-- **Per portarle su un altro computer**: *Impostazioni > Backup > Esporta backup*, e
-  sull'altro computer *Importa backup*. Il file esportato **non contiene le chiavi dei
-  servizi** (Meteoblue), che riscrivi a mano, ne' dove sta ASTAP: sull'altro computer l'app lo
+- **Per portarle su un altro computer**: *Impostazioni > Backup > Esporta*, e
+  sull'altro computer *Importa*. Il file esportato **non contiene le chiavi dei
+  servizi** (Meteoblue, servizio del cielo), che riscrivi a mano, ne' dove sta ASTAP: sull'altro computer l'app lo
   cerca da sola. L'importazione aggiunge e aggiorna, non cancella niente. Se sull'altro computer le foto stanno in un altro posto, aggiungi la cartella nel posto
   nuovo: l'app la riconosce dai file e le risposte la seguono. Se nel file c'e' una cartella che
   sull'altro computer esiste ma non si puo' usare (per esempio una cartella di sistema, o sul NAS

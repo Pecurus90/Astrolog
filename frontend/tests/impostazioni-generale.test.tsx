@@ -196,17 +196,6 @@ describe("Impostazioni, Generale", () => {
     expect(visti).toEqual(["78f1ffd4", "eee3e93e"])
   })
 
-  it("una sezione non ancora ridisegnata sta nel riquadro del foglio vecchio", async () => {
-    window.history.pushState({}, "", "/impostazioni/servizi")
-    const { container } = await app({})
-
-    expect(await screen.findByRole("tab", { name: "Servizi" })).toBeDefined()
-    // under data-modo the old sheet would take the new --inchiostro: `.app-vecchio` gives it back
-    expect(screen.getByRole("tablist").closest("[data-modo]")).not.toBeNull()
-    expect(container.querySelector(".al-imp__griglia-2 > .app-vecchio")).not.toBeNull()
-    expect(container.querySelector(".al-imp__griglia-2:not(:has(.app-vecchio))")).toBeNull()
-  })
-
   it("un salvataggio non riuscito lo dice in testa, e Riprova riscrive", async () => {
     window.history.pushState({}, "", "/impostazioni/generale")
     await app({ "PATCH /api/v1/settings": { stato: 500, corpo: {} } })

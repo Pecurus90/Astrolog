@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
+from astrolog import place
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.site_of import home_site
@@ -73,9 +74,12 @@ def test_the_key_cannot_be_written_without_being_tried(app):
     assert risposta.json()["detail"]["code"] == "tried_elsewhere"
 
 
-def test_the_other_service_key_does_not_come_out_whole_either(app):
+def test_the_other_service_key_does_not_come_out_whole_either(app, monkeypatch):
     fake_key = "cielo-abcd-9876"  # gitleaks:allow
-    app.patch("/api/v1/settings", json={"values": {"sky_service_key": fake_key}})
+    risposta = app.patch("/api/v1/settings", json={"values": {"sky_service_key": fake_key}})
+    assert risposta.json()["detail"]["code"] == "tried_elsewhere"
+    monkeypatch.setattr(place, "_fetch", lambda url: "0.12")
+    app.put("/api/v1/services/sky-key", json={"key": fake_key})
     assert app.get("/api/v1/settings").json()["values"]["sky_service_key"] == "...9876"
 
 

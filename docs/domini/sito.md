@@ -112,7 +112,12 @@ per andare avanti. Vive in Impostazioni, e quando c'e' compare il pulsante "chie
 accanto al sito. Senza chiave l'app funziona: si misura o si sceglie. Il gesto e' «Dalla mappa»
 nella carta *Il cielo del sito* (tavola v82): `POST /sites/{id}/sky/service` scrive la risposta con
 la provenienza `service`; senza chiave rifiuta (`sky_service_no_key`, la pagina porta a Servizi),
-e se il servizio tace il cielo resta com'era (`sky_service_unavailable`).
+e se il servizio tace il cielo resta com'era (`sky_service_unavailable`). La chiave si scrive in
+Impostazioni › Servizi con `PUT /services/sky-key`, che la prova su un punto prima di salvarla
+(una richiesta delle 500 del giorno): una chiave sbagliata riceve 200 con «Invalid
+authentication.» (provato il 16/11/2026) e non si salva; `PATCH /settings` la rifiuta
+(`tried_elsewhere`). Resta nel file delle risposte accanto al
+database e non esce in Esporta (ADR 0017; Marco 16/11: le chiavi restano nel file).
 
 **Il fuso porta il suo scarto di oggi** («Europe/Rome · UTC+1», tavola v82): `utc_offset_minutes`
 si calcola alla lettura perche' cambia con l'ora legale, e una colonna invecchierebbe in sei mesi.

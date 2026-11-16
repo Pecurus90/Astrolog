@@ -23,7 +23,7 @@ import { fireEvent, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
-  LETTURA,
+  SCANSIONE,
   apriImpostazioni,
   SALUTE,
   SITO_DI_CASA,
@@ -243,38 +243,32 @@ describe("l accessibilita di dove si risponde", () => {
   it("e nemmeno Scansioni, con una ricevuta per ogni esito", async () => {
     // Tre righe con tre esiti diversi: lo stato e' colore **piu'** parola, e una riga senza la
     // parola sarebbe leggibile solo da chi distingue il verde dal rosso.
+    const file = (i: number) => ({ file: `M31/L_${i}.fits`, reason: "header_unreadable" as const })
     const base = {
-      ...LETTURA,
-      found: 120,
+      ...SCANSIONE,
       new: 5,
-      unchanged: 115,
-      skipped: 2,
-      errors: 1,
-      hidden_dirs: ["cestino"],
-      skipped_by_reason: [{ reason: "calibration", count: 2 }],
+      left_out: [{ reason: "calibration" as const, count: 2 }],
+      dirs_left_out: [{ path: "D:\\Astro\\$RECYCLE.BIN", why: "hidden" as const }],
+      unread: 7,
+      unread_files: [0, 1, 2, 3, 4].map(file),
     }
     rispondi({
       ...STANOTTE,
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
       "/api/health": { stato: 200, corpo: SALUTE },
-      // prima di `/api/v1/scan-runs`, che come prefisso la prenderebbe lei
-      "/api/v1/scan-runs/3/errors": {
+      // prima di `/api/v1/scans`, che come prefisso la prenderebbe lei
+      "/api/v1/scans/3/unread": {
         stato: 200,
-        corpo: {
-          items: [{ file: "sub/rotto.fit", reason: "header_unreadable" }],
-          total: 1,
-          limit: 100,
-          offset: 0,
-        },
+        corpo: { items: [0, 1, 2, 3, 4, 5, 6].map(file), total: 7, limit: 1000, offset: 0 },
       },
-      "/api/v1/scan-runs": {
+      "/api/v1/scans": {
         stato: 200,
         corpo: {
           items: [
-            { ...base, id: 3, status: "ok" },
-            { ...base, id: 2, status: "aborted", reason: "root_unreachable" },
-            { ...base, id: 1, status: null, ended_at: null, duration_s: null },
+            { ...base, id: 3, outcome: "running", duration_s: null, progress: { read: 42, total: 100, pct: 42 } },
+            { ...base, id: 2, outcome: "blocked", reason: "root_unreachable", reason_folder: "E:\\Sole", can_retry: true },
+            { ...base, id: 1, outcome: "stopped" },
           ],
           total: 3,
           limit: 20,
@@ -286,11 +280,13 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     await apriImpostazioni()
     fireEvent.click(await screen.findByRole("tab", { name: /^scansioni$/i }))
-    await screen.findAllByRole("listitem")
-    // e col pannello aperto: e' il bottone che dichiara cosa governa, e una regione in piu' dentro
-    // una riga -- due cose che axe guarda e che chiuso non ci sono
-    fireEvent.click((await screen.findAllByRole("button", { name: /^file esclusi$/i }))[0]!)
-    await screen.findByText(/un FITS o header non valido/i)
+    // ogni esito ha la sua parola, non solo il colore
+    expect(await screen.findByText("in corso · 42%")).toBeDefined()
+    expect(screen.getByText("✕ bloccata")).toBeDefined()
+    expect(screen.getByText("! interrotta a mano")).toBeDefined()
+    // e con l'elenco intero aperto
+    fireEvent.click(screen.getAllByRole("button", { name: /^mostra tutti i 7$/i })[0]!)
+    await screen.findByText("M31/L_6.fits")
     expect(await violazioni(container)).toEqual([])
   })
 

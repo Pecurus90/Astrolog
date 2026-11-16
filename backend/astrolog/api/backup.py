@@ -10,9 +10,11 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.responses import Response
 
+from ..clock import relative_day
 from ..db import config
 from ..db.connect import connect
 from ..db.transaction import transaction
+from ..site_of import home_site
 from ..spine import backup
 from .camera_bias import declare_restored
 from .deps import get_db
@@ -27,6 +29,7 @@ router = APIRouter(prefix="/api/v1", tags=["settings"])
 # refresh and the probe are left out. A rule, not a list of routes, as `app._is_open`.
 _USER_WRITES = re.compile(
     r"^/api/v1/(review/apply|gear/.+|settings|settings/wizard-done|weather/meteoblue-key"
+    r"|services/sky-key"
     r"|sites(/\d+(/default|/sky/use|/sky/dismiss)?)?|folders|folders/\d+(/move)?"
     r"|backup/(restore|import))$"
 )
@@ -53,12 +56,24 @@ def _status(request: Request) -> BackupStatus:
     except backup.BackupError:
         data, unreadable = None, True
     offered = request.app.state.backup_offer and data is not None
+    last = BackupCounts(**backup.summary(data)) if data else None
     return BackupStatus(
         offer="found" if offered else "none",
-        last=BackupCounts(**backup.summary(data)) if data else None,
+        last=last,
         unreadable=unreadable,
         path=str(path),
+        size_bytes=path.stat().st_size if data else None,
+        written_day=relative_day(last.written_at, _home_zone(request)) if last else None,
     )
+
+
+def _home_zone(request: Request) -> str | None:
+    conn = connect(request.app.state.db_path)
+    try:
+        home = home_site(conn)
+    finally:
+        conn.close()
+    return home.timezone if home else None
 
 
 @router.get("/backup", response_model=BackupStatus)

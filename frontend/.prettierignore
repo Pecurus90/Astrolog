@@ -22,7 +22,6 @@ src/FiltriUsati.tsx
 src/GestiDelPezzo.tsx
 src/Icons.tsx
 src/ImpostazioniCartelle.tsx
-src/ImpostazioniLetture.tsx
 src/ImpostazioniLuna.tsx
 src/Meteo.tsx
 src/ModuloDelGesto.tsx
@@ -95,7 +94,6 @@ tests/dashboard-stati.test.tsx
 tests/dashboard.test.tsx
 tests/disegno-luna.test.ts
 tests/filtri-usati.test.ts
-tests/impostazioni-letture.test.tsx
 tests/impostazioni-luna.test.tsx
 tests/impostazioni-riconoscitore.test.tsx
 tests/impostazioni-servizi.test.tsx

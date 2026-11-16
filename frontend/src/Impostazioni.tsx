@@ -1,4 +1,4 @@
-import { type ReactElement, useCallback, useState } from "react"
+import { useCallback, useState } from "react"
 import { Link, useLocation } from "react-router"
 
 import { ImpostazioniBackup } from "./Backup"
@@ -9,7 +9,7 @@ import { Tema, vesteDa } from "./componenti/Tema"
 import { useSiti } from "./api/siti"
 import { Cartelle } from "./ImpostazioniCartelle"
 import { Generale, SalvataggioFallito } from "./ImpostazioniGenerale"
-import { Letture } from "./ImpostazioniLetture"
+import { Scansioni } from "./ImpostazioniScansioni"
 import { Luna } from "./ImpostazioniLuna"
 import { Meteo } from "./ImpostazioniMeteo"
 import { Riconoscitore } from "./ImpostazioniRiconoscitore"
@@ -18,16 +18,6 @@ import { PilloleSiti, Siti } from "./ImpostazioniSiti"
 import { numero, t } from "./i18n"
 import { type Sezione, sezioniAperte } from "./pagine"
 import { usePreferenze } from "./preferenze"
-
-/** A section not yet redrawn (commits C-E of step 33): the old content, on the whole row, in the
- *  old sheet's dark box (`app-vecchio`, Marco 15/11/2026). */
-const vecchia = (elemento: ReactElement) => (
-  <div className="al-imp__griglia-2">
-    <div className="app-vecchio" style={{ gridColumn: "1 / -1", minWidth: 0 }}>
-      {elemento}
-    </div>
-  </div>
-)
 
 /**
  * **Impostazioni** (tavola v82): one section at a time, under tabs on the desktop and from an
@@ -83,19 +73,19 @@ export const SEZIONI: readonly Sezione[] = [
     a: "/impostazioni/servizi",
     chiave: "settings.services",
     sotto: "settings.services.sub",
-    elemento: vecchia(<Servizi />),
+    elemento: <Servizi />,
   },
   {
     a: "/impostazioni/scansioni",
     chiave: "settings.readings",
     sotto: "settings.readings.sub",
-    elemento: vecchia(<Letture />),
+    elemento: <Scansioni />,
   },
   {
     a: "/impostazioni/backup",
     chiave: "settings.backup",
     sotto: "settings.backup.sub",
-    elemento: vecchia(<ImpostazioniBackup />),
+    elemento: <ImpostazioniBackup />,
   },
 ]
 

@@ -312,6 +312,22 @@ def test_a_folder_that_cannot_be_read_does_not_stop_the_others(app, tmp_path):
     assert uno in {c["folder_id"] for c in r.json()["started"]}
 
 
+def test_a_folder_that_did_not_answer_blocks_the_scan_card(app, tmp_path):
+    """Impostazioni › Scansioni: la cartella saltata e' nella carta del gesto, che e' bloccata col
+    motivo e quella cartella, non «completata» con una cartella sola."""
+    client, _, _ = app
+    sparita = tmp_path / "sparita"
+    sparita.mkdir()
+    client.post("/api/v1/folders", json={"root_path": str(sparita)})
+    sparita.rmdir()
+    scan_all(client)
+    client.app.state.worker.join(30.0)
+    card = client.get("/api/v1/scans").json()["items"][0]
+    assert (card["outcome"], card["reason"]) == ("blocked", "root_unreachable")
+    assert card["reason_folder"] == str(sparita)
+    assert len(card["folders"]) == 3 and card["new"] == 5
+
+
 def test_with_nothing_to_read_it_says_so_instead_of_starting(db_path):
     """A mani vuote -- nessuna cartella indicata -- il pulsante non finge una corsa: risponde
     che non c'e' niente da leggere. Una corsa a vuoto lascerebbe una ricevuta che racconta

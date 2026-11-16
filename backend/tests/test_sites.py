@@ -149,7 +149,7 @@ def test_site_sky_three_ways(client_vuoto, monkeypatch):
     senza = create(client_vuoto, name="Senza chiave")
     assert senza["sky_sqm"] is None and senza["sky_source"] is None
 
-    client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
+    client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
     chiesto = create(client_vuoto, name="Chiesto")
     assert chiesto["sky_source"] == "service"
     assert chiesto["sky_sqm"] == pytest.approx(20.51, abs=0.02)
@@ -284,7 +284,7 @@ def test_moving_a_site_redoes_only_what_came_from_the_service(client_vuoto, monk
     """La luminosita' chiesta al servizio e' una funzione delle coordinate: se il luogo si
     sposta, si richiede. Quella MISURATA e' la parola dell'utente, e nessuno la tocca."""
     answers(monkeypatch, {"lightpollutionmap": "0.5", "elevation": {"elevation": [1000.0]}})
-    client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
+    client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
 
     dal_servizio = create(client_vuoto, name="Dal servizio")
     assert dal_servizio["sky_source"] == "service"
@@ -331,7 +331,7 @@ def test_an_impossible_sky_from_the_service_is_not_a_sky(client_vuoto, monkeypat
     """Un servizio che risponde una luminosita' assurda ha risposto un guasto: non si salva,
     e non diventa un errore in faccia a chi sta creando il luogo."""
     answers(monkeypatch, {"lightpollutionmap": "1000000", "elevation": {"elevation": [120.0]}})
-    client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
+    client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
     site = create(client_vuoto)
     assert site["sky_sqm"] is None and site["sky_source"] is None
     assert "site_no_sky" in site["unknown"]
@@ -344,7 +344,7 @@ def test_a_field_sent_empty_is_cleared(client_vuoto, monkeypatch):
     Si prova con la rete VIVA, ed e' il punto: con i servizi muti il campo finirebbe vuoto
     comunque, e il test resterebbe verde anche senza la regola."""
     answers(monkeypatch, {"lightpollutionmap": "0.5", "elevation": {"elevation": [1023.0]}})
-    client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
+    client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
     site = create(client_vuoto, sky_sqm=21.3, elevation_m=1000.0)
     dopo = client_vuoto.patch(
         f"/api/v1/sites/{site['id']}", json={"sky_sqm": None, "elevation_m": None}
@@ -396,7 +396,7 @@ def test_moving_a_site_empties_a_sky_that_came_from_the_service(client_vuoto, mo
     """La stessa regola per il cielo: quello chiesto al servizio si richiede, e se il servizio
     tace resta vuoto col suo motivo invece di seguire il luogo altrove."""
     answers(monkeypatch, {"lightpollutionmap": "0.5", "elevation": {"elevation": [1000.0]}})
-    client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
+    client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
     site = create(client_vuoto)
     assert site["sky_source"] == "service"
 

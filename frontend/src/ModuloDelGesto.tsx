@@ -129,8 +129,8 @@ export function NomeDelPezzo({
  *  La comparsa e' una **regione col suo nome**, cosi' chi ascolta la raggiunge e sa di chi e':
  *  con due schede aperte ci sono due campi "Marca", e chi legge con uno schermo deve sapere in
  *  quale sta scrivendo. Il nome lo porta il `legend`, e la regione lo indica invece di ripeterlo.
- *  Non e' l'unica comparsa dell'app: quella delle letture (`LettureFuori`) non e' un modulo e non
- *  vuole ne' `fieldset` ne' `legend`. */
+ *  Non e' l'unica comparsa dell'app, ma le altre non sono moduli e non
+ *  vogliono ne' `fieldset` ne' `legend`. */
 export function Modulo({
   base,
   titolo,

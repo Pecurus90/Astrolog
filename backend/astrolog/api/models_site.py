@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from ..clock import RelativeDay
 from ..units import SQM_MAX, SQM_MIN
 from .models_page import Page
 
@@ -217,6 +218,18 @@ class BackupCounts(BaseModel):
     answers: int
 
 
+class SkyKeyIn(BaseModel):
+    key: str | None
+
+
+class SkyKeyOut(BaseModel):
+    """How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
+    there now."""
+
+    status: Literal["ok", "removed", "refused", "unreachable", "bad_answer"]
+    hint: str | None
+
+
 class BackupStatus(BaseModel):
     """The backup next to the database (ADR 0017) and whether to offer it.
 
@@ -228,3 +241,7 @@ class BackupStatus(BaseModel):
     last: BackupCounts | None
     unreadable: bool
     path: str
+    size_bytes: int | None = Field(description="The file's size; None without a readable file.")
+    written_day: RelativeDay | None = Field(
+        description="`last.written_at`'s day by the home site's clock, as in `LastScanOut`."
+    )

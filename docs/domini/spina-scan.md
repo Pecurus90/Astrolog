@@ -30,6 +30,7 @@ Cio' che vale per tutta la catena sta in [`spina.md`](spina.md).
 | Un guasto uguale su mille file non riempie il log: una traccia per tipo | `test_the_same_unexpected_fault_leaves_one_trace_in_the_log` |
 | L'elenco dei file non letti lo leggo a pagine, e lo tiene l'ultima scansione di ogni cartella (e, se quella non e' arrivata in fondo, l'ultima che ci e' arrivata) | `test_the_files_not_read_are_listed_a_page_at_a_time`, `test_only_the_last_scans_of_a_folder_keep_the_names` |
 | La ricevuta dice quanti file ha saltato e perche', calibrazioni comprese | `test_the_receipt_counts_the_skipped_by_reason` |
+| In Impostazioni › Scansioni una scansione e' un gesto: Scansiona su due cartelle e' una carta con le due cartelle, i frame entrati, cio' che e' rimasto fuori col perche' e i file non leggibili (i primi cinque, poi tutti); dalla peggiore: bloccata col motivo e la cartella, interrotta a mano, completata; una ricevuta aperta senza nessuno che legge e' bloccata, non in corso per sempre; una cartella che non risponde quando parte Scansiona e' nella carta, bloccata col suo motivo (se non risponde nessuna, non parte niente e non resta carta: lo dice subito Scansiona) (tavola v82, `SezioneServizi`) | `test_a_folder_that_did_not_answer_blocks_the_scan_card` (`backend/tests/test_api_scan_all.py`), `test_scansiona_on_two_folders_is_one_scan`, `test_a_stop_is_said_and_a_fault_is_worse`, `test_a_receipt_left_open_without_the_worker_is_blocked`, `test_unread_files_the_first_five_then_all`, `test_an_unread_list_no_longer_kept_says_so` (`backend/tests/test_scans.py`) |
 | Mentre scansiona vedo un pulsante che dice cosa fa (Scansiona / Interrompi / Riprendi) e la fase in corso coi suoi numeri veri, e a fine corsa una ricevuta, che resta in Impostazioni / Scansioni (la catena intera delle fasi non ha ancora una pagina) | `test_worker_events_stages_run_in_order_one_at_a_time`, `test_scan_receipt`, `test_scan_lock_stop_and_the_button_verb` |
 | Fermare ferma entro il file in corso, e non fa partire altro; chiudere la finestra non ferma niente | `test_worker_stop_cooperative`, `test_scan_answers_at_once_and_the_receipt_arrives_in_status` |
 | Una lettura fermata prima di cominciare, o che non riesce a partire, non lascia una ricevuta aperta per sempre, che sia di una cartella o di tutte; Riprendi la rilegge lo stesso | `test_resume_reads_one_folder_stopped_before_it_began`, `test_a_start_that_breaks_unexpectedly_leaves_nothing_behind`, `test_a_stop_does_not_leave_receipts_open_forever`, `test_a_busy_worker_leaves_no_folder_locked` |
@@ -71,7 +72,10 @@ che ci sono. Lo tiene **l'ultima scansione di ogni cartella, e se non e' arrivat
 fondo anche l'ultima che ci e' arrivata** (Marco, 2026-09-11): quei file si riprovano a ogni
 scansione arrivata in fondo, e le altre ricevute tengono i numeri (`errors_not_kept`). Cosi' il
 database non cresce nemmeno se la condivisione cade a ogni giro. Di una corsa ancora aperta
-l'elenco non c'e' ancora (`scan_run_open`). La ricevuta porta i primi 100 percorsi e le 100
+l'elenco non c'e' ancora (`scan_run_open`). **La pagina legge i gesti, non le ricevute**
+(`GET /api/v1/scans`, tavola v82): le ricevute di un gesto stanno insieme per `COALESCE(batch,
+id)`, coi conti sommati, e i file non leggibili di tutte le cartelle in `GET /scans/{id}/unread`.
+La ricevuta porta i primi 100 percorsi e le 100
 chiavi sconosciute piu' frequenti (ADR 0038).
 
 **La radice si salva come l'utente la ritrova**, confinata sotto la radice dei dati quando e'

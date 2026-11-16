@@ -197,6 +197,65 @@ Scelte diverse:
 - **Gli avvisi vanno a capo nelle parole lunghe** (un percorso senza spazi): `overflow-wrap:
   anywhere` inline in `Avviso`, e nella riga «Il nuovo percorso di ...». A Design per il foglio.
 
+## Impostazioni -- Servizi, Scansioni, Backup (passo 33, Impostazioni commit E, 16/11)
+
+Tavola v82 `componenti/SezioneServizi.dc.html` (Servizi 14-23, Scansioni 25-38, Backup 49-60,
+logica 76-112). Fuori:
+- **«Ultimo tentativo»** dei servizi e il suo avviso «per ora le righe sono simulate». Perche':
+  lista fissa del 14/11, la tavola stessa la dice simulata.
+- **AAVSO e TNS**. Perche': nessuna pagina legge quelle chiavi (Piano della notte › Ricerca non
+  c'e'); entrano con la loro pagina.
+- **Diagnostica**. Perche': simulata nella tavola (lista fissa del 14/11).
+- **Meteoblue senza chiave**: tavola «il seeing è solo una stima dal vento in quota, quando è
+  forte: «scarso»». App: «Senza la chiave il Meteo non mostra il seeing.» Perche': l'app non stima
+  il seeing dal jet (`weather/openmeteo.py`); arriva con «seeing dal jet senza chiave» del passo 33.
+- **«Ho trovato le tue risposte del ...: le rimetto?» dentro Backup**. App: la proposta prende lo
+  schermo prima di ogni pagina (`App.tsx`, `RipristinoProposto`), quindi in Backup non si vede mai.
+  Perche': la tavola stessa la segna «Al primo avvio»; si porta col Primo avvio.
+- **«da 1 min 20 s» e «ferma da 2 min»** sotto il titolo di una scansione in corso o bloccata.
+  App: niente durata finche' la scansione non e' chiusa. Perche': la durata e' del backend, che la
+  scrive a scansione chiusa; una che corre la dice «adesso» e la barra.
+- **«Dettagli» della bloccata**: porta a Scansioni, dove si e' gia'.
+
+Scelte diverse:
+- **Le chiavi non escono dal computer «e non vanno nel file esportato»**. Tavola: «non vanno nel
+  backup»; la nota di Backup «non porta le chiavi dei servizi né il percorso di ASTAP». App: il
+  file accanto al database le porta (ADR 0017), Esporta no. Perche': Marco 16/11 (le chiavi
+  tornano da sole dopo un database rovinato). A Design.
+- **«la Ricerca»** tolta dall'intro di Servizi: senza AAVSO e TNS nessuna Ricerca legge le chiavi.
+- **Verifica**: l'esito sotto la riga («✓ Chiave valida, salvata.», «✕ Chiave rifiutata: ...»,
+  «! {servizio} non risponde ...», «! Risposta non valida ...»), al posto della riga Ultimo
+  tentativo. «Cambia» apre il campo con *Annulla* (tavola: nessun campo dopo Cambia).
+- **«4 doppioni dello stesso file»** diventa «4 duplicati»: `duplicato` e' la parola del
+  glossario, «doppione» e' vietata.
+- **Rimasti fuori**: i motivi dell'app (gia' in archivio, duplicati, calibrazione, immagini
+  integrate, ancora in scrittura, solo online) e le cartelle lasciate fuori col percorso. «senza
+  data nell'intestazione» non c'e': un frame senza data entra, e si risponde in Da confermare.
+- **Non leggibili**: i motivi dell'app (file non apribile, non è un FITS o l'intestazione è
+  rovinata, nome non valido, errore interno); i primi cinque, poi «Mostra tutti i N». Un elenco non
+  piu' conservato lo dice, senza «Mostra tutti».
+- **In corso**: «{letti} file letti su {totale}» della cartella che sta leggendo (tavola: di tutto
+  il gesto, che l'app non conta prima di leggere).
+- **Bloccata**: anche una scansione rimasta aperta da un AstroLog chiuso a meta' («AstroLog si è
+  chiuso durante la lettura di ...»). *Riprova* solo sulla piu' recente, ed e' il gesto del menu
+  dell'ingranaggio. Una cartella che non risponde quando parte Scansiona e' nella carta, bloccata
+  col suo motivo; se non risponde nessuna non parte niente e non resta carta: lo dice subito
+  Scansiona («Nessuna cartella raggiungibile»), come una corsa a vuoto non lascia ricevuta.
+- **Il file illeggibile**: tavola «Scritto l'ultima volta» con la data; app senza quella riga (la
+  data sta nel file che non si legge; l'Avviso sopra dice cosa succede). Esporta resta acceso:
+  legge il database, non il file.
+- **Mostra le scansioni precedenti** dopo 20 carte (la tavola ne disegna tre).
+- **Le regioni** delle scansioni si chiamano col titolo e l'esito, la barra col suo esito: axe
+  vuole nomi unici e una barra col nome.
+- **Il file illeggibile** si nomina col percorso intero (tavola: «astrolog-risposte.json»); il file
+  dell'app si chiama `risposte.json`.
+- **Ripristino non riuscito** vale per Importa (Riprova rimanda lo stesso file).
+- **Caricamento ed errore** di ogni sezione: `Scheletro` e `Avviso` con *Riprova*.
+- **Verifica** spento col campo vuoto (tavola: acceso). Perche': una chiave vuota per la rotta
+  vuol dire «togli», e per togliere c'e' *Togli*.
+- **La fine della chiave** «...a3f9» con tre punti (tavola «…a3f9»): e' `config.hint`, la stessa
+  in tutta l'app (anche in `GET /settings`).
+
 ## Notti -- la pagina fra 700 e 1000 px e il sito lungo (v78, 10/11)
 
 

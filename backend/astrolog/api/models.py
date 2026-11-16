@@ -313,6 +313,68 @@ class PipelineStatus(BaseModel):
     )
 
 
+LeftOutReason = Literal[
+    "unchanged", "duplicates", "calibration", "stack", "still_writing", "online_only"
+]
+
+
+class LeftOutCount(BaseModel):
+    reason: LeftOutReason
+    count: int
+
+
+class DirLeftOut(BaseModel):
+    path: str
+    why: Literal["unreadable", "hidden", "linked"]
+
+
+class ScanProgressOut(BaseModel):
+    read: int
+    total: int
+    pct: int
+
+
+class ScanOut(BaseModel):
+    """One scan as the user made it: a gesture, however many folders it read (Impostazioni,
+    Scansioni, tavola v82)."""
+
+    id: int = Field(description="The gesture's first receipt: `GET /scans/{id}/unread`.")
+    started_at: str
+    started_day: RelativeDay | None = Field(
+        description="`started_at`'s day by the home site's clock, as in `LastScanOut`."
+    )
+    duration_s: float | None = Field(description="None while it runs or left open.")
+    outcome: Literal["completed", "stopped", "blocked", "running"] = Field(
+        description="`stopped` by the user; `blocked` by a fault, or left open by a process that "
+        "died. Worst first across the folders."
+    )
+    reason: Literal["root_unreachable", "internal_error", "database_error", "left_open"] | None = (
+        Field(description="Why it is `blocked`; None otherwise.")
+    )
+    reason_folder: str | None = Field(description="The folder the reason is about.")
+    folders: list[str]
+    new: int = Field(description="Frames that entered.")
+    left_out: list[LeftOutCount] = Field(description="Files found that did not enter; no zeros.")
+    dirs_left_out: list[DirLeftOut]
+    unread: int = Field(description="Files that could not be read.")
+    unread_files: list[FileNotRead] = Field(description="The first ones, folder by folder.")
+    unread_kept: bool = Field(
+        description="False when the list of a receipt is no longer kept (only the last scan of "
+        "each folder keeps it): `unread_files` is then partial and the rest is not asked."
+    )
+    progress: ScanProgressOut | None = Field(
+        description="While it runs: files read of the folder being read, once it knows its total."
+    )
+    can_retry: bool = Field(
+        description="The newest scan, blocked, with the worker idle: the page offers Riprova, "
+        "which is the gear menu's gesture (`PipelineStatus.action`)."
+    )
+
+
+class ScanList(Page[ScanOut]):
+    pass
+
+
 class WorkerOut(BaseModel):
     worker: WorkerSnapshot
     skipped: list[FolderSkipped] = Field(

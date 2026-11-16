@@ -179,17 +179,45 @@ def sky_sqm_of(
     """Without a key nothing is asked: the app works anyway, the sky is measured or chosen."""
     if not key or latitude is None or longitude is None:
         return None
-    query = urllib.parse.urlencode(
-        {"ql": "wa_2015", "qt": "point", "qd": f"{longitude},{latitude}", "key": key}
-    )
-    data = _ask(fetch, f"{SKY_URL}?{query}")
+    artificial = _bare_number(_ask(fetch, _sky_point_url(f"{longitude},{latitude}", key)))
+    return None if artificial is None else believable_sqm(sqm_from_brightness(artificial))
+
+
+def _sky_point_url(point: str, key: str) -> str:
+    query = urllib.parse.urlencode({"ql": "wa_2015", "qt": "point", "qd": point, "key": key})
+    return f"{SKY_URL}?{query}"
+
+
+def _bare_number(data: object) -> float | None:
+    """The service answers a bare number: anything else is a fault."""
     if not isinstance(data, str | int | float):
-        return None  # the service answers a bare number: anything else is a fault
+        return None
     try:
-        artificial = float(data)
+        return float(data)
     except ValueError:
         return None
-    return believable_sqm(sqm_from_brightness(artificial))
+
+
+class SkyKeyCheck(StrEnum):
+    OK = "ok"
+    REFUSED = "refused"
+    UNREACHABLE = "unreachable"
+    BAD_ANSWER = "bad_answer"
+
+
+# Any point answers a number with a good key; this one is not a user's place. [T]
+_KEY_PROBE = "0,0"
+
+
+def check_sky_key(key: str, *, fetch: net.Fetch | None = None) -> SkyKeyCheck:
+    """One request of the day's 500. A bad key gets a 200 with a sentence, not a number
+    ("Invalid authentication.")."""
+    answer, failure = net.ask_why(fetch or _fetch, _sky_point_url(_KEY_PROBE, key))
+    if failure is not None:
+        return SkyKeyCheck(failure.value)
+    if isinstance(answer, str) and answer.strip().lower().startswith("invalid"):
+        return SkyKeyCheck.REFUSED
+    return SkyKeyCheck.BAD_ANSWER if _bare_number(answer) is None else SkyKeyCheck.OK
 
 
 def elevation_from(
