@@ -253,7 +253,7 @@ describe("il primo avvio", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
     fireEvent.click(await screen.findByRole("button", { name: /aggiungi cartella/i }))
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText("Cartella non aggiunta")).toBeDefined()
     expect(chiamate().some((u) => u.includes("/settings/wizard-done"))).toBe(false)
   })
 
@@ -289,7 +289,7 @@ describe("il primo avvio", () => {
       target: { value: "casa" },
     })
     fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText("Verifica non riuscita")).toBeDefined()
   })
 
   it("se le impostazioni non accettano il nome, non si va avanti fingendo", async () => {

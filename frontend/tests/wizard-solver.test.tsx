@@ -66,32 +66,37 @@ describe("la forma dei passi Seeing e ASTAP", () => {
     avanti()
     avanti()
     // senza chiave: non si sa, e lo dice col segno dell'ignoto, non con un allarme
-    const stato = (await screen.findByText(/nessuna chiave/i)).closest(".as-avviso")
-    expect(stato?.className).toContain("as-avviso--ignoto")
+    const stato = (await screen.findByText(/nessuna chiave/i)).closest("[role=status]")
+    expect(stato?.querySelector("[aria-hidden=true]")?.textContent).toBe("?")
+    expect(screen.getByRole("link", { name: /come ottenere una chiave/i }).getAttribute("href")).toBe(
+      "https://www.meteoblue.com/it/weather-api",
+    )
     const campo = screen.getByLabelText(/chiave meteoblue/i)
-    expect(campo.closest(".as-campo-riga")).not.toBeNull()
-    // a campo vuoto il pieno e' quello che chiude; scritta la chiave lo prende chi la salva
-    expect(pieni()).toEqual(["Fine"])
+    expect(campo.closest(".al-avvio__riga-6")?.textContent).toBe("Verifica e salva")
+    // tavola `cmd`: without a saved key the full command is the one that saves it, spento
+    // while the field is empty; Fine steps down to tenue
+    expect(pieni()).toEqual(["Verifica e salva"])
+    expect(screen.getByRole("button", { name: /verifica e salva/i }).getAttribute("aria-disabled")).toBe("true")
     fireEvent.change(campo, { target: { value: "abc123" } })
     expect(pieni()).toEqual(["Verifica e salva"])
-    fireEvent.change(campo, { target: { value: "" } })
-    expect(pieni()).toEqual(["Fine"])
+    expect(screen.getByRole("button", { name: /verifica e salva/i }).getAttribute("aria-disabled")).toBeNull()
   })
 
   it("al passo ASTAP le tre parti hanno il loro titoletto, e il pieno e' uno solo", async () => {
     primoAvvio(["no_active_site", "no_solver"])
     await alPassoDelSolver()
-    const parti = [...document.querySelectorAll(".as-passo__parti > .as-passo__parte")]
-    expect(parti.map((p) => p.querySelector(".as-soprattitolo")?.textContent)).toEqual([
+    // tavola v82 `V.astapNo`: two boxes side by side, then the field
+    const titoletti = [...document.querySelectorAll(".al-avvio__colonna-8 .al-avvio__testo-13")]
+    expect(titoletti.map((p) => p.textContent)).toEqual([
       "Senza ASTAP",
       "Download",
       "Gi\u00e0 installato",
     ])
+    expect(document.querySelectorAll(".al-avvio__centro-6 > .al-avvio__colonna-22")).toHaveLength(2)
     const campo = screen.getByLabelText(/percorso di astap/i)
-    expect(campo.closest(".as-campo-riga")).not.toBeNull()
-    expect(pieni()).toEqual(["Fine"])
-    fireEvent.change(campo, { target: { value: "C:/astap/astap_cli.exe" } })
+    expect(campo.closest(".al-avvio__riga-6")?.textContent).toBe("Verifica percorso")
     expect(pieni()).toEqual(["Verifica percorso"])
+    expect(screen.getByRole("button", { name: /^fine$/i }).className).toContain("al-bottone--tenue")
   })
 
   it("verificato il percorso di ASTAP, il comando pieno torna a quello che chiude", async () => {
@@ -132,10 +137,8 @@ describe("il passo del riconoscitore, quando manca", () => {
     avanti()
     expect(screen.getByText(/gli oggetti ripresi non vengono identificati/i)).toBeDefined()
     // non un allarme: manca una cosa da fare, non e' un guasto
-    expect(screen.queryByRole("alert")).toBeNull()
-    // E gli si dice **anche del catalogo**: chi installa ASTAP dopo aver chiuso il primo avvio
-    // non ripassa piu' di qua, e cadrebbe nella trappola che questa schermata esiste per evitare.
-    expect(screen.getByText(/serve anche il catalogo stellare/i)).toBeDefined()
+    expect(screen.queryByRole("status")).toBeNull()
+    expect(screen.getByText("L'app non scarica n\u00e9 installa ASTAP.")).toBeDefined()
   })
 
   it("scritto un percorso giusto, la conferma resta e la schermata non cambia sotto le mani", async () => {
@@ -181,7 +184,10 @@ describe("il passo del riconoscitore, quando manca", () => {
     fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
 
     expect(await screen.findByText(/catalogo stellare mancante: senza/i)).toBeDefined()
+    expect(screen.getByText("ASTAP trovato, catalogo mancante")).toBeDefined()
     expect(screen.queryByText(/gli oggetti ripresi verranno identificati/i)).toBeNull()
+    // the pill says the same as the notice under it, not "Non trovato"
+    expect(screen.getByText(/^! catalogo mancante$/i)).toBeTruthy()
   })
 
   it("il passo c e anche a chi ha ASTAP senza il suo catalogo", async () => {
@@ -202,7 +208,10 @@ describe("il passo del riconoscitore, quando manca", () => {
     // Si aspetta il **collegamento del catalogo**, che lo rende solo il corpo: la frase "manca il
     // catalogo stellare" sta anche nell'intestazione, che c'e' da subito -- aspettare quella non
     // aspetta niente, e la prova passava anche col corpo sbagliato.
-    expect(await screen.findByRole("link", { name: /scarica il catalogo/i })).toBeTruthy()
+    const catalogo = await screen.findByRole("link", { name: /scarica il catalogo/i })
+    expect(catalogo.getAttribute("href")).toBe("https://www.hnsky.org/astap.htm")
+    expect(screen.getByText(/catalogo consigliato: D50/i)).toBeDefined()
+    expect(screen.getByText("Catalogo stellare mancante")).toBeDefined()
     // Il percorso qui non si chiede: e' gia' giusto, e chiederlo manda a correggere cio' che
     // non e' sbagliato.
     expect(screen.queryByLabelText(/percorso di astap/i)).toBeNull()
@@ -267,7 +276,8 @@ describe("il passo del riconoscitore, quando manca", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
 
-    expect(await screen.findByText(/astap non trovato in questo percorso/i)).toBeDefined()
+    expect(await screen.findByText("ASTAP non trovato in questo percorso.")).toBeDefined()
+    expect(screen.getByText("Il percorso deve terminare con il programma (astap_cli).")).toBeDefined()
   })
 
   it("anche il passo del riconoscitore passa dai mattoni", async () => {

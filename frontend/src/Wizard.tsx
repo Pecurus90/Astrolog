@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useRef, useState } from "react"
 
-import { ChiaveMeteoblue } from "./ChiaveMeteoblue"
 import { Avviso } from "./componenti/Avviso"
 import { useFormato } from "./componenti/formato"
 import { SceltaTema } from "./componenti/SceltaTema"
@@ -10,6 +9,7 @@ import { SalvataggioFallito, useScriviImpostazioni } from "./ImpostazioniGeneral
 import { Comando, CorniceAvvio, type Passo as Voce, type Tappa } from "./PrimoAvvioCornice"
 import { ChiusuraAvvio, type Chiuso } from "./WizardChiusura"
 import { WizardFolders } from "./WizardFolders"
+import { WizardSeeing } from "./WizardSeeing"
 import { WizardSite, useSitoDelPasso } from "./WizardSite"
 import { WizardSolver } from "./WizardSolver"
 import { api } from "./api/client"
@@ -229,13 +229,16 @@ export function Wizard({
     </>
   )
   const astapTrovato = esito("astap") === "fatto"
+  // the pill follows what the API holds now: a check can find ASTAP without its catalogue
+  const ora = preferenze.data?.missing ?? manca
+  const soloCatalogo = ora.includes("no_star_database") && !ora.includes("no_solver")
   const pastiglia =
     qui !== "astap"
       ? undefined
       : astapTrovato
         ? { testo: `✓ ${t("wizard.solver.state.found")}`, buono: true } // glifo-ok: segno della tavola
         : {
-            testo: `! ${t(senzaCatalogo ? "wizard.solver.state.noDatabase" : "wizard.solver.state")}`,
+            testo: `! ${t(soloCatalogo ? "wizard.solver.state.noDatabase" : "wizard.solver.state")}`,
             buono: false,
           }
 
@@ -269,23 +272,7 @@ export function Wizard({
             </div>
           </div>
         )}
-        {qui === "sito" && (
-          <>
-            {/* old sheet until commit C, in its dark box */}
-            <div className="app-vecchio as-passo__parti">
-              <WizardSite sito={sito} />
-            </div>
-            <div className="al-avvio__riga-11">
-              <Comando
-                testo={t("wizard.site.save")}
-                verso="pieno"
-                spento={!sito.campi.valido}
-                occupato={sito.salvando ? t("wizard.saving") : undefined}
-                onClick={() => void sito.salva()}
-              />
-            </div>
-          </>
-        )}
+        {qui === "sito" && <WizardSite sito={sito} formato={formato} />}
         {qui === "tema" && valori && (
           <SceltaTema
             {...vesteDa(valori["theme_mode"], valori["theme_accent"])}
@@ -294,29 +281,19 @@ export function Wizard({
             onAccento={(a) => scrivi.mutate({ theme_accent: a })}
           />
         )}
-        {qui === "cartelle" && (
-          <div className="app-vecchio as-passo__parti">
-            <WizardFolders onOffre={setPienoDelPasso} />
-          </div>
-        )}
-        {qui === "seeing" && (
-          <div className="app-vecchio as-passo__parti">
-            <div className="as-passo__parte">
-              <ChiaveMeteoblue id="wizard-meteoblue-key" onOffre={setPienoDelPasso} />
-            </div>
-          </div>
-        )}
+        {qui === "cartelle" && <WizardFolders formato={formato} onOffre={setPienoDelPasso} />}
+        {qui === "seeing" && <WizardSeeing formato={formato} onOffre={setPienoDelPasso} />}
         {qui === "astap" && (
-          <div className="app-vecchio as-passo__parti">
-            <WizardSolver senzaCatalogo={senzaCatalogo} onOffre={setPienoDelPasso} />
-          </div>
+          <WizardSolver formato={formato} senzaCatalogo={senzaCatalogo} onOffre={setPienoDelPasso} />
         )}
-        {(nonScritto || stamp.error) && (
+        {(nonScritto || stamp.error || (qui === "sito" && sito.rotto)) && (
           <Avviso
             tipo="blocco"
             formato={formato}
             segno="!"
-            titolo={t("wizard.savedFailedTitle")}
+            titolo={t(
+              qui === "sito" && sito.rotto ? "wizard.site.failedTitle" : "wizard.savedFailedTitle",
+            )}
             testo={t("wizard.saveFailed.text")}
           />
         )}

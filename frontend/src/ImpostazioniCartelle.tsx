@@ -10,7 +10,7 @@ import { Tema, type Formato } from "./componenti/Tema"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
 import type { components } from "./api/schema"
-import { RIFIUTI_SPOSTA, sposta, useCartelle } from "./cartelle"
+import { esitoDelloSpostamento, RIFIUTI_SPOSTA, sposta, useCartelle } from "./cartelle"
 import { CartaScansione } from "./ImpostazioniScansione"
 import { numero, t } from "./i18n"
 import { useRadiceDati } from "./radiceDati"
@@ -405,17 +405,8 @@ function esitoDellaSonda(
       testo: t("settings.folders.unreachableHelp"),
     }
   }
-  if (c.nonSpostata) return { segno: "!", titolo: t(c.nonSpostata) }
-  if (v.moved_from) {
-    const id = v.moved_from.id
-    return {
-      segno: "!",
-      titolo: t("folders.move.foundTitle"),
-      testo: t("folders.move.found", { percorso: v.moved_from.root_path }),
-      azione: t("folders.move.here"),
-      onAzione: () => void c.spostaQui(id).then(fatto),
-    }
-  }
+  const spostamento = esitoDelloSpostamento(c, fatto)
+  if (spostamento) return spostamento
   const parziale = v.complete === false
   const n = numero(v.fits_count ?? 0)
   return {

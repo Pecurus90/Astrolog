@@ -10,6 +10,7 @@ import type { components } from "./api/schema"
 import { useScriviSito, useSitoScelto } from "./ImpostazioniSiti"
 import { fuso, Riga } from "./ImpostazioniSitiSito"
 import { coordinataDa, coordinate, numero, t } from "./i18n"
+import { useCercaPosto } from "./sito"
 
 type Posto = components["schemas"]["PlaceOut"]
 type Per = "nome" | "coord"
@@ -267,16 +268,7 @@ function PerNome({
   scelto: Posto | null
   onScegli: (p: Posto) => void
 }) {
-  const [q, setQ] = useState("")
-  const [stato, setStato] = useState<"fermo" | "cerco" | "rotto">("fermo")
-  const [trovati, setTrovati] = useState<Posto[] | null>(null)
-  const cerca = async () => {
-    if (!q.trim() || stato === "cerco") return
-    setStato("cerco")
-    const { data, error } = await api.GET("/api/v1/places", { params: { query: { q: q.trim() } } })
-    setStato(error ? "rotto" : "fermo")
-    setTrovati(error ? null : data.items)
-  }
+  const { q, setQ, stato, trovati, setTrovati, cerca } = useCercaPosto()
   const stesso = (p: Posto) =>
     scelto !== null &&
     p.name === scelto.name &&

@@ -14,7 +14,7 @@ import { usePreferenze } from "./preferenze"
 type Esito = components["schemas"]["SkyKeyOut"]["status"]
 
 // Where the keys are asked: addresses, not texts to translate (tavola `SezioneServizi`).
-const METEOBLUE = "https://www.meteoblue.com/it/weather-api"
+export const METEOBLUE = "https://www.meteoblue.com/it/weather-api"
 const CIELO = "https://www.lightpollutionmap.info/"
 
 const SEGNI: Record<Esito, string> = {

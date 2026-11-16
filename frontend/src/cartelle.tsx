@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
-import { type ReactNode, useState } from "react"
+import { useState } from "react"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { Campo } from "./Campo"
+import type { SegnoAvviso } from "./componenti/Avviso"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
 import type { components } from "./api/schema"
-import { type Chiave, numero, t } from "./i18n"
+import { type Chiave, t } from "./i18n"
 
 type Probe = components["schemas"]["ProbeOut"]
 
@@ -24,6 +22,35 @@ export async function sposta(id: number, percorso: string): Promise<Chiave | und
     body: { root_path: percorso },
   })
   return error ? motivo(error, RIFIUTI_SPOSTA, "folders.move.failed") : undefined
+}
+
+/** A probe's notice, as `Avviso` takes it. */
+export interface EsitoSonda {
+  segno: SegnoAvviso
+  titolo: string
+  testo?: string
+  azione?: string
+  onAzione?: () => void
+}
+
+/** The probe's move notices, same on both pages: a refused move says why; a registered folder's
+ *  files found here offer to move it. `fatto` hears whether it moved. */
+export function esitoDelloSpostamento(
+  c: ReturnType<typeof useCartelle>,
+  fatto: (spostata: boolean) => void,
+): EsitoSonda | null {
+  if (c.nonSpostata) return { segno: "!", titolo: t(c.nonSpostata) }
+  const da = c.vista?.moved_from
+  if (!da) return null
+  return {
+    segno: "!",
+    titolo: t("folders.move.foundTitle"),
+    testo: t("folders.move.found", { percorso: da.root_path }),
+    azione: t("folders.move.here"),
+    onAzione: () => {
+      if (!c.inCorso) void c.spostaQui(da.id).then(fatto)
+    },
+  }
 }
 
 /**
@@ -104,119 +131,4 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
       return true
     },
   }
-}
-
-/** Il campo dove si scrive un percorso, col tasto che ci guarda dentro.
- *
- * E' la via del desktop, e il ripiego del NAS quando l'elenco non si legge. */
-export function ScriviPercorso({
-  id,
-  prefisso,
-  valore,
-  onScrivi,
-  onGuarda,
-}: {
-  id: string
-  prefisso: "wizard.folders"
-  valore: string
-  onScrivi: (v: string) => void
-  onGuarda: () => void
-}) {
-  // A form so that Enter in the field does what the button does; the button stays `type=button`,
-  // a single field submits on its own.
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        onGuarda()
-      }}
-      className="as-campo-riga"
-    >
-      <Campo etichetta={t(`${prefisso}.label`)} id={id}>
-        <input
-          className="as-campo-modulo__input as-campo-modulo__input--cifre"
-          id={id}
-          onChange={(e) => onScrivi(e.target.value)}
-          spellCheck={false}
-          value={valore}
-        />
-      </Campo>
-      <Bottone onClick={onGuarda}>{t(`${prefisso}.look`)}</Bottone>
-    </form>
-  )
-}
-
-/** Cosa la sonda ha visto, e il tasto che registra.
- *
- * L'esito e' un avviso che **aspetta** (`status`): nessuno lo sta ancora leggendo, e interrompere
- * chi scrive un percorso per dirgli quanti file ha trovato e' rumore. Un conteggio fermato al suo
- * tetto di tempo e' un **pavimento**, e lo dice col tono d'attesa: mostrarlo come totale su un
- * archivio lento e' una bugia tranquillizzante. */
-export function VistaDellaSonda({
-  vista,
-  inCorso,
-  onAggiungi,
-  onSposta,
-  nonSpostata,
-  prefisso,
-}: {
-  vista: Probe
-  inCorso: boolean
-  onAggiungi: () => void
-  /** Al posto di Aggiungi, quando la sonda dice da quale cartella registrata vengono questi file. */
-  onSposta: (id: number) => void
-  nonSpostata: Chiave | undefined
-  /** The first start's keys; the settings draw their own outcome (tavola v82). */
-  prefisso: "wizard.folders"
-}) {
-  if (!vista.reachable) {
-    return (
-      <Avviso esito="allarme" ruolo="status" titolo={t(`${prefisso}.unreachableTitle`)}>
-        {t(`${prefisso}.unreachableHelp`)}
-      </Avviso>
-    )
-  }
-  const alTetto = vista.complete === false
-  // Quanti file ha trovato, o il pavimento se il conteggio si e' fermato al suo tetto di tempo.
-  const conteggio = (azioni?: ReactNode) =>
-    vista.fits_count !== null && (
-      <Avviso
-        azioni={azioni}
-        esito={alTetto ? "attesa" : "buono"}
-        ruolo="status"
-        titolo={t(alTetto ? `${prefisso}.atLeastTitle` : `${prefisso}.foundTitle`)}
-      >
-        {t(alTetto ? `${prefisso}.atLeast` : `${prefisso}.found`, {
-          n: numero(vista.fits_count),
-        })}
-      </Avviso>
-    )
-  if (vista.moved_from) {
-    const da = vista.moved_from
-    return (
-      <div className="as-esito">
-        {conteggio()}
-        <Avviso
-          azioni={
-            <Bottone disabled={inCorso} verso="primario" onClick={() => onSposta(da.id)}>
-              {t("folders.move.here")}
-            </Bottone>
-          }
-          esito="buono"
-          ruolo="status"
-          titolo={t("folders.move.foundTitle")}
-        >
-          {t("folders.move.found", { percorso: da.root_path })}
-        </Avviso>
-        {nonSpostata && <Avviso esito="allarme">{t(nonSpostata)}</Avviso>}
-      </div>
-    )
-  }
-  // Il comando che registra sta **dentro** l'esito che lo motiva, su vetro: si stacca dai campi.
-  const aggiungi = (
-    <Bottone disabled={inCorso} verso="primario" onClick={onAggiungi}>
-      {t(`${prefisso}.add`)}
-    </Bottone>
-  )
-  return <div className="as-esito">{conteggio(aggiungi) || aggiungi}</div>
 }

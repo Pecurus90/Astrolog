@@ -14,21 +14,9 @@ import { SALUTE, SPINA, STANOTTE, cambia, chiamate, disegna, fuoriDaiMattoni, im
 
 afterEach(pulisci)
 
-/** Dove dice di essere, **rimesso insieme dalle briciole**.
- *
- * Il percorso non e' piu' un testo solo: e' spezzato nei suoi pezzi, coi chevron in mezzo -- si
- * vede da dove si viene, invece di leggere una riga lunga tutta o niente. Qui si rifa' il
- * percorso dai soli pezzi che sono nomi, cosi' la prova dice ancora `/data/Notti` e si rompe se
- * un pezzo sparisce, se si riordinano, o se la radice torna a perdersi. */
+/** Where the NAS list says you are (tavola v82 `N.dir`, the path written whole). */
 function dove() {
-  const riga = document.getElementById("wizard-dove")
-  const nomi = [...(riga?.querySelectorAll("span") ?? [])]
-    .filter(
-      (s) =>
-        !s.classList.contains("as-percorso__separa") && !s.classList.contains("as-solo-lettori"),
-    )
-    .map((s) => s.textContent ?? "")
-  return nomi[0] === "/" ? `/${nomi.slice(1).join("/")}` : nomi.join("/")
+  return document.querySelector(".al-avvio__colonna-18 .al-avvio__testo-18")?.textContent ?? ""
 }
 
 const SONDA = {
@@ -132,33 +120,40 @@ describe("le cartelle del primo avvio", () => {
     primoAvvio({}, [])
     await alTerzoPasso()
     const campo = screen.getByLabelText(/percorso della cartella/i)
-    expect(campo.closest("form")?.className).toBe("as-campo-riga")
+    expect(campo.closest(".al-avvio__riga-6")?.textContent).toBe("Verifica")
     const avanti = () => screen.getByRole("button", { name: /^avanti$/i })
-    expect(avanti().className).toContain("al-bottone--pieno")
+    // tavola `cmd`: without folders the step's command is the full one, Avanti tenue
+    expect(avanti().className).toContain("al-bottone--tenue")
+    expect(screen.getByRole("button", { name: /^verifica$/i }).className).toContain("al-bottone--pieno")
 
     fireEvent.change(campo, { target: { value: "D:/Astro" } })
     fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
     const aggiungi = await screen.findByRole("button", { name: /aggiungi cartella/i })
-    const esito = aggiungi.closest(".as-esito") as HTMLElement
-    expect(esito.querySelector(".as-avviso")?.className).toContain("as-avviso--buono")
-    expect(aggiungi.closest(".as-avviso__azioni")).not.toBeNull()
-    expect(aggiungi.className).toContain("as-bottone--primario")
+    const esito = aggiungi.closest("[role=status]") as HTMLElement
+    expect(within(esito).getByText("File trovati")).toBeDefined()
+    expect(within(esito).getByText("12 file FITS · D:/Astro")).toBeDefined()
+    // the check steps down to tenue: the full command is the one in the outcome
+    expect(screen.getByRole("button", { name: /^verifica$/i }).className).toContain("al-bottone--tenue")
     expect(avanti().className).toContain("al-bottone--tenue")
-    expect(document.querySelectorAll(".as-bottone--primario, .al-bottone--pieno")).toHaveLength(1)
   })
 
   it("le cartelle aggiunte sono un elenco del foglio: percorso e frame di ognuna", async () => {
     primoAvvio({}, ["D:/Astro/2024", "E:/Vecchie"])
     await alTerzoPasso()
     const voci = await waitFor(() => {
-      const trovate = [...document.querySelectorAll(".as-cartelle > .as-cartelle__voce")]
+      const trovate = [...document.querySelectorAll(".al-avvio__colonna-13 > .al-avvio__riga-14")]
       expect(trovate).toHaveLength(2)
       return trovate
     })
-    expect(voci[0]?.querySelector(".as-cartelle__percorso")?.textContent).toBe("D:/Astro/2024")
-    expect(voci[0]?.querySelector(".as-cartelle__frame")?.textContent).toBe("0 frame")
-    // il titoletto dice quante sono, e sta in una parte sua del passo
-    expect(voci[0]?.closest(".as-passo__parte")?.querySelector(".as-soprattitolo")?.textContent).toMatch(/cartelle aggiunte.*2/i)
+    expect(voci[0]?.querySelector(".al-avvio__tondo-4")?.textContent).toBe("✓")
+    expect(voci[0]?.querySelector(".al-avvio__testo-19")?.textContent).toBe("D:/Astro/2024")
+    // never read yet: no count is made up from the database's zero
+    expect(voci[0]?.querySelector(".al-avvio__testo-9")).toBeNull()
+    expect(
+      voci[0]?.closest(".al-avvio__colonna-15")?.querySelector(".al-avvio__testo-13")?.textContent,
+    ).toBe("Cartelle aggiunte")
+    // folders added, nothing waiting: Avanti is the full command again
+    expect(screen.getByRole("button", { name: /^avanti$/i }).className).toContain("al-bottone--pieno")
   })
 
   it("le cartelle indicate si vedono in elenco", async () => {
@@ -223,7 +218,9 @@ describe("le cartelle del primo avvio", () => {
     expect(dove()).toBe("/data/Notti")
     // e finche' non arriva non si registra niente: sondare una cartella mentre se ne carica
     // un'altra non ha senso in nessun caso
-    expect(screen.getByRole("button", { name: /^seleziona cartella$/i }).hasAttribute("disabled")).toBe(true)
+    expect(
+      screen.getByRole("button", { name: /^seleziona cartella$/i }).getAttribute("aria-disabled"),
+    ).toBe("true")
 
     arriva()
     expect(await screen.findByRole("button", { name: /cartella superiore/i })).toBeDefined()
@@ -316,8 +313,9 @@ describe("le cartelle del primo avvio", () => {
     })
     await alTerzoPasso()
 
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText("Elenco delle cartelle non disponibile")).toBeDefined()
     expect(await screen.findByLabelText(/percorso della cartella/i)).toBeDefined()
+    expect(screen.getByText("Percorso interno al container, non quello del computer.")).toBeDefined()
   })
 
   it("alla fine la lettura parte da sola", async () => {
@@ -400,24 +398,29 @@ describe("le cartelle del primo avvio", () => {
     })
     await alTerzoPasso()
 
-    const elenco = await screen.findByRole("list", { name: /cartelle da scegliere|scegli/i })
+    const elenco = await screen.findByRole("list", { name: /sottocartelle/i })
     expect(await within(elenco).findByText("M31")).toBeDefined()
     expect(chiamate().some((u) => u.includes("/api/v1/folders/browse"))).toBe(true)
     // l'altra meta' del titolo: li' il percorso NON si scrive
     expect(screen.queryByLabelText(/percorso della cartella/i)).toBeNull()
     // la forma del foglio: l'elenco scorre nel suo pozzo, una riga per cartella
-    expect(elenco.className).toBe("as-sfoglia__elenco")
-    expect(elenco.closest(".as-sfoglia")).not.toBeNull()
+    expect(elenco.className).toBe("al-avvio__colonna-20")
+    expect(
+      elenco.closest(".al-avvio__colonna-18")?.querySelector(".al-avvio__testo-17")?.textContent,
+    ).toBe("Scegli una cartella")
     const voce = within(elenco).getByText("M31").closest("li") as HTMLElement
-    expect(voce.className).toBe("as-sfoglia__voce")
-    expect(within(elenco).getByText("M31").className).toBe("as-sfoglia__nome")
+    expect(voce.className).toBe("al-avvio__riga-13")
+    expect(within(elenco).getByText("M31").className).toBe("al-avvio__blocco-7")
     const apri = within(voce).getByRole("button", { name: /apri m31/i })
-    expect(apri.className).toContain("as-bottone--nudo")
-    // la riga del foglio ha tre colonne (icona, nome, comando): con due figli il nome cade
-    // nella colonna dell'icona e "Apri" si allarga a tutta la riga
-    expect(voce.children).toHaveLength(3)
-    expect(voce.children[1]).toBe(within(elenco).getByText("M31"))
-    expect(voce.children[2]).toBe(apri)
+    expect(apri.className).toContain("al-bottone--tenue")
+    expect(voce.children).toHaveLength(2)
+    // at the data root there is no going higher
+    expect(
+      screen.getByRole("button", { name: /cartella superiore/i }).getAttribute("aria-disabled"),
+    ).toBe("true")
+    expect(
+      screen.getByRole("button", { name: /cartella dei dati/i }).getAttribute("aria-disabled"),
+    ).toBe("true")
   })
 
   it("una cartella senza sottocartelle lo dice nel pozzo dell'elenco", async () => {
@@ -427,7 +430,7 @@ describe("le cartelle del primo avvio", () => {
     })
     await alTerzoPasso()
     const niente = await screen.findByText("Nessuna sottocartella")
-    expect(niente.className).toBe("as-sfoglia__niente")
+    expect(niente.className).toBe("al-avvio__blocco-8")
   })
 
   it("sul NAS la carta spiega che si sfoglia, non che si scrive", async () => {
@@ -484,8 +487,6 @@ describe("una cartella spostata", () => {
 
     expect(await screen.findByText(/corrisponde a D:\/Astro: stessi file/i)).toBeDefined()
     expect(screen.queryByRole("button", { name: /aggiungi/i })).toBeNull()
-    // quanti file ha trovato lo dice anche qui: riconoscerla non toglie il conteggio
-    expect(screen.getByText("12 file FITS").closest(".as-esito")).not.toBeNull()
     fireEvent.click(screen.getByRole("button", { name: /^usa questo percorso$/i }))
 
     await waitFor(() =>
@@ -506,37 +507,6 @@ describe("una cartella spostata", () => {
 })
 
 describe("il percorso per chi ascolta", () => {
-  it("si sente intero, coi separatori, non come una fila di nomi appiccicati", async () => {
-    // Questa riga e' anche la **descrizione** del tasto che registra. Costruita dai pezzi, il
-    // nome accessibile si appiattisce in "Sei in/dataNotti": i chevron sono decorazione e non si
-    // sentono. Chi ascolta non saprebbe dire dove sta per registrare.
-    primoAvvio({
-      "GET /api/v1/folders/path-info": {
-        stato: 200,
-        corpo: { family: "posix", data_root: "/data/Notti" },
-      },
-      "GET /api/v1/folders/browse": {
-        stato: 200,
-        corpo: { path: "/data/Notti", parent: null, folders: [] },
-      },
-    })
-    await alTerzoPasso()
-    await screen.findByRole("button", { name: /^seleziona cartella$/i })
-
-    const detto = document.querySelector("#wizard-dove .as-solo-lettori")?.textContent
-    expect(detto).toContain("/data/Notti")
-    // e il tasto che registra e' descritto proprio da quella riga
-    const tasto = screen.getByRole("button", { name: /^seleziona cartella$/i })
-    expect(tasto.getAttribute("aria-describedby")).toBe("wizard-dove")
-    // e le briciole a vista **non si sentono**: lasciandole, la descrizione tornerebbe a essere
-    // la frase intera piu' i nomi appiccicati una seconda volta
-    const visibili = [...document.querySelectorAll("#wizard-dove span")].filter(
-      (s) => !s.classList.contains("as-solo-lettori"),
-    )
-    expect(visibili.length).toBeGreaterThan(0)
-    expect(visibili.every((s) => s.getAttribute("aria-hidden") === "true")).toBe(true)
-  })
-
   it("quando l elenco non arriva, cosa farci sta dentro l avviso", async () => {
     // Il disegno dice: il guasto che riguarda la pagina porta **dentro di se'** i gesti che lo
     // risolvono. Staccati, sarebbero da cercare -- e su questo passo `Sali` sparisce insieme
@@ -550,18 +520,14 @@ describe("il percorso per chi ascolta", () => {
     })
     await alTerzoPasso()
 
-    const avviso = await screen.findByRole("alert")
-    const dentro = avviso.closest(".as-avviso") as HTMLElement
-    // e il percorso si puo' tornare a scrivere a mano, che e' l'altra strada
+    // tavola v82 `C.nasNo`: the notice says what to do, and the path field is that road
+    const dentro = (await screen.findByText("Elenco delle cartelle non disponibile")).closest(
+      "[role=status]",
+    ) as HTMLElement
+    expect(within(dentro).getByText("Inserisci il percorso.")).toBeDefined()
     expect(screen.getByLabelText(/percorso della cartella/i)).toBeDefined()
-
-    // e *Riprova* **rilegge davvero**: un bottone che c'e' e non fa niente e' peggio di un
-    // bottone assente, e una prova che guarda solo la presenza non lo distingue
-    const prima = chiamate().filter((u) => u.includes("/folders/browse")).length
-    fireEvent.click(within(dentro).getByRole("button", { name: /riprova/i }))
-    await waitFor(() =>
-      expect(chiamate().filter((u) => u.includes("/folders/browse")).length).toBeGreaterThan(prima),
-    )
+    // at the root there is nowhere to go back to
+    expect(within(dentro).queryByRole("button")).toBeNull()
   })
 
   it("sceso di tre livelli, l elenco che cade lascia la strada per tornare", async () => {
@@ -584,42 +550,11 @@ describe("il percorso per chi ascolta", () => {
     await alTerzoPasso()
     fireEvent.click(await screen.findByRole("button", { name: /apri notti/i }))
 
-    const dentro = (await screen.findByRole("alert")).closest(".as-avviso") as HTMLElement
+    const dentro = (await screen.findByText("Elenco delle cartelle non disponibile")).closest(
+      "[role=status]",
+    ) as HTMLElement
     fireEvent.click(within(dentro).getByRole("button", { name: /^cartella dei dati$/i }))
 
     await waitFor(() => expect(dove()).toBe("/data"))
-  })
-})
-
-describe("un percorso spezzato a briciole", () => {
-  it("tiene la radice, invece di farla sparire", async () => {
-    // `split` lascia davanti a un percorso assoluto un pezzo vuoto, e scartarlo portava via due
-    // cose: la briciola `/` che il disegno mostra, e la barra iniziale di ogni strada -- che
-    // faceva di `/volume1/foto` la strada **relativa** `volume1/foto`.
-    const { briciole } = await import("../src/SfogliaCartelle")
-
-    expect(briciole("/volume1/foto")).toEqual([
-      { nome: "/", strada: "/" },
-      { nome: "volume1", strada: "/volume1" },
-      { nome: "foto", strada: "/volume1/foto" },
-    ])
-  })
-
-  it("su Windows la radice e' il disco, e non ne inventa una", async () => {
-    const { briciole } = await import("../src/SfogliaCartelle")
-
-    expect(briciole("D:\\Astro\\2024")).toEqual([
-      { nome: "D:", strada: "D:" },
-      { nome: "Astro", strada: "D:/Astro" },
-      { nome: "2024", strada: "D:/Astro/2024" },
-    ])
-  })
-
-  it("le barre doppie e quella finale non fanno briciole vuote", async () => {
-    // Un percorso incollato a mano ne porta spesso una di troppo, e una briciola senza nome a
-    // schermo e' un chevron che non separa niente.
-    const { briciole } = await import("../src/SfogliaCartelle")
-
-    expect(briciole("/data//Notti/").map((b) => b.nome)).toEqual(["/", "data", "Notti"])
   })
 })

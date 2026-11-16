@@ -220,7 +220,6 @@ export const enMeteo = {
   "meteoblue.label": "Meteoblue key",
   "meteoblue.none": "No key: seeing not available.",
   "meteoblue.current": "Key saved (ends in {fine}).",
-  "meteoblue.where": "How to get a free key",
   "meteoblue.save": "Check and save",
   "meteoblue.remove": "Remove key",
   "meteoblue.saved": "Key valid: seeing active.",

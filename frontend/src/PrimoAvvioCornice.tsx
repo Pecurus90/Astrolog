@@ -100,6 +100,7 @@ export function segno(m: Tappa, n: number): { testo: string; stile: CSSPropertie
 const VERSO = {
   pieno: "al-bottone--pieno",
   tenue: "al-bottone--tenue",
+  rovescio: "al-bottone--tenue al-bottone--rovescio",
   contorno: "al-bottone--contorno",
 } as const
 
@@ -374,5 +375,59 @@ export function CorniceAvvio({
       </main>
       {gesti && tel && <div className="al-avvio__riga-18">{gesti}</div>}
     </Fondo>
+  )
+}
+
+/** A field of the board (`F`): label, input, the reason under it once there is one. */
+export function CampoAvvio({
+  id,
+  etichetta,
+  valore,
+  onScrivi,
+  onLascia,
+  segnaposto = "",
+  errore,
+  dopo,
+  aiuto,
+}: {
+  id: string
+  etichetta: string
+  valore: string
+  onScrivi: (v: string) => void
+  onLascia?: () => void
+  segnaposto?: string
+  errore?: string | undefined
+  /** The command on the same row (Cerca, Verifica). */
+  dopo?: ReactNode
+  aiuto?: string | undefined
+}) {
+  return (
+    <div className="al-avvio__colonna-10">
+      <label className="al-avvio__testo-11" htmlFor={id}>
+        {etichetta}
+      </label>
+      <div className="al-avvio__riga-6">
+        <input
+          id={id}
+          className="al-campo al-avvio__blocco-6"
+          value={valore}
+          onChange={(e) => onScrivi(e.target.value)}
+          onBlur={onLascia}
+          placeholder={segnaposto}
+          aria-invalid={errore ? "true" : "false"}
+          aria-describedby={`${id}-e`}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {dopo}
+      </div>
+      {errore && (
+        <span className="al-avvio__riga-7" id={`${id}-e`} style={{ color: "var(--male)" }}>
+          <b aria-hidden="true">!</b>
+          {errore}
+        </span>
+      )}
+      {aiuto && <span className="al-avvio__testo-12">{aiuto}</span>}
+    </div>
   )
 }

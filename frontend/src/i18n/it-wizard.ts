@@ -20,7 +20,21 @@ export const itWizard = {
   "wizard.closed.noKey": "Senza chiave",
   "wizard.closed.open": "Apri AstroLog",
   "wizard.site.searchGroup": "Cerca per nome",
-  "wizard.site.manualWhy": "Si scrivono anche senza connessione.",
+  "wizard.site.manualWhy": "Si scrivono anche senza rete.",
+  "wizard.site.searching": "Ricerca…", // glifo-ok: testo della tavola
+  "wizard.site.none.title": "Nessun risultato",
+  "wizard.site.none.text": "Controlla il nome o la connessione, oppure inserisci le coordinate.",
+  "wizard.site.coordsHelp": "Virgola o punto, e la lettera del verso: N, S, E, O.",
+  "wizard.checking": "Verifica…", // glifo-ok: testo della tavola
+  "wizard.folders.atLeast.short": "almeno {n} file FITS",
+  "wizard.folders.found.where": "{file} \u00b7 {percorso}",
+  "wizard.folders.subfolders": "Sottocartelle",
+  "wizard.services.where": "Come ottenere una chiave ↗", // glifo-ok: freccia della tavola
+  "wizard.solver.foundNoDatabase": "ASTAP trovato, catalogo mancante",
+  "wizard.solver.notThere": "ASTAP non trovato in questo percorso.",
+  "wizard.solver.notThere.text": "Il percorso deve terminare con il programma (astap_cli).",
+  // D50 per ADR 0036 (manuale: copre 0,2-10 gradi), testo della tavola v82
+  "wizard.solver.which": "Catalogo consigliato: D50, nella stessa cartella di ASTAP; D80 per i campi molto stretti.",
   "wizard.site.failedTitle": "Sito non salvato",
   "wizard.folders.intro": "Indica una cartella: vengono lette anche le sottocartelle. Se ne possono aggiungere pi\u00f9 di una.",
   "wizard.folders.introNas": "L'app \u00e8 in un container e vede percorsi diversi da quelli del computer. Seleziona la cartella dall'elenco.",
@@ -74,7 +88,6 @@ export const itWizard = {
   "wizard.name.label": "Nome",
   "wizard.name.hint": "Facoltativo.",
   "wizard.site.why": "Serve a calcolare le notti e l'altezza degli oggetti. Altri siti si aggiungono dalle Impostazioni.",
-  "wizard.site.failed": "Il servizio non ha risposto.",
   "wizard.site.manual": "Coordinate",
   "wizard.site.save": "Salva sito",
   "wizard.folders.choose": "Scegli una cartella",

@@ -16,7 +16,6 @@ src/Avviso.tsx
 src/Backup.tsx
 src/Campo.tsx
 src/CartaDelParametro.tsx
-src/ChiaveMeteoblue.tsx
 src/CieloDelleNubi.tsx
 src/FiltriUsati.tsx
 src/GestiDelPezzo.tsx
@@ -29,7 +28,6 @@ src/NotteDelMeteo.tsx
 src/Notti.tsx
 src/NuovoFiltroOCorredo.tsx
 src/Ricerca.tsx
-src/ScalaDelCielo.tsx
 src/SchedaDelPezzo.tsx
 src/Semaforo.tsx
 src/Tendina.tsx

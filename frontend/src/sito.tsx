@@ -1,64 +1,39 @@
 import { useState } from "react"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { Campo } from "./Campo"
-import { type ClasseDiCielo, ScalaDelCielo } from "./ScalaDelCielo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { type Asse, coordinataDa, coordinate, numero, numeroNelCampo, t } from "./i18n"
+import { type Asse, coordinataDa, numero, numeroNelCampo, t } from "./i18n"
 
 type Posto = components["schemas"]["PlaceOut"]
 
+/** The nine Bortle classes, in reading order: the scale, not a computed range. */
+export const CLASSI = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
+export type ClasseDiCielo = (typeof CLASSI)[number]
+
 /**
- * Un sito: come lo si compila, come lo si cerca, che cielo ha.
+ * A site being written at the first run: name, point, sky.
  *
- * Sta in un modulo suo perche' lo fanno in due -- il primo avvio, dove il sito **nasce**, e la
- * sezione *Il sito* delle Impostazioni, dove si **corregge**. Le regole qui sotto sono le stesse
- * nei due posti, e scritte due volte una delle due sarebbe invecchiata da sola.
- *
- * - **La strada manuale e' sempre aperta**, non solo quando la ricerca fallisce: un sito buio
- *   puo' non avere rete, ed e' proprio dove si osserva. Per questo il **nome e' un campo suo**:
- *   prenderlo dalla casella di ricerca lascerebbe senza nome proprio chi non cerca.
- * - **Una coordinata scritta a mano la rilegge `coordinataDa`**, non `Number`: il campo propone la
- *   virgola, e `Number("46,4843")` e' `NaN`. Li' vive anche il campo vuoto,
- *   che non e' una coordinata: `Number("")` fa zero, e zero-zero e' un punto nel Golfo di Guinea.
- * - **Il motivo sta sotto il campo, e solo quando c'e' qualcosa da dire**: un campo ancora vuoto
- *   non e' sbagliato, e' solo vuoto. Spegnere il tasto e basta e' il difetto che questa schermata
- *   ha gia' pagato una volta.
- * - **Un cielo non dichiarato resta non dichiarato**: la classe 1 messa li' di partenza finirebbe
- *   nel database come una risposta.
+ * - **The manual road is always open**, not only when the search fails: a dark site may have no
+ *   network. So the **name is a field of its own**.
+ * - **A coordinate is read back by `coordinataDa`**, not `Number`: the field takes the comma, and
+ *   an empty field is no coordinate (`Number("")` is zero, a point in the Gulf of Guinea).
+ * - **A sky not declared stays not declared**: class 1 as a default would land in the database
+ *   as an answer.
  */
-
-/** Cosa rende due posti **lo stesso posto**: il nome e il punto in cui sta. Col solo nome, una
- *  ricerca per "Verona" accendeva come scelte sia quella italiana sia quella di New York. */
-const chiave = (p: Posto) => `${p.name}-${p.latitude}-${p.longitude}`
-
 export type CampiDelSito = ReturnType<typeof useCampiDelSito>
 
-export function useCampiDelSito(iniziale?: {
-  nome: string
-  lat: string
-  lon: string
-  cielo?: ClasseDiCielo
-}) {
-  const [nome, setNome] = useState(iniziale?.nome ?? "")
-  const [lat, setLat] = useState(iniziale?.lat ?? "")
-  const [lon, setLon] = useState(iniziale?.lon ?? "")
-  const [cielo, setCielo] = useState<ClasseDiCielo | undefined>(iniziale?.cielo)
-  // **Scelto adesso** o solo mostrato com'era. La classe che si vede correggendo un sito e' un
-  // numero **derivato** dalla luminosita' salvata: rimandarla indietro la farebbe registrare come
-  // una risposta ("scale"), spostando la misura al centro della classe e cancellando da dove
-  // veniva -- un servizio, o uno strumento. E il backend, ricevendola, smette di riportare il
-  // cielo quando le coordinate si spostano. Si manda solo cio' che l'utente ha toccato.
-  const [cieloToccato, setCieloToccato] = useState(false)
-  // coordinate prese da un posto trovato per nome, finche' nessuno le riscrive a mano
+export function useCampiDelSito() {
+  const [nome, setNome] = useState("")
+  const [lat, setLat] = useState("")
+  const [lon, setLon] = useState("")
+  const [cielo, setCielo] = useState<ClasseDiCielo | undefined>(undefined)
+  // coordinates taken from a place found by name, until someone rewrites them by hand
   const [trovate, setTrovate] = useState(false)
 
   const fuoriScala = (scritto: string, asse: Asse, tetto: number) => {
     if (scritto.trim() === "") return undefined
     const n = coordinataDa(scritto, asse)
-    if (!Number.isFinite(n)) return t("site.notANumber")
+    if (!Number.isFinite(n)) return t(asse === "lat" ? "site.notANumber" : "site.notANumber.lon")
     if (Math.abs(n) <= tetto) return undefined
     return t("site.range", { tetto: numero(tetto) })
   }
@@ -77,29 +52,24 @@ export function useCampiDelSito(iniziale?: {
       setTrovate(false)
       setLon(v)
     },
-    setCielo: (c: ClasseDiCielo) => {
-      setCieloToccato(true)
-      setCielo(c)
-    },
+    /** `undefined`: the chosen class pressed again, no sky declared. */
+    setCielo,
     fuoriScala,
-    /** Il tasto guarda **anche** cio' che i campi stanno gia' dicendo: acceso sopra una
-     *  latitudine di 120 gradi manderebbe una scrittura che il backend rifiuta, col motivo
-     *  scritto a due centimetri da li'. */
+    /** The command also reads what the fields already say: lit over a latitude of 120 degrees it
+     *  would send a write the backend refuses. */
     valido:
       nome.trim() !== "" &&
       Number.isFinite(coordinataDa(lat, "lat")) &&
       Number.isFinite(coordinataDa(lon, "lon")) &&
       fuoriScala(lat, "lat", 90) === undefined &&
       fuoriScala(lon, "lon", 180) === undefined,
-    /** Cio' che si manda all'API. La **classe non si salva**: il backend ne ricava la luminosita'
-     *  e registra quella. Assente se nessuno l'ha scelta **adesso**, anche quando a schermo ce
-     *  n'e' una: quella e' il sito che si racconta, non una risposta. */
+    /** What goes to the API. The class is not stored: the backend derives the brightness. */
     corpo: () => ({
       name: nome.trim(),
       latitude: coordinataDa(lat, "lat"),
       longitude: coordinataDa(lon, "lon"),
       coords_source: trovate ? ("place" as const) : ("declared" as const),
-      ...(cieloToccato && cielo !== undefined ? { bortle: cielo } : {}),
+      ...(cielo !== undefined ? { bortle: cielo } : {}),
     }),
     prendiDa: (p: Posto) => {
       setNome(p.name)
@@ -107,197 +77,33 @@ export function useCampiDelSito(iniziale?: {
       setLon(numeroNelCampo(p.longitude))
       setTrovate(true)
     },
-    /** Dopo un salvataggio riuscito, dove il modulo non si smonta: coi campi pieni lo stesso
-     *  sito si offrirebbe di nuovo, e il nome e' unico. */
+    /** After a save, where the form is not unmounted: full fields would offer the same site
+     *  again, and the name is unique. */
     azzera: () => {
       setNome("")
       setLat("")
       setLon("")
       setCielo(undefined)
-      setCieloToccato(false)
       setTrovate(false)
     },
   }
 }
 
-/** Nome, latitudine e longitudine. Le due coordinate stanno **sulla stessa riga**: sono una cosa
- *  sola, un punto sulla Terra, e incolonnate si compilano come due domande separate. */
-export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string }) {
-  return (
-    <div className="as-modulo">
-      <Campo
-        id={`${id}-name`}
-        etichetta={t("site.name")}
-        errore={
-          campi.nome.trim() === "" && (campi.lat.trim() !== "" || campi.lon.trim() !== "")
-            ? t("site.nameNeeded")
-            : undefined
-        }
-      >
-        <input
-          className="as-campo-modulo__input"
-          id={`${id}-name`}
-          onChange={(e) => campi.setNome(e.target.value)}
-          placeholder={t("site.namePlaceholder")}
-          value={campi.nome}
-        />
-      </Campo>
-      <div className="as-campo-coppia">
-        <Campo
-          id={`${id}-lat`}
-          etichetta={t("site.lat")}
-          errore={campi.fuoriScala(campi.lat, "lat", 90)}
-        >
-          <input
-            className="as-campo-modulo__input as-campo-modulo__input--cifre"
-            id={`${id}-lat`}
-            inputMode="decimal"
-            onChange={(e) => campi.setLat(e.target.value)}
-            placeholder={t("site.latPlaceholder")}
-            value={campi.lat}
-          />
-        </Campo>
-        <Campo
-          id={`${id}-lon`}
-          etichetta={t("site.lon")}
-          errore={campi.fuoriScala(campi.lon, "lon", 180)}
-        >
-          <input
-            className="as-campo-modulo__input as-campo-modulo__input--cifre"
-            id={`${id}-lon`}
-            inputMode="decimal"
-            onChange={(e) => campi.setLon(e.target.value)}
-            placeholder={t("site.lonPlaceholder")}
-            value={campi.lon}
-          />
-        </Campo>
-      </div>
-    </div>
-  )
-}
-
-/** Che cielo hai: la scala, cosa ci si vede, e che si puo' non rispondere.
- *
- * Senza la riga di cosa si vede la scala sarebbe nove numeri senza significato; senza quella che
- * dice che e' facoltativa, nove voci sembrano una domanda obbligatoria e chi non sa che cielo ha
- * si ferma a indovinare. */
-export function SceltaDelCielo({
-  cielo,
-  onScegli,
-  facoltativo = true,
-}: {
-  cielo: ClasseDiCielo | undefined
-  onScegli: (c: ClasseDiCielo) => void
-  facoltativo?: boolean
-}) {
-  return (
-    <>
-      <p className="as-soprattitolo as-soprattitolo--nudo">{t("sky.label")}</p>
-      <ScalaDelCielo scelta={cielo} onScegli={onScegli} />
-      {facoltativo && <p className="as-campo-modulo__aiuto">{t("sky.optional")}</p>}
-    </>
-  )
-}
-
-/** Cercare il posto per nome.
- *
- * **Non si distingue "non trovato" da "non ho potuto cercare"**, perche' l'API non lo distingue:
- * senza rete `GET /places` risponde 200 con elenco vuoto, di proposito. Ma un **guasto** non e'
- * un elenco vuoto e non si traveste da "nessun posto": manderebbe a correggere un nome giusto. */
-export function CercaIlPosto({
-  id,
-  onScegli,
-  aMano,
-}: {
-  id: string
-  onScegli: (p: Posto) => void
-  /** Dove portare chi la rete non ce l'ha. Il guasto porta **dentro di se'** cosa farci:
-   *  riprovare, o passare alla strada che non dipende dalla rete -- staccati, quei due gesti
-   *  sarebbero da cercare proprio mentre qualcosa non ha funzionato. */
-  aMano?: () => void
-}) {
-  const [domanda, setDomanda] = useState("")
-  const [trovati, setTrovati] = useState<Posto[]>()
-  const [postoScelto, setPostoScelto] = useState<string>()
-  const [rotta, setRotta] = useState(false)
-
-  const cerca = async () => {
-    const { data, error } = await api.GET("/api/v1/places", {
-      params: { query: { q: domanda } },
-    })
-    setRotta(Boolean(error))
-    setTrovati(error ? undefined : data.items)
+/** Search by name, first run and Impostazioni: without network `GET /places` answers an empty
+ *  list (sito.md); a fault, answered or not, is "rotto", not "no place". */
+export function useCercaPosto(onParte: () => void = () => undefined) {
+  const [q, setQ] = useState("")
+  const [stato, setStato] = useState<"fermo" | "cerco" | "rotto">("fermo")
+  const [trovati, setTrovati] = useState<Posto[] | null>(null)
+  const cerca = async (): Promise<void> => {
+    if (!q.trim() || stato === "cerco") return
+    setStato("cerco")
+    onParte()
+    const r = await api
+      .GET("/api/v1/places", { params: { query: { q: q.trim() } } })
+      .catch(() => ({ data: undefined, error: true }))
+    setStato(r.error ? "rotto" : "fermo")
+    setTrovati(r.error || !r.data ? null : r.data.items)
   }
-
-  return (
-    <>
-      <div className="as-campo-riga">
-        <Campo etichetta={t("site.searchLabel")} id={id}>
-          <input
-            className="as-campo-modulo__input"
-            id={id}
-            onChange={(e) => setDomanda(e.target.value)}
-            type="search"
-            value={domanda}
-          />
-        </Campo>
-        <Bottone disabled={domanda.trim() === ""} onClick={() => void cerca()}>
-          {t("site.search")}
-        </Bottone>
-      </div>
-
-      {trovati?.length === 0 && <Avviso esito="neutro">{t("site.none")}</Avviso>}
-      {trovati && trovati.length > 0 && (
-        <ul className="as-posti" aria-label={t("site.found")}>
-          {trovati.map((p) => (
-            <li
-              key={chiave(p)}
-              className="as-posti__voce"
-              aria-current={postoScelto === chiave(p) ? "true" : undefined}
-            >
-              <span>
-                <span className="as-posti__nome">{p.name}</span>
-                <span className="as-posti__cifre">{coordinate(p.latitude, p.longitude)}</span>
-              </span>
-              {postoScelto === chiave(p) ? (
-                <span className="as-posti__scelto">{t("site.chosen")}</span>
-              ) : (
-                <Bottone
-                  nome={t("site.chooseOne", { nome: p.name })}
-                  piccolo
-                  onClick={() => {
-                    setPostoScelto(chiave(p))
-                    onScegli(p)
-                  }}
-                >
-                  {t("site.choose")}
-                </Bottone>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {rotta && (
-        <Avviso
-          azioni={
-            <>
-              <Bottone piccolo onClick={() => void cerca()}>
-                {t("action.retry")}
-              </Bottone>
-              {aMano && (
-                <Bottone piccolo verso="nudo" onClick={aMano}>
-                  {t("site.writeByHand")}
-                </Bottone>
-              )}
-            </>
-          }
-          esito="allarme"
-          titolo={t("site.searchFailedTitle")}
-        >
-          {t("site.searchFailed")}
-        </Avviso>
-      )}
-    </>
-  )
+  return { q, setQ, stato, trovati, setTrovati, cerca }
 }

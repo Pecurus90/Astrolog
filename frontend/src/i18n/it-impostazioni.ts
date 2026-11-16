@@ -327,7 +327,6 @@ export const itImpostazioni = {
   "settings.site.title": "Siti di osservazione",
   "settings.site.what":
     "Il sito predefinito \u00e8 usato per le notti, Stanotte e il Meteo.",
-  "settings.site.add": "Aggiungi sito",
   "settings.site.failed": "Siti non disponibili.",
   "settings.site.none": "Nessun sito",
   "settings.backup": "Backup",

@@ -339,7 +339,7 @@ export const it = {
   "sky.8": "cielo di citt\u00e0",
   "sky.8.what": "Il cielo \u00e8 grigio o arancione e ci si legge; molte stelle delle costellazioni sono deboli o non si vedono affatto.",
   "sky.9": "centro citt\u00e0",
-  "sky.9.what": "Le costellazioni si perdono e, a occhio nudo, a parte le Pleiadi non si vede nessun oggetto Messier: restano Luna, pianeti e gli ammassi pi\u00f9 luminosi.",
+  "sky.9.what": "Le costellazioni si perdono e, a occhio nudo, a parte Pleiades non si vede nessun oggetto Messier: restano Luna, pianeti e gli ammassi pi\u00f9 luminosi.",
   // Le lettere dei quattro versi. Passano di qui e non stanno scritte in `coordinate()` perche'
   // sono parole di una lingua: in inglese ovest e' `W`, e una lettera dentro il formattatore
   // resterebbe italiana senza che la guardia delle traduzioni se ne accorga.

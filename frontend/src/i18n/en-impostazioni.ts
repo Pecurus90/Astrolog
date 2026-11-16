@@ -322,7 +322,6 @@ export const enImpostazioni = {
   "settings.site.title": "Observing sites",
   "settings.site.what":
     "The default site is used for nights, Tonight and Weather.",
-  "settings.site.add": "Add site",
   "settings.site.failed": "Sites not available.",
   "settings.site.none": "No sites",
   "settings.backup": "Backup",

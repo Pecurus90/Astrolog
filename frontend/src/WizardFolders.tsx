@@ -1,101 +1,275 @@
-import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
 
-import { Avviso } from "./Avviso"
-import { SfogliaCartelle } from "./SfogliaCartelle"
-import { ScriviPercorso, VistaDellaSonda, useCartelle } from "./cartelle"
+import { Avviso } from "./componenti/Avviso"
+import { gesto } from "./componenti/gesto"
+import type { Formato } from "./componenti/Tema"
+import { CampoAvvio, Comando, segno } from "./PrimoAvvioCornice"
+import { api } from "./api/client"
+import type { components } from "./api/schema"
+import { type EsitoSonda as Esito, esitoDelloSpostamento, useCartelle } from "./cartelle"
 import { numero, t } from "./i18n"
 import { usePienoDelPasso } from "./pienoDelPasso"
 import { useRadiceDati } from "./radiceDati"
 
+type Probe = components["schemas"]["ProbeOut"]
+type Cartelle = ReturnType<typeof useCartelle>
+
+/** How many FITS the probe saw, or its floor when the count stopped at its time limit. */
+function quanti(v: Probe): string {
+  const n = numero(v.fits_count ?? 0)
+  return v.complete === false
+    ? t("wizard.folders.atLeast.short", { n })
+    : t("wizard.folders.found", { n })
+}
+
+/** The probe's outcome (tavola `EC`): found, partial count, unreachable, the files of a registered
+ *  folder that moved here; a refused registration says why. The command that registers sits in it. */
+function esitoDellaSonda(
+  c: Cartelle,
+  onAggiunta: (v: Probe) => void,
+  onSpostata: () => void,
+): Esito | null {
+  if (c.rotto === "registrata")
+    return {
+      segno: "!",
+      titolo: t("folders.move.foundTitle"),
+      testo: t("settings.folders.already", { percorso: c.vista?.root_path ?? "" }),
+    }
+  if (c.rotto)
+    return {
+      segno: "!",
+      titolo: t(c.rotto === "guarda" ? "wizard.folders.lookFailed" : "wizard.folders.failed"),
+    }
+  const v = c.vista
+  if (!v) return null
+  if (!v.reachable)
+    return {
+      segno: "!",
+      titolo: t("wizard.folders.unreachableTitle"),
+      testo: t("wizard.folders.unreachableHelp"),
+    }
+  const spostamento = esitoDelloSpostamento(c, (ok) => ok && onSpostata())
+  if (spostamento) return spostamento
+  const parziale = v.complete === false
+  return {
+    segno: "\u2713",
+    titolo: t(parziale ? "wizard.folders.atLeastTitle" : "wizard.folders.foundTitle"),
+    testo: parziale
+      ? t("wizard.folders.atLeast", { n: numero(v.fits_count ?? 0) })
+      : t("wizard.folders.found.where", { file: quanti(v), percorso: v.root_path }),
+    azione: t("wizard.folders.add"),
+    // one registration: a second click would come back 409 on a write that went through
+    onAzione: () => {
+      if (!c.inCorso) void c.aggiungi().then((ok) => ok && onAggiunta(v))
+    },
+  }
+}
+
+/** The NAS's folders under the data root (tavola `V.nas`): where you are, Seleziona cartella,
+ *  up, back to the data root, the subfolders with Apri. Where you are is what was clicked, not
+ *  the answer still on its way: falling back to it, Seleziona would register the folder before. */
+function Sfoglia({
+  radice,
+  qui,
+  setQui,
+  pende,
+  verifica,
+  onSeleziona,
+  onCaduto,
+}: {
+  radice: string
+  /** Where you are; `undefined` is the data root. Held by the step: a list that fails below
+   *  the root keeps the way back in its notice. */
+  qui: string | undefined
+  setQui: (dove: string | undefined) => void
+  pende: boolean
+  verifica: boolean
+  onSeleziona: (dove: string) => void
+  onCaduto: (caduto: boolean) => void
+}) {
+  const dove = qui ?? radice
+  const sfoglia = useQuery({
+    queryKey: ["browse", dove],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/folders/browse", {
+        params: { query: qui === undefined ? {} : { path: qui } },
+      })
+      if (error) throw new Error(t("wizard.folders.browseFailedTitle"))
+      return data
+    },
+    retry: false,
+  })
+  const caduto = sfoglia.isError
+  useEffect(() => onCaduto(caduto), [caduto, onCaduto])
+  if (caduto) return null
+  const pronto = sfoglia.data?.path === dove
+  const su = pronto ? sfoglia.data?.parent : null
+  const sotto = pronto ? (sfoglia.data?.folders ?? []) : []
+  return (
+    <div className="al-avvio__colonna-18">
+      <span className="al-avvio__testo-17">{t("wizard.folders.choose")}</span>
+      <div className="al-avvio__colonna-19">
+        <span className="al-avvio__testo-9">{t("wizard.folders.here")}</span>
+        <span className="al-avvio__testo-18">{dove}</span>
+      </div>
+      <div className="al-avvio__riga-12">
+        <Comando
+          testo={t("wizard.folders.useThis")}
+          verso={pende ? "rovescio" : "pieno"}
+          spento={!pronto}
+          occupato={verifica ? t("wizard.checking") : undefined}
+          onClick={() => onSeleziona(dove)}
+        />
+        <Comando
+          testo={t("wizard.folders.up")}
+          verso="rovescio"
+          spento={!su}
+          onClick={() => su && setQui(su)}
+        />
+        <Comando
+          testo={t("wizard.folders.backToRoot")}
+          verso="rovescio"
+          spento={dove === radice}
+          onClick={() => setQui(undefined)}
+        />
+      </div>
+      <ul className="al-avvio__colonna-20" aria-label={t("wizard.folders.subfolders")}>
+        {sotto.map((d) => (
+          <li key={d.path} className="al-avvio__riga-13">
+            <span className="al-avvio__blocco-7">{d.name}</span>
+            <a
+              href="#"
+              role="button"
+              aria-label={t("wizard.folders.openOne", { nome: d.name })}
+              onClick={gesto(() => setQui(d.path))}
+              className="al-bottone al-bottone--tenue al-avvio__blocco-4"
+            >
+              {t("wizard.folders.open")}
+            </a>
+          </li>
+        ))}
+        {sfoglia.isSuccess && pronto && sotto.length === 0 && (
+          <li className="al-avvio__blocco-8">{t("wizard.folders.empty")}</li>
+        )}
+      </ul>
+    </div>
+  )
+}
+
 /**
- * Il terzo passo: dove stanno i file. **Quante cartelle vuoi**, non una sola.
- *
- * La sostanza -- guardare dentro, registrare, elencare -- sta in `cartelle.tsx`, che la divide
- * con la sezione Cartelle delle Impostazioni. Qui resta cio' che e' del **passo**:
- *
- * - **Aggiungere una cartella non chiude il primo avvio.** Prima lo chiudeva, ed e' il motivo per
- *   cui se ne poteva indicare una sola: chi tiene le foto su due dischi doveva aggiungere la
- *   seconda da un posto che non esisteva. A chiudere e' il tasto Fine.
- * - **Dove l'app ha una radice dei dati** (il NAS in Docker) le cartelle si **scelgono**: li'
- *   l'utente non sa che percorso abbia la sua cartella *dentro* il container, e scriverlo a mano
- *   e' indovinare. Sul desktop non c'e' radice, e il percorso si scrive.
+ * The folders step (tavola v82 `Primo avvio`, `V.pc`, `V.nas`, `C`). **As many folders as you
+ * want**: adding one does not close the first run, Fine does. Where the app has a data root (the
+ * NAS in Docker) folders are chosen, since the path inside the container cannot be guessed; on
+ * the computer the path is written. Looked at before registering: the probe counts without writing.
  */
-export function WizardFolders({ onOffre }: { onOffre: (offre: boolean) => void }) {
+export function WizardFolders({
+  formato,
+  onOffre,
+}: {
+  formato: Formato
+  /** The step's own command is the full one (tavola `cmd`): Avanti steps down. */
+  onOffre: (offre: boolean) => void
+}) {
   const [path, setPath] = useState("")
+  const [verifica, setVerifica] = useState(false)
+  const [nasCaduto, setNasCaduto] = useState(false)
+  const [qui, setQui] = useState<string | undefined>(undefined)
+  // what the probe counted, per registered path: the database counts frames only after the scan
+  const [contati, setContati] = useState<Record<string, string>>({})
   const cartelle = useCartelle("wizard.folders.failed")
   const radice = useRadiceDati()
-  // Quando l'esito offre di registrare, il comando pieno e' il suo: il guscio lo deve sapere,
-  // perche' Avanti gli ceda il posto.
-  usePienoDelPasso(onOffre, cartelle.vista?.reachable === true)
+  const nas = radice !== null
+  const conPercorso = !nas || nasCaduto
 
-  const scrivi = (
-    <ScriviPercorso
-      id="wizard-path"
-      onGuarda={() => void cartelle.guarda(path)}
-      onScrivi={setPath}
-      prefisso="wizard.folders"
-      valore={path}
-    />
-  )
+  const guarda = async (quale: string) => {
+    if (!quale.trim() || verifica) return
+    setVerifica(true)
+    await cartelle.guarda(quale.trim()).catch(() => undefined)
+    setVerifica(false)
+  }
+  const esito = esitoDellaSonda(cartelle, (v) => {
+    setPath("")
+    setContati((c) => ({ ...c, [v.root_path]: quanti(v) }))
+  }, () => setPath(""))
+  const pende = esito?.azione !== undefined
+  const aggiunte = cartelle.elenco.data?.items ?? []
+  // tavola `cmd`: Avanti is full only with folders added and nothing waiting to be added
+  const fermo = aggiunte.length > 0 && !pende && (!conPercorso || !path.trim())
+  usePienoDelPasso(onOffre, !fermo)
 
-  const quante = cartelle.elenco.data?.items.length ?? 0
   return (
     <>
-      <div className="as-passo__parte">
-        {/* Due strade, e le decide **dove gira l'app**: sul computer il percorso si scrive, sul
-            NAS non si puo' indovinare e si sfoglia. */}
-        {radice === null ? (
-          scrivi
-        ) : (
-          <SfogliaCartelle
-            onGuarda={cartelle.guarda}
-            radice={radice}
-            scrivi={scrivi}
-            usa={t("wizard.folders.useThis")}
+      {nas && nasCaduto && (
+        <Avviso
+          tipo="blocco"
+          formato={formato}
+          segno="?"
+          titolo={t("wizard.folders.browseFailedTitle")}
+          testo={t("wizard.folders.browseFailed")}
+          {...(qui === undefined
+            ? {}
+            : { azione: t("wizard.folders.backToRoot"), onAzione: () => setQui(undefined) })}
+        />
+      )}
+      {conPercorso && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            void guarda(path)
+          }}
+        >
+          <CampoAvvio
+            id="pa-perc"
+            etichetta={t("wizard.folders.label")}
+            valore={path}
+            onScrivi={setPath}
+            aiuto={nas ? t("wizard.folders.pathHelp") : undefined}
+            dopo={
+              <Comando
+                testo={t("wizard.folders.look")}
+                verso={pende ? "tenue" : "pieno"}
+                spento={!path.trim()}
+                occupato={verifica ? t("wizard.checking") : undefined}
+                onClick={() => void guarda(path)}
+              />
+            }
           />
-        )}
-
-        {cartelle.vista && (
-          <VistaDellaSonda
-            inCorso={cartelle.inCorso}
-            nonSpostata={cartelle.nonSpostata}
-            onAggiungi={() => {
-              setPath("")
-              void cartelle.aggiungi()
-            }}
-            onSposta={(id) => {
-              setPath("")
-              void cartelle.spostaQui(id)
-            }}
-            prefisso="wizard.folders"
-            vista={cartelle.vista}
-          />
-        )}
-
-        {cartelle.rotto && (
-          <Avviso esito="allarme">
-            {t(
-              cartelle.rotto === "guarda" ? "wizard.folders.lookFailed" : "wizard.folders.failed",
-            )}
-          </Avviso>
-        )}
-      </div>
-
-      {quante > 0 && (
-        <div className="as-passo__parte">
-          {/* Quante sono sta **nel titoletto**, non contato a occhio sulle righe. */}
-          <p className="as-soprattitolo as-soprattitolo--nudo" id="wizard-added">
-            {t("wizard.folders.added")}
-            {" \u00b7 "}
-            {numero(quante)}
-          </p>
-          <ul className="as-cartelle" aria-labelledby="wizard-added">
-            {cartelle.elenco.data?.items.map((c) => (
-              <li key={c.id} className="as-cartelle__voce">
-                <span className="as-cartelle__percorso">{c.root_path}</span>
-                <span className="as-cartelle__frame">{t("review.frames", { n: numero(c.frames) })}</span>
-              </li>
-            ))}
+        </form>
+      )}
+      {nas && radice !== null && (
+        <Sfoglia
+          radice={radice}
+          qui={qui}
+          setQui={setQui}
+          pende={pende}
+          verifica={verifica}
+          onSeleziona={(d) => void guarda(d)}
+          onCaduto={setNasCaduto}
+        />
+      )}
+      {esito && <Avviso tipo="blocco" formato={formato} {...esito} />}
+      {aggiunte.length > 0 && (
+        <div className="al-avvio__colonna-15">
+          <span className="al-avvio__testo-13">{t("wizard.folders.added")}</span>
+          <ul className="al-avvio__colonna-13">
+            {aggiunte.map((c) => {
+              const s = segno("fatto", 0)
+              const n =
+                contati[c.root_path] ??
+                (c.frames > 0 ? t("wizard.folders.found", { n: numero(c.frames) }) : "")
+              return (
+                <li key={c.id} className="al-avvio__riga-14">
+                  <span className="al-avvio__tondo-4" aria-hidden="true" style={s.stile}>
+                    {s.testo}
+                  </span>
+                  <span className="al-avvio__colonna-19">
+                    <span className="al-avvio__testo-19">{c.root_path}</span>
+                    {n && <span className="al-avvio__testo-9">{n}</span>}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

@@ -256,12 +256,49 @@ Scelte diverse:
 - **La fine della chiave** «...a3f9» con tre punti (tavola «…a3f9»): e' `config.hint`, la stessa
   in tutta l'app (anche in `GET /settings`).
 
+## Primo avvio -- Sito, Cartelle, Seeing e ASTAP (passo 33, Primo avvio commit C, 16/11)
+
+Tavola v82 `Primo avvio.dc.html` (`V.sito`, `V.pc`, `V.nas`, `V.seeing`, `V.astapNo`, `V.astapCat`).
+Il riquadro scuro del foglio vecchio non c'e' piu'. Diverso dalla tavola:
+- **Bortle da tastiera**: una fermata sola del tabulatore e le frecce che spostano la scelta senza
+  uscire dalla scala. La tavola ha nove fermate e nessuna freccia. Perche': un gruppo di radio si
+  attraversa cosi' (ARIA), ed era gia' la regola della scala di prima.
+- **Numeri con la virgola**: segnaposto ed esempio dell'errore «46,4843 N», coordinate dei posti
+  trovati scritte dall'app (`coordinate()`). Tavola «46.4843 N». Perche': virgola decimale, Marco 6/11.
+- **Posto scelto dalla ricerca**: il nome del sito e' il nome intero che il servizio da'
+  («Cima Ekar, Asiago, Vicenza, Veneto, 36012, Italia»), le coordinate con tutti i decimali e senza
+  lettera. Tavola «Cima Ekar», «45.8486 N». Perche': l'API da' un nome solo, e tagliarlo nella
+  pagina sarebbe un calcolo; il nome si corregge nel campo.
+- **Trattino corto** in «1 - cielo buio», «Bortle 3 - …» e fra le coordinate dei posti trovati;
+  tavola «–» e «·». Perche': testi gia' di tutta l'app (Impostazioni), cambiano insieme o niente.
+- **Conteggio parziale**: «Conteggio interrotto a N: potrebbero essercene altri.», tavola «i file
+  sono di più»; in Cartelle aggiunte «almeno N file FITS», tavola «oltre N». Perche': il conteggio
+  si ferma anche quando una sottocartella non risponde, e allora non si sa se ce ne sono altri.
+- **Cartelle aggiunte senza numero** quando l'app non l'ha contato in questa pagina (dopo un
+  ricaricamento): il database conta i file solo dopo la scansione, e «0 file FITS» sarebbe falso.
+- **Stesso percorso gia' registrato**: «Cartella già registrata» con «{percorso} è già fra le
+  cartelle…», come nelle Impostazioni. La tavola usa quel titolo per la cartella spostata
+  («Corrisponde a…», «Usa questo percorso»), che l'app ha uguale.
+- **Elenco del NAS che cade sotto la cartella dei dati**: l'avviso porta «Cartella dei dati» per
+  tornare su; la tavola disegna solo l'elenco che non arriva affatto, senza gesto.
+- **Seleziona cartella spento** mentre arriva l'elenco della cartella appena aperta: si
+  registrerebbe quella di prima.
+- **Verifica o aggiunta non riuscite** (rete, app ferma): avviso «Verifica non riuscita» o
+  «Cartella non aggiunta». La tavola non le disegna.
+- **Chiave Meteoblue che non parte** (app ferma): riga «Invio della chiave non riuscito».
+- **Link di Meteoblue**: la pagina italiana in ogni lingua, lo stesso delle Impostazioni (un
+  indirizzo, una casa).
+- **Percorso di ASTAP**: segnaposto del sistema (Windows «C:\Program Files\astap\astap_cli.exe»,
+  tavola «/opt/astap/astap_cli»); si salva anche lasciando il campo, non solo con Verifica
+  percorso. Perche': un percorso battuto a mano e perso perche' non si e' premuto il tasto.
+- **Scrittura del percorso non riuscita**: avviso «Salvataggio non riuscito».
+- **Escono** (non sono nella tavola): «Il percorso viene verificato subito.», «Serve anche il
+  catalogo stellare…», Riprova dentro la ricerca caduta e nell'elenco del NAS, le briciole del
+  percorso del NAS, il catalogo da SourceForge (ora hnsky.org come la tavola), «circa 870 MB» del D50.
+
 ## Primo avvio -- il guscio, Nome, Tema, chiusura e backup (passo 33, Primo avvio commit B, 16/11)
 
 Tavola v82 `Primo avvio.dc.html` (markup 14-103, logica 106-318). Diverso dalla tavola:
-- **Sito, Cartelle, Seeing e ASTAP** stanno ancora sul foglio vecchio, in un riquadro scuro dentro
-  la carta del passo. Perche': si rifanno nel commit C; il guscio (lato, carta, titolo, perche',
-  pastiglia di ASTAP, gesti) e' gia' quello della tavola, e «Salva sito» sta gia' sotto i campi.
 - **Automatico** spento nel passo Tema, e lo stato «tema: automatico senza sito» non c'e'. Perche':
   Marco 15/11, piu' recente della tavola: Automatico arriva col passo Tema (`navigazione.md`).
 - **«Leggo le impostazioni…» e «AstroLog non risponde, riprova»** si vedono all'apertura dell'app
@@ -274,9 +311,6 @@ Tavola v82 `Primo avvio.dc.html` (markup 14-103, logica 106-318). Diverso dalla 
   sito salvato, cartelle registrate, chiave salvata, ASTAP pronto), non cio' che la pagina
   simula; Tema e' sempre «fatto», come nella tavola.
 - **Salta** timbra il primo avvio ed entra nell'app (la tavola apre la Dashboard): stesso esito.
-- **Avanti pieno** a Cartelle senza cartelle, Seeing senza chiave e ASTAP non trovato, dove la
-  tavola (`cmd`) lo vuole tenue col comando del passo pieno. Perche': quei comandi sono ancora del
-  foglio vecchio; si allinea nel commit C.
 - **Sito dopo un ricaricamento a meta'**: nella lista di lato resta «saltato» finche' non si
   arriva alla chiusura, che lo rilegge dal database e lo segna «fatto». Perche': prima di Fine
   l'app sa solo del sito salvato in questa pagina.

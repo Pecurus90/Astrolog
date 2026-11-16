@@ -236,7 +236,6 @@ export const itMeteo = {
   "meteoblue.label": "Chiave Meteoblue",
   "meteoblue.none": "Nessuna chiave: seeing non disponibile.",
   "meteoblue.current": "Chiave salvata (termina con {fine}).",
-  "meteoblue.where": "Come ottenere una chiave gratuita",
   "meteoblue.save": "Verifica e salva",
   "meteoblue.remove": "Rimuovi chiave",
   "meteoblue.saved": "Chiave valida: seeing attivo.",

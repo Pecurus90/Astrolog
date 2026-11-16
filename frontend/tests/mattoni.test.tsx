@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * I mattoni condivisi -- `Avviso`, `Bottone`, `Campo`, `ScalaDelCielo`, `Vuoto` -- e cio' che il
+ * I mattoni condivisi -- `Avviso`, `Bottone`, `Campo`, `Vuoto` -- e cio' che il
  * foglio si aspetta da loro.
  *
  * Perche' hanno un file proprio: un mattone lo usano tutte le pagine, e una sua regola rotta non
@@ -11,7 +11,7 @@
  * Qui si prova **cosa il mattone rende**, non come si vede: il colore lo misura
  * `tools/controlli_contrasto.py` sui valori veri, che in jsdom non esistono.
  */
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { MemoryRouter } from "react-router"
@@ -19,7 +19,6 @@ import { MemoryRouter } from "react-router"
 import { Avviso } from "../src/Avviso"
 import { Bottone } from "../src/Bottone"
 import { Campo } from "../src/Campo"
-import { CLASSI, ScalaDelCielo, cosaSiVede } from "../src/ScalaDelCielo"
 import { Vuoto } from "../src/Vuoto"
 import { pulisci } from "./banco"
 
@@ -353,169 +352,5 @@ describe("Vuoto", () => {
 
     rerender(<Vuoto titolo="nights.empty.noFrames" perche="nights.empty.noFrames.why" />)
     expect(screen.getByRole("heading", { level: 3 })).not.toBeNull()
-  })
-})
-
-describe("ScalaDelCielo", () => {
-  const scala = () => screen.getByRole("radiogroup")
-  const voci = () => within(scala()).getAllByRole("radio")
-
-  it("ha nove classi, e ognuna porta la sua cifra scritta", () => {
-    // Il colore non dice mai da solo che classe e' (WCAG 2.2, 1.4.1): la fascia e' decorazione,
-    // e chi non distingue il ciano dal rosa deve leggere il numero.
-    render(<ScalaDelCielo onScegli={() => {}} />)
-
-    expect(voci()).toHaveLength(9)
-    expect(voci().map((v) => v.closest("label")?.querySelector(".as-bortle-scegli__cifra")?.textContent)).toEqual([
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-    ])
-  })
-
-  it("ogni classe si chiama col suo cielo, e sono nove cieli diversi", () => {
-    // Nove bottoni che si chiamano "1".."9" non dicono niente a chi ascolta: il nome porta
-    // dentro che cielo e' quello, che e' l'unica cosa su cui si puo' scegliere.
-    //
-    // E si guardano **tutte e nove**, legate una per una alla loro parola: e' cosi' che questa
-    // scala e' gia' entrata sbagliata una volta, con due classi scambiate fra loro. Provandone
-    // due, scambiare la 4 con la 5 -- nome e descrizione, in tutte e due le lingue -- lasciava
-    // la suite verde.
-    const PAROLA: Record<number, RegExp> = {
-      1: /buio pieno/i,
-      2: /buio vero/i,
-      3: /campagna/i,
-      4: /chiara/i,
-      5: /periferia/i,
-      6: /luminosa/i,
-      7: /fra periferia e citt/i,
-      8: /di citt/i,
-      9: /centro citt/i,
-    }
-    render(<ScalaDelCielo onScegli={() => {}} />)
-
-    const nomi = voci().map((v) => v.getAttribute("aria-label") ?? "")
-    for (const [i, nome] of nomi.entries()) {
-      expect(nome).toMatch(new RegExp(`^Bortle ${i + 1} - `))
-      expect(nome).toMatch(PAROLA[i + 1]!)
-    }
-    // e sono nove nomi diversi, non lo stesso ripetuto
-    expect(new Set(nomi).size).toBe(9)
-  })
-
-  it("e ogni classe dice cosa ci si vede, con un segno che le altre non hanno", () => {
-    // La descrizione e' la riga su cui si sceglie davvero. Due classi che danno lo stesso
-    // indizio non si possono distinguere: la 1 e la 2 lo facevano tutte e due sulla luce
-    // zodiacale, e chi sceglieva leggeva due volte la stessa cosa.
-    const dette = CLASSI.map((c) => cosaSiVede(c))
-
-    expect(new Set(dette).size).toBe(9)
-    expect(dette[0]).toMatch(/ombre/i)
-    expect(dette[1]).toMatch(/zodiacale/i)
-    expect(dette[0]).not.toMatch(/zodiacale/i)
-  })
-
-  it("anche senza scelta il tabulatore trova UNA voce, o il gruppo e' irraggiungibile", () => {
-    // E' lo stato in cui la scala **nasce** nel primo avvio. Senza una fermata, da tastiera non
-    // ci si entra affatto: nessun `tabindex="0"`, e nove voci che il tabulatore salta. La prova
-    // con `scelta` non lo vedrebbe, perche' li' la fermata e' quella scelta.
-    render(<ScalaDelCielo onScegli={() => {}} />)
-
-    const fermate = voci().filter((v) => v.getAttribute("tabindex") === "0")
-    expect(fermate).toHaveLength(1)
-    expect((fermate[0] as HTMLInputElement).value).toBe("1")
-    // e restare raggiungibili non vuol dire essere scelti
-    expect((fermate[0] as HTMLInputElement).checked).toBe(false)
-  })
-
-  it("ogni fascia porta la classe che il foglio le da', non una tinta scritta qui", () => {
-    // La rampa dal ciano al rosa **e' del foglio**, una classe per fascia
-    // (`as-bortle-scegli__voce--1` ... `--9`). Scrivere il colore in linea sarebbe una seconda verita'
-    // sullo stesso colore, e nessuna macchina la vedrebbe: una classe che **esiste** non e' una
-    // classe inventata, quindi la guardia del cancello tace. Qui si guarda che la classe ci sia.
-    render(<ScalaDelCielo onScegli={() => {}} />)
-
-    const tinte = voci().map((v, i) => v.closest("label")?.classList.contains(`as-bortle-scegli__voce--${i + 1}`))
-    expect(tinte).toEqual(CLASSI.map(() => true))
-    // e il colore non e' scritto sull'elemento: se ci fosse, verrebbe da noi e non dal foglio
-    expect(voci().every((v) => v.getAttribute("style") === null)).toBe(true)
-  })
-
-  it("e' il gruppo di scelte del foglio: nove radio veri, e sotto cio' che si e' scelto", () => {
-    // Il foglio veste `.as-bortle-scegli` su radio veri (`:has(input:checked)`): nove bottoni
-    // con un ruolo scritto a mano non prenderebbero ne' la tinta ne' il segno della scelta.
-    const { container, rerender } = render(<ScalaDelCielo onScegli={() => {}} />)
-    expect(scala().tagName).toBe("FIELDSET")
-    expect(scala().className).toBe("as-bortle-scegli")
-    expect(container.querySelectorAll(".as-bortle-scegli__scala > label.as-bortle-scegli__voce > input[type=radio]")).toHaveLength(9)
-    // senza scelta lo dice, invece di lasciare un vuoto
-    expect(container.querySelector(".as-bortle-scegli__letta--niente")?.textContent).toBe("Nessuna classe selezionata.")
-
-    rerender(<ScalaDelCielo scelta={5} onScegli={() => {}} />)
-    expect(container.querySelector(".as-bortle-scegli__letta--niente")).toBeNull()
-    expect(container.querySelector(".as-bortle-scegli__letta b")?.textContent).toMatch(/^Bortle 5/)
-    expect(container.querySelector(".as-bortle-scegli__letta span")?.textContent).toBeTruthy()
-  })
-
-  it("il tabulatore trova UNA voce sola, e le frecce spostano la scelta", () => {
-    // E' un gruppo di scelte, non nove fermate del tabulatore: senza il tabindex mobile chi
-    // arriva da tastiera deve premere nove volte per attraversarlo.
-    const scelte: number[] = []
-    render(<ScalaDelCielo scelta={4} onScegli={(n) => scelte.push(n)} />)
-
-    expect(voci().filter((v) => v.getAttribute("tabindex") === "0")).toHaveLength(1)
-    expect(voci()[3]?.getAttribute("tabindex")).toBe("0")
-
-    fireEvent.keyDown(voci()[3]!, { key: "ArrowRight" })
-    fireEvent.keyDown(voci()[3]!, { key: "ArrowLeft" })
-    expect(scelte).toEqual([5, 3])
-  })
-
-  it("le frecce non escono dalla scala, da nessuno dei due estremi", () => {
-    // Nove classi sono nove, e una scala che gira su se' stessa farebbe saltare dal centro
-    // citta' al buio pieno con un tasto solo.
-    //
-    // E l'estremo basso e' il piu' pericoloso dei due: senza la guardia, ArrowLeft sulla 1
-    // prende la classe di posto -1, che non esiste, e **cancella in silenzio la scelta gia'
-    // fatta** -- il cielo sparisce dal sito che si sta per salvare, senza un messaggio.
-    const scelte: (number | undefined)[] = []
-    const { unmount } = render(<ScalaDelCielo scelta={9} onScegli={(n) => scelte.push(n)} />)
-    fireEvent.keyDown(voci()[8]!, { key: "ArrowRight" })
-    expect(scelte).toEqual([])
-    unmount()
-
-    render(<ScalaDelCielo scelta={1} onScegli={(n) => scelte.push(n)} />)
-    fireEvent.keyDown(voci()[0]!, { key: "ArrowLeft" })
-    expect(scelte).toEqual([])
-  })
-
-  it("dice quale ha scelto, e una sola", () => {
-    render(<ScalaDelCielo scelta={4} onScegli={() => {}} />)
-
-    expect(voci().filter((v) => (v as HTMLInputElement).checked)).toHaveLength(1)
-    expect((voci()[3] as HTMLInputElement).checked).toBe(true)
-  })
-
-  it("senza scelta nessuna classe e' scelta: un cielo non dichiarato non e' il migliore", () => {
-    // Partire dalla 1 vorrebbe dire dichiarare un cielo eccellente a chi non ha risposto, e
-    // quello e' il numero che poi finisce nel database.
-    render(<ScalaDelCielo onScegli={() => {}} />)
-
-    expect(voci().filter((v) => (v as HTMLInputElement).checked)).toHaveLength(0)
-  })
-
-  it("i due estremi si leggono a parole, non solo dai colori", () => {
-    // Chi non vede la rampa deve sapere da che parte si va: e' scritto sotto la scala.
-    render(<ScalaDelCielo onScegli={() => {}} />)
-
-    const estremi = document.querySelector(".as-bortle-scegli__estremi")?.textContent ?? ""
-    expect(estremi).toMatch(/buio/i)
-    expect(estremi).toMatch(/citt/i)
   })
 })

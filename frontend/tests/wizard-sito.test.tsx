@@ -90,8 +90,10 @@ describe("il posto da cui osservi", () => {
       target: { value: "Zzz" },
     })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
-    expect(await screen.findByText(/nessun risultato/i)).toBeDefined()
-    expect(screen.queryByText(/senza rete/i)).toBeNull()
+    expect(await screen.findByText("Nessun risultato")).toBeDefined()
+    expect(
+      screen.getByText("Controlla il nome o la connessione, oppure inserisci le coordinate."),
+    ).toBeDefined()
     expect(screen.getByLabelText(/latitudine/i)).toBeDefined()
     expect(screen.getByLabelText(/longitudine/i)).toBeDefined()
   })
@@ -121,7 +123,7 @@ describe("il posto da cui osservi", () => {
     const trovato = (await screen.findByText("Verona")).closest("li")
     fireEvent.click(within(trovato as HTMLElement).getByRole("button", { name: /seleziona/i }))
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText("Sito non salvato")).toBeDefined()
     // E soprattutto: si resta qui, dove il problema si puo' ancora risolvere.
     expect(screen.getByLabelText(/cerca un luogo/i)).toBeDefined()
   })
@@ -139,7 +141,7 @@ describe("il posto da cui osservi", () => {
     fireEvent.change(screen.getByLabelText(/longitudine/i), { target: { value: "11" } })
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
 
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText("Sito non salvato")).toBeDefined()
     expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(false)
     // i campi restano: a rete tornata si riprova senza riscrivere
     expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("Casa")
@@ -182,14 +184,10 @@ describe("il posto da cui osservi", () => {
     fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "Verona" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
 
-    const dentro = (await screen.findByRole("alert")).closest(".as-avviso") as HTMLElement
-    expect(within(dentro).getByRole("button", { name: /riprova/i })).toBeDefined()
-
-    // e *Scrivi a mano* porta **dove si comincia**, cioe' al nome: portando alla latitudine si
-    // saltava il campo che il tasto pretende, e riempite le coordinate il tasto restava spento
-    // senza dire perche' -- lo stesso difetto della virgola, con un altro ingresso
+    // tavola v82 `R.av`: the notice carries the way to the coordinates, and it lands on them
+    const dentro = (await screen.findByText("Ricerca non riuscita")).closest("[role=status]") as HTMLElement
     fireEvent.click(within(dentro).getByRole("button", { name: /inserisci le coordinate/i }))
-    expect(document.activeElement?.id).toBe("wizard-name")
+    expect(document.activeElement?.id).toBe("pa-lat")
   })
 
   it("un nome che manca lo dice, invece di spegnere il tasto in silenzio", async () => {
@@ -201,10 +199,13 @@ describe("il posto da cui osservi", () => {
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
     const nome = screen.getByLabelText(/nome del sito/i)
-    expect(nome.getAttribute("aria-invalid")).toBeNull()
+    expect(nome.getAttribute("aria-invalid")).toBe("false")
 
     fireEvent.change(screen.getByLabelText(/latitudine/i), { target: { value: "45,44" } })
     fireEvent.change(screen.getByLabelText(/longitudine/i), { target: { value: "12,05" } })
+    // tavola v82 `tocc`: the reason shows once the field is left
+    expect(nome.getAttribute("aria-invalid")).toBe("false")
+    fireEvent.blur(nome)
 
     expect(nome.getAttribute("aria-invalid")).toBe("true")
     expect(
@@ -228,7 +229,8 @@ describe("il posto da cui osservi", () => {
 
     fireEvent.click(screen.getByRole("radio", { name: /^Bortle 3 -/ }))
     // e la scelta si legge: la riga dice cosa ci si vede, non solo il numero
-    expect(document.querySelector(".as-bortle-scegli__letta span")?.textContent).toMatch(/Via Lattea/i)
+    expect(document.querySelector(".al-avvio__colonna-17 .al-avvio__testo-16")?.textContent).toMatch(/Via Lattea/i)
+    expect(screen.getByRole("radio", { name: /^Bortle 3 -/ }).getAttribute("aria-checked")).toBe("true")
 
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
     await waitFor(() => {
@@ -292,7 +294,7 @@ describe("il posto da cui osservi", () => {
     vaiAlPasso(1)
     fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "x" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
-    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(await screen.findByText("Ricerca non riuscita")).toBeDefined()
     expect(screen.queryByText(/nessun risultato/i)).toBeNull()
   })
   it("senza coordinate non nasce nessun luogo", async () => {
@@ -318,21 +320,23 @@ describe("il posto da cui osservi", () => {
     vaiAlPasso(1)
     const lat = screen.getByLabelText(/latitudine/i)
     fireEvent.change(lat, { target: { value: "120" } })
+    fireEvent.blur(lat)
     expect(lat.getAttribute("aria-invalid")).toBe("true")
     const motivo = document.getElementById(lat.getAttribute("aria-describedby") as string)
     // il testo intero, non solo il numero: `toContain("90")` restava verde anche su un tetto
     // scritto a mano al posto di quello dell'asse
-    expect(motivo?.textContent).toBe("Valore fra −90 e 90")
+    expect(motivo?.textContent).toBe("!Valore fra −90 e 90")
 
     // e la longitudine ha **il suo** tetto, che e' il doppio: senza questa riga, portarlo a 90
     // avrebbe reso irricevibile Sydney (151 gradi est) senza che niente cadesse
     const lon = screen.getByLabelText(/longitudine/i)
     fireEvent.change(lon, { target: { value: "151,2" } })
-    expect(lon.getAttribute("aria-invalid")).toBeNull()
+    fireEvent.blur(lon)
+    expect(lon.getAttribute("aria-invalid")).toBe("false")
     fireEvent.change(lon, { target: { value: "181" } })
     expect(
       document.getElementById(lon.getAttribute("aria-describedby") as string)?.textContent,
-    ).toBe("Valore fra −180 e 180")
+    ).toBe("!Valore fra −180 e 180")
 
     // e il tasto che salva resta spento finche' un campo dice che c'e' qualcosa che non va:
     // acceso, manderebbe una scrittura che il backend rifiuta col motivo scritto a due
@@ -354,7 +358,7 @@ describe("il posto da cui osservi", () => {
     // scrive un italiano per abitudine: con `Number` era NaN, il campo tornava pulito
     // per la ragione sbagliata e il tetto poteva essere qualunque senza che niente cadesse
     fireEvent.change(lat, { target: { value: "45,44" } })
-    expect(screen.getByLabelText(/latitudine/i).getAttribute("aria-invalid")).toBeNull()
+    expect(screen.getByLabelText(/latitudine/i).getAttribute("aria-invalid")).toBe("false")
     expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(
       false,
     )
@@ -371,6 +375,7 @@ describe("il posto da cui osservi", () => {
     const lat = screen.getByLabelText(/latitudine/i)
 
     fireEvent.change(lat, { target: { value: "quassu'" } })
+    fireEvent.blur(lat)
     expect(lat.getAttribute("aria-invalid")).toBe("true")
     expect(
       document.getElementById(lat.getAttribute("aria-describedby") as string)?.textContent,
@@ -416,7 +421,7 @@ describe("il posto da cui osservi", () => {
     fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
     expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("")
     expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("")
-    expect(screen.getAllByRole("radio").some((r) => (r as HTMLInputElement).checked)).toBe(false)
+    expect(screen.getAllByRole("radio").some((r) => r.getAttribute("aria-checked") === "true")).toBe(false)
     expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(true)
   })
 
@@ -430,21 +435,64 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    expect(document.querySelectorAll(".as-passo__parti > .as-passo__parte")).toHaveLength(3)
-    // il campo e il suo bottone in una riga, le due coordinate in coppia
-    expect(screen.getByLabelText(/cerca un luogo/i).closest(".as-campo-riga")).not.toBeNull()
-    expect(screen.getByLabelText(/latitudine/i).closest(".as-campo-coppia")).toBe(
-      screen.getByLabelText(/longitudine/i).closest(".as-campo-coppia"),
+    // tavola v82 `V.sito`: search, coordinates and Bortle, the last two under a rule
+    const passo = document.querySelector(".al-avvio__colonna-8 .al-avvio__colonna-11") as HTMLElement
+    expect([...passo.children].map((c) => c.className)).toEqual([
+      "al-avvio__colonna-12",
+      "al-avvio__colonna-15",
+      "al-avvio__colonna-15",
+      "al-avvio__riga-11",
+    ])
+    expect(document.querySelector(".app-vecchio")).toBeNull()
+    // the field and its button in one row, the two coordinates side by side
+    expect(screen.getByLabelText(/cerca un luogo/i).closest(".al-avvio__riga-6")?.textContent).toBe("Cerca")
+    expect(screen.getByLabelText(/latitudine/i).closest(".al-avvio__centro-3")).toBe(
+      screen.getByLabelText(/longitudine/i).closest(".al-avvio__centro-3"),
     )
+    expect(screen.getByText("Si scrivono anche senza rete.")).toBeDefined()
+    expect(screen.getAllByRole("radio")).toHaveLength(9)
+    expect(screen.getByText("Nessuna classe selezionata.")).toBeDefined()
     fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "Verona" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
     const voce = (await screen.findByText("Verona")).closest("li") as HTMLElement
-    expect(voce.className).toBe("as-posti__voce")
-    expect(voce.parentElement?.className).toBe("as-posti")
+    expect(voce.className).toBe("al-avvio__riga-8")
+    expect(voce.parentElement?.className).toBe("al-avvio__colonna-13")
     expect(voce.getAttribute("aria-current")).toBeNull()
     fireEvent.click(within(voce).getByRole("button", { name: /seleziona/i }))
     expect(voce.getAttribute("aria-current")).toBe("true")
-    expect(voce.querySelector(".as-posti__scelto")?.textContent).toBe("Selezionato")
+    expect(voce.querySelector(".al-avvio__riga-9")?.textContent).toBe("✓ Selezionato")
+  })
+
+  it("la scala del cielo e' una fermata sola, e le frecce non escono dai suoi estremi", async () => {
+    // Nine tab stops make the group a chore from the keyboard; a scale that wraps jumps from
+    // city centre to full dark, and left on 1 would clear the choice in silence.
+    senzaTimbro()
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(1)
+    const voci = () => screen.getAllByRole("radio")
+    const fermate = () => voci().filter((v) => v.getAttribute("tabindex") === "0")
+    // with no choice the stop is the first class, and it is not chosen
+    expect(fermate()).toEqual([voci()[0]])
+    expect(voci()[0]?.getAttribute("aria-checked")).toBe("false")
+
+    fireEvent.click(voci()[3]!)
+    expect(fermate()).toEqual([voci()[3]])
+    fireEvent.keyDown(voci()[3]!, { key: "ArrowRight" })
+    expect(voci()[4]?.getAttribute("aria-checked")).toBe("true")
+    expect(document.activeElement).toBe(voci()[4])
+    fireEvent.keyDown(voci()[4]!, { key: "ArrowLeft" })
+    fireEvent.keyDown(voci()[3]!, { key: "ArrowLeft" })
+    expect(voci()[2]?.getAttribute("aria-checked")).toBe("true")
+
+    fireEvent.click(voci()[0]!)
+    fireEvent.keyDown(voci()[0]!, { key: "ArrowLeft" })
+    expect(voci()[0]?.getAttribute("aria-checked")).toBe("true")
+    fireEvent.click(voci()[8]!)
+    fireEvent.keyDown(voci()[8]!, { key: "ArrowRight" })
+    expect(voci()[8]?.getAttribute("aria-checked")).toBe("true")
+    // and every class is named by its sky, nine different skies
+    expect(new Set(voci().map((v) => v.getAttribute("aria-label"))).size).toBe(9)
   })
 
   it("due posti con lo stesso nome non si accendono insieme", async () => {
@@ -473,7 +521,7 @@ describe("il posto da cui osservi", () => {
       within(righe[0]!.closest("li") as HTMLElement).getByRole("button", { name: /seleziona/i }),
     )
 
-    expect(screen.getAllByText(/^selezionato$/i)).toHaveLength(1)
+    expect(screen.getAllByText(/selezionato$/i)).toHaveLength(1)
     // e quella salvata e' la prima, non la seconda
     expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("45,44")
   })

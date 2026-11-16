@@ -11,7 +11,6 @@ export const enSolver = {
   "solver.haveItGroup": "Already installed",
   "solver.noDownload": "The app does not download or install ASTAP.",
   "solver.pathHelp": "Path of the program (astap_cli), not of the folder.",
-  "solver.checkNow": "The path is checked immediately.",
   "solver.placeholder": "C:\\Program Files\\astap\\astap_cli.exe",
   "solver.foundTitle": "ASTAP found",
   "solver.download": "Download ASTAP from the author's site",
@@ -20,15 +19,8 @@ export const enSolver = {
   "solver.found": "Imaged objects will be identified.",
   "solver.foundNoDatabase":
     "Star catalog missing: without it, objects are not identified.",
-  "solver.alsoTheDatabase":
-    "The star catalog is also required. It is downloaded separately.",
-  "solver.notThere":
-    "ASTAP not found at this path. The path must end with the program (astap_cli).",
-  "solver.databaseHere": "star catalog: {quali}",
   "solver.databaseTitle": "Star catalog missing",
   "solver.databaseWhy":
     "ASTAP requires a star catalog, which is downloaded separately. Without a catalog, objects are not identified.",
   "solver.databaseGet": "Download the star catalog",
-  "solver.databaseWhich":
-    "Recommended catalog: D50 (about 870 MB), in the same folder as ASTAP; D80 for very narrow fields.",
 }

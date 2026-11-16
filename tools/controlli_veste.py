@@ -98,22 +98,7 @@ MATTONI = {
         "as-filtri__pallino",
         *(f"as-filtro--{v}" for v in _VARIANTI),
     ),  # fmt: skip
-    # La scala del cielo ha **tre forme**, e il foglio da' a ognuna un nome suo: `as-bortle-scegli*`
-    # estesa (dove si sceglie), `as-bortle-letta*` compatta (dove si legge accanto a un luogo),
-    # `as-bortle-scala*` la rampa intera, che il foglio assegna **al piede della barra e a
-    # nient'altro**. Le prime due stanno nel mattone; la terza sta dove il foglio la manda.
-    "frontend/src/ScalaDelCielo.tsx": (
-        "as-bortle-scegli",
-        "as-bortle-scegli__scala",
-        "as-bortle-scegli__voce",
-        "as-bortle-scegli__cifra",
-        "as-bortle-scegli__estremi",
-        "as-bortle-scegli__letta",
-        "as-bortle-letta",
-        "as-bortle-letta__fascia",
-        "as-bortle-letta__classe",
-        "as-bortle-letta__misura",
-    ),
+    # `as-bortle-scala*`, the whole ramp: the sheet gives it to the bar's foot and nothing else
     "frontend/src/Stanotte.tsx": (
         "as-bortle-scala",
         "as-bortle-scala__dice",

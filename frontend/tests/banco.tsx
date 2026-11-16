@@ -579,10 +579,6 @@ export function fuoriDaiMattoni() {
         "as-campo-modulo__input",
         "as-bottone",
         "as-campo-modulo__etichetta",
-        // Le nove voci della scala del cielo: sono bottoni, ma non sono bottoni dell'app -- hanno
-        // il loro mattone (`ScalaDelCielo`) e la loro classe nel foglio. Vestirle da `as-bottone`
-        // vorrebbe dire dargli il bordo e il fondo di un'azione, che non sono.
-        "as-bortle__voce",
         // Le voci di un segmentato -- le due viste dell'Archivio, i tre ordini: sono **una** scelta
         // fra poche, non tre azioni, e il foglio le veste da se' (bordo condiviso, quella accesa
         // piena). Vestirle da `as-bottone` darebbe tre pulsanti attaccati.
