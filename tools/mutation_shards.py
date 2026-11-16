@@ -149,10 +149,15 @@ def only_mutate(shard: str, pyproject: Path) -> int:
 
 def reopen(mutants: Path) -> int:
     """Survivors and mutants without tests back to unchecked, so a new test can kill them; the
-    killed stay killed until mutmut resets their changed function."""
+    killed stay killed until mutmut resets their changed function. Not while some never ran:
+    reopened survivors would take the night before the tail (#87)."""
+    metas = {m: json.loads(m.read_text(encoding="utf-8")) for m in mutants.rglob("*.py.meta")}
+    unrun = sum(code is None for d in metas.values() for code in d["exit_code_by_key"].values())
+    if unrun:
+        sys.stderr.write(f"{mutants}: {unrun} mutants never run: survivors wait\n")
+        return 0
     reopened = 0
-    for meta in mutants.rglob("*.py.meta"):
-        data = json.loads(meta.read_text(encoding="utf-8"))
+    for meta, data in metas.items():
         codes = data["exit_code_by_key"]
         for key, code in codes.items():
             if code is not None and code not in FINAL:

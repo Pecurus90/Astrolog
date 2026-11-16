@@ -279,7 +279,6 @@ def test_survivors_are_reopened_and_final_verdicts_stand(tmp_path, capsys):
         "v": 0,
         "n": 33,
         "q": 35,
-        "u": None,
         "x": 255,
         "g": -9,
     }
@@ -291,6 +290,30 @@ def test_survivors_are_reopened_and_final_verdicts_stand(tmp_path, capsys):
     assert data["exit_code_by_key"] == {**codes, "v": None, "n": None, "q": None}
     assert data["durations_by_key"] == {}
     assert "3 mutants without a final verdict reopened" in capsys.readouterr().err
+
+
+def test_survivors_wait_while_the_shard_has_mutants_never_run(tmp_path, capsys):
+    """Night of 16/11/2026: 1060 survivors reopened took 92 of the 120 minutes, the 10717 never
+    run stayed so (#87). Survivors reopen only once the tail is done."""
+    survivor = {"exit_code_by_key": {"v": 0, "k": 1}, "durations_by_key": {}}
+    unrun = {"exit_code_by_key": {"u": None, "k": 1}, "durations_by_key": {}}
+    (tmp_path / "astrolog").mkdir()
+    (tmp_path / "astrolog" / "a.py.meta").write_text(json.dumps(survivor), "utf-8")
+    (tmp_path / "astrolog" / "b.py.meta").write_text(json.dumps(unrun), "utf-8")
+    assert main(["mutation_shards.py", "--reopen", str(tmp_path)]) == 0
+    data = json.loads((tmp_path / "astrolog" / "a.py.meta").read_text(encoding="utf-8"))
+    assert data["exit_code_by_key"] == {"v": 0, "k": 1}
+    assert "1 mutants never run: survivors wait" in capsys.readouterr().err
+
+
+def test_the_workflow_stop_lets_mutmut_save_on_ubuntu_26_04():
+    """uutils timeout 0.10 (Ubuntu 26.04) with -k sends KILL at once and exits 137: every shard
+    died at 120 minutes without saving and failed (Nightly 43881105376)."""
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    stops = [line for line in workflow.splitlines() if re.search(r"\btimeout -", line)]
+    assert len(stops) == 2
+    assert all(" -k " not in line for line in stops)
 
 
 def test_the_workflow_runs_each_shard_on_its_files_and_what_they_have_left():

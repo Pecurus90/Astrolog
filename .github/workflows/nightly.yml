@@ -61,8 +61,8 @@ jobs:
             python ../tools/mutation_shards.py --reopen mutants
           fi
           # A runner lost saves nothing (rest: at 3 h, then shut down at 2 h 30): stopped earlier,
-          # mutmut keeps each verdict it has.
-          timeout -k 5m -s INT 120m mutmut run --max-children 4 || [ $? -eq 124 ]
+          # mutmut keeps each verdict it has. No -k: uutils timeout (Ubuntu 26.04) then KILLs at once.
+          timeout -s INT 120m mutmut run --max-children 4 || [ $? -eq 124 ]
           # stopped mid-write, a .meta stays empty: dropped before the cache and the report
           python ../tools/mutation_shards.py --drop-broken mutants
       - uses: actions/cache/save@v6
@@ -108,7 +108,7 @@ jobs:
       - name: Mutants of frontend part ${{ matrix.part }}
         timeout-minutes: 270
         run: >-
-          timeout -k 5m -s INT 160m npx stryker run --inPlace
+          timeout -s INT 160m npx stryker run --inPlace
           --mutate "$(python ../tools/mutation_shards.py frontend ${{ matrix.part }})"
           --incrementalFile reports/stryker-${{ matrix.part }}.json
           || [ $? -eq 124 ]
