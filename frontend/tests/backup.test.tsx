@@ -50,17 +50,19 @@ describe("Il backup", () => {
   it("su un database nuovo chiede di rimetterle, prima del primo avvio", async () => {
     await app("found", false)
     expect(await screen.findByText(/^backup trovato$/i)).toBeDefined()
-    // la forma del foglio: una carta sola al centro, i conti in elenco, il pieno per ultimo
-    expect(screen.getByRole("main").className).toBe("as-entra")
+    // tavola v82 `Primo avvio`, passo backup: dentro il primo avvio, senza i passi di lato,
+    // i quattro conti in tessere, Ripristina pieno per primo
+    expect(screen.getByRole("main").className).toBe("al-avvio__centro-1")
+    expect(screen.queryByRole("list", { name: /passi del primo avvio/i })).toBeNull()
     const carta = screen.getByRole("region", { name: /^backup trovato$/i })
-    expect(carta.className).toBe("as-carta as-ritrovate")
-    const conti = [...carta.querySelectorAll(".as-conti > .as-conti__voce")].map(
-      (v) => `${v.querySelector(".as-conti__nome")?.textContent}=${v.querySelector(".as-conti__dato")?.textContent}`,
+    expect(carta.className).toBe("al-avvio__colonna-8")
+    const conti = [...carta.querySelectorAll(".al-avvio__colonna-9")].map(
+      (v) => `${v.querySelector(".al-avvio__testo-9")?.textContent}=${v.querySelector(".al-avvio__testo-8")?.textContent}`,
     )
-    expect(conti).toEqual(["Conferme=42", "Siti=1", "Cartelle=2", "Strumenti e filtri=4"])
-    const azioni = [...carta.querySelectorAll(".as-ritrovate__azioni > *")]
-    expect(azioni.map((a) => a.textContent)).toEqual(["Inizia da zero", "Ripristina"])
-    expect(azioni.at(-1)?.className).toContain("as-bottone--primario")
+    expect(conti).toEqual(["conferme=42", "siti=1", "cartelle=2", "strumenti e filtri=4"])
+    const azioni = [...carta.querySelectorAll(".al-avvio__riga-5 > *")]
+    expect(azioni.map((a) => a.textContent)).toEqual(["Ripristina", "Inizia da zero"])
+    expect(azioni[0]?.className).toContain("al-bottone--pieno")
 
     fireEvent.click(screen.getByRole("button", { name: /^ripristina$/i }))
 

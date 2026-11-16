@@ -47,6 +47,14 @@ function conTimbro(fatto: boolean, extra: Parameters<typeof rispondi>[0] = {}) {
   })
 }
 
+/** Le righe della chiusura: «segno voce=valore». */
+function righe(carta: HTMLElement) {
+  return [...carta.querySelectorAll("li.al-avvio__centro-7")].map(
+    (r) =>
+      `${r.querySelector(".al-avvio__tondo-5")?.textContent} ${r.querySelector(".al-avvio__testo-21")?.textContent}=${r.querySelector(".al-avvio__testo-22")?.textContent}`,
+  )
+}
+
 /** Porta il primo avvio al passo chiesto (0 = il primo). */
 function vaiAlPasso(n: number) {
   for (let i = 0; i < n; i++) fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
@@ -81,25 +89,30 @@ describe("il primo avvio", () => {
       ...DOPO,
     })
     await disegna()
-    const avviso = await screen.findByRole("alert")
-    expect(avviso.textContent).toContain("Il servizio non ha risposto")
+    // tavola v82 `appErr`: l'avviso di pagina dentro il primo avvio, con Riprova
+    const avviso = await screen.findByText("AstroLog non risponde, riprova")
+    expect(avviso.closest(".al-avvio__colonna-1")).not.toBeNull()
+    expect(screen.getByText(/nessun dato è cambiato/i)).toBeDefined()
     expect(screen.queryByText(/^da confermare$/)).toBeNull()
     expect(screen.queryByRole("button", { name: /salta/i })).toBeNull()
+    // Riprova rilegge davvero le impostazioni
+    const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+    const prima = quante()
+    fireEvent.click(screen.getByRole("button", { name: "Riprova" }))
+    await waitFor(() => expect(quante()).toBeGreaterThan(prima))
   })
 
   it("un errore senza corpo (il 502 di un proxy) dice la stessa frase, non tace", async () => {
     rispondi({ ...STANOTTE, "/api/v1/settings": { stato: 502, corpo: undefined }, ...DOPO })
     await disegna()
-    const avviso = await screen.findByRole("alert")
-    expect(avviso.textContent).toContain("Il servizio non ha risposto")
+    expect(await screen.findByText("AstroLog non risponde, riprova")).toBeDefined()
   })
 
   it("una richiesta che non arriva (rete caduta) dice la stessa frase, non l'errore del browser", async () => {
     rispondi({ ...STANOTTE, ...DOPO })
     await disegna()
-    const avviso = await screen.findByRole("alert")
-    expect(avviso.textContent).toContain("Il servizio non ha risposto")
-    expect(avviso.textContent).not.toContain("rotta non prevista")
+    expect(await screen.findByText("AstroLog non risponde, riprova")).toBeDefined()
+    expect(document.body.textContent).not.toContain("rotta non prevista")
   })
 
   it("si salta da OGNI passo, non solo dal primo", async () => {
@@ -143,6 +156,19 @@ describe("il primo avvio", () => {
     expect(await within(screen.getByRole("main")).findByText("Per cominciare")).toBeDefined()
   })
 
+  it("un nome di soli spazi non si salva, e il passo resta saltato", async () => {
+    // tavola v82 `esito`: `!!s.nome.trim()`
+    conTimbro(false)
+    await disegna()
+    fireEvent.change(await screen.findByLabelText(/^nome$/i), { target: { value: "   " } })
+    vaiAlPasso(1)
+    await screen.findByRole("region", { name: "Sito di osservazione" })
+    expect(scritture().some((s) => s.url.endsWith("/api/v1/settings"))).toBe(false)
+    expect(document.querySelector(".al-avvio__riga-1")?.getAttribute("aria-label")).toBe(
+      "Nome utente, saltato",
+    )
+  })
+
   it("il primo passo chiede il nome, e quello che scrivo viene salvato", async () => {
     conTimbro(false)
     await disegna()
@@ -166,7 +192,7 @@ describe("il primo avvio", () => {
     })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(2)
+    vaiAlPasso(3)
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "D:/Astro" },
     })
@@ -198,7 +224,7 @@ describe("il primo avvio", () => {
     })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(2)
+    vaiAlPasso(3)
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "D:/Astro" },
     })
@@ -221,7 +247,7 @@ describe("il primo avvio", () => {
     })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(2)
+    vaiAlPasso(3)
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "D:/Astro" },
     })
@@ -241,7 +267,7 @@ describe("il primo avvio", () => {
     })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(2)
+    vaiAlPasso(3)
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "Z:/via" },
     })
@@ -258,7 +284,7 @@ describe("il primo avvio", () => {
     })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(2)
+    vaiAlPasso(3)
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "casa" },
     })
@@ -275,7 +301,9 @@ describe("il primo avvio", () => {
     await disegna()
     fireEvent.change(await screen.findByLabelText(/^nome$/i), { target: { value: "Marco" } })
     fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
-    expect(await screen.findByRole("alert")).toBeDefined()
+    // tavola v82 `salvaErr`: un avviso nel passo, e ci si resta
+    expect(await screen.findByText("Salvataggio non riuscito")).toBeDefined()
+    expect(screen.getByText(/l'app non ha risposto/i)).toBeDefined()
     expect(screen.getByLabelText(/^nome$/i)).toBeDefined()
   })
 
@@ -286,7 +314,13 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Cartelle", "Seeing (Meteoblue)"])
+    expect(nomiDeiPassi()).toEqual([
+      "Nome utente",
+      "Sito di osservazione",
+      "Tema",
+      "Cartelle",
+      "Seeing (Meteoblue)",
+    ])
     const corrente = () =>
       screen.getAllByRole("listitem").findIndex((li) => li.getAttribute("aria-current") === "step")
     expect(corrente()).toBe(0)
@@ -301,55 +335,97 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    const tappe = () => [...document.querySelectorAll(".as-passi__tappa")]
+    const tappe = () => [...document.querySelectorAll(".al-avvio__riga-1")]
+    const etichette = () => tappe().map((t) => t.getAttribute("aria-label"))
+    const segni = () => tappe().map((t) => t.querySelector(".al-avvio__tondo-1")?.textContent)
 
-    // al primo passo: nessuna fatta, la prima e' quella di adesso e lo dice a parole
-    expect(tappe().map((t) => t.className.includes("as-passi__tappa--fatto"))).toEqual([
-      false,
-      false,
-      false,
-      false,
+    // al primo passo: la prima e' quella di adesso, le altre da fare, e lo dicono a parole
+    expect(etichette()).toEqual([
+      "Nome utente, passo attuale",
+      "Sito di osservazione, da fare",
+      "Tema, da fare",
+      "Cartelle, da fare",
+      "Seeing (Meteoblue), da fare",
     ])
-    expect(tappe()[0]?.textContent).toContain("sei qui")
-    expect(tappe()[1]?.textContent).not.toContain("sei qui")
-    // e quelle che vengono non dicono niente: dirlo sarebbe rumore su cio' che non e' successo
-    expect(tappe()[2]?.textContent?.trim()).toBe("3Cartelle")
+    expect(segni()).toEqual(["1", "2", "3", "4", "5"])
 
+    // Nome scritto e salvato: fatto. Sito lasciato vuoto: saltato, col trattino e non la spunta.
+    fireEvent.change(screen.getByLabelText(/^nome$/i), { target: { value: "Marco" } })
+    fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
+    await waitFor(() => expect(etichette()[0]).toBe("Nome utente, fatto"))
     vaiAlPasso(1)
-    // la prima ora e' fatta, e lo dice in tutti e tre i modi: il segno, la forma, la parola.
-    // Il segno **per intero**, non "contiene": lasciando il numero al posto della spunta la
-    // tappa fatta direbbe "1" e senza questa riga la suite non se ne accorgerebbe.
-    expect(tappe()[0]?.textContent?.trim()).toBe("\u2713Nome utente - fatto")
-    expect(tappe()[0]?.className).toContain("as-passi__tappa--fatto")
-    expect(tappe()[1]?.textContent).toContain("sei qui")
+    expect(etichette().slice(0, 3)).toEqual([
+      "Nome utente, fatto",
+      "Sito di osservazione, saltato",
+      "Tema, passo attuale",
+    ])
+    // il segno per intero, e la parola visibile sotto il nome
+    expect(segni().slice(0, 3)).toEqual(["\u2713", "\u2013", "3"])
+    expect(tappe()[1]?.querySelector(".al-avvio__testo-4")?.textContent).toBe("saltato")
+    expect(tappe()[0]?.querySelector(".al-avvio__testo-4")?.textContent).toBe("fatto")
+    // e quelle che vengono non dicono niente sotto il nome
+    expect(tappe()[3]?.querySelector(".al-avvio__testo-4")).toBeNull()
   })
 
   it("la pagina ha i passi di lato, il passo in una carta col suo nome, e i gesti in fondo", async () => {
-    // La forma del foglio: senza `.as-entra` la pagina non e' una colonna centrata, senza
-    // `.as-passo` la carta non ha il piede, e i gesti fuori da `.as-gesti` non restano in vista
-    // sul telefono.
+    // tavola v82 `Primo avvio`: lato con titolo e passi, la carta del passo, i gesti nel suo piede
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     const pagina = screen.getByRole("main")
-    expect(pagina.className).toBe("as-entra")
-    const lato = pagina.querySelector(".as-entra__colonna > .as-entra__lato")
-    expect(lato?.querySelector(".as-entra__titolo")?.textContent).toBe("Primo avvio")
-    expect(lato?.querySelector(".as-passi > .as-passi__elenco")).not.toBeNull()
-    expect(lato?.querySelector(".as-passi__quanti")?.textContent).toMatch(/passo 1 di 4/i)
+    expect(pagina.className).toBe("al-avvio__centro-1")
+    const lato = pagina.querySelector(":scope > .al-avvio__colonna-2")
+    expect(lato?.querySelector("h1.al-avvio__testo-1")?.textContent).toBe("Primo avvio")
+    expect(lato?.querySelector(".al-avvio__testo-2")?.textContent).toBe("Tutti i passi sono facoltativi.")
+    expect(lato?.querySelector(".al-avvio__blocco-2")?.textContent).toMatch(/passo 1 di 5/i)
+    expect(lato?.querySelector("ol.al-avvio__colonna-5")).not.toBeNull()
     // la carta porta il nome del passo, per chi ascolta e per chi guarda
     const carta = screen.getByRole("region", { name: "Nome utente" })
-    expect(carta.className).toBe("as-carta as-passo")
-    expect(carta.querySelector(".as-passo__titolo")?.textContent).toBe("Nome utente")
-    // saltare sta per primo, lontano da cio' che manda avanti; il primario e' l'ultimo
-    const gesti = () => [...document.querySelectorAll(".as-gesti > *")]
-    expect(gesti().map((g) => g.textContent)).toEqual(["Salta", "Avanti"])
-    expect(gesti().at(-1)?.className).toContain("as-bottone--primario")
+    expect(carta.className).toBe("al-avvio__colonna-8")
+    expect(carta.querySelector("h2.al-avvio__riga-4")?.textContent).toBe("Nome utente")
+    // saltare sta per primo, lontano da cio' che manda avanti; il pieno e' l'ultimo
+    const gesti = () => [...carta.querySelectorAll(".al-avvio__riga-16 > *")]
+    expect(gesti().map((g) => g.textContent)).toEqual(["Salta", "", "Avanti"])
+    expect(gesti().at(-1)?.className).toContain("al-bottone--pieno")
 
-    vaiAlPasso(1)
-    expect(screen.getByRole("region", { name: "Sito di osservazione" })).toBeDefined()
-    // al sito il comando che salva e' l'ultimo, e Avanti gli cede il posto di primario
-    expect(gesti().map((g) => g.textContent)).toEqual(["Salta", "Indietro", "Avanti", "Salva sito"])
+    vaiAlPasso(2)
+    expect(screen.getByRole("region", { name: "Tema" })).toBeDefined()
+    const piede = [...document.querySelectorAll(".al-avvio__riga-16 > *")]
+    expect(piede.map((g) => g.textContent)).toEqual(["Salta", "", "Indietro", "Avanti"])
+  })
+
+  it("sul telefono i passi sono cerchi col filo e i gesti una barra in fondo", async () => {
+    window.history.pushState({}, "", "/?formato=telefono")
+    conTimbro(false)
+    await disegna()
+    await screen.findAllByRole("button", { name: /salta/i })
+    // niente nomi di lato: i cerchi, e sotto «Passo 1 di 5 · Nome utente»
+    expect(document.querySelector("ol.al-avvio__colonna-5")).toBeNull()
+    const cerchi = [...document.querySelectorAll("ol.al-avvio__riga-2 > li")]
+    expect(cerchi).toHaveLength(5)
+    expect(cerchi[0]?.querySelector(".al-avvio__riquadro-1")).toBeNull()
+    expect(cerchi[1]?.querySelector(".al-avvio__riquadro-1")).not.toBeNull()
+    expect(document.querySelector(".al-avvio__testo-5")?.textContent).toBe("Passo 1 di 5 · Nome utente")
+    // i gesti fuori dalla carta, nella barra fissa
+    expect(document.querySelector(".al-avvio__riga-16")).toBeNull()
+    const barra = document.querySelector(".al-avvio__riga-18")
+    expect(barra?.closest(".al-avvio__colonna-8")).toBeNull()
+    expect([...(barra?.children ?? [])].map((g) => g.textContent)).toEqual(["Salta", "", "Avanti"])
+  })
+
+  it("il passo Tema mostra la scelta del tema, e la scelta si salva subito", async () => {
+    conTimbro(false)
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(2)
+    expect(screen.getByText(/come si vede l'app/i)).toBeDefined()
+    // Automatico spento fino al passo Tema (Marco 15/11)
+    expect(screen.getByRole("radio", { name: "Automatico" }).getAttribute("aria-disabled")).toBe("true")
+    fireEvent.click(screen.getByRole("radio", { name: "Chiaro" }))
+    await waitFor(() => {
+      const scritta = scritture().find((s) => s.url.endsWith("/api/v1/settings"))
+      expect(scritta?.corpo).toEqual({ values: { theme_mode: "chiaro" } })
+    })
   })
 
   it("Indietro riporta al passo di prima", async () => {
@@ -395,21 +471,24 @@ describe("il primo avvio", () => {
     await screen.findByRole("button", { name: /salta/i })
 
     const perche = () =>
-      document.querySelector(".as-passo__capo .as-passo__perche")?.textContent ?? ""
+      document.querySelector(".al-avvio__colonna-8 > header > .al-avvio__blocco-3")?.textContent ?? ""
     const attesi = [
       /intestare le statistiche/i,
       /calcolare le notti/i,
+      /come si vede l'app/i,
       /indica una cartella/i,
       /chiave Meteoblue/i,
       /ASTAP non \u00e8 installato/i,
     ]
     for (const [i, atteso] of attesi.entries()) {
-      expect(screen.getByText(new RegExp(`passo ${i + 1} di 5`, "i"))).toBeDefined()
+      expect(screen.getByText(new RegExp(`passo ${i + 1} di 6`, "i"))).toBeDefined()
       expect(perche()).toMatch(atteso)
       if (i < attesi.length - 1) vaiAlPasso(1)
     }
-    // all'ultimo passo lo stato di ASTAP sta accanto al titolo, col segno dell'attesa del foglio
-    expect(document.querySelector(".as-passo__titolo > .as-passo__pastiglia")?.textContent).toBeTruthy()
+    // all'ultimo passo lo stato di ASTAP sta accanto al titolo, col segno e la parola
+    expect(document.querySelector("h2.al-avvio__riga-4 > .al-avvio__pillola-1")?.textContent).toBe(
+      "! Non trovato",
+    )
   })
 
   it("ogni campo e ogni bottone dei quattro passi passa dal suo mattone", async () => {
@@ -423,13 +502,13 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    for (const passo of [0, 1, 2, 3]) {
+    for (const passo of [0, 1, 2, 3, 4]) {
       // che ci sia qualcosa da guardare si afferma **prima**. Il conto e' sempre almeno due --
       // il piede porta *Salta* e *Avanti* su ogni schermata -- quindi qui la soglia e' piu' alta:
       // ogni passo ha un controllo **suo**, e senza di quello si sta guardando un'altra pagina.
       expect(quantiControlli(), `al passo ${passo}`).toBeGreaterThan(3)
       expect(fuoriDaiMattoni(), `al passo ${passo}`).toEqual([])
-      if (passo < 3) vaiAlPasso(1)
+      if (passo < 4) vaiAlPasso(1)
     }
   })
 
@@ -438,10 +517,10 @@ describe("il primo avvio", () => {
       "/api/v1/settings": { stato: 200, corpo: impostazioni(false), attesa: new Promise(() => {}) },
     })
     await disegna()
+    // tavola v82 `appCar`: lo Scheletro con «Leggo le impostazioni…», dentro il primo avvio
     const attesa = screen.getByRole("status")
-    expect(attesa.className).toBe("as-entra__attesa")
-    expect(attesa.querySelector(".as-attesa")).not.toBeNull()
-    expect(attesa.closest(".as-entra")).not.toBeNull()
+    expect(attesa.textContent).toContain("Leggo le impostazioni…")
+    expect(attesa.closest(".al-avvio__colonna-1")).not.toBeNull()
     expect(screen.queryByRole("main")).toBeNull()
   })
 
@@ -460,26 +539,40 @@ describe("il primo avvio", () => {
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Marco" } })
     vaiAlPasso(1)
     await screen.findByRole("region", { name: "Sito di osservazione" })
-    vaiAlPasso(2)
+    vaiAlPasso(3)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
 
     const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
-    expect(carta.className).toBe("as-carta as-ritrovate")
-    const conti = [...carta.querySelectorAll(".as-conti > .as-conti__voce")].map(
-      (v) => `${v.querySelector(".as-conti__nome")?.textContent}=${v.querySelector(".as-conti__dato")?.textContent}`,
-    )
-    expect(conti).toEqual([
-      "Nome utente=Marco",
-      "Sito di osservazione=Nessun sito",
-      "Cartelle=Nessuna",
-      "Seeing=Senza chiave",
+    expect(carta.className).toBe("al-avvio__colonna-8")
+    expect(within(carta).getByText("Tutto si cambia dalle Impostazioni.")).toBeDefined()
+    // tavola v82 `righe`: cinque righe, col segno dato/non dato accanto
+    expect(righe(carta)).toEqual([
+      "✓ Nome utente=Marco",
+      "– Sito di osservazione=Nessun sito",
+      "✓ Tema=Scuro · ambra · blu notte",
+      "– Cartelle=Nessuna",
+      "– Seeing=Senza chiave",
     ])
+    // nessuna cartella: nessuna scansione da dire che non e' partita
+    expect(within(carta).queryByText(/la scansione non è partita/i)).toBeNull()
+    // i passi di lato dicono come sono stati lasciati, e nessuno e' quello di adesso
+    expect(
+      [...document.querySelectorAll(".al-avvio__riga-1")].map((li) => li.getAttribute("aria-label")),
+    ).toEqual([
+      "Nome utente, fatto",
+      "Sito di osservazione, saltato",
+      "Tema, fatto",
+      "Cartelle, saltato",
+      "Seeing (Meteoblue), saltato",
+    ])
+    expect(document.querySelector(".al-avvio__blocco-2")).toBeNull()
     // il timbro e' gia' scritto, ma nell'app si entra col suo comando: l'unico, e pieno
     expect(chiamate().some((u) => u.includes("/settings/wizard-done"))).toBe(true)
+    expect(screen.queryByRole("button", { name: /salta/i })).toBeNull()
     const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
     const prima = quante()
     const apri = screen.getByRole("button", { name: "Apri AstroLog" })
-    expect(apri.className).toContain("as-bottone--primario")
+    expect(apri.className).toContain("al-bottone--pieno")
     fireEvent.click(apri)
     await waitFor(() => expect(quante()).toBeGreaterThan(prima))
   })
@@ -494,12 +587,37 @@ describe("il primo avvio", () => {
     })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(3)
+    vaiAlPasso(4)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
 
     const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
-    const dati = [...carta.querySelectorAll(".as-conti__dato")].map((v) => v.textContent)
-    expect(dati.slice(0, 2)).toEqual(["Marco", "Vicenza · Bortle 5"])
+    expect(righe(carta).slice(0, 2)).toEqual([
+      "✓ Nome utente=Marco",
+      "✓ Sito di osservazione=Vicenza · Bortle 5",
+    ])
+    // i passi di lato dicono lo stesso delle righe: li decide il database, non questa pagina
+    const tappe = [...document.querySelectorAll(".al-avvio__riga-1")].map((li) =>
+      li.getAttribute("aria-label"),
+    )
+    expect(tappe.slice(0, 2)).toEqual(["Nome utente, fatto", "Sito di osservazione, fatto"])
+  })
+
+  it("cartelle date e scansione non partita: la riga lo segna, e un avviso dice dove si avvia", async () => {
+    conTimbro(false, {
+      "GET /api/v1/folders": { stato: 200, corpo: { items: [], total: 2 } },
+      "POST /api/v1/scan": { stato: 500, corpo: { detail: { code: "rotto" } } },
+    })
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(4)
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+    const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
+    expect(righe(carta)[3]).toBe("! Cartelle=2")
+    expect(
+      within(carta).getByText(
+        "La scansione non è partita: si avvia da Scansiona, nel menu dell'ingranaggio.",
+      ),
+    ).toBeDefined()
   })
 
   it("la chiusura resta finche' non si preme Apri AstroLog, anche a impostazioni rilette", async () => {
@@ -508,7 +626,7 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(3)
+    vaiAlPasso(4)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
     await screen.findByRole("region", { name: "Primo avvio completato" })
 
@@ -538,7 +656,7 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(3)
+    vaiAlPasso(4)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
     await screen.findByRole("region", { name: "Primo avvio completato" })
 
@@ -557,7 +675,7 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(3)
+    vaiAlPasso(4)
     cambia({
       "GET /api/v1/folders": { stato: 500, corpo: { detail: { code: "rotto" } } },
       "/api/v1/sites": { stato: 500, corpo: { detail: { code: "rotto" } } },
@@ -567,8 +685,8 @@ describe("il primo avvio", () => {
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
 
     const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
-    const nomi = [...carta.querySelectorAll(".as-conti__nome")].map((v) => v.textContent)
-    expect(nomi).toEqual(["Nome utente", "Seeing"])
+    const nomi = [...carta.querySelectorAll(".al-avvio__testo-21")].map((v) => v.textContent)
+    expect(nomi).toEqual(["Nome utente", "Tema", "Seeing"])
   })
 
   it("chi salta entra subito: nessuna schermata di chiusura", async () => {
@@ -583,7 +701,7 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    vaiAlPasso(3)
+    vaiAlPasso(4)
     // All'ultimo passo "Avanti" non ha piu' senso: al suo posto c'e' la fine.
     expect(screen.queryByRole("button", { name: /avanti/i })).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))

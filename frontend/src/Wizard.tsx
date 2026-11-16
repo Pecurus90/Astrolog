@@ -1,61 +1,53 @@
-import { useMutation } from "@tanstack/react-query"
-import { useId, useRef, useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useCallback, useRef, useState } from "react"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { Campo } from "./Campo"
-import { CartaSola } from "./CartaSola"
 import { ChiaveMeteoblue } from "./ChiaveMeteoblue"
-import { BinarioDeiPassi } from "./BinarioDeiPassi"
+import { Avviso } from "./componenti/Avviso"
+import { useFormato } from "./componenti/formato"
+import { SceltaTema } from "./componenti/SceltaTema"
+import { vesteDa } from "./componenti/Tema"
+import { SalvataggioFallito, useScriviImpostazioni } from "./ImpostazioniGenerale"
+import { Comando, CorniceAvvio, type Passo as Voce, type Tappa } from "./PrimoAvvioCornice"
+import { ChiusuraAvvio, type Chiuso } from "./WizardChiusura"
 import { WizardFolders } from "./WizardFolders"
 import { WizardSite, useSitoDelPasso } from "./WizardSite"
 import { WizardSolver } from "./WizardSolver"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { type Chiave, numero, t } from "./i18n"
+import { type Chiave, t } from "./i18n"
 import { usePreferenze } from "./preferenze"
 import { useRadiceDati } from "./radiceDati"
 
-// Cosa manca all'app, coi codici generati dall'API: scritto `string[]` a mano, un codice
-// ritirato o rinominato dal backend continuerebbe a compilare e il passo non comparirebbe piu'.
+// What the app lacks, with the API's generated codes.
 type Manca = components["schemas"]["SettingsOut"]["missing"]
+type Cartelle = components["schemas"]["FolderList"]
 
-// `as const` e non `readonly Chiave[]`: cosi' `Passo` e' l'elenco dei cinque nomi veri, e la
-// tabella qui sotto non puo' dimenticarne uno. Annotata `Chiave[]`, il tipo di un passo tornava
-// a essere "una chiave qualunque" e un passo senza la sua riga non faceva rosso da nessuna parte.
-const STEPS = [
-  "wizard.step.name",
-  "wizard.step.site",
-  "wizard.step.folders",
-  "wizard.step.services",
-] as const
+// tavola v82 order: the theme after the site, ASTAP last and only when missing
+const PASSI = ["nome", "sito", "tema", "cartelle", "seeing"] as const
+type Passo = (typeof PASSI)[number] | "astap"
 
-// Il passo in piu': c'e' solo se il riconoscitore non e' pronto. Non e' un quinto passo per
-// tutti -- chi ce l'ha non deve nemmeno sapere che esiste -- ma senza, chi non ce l'ha scansiona,
-// aspetta e non riconosce niente, senza che nessuno glielo dica (Marco, 9/9/2026).
-//
-// **Non pronto sono due cose**: il programma che non c'e', e il programma che c'e' senza il suo
-// catalogo stellare. La seconda arriva allo stesso identico punto -- una scansione che non
-// riconosce niente -- e chiederla solo per la prima lasciava fuori chi ha installato ASTAP e si
-// e' fermato prima di scaricare anche quello.
-const PASSO_SOLVER = "wizard.step.solver" as const
-const RICONOSCITORE_NON_PRONTO = ["no_solver", "no_star_database"] as const
-
-type Passo = (typeof STEPS)[number] | typeof PASSO_SOLVER
-
-// Perche' l'app chiede quel passo: una riga per ognuno, accanto al suo nome. Sta qui e non nei
-// quattro file dei passi perche' e' l'intestazione della carta a mostrarla, e l'intestazione la
-// monta il guscio: scritta di la', ogni passo dovrebbe passarla su.
-const PERCHE: Record<Passo, Chiave> = {
-  "wizard.step.name": "wizard.name.why",
-  "wizard.step.site": "wizard.site.why",
-  "wizard.step.folders": "wizard.folders.intro",
-  "wizard.step.services": "wizard.services.why",
-  "wizard.step.solver": "wizard.solver.intro",
+const NOMI: Record<Passo, Chiave> = {
+  nome: "wizard.step.name",
+  sito: "wizard.step.site",
+  tema: "wizard.step.theme",
+  cartelle: "wizard.step.folders",
+  seeing: "wizard.step.services",
+  astap: "wizard.step.solver",
 }
 
-/** Il sito di casa com'e' nel database, per la chiusura. `null` = nessun sito; `undefined` = la
- *  lettura e' fallita e non si sa: la chiusura tace invece di dire "Nessun sito" a chi l'ha dato. */
+const PERCHE: Record<Passo, Chiave> = {
+  nome: "wizard.name.why",
+  sito: "wizard.site.why",
+  tema: "wizard.theme.why",
+  cartelle: "wizard.folders.intro",
+  seeing: "wizard.services.why",
+  astap: "wizard.solver.intro",
+}
+
+// the recognizer is not ready: no program, or the program without its star catalogue
+const RICONOSCITORE_NON_PRONTO = ["no_solver", "no_star_database"] as const
+
+/** The home site as the database has it, for the closing. `undefined`: the read failed. */
 async function sitoDiCasa() {
   const { data } = await api.GET("/api/v1/sites").catch(() => ({ data: undefined }))
   if (!data) return undefined
@@ -64,27 +56,14 @@ async function sitoDiCasa() {
 }
 
 /**
- * Il primo avvio: quattro domande -- come ti chiami, da dove osservi, dove stanno i file, e la
- * chiave Meteoblue se ce l'hai -- piu' una quinta a chi manca il riconoscitore, e poi si toglie di mezzo. Le decisioni stanno nel contratto
- * (`docs/domini/sito.md`), che e' la loro casa; qui ci sono solo i vincoli di questo pezzo di
- * schermo.
+ * The first run (tavola v82 `Primo avvio`): name, site, theme, folders, seeing, and ASTAP to whom
+ * lacks it; then it gets out of the way. Decisions in `docs/domini/sito.md`.
  *
- * - **Quanti passi sono si decide entrando**, e non cambia piu': scrivere il percorso del solver
- *   fa sparire `no_solver`, e con l'elenco vivo il quinto passo si toglierebbe da sotto i piedi di
- *   chi ci sta dentro -- schermata vuota, e nessuna idea di cosa sia appena successo.
- * - **Si salta sempre, da ogni passo**, e saltare non chiede conferma: e' una scelta legittima,
- *   non un incidente.
- * - **Saltare e completare timbrano**, e il timbro porta **fuori**: scriverlo e restare fermi qui
- *   sarebbe la stessa prigione con una riga in piu' nel database.
- * - **Il binario non e' una barra di avanzamento**: dice quanti passi sono e come si chiamano --
- *   cose che si sanno prima di cominciare -- e quale si sta facendo. Una percentuale prometterebbe
- *   una misura del lavoro che resta, che nessuno ha.
- * - **La riga che dice perche' l'app chiede non e' sempre la stessa**: al passo delle cartelle
- *   dipende da dove gira l'app, perche' sul NAS si sfoglia e sul computer si scrive, e una sola
- *   delle due frasi e' vera per chi la legge.
- * - **Qui non c'e' un guasto, manca una configurazione**: nessun allarme per cio' che e' solo da
- *   fare. Ma una **scrittura fallita si dice**, perche' tacerla lascerebbe credere fatto qualcosa
- *   che non e' successo.
+ * - **The steps are fixed on entry**: writing the solver path drops `no_solver`, and a live list
+ *   would pull the last step from under whoever is on it.
+ * - **Skip from every step**, without asking; skipping and finishing write the same stamp.
+ * - **A step stands done or skipped** by what the API holds when one moves on, never by colour.
+ * - **A failed write is said**, and one stays on the step.
  */
 export function Wizard({
   onDone,
@@ -92,81 +71,68 @@ export function Wizard({
   manca,
 }: {
   onDone: () => void
-  /** "Fine" e' stato premuto: da qui si esce solo con `onDone`, anche a timbro gia' scritto. */
+  /** "Fine" was pressed: from here only `onDone` leaves, stamp written or not. */
   onChiusura: () => void
   manca: Manca
 }) {
+  const formato = useFormato()
+  const cache = useQueryClient()
+  const preferenze = usePreferenze()
+  const valori = preferenze.data?.values
   const [passi] = useState<readonly Passo[]>(() =>
-    RICONOSCITORE_NON_PRONTO.some((c) => manca.includes(c)) ? [...STEPS, PASSO_SOLVER] : STEPS,
+    RICONOSCITORE_NON_PRONTO.some((c) => manca.includes(c)) ? [...PASSI, "astap"] : PASSI,
   )
-  // Dove l'app vede i dati decide **quale riga** spiega il terzo passo: sul NAS non si scrive un
-  // percorso, si sfoglia, e la riga che dice "scrivi il percorso di una cartella" mandava a fare
-  // una cosa che quella schermata non offre. La domanda e' quella che fa anche il passo delle
-  // cartelle, e parte gia' da qui: cosi' quando ci si arriva la risposta c'e' di sicuro.
+  // NAS or computer, ASTAP or its catalogue: which reason is true is decided on entry too
   const radice = useRadiceDati()
-  // Chi ha ASTAP e non il suo catalogo arriva al **quinto passo per un altro motivo**, e la riga
-  // che dice perche' l'app lo chiede deve dire il suo: "non trovo ASTAP" a chi ce l'ha manda a
-  // cercare la cosa sbagliata. Si decide da cio' che mancava **entrando**, come il numero dei
-  // passi: cambiando sotto i piedi, la ragione non corrisponderebbe piu' al passo che si vede.
   const [senzaCatalogo] = useState(() => manca.includes("no_star_database"))
-  const perche = (passo: Passo): Chiave => {
-    if (passo === "wizard.step.folders" && radice !== null) return "wizard.folders.introNas"
-    if (passo === PASSO_SOLVER && senzaCatalogo) return "wizard.solver.introNoDatabase"
-    return PERCHE[passo]
+  const perche = (p: Passo): Chiave => {
+    if (p === "cartelle" && radice !== null) return "wizard.folders.introNas"
+    if (p === "astap" && senzaCatalogo) return "wizard.solver.introNoDatabase"
+    return PERCHE[p]
   }
   const [step, setStep] = useState(0)
+  const [segnati, setSegnati] = useState<Partial<Record<Passo, Tappa>>>({})
   const [name, setName] = useState("")
-  const [failed, setFailed] = useState(false)
+  const [nonScritto, setNonScritto] = useState(false)
   const saved = useRef<string | undefined>(undefined)
+  const qui = passi[step]!
   const last = step === passi.length - 1
-  const sito = useSitoDelPasso(() => setStep(2))
-  const alSito = step === 1
-  // Un passo puo' avere un comando pieno suo (aggiungi la cartella, verifica e salva): quando lo
-  // offre, cio' che manda avanti scende a tenue e il pieno a schermo resta uno solo.
+  const sito = useSitoDelPasso(() => {
+    setSegnati((s) => ({ ...s, sito: "fatto" }))
+    setStep((n) => n + 1)
+  })
+  // a step with a full command of its own (add, verify and save): Avanti steps down to tenue
   const [pienoDelPasso, setPienoDelPasso] = useState(false)
-  const titolo = useId()
+  const fallito = useCallback((f: (() => void) | null) => setNonScritto(f !== null), [])
+  const scrivi = useScriviImpostazioni()
 
-  // Dopo Fine, cio' che la chiusura racconta: letto dal database a timbro scritto, non da cio'
-  // che questa pagina ricorda -- ricaricata a meta', nome e sito salvati prima ci sono lo stesso.
-  const [chiuso, setChiuso] = useState<{
-    nome: string | null
-    sito: Awaited<ReturnType<typeof sitoDiCasa>>
-    // `null`: quante sono non si e' saputo, e la chiusura tace la riga.
-    cartelle: number | null
-    letta: boolean
-  }>()
-  const preferenze = usePreferenze()
+  const [chiuso, setChiuso] = useState<Chiuso>()
   const stamp = useMutation({
-    // `mostra`: Fine passa dalla chiusura, Salta entra subito.
+    // `mostra`: Fine goes through the closing, Salta enters at once
     mutationFn: async (mostra: boolean) => {
-      // prima del timbro: scritto quello, una rilettura delle impostazioni smonterebbe la pagina
+      // before the stamp: once written, a reread of the settings would unmount the page
       if (mostra) onChiusura()
       const { data: scritte, error } = await api.POST("/api/v1/settings/wizard-done", {})
       if (error) throw new Error(t("settings.failed"))
+      const nome = scritte.values["user_name"]
       const dati = {
         mostra,
-        nome: typeof scritte.values["user_name"] === "string" ? scritte.values["user_name"] : null,
+        nome: typeof nome === "string" ? nome : null,
+        veste: vesteDa(scritte.values["theme_mode"], scritte.values["theme_accent"]),
+        chiave: Boolean(scritte.values["meteoblue_key"]),
         sito: mostra ? await sitoDiCasa() : undefined,
       }
-      // **Finito il primo avvio, l'app si mette a leggere.** Chi ha appena installato non deve
-      // sapere che esiste un pulsante: indica dove stanno le foto, chiude, e l'archivio si
-      // riempie. Si chiede **solo se una cartella c'e'**: senza, il backend risponderebbe "non
-      // c'e' niente da leggere" e il primo avvio si chiuderebbe con un errore in faccia.
-      //
-      // E **il timbro comanda**: se questa parte va storta si esce lo stesso. Il timbro e' gia'
-      // scritto, quindi tenere l'utente dentro il primo avvio vorrebbe dire chiuderlo in una
-      // stanza di cui ha gia' la chiave -- e la lettura si chiede col pulsante in barra.
+      // With a folder, the app starts reading at once; the stamp rules, so a failure here
+      // still leaves the first run, and the read is asked from Scansiona.
       let cartelle: number | null = null
       try {
-        // `limit: 1` perche' qui serve solo **quante** sono: l'elenco intero e' 27 KB su
-        // trecento cartelle, e nessuno lo guarda (misurato: 319 byte contro 27.156).
+        // `limit: 1`: only how many (319 bytes against 27 156 on three hundred folders)
         const { data } = await api.GET("/api/v1/folders", { params: { query: { limit: 1 } } })
         cartelle = data?.total ?? null
         if (!cartelle) return { ...dati, cartelle, letta: false }
         const { error: nonLetta } = await api.POST("/api/v1/scan")
         return { ...dati, cartelle, letta: !nonLetta }
       } catch {
-        // niente: l'archivio si leggera' col pulsante, e il primo avvio e' finito comunque
         return { ...dati, cartelle, letta: false }
       }
     },
@@ -176,165 +142,185 @@ export function Wizard({
     },
   })
 
-  // Il nome si scrive lasciando il passo, non a ogni tasto -- e non si riscrive se non e'
-  // cambiato: con Indietro e Avanti si ripasserebbe di qui a ogni giro.
-  const next = async () => {
-    if (step === 0 && name && name !== saved.current) {
-      const { error } = await api.PATCH("/api/v1/settings", {
-        body: { values: { user_name: name } },
-      })
-      setFailed(Boolean(error))
-      if (error) return
-      saved.current = name
+  // what the API holds when one moves on: given, or skipped
+  const esito = (p: Passo): Tappa => {
+    const missing = preferenze.data?.missing ?? manca
+    const dato: Record<Passo, boolean> = {
+      nome: Boolean(saved.current || valori?.["user_name"]),
+      sito: segnati.sito === "fatto",
+      tema: true,
+      cartelle: (cache.getQueryData<Cartelle>(["folders"])?.items.length ?? 0) > 0,
+      seeing: Boolean(valori?.["meteoblue_key"]),
+      astap: !RICONOSCITORE_NON_PRONTO.some((c) => missing.includes(c)),
     }
-    setStep((s) => s + 1)
+    return dato[p] ? "fatto" : "saltato"
   }
 
-  // La chiusura dice solo cio' che e' vero: cosa e' stato dato, e se la scansione e' partita. Il
-  // timbro e' gia' scritto; nell'app si entra col suo comando.
+  const avanti = async () => {
+    // the name is written leaving the step, and not rewritten if unchanged
+    const scritto = name.trim()
+    if (qui === "nome" && scritto && scritto !== saved.current) {
+      const { error } = await api
+        .PATCH("/api/v1/settings", { body: { values: { user_name: scritto } } })
+        .catch(() => ({ error: true }))
+      setNonScritto(Boolean(error))
+      if (error) return
+      saved.current = scritto
+      void cache.invalidateQueries({ queryKey: ["settings"] })
+    }
+    setNonScritto(false)
+    setSegnati((s) => ({ ...s, [qui]: esito(qui) }))
+    if (last) stamp.mutate(true)
+    else setStep((n) => n + 1)
+  }
+
   if (chiuso) {
-    // Una riga di cui non si e' saputo il dato (lettura fallita) si tace: non si scrive "Nessuna".
-    const { sito: casa, cartelle } = chiuso
+    // name and site as the closing read them from the database, so list and rows agree
+    const chiusa = (p: Passo): Tappa => {
+      if (p === "nome") return chiuso.nome ? "fatto" : "saltato"
+      if (p === "sito" && chiuso.sito !== undefined) return chiuso.sito ? "fatto" : "saltato"
+      return segnati[p] ?? "saltato"
+    }
     return (
-      <CartaSola
-        titolo={t("wizard.closed.title")}
-        conti={[
-          { nome: t("wizard.step.name"), dato: chiuso.nome || t("wizard.closed.noName") },
-          ...(casa === undefined
-            ? []
-            : [
-                {
-                  nome: t("wizard.step.site"),
-                  dato: casa
-                    ? [casa.nome, casa.bortle && t("site.bortle", { n: casa.bortle })]
-                        .filter(Boolean)
-                        .join(" \u00b7 ")
-                    : t("wizard.closed.noSite"),
-                },
-              ]),
-          ...(cartelle === null
-            ? []
-            : [
-                {
-                  nome: t("wizard.closed.folders"),
-                  dato:
-                    cartelle === 0
-                      ? t("wizard.closed.noFolders")
-                      : [numero(cartelle), chiuso.letta && t("wizard.closed.scanStarted")]
-                          .filter(Boolean)
-                          .join(" \u00b7 "),
-                },
-              ]),
-          {
-            nome: t("wizard.closed.seeing"),
-            dato: t(preferenze.data?.values["meteoblue_key"] ? "wizard.closed.key" : "wizard.closed.noKey"),
-          },
-        ]}
-        azioni={
-          <Bottone verso="primario" onClick={onDone}>
-            {t("wizard.closed.open")}
-          </Bottone>
-        }
+      <ChiusuraAvvio
+        chiuso={chiuso}
+        passi={passi.map((p) => ({ nome: t(NOMI[p]), tappa: chiusa(p) }))}
+        onApri={onDone}
       />
     )
   }
 
+  const voci: Voce[] = passi.map((p, j) => ({
+    nome: t(NOMI[p]),
+    tappa: j === step ? "ora" : (segnati[p] ?? "dopo"),
+  }))
+  const proprio = qui === "sito" || pienoDelPasso
+  const gesti = (
+    <>
+      <a
+        className="al-avvio__riga-17"
+        href="#"
+        role="button"
+        aria-disabled={stamp.isPending ? "true" : undefined}
+        onClick={(e) => {
+          e.preventDefault()
+          if (!stamp.isPending) stamp.mutate(false)
+        }}
+      >
+        {t("wizard.skip")}
+      </a>
+      <span className="al-avvio__blocco-9" />
+      {step > 0 && (
+        <Comando
+          testo={t("wizard.back")}
+          verso="tenue"
+          onClick={() => {
+            setNonScritto(false)
+            setStep((n) => n - 1)
+          }}
+        />
+      )}
+      <Comando
+        testo={t(last ? "wizard.done" : "wizard.next")}
+        verso={proprio ? "tenue" : "pieno"}
+        spento={stamp.isPending}
+        onClick={() => void avanti()}
+      />
+    </>
+  )
+  const astapTrovato = esito("astap") === "fatto"
+  const pastiglia =
+    qui !== "astap"
+      ? undefined
+      : astapTrovato
+        ? { testo: `✓ ${t("wizard.solver.state.found")}`, buono: true } // glifo-ok: segno della tavola
+        : {
+            testo: `! ${t(senzaCatalogo ? "wizard.solver.state.noDatabase" : "wizard.solver.state")}`,
+            buono: false,
+          }
+
   return (
-    /* Fuori dal telaio: lo schermo e' `.as-entra`, coi passi di lato e la carta del passo. Sotto
-       900 il foglio mette i passi in fila e i gesti in una barra in fondo. */
-    <main className="as-entra">
-      <div className="as-entra__colonna">
-        <div className="as-entra__lato">
-          <header className="as-entra__testata">
-            <h1 className="as-entra__titolo">{t("wizard.title")}</h1>
-            <p className="as-entra__sotto">{t("wizard.reassure")}</p>
-          </header>
-          <BinarioDeiPassi passi={passi} step={step} />
-        </div>
-
-        {/* La carta ripete il nome del passo che il lato mostra gia': chi arriva a meta' non
-            guarda di lato, e sul telefono i nomi di lato non si vedono. */}
-        <section className="as-carta as-passo" aria-labelledby={titolo}>
-          <div className="as-passo__corpo">
-            <div className="as-passo__capo">
-              <h2 className="as-passo__titolo" id={titolo}>
-                {t(passi[step]!)}
-                {/* Attesa e non allarme: non avere ASTAP e' una cosa da fare, non un guasto. */}
-                {passi[step] === PASSO_SOLVER && (
-                  <span className="as-passo__pastiglia">
-                    {t(senzaCatalogo ? "wizard.solver.state.noDatabase" : "wizard.solver.state")}
-                  </span>
-                )}
-              </h2>
-              {/* La ragione prima della domanda: chi sta per rispondere legge prima perche'. */}
-              <p className="as-passo__perche">{t(perche(passi[step]!))}</p>
-            </div>
-            <div className="as-passo__parti">
-              {step === 0 && (
-                <Campo id="wizard-name" etichetta={t("wizard.name.label")}>
-                  <input
-                    className="as-campo-modulo__input"
-                    id="wizard-name"
-                    placeholder={t("wizard.name.placeholder")}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                  <p className="as-campo-modulo__aiuto">{t("wizard.name.hint")}</p>
-                </Campo>
-              )}
-              {alSito && <WizardSite sito={sito} />}
-              {/* Aggiungere una cartella non chiude il primo avvio: a chiudere e' Fatto. */}
-              {step === 2 && <WizardFolders onOffre={setPienoDelPasso} />}
-              {passi[step] === "wizard.step.services" && (
-                <div className="as-passo__parte">
-                  <ChiaveMeteoblue id="wizard-meteoblue-key" onOffre={setPienoDelPasso} />
-                </div>
-              )}
-              {passi[step] === PASSO_SOLVER && (
-                <WizardSolver senzaCatalogo={senzaCatalogo} onOffre={setPienoDelPasso} />
-              )}
-              {/* Una scrittura fallita si dice nel passo che l'ha provocata, e ci si resta. */}
-              {(failed || stamp.error) && (
-                <Avviso esito="allarme" titolo={t("wizard.savedFailedTitle")}>
-                  {t("settings.failed")}
-                </Avviso>
-              )}
+    <SalvataggioFallito.Provider value={fallito}>
+      <CorniceAvvio
+        passi={voci}
+        titolo={t(NOMI[qui])}
+        pastiglia={pastiglia}
+        perche={t(perche(qui))}
+        gesti={gesti}
+      >
+        {qui === "nome" && (
+          <div className="al-avvio__blocco-5">
+            <div className="al-avvio__colonna-10">
+              <label className="al-avvio__testo-11" htmlFor="pa-nome">
+                {t("wizard.name.label")}
+              </label>
+              <div className="al-avvio__riga-6">
+                <input
+                  id="pa-nome"
+                  className="al-campo al-avvio__blocco-6"
+                  placeholder={t("wizard.name.placeholder")}
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <span className="al-avvio__testo-12">{t("wizard.name.hint")}</span>
             </div>
           </div>
-
-          {/* Saltare sta per primo, lontano da cio' che manda avanti; al primo passo Indietro
-              non c'e'. Il primario e' l'ultimo, e uno solo: al sito e' quello che salva. */}
-          <div className={alSito ? "as-gesti as-gesti--due" : "as-gesti"}>
-            <Bottone verso="nudo" onClick={() => stamp.mutate(false)} disabled={stamp.isPending}>
-              {t("wizard.skip")}
-            </Bottone>
-            {step > 0 && <Bottone onClick={() => setStep((s) => s - 1)}>{t("wizard.back")}</Bottone>}
-            {!last && (
-              <Bottone verso={alSito || pienoDelPasso ? "tenue" : "primario"} onClick={() => void next()}>
-                {t("wizard.next")}
-              </Bottone>
-            )}
-            {alSito && (
-              <Bottone
-                disabled={!sito.campi.valido || sito.salvando}
-                verso="primario"
+        )}
+        {qui === "sito" && (
+          <>
+            {/* old sheet until commit C, in its dark box */}
+            <div className="app-vecchio as-passo__parti">
+              <WizardSite sito={sito} />
+            </div>
+            <div className="al-avvio__riga-11">
+              <Comando
+                testo={t("wizard.site.save")}
+                verso="pieno"
+                spento={!sito.campi.valido}
+                occupato={sito.salvando ? t("wizard.saving") : undefined}
                 onClick={() => void sito.salva()}
-              >
-                {t("wizard.site.save")}
-              </Bottone>
-            )}
-            {last && (
-              <Bottone
-                verso={pienoDelPasso ? "tenue" : "primario"}
-                onClick={() => stamp.mutate(true)}
-                disabled={stamp.isPending}
-              >
-                {t("wizard.done")}
-              </Bottone>
-            )}
+              />
+            </div>
+          </>
+        )}
+        {qui === "tema" && valori && (
+          <SceltaTema
+            {...vesteDa(valori["theme_mode"], valori["theme_accent"])}
+            formato={formato}
+            onModo={(m) => scrivi.mutate({ theme_mode: m })}
+            onAccento={(a) => scrivi.mutate({ theme_accent: a })}
+          />
+        )}
+        {qui === "cartelle" && (
+          <div className="app-vecchio as-passo__parti">
+            <WizardFolders onOffre={setPienoDelPasso} />
           </div>
-        </section>
-      </div>
-    </main>
+        )}
+        {qui === "seeing" && (
+          <div className="app-vecchio as-passo__parti">
+            <div className="as-passo__parte">
+              <ChiaveMeteoblue id="wizard-meteoblue-key" onOffre={setPienoDelPasso} />
+            </div>
+          </div>
+        )}
+        {qui === "astap" && (
+          <div className="app-vecchio as-passo__parti">
+            <WizardSolver senzaCatalogo={senzaCatalogo} onOffre={setPienoDelPasso} />
+          </div>
+        )}
+        {(nonScritto || stamp.error) && (
+          <Avviso
+            tipo="blocco"
+            formato={formato}
+            segno="!"
+            titolo={t("wizard.savedFailedTitle")}
+            testo={t("wizard.saveFailed.text")}
+          />
+        )}
+      </CorniceAvvio>
+    </SalvataggioFallito.Provider>
   )
 }

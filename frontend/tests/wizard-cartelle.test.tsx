@@ -84,8 +84,8 @@ function primoAvvio(
 async function alTerzoPasso() {
   await disegna()
   await screen.findByRole("button", { name: /salta/i })
-  fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
-  fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
+  // nome, sito, tema: le cartelle sono il quarto passo (tavola v82)
+  for (let i = 0; i < 3; i++) fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
 }
 
 async function indica(percorso: string) {
@@ -134,7 +134,7 @@ describe("le cartelle del primo avvio", () => {
     const campo = screen.getByLabelText(/percorso della cartella/i)
     expect(campo.closest("form")?.className).toBe("as-campo-riga")
     const avanti = () => screen.getByRole("button", { name: /^avanti$/i })
-    expect(avanti().className).toContain("as-bottone--primario")
+    expect(avanti().className).toContain("al-bottone--pieno")
 
     fireEvent.change(campo, { target: { value: "D:/Astro" } })
     fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
@@ -143,8 +143,8 @@ describe("le cartelle del primo avvio", () => {
     expect(esito.querySelector(".as-avviso")?.className).toContain("as-avviso--buono")
     expect(aggiungi.closest(".as-avviso__azioni")).not.toBeNull()
     expect(aggiungi.className).toContain("as-bottone--primario")
-    expect(avanti().className).toContain("as-bottone--tenue")
-    expect(document.querySelectorAll(".as-bottone--primario")).toHaveLength(1)
+    expect(avanti().className).toContain("al-bottone--tenue")
+    expect(document.querySelectorAll(".as-bottone--primario, .al-bottone--pieno")).toHaveLength(1)
   })
 
   it("le cartelle aggiunte sono un elenco del foglio: percorso e frame di ognuna", async () => {

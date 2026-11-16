@@ -50,15 +50,18 @@ async function alPassoDelSolver() {
   avanti()
   avanti()
   avanti()
+  avanti()
 }
 
 describe("la forma dei passi Seeing e ASTAP", () => {
-  const pieni = () => [...document.querySelectorAll(".as-bottone--primario")].map((b) => b.textContent)
+  const pieni = () =>
+    [...document.querySelectorAll(".as-bottone--primario, .al-bottone--pieno")].map((b) => b.textContent)
 
   it("al Seeing lo stato della chiave e' un avviso, e il comando pieno e' uno solo", async () => {
     primoAvvio(["no_active_site"])
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
+    avanti()
     avanti()
     avanti()
     avanti()
@@ -105,14 +108,14 @@ describe("la forma dei passi Seeing e ASTAP", () => {
 })
 
 describe("il passo del riconoscitore, quando manca", () => {
-  it("con tutto a posto i passi restano quattro", async () => {
+  it("con tutto a posto i passi restano cinque", async () => {
     // La regola che tiene onesto il primo avvio: il quinto non e' un passo in piu' per tutti,
     // e' una rete che compare quando serve. Chi ha gia' il solver non deve nemmeno saperlo.
     primoAvvio(["no_active_site"])
     await disegna()
 
     await screen.findAllByRole("listitem")
-    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Cartelle", "Seeing (Meteoblue)"])
+    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Tema", "Cartelle", "Seeing (Meteoblue)"])
   })
 
   it("se manca, il passo c e e dice cosa ci perdi", async () => {
@@ -122,6 +125,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     await screen.findAllByRole("listitem")
     expect(nomiDeiPassi()).toContain("ASTAP")
 
+    avanti()
     avanti()
     avanti()
     avanti()
@@ -160,7 +164,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     expect(screen.getByText(/astap non \u00e8 installato/i)).toBeDefined()
     // e i passi restano quelli: toglierne uno adesso lascerebbe una schermata vuota sotto i
     // piedi di chi ci sta dentro
-    expect(screen.getAllByRole("listitem")).toHaveLength(5)
+    expect(screen.getAllByRole("listitem")).toHaveLength(6)
   })
 
   it("scritto un percorso giusto ma senza catalogo, la conferma non promette troppo", async () => {
@@ -194,6 +198,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     avanti()
     avanti()
     avanti()
+    avanti()
     // Si aspetta il **collegamento del catalogo**, che lo rende solo il corpo: la frase "manca il
     // catalogo stellare" sta anche nell'intestazione, che c'e' da subito -- aspettare quella non
     // aspetta niente, e la prova passava anche col corpo sbagliato.
@@ -204,7 +209,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     // E la ragione e' **la sua**: "non trovo ASTAP" a chi ce l'ha manda a cercare la cosa
     // sbagliata.
     expect(screen.queryByText(/astap non \u00e8 installato/i)).toBeNull()
-    expect(screen.getByText(/^catalogo mancante$/i)).toBeTruthy()
+    expect(screen.getByText(/^! catalogo mancante$/i)).toBeTruthy()
   })
 
   it("il collegamento per prenderlo c e, e l app non lo scarica da sola", async () => {

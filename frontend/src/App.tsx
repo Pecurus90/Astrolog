@@ -1,14 +1,13 @@
 import { useState } from "react"
 import { BrowserRouter, Route, Routes } from "react-router"
 
-import { Avviso } from "./Avviso"
 import { RipristinoProposto, useBackup } from "./Backup"
-import { SiApre } from "./CartaSola"
 import { Layout } from "./Layout"
 import { PaginaCheNonCe } from "./PaginaCheNonCe"
+import { AvvioInAttesa, AvvioNonRisponde } from "./PrimoAvvioCornice"
 import { Wizard } from "./Wizard"
 import { VesteSalvata, vesteDa } from "./componenti/Tema"
-import { t, usaLingua } from "./i18n"
+import { usaLingua } from "./i18n"
 import { ComingSoon } from "./ComingSoon"
 import { PAGINE, sezioniAperte } from "./pagine"
 import { usePreferenze } from "./preferenze"
@@ -36,37 +35,37 @@ export function App() {
   // quando chiude: dedotto dal timbro che manca, si accenderebbe anche a meta' di un ripristino.
   const [inChiusura, setInChiusura] = useState(false)
 
-  // Finche' non si sa, non si sceglie: mostrare l'app e poi sostituirla col primo avvio sarebbe
-  // uno sfarfallio che dice due cose diverse in mezzo secondo. E se la domanda non ha risposta
-  // non si tira a indovinare: mostrare l'app direbbe "tutto configurato" senza saperlo.
-  if (settings.isPending || backup.isPending) return <SiApre>{t("app.loading")}</SiApre>
-  // L'errore prende lo schermo solo se non si sa niente: una rilettura fallita lascia cio' che
-  // si sapeva gia', invece di togliere la pagina da sotto gli occhi.
-  if (settings.error && !settings.data) return <Avviso esito="allarme">{settings.error.message}</Avviso>
-  // Un database nuovo con le risposte accanto: prima si chiede se rimetterle, poi il primo avvio
-  // (che, rimesse, non serve piu'). Se lo stato del backup non si sa, si va avanti senza.
-  if (backup.data?.offer === "found") return <RipristinoProposto stato={backup.data} />
-  if (settings.data && (inChiusura || !settings.data.wizard_done)) {
-    // `missing` dice cosa manca all'app: il primo avvio guarda il **riconoscitore** -- il
-    // programma, e il suo catalogo -- per decidere se fare la domanda in piu', e quale.
-    return (
-      <Wizard
-        onChiusura={() => setInChiusura(true)}
-        // Si spegne a impostazioni rilette: prima, per un attimo varrebbe il timbro vecchio.
-        onDone={() => void settings.refetch().then(() => setInChiusura(false))}
-        manca={settings.data.missing}
-      />
-    )
-  }
-
   // Lingua e tema dalle preferenze: cambiata la lingua, `key` rimonta tutto, perche' `t()` non
-  // e' reattivo; il tema lo leggono i `Tema` senza props.
+  // e' reattivo; il tema lo leggono i `Tema` senza props, primo avvio compreso.
   const valori = settings.data?.values
   const lingua = usaLingua(String(valori?.language ?? ""))
   const veste = vesteDa(valori?.theme_mode, valori?.theme_accent)
+
+  // Finche' non si sa, non si sceglie: mostrare l'app e poi sostituirla col primo avvio sarebbe
+  // uno sfarfallio. E se la domanda non ha risposta non si tira a indovinare.
+  // L'errore prende lo schermo solo se non si sa niente: una rilettura fallita lascia cio' che
+  // si sapeva gia'. Un database nuovo con le risposte accanto: prima si chiede se rimetterle.
+  // `missing` dice al primo avvio se fare la domanda di ASTAP, e quale.
+  const porta = (() => {
+    if (settings.isPending || backup.isPending) return <AvvioInAttesa />
+    if (settings.error && !settings.data)
+      return <AvvioNonRisponde onRiprova={() => void settings.refetch()} />
+    if (backup.data?.offer === "found") return <RipristinoProposto stato={backup.data} />
+    if (settings.data && (inChiusura || !settings.data.wizard_done))
+      return (
+        <Wizard
+          onChiusura={() => setInChiusura(true)}
+          // Si spegne a impostazioni rilette: prima, per un attimo varrebbe il timbro vecchio.
+          onDone={() => void settings.refetch().then(() => setInChiusura(false))}
+          manca={settings.data.missing}
+        />
+      )
+    return null
+  })()
   return (
     <VesteSalvata veste={veste}>
     <BrowserRouter key={lingua}>
+      {porta ?? (
       <Layout>
         <Routes>
           {PAGINE.map((p) => (
@@ -81,6 +80,7 @@ export function App() {
           <Route path="*" element={<PaginaCheNonCe />} />
         </Routes>
       </Layout>
+      )}
     </BrowserRouter>
     </VesteSalvata>
   )

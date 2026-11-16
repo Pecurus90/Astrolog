@@ -8,7 +8,6 @@
  */
 export const enGuscio = {
   "app.title": "AstroLog",
-  "app.loading": "Loading\u2026",
   "nav.unknown": "Unknown page",
   "notFound.title": "Page not found",
   "notFound.why":

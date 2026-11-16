@@ -140,7 +140,7 @@ describe("il posto da cui osservi", () => {
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
 
     expect(await screen.findByRole("alert")).toBeDefined()
-    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(false)
+    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(false)
     // i campi restano: a rete tornata si riprova senza riscrivere
     expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("Casa")
   })
@@ -210,7 +210,7 @@ describe("il posto da cui osservi", () => {
     expect(
       document.getElementById(nome.getAttribute("aria-describedby") as string)?.textContent,
     ).toContain("Nome obbligatorio")
-    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(
+    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(
       true,
     )
   })
@@ -304,10 +304,7 @@ describe("il posto da cui osservi", () => {
     vaiAlPasso(1)
     // Il tasto si vede spento: e' la meta' che l'utente puo' constatare, e senza questa riga
     // toglierlo lascerebbe la suite verde.
-    expect(screen.getByRole("button", { name: /salva sito/i })).toHaveProperty(
-      "disabled",
-      true,
-    )
+    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled")).toBe("true")
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
     await waitFor(() => expect(chiamate().length).toBeGreaterThan(0))
     expect(scritture().some((s) => s.url.includes("/api/v1/sites"))).toBe(false)
@@ -343,13 +340,13 @@ describe("il posto da cui osservi", () => {
     // tasto resta spento comunque, e togliere quella della longitudine lascerebbe la prova verde.
     fireEvent.change(screen.getByLabelText(/nome del sito/i), { target: { value: "Malga" } })
     fireEvent.change(lat, { target: { value: "45,44" } })
-    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(
+    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(
       true,
     )
     // e ora l'altra meta': la latitudine buona, la longitudine storta
     fireEvent.change(lon, { target: { value: "12,05" } })
     fireEvent.change(lat, { target: { value: "120" } })
-    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(
+    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(
       true,
     )
 
@@ -358,7 +355,7 @@ describe("il posto da cui osservi", () => {
     // per la ragione sbagliata e il tetto poteva essere qualunque senza che niente cadesse
     fireEvent.change(lat, { target: { value: "45,44" } })
     expect(screen.getByLabelText(/latitudine/i).getAttribute("aria-invalid")).toBeNull()
-    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(
+    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(
       false,
     )
   })
@@ -383,21 +380,22 @@ describe("il posto da cui osservi", () => {
     fireEvent.change(lat, { target: { value: "45 W" } })
     expect(lat.getAttribute("aria-invalid")).toBe("true")
   })
-  it("il passo ha un solo comando pieno, Salva sito, e sta in fondo con gli altri", async () => {
+  it("il passo ha un solo comando pieno, Salva sito, sotto i campi; Avanti scende a tenue", async () => {
     // Due bottoni pieni -- Salva sito nel passo e Avanti nel piede -- si confondevano: chi premeva
-    // Avanti credeva di aver salvato.
+    // Avanti credeva di aver salvato (tavola v82: `R.salva` nel passo, `cmd` spegne Avanti).
     senzaTimbro()
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    const gesti = document.querySelector(".as-gesti") as HTMLElement
-    expect(gesti.className).toBe("as-gesti as-gesti--due")
-    expect([...gesti.children].map((g) => g.textContent)).toEqual(["Salta", "Indietro", "Avanti", "Salva sito"])
-    expect(document.querySelectorAll(".as-bottone--primario")).toHaveLength(1)
-    expect(gesti.lastElementChild?.className).toContain("as-bottone--primario")
-    // e fuori dal passo del sito i comandi tornano quelli di sempre
+    const gesti = document.querySelector(".al-avvio__riga-16") as HTMLElement
+    expect([...gesti.children].map((g) => g.textContent)).toEqual(["Salta", "", "Indietro", "Avanti"])
+    const pieni = document.querySelectorAll(".as-bottone--primario, .al-bottone--pieno")
+    expect([...pieni].map((b) => b.textContent)).toEqual(["Salva sito"])
+    expect(pieni[0]?.closest(".al-avvio__riga-11")).not.toBeNull()
+    expect(gesti.lastElementChild?.className).toContain("al-bottone--tenue")
+    // e fuori dal passo del sito Avanti torna pieno
     fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
-    expect(document.querySelector(".as-gesti")?.className).toBe("as-gesti")
+    expect(screen.getByRole("button", { name: /avanti/i }).className).toContain("al-bottone--pieno")
   })
 
   it("tornando al passo dopo aver salvato, il sito non si offre di nuovo", async () => {
@@ -419,7 +417,7 @@ describe("il posto da cui osservi", () => {
     expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("")
     expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("")
     expect(screen.getAllByRole("radio").some((r) => (r as HTMLInputElement).checked)).toBe(false)
-    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(true)
+    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(true)
   })
 
   it("le parti del passo, i campi e i posti trovati hanno la forma del foglio", async () => {

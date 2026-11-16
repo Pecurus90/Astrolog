@@ -20,8 +20,8 @@ sono state assorbite qui e tolte da [`ereditato.md`](ereditato.md).
 | Ho piu' siti: li aggiungo tutti e dico qual e' quello di casa | `test_sites_many_and_one_default` |
 | Un sito che ha gia' delle notti non lo perdo per sbaglio: l'app si rifiuta e mi dice quante | `test_site_with_nights_is_not_deleted` |
 | Se cambio il sito di casa, le notti che l'app aveva attribuito da sola vengono con me; quelle che ho dichiarato io restano dove le ho messe | `test_moving_home_takes_along_the_nights_the_app_assigned`, `test_a_night_that_would_collide_stays_where_it_is` |
-| Il primo avvio mi chiede Nome, Sito, Tema, Cartelle e Seeing (Meteoblue), tutti facoltativi, e poi si toglie di mezzo; un passo saltato resta segnato «saltato», e la chiusura dice se la scansione non e' partita; se lo salto l'app funziona lo stesso, e non me lo richiede piu' (Tema dal 24/10/2026, Marco: Tema e «saltato» da costruire) | `test_wizard_steps_and_the_stamp`; a schermo *col timbro l app mostra se stessa e non richiede niente*, *ogni campo e ogni bottone dei quattro passi passa dal suo mattone*, *saltare TIMBRA: domani l app non rifa le stesse domande*, *si completa, e completare timbra come saltare*, *e dopo il timbro il primo avvio si toglie davvero di mezzo* |
-| Se il riconoscitore del cielo non ce l'ho, me lo dice **prima** di farmi aspettare una lettura che non riconoscera' niente -- e se ce l'ho non me ne parla nemmeno | `test_the_app_says_when_the_solver_is_missing`; a schermo *se manca, il passo c e e dice cosa ci perdi*, *con tutto a posto i passi restano quattro* |
+| Il primo avvio mi chiede Nome, Sito, Tema, Cartelle e Seeing (Meteoblue), tutti facoltativi, e poi si toglie di mezzo; un passo saltato resta segnato «saltato», e la chiusura dice se la scansione non e' partita; se lo salto l'app funziona lo stesso, e non me lo richiede piu' (Tema dal 24/10/2026, Marco; Tema e «saltato» fatti il 16/11 dalla tavola v82) | `test_wizard_steps_and_the_stamp`; a schermo *col timbro l app mostra se stessa e non richiede niente*, *ogni campo e ogni bottone dei quattro passi passa dal suo mattone*, *saltare TIMBRA: domani l app non rifa le stesse domande*, *si completa, e completare timbra come saltare*, *e dopo il timbro il primo avvio si toglie davvero di mezzo* |
+| Se il riconoscitore del cielo non ce l'ho, me lo dice **prima** di farmi aspettare una lettura che non riconoscera' niente -- e se ce l'ho non me ne parla nemmeno | `test_the_app_says_when_the_solver_is_missing`; a schermo *se manca, il passo c e e dice cosa ci perdi*, *con tutto a posto i passi restano cinque* |
 | Dico io dove sta il mio ASTAP e l'app usa quello, anche se ne troverebbe un altro per conto suo; se scrivo un percorso sbagliato me lo dice subito | `test_the_declared_path_wins_over_the_automatic_search`, `test_the_run_launches_the_path_written_in_settings`, `test_writing_the_path_turns_the_warning_off` |
 | Vedo **dove** l'app prende ASTAP e da cosa l'ha dedotto, cosi' posso dire "no, non quello"; e se voglio glielo faccio cercare, e usa cio' che ha trovato solo se glielo dico | `test_the_route_says_where_the_solver_is_and_from_which_channel`, `test_looking_for_it_proposes_without_writing`, `test_looking_for_it_ignores_what_is_declared`; a schermo *dice dove sta, e da cosa l app l ha dedotto*, *Cercalo tu propone, e non scrive niente finche' non si sceglie* |
 | Se ad ASTAP manca il catalogo stellare me lo dice **prima**, invece di lasciarmi scoprire da una scansione che non riconosce niente; e se ASTAP non ce l'ho affatto, non mi parla anche del suo catalogo | `test_astap_without_its_catalogue_is_a_thing_that_is_missing`, `test_without_astap_nobody_complains_about_its_catalogue`, `test_the_star_databases_are_the_ones_next_to_the_program` |
@@ -138,8 +138,9 @@ Impostazioni: l'euristica "sembra vuoto" tornerebbe vera mesi dopo, dopo un azze
 Completare e saltare scrivono lo stesso timbro. **Il primo avvio non si riapre** (Marco,
 21/10/2026): ognuna delle sue cose -- nome, sito, tema, cartelle, chiave, ASTAP -- si cambia nelle
 Impostazioni; il nome non c'e' ancora (Issue #19). **Completare passa dalla chiusura** (Marco, 9/10/2026): timbrato, l'app mostra cosa e'
-stato dato, letto dal database e non dalla memoria della pagina -- nome, sito, cartelle e se la
-scansione e' partita, chiave del seeing -- e si entra
+stato dato, letto dal database e non dalla memoria della pagina -- nome, sito, tema, cartelle e
+se la scansione e' partita, chiave del seeing; una riga per voce col segno di dato o non dato, e
+se ci sono cartelle e la scansione non e' partita lo dice e dice dove si avvia (tavola v82) -- e si entra
 con "Apri AstroLog"; saltare entra subito. Una riga di cui la lettura e' fallita (sito, cartelle)
 si tace: "Nessuna" a chi le ha date sarebbe falso. La chiusura resta finche' non si preme il
 comando, anche se le impostazioni si rileggono col timbro gia' scritto: lo ricorda `App.tsx`.
@@ -147,7 +148,10 @@ comando, anche se le impostazioni si rileggono col timbro gia' scritto: lo ricor
 **A schermo il primo avvio e' un cancelletto, non un indirizzo** (14/9/2026): senza il timbro
 l'app mostra le sue domande, col timbro mostra se stessa -- non c'e' una pagina `/wizard` dove
 si possa atterrare. Il router c'e' (nato con Da confermare), ma il primo avvio resta fuori dalle
-rotte: senza il timbro l'app non monta nessuna pagina. Sta qui e non nel brief
+rotte: senza il timbro l'app non monta nessuna pagina. Finche' le impostazioni non si leggono,
+la stessa pagina del primo avvio dice «Leggo le impostazioni…» o, se non rispondono, «AstroLog non
+risponde, riprova» con Riprova; la proposta del backup trovato sta li' dentro, prima dei passi
+(tavola v82). Sta qui e non nel brief
 perche' un brief si sostituisce a ogni fetta, e questa decisione deve sopravvivergli.
 
 **Il passo del riconoscitore compare solo a chi serve, e l'app non scarica programmi.** Senza ASTAP

@@ -113,7 +113,7 @@ Tavola v82 `Impostazioni.dc.html` (desktop 14-41, telefono 216-243, logica 441-4
   chiare; Meteo, «in arrivo», la 404 e le sezioni vecchie qui sopra in un riquadro scuro col
   foglio vecchio (`.as-pagina`, `.app-vecchio`). Perche': Marco 15/11, finche' non sono portate.
 - **Caricamento ed errore della pagina.** Tavola: li mostra il Telaio (`appSt`, 441-443). App: li
-  mostra l'App (`SiApre`) prima di montare le pagine. Perche': le impostazioni (lingua, tema)
+  mostra l'App (`AvvioInAttesa`, `AvvioNonRisponde` del Primo avvio) prima di montare le pagine. Perche': le impostazioni (lingua, tema)
   arrivano prima di ogni pagina.
 
 ## Impostazioni -- Siti (passo 33, Impostazioni commit C, 15/11)
@@ -255,6 +255,35 @@ Scelte diverse:
   vuol dire «togli», e per togliere c'e' *Togli*.
 - **La fine della chiave** «...a3f9» con tre punti (tavola «…a3f9»): e' `config.hint`, la stessa
   in tutta l'app (anche in `GET /settings`).
+
+## Primo avvio -- il guscio, Nome, Tema, chiusura e backup (passo 33, Primo avvio commit B, 16/11)
+
+Tavola v82 `Primo avvio.dc.html` (markup 14-103, logica 106-318). Diverso dalla tavola:
+- **Sito, Cartelle, Seeing e ASTAP** stanno ancora sul foglio vecchio, in un riquadro scuro dentro
+  la carta del passo. Perche': si rifanno nel commit C; il guscio (lato, carta, titolo, perche',
+  pastiglia di ASTAP, gesti) e' gia' quello della tavola, e «Salva sito» sta gia' sotto i campi.
+- **Automatico** spento nel passo Tema, e lo stato «tema: automatico senza sito» non c'e'. Perche':
+  Marco 15/11, piu' recente della tavola: Automatico arriva col passo Tema (`navigazione.md`).
+- **«Leggo le impostazioni…» e «AstroLog non risponde, riprova»** si vedono all'apertura dell'app
+  anche a chi il primo avvio l'ha gia' fatto. Perche': finche' le impostazioni non si leggono
+  l'app non sa se mostrare il primo avvio o le pagine (`App.tsx`); prima diceva «Caricamento…».
+- **Backup trovato**: se Ripristina o Inizia da zero non riescono, un avviso di blocco col perche'
+  sotto i bottoni. La tavola non lo disegna; tacerlo lascerebbe credere fatto un ripristino che
+  non c'e'. Senza la data dell'ultimo backup la riga sotto il titolo non c'e'.
+- **«fatto» e «saltato» dei passi** li decide cio' che l'API ha quando si va avanti (nome salvato,
+  sito salvato, cartelle registrate, chiave salvata, ASTAP pronto), non cio' che la pagina
+  simula; Tema e' sempre «fatto», come nella tavola.
+- **Salta** timbra il primo avvio ed entra nell'app (la tavola apre la Dashboard): stesso esito.
+- **Avanti pieno** a Cartelle senza cartelle, Seeing senza chiave e ASTAP non trovato, dove la
+  tavola (`cmd`) lo vuole tenue col comando del passo pieno. Perche': quei comandi sono ancora del
+  foglio vecchio; si allinea nel commit C.
+- **Sito dopo un ricaricamento a meta'**: nella lista di lato resta «saltato» finche' non si
+  arriva alla chiusura, che lo rilegge dal database e lo segna «fatto». Perche': prima di Fine
+  l'app sa solo del sito salvato in questa pagina.
+- **«Ultimo backup: 16 nov 2026, 17:37.»** col mese corto; la tavola «12 ottobre 2026, 22:14».
+  Perche': la data viene da `giorno()`, lo stesso formato di tutta l'app.
+- **Lettura delle impostazioni a 1440**: lo Scheletro esce in due colonne strette col testo
+  tagliato, come nella tavola. A Design (`handoff/per-design.md`).
 
 ## Notti -- la pagina fra 700 e 1000 px e il sito lungo (v78, 10/11)
 

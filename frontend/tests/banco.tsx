@@ -592,6 +592,8 @@ export function fuoriDaiMattoni() {
         // La x accanto a una tendina scelta, e quella del periodo a giorni: stesso mattone (`Togli`).
         "as-tendina__togli",
       ].some((c) => e.classList.contains(c)) &&
+      // a ported page wears the v58 sheet: its classes (`al-campo`, `al-avvio__testo-11`) dress it
+      ![...e.classList].some((c) => c.startsWith("al-")) &&
       // Il campo di ricerca del foglio (`CampoDiRicerca`): il pozzo e' il `<label>`, e l'input
       // dentro non ha classe sua -- lo veste il pozzo.
       e.closest("label.as-campo-cerca") === null &&
@@ -607,7 +609,9 @@ export function fuoriDaiMattoni() {
  * campi e bottoni non ne ha nessuno: senza questo conto, una prova che non ha trovato la sua
  * schermata sarebbe verde per il motivo sbagliato. */
 export function quantiControlli() {
-  return document.querySelectorAll("input, textarea, select, button, label").length
+  // the v58 sheet's commands and choices are `<a role="button">`, `<a role="radio">`
+  return document.querySelectorAll("input, textarea, select, button, label, a[role=button], a[role=radio]")
+    .length
 }
 
 /** I nomi delle tappe del binario del primo avvio, senza il segno ne' la parola per chi ascolta.
@@ -617,8 +621,8 @@ export function quantiControlli() {
  * Leggere `textContent` le prenderebbe tutte e tre, e le prove che chiamano questa funzione
  * guardano **come si chiamano i passi**: quello sta nel suo pezzo. */
 export function nomiDeiPassi() {
-  return [...document.querySelectorAll(".as-passi__nome")].map((n) =>
-    (n.firstChild?.textContent ?? "").trim(),
+  return [...document.querySelectorAll(".al-avvio__riga-1 .al-avvio__testo-3")].map((n) =>
+    (n.textContent ?? "").trim(),
   )
 }
 

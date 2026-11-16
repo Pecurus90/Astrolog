@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRef } from "react"
 
-import { Avviso as AvvisoVecchio } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { CartaSola } from "./CartaSola"
+import { Comando, CorniceAvvio, MISURE } from "./PrimoAvvioCornice"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { Avviso } from "./componenti/Avviso"
@@ -54,39 +52,46 @@ export function RipristinoProposto({ stato }: { stato: Stato }) {
     },
     onSuccess: () => cache.invalidateQueries({ queryKey: ["backup"] }),
   })
+  const formato = useFormato()
   const conti = stato.last
+  const errore = rimetti.error ?? ricomincia.error
 
+  // tavola v82 `Primo avvio`, passo `backup`: before the steps, so no list of them
   return (
-    <CartaSola
-      titolo={t("backup.found.title")}
-      // la data, se c'e', e' una frase sua: senza, la domanda non comincia con un punto
-      sotto={[conti ? quando(conti) : "", t("backup.found.question")].filter(Boolean).join(". ")}
-      conti={
-        conti
-          ? [
-              { nome: t("backup.count.answers"), dato: numero(conti.answers) },
-              { nome: t("backup.count.sites"), dato: numero(conti.sites) },
-              { nome: t("backup.count.folders"), dato: numero(conti.folders) },
-              { nome: t("backup.count.gear"), dato: numero(conti.instruments + conti.filters) },
-            ]
-          : []
-      }
-      azioni={
-        <>
-          <Bottone onClick={() => ricomincia.mutate()} disabled={rimetti.isPending}>
-            {t("backup.found.decline")}
-          </Bottone>
-          <Bottone verso="primario" onClick={() => rimetti.mutate()} disabled={rimetti.isPending}>
-            {t("backup.found.restore")}
-          </Bottone>
-        </>
-      }
-    >
-      {rimetti.error && <AvvisoVecchio esito="allarme">{rimetti.error.message}</AvvisoVecchio>}
-      {ricomincia.error && (
-        <AvvisoVecchio esito="allarme">{ricomincia.error.message}</AvvisoVecchio>
+    <CorniceAvvio titolo={t("backup.found.title")} perche={conti ? `${quando(conti)}.` : undefined}>
+      {conti && (
+        <div className="al-avvio__centro-2" style={{ gridTemplateColumns: MISURE[formato].conti }}>
+          {[
+            { n: conti.answers, l: t("backup.count.answers") },
+            { n: conti.sites, l: t("backup.count.sites") },
+            { n: conti.folders, l: t("backup.count.folders") },
+            { n: conti.instruments + conti.filters, l: t("backup.count.gear") },
+          ].map((c) => (
+            <div key={c.l} className="al-avvio__colonna-9">
+              <span className="al-avvio__testo-8">{numero(c.n)}</span>
+              <span className="al-avvio__testo-9">{c.l}</span>
+            </div>
+          ))}
+        </div>
       )}
-    </CartaSola>
+      <p className="al-avvio__testo-10">{t("backup.found.question")}</p>
+      <div className="al-avvio__riga-5">
+        <Comando
+          testo={t("backup.found.restore")}
+          verso="pieno"
+          spento={ricomincia.isPending}
+          occupato={rimetti.isPending ? t("backup.restoring") : undefined}
+          onClick={() => rimetti.mutate()}
+        />
+        <Comando
+          testo={t("backup.found.decline")}
+          verso="tenue"
+          spento={rimetti.isPending || ricomincia.isPending}
+          onClick={() => ricomincia.mutate()}
+        />
+      </div>
+      {errore && <Avviso tipo="blocco" formato={formato} segno="!" titolo={errore.message} />}
+    </CorniceAvvio>
   )
 }
 

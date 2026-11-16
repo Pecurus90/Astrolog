@@ -96,7 +96,8 @@ describe("l accessibilita di dove si risponde", () => {
     })
     const { container } = await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
+    // nome, sito, tema, cartelle, seeing: ASTAP e' il sesto passo (tavola v82)
+    for (let i = 0; i < 5; i++) fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
     await screen.findByLabelText(/percorso di astap/i)
 
     expect(await violazioni(container)).toEqual([])

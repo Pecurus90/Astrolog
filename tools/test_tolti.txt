@@ -713,3 +713,5 @@ la sezione passa dai mattoni e dalla guardia di accessibilita', con la chiave sa
 una chiave che il conto rifiuta non si salva, e lo dice - step 33, Settings E: replaced by una chiave che il servizio rifiuta non si salva, e lo dice
 una chiave salvata si toglie - step 33, Settings E: replaced by una chiave salvata si toglie, e Cambia apre il campo
 una sezione non ancora ridisegnata sta nel riquadro del foglio vecchio - step 33, Settings E: every section is ported, the old box is gone
+con tutto a posto i passi restano quattro - step 33, Primo avvio B: the Tema step makes five; replaced by con tutto a posto i passi restano cinque
+il passo ha un solo comando pieno, Salva sito, e sta in fondo con gli altri - step 33, Primo avvio B: tavola v82 puts Salva sito under the fields; replaced by il passo ha un solo comando pieno, Salva sito, sotto i campi; Avanti scende a tenue

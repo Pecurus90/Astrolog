@@ -12,7 +12,6 @@
  */
 export const itGuscio = {
   "app.title": "AstroLog",
-  "app.loading": "Caricamento\u2026",
   "nav.unknown": "Pagina sconosciuta",
   "notFound.title": "Pagina non trovata",
   "notFound.why":

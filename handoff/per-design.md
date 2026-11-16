@@ -13,6 +13,13 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Primo avvio, il guscio (passo 33 B, collaudo 16/11): (a) stato «lettura delle
+  impostazioni» a 1440: lo Scheletro (`appSk`, riga 186) esce in due colonne strette affiancate e
+  «Leggo le impostazioni…» si taglia; sul telefono e' giusto. L'app lo copia com'e'. (b) La data
+  di «Backup trovato» nell'app ha il mese corto («16 nov 2026, 17:37»), come in tutta l'app; la
+  tavola «12 ottobre 2026». Allineare la tavola. Dettaglio in `differenze-dalle-tavole.md`,
+  «Primo avvio -- il guscio».
+
 - [da dare] Impostazioni, Servizi, Scansioni e Backup (passo 33 E, 16/11): (a) le chiavi dei
   servizi stanno nel file delle risposte accanto al database e tornano dopo un database rovinato;
   solo Esporta non le porta (Marco 16/11, ADR 0017): l'intro di Servizi dice «non vanno nel file

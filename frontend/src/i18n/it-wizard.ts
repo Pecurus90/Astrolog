@@ -45,10 +45,22 @@ export const itWizard = {
   "wizard.title": "Primo avvio",
   "wizard.step.name": "Nome utente",
   "wizard.steps": "I passi del primo avvio",
-  // Le due parole che il segno del binario non puo' dire: e' `aria-hidden`, perche' chi
-  // ascolta sentirebbe "spunta" invece di "fatto".
-  "wizard.step.done": "- fatto",
-  "wizard.step.here": "- sei qui",
+  // what a step's sign says in words: under the name, and for whoever listens
+  "wizard.mark.done": "fatto",
+  "wizard.mark.skipped": "saltato",
+  "wizard.mark.here": "passo attuale",
+  "wizard.mark.later": "da fare",
+  "wizard.step.theme": "Tema",
+  "wizard.theme.why": "Come si vede l'app. Si cambia quando si vuole dalle Impostazioni.",
+  "wizard.loading": "Leggo le impostazioni…", // glifo-ok: testo della tavola
+  "wizard.unreachable": "AstroLog non risponde, riprova",
+  "wizard.unreachable.text": "Le impostazioni non si leggono. Nessun dato è cambiato.", // glifo-ok: testo della tavola
+  "wizard.retry": "Riprova",
+  "wizard.saving": "Salvataggio…", // glifo-ok: testo della tavola
+  "wizard.saveFailed.text": "L'app non ha risposto. Riprova.",
+  "wizard.solver.state.found": "Trovato",
+  "wizard.closed.why": "Tutto si cambia dalle Impostazioni.",
+  "wizard.closed.notStarted": "La scansione non è partita: si avvia da Scansiona, nel menu dell'ingranaggio.", // glifo-ok: testo della tavola
   "wizard.step.site": "Sito di osservazione",
   "wizard.step.solver": "ASTAP",
   "wizard.step.folders": "Cartelle",

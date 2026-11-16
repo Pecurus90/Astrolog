@@ -46,7 +46,7 @@ export const NOMI_MODO: Record<Modo | "automatico", Chiave> = {
   automatico: "theme.mode.auto",
 }
 
-const NOMI_ACCENTO: Record<Accento, Chiave> = {
+export const NOMI_ACCENTO: Record<Accento, Chiave> = {
   originale: "theme.accent.original",
   ambra: "theme.accent.amber",
   turchese: "theme.accent.teal",
