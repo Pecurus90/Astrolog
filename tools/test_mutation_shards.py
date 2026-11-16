@@ -18,6 +18,7 @@ from mutation_shards import (
     FRONTEND_SHARDS,
     REFERENCE,
     REST,
+    files,
     frontend_shards,
     main,
     modules,
@@ -240,6 +241,65 @@ def test_a_better_score_asks_for_the_reference_to_rise(tmp_path, capsys):
     path = write_reference(tmp_path, api=0.25)
     assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(API_RESULTS), path) == 0
     assert "raise the reference to 0.5000" in capsys.readouterr().err
+
+
+def test_every_backend_file_is_mutated_by_exactly_one_shard():
+    """Run without names (#87), each shard walks its files alone; spine/__init__ has a name in
+    two shards and goes to the first."""
+    table = shards()
+    every = [f for shard in table for f in files(shard, table)]
+    assert len(every) == len(set(every))
+    package = Path(__file__).resolve().parent.parent / "backend" / "astrolog"
+    assert set(every) == {p.relative_to(package.parent).as_posix() for p in package.rglob("*.py")}
+    assert "astrolog/spine/__init__.py" in files("spine-a-f", table)
+    assert "astrolog/api/app.py" in files("api", table)
+    assert "astrolog/log.py" in files("rest", table)
+
+
+def test_the_shard_files_go_into_the_mutmut_section_once(tmp_path):
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.mutmut]\npaths_to_mutate = ["astrolog/"]\n\n[x]\n', encoding="utf-8"
+    )
+    assert main(["mutation_shards.py", "api", "--only-mutate", str(pyproject)]) == 0
+    lines = pyproject.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "[tool.mutmut]" and lines[2] == 'paths_to_mutate = ["astrolog/"]'
+    assert json.loads(lines[1].removeprefix("only_mutate = ")) == files("api", shards())
+    assert main(["mutation_shards.py", "api", "--only-mutate", str(pyproject)]) == 1
+
+
+def test_survivors_are_reopened_and_final_verdicts_stand(tmp_path, capsys):
+    """Every night retested every mutant, so the same tail was cut at 120 minutes (#87). Now a
+    night tries only the unchecked: survivors reopened, for a new test to kill them."""
+    codes = {
+        "k": 1,
+        "t": 36,
+        "s": 34,
+        "c": 37,
+        "v": 0,
+        "n": 33,
+        "q": 35,
+        "u": None,
+        "x": 255,
+        "g": -9,
+    }
+    meta = tmp_path / "astrolog" / "a.py.meta"
+    meta.parent.mkdir()
+    meta.write_text(json.dumps({"exit_code_by_key": codes, "durations_by_key": {}}), "utf-8")
+    assert main(["mutation_shards.py", "--reopen", str(tmp_path)]) == 0
+    data = json.loads(meta.read_text(encoding="utf-8"))
+    assert data["exit_code_by_key"] == {**codes, "v": None, "n": None, "q": None}
+    assert data["durations_by_key"] == {}
+    assert "3 mutants without a final verdict reopened" in capsys.readouterr().err
+
+
+def test_the_workflow_runs_each_shard_on_its_files_and_what_they_have_left():
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    assert "mutation_shards.py ${{ matrix.shard }} --only-mutate pyproject.toml" in workflow
+    assert "mutation_shards.py --reopen mutants" in workflow
+    # named, mutmut retests every mutant it is given
+    assert re.search(r"mutmut run --max-children 4 \|\|", workflow)
 
 
 def write_reports(tmp_path, *files, stale=None):

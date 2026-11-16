@@ -33,20 +33,23 @@ FIXED = {
 }
 REST = "rest"
 FILTER = "--filter"
+ONLY_MUTATE = "--only-mutate"
+REOPEN = "--reopen"
 DROP_BROKEN = "--drop-broken"
 MUTANT = re.compile(r"\S+__mutmut_\d+")
+# mutmut exit codes of a final verdict (mutmut/stats.py): killed, skipped, timeout, type check
+FINAL = {1, 3, 34, 36, 37, 24, -24, 152, 255, -9, -11}
+
+
+def names_of(path: Path, package: Path) -> list[str]:
+    """Dotted names as mutmut writes them; a package's `__init__` both ways, since mutmut drops
+    it from some names and not others."""
+    parts = path.relative_to(package.parent).with_suffix("").parts
+    return [".".join(parts)] + ([".".join(parts[:-1])] if parts[-1] == "__init__" else [])
 
 
 def modules(package: Path = PACKAGE) -> list[str]:
-    """Dotted names as mutmut writes them; a package's `__init__` both ways, since mutmut drops
-    it from some names and not others."""
-    names = []
-    for path in sorted(package.rglob("*.py")):
-        parts = path.relative_to(package.parent).with_suffix("").parts
-        names.append(".".join(parts))
-        if parts[-1] == "__init__":
-            names.append(".".join(parts[:-1]))
-    return names
+    return [name for path in sorted(package.rglob("*.py")) for name in names_of(path, package)]
 
 
 def probes(module: str) -> list[str]:
@@ -117,6 +120,47 @@ def filter_results(
         sys.stderr.write(f"shard {shard}: {len(report.orphans)} mutants belong to no shard\n")
         failed = True
     return (1 if failed else 0), report.statuses
+
+
+def files(shard: str, table: dict[str, list[str]], package: Path = PACKAGE) -> list[str]:
+    """The shard's source files as mutmut walks them; a file goes to the first shard owning one
+    of its names (spine/__init__ has one in two)."""
+    own = []
+    for path in sorted(package.rglob("*.py")):
+        names = [n for m in names_of(path, package) for n in probes(m)]
+        owner = next((s for s, p in table.items() if any(matches(n, p) for n in names)), None)
+        if owner == shard:
+            own.append(path.relative_to(package.parent).as_posix())
+    return own
+
+
+def only_mutate(shard: str, pyproject: Path) -> int:
+    """Restricts mutmut to the shard's files: run without names, it then tries only the mutants
+    without a verdict, so a tail cut at 120 minutes runs the next night (#87)."""
+    text = pyproject.read_text(encoding="utf-8")
+    header = "[tool.mutmut]\n"
+    if text.count(header) != 1 or "\nonly_mutate" in text:
+        sys.stderr.write(f"{pyproject}: no single [tool.mutmut], or only_mutate already set\n")
+        return 1
+    line = f"only_mutate = {json.dumps(files(shard, shards()))}\n"
+    pyproject.write_text(text.replace(header, header + line), encoding="utf-8")
+    return 0
+
+
+def reopen(mutants: Path) -> int:
+    """Survivors and mutants without tests back to unchecked, so a new test can kill them; the
+    killed stay killed until mutmut resets their changed function."""
+    reopened = 0
+    for meta in mutants.rglob("*.py.meta"):
+        data = json.loads(meta.read_text(encoding="utf-8"))
+        codes = data["exit_code_by_key"]
+        for key, code in codes.items():
+            if code is not None and code not in FINAL:
+                codes[key] = None
+                reopened += 1
+        meta.write_text(json.dumps(data, indent=4), encoding="utf-8")
+    sys.stderr.write(f"{mutants}: {reopened} mutants without a final verdict reopened\n")
+    return 0
 
 
 def frontend_shards(frontend: Path = FRONTEND_DIR) -> list[list[str]]:
@@ -224,7 +268,11 @@ def main(
         return frontend(argv[2:], reference, parts)
     if argv[1:2] == [DROP_BROKEN] and len(argv) == 3:
         return drop_broken(Path(argv[2]))
+    if argv[1:2] == [REOPEN] and len(argv) == 3:
+        return reopen(Path(argv[2]))
     names = [*FIXED, REST]
+    if len(argv) == 4 and argv[1] in names and argv[2] == ONLY_MUTATE:
+        return only_mutate(argv[1], Path(argv[3]))
     if len(argv) not in (2, 3) or argv[1] not in names or argv[2:] not in ([], [FILTER]):
         sys.stderr.write(f"usage: mutation_shards.py {{{','.join(names)}}} [{FILTER}]\n")
         return 2
