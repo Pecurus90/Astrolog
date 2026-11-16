@@ -5783,6 +5783,11 @@ export interface components {
              */
             declared: string | null;
             /**
+             * Wrong Env
+             * @description ASTROLOG_ASTAP when, with no path declared, it leads to no file: the run stops on it and *Cercalo tu* goes past it. None otherwise.
+             */
+            wrong_env?: string | null;
+            /**
              * Databases
              * @description The star databases found next to the program, by name (`d80`, `v50`). Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a path only means ASTAP is not there.
              */

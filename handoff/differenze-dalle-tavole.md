@@ -173,6 +173,9 @@ Scelte diverse:
 - **L'esito di ASTAP** e' un avviso a blocco col percorso e da dove l'app l'ha preso («· PATH di
   sistema»); appare anche aprendo la sezione. Tavola: avviso di riga solo dopo *Verifica*. Perche':
   «trovato» senza da dove non si puo' smentire (`sito.md`).
+- **ASTROLOG_ASTAP sbagliata** (tavola: non c'e'): senza percorso scritto, l'esito dice «ASTROLOG_ASTAP
+  punta a un file che non esiste: ...» invece di «ASTAP non trovato.», e *Cercalo tu* la salta.
+  Perche': la variabile ferma l'analisi e la pagina diceva un motivo falso (#86, Marco 16/11).
 - **Cataloghi**: tutti quelli trovati vicino ad ASTAP, con la riga solo per D05, D50, D80 (tavola:
   solo quei tre). Chi non ha ASTAP non vede la riga dei cataloghi.
 - **Scansione**: mai fatta dice «Nessuna scansione finora · Scansiona legge le cartelle qui accanto.»

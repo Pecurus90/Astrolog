@@ -55,6 +55,9 @@ export const itImpostazioni = {
   "settings.solver.notThere": "ASTAP non trovato in questo percorso.",
   "settings.solver.notThere.why": "Il percorso deve terminare con il programma (astap_cli).",
   "settings.solver.none": "ASTAP non trovato.",
+  "settings.solver.wrongEnv": "ASTROLOG_ASTAP punta a un file che non esiste: {percorso}",
+  "settings.solver.wrongEnv.why":
+    "Cercalo tu la salta; l'analisi si ferma qui finch\u00e9 non scegli un percorso.",
   "settings.solver.foundAt": "{percorso} \u00b7 {come}",
   "settings.solver.from.declared": "percorso inserito manualmente",
   "settings.solver.from.env": "variabile ASTROLOG_ASTAP",

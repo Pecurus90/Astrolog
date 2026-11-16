@@ -248,6 +248,13 @@ function esitoDelPercorso(dove: ReturnType<typeof useDoveStaASTAP>, solver: Solv
     }
   }
   if (dove.path !== (solver.declared ?? "")) return null
+  if (solver.path === null && solver.wrong_env != null) {
+    return {
+      segno: "!",
+      titolo: t("settings.solver.wrongEnv", { percorso: solver.wrong_env }),
+      testo: t("settings.solver.wrongEnv.why"),
+    }
+  }
   if (solver.path === null) {
     return solver.declared !== null
       ? {

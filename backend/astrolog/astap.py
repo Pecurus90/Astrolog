@@ -142,7 +142,7 @@ def _search(
     if written:
         # Windows' *Copy as path* wraps it in quotes: with them inside the file is never found,
         # and the warning would blame the wrong thing.
-        written = written.strip().strip("\"'")
+        written = _cleaned(written)
         # A written wrong path, or a folder, stops the search: falling back on PATH would say
         # "found" to whoever wrote it wrong.
         return (written, channel) if Path(written).is_file() else (None, None)
@@ -154,6 +154,17 @@ def _search(
         if Path(candidate).is_file():
             return str(candidate), Source.KNOWN_PLACE
     return None, None
+
+
+def wrong_env(env: Mapping[str, str] | None = None) -> str | None:
+    """`ASTROLOG_ASTAP` as written when it leads to no file: without a preference the run stops
+    on it (`_search`), so the screen names it."""
+    written = (os.environ if env is None else env).get(ENV_EXE)
+    return written if written and not Path(_cleaned(written)).is_file() else None
+
+
+def _cleaned(written: str) -> str:
+    return written.strip().strip("\"'")
 
 
 def star_databases(exe: str | Path | None) -> tuple[str, ...]:

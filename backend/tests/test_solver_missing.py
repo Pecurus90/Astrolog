@@ -142,7 +142,13 @@ def test_at_empty_hands_the_route_says_nothing_found(client):
     ASTAP installato diventa rossa. Senza, quella riga del recinto non dimostra niente."""
     detto = client.get("/api/v1/solver")
     assert detto.status_code == 200, detto.text
-    assert detto.json() == {"path": None, "source": None, "declared": None, "databases": []}
+    assert detto.json() == {
+        "path": None,
+        "source": None,
+        "declared": None,
+        "wrong_env": None,
+        "databases": [],
+    }
 
 
 def test_astap_without_its_catalogue_is_a_thing_that_is_missing(client, tmp_path, monkeypatch):
@@ -272,6 +278,18 @@ def test_looking_for_it_goes_past_a_wrong_variable(client, tmp_path, monkeypatch
     )
     proposto = client.post("/api/v1/solver/search").json()
     assert (proposto["path"], proposto["source"]) == (str(installato), "known_place")
+
+
+def test_a_wrong_variable_is_named_where_it_stops_the_run(client, tmp_path, monkeypatch):
+    """Senza preferenza, una `ASTROLOG_ASTAP` sbagliata ferma l'analisi: la sezione la nomina,
+    o direbbe "non trovato" senza il perche' (#86). Scelto un percorso, non conta piu'."""
+    sbagliata = str(tmp_path / "non-c-e.exe")
+    monkeypatch.setenv(astap.ENV_EXE, sbagliata)
+    assert client.get("/api/v1/solver").json()["wrong_env"] == sbagliata
+    giusto = tmp_path / "astap.exe"
+    giusto.write_text("x", encoding="utf-8")
+    client.patch("/api/v1/settings", json={"values": {"astap_path": str(giusto)}})
+    assert client.get("/api/v1/solver").json()["wrong_env"] is None
 
 
 def test_the_run_launches_the_path_written_in_settings(db_path, tmp_path, monkeypatch):

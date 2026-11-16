@@ -72,6 +72,11 @@ def solver_where(conn: sqlite3.Connection) -> tuple[str | None, astap.Source | N
     return astap.where_exe(config.read(conn).astap_path)
 
 
+def solver_wrong_env(conn: sqlite3.Connection) -> str | None:
+    """The variable that stops the run; a written preference beats it, so then none."""
+    return None if config.read(conn).astap_path else astap.wrong_env()
+
+
 def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:
     """The executable is passed because the question is also asked of a proposed one. Here and not
     in `api/` because the API does not read ASTAP."""
@@ -81,7 +86,7 @@ def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:
 def solver_found() -> tuple[str | None, astap.Source | None]:
     """What the search finds ignoring the preferences; why it only proposes: `api/settings`."""
     found = astap.where_exe(None)
-    if found[0] is None and os.environ.get(astap.ENV_EXE):
+    if found[0] is None and astap.wrong_env():
         # a wrong variable stops the run, not the proposal: adopted, the preference beats it
         found = astap.where_exe(None, {k: v for k, v in os.environ.items() if k != astap.ENV_EXE})
     return found

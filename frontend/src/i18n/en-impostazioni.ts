@@ -54,6 +54,9 @@ export const enImpostazioni = {
   "settings.solver.notThere": "ASTAP not found at this path.",
   "settings.solver.notThere.why": "The path must end with the program (astap_cli).",
   "settings.solver.none": "ASTAP not found.",
+  "settings.solver.wrongEnv": "ASTROLOG_ASTAP points to a file that does not exist: {percorso}",
+  "settings.solver.wrongEnv.why":
+    "Find it for me skips it; analysis stops here until you choose a path.",
   "settings.solver.foundAt": "{percorso} \u00b7 {come}",
   "settings.solver.from.declared": "path entered manually",
   "settings.solver.from.env": "variable ASTROLOG_ASTAP",

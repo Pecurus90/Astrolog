@@ -185,6 +185,11 @@ class SolverOut(BaseModel):
         description="What the user wrote, **even when it leads nowhere**: without it, a wrong "
         "path would vanish from the screen and there would be nothing to correct."
     )
+    wrong_env: str | None = Field(
+        default=None,
+        description="ASTROLOG_ASTAP when, with no path declared, it leads to no file: the run "
+        "stops on it and *Cercalo tu* goes past it. None otherwise.",
+    )
     databases: list[str] = Field(
         description="The star databases found next to the program, by name (`d80`, `v50`). "
         "Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a "

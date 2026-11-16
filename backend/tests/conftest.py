@@ -62,6 +62,7 @@ def dentro_il_recinto(monkeypatch, tmp_path):
     monkeypatch.setattr(bundle, "path", lambda: None)
     monkeypatch.setattr(astap, "find_exe", lambda *a, **k: None)
     monkeypatch.setattr(astap, "where_exe", lambda *a, **k: (None, None))
+    monkeypatch.delenv(astap.ENV_EXE, raising=False)
 
     def boom(cmd, timeout_s):
         raise AssertionError(f"la suite ha lanciato ASTAP davvero: {cmd}")

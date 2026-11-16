@@ -112,6 +112,16 @@ describe("Impostazioni / ASTAP", () => {
     expect(campo(carta).value).toBe("D:\\sbagliato\\astap.exe")
   })
 
+  it("una ASTROLOG_ASTAP sbagliata e' nominata, non spacciata per ASTAP assente (#86)", async () => {
+    const carta = await vaiAdASTAP({ ...ASSENTE, wrong_env: "/opt/astap/astap_cli" })
+
+    expect(
+      within(carta).getByText("ASTROLOG_ASTAP punta a un file che non esiste: /opt/astap/astap_cli"),
+    ).toBeTruthy()
+    expect(within(carta).getByText(/cercalo tu la salta/i)).toBeTruthy()
+    expect(within(carta).queryByText("ASTAP non trovato.")).toBeNull()
+  })
+
   it("Cercalo tu propone, e non scrive niente finche' non si sceglie", async () => {
     const carta = await vaiAdASTAP(ASSENTE, {
       "POST /api/v1/solver": { stato: 200, corpo: { ...TROVATO, source: "path" } },

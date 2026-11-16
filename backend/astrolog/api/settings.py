@@ -20,6 +20,7 @@ from ..spine.solve import (
     solver_found,
     solver_path,
     solver_where,
+    solver_wrong_env,
 )
 from ..weather import view
 from .deps import get_db
@@ -126,6 +127,7 @@ def _solver(conn: sqlite3.Connection, where: tuple[str | None, str | None]) -> S
         # The `SolverSource` Literal repeats `astap.Source` on purpose (`models_tonight`).
         source=cast("SolverSource | None", where[1]),
         declared=config.read(conn).astap_path,
+        wrong_env=solver_wrong_env(conn),
         databases=list(databases_next_to(where[0])),
     )
 
