@@ -62,7 +62,8 @@ describe("Impostazioni / Scansioni", () => {
         ],
       },
     ])
-    const carta = await screen.findByRole("region", { name: /^ieri, 22:05/ })
+    // l'ora e' nel fuso di chi guarda: in CI e' UTC
+    const carta = await screen.findByRole("region", { name: /^ieri, \d\d:05/ })
     expect(within(carta).getByText("3 min 40 s")).toBeDefined()
     expect(within(carta).getByText("✓ completata")).toBeDefined()
     expect(within(carta).getByText("E:\\Sole")).toBeDefined()
