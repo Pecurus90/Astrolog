@@ -40,7 +40,9 @@ export function useSitoDelPasso(onSaved: () => void) {
     campi.azzera()
     onSaved()
   }
-  return { campi, rotto, salvando, salva }
+  // leaving the step drops a failed write: back on it, nothing was retried yet
+  const dimentica = () => setRotto(false)
+  return { campi, rotto, salvando, salva, dimentica }
 }
 
 type Sito = ReturnType<typeof useSitoDelPasso>

@@ -146,6 +146,23 @@ describe("il posto da cui osservi", () => {
     // i campi restano: a rete tornata si riprova senza riscrivere
     expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("Casa")
   })
+  it("un salvataggio fallito non segue chi lascia il passo e ci torna", async () => {
+    // Issue #20: l'avviso restava andando avanti e indietro, come se si fosse appena riprovato.
+    senzaTimbro({ "/api/v1/sites": { stato: 500, corpo: { detail: { code: "rotto" } } } })
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(1)
+    fireEvent.change(screen.getByLabelText(/nome del sito/i), { target: { value: "Casa" } })
+    fireEvent.change(screen.getByLabelText(/latitudine/i), { target: { value: "45" } })
+    fireEvent.change(screen.getByLabelText(/longitudine/i), { target: { value: "11" } })
+    fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
+    expect(await screen.findByText("Sito non salvato")).toBeDefined()
+
+    fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /indietro/i }))
+    await screen.findByLabelText(/nome del sito/i)
+    expect(screen.queryByText("Sito non salvato")).toBeNull()
+  })
   it("chi non ha rete deve poter dare un nome al suo luogo", async () => {
     // Il difetto piu' grave della fetta: il nome veniva preso dalla casella di RICERCA, quindi
     // chi prende la strada manuale -- coordinate a mano, senza cercare, che e' esattamente il

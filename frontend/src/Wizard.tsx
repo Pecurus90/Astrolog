@@ -169,6 +169,7 @@ export function Wizard({
       void cache.invalidateQueries({ queryKey: ["settings"] })
     }
     setNonScritto(false)
+    sito.dimentica()
     setSegnati((s) => ({ ...s, [qui]: esito(qui) }))
     if (last) stamp.mutate(true)
     else setStep((n) => n + 1)
@@ -216,6 +217,7 @@ export function Wizard({
           verso="tenue"
           onClick={() => {
             setNonScritto(false)
+            sito.dimentica()
             setStep((n) => n - 1)
           }}
         />
