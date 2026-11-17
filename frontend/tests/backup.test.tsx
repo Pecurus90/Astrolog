@@ -6,7 +6,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, SPINA, STANOTTE, chiamate, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
+import { SALUTE, SPINA, STANOTTE, cambia, chiamate, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
 
 afterEach(pulisci)
 
@@ -200,23 +200,30 @@ describe("Il backup", () => {
 
   it("uno stato del backup che non arriva, aperto sulla sua sezione, lo dice una volta e non gira (#90)", async () => {
     window.history.pushState({}, "", "/impostazioni/backup")
-    rispondi({
+    const mappa = {
       ...STANOTTE,
       ...SPINA,
       "/api/v1/backup": { stato: 500, corpo: {} },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
       "/api/health": { stato: 200, corpo: SALUTE },
-    })
+    }
+    rispondi(mappa)
     await disegna()
     expect(await screen.findByText("Stato del backup non disponibile.")).toBeDefined()
     await new Promise((r) => setTimeout(r, 300))
     expect(chiamate().filter((u) => new URL(u).pathname === "/api/v1/backup").length).toBeLessThan(4)
     expect(screen.queryByText("Leggo le impostazioni…")).toBeNull()
-    // Riprova rilegge, e la sezione resta a schermo
+    // Riprova rilegge, e mentre legge la pagina delle Impostazioni resta a schermo (#91)
+    let lascia: (v?: unknown) => void = () => {}
+    const attesa = new Promise((r) => (lascia = r))
+    cambia({ ...mappa, "/api/v1/backup": { stato: 500, corpo: {}, attesa } })
     const prima = chiamate().length
     fireEvent.click(screen.getByRole("button", { name: "Riprova" }))
     await waitFor(() => expect(chiamate().length).toBeGreaterThan(prima))
+    expect(screen.queryByText("Leggo le impostazioni…")).toBeNull()
+    expect(screen.getByRole("heading", { name: "Impostazioni", level: 1 })).toBeDefined()
+    lascia()
     expect(await screen.findByText("Stato del backup non disponibile.")).toBeDefined()
   })
 

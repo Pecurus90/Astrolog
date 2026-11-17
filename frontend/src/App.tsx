@@ -47,7 +47,9 @@ export function App() {
   // si sapeva gia'. Un database nuovo con le risposte accanto: prima si chiede se rimetterle.
   // `missing` dice al primo avvio se fare la domanda di ASTAP, e quale.
   const porta = (() => {
-    if (settings.isPending || backup.isPending) return <AvvioInAttesa />
+    // Backup failed once: gate no more, its Riprova sets pending again (#91)
+    const backupInLettura = backup.isPending && backup.errorUpdatedAt === 0
+    if (settings.isPending || backupInLettura) return <AvvioInAttesa />
     if (settings.error && !settings.data)
       return <AvvioNonRisponde onRiprova={() => void settings.refetch()} />
     if (backup.data?.offer === "found") return <RipristinoProposto stato={backup.data} />
