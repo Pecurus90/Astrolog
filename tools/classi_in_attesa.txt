@@ -3,10 +3,6 @@
 # Letto da tools/controlli_veste.py (classi_inventate). L'elenco solo si accorcia, pagina per
 # pagina: una classe nuova assente dal foglio e' un rosso, e una voce che il codice non scrive
 # piu' o che il foglio ora ha e' un rosso finche' non si toglie da qui.
-as-apertura
-as-apertura--accanto
-as-apertura__azioni
-as-apertura__titolo
 as-bottone--distruttivo
 as-bottone--errore
 as-riga--errore
