@@ -19,9 +19,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import axe from "axe-core"
-import { vi } from "vitest"
+import { beforeAll, vi } from "vitest"
 
 import type { components } from "../src/api/schema"
+
+// Cold transform of the App graph is file setup, not the first test's time (Issue #89).
+// Only under jsdom: the App reads `document` at import.
+beforeAll(async () => {
+  if (typeof document !== "undefined") await import("../src/App")
+})
 
 export const SALUTE = {
   status: "ok",
