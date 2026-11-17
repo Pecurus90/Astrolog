@@ -17,12 +17,14 @@ from mutation_shards import (
     FRONTEND_DIR,
     FRONTEND_SHARDS,
     REFERENCE,
-    REST,
+    REST_PARTS,
+    REST_SHARDS,
     files,
     frontend_shards,
     main,
     modules,
     probes,
+    reopen,
     shards,
 )
 from mutation_shards import matches as matched
@@ -43,9 +45,9 @@ def test_every_module_of_the_backend_runs_in_exactly_one_shard():
     ("name", "shard"),
     [
         # Names as the nightly run printed them.
-        ("astrolog.fits.frame_type.x_image_type__mutmut_14", "rest"),
-        ("astrolog.log.x\u01c1JsonLines\u01c1format__mutmut_17", "rest"),
-        ("astrolog.weather.forecast.x\u01c1Cadence\u01c1__init____mutmut_2", "rest"),
+        ("astrolog.fits.frame_type.x_image_type__mutmut_14", "rest-"),
+        ("astrolog.log.x\u01c1JsonLines\u01c1format__mutmut_17", "rest-"),
+        ("astrolog.weather.forecast.x\u01c1Cadence\u01c1__init____mutmut_2", "rest-"),
         ("astrolog.spine.scan.x_scan__mutmut_1", "spine-n-z"),
         ("astrolog.spine.gear_usage.x_usage__mutmut_1", "spine-g-m"),
         ("astrolog.spine.copies.x_decide__mutmut_14", "spine-a-f"),
@@ -54,7 +56,19 @@ def test_every_module_of_the_backend_runs_in_exactly_one_shard():
     ],
 )
 def test_a_real_mutant_name_lands_in_its_shard(name, shard):
-    assert owners(name, shards()) == [shard]
+    found = owners(name, shards())
+    assert len(found) == 1
+    assert found[0] in REST_SHARDS if shard == "rest-" else found[0] == shard
+
+
+def test_the_rest_is_cut_in_parts_of_near_equal_size_so_none_overruns():
+    """rest, Nightly 44107096567: 9695 of 20763 mutants not run, ~7 a minute in its pipeline tail
+    (#87); cut by size like the frontend, a growing package spreads over the parts."""
+    table = shards()
+    package = Path(__file__).resolve().parent.parent / "backend"
+    sizes = [sum((package / f).stat().st_size for f in files(s, table)) for s in REST_SHARDS]
+    assert len(sizes) == REST_PARTS >= 6
+    assert max(sizes) < 2 * sum(sizes) / len(sizes)
 
 
 def fake_package(root, *files):
@@ -67,10 +81,10 @@ def fake_package(root, *files):
 
 def test_a_new_module_falls_in_the_rest_without_touching_the_table(tmp_path):
     package = fake_package(tmp_path, "newpkg/__init__.py", "newpkg/thing.py")
-    table = shards(package)
-    assert owners("astrolog.newpkg.thing.x_f__mutmut_1", table) == ["rest"]
-    assert owners("astrolog.newpkg.x_f__mutmut_1", table) == ["rest"]
-    assert owners("astrolog.newpkg.__init__.x_f__mutmut_1", table) == ["rest"]
+    table = shards(package, parts=1)
+    assert owners("astrolog.newpkg.thing.x_f__mutmut_1", table) == ["rest-0"]
+    assert owners("astrolog.newpkg.x_f__mutmut_1", table) == ["rest-0"]
+    assert owners("astrolog.newpkg.__init__.x_f__mutmut_1", table) == ["rest-0"]
     assert owners("astrolog.spine.zeta.x_f__mutmut_1", table) == ["spine-n-z"]
 
 
@@ -91,8 +105,13 @@ def test_a_fixed_shard_left_without_modules_is_refused(tmp_path, shard, file):
 
 
 def test_a_rest_shard_left_without_modules_is_refused(tmp_path):
-    with pytest.raises(ValueError, match="shard rest:"):
+    with pytest.raises(ValueError, match="shard rest-0:"):
         shards(fake_package(tmp_path))
+
+
+def test_a_rest_part_left_without_files_is_refused(tmp_path):
+    with pytest.raises(ValueError, match="shard rest-1:"):
+        shards(fake_package(tmp_path, "newpkg/thing.py"), parts=2)
 
 
 def test_every_fixed_shard_holds_a_real_module():
@@ -101,7 +120,7 @@ def test_every_fixed_shard_holds_a_real_module():
         assert any(owners(n, table) == [shard] for m in modules() for n in probes(m)), shard
 
 
-@pytest.mark.parametrize("shard", ["api", "rest"])
+@pytest.mark.parametrize("shard", ["api", "rest-0", "rest-5"])
 def test_the_printed_patterns_are_the_shard_word_by_word(capsys, shard):
     assert main(["mutation_shards.py", shard]) == 0
     printed = capsys.readouterr().out.split()
@@ -162,7 +181,11 @@ def test_the_workflow_runs_every_shard_and_filters_each_report_to_its_own():
     workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
     found = re.findall(r"^\s*shard:\s*\[(.*)\]\s*$", workflow, re.MULTILINE)
     assert len(found) == 1, found
-    assert [s.strip() for s in found[0].split(",")] == [*FIXED, REST]
+    assert [s.strip() for s in found[0].split(",")] == [*FIXED, *REST_SHARDS]
+    # A part without its own cache yet starts from the old rest one: its verdicts stand (#87).
+    assert re.search(
+        r"restore-keys: \|\n\s+mutants-\$\{\{ matrix.shard \}\}-\n\s+mutants-rest-\n", workflow
+    )
     # The report step keeps only its own shard's mutants, killed ones included in the input.
     assert "mutmut results --all true" in workflow
     assert "mutation_shards.py ${{ matrix.shard }} --filter" in workflow
@@ -199,10 +222,10 @@ def test_a_mutant_no_shard_owns_fails_the_rest_report_alone(tmp_path, capsys):
         "    astrolog.other.y_f__mutmut_1: not checked\n"
     )
     path = write_reference(tmp_path)
-    assert main(["mutation_shards.py", "rest", "--filter"], io.StringIO(lines), path) == 1
+    assert main(["mutation_shards.py", "rest-0", "--filter"], io.StringIO(lines), path) == 1
     captured = capsys.readouterr()
     assert "    astrolog.other.y_f__mutmut_1: not checked" in captured.out.splitlines()
-    assert "shard rest: 1 mutants belong to no shard" in captured.err
+    assert "shard rest-0: 1 mutants belong to no shard" in captured.err
     assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(lines), path) == 0
     assert "belong to no shard" not in capsys.readouterr().err
 
@@ -253,7 +276,7 @@ def test_every_backend_file_is_mutated_by_exactly_one_shard():
     assert set(every) == {p.relative_to(package.parent).as_posix() for p in package.rglob("*.py")}
     assert "astrolog/spine/__init__.py" in files("spine-a-f", table)
     assert "astrolog/api/app.py" in files("api", table)
-    assert "astrolog/log.py" in files("rest", table)
+    assert any("astrolog/log.py" in files(s, table) for s in REST_SHARDS)
 
 
 def test_the_shard_files_go_into_the_mutmut_section_once(tmp_path):
@@ -297,7 +320,7 @@ def test_survivors_are_reopened_and_final_verdicts_stand(tmp_path, capsys):
     meta = tmp_path / "astrolog" / "a.py.meta"
     meta.parent.mkdir()
     meta.write_text(json.dumps({"exit_code_by_key": codes, "durations_by_key": {}}), "utf-8")
-    assert main(["mutation_shards.py", "--reopen", str(tmp_path)]) == 0
+    assert reopen(tmp_path, ["astrolog/a.py"]) == 0
     data = json.loads(meta.read_text(encoding="utf-8"))
     assert data["exit_code_by_key"] == {**codes, "v": None, "n": None, "q": None}
     assert data["durations_by_key"] == {}
@@ -312,10 +335,27 @@ def test_survivors_wait_while_the_shard_has_mutants_never_run(tmp_path, capsys):
     (tmp_path / "astrolog").mkdir()
     (tmp_path / "astrolog" / "a.py.meta").write_text(json.dumps(survivor), "utf-8")
     (tmp_path / "astrolog" / "b.py.meta").write_text(json.dumps(unrun), "utf-8")
-    assert main(["mutation_shards.py", "--reopen", str(tmp_path)]) == 0
+    assert reopen(tmp_path, ["astrolog/a.py", "astrolog/b.py"]) == 0
     data = json.loads((tmp_path / "astrolog" / "a.py.meta").read_text(encoding="utf-8"))
     assert data["exit_code_by_key"] == {"v": 0, "k": 1}
     assert "1 mutants never run: survivors wait" in capsys.readouterr().err
+
+
+def test_unrun_mutants_of_files_outside_the_shard_do_not_hold_its_survivors(tmp_path, capsys):
+    """rest, Nightly 44107096567: its cache held 30191 never run, 9695 its own; the others, from
+    files mutmut no longer walks there, would hold the survivors for ever (#87)."""
+    survivor = {"exit_code_by_key": {"v": 0, "k": 1}, "durations_by_key": {}}
+    foreign = {"exit_code_by_key": {"u": None}, "durations_by_key": {}}
+    (tmp_path / "astrolog").mkdir()
+    (tmp_path / "astrolog" / "a.py.meta").write_text(json.dumps(survivor), "utf-8")
+    (tmp_path / "astrolog" / "z.py.meta").write_text(json.dumps(foreign), "utf-8")
+    assert main(["mutation_shards.py", "api", "--reopen", str(tmp_path)]) == 0
+    assert reopen(tmp_path, ["astrolog/a.py"]) == 0
+    data = json.loads((tmp_path / "astrolog" / "a.py.meta").read_text(encoding="utf-8"))
+    assert data["exit_code_by_key"] == {"v": None, "k": 1}
+    untouched = json.loads((tmp_path / "astrolog" / "z.py.meta").read_text(encoding="utf-8"))
+    assert untouched == foreign
+    assert "1 mutants without a final verdict reopened" in capsys.readouterr().err
 
 
 def test_the_workflow_stop_lets_mutmut_save_on_ubuntu_26_04():
@@ -332,7 +372,7 @@ def test_the_workflow_runs_each_shard_on_its_files_and_what_they_have_left():
     root = Path(__file__).resolve().parent.parent
     workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
     assert "mutation_shards.py ${{ matrix.shard }} --only-mutate pyproject.toml" in workflow
-    assert "mutation_shards.py --reopen mutants" in workflow
+    assert "mutation_shards.py ${{ matrix.shard }} --reopen mutants" in workflow
     # named, mutmut retests every mutant it is given
     assert re.search(r"mutmut run --max-children 4 \|\|", workflow)
 
@@ -440,7 +480,7 @@ def test_the_workflow_runs_every_frontend_shard_and_scores_them_together():
 
 def test_the_saved_reference_names_only_real_shards():
     reference = json.loads(REFERENCE.read_text(encoding="utf-8"))
-    assert set(reference) <= {*FIXED, REST, FRONTEND}
+    assert set(reference) <= {*FIXED, *REST_SHARDS, FRONTEND}
     assert all(0 <= score <= 1 for score in reference.values())
 
 

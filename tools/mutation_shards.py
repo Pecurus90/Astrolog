@@ -32,6 +32,9 @@ FIXED = {
     "spine-n-z": ["astrolog.spine.[n-z]*"],
 }
 REST = "rest"
+# rest in one job: 9695 of 20763 mutants not run, ~7 a minute in the pipeline tail (#87)
+REST_PARTS = 6
+REST_SHARDS = [f"{REST}-{k}" for k in range(REST_PARTS)]
 FILTER = "--filter"
 ONLY_MUTATE = "--only-mutate"
 REOPEN = "--reopen"
@@ -61,20 +64,41 @@ def matches(name: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatchcase(name, p) for p in patterns)
 
 
-def shards(package: Path = PACKAGE) -> dict[str, list[str]]:
-    """Refuses a fixed pattern that matches no module: mutmut would run nothing and stay green."""
+def cut(items: list[list[str]], sizes: list[int], parts: int) -> list[list[str]]:
+    """Items in order, cut in `parts` runs of near equal total size."""
+    table: list[list[str]] = [[] for _ in range(parts)]
+    total = max(sum(sizes), 1)
+    done = 0
+    for item, size in zip(items, sizes, strict=True):
+        table[min(done * parts // total, parts - 1)].extend(item)
+        done += size
+    return table
+
+
+def shards(package: Path = PACKAGE, parts: int = REST_PARTS) -> dict[str, list[str]]:
+    """Refuses a fixed pattern that matches no module, or a rest part without one: mutmut would
+    run nothing and stay green. The rest goes file by file into parts cut by size."""
     names = [name for m in modules(package) for name in probes(m)]
     for shard, patterns in FIXED.items():
         for pattern in patterns:
             if not any(fnmatch.fnmatchcase(name, pattern) for name in names):
                 raise ValueError(f"shard {shard}: pattern {pattern} matches no module")
     fixed = [p for patterns in FIXED.values() for p in patterns]
-    rest = [
-        f"{m}.x*" for m in modules(package) if not all(matches(name, fixed) for name in probes(m))
-    ]
-    if not rest:
-        raise ValueError(f"shard {REST}: no patterns, the job would run nothing")
-    return {**FIXED, REST: rest}
+    rest, sizes = [], []
+    for path in sorted(package.rglob("*.py")):
+        own = [
+            f"{m}.x*"
+            for m in names_of(path, package)
+            if not all(matches(name, fixed) for name in probes(m))
+        ]
+        if own:
+            rest.append(own)
+            sizes.append(path.stat().st_size)
+    table = cut(rest, sizes, parts)
+    for k, patterns in enumerate(table):
+        if not patterns:
+            raise ValueError(f"shard {REST}-{k}: no patterns, the job would run nothing")
+    return {**FIXED, **{f"{REST}-{k}": patterns for k, patterns in enumerate(table)}}
 
 
 @dataclass
@@ -110,12 +134,12 @@ def filter_results(
     shard: str, table: dict[str, list[str]], stdin: TextIO
 ) -> tuple[int, Counter[str]]:
     """Refuses a report where the shard owns no mutant (mutmut's names no longer match the
-    patterns) and, in the rest shard alone, one with mutants no shard ever runs."""
+    patterns) and, in the rest parts alone, one with mutants no shard ever runs."""
     report = own_results(stdin, shard, table)
     sys.stdout.writelines(f"{line}\n" for line in report.lines)
     sys.stderr.write(f"shard {shard}: {report.owned} of {report.total} mutants are its own\n")
     failed = not report.owned
-    if shard == REST and report.orphans:
+    if shard.startswith(f"{REST}-") and report.orphans:
         sys.stdout.writelines(f"{line}\n" for line in report.orphans)
         sys.stderr.write(f"shard {shard}: {len(report.orphans)} mutants belong to no shard\n")
         failed = True
@@ -147,11 +171,13 @@ def only_mutate(shard: str, pyproject: Path) -> int:
     return 0
 
 
-def reopen(mutants: Path) -> int:
+def reopen(mutants: Path, own: list[str]) -> int:
     """Survivors and mutants without tests back to unchecked, so a new test can kill them; the
     killed stay killed until mutmut resets their changed function. Not while some never ran:
-    reopened survivors would take the night before the tail (#87)."""
-    metas = {m: json.loads(m.read_text(encoding="utf-8")) for m in mutants.rglob("*.py.meta")}
+    reopened survivors would take the night before the tail (#87). Only the shard's `own` files:
+    a cache keeps metas of files mutmut no longer walks there, never run for ever."""
+    paths = [mutants / f"{f}.meta" for f in own]
+    metas = {m: json.loads(m.read_text(encoding="utf-8")) for m in paths if m.is_file()}
     unrun = sum(code is None for d in metas.values() for code in d["exit_code_by_key"].values())
     if unrun:
         sys.stderr.write(f"{mutants}: {unrun} mutants never run: survivors wait\n")
@@ -179,12 +205,7 @@ def frontend_shards(frontend: Path = FRONTEND_DIR) -> list[list[str]]:
         and not (p.parent.name == "i18n" and DICTIONARY.fullmatch(p.name))
     )
     sizes = [(frontend / f).stat().st_size for f in files]
-    table: list[list[str]] = [[] for _ in range(FRONTEND_SHARDS)]
-    done = 0
-    for name, size in zip(files, sizes, strict=True):
-        part = min(done * FRONTEND_SHARDS // sum(sizes), FRONTEND_SHARDS - 1)
-        table[part].append(name)
-        done += size
+    table = cut([[f] for f in files], sizes, FRONTEND_SHARDS)
     if not all(table):
         raise ValueError("a frontend part holds no file")
     return table
@@ -273,9 +294,9 @@ def main(
         return frontend(argv[2:], reference, parts)
     if argv[1:2] == [DROP_BROKEN] and len(argv) == 3:
         return drop_broken(Path(argv[2]))
-    if argv[1:2] == [REOPEN] and len(argv) == 3:
-        return reopen(Path(argv[2]))
-    names = [*FIXED, REST]
+    names = [*FIXED, *REST_SHARDS]
+    if len(argv) == 4 and argv[1] in names and argv[2] == REOPEN:
+        return reopen(Path(argv[3]), files(argv[1], shards()))
     if len(argv) == 4 and argv[1] in names and argv[2] == ONLY_MUTATE:
         return only_mutate(argv[1], Path(argv[3]))
     if len(argv) not in (2, 3) or argv[1] not in names or argv[2:] not in ([], [FILTER]):

@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [api, spine-a-f, spine-g-m, spine-n-z, rest]
+        shard: [api, spine-a-f, spine-g-m, spine-n-z, rest-0, rest-1, rest-2, rest-3, rest-4, rest-5]
     runs-on: ubuntu-latest
     timeout-minutes: 300
     defaults:
@@ -30,12 +30,15 @@ jobs:
       # mutmut 3.8.0 reads item._nodeid, gone in pytest 9.2: stats fail on every test
       - run: python -m pip install --quiet -e ".[dev]" "mutmut>=3.8.1"
       # Unnamed, mutmut tries only unchecked mutants (3.8.1 _run): a shard walks its own files,
-      # so a tail cut at 120 minutes runs the next night and the nights add up.
+      # so a tail cut at 120 minutes runs the next night and the nights add up. A part without
+      # its own cache starts from the old rest one: an unchanged function keeps its verdict.
       - uses: actions/cache/restore@v6
         with:
           path: backend/mutants
           key: mutants-${{ matrix.shard }}-${{ github.run_id }}
-          restore-keys: mutants-${{ matrix.shard }}-
+          restore-keys: |
+            mutants-${{ matrix.shard }}-
+            mutants-rest-
       # A step limit below the job's, so a shard cut short still saves and reports.
       - name: Mutants of shard ${{ matrix.shard }}
         timeout-minutes: 270
@@ -58,7 +61,7 @@ jobs:
               [ -f "${f#mutants/}" ] || rm -f "$f" "$f.meta"
             done
             # killed stay killed until their function changes: mutmut then resets them unchecked
-            python ../tools/mutation_shards.py --reopen mutants
+            python ../tools/mutation_shards.py ${{ matrix.shard }} --reopen mutants
           fi
           # A runner lost saves nothing (rest: at 3 h, then shut down at 2 h 30): stopped earlier,
           # mutmut keeps each verdict it has. No -k: uutils timeout (Ubuntu 26.04) then KILLs at once.

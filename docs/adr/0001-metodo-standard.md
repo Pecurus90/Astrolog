@@ -17,8 +17,9 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
   con gli stessi comandi. La mutazione gira **di notte** (`mutmut`) ed e' un rapporto, non un
   blocco (superata: vedi 0040): su tutto il backend i mutanti sopravvissuti ci sono sempre, e un job sempre rosso non
   dice niente. mutmut non gira su Windows, quindi gira solo in CI. Tutto il backend in un job
-  solo sfora il limite di 5 ore: si divide in quattro job paralleli (`api`, `spine` in due, il
-  resto), e il resto si calcola da `tools/mutation_shards.py`, cosi' un modulo nuovo non resta
+  solo sfora il limite di 5 ore: si divide in job paralleli (`api`, `spine` in tre, il resto in
+  sei parti tagliate per dimensione dei file, #87), e il resto si calcola da
+  `tools/mutation_shards.py`, cosi' un modulo nuovo non resta
   fuori; un gruppo che resta senza moduli ferma il job. Il rapporto di ogni job tiene
   solo i mutanti del suo gruppo, compresi i "not checked": un job tagliato a meta' lo dice; se
   nel rapporto il gruppo non ha nessun mutante (i nomi non si leggono piu'), il job fallisce
