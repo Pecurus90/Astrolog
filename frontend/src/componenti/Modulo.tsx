@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react"
+import { type CSSProperties, type ReactNode, useId } from "react"
 
 import { gesto } from "./gesto"
 import { type Formato, useTema } from "./Tema"
@@ -11,6 +11,31 @@ export interface RigaDelModulo {
   avviso: boolean
 }
 
+/** A kind of a new form: its word and its icon's path (`m.tipi`, `m.tipo`). */
+export interface TipoDelModulo {
+  l: string
+  icona: string
+}
+
+/** The board's kind icon, stroke 1.5. */
+function Segno({ d, lato }: { d: string; lato: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={lato}
+      height={lato}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={d} />
+    </svg>
+  )
+}
+
 /**
  * Il **Modulo** della consegna (v82 `componenti/Modulo`): titolo, i campi, l'errore, Salva e
  * Annulla col perche' accanto quando Salva e' spento. `dentro` e' quello aperto in una carta, con
@@ -18,13 +43,16 @@ export interface RigaDelModulo {
  * attaccata al fondo mentre si scorre.
  *
  * `blocchi`: i figli sono gia' `BloccoDelModulo` (nome e modello, dati tecnici); senza, un blocco
- * solo senza titolo. `elimina` sta in fondo, sotto i bottoni.
+ * solo senza titolo. `elimina` sta in fondo, sotto i bottoni. Un modulo nuovo sceglie prima il tipo
+ * a tasselli (`tipi`), poi lo dice con "Cambia" (`tipo`).
  */
 export function Modulo({
   titolo,
   formato,
   dentro = false,
   disco,
+  tipi,
+  tipo,
   blocchi = false,
   righe = [],
   errore,
@@ -39,6 +67,10 @@ export function Modulo({
   dentro?: boolean
   /** A filter's colour beside the title. */
   disco?: CSSProperties
+  /** A new form with no kind yet: the tiles to choose it. */
+  tipi?: (TipoDelModulo & { on: () => void })[]
+  /** The kind chosen, said with "Cambia". */
+  tipo?: TipoDelModulo & { onCambia: () => void }
   blocchi?: boolean
   righe?: RigaDelModulo[]
   /** The refusal, already in words. */
@@ -49,13 +81,17 @@ export function Modulo({
   /** Why Salva is off. */
   perche?: string
   elimina?: ReactNode
-  children: ReactNode
+  /** None while the kind is still to choose. */
+  children?: ReactNode
 }) {
   const { modo, accento } = useTema()
   const tel = formato === "telefono"
   // [T] Attrezzatura.dc.html `modulo` return (295-300): the two contexts and the phone's footer
   const fondo = dentro ? "var(--carta-2)" : "var(--carta)"
   const spento = salva !== null && (salva.spento || salva.occupato)
+  const sotto = dentro ? "var(--carta)" : "var(--carta-2)"
+  const idTipo = useId()
+  const pieno = children !== null && children !== undefined && children !== false
   return (
     <div className="al-c-modulo__blocco-1" data-modo={modo} data-accento={accento}>
       <section
@@ -75,7 +111,7 @@ export function Modulo({
             <span
               className="al-c-modulo__centro-1"
               aria-hidden="true"
-              style={{ background: dentro ? "var(--carta)" : "var(--carta-2)" }}
+              style={{ background: sotto }}
             >
               <span className="al-c-modulo__tondo-1" style={disco} />
             </span>
@@ -87,21 +123,70 @@ export function Modulo({
             {titolo}
           </h2>
         </div>
-        <div
-          className="al-c-modulo__centro-3"
-          style={{ gridTemplateColumns: tel ? "minmax(0,1fr)" : "repeat(2,minmax(0,1fr))" }}
-        >
-          {blocchi ? (
-            children
-          ) : (
-            <section
-              className="al-c-modulo__colonna-4"
-              style={{ gridColumn: "1 / -1", background: "transparent", padding: 0 }}
+        {tipi && (
+          <div className="al-c-modulo__colonna-2">
+            <span className="al-c-modulo__testo-1" id={idTipo}>
+              {t("ui.form.kind")}
+            </span>
+            <div
+              className="al-c-modulo__centro-2"
+              role="radiogroup"
+              aria-labelledby={idTipo}
+              style={{
+                gridTemplateColumns: tel ? "repeat(2,minmax(0,1fr))" : "repeat(6,minmax(0,1fr))",
+              }}
             >
-              <div className="al-c-modulo__griglia-1">{children}</div>
-            </section>
-          )}
-        </div>
+              {tipi.map((x) => (
+                <a
+                  key={x.l}
+                  className="al-c-modulo__colonna-3"
+                  href="#"
+                  role="radio"
+                  aria-checked="false"
+                  onClick={gesto(x.on)}
+                  style={{ background: sotto }}
+                >
+                  <Segno d={x.icona} lato={24} />
+                  <span className="al-c-modulo__testo-2">{x.l}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+        {tipo && (
+          <div className="al-c-modulo__riga-2" style={{ background: sotto }}>
+            <Segno d={tipo.icona} lato={20} />
+            <span className="al-c-modulo__blocco-3">
+              {t("ui.form.kind")}: <b className="al-c-modulo__testo-3">{tipo.l}</b>
+            </span>
+            <a
+              href="#"
+              role="button"
+              onClick={gesto(tipo.onCambia)}
+              className="al-bottone al-bottone--contorno"
+              style={{ minHeight: tel ? "44px" : "40px" }}
+            >
+              {t("ui.form.change")}
+            </a>
+          </div>
+        )}
+        {pieno && (
+          <div
+            className="al-c-modulo__centro-3"
+            style={{ gridTemplateColumns: tel ? "minmax(0,1fr)" : "repeat(2,minmax(0,1fr))" }}
+          >
+            {blocchi ? (
+              children
+            ) : (
+              <section
+                className="al-c-modulo__colonna-4"
+                style={{ gridColumn: "1 / -1", background: "transparent", padding: 0 }}
+              >
+                <div className="al-c-modulo__griglia-1">{children}</div>
+              </section>
+            )}
+          </div>
+        )}
         {righe.map((r) => (
           <div key={r.testo} className="al-c-modulo__riga-7">
             <span
@@ -189,6 +274,7 @@ export function BloccoDelModulo({
   formato,
   aperto,
   onApri,
+  inTesta = false,
   children,
 }: {
   titolo: string
@@ -197,11 +283,13 @@ export function BloccoDelModulo({
   /** On the phone one block at a time (board `passo`): the form says which. */
   aperto: boolean
   onApri: (si: boolean) => void
+  /** In a form at the page's top (board ctx `top`), not one opened in a card. */
+  inTesta?: boolean
   children: ReactNode
 }) {
   const fisso = formato !== "telefono"
   const visto = fisso || aperto
-  const sotto = "var(--carta)"
+  const sotto = inTesta ? "var(--carta-2)" : "var(--carta)"
   return (
     <section
       className="al-c-modulo__colonna-4"

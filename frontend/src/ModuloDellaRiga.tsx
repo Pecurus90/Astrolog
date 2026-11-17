@@ -6,6 +6,7 @@ import {
   Modulo,
   type RigaDelModulo,
   TendinaDelModulo,
+  type TipoDelModulo,
   TestoDelModulo,
 } from "./componenti/Modulo"
 import type { Formato } from "./componenti/Tema"
@@ -48,11 +49,12 @@ export function ModuloDellaRiga({
   chi,
   tecnici,
   manca,
-  unibili,
-  etichettaUnione,
-  unione,
-  onUnione,
-  frame,
+  tipo,
+  unibili = [],
+  etichettaUnione = "",
+  unione = "",
+  onUnione = () => {},
+  frame = null,
   scrittura,
   rifiuto,
   elimina,
@@ -77,17 +79,19 @@ export function ModuloDellaRiga({
   tecnici: Conto
   /** Why Salva waits besides the name ("serve almeno una banda"), empty for none. */
   manca: string
-  unibili: { id: number; name: string }[]
-  etichettaUnione: string
-  unione: string
+  /** A new piece: its kind with "Cambia"; it has nothing to merge or delete. */
+  tipo?: TipoDelModulo & { onCambia: () => void }
+  unibili?: { id: number; name: string }[]
+  etichettaUnione?: string
+  unione?: string
   /** Choosing or dropping the merge: the caller starts its draft over. */
-  onUnione: (v: string) => void
+  onUnione?: (v: string) => void
   /** Its frames, which a merge moves. */
-  frame: number | null
+  frame?: number | null
   scrittura: { onSalva: () => void; occupato: boolean }
   /** The write's refusal, in words. */
   rifiuto: string | null
-  elimina: {
+  elimina?: {
     rifiuto: components["schemas"]["DeleteRefused"] | null
     inSetup: components["schemas"]["PieceInRig"][]
     manda: () => Promise<{ error?: unknown }>
@@ -118,32 +122,36 @@ export function ModuloDellaRiga({
     formato,
     aperto: passo === quale,
     onApri: (si: boolean) => setPasso(si ? quale : null),
+    inTesta: tipo !== undefined,
   })
   return (
     <Modulo
       titolo={titolo}
       formato={formato}
-      dentro
+      dentro={!tipo}
       blocchi
       {...(disco ? { disco } : {})}
+      {...(tipo ? { tipo } : {})}
       righe={righe}
       errore={nonEliminato ?? rifiuto}
       salva={{ ...scrittura, spento: perche !== "" }}
       onAnnulla={onChiudi}
       perche={perche}
       elimina={
-        <EliminaDelModulo
-          nome={titolo}
-          pagina={pagina}
-          rifiuto={elimina.rifiuto}
-          inSetup={elimina.inSetup}
-          scansione={scansione}
-          salvando={scrittura.occupato}
-          unisci={unisciId}
-          elimina={elimina.manda}
-          onFatto={onChiudi}
-          onErrore={setNonEliminato}
-        />
+        elimina && (
+          <EliminaDelModulo
+            nome={titolo}
+            pagina={pagina}
+            rifiuto={elimina.rifiuto}
+            inSetup={elimina.inSetup}
+            scansione={scansione}
+            salvando={scrittura.occupato}
+            unisci={unisciId}
+            elimina={elimina.manda}
+            onFatto={onChiudi}
+            onErrore={setNonEliminato}
+          />
+        )
       }
     >
       {!verso && (

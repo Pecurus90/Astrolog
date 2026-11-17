@@ -185,8 +185,8 @@ export function Attrezzatura() {
               {aggiungo && (tel ? aperto : true) && (
                 <AggiungiUnPezzo
                   key={aggiungo.genere ?? ""}
-                  schede={pagina.cards}
-                  pezzi={pagina.instruments}
+                  pagina={pagina}
+                  formato={formato}
                   onChiudi={() => setAggiungo(false)}
                   {...(aggiungo.genere ? { primo: aggiungo.genere } : {})}
                 />

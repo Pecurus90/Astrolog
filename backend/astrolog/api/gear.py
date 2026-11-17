@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 
 from ..spine import gear, inventory, rig_card
 from ..units import MOON_DIAMETER_DEG
+from ..vocab.filters import band_passbands
 from . import instrument_answer
 from .deps import get_db
 from .models_gear import GearList
@@ -50,6 +51,7 @@ def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
             "fields": boxes,
             "moon_pct": moon_pct,
             "brands": inventory.brands(conn),
+            "band_passbands": band_passbands(),
         }
     )
 

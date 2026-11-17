@@ -1,17 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createContext, useContext } from "react"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
-import { Campo } from "./Campo"
 import { motivo } from "./api/motivo"
 import type { components } from "./api/schema"
 import { type Chiave, t } from "./i18n"
-import { testo } from "./scritto"
 
 /**
- * I mattoni dei moduli dell'Attrezzatura: la scrittura, il modulo, il nome e il perche' di un
- * rifiuto. Li usano i gesti che fanno nascere qualcosa e quelli che correggono una riga.
+ * La scrittura dei moduli dell'Attrezzatura e il perche' di un rifiuto. La usano i gesti che fanno
+ * nascere qualcosa e quelli che correggono una riga; il modulo e' `componenti/Modulo`.
  *
  * **Un rifiuto si legge**: il backend manda un codice, qui diventa una frase -- un nome che possiedi
  * gia' non e' un errore dell'app, e' una cosa che devi sapere.
@@ -55,112 +51,7 @@ export function useScrittura(manda: () => Promise<Scritto | undefined>, onFatto:
   })
 }
 
-/** Un campo scritto entra nella scritta, uno che non dice niente ne' **esce**: mandare un
- *  campo vuoto vorrebbe dire "cancellalo", e non toccarlo vuol dire lasciarlo com'e'. */
-export function con<S extends object>(scritta: S, campo: string, valore: unknown): S {
-  const dopo: Record<string, unknown> = { ...(scritta as Record<string, unknown>) }
-  if (valore === undefined) delete dopo[campo]
-  else dopo[campo] = valore
-  return dopo as S
-}
-
 /** The refusal in words, for the delivery's Modulo; null without one. */
 export function rifiutoDetto(errore: unknown): string | null {
   return errore ? t(motivo(errore, RIFIUTI, "gear.write.failed")) : null
-}
-
-function Rifiuto({ errore }: { errore: unknown }) {
-  if (!errore) return null
-  return <Avviso esito="allarme">{t(motivo(errore, RIFIUTI, "gear.write.failed"))}</Avviso>
-}
-
-/** **Senza nome non si salva.** Un nome vuoto l'API lo rifiuta, e mandarlo vorrebbe dire far
- *  scrivere all'utente un errore generico per una cosa che si vede prima di premere -- la stessa
- *  scelta della scheda di un sito. */
-function Azioni({
-  onManda,
-  onAnnulla,
-  salvando,
-  valido,
-}: {
-  onManda: () => void
-  onAnnulla: () => void
-  salvando: boolean
-  valido: boolean
-}) {
-  return (
-    // `as-apertura__azioni` e non `as-carta__azioni`: la seconda nel foglio esiste solo come
-    // figlia dell'intestazione di una carta, e qui dentro non prenderebbe ne' la disposizione
-    // ne' lo spazio fra i bottoni. La guardia sulle classi inventate non lo vede, perche' quel
-    // nome nel foglio c'e' -- dentro un selettore composto.
-    <div className="as-apertura__azioni">
-      <Bottone verso="primario" disabled={salvando || !valido} onClick={onManda}>
-        {t("gear.write.save")}
-      </Bottone>{" "}
-      <Bottone onClick={onAnnulla}>{t("gear.write.cancel")}</Bottone>
-    </div>
-  )
-}
-
-export function NomeDelPezzo({
-  id,
-  cheCera,
-  onNome,
-}: {
-  id: string
-  cheCera?: string
-  onNome: (n: string | undefined) => void
-}) {
-  return (
-    <Campo id={id} etichetta={t("gear.write.name")}>
-      <input
-        className="as-campo-modulo__input"
-        id={id}
-        defaultValue={cheCera ?? ""}
-        onChange={(e) => onNome(testo(e.target.value, cheCera))}
-      />
-    </Campo>
-  )
-}
-
-/** Un modulo di scrittura: la scheda dentro la sua comparsa, il perche' di un rifiuto, e i due
- *  bottoni.
- *
- *  La comparsa e' una **regione col suo nome**, cosi' chi ascolta la raggiunge e sa di chi e':
- *  con due schede aperte ci sono due campi "Marca", e chi legge con uno schermo deve sapere in
- *  quale sta scrivendo. Il nome lo porta il `legend`, e la regione lo indica invece di ripeterlo.
- *  Non e' l'unica comparsa dell'app, ma le altre non sono moduli e non
- *  vogliono ne' `fieldset` ne' `legend`. */
-export function Modulo({
-  base,
-  titolo,
-  onManda,
-  onAnnulla,
-  salvando,
-  valido,
-  errore,
-  children,
-}: {
-  base: string
-  titolo: string
-  onManda: () => void
-  onAnnulla: () => void
-  salvando: boolean
-  /** Se si puo' mandare: un nome vuoto l'API lo rifiuta, e si vede prima di premere. */
-  valido: boolean
-  errore: unknown
-  children: React.ReactNode
-}) {
-  return (
-    <div className="as-apertura as-apertura--accanto" role="region" aria-labelledby={`${base}-nome`}>
-      <fieldset>
-        <legend className="as-apertura__titolo" id={`${base}-nome`}>
-          {titolo}
-        </legend>
-        {children}
-        <Rifiuto errore={errore} />
-        <Azioni onManda={onManda} onAnnulla={onAnnulla} salvando={salvando} valido={valido} />
-      </fieldset>
-    </div>
-  )
 }

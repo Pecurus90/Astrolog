@@ -54,6 +54,8 @@ export const enComponenti = {
   "ui.form.save": "Save",
   "ui.form.saving": "Saving…", // glifo-ok: ellipsis
   "ui.form.cancel": "Cancel",
+  "ui.form.kind": "Type",
+  "ui.form.change": "Change",
   "theme.label": "Theme",
   "theme.mode": "Mode",
   "theme.mode.light": "Light",

@@ -622,7 +622,7 @@ classi `al-attr__` (`Attrezzatura.dc.html` 19-49). Restano diverse dalla tavola:
   Treno ottico; il gruppo a righe con Modifica (51-117). App: le righe di prima (`UnCorredo`,
   `UnPezzo`, `UnFiltro`) del setup o del gruppo scelto. Perche': arrivano coi commit C e D.
 - **Il modulo di «Aggiungi strumento».** Tavola: il Modulo in testa con i tipi a icone (32). App:
-  il modulo di prima. Perche': arriva col commit D.
+  il modulo di prima. Perche': arriva col commit D. Fatto al passo 33, Sistema A (17/11): sotto.
 - **Il titolo grande «Attrezzatura».** Tavola: un h1 che il foglio nasconde (`al-attr__testo-1`).
   App: nessun h1 nella pagina. Perche': lo porta gia' il telaio per chi legge con la voce; a
   schermo non cambia niente.
@@ -724,3 +724,23 @@ modello e dati tecnici, Unisci a, Elimina con la conferma. Restano diverse dalla
   col «!», come la tavola (`delErr`).
 - **L'ordine dei campi della camera** e' quello della tavola (`TEC`: sensore, risoluzione, pixel,
   tipo, bit): l'API lo manda cosi' (`instrument_answer.CARD`).
+
+## Sistema -- Token, telaio e mattoni (passo 33, 17/11)
+
+`Sistema.dc.html` non e' una pagina dell'app: e' il catalogo dei token, del telaio e dei mattoni.
+Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stanno in
+`frontend/src/componenti` con le classi `al-c-*`. Si porta come i componenti contro il catalogo.
+- **Commit A, il Modulo coi tipi a tasselli** (`componenti/Modulo` 18-19): «Aggiungi strumento»
+  dell'Attrezzatura sceglie il tipo a tasselli con l'icona, poi «Tipo: ... Cambia». Restano
+  diversi: i calcolati del pezzo nuovo (rapporto focale, potere risolutore, sensore in mm) non ci
+  sono, perche' li scrive il backend e un pezzo nuovo non ha ancora numeri; la bozza resta con
+  «Cambia» solo fra i tipi di strumento (nome, marca, campi in comune), filtro e setup ripartono
+  vuoti, come prima del porting. Il disco del filtro nuovo prende il colore delle bande dalla
+  tabella `band_passbands` di `GET /gear`, la stessa regola della scrittura (`discoK` della
+  tavola). «Quante bande» parte con «1» scelto (tavola: nessuna pillola scelta, ma una banda gia'
+  in vista): la pillola dice quello che il modulo mostra. Fra i tasselli e Salva l'app non ha i
+  18 px di un contenitore dei blocchi vuoto che la tavola disegna (`blocchi: []`): a Design.
+- **Fuori, con la pagina Meteo** (dopo il passo 13): CardMeteo «telefono compatta», `anello` e la
+  carta che si apre (`aperto`); il Meteo di oggi usa ancora i suoi mattoni vecchi.
+- **Fuori, coi Planner** (passo 45): il vetro sul cielo, `PlannerSolare2`, `PlannerEventi2`.
+- **SceltaTema senza sito**: Automatico resta spento finche' non arriva il passo Tema (Marco 15/11).

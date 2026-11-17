@@ -103,6 +103,7 @@ export const itAttrezzatura = {
   "gear.write.busy": "Scansione in corso: riprova al termine.",
   "gear.write.failed": "Salvataggio non riuscito",
   "gear.write.needName": "Per salvare serve il nome.",
+  "gear.write.needRig": "Per salvare servono ottica, camera e focale effettiva.",
   "gear.write.rig.label": "Rinomina {nome}",
   // Il dettaglio di un setup (tavola v82, `corredoV` e `conti`).
   "gear.rig.pair": "{ottica} · {camera}", // glifo-ok: separatore della tavola

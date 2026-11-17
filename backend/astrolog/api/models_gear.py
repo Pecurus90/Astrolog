@@ -401,6 +401,11 @@ class GearList(BaseModel):
     brands: list[str] = Field(
         description='The makers already written on pieces and filters: "altra" adds a new one.'
     )
+    band_passbands: dict[str, str] = Field(
+        description="The passband of every set of bands, keyed by the bands sorted and joined "
+        'with "+" ("HA+OIII"): the colour of a filter still being written, from the same rule '
+        "its write will take."
+    )
 
 
 class InstrumentNew(InstrumentCardIn):

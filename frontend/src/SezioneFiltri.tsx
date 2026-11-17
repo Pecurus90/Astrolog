@@ -5,7 +5,7 @@ import { FormatoConf, statoDi } from "./ConfermareGuscio"
 import { Campi, Domanda, Nota, Parte, Risposte, Sotto, rigaDeiFrame, voce } from "./Domanda"
 import { Sezione } from "./Sezione"
 import { provaDegliOggetti, provaDegliStrumenti } from "./Soggetti"
-import { BANDE, nomeDellaBanda } from "./TendinaDellaBanda"
+import { BANDE, nomeDellaBanda } from "./bande"
 import type { components } from "./api/schema"
 import { type Chiave, numero, numeroNelCampo, t } from "./i18n"
 

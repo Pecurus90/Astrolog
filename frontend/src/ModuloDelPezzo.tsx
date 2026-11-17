@@ -1,6 +1,11 @@
 import { useState } from "react"
 
-import { CalcolatoDelModulo, CampoDelModulo, TestoDelModulo } from "./componenti/Modulo"
+import {
+  CalcolatoDelModulo,
+  CampoDelModulo,
+  TestoDelModulo,
+  type TipoDelModulo,
+} from "./componenti/Modulo"
 import { PillolaScelta } from "./componenti/PillolaScelta"
 import type { Formato } from "./componenti/Tema"
 import { ALTRA, ModuloDellaRiga } from "./ModuloDellaRiga"
@@ -14,7 +19,7 @@ import { misuraConVirgola, testo } from "./scritto"
 type Pagina = components["schemas"]["GearList"]
 type Pezzo = components["schemas"]["InstrumentOnPage"]
 type Scritta = components["schemas"]["InstrumentCorrection"]
-type Bozza = Record<string, string>
+export type Bozza = Record<string, string>
 
 // [T] Attrezzatura.dc.html `SCHEMI`, `MISURE` (427-428): the pills, in the board's order
 const SCHEMI = ["refractor", "newtonian", "sct", "rc", "maksutov", "camera_lens", "other"] as const
@@ -70,6 +75,51 @@ function valore(campo: CampoScheda, s: string): unknown {
   return misuraConVirgola(s, INTERI.includes(campo))
 }
 
+/** The fields of a kind's card that go in "dati tecnici", cooling only for a cooled camera. */
+export function tecniciDi(campi: CampoScheda[], b: Bozza): CampoScheda[] {
+  return campi.filter(
+    (c) => !CHI.includes(c) && c !== "height_px" && (c !== "cooling_c" || b.cooled === "si"),
+  )
+}
+
+/** One field of a piece's form: pills for a closed choice, else text. */
+function CampoDelPezzo({
+  base,
+  kind,
+  campo: c,
+  valore: v,
+  onValore,
+  origine,
+  formato,
+}: {
+  base: string
+  kind: Pezzo["kind"]
+  campo: CampoScheda
+  valore: string
+  onValore: (v: string) => void
+  origine: string | undefined
+  formato: Formato
+}) {
+  const id = `${base}-${c}`
+  const scelte = PILLOLE[c]
+  const lab = etichetta(kind, c)
+  return (
+    <CampoDelModulo id={id} etichetta={lab} largo={LARGHI.includes(c)} origine={origine}>
+      {scelte ? (
+        <PillolaScelta
+          forma="risposta"
+          fondo="vuoto"
+          etichetta={lab}
+          formato={formato}
+          opzioni={scelte.map((s) => ({ l: t(s.l), sel: v === s.v, on: () => onValore(s.v) }))}
+        />
+      ) : (
+        <TestoDelModulo id={id} valore={v} onValore={onValore} />
+      )}
+    </CampoDelModulo>
+  )
+}
+
 /** Only what changed leaves: sending back what the files said would make it yours. */
 function scritta(campi: CampoScheda[], prima: Bozza, b: Bozza): Scritta {
   const out: Record<string, unknown> = {}
@@ -114,9 +164,7 @@ export function ModuloDelPezzo({
   const [unione, setUnione] = useState("")
   const metti = (c: string, v: string) => setB((x) => ({ ...x, [c]: v }))
   const campi = (pagina.cards[p.kind] ?? []) as CampoScheda[]
-  const tecnici = campi.filter(
-    (c) => !CHI.includes(c) && c !== "height_px" && (c !== "cooling_c" || b.cooled === "si"),
-  )
+  const tecnici = tecniciDi(campi, b)
   const unibili = pagina.instruments.filter((o) => p.mergeable_into.includes(o.id))
   const base = `pezzo-${p.id}`
   const scrivi = useScrittura(async () => {
@@ -153,31 +201,18 @@ export function ModuloDelPezzo({
       : p.from_files.includes(c) && b[c] === prima[c]
         ? t("gear.form.fromFiles")
         : t("gear.form.declared")
-  const campo = (c: CampoScheda) => {
-    const id = `${base}-${c}`
-    const scelte = PILLOLE[c]
-    return (
-      <CampoDelModulo
-        key={c}
-        id={id}
-        etichetta={etichetta(p.kind, c)}
-        largo={LARGHI.includes(c)}
-        origine={origine(c)}
-      >
-        {scelte ? (
-          <PillolaScelta
-            forma="risposta"
-            fondo="vuoto"
-            etichetta={etichetta(p.kind, c)}
-            formato={formato}
-            opzioni={scelte.map((s) => ({ l: t(s.l), sel: b[c] === s.v, on: () => metti(c, s.v) }))}
-          />
-        ) : (
-          <TestoDelModulo id={id} valore={b[c] ?? ""} onValore={(v) => metti(c, v)} />
-        )}
-      </CampoDelModulo>
-    )
-  }
+  const campo = (c: CampoScheda) => (
+    <CampoDelPezzo
+      key={c}
+      base={base}
+      kind={p.kind}
+      campo={c}
+      valore={b[c] ?? ""}
+      onValore={(v) => metti(c, v)}
+      origine={origine(c)}
+      formato={formato}
+    />
+  )
   const n = p.numbers
   const dopo = (c: CampoScheda) => {
     if (c === "focal_mm" && p.kind === "optics") {
@@ -300,6 +335,100 @@ export function ModuloDelPezzo({
         </>
       }
       campiTecnici={tecnici.flatMap((c) => [campo(c), ...dopo(c)])}
+    />
+  )
+}
+
+/**
+ * Un **pezzo nuovo** (tavola v82 `modulo`, k `nuovo` col tipo scelto): "Tipo: ... Cambia", nome e
+ * modello, i dati tecnici che l'API chiede per il tipo. Niente calcolati: li da' l'API dopo Salva.
+ * La bozza la tiene chi lo apre, perche' sopravviva a "Cambia".
+ */
+export function NuovoPezzo({
+  kind,
+  pagina,
+  formato,
+  scansione,
+  tipo,
+  bozza: b,
+  onBozza,
+  onChiudi,
+}: {
+  kind: Pezzo["kind"]
+  pagina: Pagina
+  formato: Formato
+  scansione: boolean
+  tipo: TipoDelModulo & { onCambia: () => void }
+  bozza: Bozza
+  onBozza: (b: Bozza) => void
+  onChiudi: () => void
+}) {
+  const metti = (c: string, v: string) => onBozza({ ...b, [c]: v })
+  const campi = (pagina.cards[kind] ?? []) as CampoScheda[]
+  const tecnici = tecniciDi(campi, b)
+  const base = "aggiungi"
+  const scrivi = useScrittura(async () => {
+    const { data, error } = await api.POST("/api/v1/gear/instruments", {
+      // only the fields on screen: one the form hid since (cooling, cooled "no") stays home
+      body: { ...scritta([...CHI, ...tecnici], { name: "" }, b), kind, name: b.name?.trim() ?? "" },
+    })
+    if (error) throw error
+    return data
+  }, onChiudi)
+  const inserito = (c: string) => (b[c] ? t("gear.form.declared") : undefined)
+  const marca = b.brand === ALTRA ? b.newBrand : b.brand
+  return (
+    <ModuloDellaRiga
+      base={base}
+      titolo={t("gear.write.add.title")}
+      formato={formato}
+      pagina={pagina}
+      scansione={scansione}
+      tipo={tipo}
+      nome={b.name ?? ""}
+      onNome={(v) => metti("name", v)}
+      marca={b.brand ?? ""}
+      nuovaMarca={b.newBrand ?? ""}
+      origineMarca={inserito("brand")}
+      onMarca={(v) => metti("brand", v)}
+      onNuovaMarca={(v) => metti("newBrand", v)}
+      chi={{ scritti: [b.name, marca, b.model, b.notes].filter((x) => x?.trim()).length, di: 4 }}
+      tecnici={{ scritti: tecnici.filter((c) => b[c]?.trim()).length, di: tecnici.length }}
+      manca=""
+      scrittura={{ onSalva: () => scrivi.mutate(), occupato: scrivi.isPending }}
+      rifiuto={rifiutoDetto(scrivi.error)}
+      onChiudi={onChiudi}
+      campiChi={
+        <>
+          {(["model", "notes"] as const).map((c) => (
+            <CampoDelModulo
+              key={c}
+              id={`${base}-${c}`}
+              etichetta={t(`gear.f.${c}`)}
+              largo={c === "notes"}
+              origine={inserito(c)}
+            >
+              <TestoDelModulo
+                id={`${base}-${c}`}
+                valore={b[c] ?? ""}
+                onValore={(v) => metti(c, v)}
+              />
+            </CampoDelModulo>
+          ))}
+        </>
+      }
+      campiTecnici={tecnici.map((c) => (
+        <CampoDelPezzo
+          key={c}
+          base={base}
+          kind={kind}
+          campo={c}
+          valore={b[c] ?? ""}
+          onValore={(v) => metti(c, v)}
+          origine={inserito(c)}
+          formato={formato}
+        />
+      ))}
     />
   )
 }

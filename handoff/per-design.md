@@ -109,6 +109,10 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
   rifrattore come uno schema non scritto; se serve un disegno suo, disegnarlo; (c) nomi lunghi
   (driver ASCOM): la tavola spinge la prima pillola fuori dal riquadro a sinistra; l'app (Marco,
   14/11) passa ai numeri con la legenda del telefono anche sul desktop. Disegnare lo stato.
+- [da dare] Attrezzatura, «Aggiungi strumento» coi tasselli (17/11): (a) coi tasselli in vista la
+  tavola disegna anche il contenitore dei blocchi vuoto (`blocchi: []` e' vero per `sc-if`), 18 px
+  in piu' prima di Salva; l'app non lo disegna; (b) nel filtro nuovo «Quante bande» non ha
+  nessuna pillola scelta mentre una banda e' gia' in vista: l'app sceglie «1». Allineare la tavola.
 ## Date, da controllare alla consegna
 
 - [fatta v82] Dashboard, Il 2026 e Filtri del 2026 (porting 11/11): (a) «4.6» col punto e' un

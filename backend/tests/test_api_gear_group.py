@@ -27,6 +27,18 @@ def test_the_page_has_the_makers_already_written_once_each(archivio):  # noqa: F
     assert archivio.get("/api/v1/gear").json()["brands"] == ["Sky-Watcher", "ZWO"]
 
 
+def test_a_new_filter_colours_its_bands_as_the_saved_one_will(archivio):  # noqa: F811
+    """The new filter's disc (board v82 `discoK`) before Salva: the same road from bands to a
+    passband the write takes, as a table, so the page does not keep a second rule."""
+    combos = archivio.get("/api/v1/gear").json()["band_passbands"]
+    assert combos["HA"] == "HA"
+    assert combos["HA+OIII"] == "DUO_HAOIII"
+    assert combos["OIII+SII"] == "DUO_SIIOIII"
+    assert combos["HA+OIII+SII"] == "TRI_NB"
+    assert combos["G+R"] == "UNKNOWN"
+    assert len(combos) == 2**8 - 1
+
+
 def test_the_refusal_read_before_is_the_one_the_delete_gives(archivio):  # noqa: F811
     """Un distanziale non sta in nessun frame: le sue ore sono quelle dei setup che lo montano."""
     rig = archivio.get("/api/v1/gear").json()["rigs"][0]["id"]

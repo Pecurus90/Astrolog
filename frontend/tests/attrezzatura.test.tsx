@@ -450,7 +450,10 @@ describe("l Attrezzatura", () => {
     // niente da salvare: solo Annulla e la via per scriverne una
     expect(within(modulo).queryByRole("button", { name: /salva/i })).toBeNull()
     fireEvent.click(within(modulo).getByRole("button", { name: /aggiungine uno/i }))
-    expect(((await screen.findByLabelText(/^tipo$/i)) as HTMLSelectElement).value).toBe("mount")
+    // the form opens on the part's kind: «Tipo: montatura», no tiles to choose from
+    const nuovo = await screen.findByRole("group", { name: "Nuovo strumento" })
+    expect(within(nuovo).getByText("montatura", { selector: "b" })).toBeDefined()
+    expect(within(nuovo).queryByRole("radiogroup", { name: "Tipo" })).toBeNull()
   })
 
   it("i distanziali si scelgono insieme, e partono tutti", async () => {

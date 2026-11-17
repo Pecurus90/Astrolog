@@ -92,6 +92,7 @@ export const enAttrezzatura = {
   "gear.write.busy": "Scan in progress: try again when it ends.",
   "gear.write.failed": "Save failed",
   "gear.write.needName": "A name is required to save.",
+  "gear.write.needRig": "Optics, camera and effective focal length are required to save.",
   "gear.write.rig.label": "Rename {nome}",
   "gear.rig.pair": "{ottica} · {camera}", // glifo-ok: separatore della tavola
   "gear.rig.ratio": "f/{n}",

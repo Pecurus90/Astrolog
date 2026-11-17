@@ -55,6 +55,8 @@ export const itComponenti = {
   "ui.form.save": "Salva",
   "ui.form.saving": "Salvataggio…", // glifo-ok: ellipsis
   "ui.form.cancel": "Annulla",
+  "ui.form.kind": "Tipo",
+  "ui.form.change": "Cambia",
   // SceltaTema.dc.html
   "theme.label": "Tema",
   "theme.mode": "Modo",

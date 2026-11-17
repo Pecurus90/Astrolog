@@ -161,6 +161,8 @@ export function attrezzatura(corpo: Record<string, unknown> = {}, porte: Record<
         fields: [],
         moon_pct: null,
         brands: [] as string[],
+        // a slice of the API's table: the bands the tests write
+        band_passbands: { HA: "HA", OIII: "OIII", "HA+OIII": "DUO_HAOIII" },
         ...corpo,
       },
     },

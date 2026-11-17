@@ -36,7 +36,8 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | Un frame che non dice quanto e' durato non diventa zero ore | `test_a_frame_without_a_time_is_not_zero_hours_of_gear` |
 | Se ancora non ho niente, capisco cosa fare invece di trovare una pagina rotta | `test_an_empty_gear_page_is_an_answer_not_an_error`; *a mani vuote dice cosa fare, non nessun risultato* |
 | La ruota, il focheggiatore e la camera di guida che il mio programma scrive li trovo gia' li', **con le loro ore** | `test_the_pieces_a_frame_names_come_from_the_header_too`, `test_every_frame_says_which_of_them_it_used`, `test_a_piece_the_files_name_on_every_frame_has_its_hours` |
-| Creo a mano un pezzo che i file non nominano: una guida, un riduttore, una montatura | `test_you_can_add_a_piece_the_files_never_named`, `test_a_piece_is_born_with_its_card`; *aggiungo un pezzo che nessun file nomina, scegliendone il genere* |
+| Creo a mano un pezzo che i file non nominano: una guida, un riduttore, una montatura | `test_you_can_add_a_piece_the_files_never_named`, `test_a_piece_is_born_with_its_card`; *aggiungo un pezzo che nessun file nomina, scegliendone il tipo* |
+| Il tipo si sceglie a tasselli con l'icona, nell'ordine della tavola v82 (`TIPI`, componenti/Modulo 18-19), poi "Tipo: ... Cambia"; senza tipo Salva resta spento | *il tipo si sceglie a tasselli, nell'ordine della tavola, e senza tipo non si salva*, *Cambia riapre i tasselli* |
 | E quello che scrivo io non fa un doppione il giorno che i file lo nominano | `test_a_piece_you_wrote_is_the_one_the_files_bring_later`, `test_a_name_you_already_own_is_a_refusal_not_a_second_piece`, `test_the_same_name_in_another_kind_is_another_piece` |
 | Un pezzo nuovo, trovato nei file o scritto da me, non e' una domanda: lo vedo qui | `test_a_piece_you_wrote_yourself_is_not_a_question`, `test_review_only_new_things` |
 | Creo a mano un **filtro** o un **setup**, anche prima di averci ripreso | `test_you_can_write_a_filter_you_have_not_used_yet`, `test_you_can_write_a_rig_before_shooting_with_it`; *scrivo a mano un filtro, con la sua banda*, *scrivo a mano un setup, con ottica e camera fra i miei pezzi e la focale* |
@@ -51,7 +52,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | Un'unione che non ha senso si rifiuta e me lo dice | `test_a_merge_the_spine_refuses_is_said`, `test_a_filter_is_never_merged_into_or_from_no_filter`, `test_a_filter_is_merged_only_into_one_with_a_known_band`, `test_a_merge_into_a_filter_that_is_gone_says_the_page_is_old`, `test_a_catalog_model_that_does_not_exist_is_refused` |
 | Correggo la scheda di uno strumento dalla pagina in cui lo guardo | `test_you_can_correct_a_card_without_leaving_the_page`, `test_renaming_a_piece_teaches_the_old_spelling`; *correggo la scheda di un pezzo dalla pagina in cui lo guardo* |
 | E quello che dico vince su quello che dicono i file | `test_what_you_declare_about_a_camera_is_what_the_page_shows` |
-| Mentre compilo, quello che scelgo resta scelto | *cio' che scelgo in una scheda resta scelto*, *cambiando genere non porto con me i campi del genere di prima* |
+| Mentre compilo, quello che scelgo resta scelto | *cio' che scelgo in una scheda resta scelto*, *cambiando tipo non porto con me i campi del tipo di prima* |
 | E col lavoro in corso non scrivo a meta' | `test_you_cannot_write_gear_while_the_archive_is_being_read`, `test_a_busy_worker_is_not_an_error_for_whoever_answered` |
 | I campi che mi chiede una scheda sono quelli del suo genere | `test_the_page_knows_which_fields_a_kind_asks_even_without_owning_one`; *la scheda chiede i campi del genere che sta guardando, e li decide il backend* |
 | Se il mio programma scrive la montatura, la montatura ha le sue ore senza che io dica niente | `test_the_mount_the_files_name_is_carried_by_every_frame`, `test_a_mount_carried_by_the_frames_has_their_hours`, `test_a_frame_without_a_rig_still_takes_the_mount_its_file_names`; *una montatura portata dalle pose ha le sue ore* <!-- glossario-ok --> |
@@ -303,8 +304,11 @@ e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono 
 Le etichette proposte il 18/10 per i campi nuovi (Raffreddamento, Risoluzione, Prisma, Passo,
 Passi totali, Montato, Per ottiche veloci) valgono come la tavola v82 le scrive.
 
-**Un filtro e un setup scritti a mano** (Marco, 21/9/2026) nascono dallo stesso *Aggiungi un
-pezzo*: il filtro col nome e la banda, il setup con ottica, camera e focale obbligatoria -- senza,
+**Un filtro e un setup scritti a mano** (Marco, 21/9/2026) nascono dallo stesso *Aggiungi
+strumento*, coi tasselli Filtro e Setup: il filtro col nome e la banda, il setup con ottica e
+camera a pillole fra i tuoi pezzi e la focale effettiva obbligatoria (il disco del filtro che
+scrivi ha gia' il colore delle sue bande: `GET /gear` manda `band_passbands`, la tabella di
+`passband_from_bands` per ogni insieme di bande) -- senza,
 i file che la dicono farebbero un secondo setup. Se il vocabolario darebbe al filtro un altro nome
 (`L` diventa `Lum`), il filtro lo impara come una rinomina: la regola si legge dopo il colore, e i
 frame mono di chi scrive `L` vengono a lui mentre quelli a colori restano OSC. Se quel nome e' gia'

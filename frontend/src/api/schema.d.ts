@@ -2927,6 +2927,13 @@ export interface components {
              * @description The makers already written on pieces and filters: "altra" adds a new one.
              */
             brands: string[];
+            /**
+             * Band Passbands
+             * @description The passband of every set of bands, keyed by the bands sorted and joined with "+" ("HA+OIII"): the colour of a filter still being written, from the same rule its write will take.
+             */
+            band_passbands: {
+                [key: string]: string;
+            };
         };
         /**
          * GearObject

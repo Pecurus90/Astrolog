@@ -6,6 +6,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
+from itertools import combinations
 from pathlib import Path
 
 
@@ -144,6 +145,16 @@ def passband_from_bands(bands: Iterable[str]) -> Passband:
     if len(chosen) == 2:
         return _DUO.get(frozenset(chosen), Passband.MULTI_NB)
     return Passband.TRI_NB if len(chosen) == 3 else Passband.MULTI_NB
+
+
+def band_passbands() -> dict[str, Passband]:
+    """`passband_from_bands` for every set of bands, keyed by the bands sorted and joined with
+    "+": a form colours a filter not saved yet with no rule of its own."""
+    return {
+        "+".join(sorted(c)): passband_from_bands(c)
+        for n in range(1, len(BANDS) + 1)
+        for c in combinations(BANDS, n)
+    }
 
 
 def _strip_brand_and_width(value: str) -> str:

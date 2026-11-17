@@ -23,15 +23,11 @@ src/Icons.tsx
 src/ImpostazioniCartelle.tsx
 src/ImpostazioniLuna.tsx
 src/Meteo.tsx
-src/ModuloDelGesto.tsx
 src/NotteDelMeteo.tsx
 src/Notti.tsx
-src/NuovoFiltroOCorredo.tsx
 src/Ricerca.tsx
-src/SchedaDelPezzo.tsx
 src/Semaforo.tsx
 src/Tendina.tsx
-src/TendinaDellaBanda.tsx
 src/Vuoto.tsx
 src/Wizard.tsx
 src/WizardFolders.tsx
