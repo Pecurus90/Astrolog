@@ -128,8 +128,8 @@ function gruppiDellArchivio(trovati: Trovati): Gruppo[] {
         accanto: o.common_name,
         dice:
           o.panels === null
-            ? quanto(o.frames, o.integration_s)
-            : `${quanto(o.frames, o.integration_s)} \u00b7 ${t("search.mosaic", { n: numero(o.panels) })}`,
+            ? quanto(o.frames, o.integration_s, o.untimed)
+            : `${quanto(o.frames, o.integration_s, o.untimed)} \u00b7 ${t("search.mosaic", { n: numero(o.panels) })}`,
       })),
       objects.total,
     ),
@@ -140,7 +140,7 @@ function gruppiDellArchivio(trovati: Trovati): Gruppo[] {
         a: `/notti?notte=${n.id}`,
         nome: notte(n.night_date),
         accanto: n.site,
-        dice: quanto(n.frames, n.integration_s),
+        dice: quanto(n.frames, n.integration_s, n.untimed),
       })),
       nights.total,
       percheDi(nights.why),
@@ -179,12 +179,20 @@ function percheDi(perche: Perche | null): string {
   return t("search.why.objects")
 }
 
-/** Frame e ore coi minuti come la tavola (`3 h 24`, `< 6 min`); senza durata "senza durata", mai "0 h". */
-function quanto(frame: number, secondi: number): string {
+/** Quante voci il gruppo mostra su quante ne ha: "2 di 7", o il numero solo se le mostra tutte. */
+export function contoDi(g: Gruppo): string {
+  return g.voci.length < g.totale
+    ? t("search.some", { n: numero(g.voci.length), tot: numero(g.totale) })
+    : numero(g.totale)
+}
+
+/** Frame e ore coi minuti come la tavola (`3 h 24`, `< 6 min`); senza durata "senza durata", mai "0 h".
+ *  Con frame in parte senza durata, dopo le ore anche quanti. */
+function quanto(frame: number, secondi: number, senza: number | null): string {
   const n = t("search.frames", { n: numero(frame) })
-  return secondi > 0
-    ? t("search.timed", { frame: n, ore: oreEMinuti(secondi) })
-    : t("search.untimed", { frame: n })
+  if (secondi <= 0) return t("search.untimed", { frame: n })
+  const ore = t("search.timed", { frame: n, ore: oreEMinuti(secondi) })
+  return senza ? t("search.untimed.some", { testo: ore, n: numero(senza) }) : ore
 }
 
 /** Le ore di un pezzo, o perche' non ci sono: il perche' lo decide il backend. */
@@ -193,5 +201,5 @@ function usoDi(pezzo: Pezzo): { dice: string } {
   if (pezzo.no_hours !== null || pezzo.frames === null || pezzo.integration_s === null) {
     return { dice: t(pezzo.no_hours === "no_rig" ? "search.noRig" : "search.filesSilent") }
   }
-  return { dice: quanto(pezzo.frames, pezzo.integration_s) }
+  return { dice: quanto(pezzo.frames, pezzo.integration_s, pezzo.untimed) }
 }

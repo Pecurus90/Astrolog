@@ -133,6 +133,16 @@ describe("Cerca, la finestra", () => {
     expect(within(siti).getByRole("option", { name: /Casa.*64 notti/ })).toBeTruthy()
   })
 
+  it("una voce con frame in parte senza durata li conta, e il totale del gruppo si sente", async () => {
+    // Issue #20: i senza durata tacevano appena c'era un'ora; "2 di 7" stava sotto aria-hidden
+    const inParte = { id: 7, night_date: "2026-09-02", site: "Casa", frames: 50, integration_s: 3600, untimed: 10 }
+    conRicerca({ ...NIENTE, nights: { ...TROVATI.nights, items: [inParte] } })
+    await cerca("m31")
+    const notti = await screen.findByRole("group", { name: /^notti, 1 di 7$/i })
+    const voce = within(notti).getByRole("option", { name: /2 set 2026/ })
+    expect(voce.textContent).toMatch(/50 frame · 1 h.* · 10 senza durata/)
+  })
+
   it("le notti trovate per data dicono le date lette, anche nei due versi", async () => {
     const perData = { by: "dates", object: null, dates: [{ year: null, month: 6, day: 5 }, { year: null, month: 5, day: 6 }] }
     conRicerca({ ...NIENTE, nights: { ...TROVATI.nights, why: perData } })

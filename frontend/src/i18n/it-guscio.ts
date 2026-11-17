@@ -89,6 +89,7 @@ export const itGuscio = {
   "search.frames.one": "1 frame",
   "search.timed": "{frame} \u00b7 {ore}",
   "search.untimed": "{frame} senza durata",
+  "search.untimed.some": "{testo} \u00b7 {n} senza durata",
   "search.mosaic": "mosaico, {n} pannelli",
   "search.mosaic.one": "mosaico, 1 pannello",
   "search.notCounted": "conteggio in corso",

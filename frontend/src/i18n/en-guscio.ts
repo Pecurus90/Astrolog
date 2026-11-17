@@ -83,6 +83,7 @@ export const enGuscio = {
   "search.frames.one": "1 frame",
   "search.timed": "{frame} \u00b7 {ore}",
   "search.untimed": "{frame} no duration",
+  "search.untimed.some": "{testo} \u00b7 {n} no duration",
   "search.mosaic": "mosaic, {n} panels",
   "search.mosaic.one": "mosaic, 1 panel",
   "search.notCounted": "counting in progress",

@@ -15,7 +15,7 @@ import { api } from "./api/client"
 import { useFormato } from "./componenti/formato"
 import { useTema } from "./componenti/Tema"
 import { type Chiave, numero, t } from "./i18n"
-import { type Voce, SEGNI, gruppiDi } from "./ricercaVoci"
+import { type Voce, SEGNI, contoDi, gruppiDi } from "./ricercaVoci"
 import { percentualeDi, statoDi, useStato } from "./Scansiona"
 import { LENTE } from "./TelaioComune"
 
@@ -269,13 +269,16 @@ export function Ricerca({ onChiudi }: { onChiudi: (riportaIlFuoco: boolean) => v
             </div>
           )}
           {gruppi.map((g) => (
-            <div className="al-c-cerca__colonna-6" role="group" aria-label={t(g.titolo)} key={g.titolo}>
+            <div
+              className="al-c-cerca__colonna-6"
+              role="group"
+              aria-label={`${t(g.titolo)}, ${contoDi(g)}`}
+              key={g.titolo}
+            >
               <div className="al-c-cerca__riga-6" aria-hidden="true">
                 <span className="al-c-cerca__testo-7">{t(g.titolo)}</span>
                 <span>{g.perche}</span>
-                <span className="al-c-cerca__testo-8">
-                  {g.voci.length < g.totale ? t("search.some", { n: numero(g.voci.length), tot: numero(g.totale) }) : numero(g.totale)}
-                </span>
+                <span className="al-c-cerca__testo-8">{contoDi(g)}</span>
               </div>
               {g.voci.map((v) => {
                 const qui = posto++
