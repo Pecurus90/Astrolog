@@ -106,6 +106,8 @@ filterwarnings = ["error::DeprecationWarning:astrolog"]
 # Nightly only (.github/workflows/nightly.yml): mutmut runs on Linux and macOS, not Windows.
 paths_to_mutate = ["astrolog/"]
 pytest_add_cli_args = ["-m", "not lento and not sorgente"]
+# wall limit 4x the tests' time, not 15x: looping mutants ate the 120 minutes of rest (#87)
+timeout_multiplier = 4.0
 
 [tool.coverage.run]
 source = ["astrolog"]

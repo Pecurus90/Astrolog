@@ -268,6 +268,18 @@ def test_the_shard_files_go_into_the_mutmut_section_once(tmp_path):
     assert main(["mutation_shards.py", "api", "--only-mutate", str(pyproject)]) == 1
 
 
+def test_a_looping_mutant_is_cut_within_two_minutes():
+    """rest, Nightly 44060474083: 70 of 77 mutants timed out, ~6 min each at mutmut's 15x (#87).
+    mutmut 3.8.1 wall limit: multiplier * (tests' time + constant), workers/isolation.py."""
+    import tomllib
+
+    pyproject = Path(__file__).resolve().parent.parent / "backend" / "pyproject.toml"
+    cfg = tomllib.loads(pyproject.read_text(encoding="utf-8"))["tool"]["mutmut"]
+    tests_s = 24
+    wall_s = cfg.get("timeout_multiplier", 15.0) * (tests_s + cfg.get("timeout_constant", 1.0))
+    assert wall_s <= 120
+
+
 def test_survivors_are_reopened_and_final_verdicts_stand(tmp_path, capsys):
     """Every night retested every mutant, so the same tail was cut at 120 minutes (#87). Now a
     night tries only the unchecked: survivors reopened, for a new test to kill them."""
