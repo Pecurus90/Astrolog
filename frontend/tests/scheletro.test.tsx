@@ -330,9 +330,12 @@ describe("l'ingranaggio e la scansione", () => {
     app({ ...FERMO, scan: { state: "error", folder_id: 2, run_id: 3, last_event: null, receipt: null } })
     await disegna()
     const corpo = await screen.findByRole("main")
-    const riga = (await within(corpo).findByText(/Lettura di una cartella non completata/)).closest(".as-avviso") as HTMLElement
-    expect(riga.classList.contains("as-avviso--pagina")).toBe(true)
-    expect(within(riga).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/scansioni")
+    // the delivery's Avviso in a row (v82 `componenti/Avviso` tipo riga), "!" before the words
+    const riga = (await within(corpo).findByText(/Lettura di una cartella non completata/)).closest('[role="status"]') as HTMLElement
+    expect(riga.classList.contains("al-c-avviso__riga-3")).toBe(true)
+    expect(riga.textContent?.startsWith("!")).toBe(true)
+    fireEvent.click(within(riga).getByRole("button", { name: "Dettagli" }))
+    expect(window.location.pathname).toBe("/impostazioni/scansioni")
   })
 
   it("le cartelle saltate si dicono, non si buttano", async () => {
@@ -345,9 +348,10 @@ describe("l'ingranaggio e la scansione", () => {
     await disegna()
     fireEvent.click(within(await apriIngranaggio()).getByRole("menuitem", { name: /^Scansiona/ }))
     const corpo = await screen.findByRole("main")
-    const riga = (await within(corpo).findByText(/\/\/nas\/foto/)).closest(".as-avviso") as HTMLElement
-    expect(riga.classList.contains("as-avviso--pagina")).toBe(true)
-    expect(within(riga).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/cartelle")
+    const riga = (await within(corpo).findByText(/\/\/nas\/foto/)).closest('[role="status"]') as HTMLElement
+    expect(riga.classList.contains("al-c-avviso__riga-3")).toBe(true)
+    fireEvent.click(within(riga).getByRole("button", { name: "Dettagli" }))
+    expect(window.location.pathname).toBe("/impostazioni/cartelle")
   })
 
   it("Dettagli porta alle Cartelle solo quando il rifiuto e' delle cartelle", async () => {
@@ -355,15 +359,16 @@ describe("l'ingranaggio e la scansione", () => {
     rispondi({ ...mappa(), "/api/v1/scan": { stato: 409, corpo: { detail: { code: "worker_busy" } } } })
     await disegna()
     fireEvent.click(within(await apriIngranaggio()).getByRole("menuitem", { name: /^Scansiona/ }))
-    const occupato = (await within(await screen.findByRole("main")).findByText(/Operazione già in corso/)).closest(".as-avviso") as HTMLElement
-    expect(within(occupato).queryByRole("link", { name: "Dettagli" })).toBeNull()
+    const occupato = (await within(await screen.findByRole("main")).findByText(/Operazione già in corso/)).closest('[role="status"]') as HTMLElement
+    expect(within(occupato).queryByRole("button", { name: "Dettagli" })).toBeNull()
     pulisci()
 
     rispondi({ ...mappa(), "/api/v1/scan": { stato: 409, corpo: { detail: { code: "no_folders" } } } })
     await disegna()
     fireEvent.click(within(await apriIngranaggio()).getByRole("menuitem", { name: /^Scansiona/ }))
-    const senza = (await within(await screen.findByRole("main")).findByText(/Nessuna cartella da leggere/)).closest(".as-avviso") as HTMLElement
-    expect(within(senza).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/cartelle")
+    const senza = (await within(await screen.findByRole("main")).findByText(/Nessuna cartella da leggere/)).closest('[role="status"]') as HTMLElement
+    fireEvent.click(within(senza).getByRole("button", { name: "Dettagli" }))
+    expect(window.location.pathname).toBe("/impostazioni/cartelle")
   })
 })
 

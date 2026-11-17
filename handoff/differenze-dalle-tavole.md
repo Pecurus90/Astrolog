@@ -740,6 +740,12 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
   tavola). «Quante bande» parte con «1» scelto (tavola: nessuna pillola scelta, ma una banda gia'
   in vista): la pillola dice quello che il modulo mostra. Fra i tasselli e Salva l'app non ha i
   18 px di un contenitore dei blocchi vuoto che la tavola disegna (`blocchi: []`): a Design.
+- **Commit B, i mattoni comuni dove il telaio ridisegnava**: le righe di cio' che la scansione
+  non ha potuto fare (un rifiuto, una cartella persa, le cartelle saltate) passano all'Avviso
+  della consegna, tipo riga, col «!» e «Dettagli» come bottone; prima classi `as-avviso` e un
+  link. Tutte annunciate come stato (`role="status"`, come l'Avviso della consegna): prima il
+  rifiuto dopo un gesto interrompeva chi legge (`alert`). Il disco della Luna di Stanotte, rimasto
+  senza utenti, esce.
 - **Fuori, con la pagina Meteo** (dopo il passo 13): CardMeteo «telefono compatta», `anello` e la
   carta che si apre (`aperto`); il Meteo di oggi usa ancora i suoi mattoni vecchi.
 - **Fuori, coi Planner** (passo 45): il vetro sul cielo, `PlannerSolare2`, `PlannerEventi2`.

@@ -1,10 +1,10 @@
 import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type CSSProperties, type ReactNode, useEffect } from "react"
-import { Link } from "react-router"
+import { type CSSProperties, Fragment, type ReactNode, useEffect } from "react"
+import { Link, useNavigate } from "react-router"
 
-import { Avviso } from "./Avviso"
-import { Bottone } from "./Bottone"
 import { api } from "./api/client"
+import { Avviso } from "./componenti/Avviso"
+import { useFormato } from "./componenti/formato"
 import type { components } from "./api/schema"
 import { motivo } from "./api/motivo"
 import { gesto } from "./componenti/gesto"
@@ -369,37 +369,33 @@ export function AvvisiDellaScansione() {
   const dati = ultimo?.dati
   const saltate = conSaltate(dati) ? dati.skipped : []
   const errore = ultimo?.errore
-  const vedi = (a: string) => (
-    <Bottone verso="tenue" piccolo a={a}>
-      {t("scan.blocked.see")}
-    </Bottone>
+  const formato = useFormato()
+  const vai = useNavigate()
+  // the delivery's row notice (v82 `componenti/Avviso` tipo riga): "!" and "Dettagli" where it mends
+  const riga = (testo: string, dove?: string) => (
+    <Avviso
+      tipo="riga"
+      formato={formato}
+      titolo={testo}
+      {...(dove ? { azione: t("scan.blocked.see"), onAzione: () => void vai(dove) } : {})}
+    />
   )
   return (
     <>
-      {errore && (
-        <Avviso
-          esito="allarme"
-          pagina
-          azioni={
-            errore instanceof Rifiuto && DI_CARTELLE.has(errore.chiave)
-              ? vedi("/impostazioni/cartelle")
-              : undefined
-          }
-        >
-          {errore.message}
-        </Avviso>
-      )}
+      {errore &&
+        riga(
+          errore.message,
+          errore instanceof Rifiuto && DI_CARTELLE.has(errore.chiave)
+            ? "/impostazioni/cartelle"
+            : undefined,
+        )}
       {/* Una cartella caduta MENTRE la si leggeva non sta fra le saltate: senza questa riga
           l'utente leggerebbe "fatto" con una cartella non letta. */}
-      {stato.data?.scan?.state === "error" && (
-        <Avviso esito="allarme" pagina ruolo="status" azioni={vedi("/impostazioni/scansioni")}>
-          {t("scan.lostFolder")}
-        </Avviso>
-      )}
+      {stato.data?.scan?.state === "error" && riga(t("scan.lostFolder"), "/impostazioni/scansioni")}
       {saltate.map((c) => (
-        <Avviso esito="attesa" pagina key={c.folder_id} azioni={vedi("/impostazioni/cartelle")}>
-          {t(SALTI[c.reason], { cartella: c.root_path })}
-        </Avviso>
+        <Fragment key={c.folder_id}>
+          {riga(t(SALTI[c.reason], { cartella: c.root_path }), "/impostazioni/cartelle")}
+        </Fragment>
       ))}
     </>
   )

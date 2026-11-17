@@ -4,7 +4,6 @@ import { Link } from "react-router"
 import { api } from "./api/client"
 import { Avviso } from "./componenti/Avviso"
 import type { components } from "./api/schema"
-import { tracciatoDellaLuna } from "./disegnoDellaLuna"
 import { type Chiave, giornoEMese, numero, oraDelSito, t, unDecimale } from "./i18n"
 
 /**
@@ -33,29 +32,7 @@ export function useStanotte() {
   })
 }
 
-type LunaDetta = components["schemas"]["MoonOut"]
 type Notte = components["schemas"]["TonightOut"]
-
-/** Il disco della Luna: il cerchio spento e la parte illuminata. Lo usano le Notti e la Dashboard. */
-export function Disco({
-  luna,
-  className = "",
-}: {
-  luna: Pick<LunaDetta, "illumination_pct" | "lit_side">
-  className?: string
-}) {
-  const illuminata = tracciatoDellaLuna(luna.illumination_pct, luna.lit_side === "right")
-  return (
-    <svg
-      className={`as-luna__faccia ${className}`.trim()}
-      viewBox="-12 -12 24 24"
-      aria-hidden="true"
-    >
-      <circle className="as-luna__disco" cx="0" cy="0" r="10" />
-      {illuminata && <path className="as-luna__illuminata" d={illuminata} />}
-    </svg>
-  )
-}
 
 /** Cio' che la pastiglia dice: il sito (la freccia la disegna il telaio), o "Aggiungi sito"; vuoto
  *  finche' non si sa. */
