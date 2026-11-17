@@ -24,6 +24,8 @@ export function useBackup() {
       if (error) throw new Error(t("backup.failed"))
       return data
     },
+    // App gates on pending: a mount that reset the error to pending would loop (#90)
+    retryOnMount: false,
   })
 }
 
