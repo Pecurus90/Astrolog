@@ -254,6 +254,11 @@ export function detto(dati: Stato, stato: Exclude<StatoScansione, "ferma">) {
         ora: orario(finita),
       })
     : ""
+  const fase = corrente
+    ? FASI[corrente.name]
+      ? t(FASI[corrente.name] as Chiave)
+      : corrente.name
+    : t("scan.working")
   if (stato === "bloccata") {
     // Il worker va in errore anche per solve/identify/db: la cartella si incolpa solo se la lettura e' caduta.
     const perche = dati.scan?.state === "error" ? t("scan.lostFolder") : t("scan.blocked.why")
@@ -273,17 +278,13 @@ export function detto(dati: Stato, stato: Exclude<StatoScansione, "ferma">) {
     ]
     return {
       titolo: t("frame.scan.stopped"),
-      fase: quando,
+      // where it stopped, then when: the time alone did not say which phase to resume
+      fase: [corrente ? fase : null, quando].filter(Boolean).join(` ${String.fromCharCode(0xb7)} `),
       riga: riga.filter(Boolean).join(" "),
       bottone: t("scan.resume"),
       pct: corrente?.pct ?? null,
     }
   }
-  const fase = corrente
-    ? FASI[corrente.name]
-      ? t(FASI[corrente.name] as Chiave)
-      : corrente.name
-    : t("scan.working")
   const resta = dati.scan?.remaining_s
   let riga = ""
   if (conti) {

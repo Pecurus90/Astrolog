@@ -238,11 +238,14 @@ describe("l'ingranaggio e la scansione", () => {
     expect(within(menu).getAllByRole("menuitem")[0]?.textContent).toMatch(/^Scansionaultima scansione oggi, \d\d:\d\d · /)
   })
 
-  it("interrotta ieri: «ieri» con l'ora", async () => {
+  it("interrotta ieri: la fase dove si e' fermata, poi «ieri» con l'ora", async () => {
+    // Issue #20: il posto della fase diceva solo l'ora, e non si sapeva dove si era fermata
     app({ ...INTERROTTA, worker: { ...INTERROTTA.worker, ended_day: "yesterday" } })
     await disegna()
     const riquadro = within(await apriIngranaggio()).getByRole("group", { name: "Scansione" })
-    expect(riquadro.querySelector(".al-c-menu__testo-2")?.textContent).toMatch(/^ieri, \d\d:\d\d$/)
+    expect(riquadro.querySelector(".al-c-menu__testo-2")?.textContent).toMatch(
+      /^Lettura dei file · ieri, \d\d:\d\d$/,
+    )
   })
 
   it("l'ultima scansione senza file nuovi e con file non letti lo dice", async () => {

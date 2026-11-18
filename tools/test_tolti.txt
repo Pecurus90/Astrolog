@@ -733,3 +733,4 @@ le barre doppie e quella finale non fanno briciole vuote - step 33, Primo avvio 
 aggiungo un pezzo che nessun file nomina, scegliendone il genere - step 33, Sistema A: the kind is chosen on the Modulo's tiles (tavola v82 componenti/Modulo 18-19); replaced by aggiungo un pezzo che nessun file nomina, scegliendone il tipo
 cambiando genere non porto con me i campi del genere di prima - step 33, Sistema A: the kind is chosen on the Modulo's tiles (tavola v82 componenti/Modulo 18-19); replaced by cambiando tipo non porto con me i campi del tipo di prima
 test_a_push_gets_an_intel_mac_and_the_rest_keep_apple_silicon - Issue #50: macos-15-intel has no llvmlite wheel (ADR 0043); replaced by test_a_push_runs_no_mac_and_the_rest_keep_apple_silicon
+interrotta ieri: «ieri» con l'ora - Issue #20: the interrupted scan box says the phase it stopped in, then the time; replaced by interrotta ieri: la fase dove si e' fermata, poi «ieri» con l'ora
