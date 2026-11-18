@@ -3,6 +3,19 @@
 # catalog next to itself), the catalog downloaded once with its checksum (ADR 0003).
 set -eu
 
+# As root only one step: hand /data itself to PUID:PGID (linuxserver.io convention), then rerun
+# this script as that user. Nothing else runs as root, so no link in /data is ever followed by it.
+if [ "$(id -u)" = 0 ]; then
+    uid=${PUID:-1000}
+    gid=${PGID:-1000}
+    chown -h "$uid:$gid" /data
+    exec setpriv --reuid="$uid" --regid="$gid" --clear-groups "$0"
+fi
+
+# Libraries (astropy) keep config and cache under HOME: root's is not theirs.
+export HOME=/data/home
+mkdir -p "$HOME"
+
 astap_dir=/data/astap
 catalog_url=https://sourceforge.net/projects/astap-program/files/star_databases/d50_star_database.zip/download
 # md5 as published on SourceForge for d50_star_database.zip (901308858 bytes).
@@ -32,11 +45,4 @@ if ! ls "$astap_dir"/*_0101.* >/dev/null 2>&1; then
     fi
 fi
 
-# The app runs as PUID:PGID, never root: the NAS user who owns the photos (linuxserver.io convention).
-uid=${PUID:-1000}
-gid=${PGID:-1000}
-# Libraries (astropy) keep config and cache under HOME: root's is not theirs.
-export HOME=/data/home
-mkdir -p "$HOME"
-find /data \( ! -user "$uid" -o ! -group "$gid" \) -exec chown "$uid:$gid" {} +
-exec setpriv --reuid="$uid" --regid="$gid" --clear-groups python -m astrolog
+exec python -m astrolog
