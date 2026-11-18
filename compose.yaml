@@ -5,6 +5,7 @@ services:
     image: ghcr.io/pecurus90/astrolog:anteprima
     container_name: astrolog
     restart: unless-stopped
+    init: true
     ports:
       - "8765:8765"
     environment:

@@ -26,23 +26,29 @@ cp -f /opt/astap/astap_cli "$astap_dir/astap_cli"
 
 fetch_catalog() {
     tmp="$astap_dir/d50.zip.part"
-    curl -fL --retry 3 -o "$tmp" "$catalog_url" &&
+    unpacked="$astap_dir/.d50"
+    # Unpacked aside, then moved in: the solver never sees half a catalog.
+    rm -rf "$unpacked"
+    curl -fsSL --retry 3 -o "$tmp" "$catalog_url" &&
         echo "$catalog_md5  $tmp" | md5sum -c - &&
-        unzip -q -o "$tmp" -d "$astap_dir"
+        unzip -q -o "$tmp" -d "$unpacked" &&
+        find "$unpacked" -type f -exec mv -f {} "$astap_dir/" \;
     status=$?
-    rm -f "$tmp"
+    rm -rf "$tmp" "$unpacked"
     return $status
 }
 
-# A failed download does not stop the app: it starts and says the catalog is missing.
-# Any ASTAP catalog already there (`<code>_0101.<ext>`, as astap.py reads them) counts.
+# The download runs beside the app, which starts at once and says the catalog is missing until
+# it lands. Any ASTAP catalog already there (`<code>_0101.<ext>`, as astap.py reads them) counts.
 if ! ls "$astap_dir"/*_0101.* >/dev/null 2>&1; then
-    echo "AstroLog: downloading the D50 star catalog (900 MB, once)..."
-    if fetch_catalog; then
-        echo "AstroLog: star catalog ready."
-    else
-        echo "AstroLog: star catalog download failed; it is retried at the next start." >&2
-    fi
+    (
+        echo "AstroLog: downloading the D50 star catalog (900 MB, once)..."
+        if fetch_catalog; then
+            echo "AstroLog: star catalog ready."
+        else
+            echo "AstroLog: star catalog download failed; it is retried at the next start." >&2
+        fi
+    ) &
 fi
 
 exec python -m astrolog
