@@ -4,13 +4,14 @@
  * markup su desktop e telefono ferma classi e misure della consegna, che un'asserzione puntuale non
  * dice. Un ritocco voluto della tavola riscrive l'impronta attesa.
  */
-import { fireEvent, screen, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
   FERMO,
   SALUTE,
   SPINA,
+  chiamate,
   STANOTTE,
   disegna,
   impostazioni,
@@ -170,6 +171,19 @@ describe("Impostazioni, le impronte della consegna", () => {
       pulisci()
     }
     expect(visti).toEqual(["8ef25ced", "1532d010", "d0303647", "7d559c4c"])
+  })
+
+  it("togliere una cartella rilegge anche il conto di Da confermare (Issue #20)", async () => {
+    // il vuoto di Da confermare dipende dalle cartelle: senza, restava quello di prima 5 minuti
+    const dove = await sezione("cartelle", "Scansione", false, {
+      "DELETE /api/v1/folders": { stato: 200, corpo: { deleted: true } },
+    })
+    await within(dove).findByText(/3180 frame in archivio$/)
+    const domande = () => chiamate().filter((u) => u.endsWith("/api/v1/review")).length
+    const prima = domande()
+    fireEvent.click(within(dove).getAllByText("Togli")[0] as HTMLElement)
+    fireEvent.click(within(dove).getByRole("button", { name: "Togli la cartella" }))
+    await waitFor(() => expect(domande()).toBeGreaterThan(prima))
   })
 
   it("Meteo", async () => {

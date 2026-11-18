@@ -284,7 +284,7 @@ describe("l'ingranaggio e la scansione", () => {
     // Il lavoro sopravvive alla pagina: deve restare visibile e fermabile dovunque tu vada.
     app(AL_LAVORO)
     await disegna()
-    vai("/da-confermare")
+    vai("/progetti")
     expect((await screen.findByRole("link", { name: "Impostazioni · scansione in corso" })).querySelector("[aria-hidden]")).not.toBeNull()
     const menu = await apriIngranaggio()
     const riquadro = within(menu).getByRole("group", { name: "Scansione" })

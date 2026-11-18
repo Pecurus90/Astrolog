@@ -105,7 +105,7 @@ function CartaCartelle({ formato, cartelle }: { formato: Formato; cartelle: Stat
           }
           onFatto={() => {
             setAperta(null)
-            void cartelle.elenco.refetch()
+            cartelle.rileggi()
           }}
         />
       ))}

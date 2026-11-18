@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import type { SegnoAvviso } from "./componenti/Avviso"
@@ -81,6 +81,7 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
   const [rotto, setRotto] = useState<"guarda" | "aggiungi" | "registrata">()
   const [inCorso, setInCorso] = useState(false)
   const [nonSpostata, setNonSpostata] = useState<Chiave>()
+  const cache = useQueryClient()
 
   const elenco = useQuery({
     queryKey: ["folders"],
@@ -91,8 +92,15 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
     },
   })
 
+  // the folders decide Da confermare's empty page (no folders, never read): its count goes too
+  const rileggi = () => {
+    void elenco.refetch()
+    void cache.invalidateQueries({ queryKey: ["review"] })
+  }
+
   return {
     elenco,
+    rileggi,
     vista,
     rotto,
     inCorso,
@@ -116,7 +124,7 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
       setRotto(!error ? undefined : codice === "folder_exists" ? "registrata" : "aggiungi")
       if (error) return false
       setVista(undefined)
-      void elenco.refetch()
+      rileggi()
       return true
     },
     /** True when moved. */
@@ -127,7 +135,7 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
       setNonSpostata(perche)
       if (perche) return false
       setVista(undefined)
-      void elenco.refetch()
+      rileggi()
       return true
     },
   }
