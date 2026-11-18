@@ -61,6 +61,7 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
         "broadband_dark_s": None,
         "narrowband_dark_s": None,
         "highest_planet": None,
+        "next_good": None,
         "dark_returns": None,
     }
 

@@ -1,7 +1,7 @@
 import type { components } from "./api/schema"
 import type { TipoRipresa } from "./componenti/Ripresa"
 import type { Esito } from "./componenti/Pillola"
-import { type Chiave, numero, oraDelSito, oreEMinuti, t, unDecimale } from "./i18n"
+import { type Chiave, giornoENumero, numero, oraDelSito, oreEMinuti, t, unDecimale } from "./i18n"
 import { buioDellaNotte, fraseDellaLuna } from "./Stanotte"
 
 /**
@@ -59,7 +59,7 @@ export function ripresaDiStanotte(s: Stanotte): { tipo: TipoRipresa; testo: stri
   return { tipo, testo: fraseDellaLuna(s) }
 }
 
-/** The head's line under the number: bands, dark, Transparency, the models, the upper wind. */
+/** The head's line under the number: next good night (nogo), bands, dark, Transparency, models, wind. */
 export function sottoDellaNotte(s: Stanotte, w: Breve): string {
   const parti = [bandeDellaPosa(w), buioDellaNotte(s)]
   if (w.transparency != null)
@@ -80,7 +80,17 @@ export function sottoDellaNotte(s: Stanotte, w: Breve): string {
         : t("dashboard.wind700", { v, n: numero(w.wind_700hpa_tenths) }),
     )
   }
+  // first: the line is cut at the head's width, the board shows it whole
+  if (w.verdict === "nogo" && s.next_good) parti.unshift(prossimaBuona(s.next_good))
   return parti.filter(Boolean).join(" \u00b7 ")
+}
+
+/** "la prossima notte buona \u00e8 venerd\u00ec 2, con 8,4 ore di posa": without hours on a trend night. */
+function prossimaBuona(b: NonNullable<Stanotte["next_good"]>): string {
+  const giorno = giornoENumero(b.night)
+  return b.exposure_hours == null
+    ? t("dashboard.head.nextGood", { giorno })
+    : t("dashboard.head.nextGood.hours", { giorno, ore: unDecimale(b.exposure_hours) })
 }
 
 /** A dark stretch's band words: "banda larga" or "solo banda stretta". */

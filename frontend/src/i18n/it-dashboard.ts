@@ -21,6 +21,8 @@ export const itDashboard = {
   "dashboard.head.noZone.sub": "Le ore della notte si calcolano col fuso orario del sito.",
   "dashboard.head.solar": "Pi\u00f9 alto stanotte, nel Sistema solare",
   "dashboard.head.solar.pill": "{gradi}\u00b0 alle {ora}",
+  "dashboard.head.nextGood": "la prossima notte buona \u00e8 {giorno}",
+  "dashboard.head.nextGood.hours": "la prossima notte buona \u00e8 {giorno}, con {ore} ore di posa",
   "dashboard.night.pill": "{segno} notte {parola}",
   "dashboard.night.noWeather": "senza meteo",
   "dashboard.exposure.hours": "{ore} ore",

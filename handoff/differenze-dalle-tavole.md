@@ -483,9 +483,14 @@ Diverse dalla tavola:
   Nuvole, Seeing, Jet stream, Vento, Condensa, Aerosol; Seeing e Aerosol senza ore dicono «non si
   misura» (stato della CardMeteo). Perche': nessun dato dice quando una notte e' «coperta» per
   cambiare le carte; sei carte al loro posto (Marco, 12/10). A Design.
-- **«La prossima notte buona».** Tavola: a notte coperta la testa dice «la prossima notte buona e'
-  venerdi' 2, con 8,4 ore di posa» (418). App: non lo dice ancora. Perche': il backend non la
-  scrive; arriva col passo 33.4.
+- **«La prossima notte buona».** Tavola: a notte coperta la testa dice «coperto dalle 17, pioggia
+  fino alle 04 · la prossima notte buona e' venerdi' 2, con 8,4 ore di posa» (427). App (18/11,
+  passo 33.4): la stessa frase in testa alla riga di sempre, prima di buio, trasparenza, modelli e
+  vento, solo a notte non adatta; senza le ore se quella notte e' di tendenza; niente se nessuna
+  delle sette notti e' buona. In testa perche' la riga e' una sola e si taglia alla larghezza:
+  in fondo non si vedeva. La causa in testa («coperto dalle 17») resta fuori: la riga dice gia'
+  l'accordo dei modelli e le carte la causa. Sul telefono la riga mostra solo il primo pezzo, che
+  a notte non adatta e' questa frase.
 - **La Luna sopra le curvette delle prossime notti.** Tavola: «Luna 00:10» (523). App: «5 h di
   buio senza Luna · Luna sorge 00:10», o «tramonta», «tutta la notte», «non sorge»; la linea
   tratteggiata come la tavola, ogni 15 minuti. Perche': l'ora sola non dice se sorge o tramonta, e le

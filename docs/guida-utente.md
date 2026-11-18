@@ -264,7 +264,9 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   per quanta luce lascia passare il cielo, la **Trasparenza** del Meteo. Sotto, cosa permette la
   Luna (per esempio *dopo le 23:40 consigliata banda stretta*) e una riga con le ore divise fra
   **banda larga** e **solo banda stretta**, il buio, i tratti senza Luna, la Trasparenza media,
-  quanti modelli sono d'accordo e il vento in quota. Il grafico va da mezz'ora prima del tramonto
+  quanti modelli sono d'accordo e il vento in quota. Se la notte non e' adatta, la riga ti dice
+  anche **la prossima notte buona** fra le sette del Meteo, con le sue ore di posa (non nelle
+  notti di tendenza, dove la previsione non le sa ancora). Il grafico va da mezz'ora prima del tramonto
   a dopo l'alba, con le fasce del crepuscolo: la **Trasparenza ora per ora** e la **Luna**
   tratteggiata; sotto, una fascia dice quando si riprende in banda larga e quando solo in banda
   stretta. Passa col puntatore, o usa le frecce, e leggi i valori a quell'ora.

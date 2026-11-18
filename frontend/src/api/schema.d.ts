@@ -4037,6 +4037,17 @@ export interface components {
             root_path: string;
         };
         /**
+         * NextGoodNightOut
+         * @description A coming good night: its date (`YYYY-MM-DD`) and its Ore di posa as the forecast wrote
+         *     them; `None` on a trend night, which carries nothing read from the hours.
+         */
+        NextGoodNightOut: {
+            /** Night */
+            night: string;
+            /** Exposure Hours */
+            exposure_hours: number | null;
+        };
+        /**
          * Night
          * @description A row: **one night**, with what you did in it.
          */
@@ -6131,6 +6142,8 @@ export interface components {
              * @description Of `dark_s`, the narrowband stretches together.
              */
             narrowband_dark_s?: number | null;
+            /** @description After tonight, the first night the forecast judged `go`, among the ones the Meteo shows; `None` when none is, or without a forecast. The Dashboard says it when tonight is not good. */
+            next_good?: components["schemas"]["NextGoodNightOut"] | null;
             /**
              * Dark Returns
              * @description When `dark_s` is 0 (midnight sun, white nights): the first night (`YYYY-MM-DD`) with astronomical dark again. `None` when tonight has dark, or no night.

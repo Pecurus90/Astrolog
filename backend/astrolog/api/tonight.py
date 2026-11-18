@@ -245,6 +245,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         night=the_night,
         site=_site_sky(home),
         weather=weather.brief_of(conn, home.id, the_night),
+        next_good=weather.next_good_of(conn, home.id, the_night),
         sky_bands=[_sky_band(f) for f in bands],
         dark_s=dark_s,
         moonless_dark=[

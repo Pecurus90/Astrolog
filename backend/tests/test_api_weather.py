@@ -331,6 +331,51 @@ def test_tonight_tells_the_weather_of_the_night_under_way(letto):
 
 def test_tonight_without_a_forecast_says_nothing_of_the_weather(con_casa):
     assert con_casa.get("/api/v1/tonight").json()["weather"] is None
+    assert con_casa.get("/api/v1/tonight").json()["next_good"] is None
+
+
+def _giudica(db_path, esiti: list[str]) -> list[str]:
+    """Riscrive il verdetto delle notti scritte, dalla notte in corso in poi, una per esito."""
+    c = connect(db_path)
+    notti = [
+        r[0] for r in c.execute("SELECT DISTINCT night_date FROM weather_view ORDER BY night_date")
+    ]
+    for notte, esito in zip(notti, esiti, strict=False):
+        c.execute(
+            "UPDATE weather_view SET summary_json = json_set(summary_json, '$.verdict', ?)"
+            " WHERE night_date = ?",
+            (esito, notte),
+        )
+    c.commit()
+    c.close()
+    return notti
+
+
+def test_tonight_names_the_first_good_night_after_it_with_its_exposure(letto, db_path):
+    """Dopo stanotte, la prima notte giudicata buona fra quelle del Meteo, con le sue ore di posa
+    come la previsione le ha scritte: la Dashboard la dice a notte non adatta."""
+    attuale = letto.get("/api/v1/tonight").json()["night"]
+    notti = [n["night"] for n in letto.get("/api/v1/weather").json()["nights"]]
+    assert notti[0] == attuale
+    _giudica(db_path, ["go", "nogo", "go", "go"])
+    detto = letto.get("/api/v1/tonight").json()["next_good"]
+    terza = letto.get("/api/v1/weather").json()["nights"][2]
+    assert detto == {"night": notti[2], "exposure_hours": terza["exposure_hours"]}
+
+
+def test_a_good_night_in_the_trend_carries_no_exposure(letto, db_path):
+    """La tendenza non porta cio' che si legge dalle ore: la notte buona c'e', le ore di posa no."""
+    notti = [n["night"] for n in letto.get("/api/v1/weather").json()["nights"]]
+    _giudica(db_path, ["nogo", "nogo", "marginal", "go"])
+    detto = letto.get("/api/v1/tonight").json()["next_good"]
+    assert detto == {"night": notti[3], "exposure_hours": None}
+
+
+def test_without_a_good_night_in_the_forecast_tonight_names_none(letto, db_path):
+    """Una notte buona oltre le sette del Meteo non si dice: la pagina non la mostra."""
+    notti = _giudica(db_path, ["nogo"] * 7 + ["go"] * 3)
+    assert len(notti) > 7  # c'e' una notte buona oltre le sette, o la prova non prova il taglio
+    assert letto.get("/api/v1/tonight").json()["next_good"] is None
 
 
 def test_the_sky_aloft_carries_the_wind_at_700_hpa(letto):

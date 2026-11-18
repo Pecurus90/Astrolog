@@ -104,6 +104,32 @@ describe("la testa della notte", () => {
       ),
     ).toBe("")
   })
+
+  it("a notte non adatta dice la prossima notte buona, con le ore se non e' tendenza", () => {
+    const coperta = w({
+      exposure_hours: 0,
+      broadband_exposure_hours: 0,
+      narrowband_exposure_hours: 0,
+      transparency: null,
+      verdict: "nogo",
+      wind_700hpa_kmh: null,
+    })
+    const vuota = { chart: null, moonless_dark: [] }
+    const buona = { night: "2026-10-02", exposure_hours: 8.44 }
+    expect(sottoDellaNotte(s({ ...vuota, next_good: buona }), coperta)).toBe(
+      "la prossima notte buona è venerdì 2, con 8,4 ore di posa · 0 modelli d'accordo su 4",
+    )
+    expect(
+      sottoDellaNotte(s({ ...vuota, next_good: { ...buona, exposure_hours: null } }), coperta),
+    ).toBe("la prossima notte buona è venerdì 2 · 0 modelli d'accordo su 4")
+    expect(sottoDellaNotte(s({ ...vuota, next_good: null }), coperta)).toBe(
+      "0 modelli d'accordo su 4",
+    )
+    // incerta: la tavola la dice solo a notte non adatta
+    expect(
+      sottoDellaNotte(s({ ...vuota, next_good: buona }), { ...coperta, verdict: "marginal" }),
+    ).not.toContain("prossima")
+  })
 })
 
 describe("la ripresa", () => {

@@ -159,6 +159,11 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   mattone; quella delle nuvole non ha la riga del giudizio, perche' la sua parola e' il verdetto in
   testa. La trasparenza come carta non c'e'; temperatura, umidita', pioggia e nuvole basse si
   leggono nel Meteo. I testi stanno in `frontend/src/i18n/it-dashboard.ts`.
+- **La prossima notte buona** (passo 33.4, 18/11/2026; tavola Dashboard, notte coperta): a notte
+  `nogo` la riga sotto le ore di posa dice la prima notte dopo stanotte giudicata `go`, fra le sette
+  del Meteo, con le sue ore di posa; nelle notti di tendenza senza ore, che la tendenza non legge.
+  Nessuna notte buona fra le sette: la riga non la dice. `next_good` di `GET /tonight`, scelta
+  fra verdetti scritti (`weather.next_good_of`), niente calcolo.
 - **Tre notti piene, poi tendenza fino alla settima** (Marco, 26/9/2026): le ore e le misure delle
   prime tre notti, dalla quarta il verdetto, le nuvole, le ore di buio e l'accordo, detti meno
   affidabili. Nessuna fonte trovata

@@ -15,6 +15,7 @@ from ..db.transaction import transaction
 from ..site_of import home_site
 from ..weather import fetches, forecast, judge, meteoblue, openmeteo, rounds, sky, view
 from .deps import get_db
+from .models_tonight import NextGoodNightOut
 from .models_weather import (
     JudgedCode,
     KeyStatus,
@@ -173,6 +174,20 @@ def brief_of(conn: sqlite3.Connection, site_id: int, night: str) -> WeatherBrief
     if row is None or row["night_date"] != night:
         return None
     return WeatherBriefOut(**json.loads(row["summary_json"]))
+
+
+def next_good_of(conn: sqlite3.Connection, site_id: int, night: str) -> NextGoodNightOut | None:
+    """After `night`, the first of the Meteo's nights judged `go`, as written: a choice among
+    written verdicts, nothing computed."""
+    chosen = config.read(conn).weather_model
+    rows = conn.execute(_NIGHTS, (site_id, chosen, night)).fetchall()[:MAX_NIGHTS]
+    for rank, row in enumerate(rows):
+        shown = _night(row, rank)
+        if shown.night == night or shown.verdict != "go":
+            continue
+        hours = None if shown.trend else shown.exposure_hours
+        return NextGoodNightOut(night=shown.night, exposure_hours=hours)
+    return None
 
 
 REMOVED: Final = "removed"

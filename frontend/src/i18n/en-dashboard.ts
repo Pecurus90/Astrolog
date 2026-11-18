@@ -19,6 +19,8 @@ export const enDashboard = {
   "dashboard.head.noZone.sub": "The hours of the night are computed with the site's time zone.",
   "dashboard.head.solar": "Highest tonight, in the Solar system",
   "dashboard.head.solar.pill": "{gradi}\u00b0 at {ora}",
+  "dashboard.head.nextGood": "the next good night is {giorno}",
+  "dashboard.head.nextGood.hours": "the next good night is {giorno}, with {ore} hours of exposure",
   "dashboard.night.pill": "{segno} night {parola}",
   "dashboard.night.noWeather": "no weather",
   "dashboard.exposure.hours": "{ore} hours",

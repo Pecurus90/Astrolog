@@ -215,6 +215,14 @@ class ShootingStretchOut(BaseModel):
     seconds: int
 
 
+class NextGoodNightOut(BaseModel):
+    """A coming good night: its date (`YYYY-MM-DD`) and its Ore di posa as the forecast wrote
+    them; `None` on a trend night, which carries nothing read from the hours."""
+
+    night: str
+    exposure_hours: float | None
+
+
 class TonightOut(BaseModel):
     """The night it refers to (`YYYY-MM-DD` in the site's time zone), the site, the Moon and the
     sky."""
@@ -261,6 +269,12 @@ class TonightOut(BaseModel):
     )
     narrowband_dark_s: int | None = Field(
         default=None, description="Of `dark_s`, the narrowband stretches together."
+    )
+    next_good: NextGoodNightOut | None = Field(
+        default=None,
+        description="After tonight, the first night the forecast judged `go`, among the ones the "
+        "Meteo shows; `None` when none is, or without a forecast. The Dashboard says it when "
+        "tonight is not good.",
     )
     dark_returns: str | None = Field(
         default=None,
