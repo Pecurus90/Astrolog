@@ -77,6 +77,20 @@ def test_gitleaks_arrives_even_when_the_release_page_answers_504(tmp_path):
     assert (work / "gitleaks").exists()
 
 
+def _checks_oses(event: str) -> list[str]:
+    with open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8") as f:
+        expr = yaml.safe_load(f)["jobs"]["checks"]["strategy"]["matrix"]["os"]
+    push, other = (s.split("'")[1] for s in expr.split("&&")[1].split("||"))
+    return yaml.safe_load(push if event == "push" else other)
+
+
+def test_a_push_gets_an_intel_mac_and_the_rest_keep_apple_silicon():
+    """arm64 macOS runners are short (Issue #50): a push queued 15 min, then cancelled."""
+    assert "macos-15-intel" in _checks_oses("push")
+    assert "macos-latest" not in _checks_oses("push")
+    assert "macos-latest" in _checks_oses("pull_request")
+
+
 RED = {"databaseId": 123, "status": "completed", "conclusion": "failure", "url": "https://x/123"}
 
 
