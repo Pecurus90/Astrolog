@@ -16,6 +16,22 @@ dice *AstroLog e' gia' aperto*. Due copie insieme farebbero sparire i frame a vi
 **Sul NAS l'app va tenuta solo nella rete di casa**, mai raggiungibile da Internet: non chiede
 una password, quindi chiunque la raggiunga puo' usarla. Non aprire la sua porta sul router.
 
+## Installarla su un NAS (anteprima)
+
+Sul NAS AstroLog si installa dall'**app Docker** del NAS (Container Manager, Container Station,
+l'app Docker di UGOS, Portainer...), senza terminale. Serve un NAS con Docker e un processore
+Intel, AMD o ARM a 64 bit.
+
+1. Nell'app Docker crea un **progetto** (o *stack*, o *compose*) e incolla il contenuto di
+   [`compose.yaml`](../compose.yaml).
+2. Cambia le due righe segnate: l'indirizzo con cui apri il NAS nel browser (per esempio
+   `192.168.1.10`), e la cartella dove tieni le foto astronomiche, che l'app legge soltanto.
+3. Avvia il progetto. Al primo avvio scarica il catalogo di stelle per risolvere le immagini
+   (circa 900 MB, una volta sola): finche' non ha finito, le immagini non si risolvono.
+4. Apri `http://<indirizzo del NAS>:8765` nel browser.
+
+E' un'**anteprima**: serve a provarla, non ancora a tenerci l'archivio.
+
 ## Il primo avvio
 
 La prima volta l'app ti fa **cinque domande**, e poi si toglie di mezzo.

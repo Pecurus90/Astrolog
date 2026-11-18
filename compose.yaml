@@ -1,0 +1,17 @@
+# AstroLog on a NAS (preview). Paste this into your NAS Docker app as a new project, change the
+# two marked lines, start it, then open http://<NAS address>:8765 in the browser.
+services:
+  astrolog:
+    image: ghcr.io/pecurus90/astrolog:anteprima
+    container_name: astrolog
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      # CHANGE: the address you type in the browser to reach the NAS (IP or name), comma-separated.
+      ASTROLOG_HOSTS: "192.168.1.10"
+    volumes:
+      # AstroLog's database, cache and star catalog: a folder on the NAS's own disk.
+      - ./astrolog-dati:/data
+      # CHANGE: your astrophotography folder on the NAS, read only.
+      - /volume1/Astro:/archivio:ro
