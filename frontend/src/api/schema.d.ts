@@ -1444,7 +1444,9 @@ export interface paths {
          *     tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
          *     their `ranges`; 422 `moon_limit_below_good` when the Moon's marginal bound would fall under
          *     its good one; 422 `wrong_type` if a value has the wrong type or is not one of the key's
-         *     allowed choices. A change of the Moon rule rewrites at once what it judged.
+         *     allowed choices; 422 `solver_set_by_admin` for `astap_path` on a NAS (a data root), where only
+         *     `ASTROLOG_ASTAP` picks the solver (#95). A change of the Moon rule rewrites at once what it
+         *     judged.
          */
         patch: operations["write_settings"];
         trace?: never;
