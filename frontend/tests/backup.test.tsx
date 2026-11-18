@@ -73,6 +73,26 @@ describe("Il backup", () => {
     })
   })
 
+  it("un backup senza cartelle si rimette senza chiedere una lettura (collaudo 18/11)", async () => {
+    // la lettura di nessuna cartella e' un 409 `no_folders` nella console, a ogni ripristino
+    rispondi({
+      ...STANOTTE,
+      ...SPINA,
+      "POST /api/v1/backup/restore": { stato: 200, corpo: { offer: "none", last: CONTI, unreadable: false, path: "x" } },
+      "POST /api/v1/scan": { stato: 409, corpo: { detail: { code: "no_folders" } } },
+      "/api/v1/backup": { stato: 200, corpo: { ...STATO, offer: "found", last: { ...CONTI, folders: 0 } } },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(false) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+    })
+    await disegna()
+    fireEvent.click(await screen.findByRole("button", { name: /^ripristina$/i }))
+    const fatte = () => scritture().map((s) => `${s.metodo} ${new URL(s.url).pathname}`)
+    await waitFor(() => expect(fatte()).toContain("POST /api/v1/backup/restore"))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(fatte()).not.toContain("POST /api/v1/scan")
+  })
+
   it("ripristinato un backup che porta il timbro, si entra nell'app e non nel primo avvio", async () => {
     // Il backup rimette anche il timbro: il primo avvio, mai mostrato, non deve comparire dopo.
     await app("found", false)

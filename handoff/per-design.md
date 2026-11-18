@@ -13,6 +13,15 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Riquadro della scansione nel menu dell'ingranaggio (Issue #20, 18/11): (a) la catena
+  delle fasi -- oggi il riquadro dice solo la fase corrente («Lettura dei file»), il backend sa
+  tutte le fasi della corsa (lettura, impronta, cielo, oggetti, notti) con fatto/in corso/da fare;
+  serve il disegno di come si vedono insieme, desktop e telefono. (b) La ricevuta dell'ultima corsa
+  (file trovati, nuovi, invariati, doppioni, mancanti, saltati, errori, per cartella) e il caso
+  «cartella ritirata» (non si segue piu'): dove sta e come si apre. (c) Lo stato «interrotta» non
+  c'e' nella tavola: l'app dice la fase dove si e' fermata, poi il giorno e l'ora («Lettura dei
+  file · ieri, 07:40»); confermarlo nella tavola.
+
 - [da dare] Primo avvio, il guscio (passo 33 B, collaudo 16/11): (a) stato «lettura delle
   impostazioni» a 1440: lo Scheletro (`appSk`, riga 186) esce in due colonne strette affiancate e
   «Leggo le impostazioni…» si taglia; sul telefono e' giusto. L'app lo copia com'e'. (b) La data

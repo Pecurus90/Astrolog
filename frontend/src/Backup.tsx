@@ -43,7 +43,8 @@ export function RipristinoProposto({ stato }: { stato: Stato }) {
     mutationFn: async () => {
       const { error } = await api.POST("/api/v1/backup/restore")
       if (error) throw new Error(t("backup.restoreFailed"))
-      await api.POST("/api/v1/scan")
+      // a backup without folders has nothing to read: the scan would only be refused
+      if (stato.last?.folders) await api.POST("/api/v1/scan")
     },
     onSuccess: () => cache.invalidateQueries(),
   })
@@ -143,7 +144,9 @@ export function ImpostazioniBackup() {
         )
       }
       if (error) throw new Error(t("backup.importFailed"))
-      await api.POST("/api/v1/scan")
+      // the folders already here are read; only a file that brings folders has new ones to read
+      if (Array.isArray(contenuto.folders) && contenuto.folders.length > 0)
+        await api.POST("/api/v1/scan")
     },
     onSuccess: () => cache.invalidateQueries(),
   })

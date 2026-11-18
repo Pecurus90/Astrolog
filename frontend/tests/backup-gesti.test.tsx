@@ -172,17 +172,38 @@ describe("il backup nelle Impostazioni", () => {
     fireEvent.click(importa)
     expect(apre).toHaveBeenCalledTimes(1)
 
-    const file = new File(['{"version": 1, "answers": []}'], "risposte.json", {
-      type: "application/json",
-    })
+    const file = new File(
+      ['{"version": 1, "folders": [{"root_path": "D:/Astro"}]}'],
+      "risposte.json",
+      {
+        type: "application/json",
+      },
+    )
     fireEvent.change(scelta, { target: { files: [file] } })
     expect(await screen.findByText("Risposte importate: le cartelle si rileggono.")).toBeDefined()
     expect(scritture().find((s) => s.url.includes("/backup/import"))?.corpo).toEqual({
       version: 1,
-      answers: [],
+      folders: [{ root_path: "D:/Astro" }],
     })
-    expect(fatte()).toContain("POST /api/v1/scan")
+    await waitFor(() => expect(fatte()).toContain("POST /api/v1/scan"))
     expect(screen.queryByText("Ripristino non riuscito")).toBeNull()
+  })
+
+  it("un file senza cartelle entra senza chiedere una lettura (collaudo 18/11)", async () => {
+    const { container } = await impostazioniBackup({
+      "POST /api/v1/backup/import": { stato: 200, corpo: {} },
+      "POST /api/v1/scan": { stato: 409, corpo: { detail: { code: "no_folders" } } },
+      "/api/v1/backup": { stato: 200, corpo: STATO },
+    })
+    await screen.findByRole("button", { name: /^importa$/i })
+    const scelta = container.querySelector<HTMLInputElement>('input[type="file"]')!
+    const file = new File(['{"version": 1, "answers": []}'], "risposte.json", {
+      type: "application/json",
+    })
+    fireEvent.change(scelta, { target: { files: [file] } })
+    await waitFor(() => expect(fatte()).toContain("POST /api/v1/backup/import"))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(fatte()).not.toContain("POST /api/v1/scan")
   })
 
   it("un file che non e' JSON non parte, e lo dice sotto i gesti", async () => {
