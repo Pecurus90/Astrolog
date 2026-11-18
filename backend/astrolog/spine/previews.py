@@ -195,6 +195,22 @@ def _drop_if_unused(conn: sqlite3.Connection, db_path: str | Path, digest: str) 
         (folder_of(db_path) / f"{digest}.jpg").unlink(missing_ok=True)
 
 
+def drop_unused(conn: sqlite3.Connection, db_path: str | Path, digests: Iterable[str]) -> None:
+    for digest in set(digests):
+        _drop_if_unused(conn, db_path, digest)
+
+
+def in_use(conn: sqlite3.Connection) -> set[str]:
+    return {r[0] for r in conn.execute("SELECT sha256 FROM production_previews")}
+
+
+def drop_unused_here(conn: sqlite3.Connection, digests: Iterable[str]) -> None:
+    """As `drop_unused`, beside the connection's own file; an in-memory DB has no photos."""
+    main = [r[2] for r in conn.execute("PRAGMA database_list") if r[1] == "main"]
+    if main and main[0]:
+        drop_unused(conn, main[0], digests)
+
+
 def of(
     conn: sqlite3.Connection, keys: Iterable[str]
 ) -> dict[tuple[str, str, str | None, str | None], str]:
@@ -269,9 +285,12 @@ def for_backup(conn: sqlite3.Connection, embed_from: Path | None) -> list[dict[s
     return out
 
 
-def restore(conn: sqlite3.Connection, db_path: str | Path, items: list[dict[str, Any]]) -> None:
-    """An imported photo is checked as an upload; a slot whose file is neither here nor in the
-    item is skipped. Adds and replaces, never deletes."""
+def restore(
+    conn: sqlite3.Connection, db_path: str | Path, items: list[dict[str, Any]]
+) -> list[str]:
+    """Photo checked as an upload; slot without file here or in item skipped. Adds, replaces,
+    never deletes; gives replaced photos, for `drop_unused` after the commit."""
+    replaced: list[str] = []
     for item in items:
         slot = Slot(item["owner_kind"], item["owner_key"], item["optics"], item["camera"])
         if "jpeg" in item:
@@ -281,9 +300,13 @@ def restore(conn: sqlite3.Connection, db_path: str | Path, items: list[dict[str,
             digest = item["sha256"]
         else:
             continue
+        old = digest_in(conn, slot)
+        if old is not None and old != digest:
+            replaced.append(old)
         conn.execute(f"DELETE FROM production_previews WHERE {_SLOT}", _key(slot))  # noqa: S608
         conn.execute(
             "INSERT INTO production_previews (owner_kind, owner_key, optics, camera, sha256,"
             " updated_at) VALUES (?, ?, ?, ?, ?, ?)",
             (*_key(slot), digest, item["updated_at"]),
         )
+    return replaced

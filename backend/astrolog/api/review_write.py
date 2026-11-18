@@ -16,6 +16,7 @@ from ..spine import (
     gear_numbers,
     mosaic,
     object_answer,
+    previews,
     rigs,
     typeless_answer,
     undated,
@@ -128,6 +129,7 @@ def answer_filter(
 def writing(conn: sqlite3.Connection) -> Iterator[None]:
     """All or nothing, and the refusals of the database or the rules become words a page can show,
     not failures. One home for Apply and for the Gear gestures."""
+    photos_before = previews.in_use(conn)
     try:
         with transaction(conn):
             yield
@@ -138,6 +140,8 @@ def writing(conn: sqlite3.Connection) -> Iterator[None]:
         if refusal is None:
             raise
         raise refusal from err
+    # a merge or rename leaves photos without a slot: gone after the commit, kept on a rollback
+    previews.drop_unused_here(conn, photos_before)
 
 
 # The refusals of the rules, as (status, code): words a page can show.

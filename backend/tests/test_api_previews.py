@@ -5,6 +5,7 @@ import io
 
 import numpy as np
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -209,6 +210,62 @@ def test_the_correction_of_da_confermare_moves_the_photo(db_path):
     _scrivi(conn, "RedCat", "ASI", "a", chiave="m 31 scritto male")
     correct_object(conn, "m 31 scritto male", slug="m31")
     assert [r[0] for r in _posti(conn)] == ["m31"]
+
+
+def _file(db_path, sha):
+    cartella = previews.folder_of(db_path)
+    cartella.mkdir(exist_ok=True)
+    (cartella / f"{sha * 64}.jpg").write_bytes(b"jpeg")
+
+
+def _file_rimasti(db_path):
+    return sorted(p.name[0] for p in previews.folder_of(db_path).glob("*.jpg"))
+
+
+@pytest.mark.parametrize("unendo", [False, True])
+def test_a_photo_left_by_a_renamed_or_merged_camera_leaves_the_disk(db_path, unendo):
+    """#92: la foto che perde il posto non resta su disco; quella che lo tiene si'."""
+    from astrolog.api.review_write import writing
+
+    conn = connect(db_path)
+    _scrivi(conn, "RedCat", "ASI vecchia", "a")
+    _scrivi(conn, "RedCat", "ASI nuova", "b")
+    conn.commit()
+    for sha in "ab":
+        _file(db_path, sha)
+    with writing(conn):
+        previews.follow_instrument(conn, "camera", "ASI vecchia", "ASI nuova", merging=unendo)
+    assert _file_rimasti(db_path) == (["b"] if unendo else ["a"])
+
+
+def test_a_merge_rolled_back_keeps_both_photos(db_path):
+    """#92: un Apply che fallisce dopo la fusione rimette il posto, e il posto il suo file."""
+    from astrolog.api.review_write import writing
+
+    conn = connect(db_path)
+    _scrivi(conn, "RedCat", "ASI vecchia", "a")
+    _scrivi(conn, "RedCat", "ASI nuova", "b")
+    conn.commit()
+    for sha in "ab":
+        _file(db_path, sha)
+    with pytest.raises(HTTPException), writing(conn):
+        previews.follow_instrument(conn, "camera", "ASI vecchia", "ASI nuova", merging=True)
+        raise LookupError("seconda coppia non piu' chiesta")
+    assert len(_posti(conn)) == 2
+    assert _file_rimasti(db_path) == ["a", "b"]
+
+
+def test_a_restored_slot_drops_the_photo_it_replaces(db_path):
+    """#92: il ripristino che cambia la foto di un posto toglie la vecchia dal disco."""
+    from astrolog.spine.backup import restore
+
+    conn = connect(db_path)
+    _scrivi(conn, "RedCat", "ASI", "a")
+    for sha in "ab":
+        _file(db_path, sha)
+    voce = {"owner_kind": "object", "owner_key": "m31", "optics": "RedCat", "camera": "ASI"}
+    restore(conn, {"previews": [{**voce, "sha256": "b" * 64, "updated_at": "y"}]}, db_path=db_path)
+    assert _file_rimasti(db_path) == ["b"]
 
 
 def test_the_export_carries_the_photo_and_the_import_puts_it_back(client, tmp_path):

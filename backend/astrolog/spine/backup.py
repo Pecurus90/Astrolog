@@ -206,15 +206,9 @@ def restore(
     """Adds and updates, never deletes; ids and rigs re-linked by name. `this_machine=False`: what
     the export leaves out stays out (ADR 0017). Previews come back only with `db_path`."""
     now = now_iso()
+    replaced: list[str] = []
     with transaction(conn):
-        for key, value in data.get("config", {}).items():
-            if key not in config.KEYS or (not this_machine and key in _STAYS_HERE):
-                continue
-            # a solver path of another machine (a Windows path inside Docker) would stop the search
-            if key != "astap_path" or (value and os.path.exists(value)):
-                config.write(conn, key, None if value is None else config.KEYS[key].kind(value))
-        if not config.moon_rule_holds(config.read(conn)):
-            raise config.OutOfRangeError("moon_limit_pct")
+        _restore_config(conn, data, this_machine=this_machine)
         for site in data.get("sites", []):
             _restore_site(conn, site, now)
         for folder in data.get("folders", []):
@@ -225,8 +219,21 @@ def restore(
             _restore_filter(conn, f, now)
         _restore_answers(conn, data, now)
         if db_path is not None:
-            previews.restore(conn, db_path, data.get("previews", []))
+            replaced = previews.restore(conn, db_path, data.get("previews", []))
         gear_usage.restore_rigs(conn, now)
+    if db_path is not None:  # after the commit: a rolled-back import keeps its photos
+        previews.drop_unused(conn, db_path, replaced)
+
+
+def _restore_config(conn: sqlite3.Connection, data: dict[str, Any], *, this_machine: bool) -> None:
+    for key, value in data.get("config", {}).items():
+        if key not in config.KEYS or (not this_machine and key in _STAYS_HERE):
+            continue
+        # a solver path of another machine (a Windows path inside Docker) would stop the search
+        if key != "astap_path" or (value and os.path.exists(value)):
+            config.write(conn, key, None if value is None else config.KEYS[key].kind(value))
+    if not config.moon_rule_holds(config.read(conn)):
+        raise config.OutOfRangeError("moon_limit_pct")
 
 
 def _restore_answers(conn: sqlite3.Connection, data: dict[str, Any], now: str) -> None:
