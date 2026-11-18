@@ -207,6 +207,13 @@ export function PannelloStanotte({ telefono }: { telefono: boolean }) {
 
 /** Ogni quanto rileggere Stanotte: spesso solo mentre c'e' una notte da dividere e la sua previsione
  *  non e' ancora arrivata; senza fuso non arrivera' mai, e con la previsione basta la scadenza. */
-export function rileggiOgni(detto: { moon: unknown; weather?: unknown } | undefined) {
-  return detto?.moon && !detto.weather ? 5 * 60 * 1000 : false
+export function rileggiOgni(
+  detto: { moon: unknown; weather?: unknown; night_ends_at?: string | null } | undefined,
+  ora: number = Date.now(),
+): number | false {
+  const previsione = detto?.moon && !detto.weather ? 5 * 60 * 1000 : false
+  if (!detto?.night_ends_at) return previsione
+  // at the site's noon the night is another: read again then, not an hour later
+  const mezzogiorno = Math.max(1000, Date.parse(detto.night_ends_at) - ora)
+  return previsione === false ? mezzogiorno : Math.min(previsione, mezzogiorno)
 }

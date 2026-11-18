@@ -231,4 +231,16 @@ describe("quando Stanotte si rilegge da sola", () => {
     expect(rileggiOgni({ moon: null, weather: null })).toBe(false)
     expect(rileggiOgni(undefined)).toBe(false)
   })
+
+  it("e al mezzogiorno del sito, quando la notte cambia (Issue #20)", () => {
+    const ora = Date.parse("2026-11-18T09:00:00Z")
+    const fine = "2026-11-18T11:00:00+00:00"
+    expect(rileggiOgni({ moon: LUNA, weather: { verdict: "go" }, night_ends_at: fine }, ora)).toBe(
+      2 * 60 * 60 * 1000,
+    )
+    // la previsione che manca vince se arriva prima
+    expect(rileggiOgni({ moon: LUNA, weather: null, night_ends_at: fine }, ora)).toBe(5 * 60 * 1000)
+    // passato il mezzogiorno, subito
+    expect(rileggiOgni({ moon: LUNA, weather: { verdict: "go" }, night_ends_at: fine }, ora + 3 * 3600_000)).toBe(1000)
+  })
 })

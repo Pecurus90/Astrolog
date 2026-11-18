@@ -2,7 +2,7 @@
 downloads, so a lazy import would leave the process online until this route first ran."""
 
 import sqlite3
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from typing import Literal, cast
 
 from fastapi import APIRouter, Depends
@@ -246,6 +246,8 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         site=_site_sky(home),
         weather=weather.brief_of(conn, home.id, the_night),
         next_good=weather.next_good_of(conn, home.id, the_night),
+        # in UTC: added on the wall clock, a clock-change night would end an hour off
+        night_ends_at=(window_start.astimezone(UTC) + timedelta(hours=window_hours)).isoformat(),
         sky_bands=[_sky_band(f) for f in bands],
         dark_s=dark_s,
         moonless_dark=[

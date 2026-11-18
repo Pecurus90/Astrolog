@@ -270,6 +270,11 @@ class TonightOut(BaseModel):
     narrowband_dark_s: int | None = Field(
         default=None, description="Of `dark_s`, the narrowband stretches together."
     )
+    night_ends_at: str | None = Field(
+        default=None,
+        description="When `night` gives way to the next one: the site's noon, as an instant. "
+        "Whoever shows tonight reads it again then, not by the clock. `None` without a night.",
+    )
     next_good: NextGoodNightOut | None = Field(
         default=None,
         description="After tonight, the first night the forecast judged `go`, among the ones the "

@@ -14,6 +14,7 @@ import { Ripresa } from "./componenti/Ripresa"
 import type { Formato } from "./componenti/Tema"
 import { ESITO, type Meteo, type Stanotte, latiDellaRipresa } from "./DashboardDati"
 import { quandoDellEvento, quandoDellaLuna } from "./DashboardNotte"
+import { useStanotte } from "./Stanotte"
 import {
   type Chiave,
   giornoDelMese,
@@ -31,8 +32,10 @@ type GiornoDetto = Calendario["nights"][number]
 
 /** This month and the next as the background round wrote them; empty until it has run. */
 export function useCalendario() {
+  // the night in the key: at the site's noon tonight changes, and the calendar's "today" with it
+  const notte = useStanotte().data?.night ?? null
   return useQuery({
-    queryKey: ["moon-calendar"],
+    queryKey: ["moon-calendar", notte],
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/moon/calendar")
       if (error) throw new Error(t("dashboard.moon.calendar.failed"))

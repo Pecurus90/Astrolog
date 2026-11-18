@@ -164,6 +164,9 @@ export function cambia(mappa: Record<string, Voce>) {
   mappaCorrente = mappa
 }
 
+/** The bench's answers now: to change one route and keep the others (`cambia({...adesso(), x})`). */
+export const adesso = (): Record<string, Voce> => ({ ...mappaCorrente })
+
 /** Il solo elemento del selettore dentro `dentro`; manca = la prova cade col suo nome. */
 export const una = (dentro: Element, selettore: string): HTMLElement => {
   const el = dentro.querySelector<HTMLElement>(selettore)

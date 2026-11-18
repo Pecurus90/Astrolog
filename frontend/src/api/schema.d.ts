@@ -6202,6 +6202,11 @@ export interface components {
              * @description Of `dark_s`, the narrowband stretches together.
              */
             narrowband_dark_s?: number | null;
+            /**
+             * Night Ends At
+             * @description When `night` gives way to the next one: the site's noon, as an instant. Whoever shows tonight reads it again then, not by the clock. `None` without a night.
+             */
+            night_ends_at?: string | null;
             /** @description After tonight, the first night the forecast judged `go`, among the ones the Meteo shows; `None` when none is, or without a forecast. The Dashboard says it when tonight is not good. */
             next_good?: components["schemas"]["NextGoodNightOut"] | null;
             /**

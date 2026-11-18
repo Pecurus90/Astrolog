@@ -4,10 +4,10 @@
  * la Luna col calendario, le sei carte del meteo, le prossime 3 notti, Da riprendere. Ogni numero
  * a schermo e' quello che l'API ha scritto.
  */
-import { fireEvent, screen, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { pulisci } from "./banco"
+import { adesso, cambia, chiamate, pulisci } from "./banco"
 import { NOTTE, SCALA_DELLA_LUNA, STANOTTE_PIENA, montaDashboard } from "./dashboard-banco"
 import { misura } from "./meteo-banco"
 
@@ -61,6 +61,17 @@ describe("la Dashboard piena", () => {
     fireEvent.click(giorno)
     expect(await screen.findByText("Casa: M 31 · M 33 · 180 frame")).toBeDefined()
     expect(screen.getByRole("link", { name: "Apri la notte in Notti" }).getAttribute("href")).toBe("/notti?notte=7")
+  })
+
+  it("al mezzogiorno del sito, notte nuova: il calendario della Luna si rilegge (Issue #20)", async () => {
+    await montaDashboard({ stanotte: { night_ends_at: new Date(Date.now() + 1500).toISOString() } })
+    const calendari = () => chiamate().filter((u) => u.endsWith("/api/v1/moon/calendar")).length
+    await waitFor(() => expect(calendari()).toBe(1))
+    cambia({
+      ...adesso(),
+      "/api/v1/tonight": { stato: 200, corpo: { ...STANOTTE_PIENA, night: "2026-10-01" } },
+    })
+    await waitFor(() => expect(calendari()).toBe(2), { timeout: 5000 })
   })
 
   it("il dettaglio della Luna si apre e si chiude", async () => {

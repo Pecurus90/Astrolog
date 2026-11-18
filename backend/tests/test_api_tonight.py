@@ -61,6 +61,7 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
         "broadband_dark_s": None,
         "narrowband_dark_s": None,
         "highest_planet": None,
+        "night_ends_at": None,
         "next_good": None,
         "dark_returns": None,
     }
@@ -77,6 +78,19 @@ def test_with_a_home_site_the_moon_is_told_with_its_night(client_vuoto):
     assert detto["night"] is not None and len(detto["night"]) == len("2026-09-19")
     assert detto["moon"]["phase_key"] in moon.PHASES
     assert 0 <= detto["moon"]["illumination_pct"] <= 100
+
+
+def test_tonight_says_when_its_night_ends_at_the_site_s_noon(client_vuoto):
+    """Issue #20: il piede si rileggeva a tempo, un'ora dopo; ora sa quando la sua notte finisce,
+    al mezzogiorno del sito, e si rilegge li'."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    fine = datetime.fromisoformat(detto["night_ends_at"]).astimezone(ZoneInfo("Europe/Rome"))
+    assert (fine.hour, fine.minute) == (12, 0)
+    assert fine.date().isoformat() > detto["night"]
 
 
 def test_the_moon_comes_from_the_home_site_not_from_any_site(client_vuoto):
