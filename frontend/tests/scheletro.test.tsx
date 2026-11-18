@@ -198,6 +198,21 @@ describe("Da confermare", () => {
     expect(pillola.textContent).toBe("Da confermare")
   })
 
+  it("cambiando pagina il conto non richiede tutte le domande ogni volta (Issue #20)", async () => {
+    app()
+    await disegna()
+    await screen.findByRole("link", { name: "Da confermare, 12" })
+    const domande = () => chiamate().filter((u) => u.endsWith("/api/v1/review")).length
+    const prima = domande()
+    vai("/da-confermare")
+    vai("/archivio")
+    vai("/da-confermare")
+    // tornare sulla finestra: react-query 5 rilegge le domande vecchie su visibilitychange
+    document.dispatchEvent(new Event("visibilitychange"))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(domande()).toBe(prima)
+  })
+
   it("quando il lavoro finisce, il conto si rilegge", async () => {
     // Trovato dal vivo: dopo una scansione erano entrati 18 frame e la barra diceva ancora il
     // conto di prima, finche' non si ricaricava la pagina a mano.
@@ -269,7 +284,7 @@ describe("l'ingranaggio e la scansione", () => {
     // Il lavoro sopravvive alla pagina: deve restare visibile e fermabile dovunque tu vada.
     app(AL_LAVORO)
     await disegna()
-    vai("/progetti")
+    vai("/da-confermare")
     expect((await screen.findByRole("link", { name: "Impostazioni · scansione in corso" })).querySelector("[aria-hidden]")).not.toBeNull()
     const menu = await apriIngranaggio()
     const riquadro = within(menu).getByRole("group", { name: "Scansione" })

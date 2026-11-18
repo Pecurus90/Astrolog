@@ -68,6 +68,8 @@ export function useScriviSito(casa: boolean) {
     if (!error) {
       fallito(null)
       await cache.invalidateQueries({ queryKey: ["sites"] })
+      // a site written can answer Da confermare's place questions; its count is kept, not polled
+      void cache.invalidateQueries({ queryKey: ["review"] })
       if (casa) {
         void cache.invalidateQueries({ queryKey: ["tonight"] })
         void cache.invalidateQueries({ queryKey: ["moon-calendar"] })
