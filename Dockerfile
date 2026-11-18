@@ -38,7 +38,8 @@ ENV ASTROLOG_HOST=0.0.0.0 \
     ASTROLOG_PORT=8765 \
     ASTROLOG_DATA_DIR=/data \
     ASTROLOG_DATA_ROOT=/archivio \
-    ASTROLOG_ASTAP=/data/astap/astap_cli
+    ASTROLOG_ASTAP=/data/astap/astap_cli \
+    NUMBA_CACHE_DIR=/data/cache/numba
 VOLUME ["/data"]
 EXPOSE 8765
 LABEL org.opencontainers.image.source=https://github.com/Pecurus90/Astrolog \

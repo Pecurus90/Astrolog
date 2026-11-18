@@ -22,7 +22,8 @@ fetch_catalog() {
 }
 
 # A failed download does not stop the app: it starts and says the catalog is missing.
-if ! ls "$astap_dir"/d50_* >/dev/null 2>&1; then
+# Any ASTAP catalog already there (`<code>_0101.<ext>`, as astap.py reads them) counts.
+if ! ls "$astap_dir"/*_0101.* >/dev/null 2>&1; then
     echo "AstroLog: downloading the D50 star catalog (900 MB, once)..."
     if fetch_catalog; then
         echo "AstroLog: star catalog ready."
@@ -31,4 +32,11 @@ if ! ls "$astap_dir"/d50_* >/dev/null 2>&1; then
     fi
 fi
 
-exec python -m astrolog
+# The app runs as PUID:PGID, never root: the NAS user who owns the photos (linuxserver.io convention).
+uid=${PUID:-1000}
+gid=${PGID:-1000}
+# Libraries (astropy) keep config and cache under HOME: root's is not theirs.
+export HOME=/data/home
+mkdir -p "$HOME"
+find /data \( ! -user "$uid" -o ! -group "$gid" \) -exec chown "$uid:$gid" {} +
+exec setpriv --reuid="$uid" --regid="$gid" --clear-groups python -m astrolog

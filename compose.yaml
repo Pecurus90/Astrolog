@@ -10,6 +10,9 @@ services:
     environment:
       # CHANGE: the address you type in the browser to reach the NAS (IP or name), comma-separated.
       ASTROLOG_HOSTS: "192.168.1.10"
+      # The NAS user AstroLog runs as (it must be able to read the photos): its uid and gid.
+      PUID: "1000"
+      PGID: "1000"
     volumes:
       # AstroLog's database, cache and star catalog: a folder on the NAS's own disk.
       - ./astrolog-dati:/data
