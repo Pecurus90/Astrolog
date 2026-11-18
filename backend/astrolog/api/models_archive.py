@@ -24,6 +24,19 @@ class ArchivePanel(BaseModel):
     untimed: int
 
 
+class ArchivePreview(BaseModel):
+    """A place for the user's photo: one per production, one for a mosaic (step 33.2)."""
+
+    url: str = Field(
+        description="Where the photo is read, put (PUT, the image as the body) and removed "
+        "(DELETE); the same address whether a photo is there or not."
+    )
+    at: str | None = Field(
+        description="When the photo was put: it changes with the photo. Null: no photo was "
+        "put on this place, not an unknown."
+    )
+
+
 class ArchiveProduction(BaseModel):
     """The row shot with one optics and one camera: a production, until projects exist."""
 
@@ -77,6 +90,10 @@ class ArchiveObject(BaseModel):
     panels: int | None = Field(description="How many panels, for a mosaic; null for an object.")
     panel_list: list[ArchivePanel] = Field(
         description="The panels, most shot first; empty for an object."
+    )
+    previews: list[ArchivePreview] = Field(
+        description="The card's photo places in order: one per production, as `productions`; "
+        "one for a mosaic, of all its productions."
     )
 
 

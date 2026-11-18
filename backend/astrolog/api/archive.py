@@ -3,10 +3,11 @@ only those. The user's sort too, for the reason in `api/nights`."""
 
 import sqlite3
 from typing import Annotated, Any, Literal, cast
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Query
 
-from ..spine import archive, archive_criteria, filters_used, objects, productions
+from ..spine import archive, archive_criteria, filters_used, objects, previews, productions
 from ..spine.archive import Family, Form
 from ..spine.counts import Scope, Subject
 from ..spine.solve import solver_where
@@ -17,6 +18,7 @@ from .models_archive import (
     ArchiveList,
     ArchiveObject,
     ArchivePanel,
+    ArchivePreview,
     ArchiveProduction,
     ArchiveUnresolved,
     ArchiveWhole,
@@ -111,6 +113,7 @@ def items_of(
     made_by_key = productions.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
     made_by_key |= productions.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
     panels_by_key = archive.panels(conn, mosaic_keys, scope)
+    put = previews.of(conn, (r["key"] for r in rows))
     return [
         ArchiveObject(
             key=r["key"],
@@ -128,6 +131,37 @@ def items_of(
             ],
             panels=r["panels"],
             panel_list=[ArchivePanel(**p) for p in panels_by_key.get(r["mosaic_key"], [])],
+            previews=_previews(r, made_by_key.get(r["mosaic_key"] or r["id"], []), put),
         )
         for r in rows
     ]
+
+
+def _previews(
+    row: dict[str, Any], made: list[dict[str, Any]], put: dict[Any, str]
+) -> list[ArchivePreview]:
+    """One place per production, in their order; a mosaic's one place is of all of them."""
+    if row["mosaic_key"] is not None:
+        at = put.get(("mosaic", row["key"], None, None))
+        return [ArchivePreview(url=url_of(row["key"], None), at=at)]
+    return [
+        ArchivePreview(
+            url=url_of(row["key"], f"{_id(p['optics_id'])}:{_id(p['camera_id'])}"),
+            at=put.get(("object", row["key"], p["optics"], p["camera"])),
+        )
+        for p in made
+    ]
+
+
+PREVIEW_PATH = "/archive/preview"
+
+
+def url_of(key: str, production: str | None) -> str:
+    """The one address of a photo place, for reading, putting and removing (`api/previews.py`):
+    the page never builds it."""
+    query = {"key": key} | ({"production": production} if production else {})
+    return f"/api/v1{PREVIEW_PATH}?{urlencode(query)}"
+
+
+def _id(instrument_id: int | None) -> str:
+    return "none" if instrument_id is None else str(instrument_id)

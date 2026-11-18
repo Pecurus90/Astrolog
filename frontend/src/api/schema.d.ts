@@ -142,8 +142,9 @@ export interface paths {
         /**
          * Export Backup
          * @description The answers as a file to take to another computer, **without the service keys**: whoever
-         *     has the file does not get them; nor the solver path, wrong on another computer. Import it
-         *     there with `POST /backup/import`.
+         *     has the file does not get them; nor the solver path, wrong on another computer. The
+         *     productions' previews travel inside it, the photos too (ADR 0017). Import it there
+         *     with `POST /backup/import`.
          */
         get: operations["export_backup"];
         put?: never;
@@ -813,6 +814,44 @@ export interface paths {
          *     404 `folder_not_found` if it is unknown.
          */
         delete: operations["retire_folder"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/archive/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Preview
+         * @description The photo of a slot as a JPEG; the page reads it with its token and shows it from memory.
+         *     Its ETag is the photo's hash: 304 when the page already has it.
+         *
+         *     404 `object_not_found`, `production_not_found`, or `no_preview` when none was put.
+         *     422 `production_required` on an object, `mosaic_has_one_preview` on a mosaic.
+         */
+        get: operations["get_preview"];
+        /**
+         * Put Preview
+         * @description Puts or replaces the photo of a slot: the body is the image itself, JPEG, PNG or WebP; its
+         *     bytes decide, not its declared type. It is kept shrunk, upright, without its EXIF.
+         *
+         *     413 `too_large` past 40 MB. 422 `not_an_image`, or `too_many_pixels` past 60 megapixels.
+         *     404 and 422 as the reading.
+         */
+        put: operations["put_preview"];
+        post?: never;
+        /**
+         * Delete Preview
+         * @description Takes the photo off a slot; the file goes when no slot uses it.
+         *
+         *     404 `no_preview` when there was none; the others as the reading.
+         */
+        delete: operations["delete_preview"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1784,6 +1823,11 @@ export interface components {
              * @description The panels, most shot first; empty for an object.
              */
             panel_list: components["schemas"]["ArchivePanel"][];
+            /**
+             * Previews
+             * @description The card's photo places in order: one per production, as `productions`; one for a mosaic, of all its productions.
+             */
+            previews: components["schemas"]["ArchivePreview"][];
         };
         /**
          * ArchiveOption
@@ -1841,6 +1885,22 @@ export interface components {
             integration_s: number;
             /** Untimed */
             untimed: number;
+        };
+        /**
+         * ArchivePreview
+         * @description A place for the user's photo: one per production, one for a mosaic (step 33.2).
+         */
+        ArchivePreview: {
+            /**
+             * Url
+             * @description Where the photo is read, put (PUT, the image as the body) and removed (DELETE); the same address whether a photo is there or not.
+             */
+            url: string;
+            /**
+             * At
+             * @description When the photo was put: it changes with the photo. Null: no photo was put on this place, not an unknown.
+             */
+            at: string | null;
         };
         /**
          * ArchiveProduction
@@ -8157,6 +8217,106 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RetireOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_preview: {
+        parameters: {
+            query: {
+                key: string;
+                production?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_preview: {
+        parameters: {
+            query: {
+                key: string;
+                production?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "image/jpeg": string;
+                "image/png": string;
+                "image/webp": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivePreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_preview: {
+        parameters: {
+            query: {
+                key: string;
+                production?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

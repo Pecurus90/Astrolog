@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 382; senza fonte: 0.
-Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T tecnico: 94.
+Valori: 391; senza fonte: 0.
+Fonti: C norma: 197; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 98.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -91,6 +91,14 @@ Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T
 | simbolo | valore | fonte |
 |---|---|---|
 | ETA_AFTER_S | `60` | P docs/domini/navigazione.md |
+
+### api/previews.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| _KEY | `Query(..., max_length=200)` | T |
+| get_preview@router.get | `router.get(PATH, response_class=Response, responses={200: {"content...` | C RFC 9110 15.3.1: 200 OK |
+| delete_preview@router.delete | `router.delete(PATH, status_code=204, response_class=Response)` | C RFC 9110 15.3.5: 204 No Content |
 
 ### api/review.py
 
@@ -752,6 +760,23 @@ Fonti: C norma: 193; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 39; T
 | simbolo | valore | fonte |
 |---|---|---|
 | _SLIVER_PCT | `2` | T |
+
+### spine/previews.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| MAX_BYTES | `40 * 1024 * 1024` | P docs/domini/archivio.md |
+| MAX_PIXELS | `60_000_000` | T |
+| LONG_SIDE | `1200` | T |
+| QUALITY | `85` | T |
+| _ORIENTATION | `2: Image.Transpose.FLIP_LEFT_RIGHT,` | C CIPA DC-008 Exif 2.32, tag 0x0112 Orientation |
+| _ORIENTATION | `3: Image.Transpose.ROTATE_180,` | C CIPA DC-008 Exif 2.32, tag 0x0112 Orientation |
+| _ORIENTATION | `4: Image.Transpose.FLIP_TOP_BOTTOM,` | C CIPA DC-008 Exif 2.32, tag 0x0112 Orientation |
+| _ORIENTATION | `5: Image.Transpose.TRANSPOSE,` | C CIPA DC-008 Exif 2.32, tag 0x0112 Orientation |
+| _ORIENTATION | `6: Image.Transpose.ROTATE_270,` | C CIPA DC-008 Exif 2.32, tag 0x0112 Orientation |
+| _ORIENTATION | `7: Image.Transpose.TRANSVERSE,` | C CIPA DC-008 Exif 2.32, tag 0x0112 Orientation |
+| _ORIENTATION | `8: Image.Transpose.ROTATE_90,` | C CIPA DC-008 Exif 2.32, tag 0x0112 Orientation |
+| _EXIF_ORIENTATION | `0x0112` | C CIPA DC-008 Exif 2.32: Orientation |
 
 ### spine/rewrite.py
 

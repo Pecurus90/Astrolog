@@ -516,6 +516,12 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'previews': list([
+          dict({
+            'at': None,
+            'url': '/api/v1/archive/preview?key=IC+1396&production=none%3A1',
+          }),
+        ]),
         'productions': list([
           dict({
             'camera': 'Canon EOS 700D',
@@ -563,6 +569,16 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'previews': list([
+          dict({
+            'at': None,
+            'url': '/api/v1/archive/preview?key=M+31&production=5%3A6',
+          }),
+          dict({
+            'at': None,
+            'url': '/api/v1/archive/preview?key=M+31&production=5%3A9',
+          }),
+        ]),
         'productions': list([
           dict({
             'camera': 'ATR2600M(USB2.0)',
@@ -621,6 +637,12 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'previews': list([
+          dict({
+            'at': None,
+            'url': '/api/v1/archive/preview?key=M+42&production=5%3A6',
+          }),
+        ]),
         'productions': list([
           dict({
             'camera': 'ATR2600M(USB2.0)',
@@ -656,6 +678,12 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'previews': list([
+          dict({
+            'at': None,
+            'url': '/api/v1/archive/preview?key=M+51&production=10%3A11',
+          }),
+        ]),
         'productions': list([
           dict({
             'camera': 'QHY268M',
@@ -703,6 +731,12 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'previews': list([
+          dict({
+            'at': None,
+            'url': '/api/v1/archive/preview?key=NGC+6888&production=5%3A6',
+          }),
+        ]),
         'productions': list([
           dict({
             'camera': 'ATR2600M(USB2.0)',
@@ -750,6 +784,12 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'previews': list([
+          dict({
+            'at': None,
+            'url': '/api/v1/archive/preview?key=Sh2+155&production=12%3A13',
+          }),
+        ]),
         'productions': list([
           dict({
             'camera': 'ASI2600MM Pro',

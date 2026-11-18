@@ -10,7 +10,9 @@ dependencies = [
   # ognuna entra col difetto che risolve, la licenza, e una ruota per le quattro
   # architetture (Windows x64, Mac Apple Silicon, Linux amd64 e arm64; ADR 0043) o Python puro
   "fastapi>=0.162.0",          # MIT   - le rotte e l'OpenAPI da cui si generano i tipi TS
-  "uvicorn>=0.54.0",           # BSD   - il server
+  "starlette>=1.5.0",          # BSD-3 - gia' sotto fastapi; il pavimento per exclude_content_types
+                             #         del GZip (le anteprime JPEG non si ricomprimono)
+  "uvicorn>=0.54.0",          # BSD   - il server
   "pydantic>=2.14.2",           # MIT   - la forma delle risposte
   "astropy>=8.0.2",            # BSD   - lettura header FITS (ruote per tutte e cinque)
   "platformdirs>=4.14.0",       # MIT   - dove sta il DB su Windows, Mac e Linux
@@ -31,6 +33,9 @@ dependencies = [
   "numba>=0.68.1",             # BSD-2 - i cicli caldi di measure compilati (piano 26.57, Marco
                              #         4/11: non piu' lenti di Image Analysis; con llvmlite,
                              #         BSD-2, ~150 MB; Mac Intel senza ruota: fuori, ADR 0043)
+  "pillow>=13.0.0",            # MIT-CMU - l'anteprima di una produzione (passo 33.2): legge
+                             #         JPEG, PNG e WebP dell'utente, li riduce e li riscrive
+                             #         in JPEG; ruote per le quattro, nessuna dipendenza
 ]
 
 [project.optional-dependencies]

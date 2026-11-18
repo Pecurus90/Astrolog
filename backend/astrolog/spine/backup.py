@@ -13,7 +13,7 @@ from .. import place
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
-from . import gear, gear_usage
+from . import gear, gear_usage, previews
 from .folder_move import SAMPLE_FILES
 
 log = logging.getLogger(__name__)
@@ -55,9 +55,11 @@ def path_for(db_path: str | Path) -> Path:
     return Path(db_path).with_name(FILE_NAME)
 
 
-def collect(conn: sqlite3.Connection, *, this_machine: bool) -> dict[str, Any]:
-    """The declared tables by their stable keys; `this_machine=False` for a file that leaves the
-    machine: the export carries no service keys and no solver path (ADR 0017)."""
+def collect(
+    conn: sqlite3.Connection, *, this_machine: bool, photos: Path | None = None
+) -> dict[str, Any]:
+    """Declared tables by stable keys; `this_machine=False`: no service keys, no solver path
+    (ADR 0017). `photos`: the previews' folder, for an export carrying the photos themselves."""
     rows = lambda sql, *a: [dict(r) for r in conn.execute(sql, a)]  # noqa: E731
     return {
         "version": VERSION,
@@ -84,6 +86,8 @@ def collect(conn: sqlite3.Connection, *, this_machine: bool) -> dict[str, Any]:
         "camera_biases": rows(
             "SELECT camera, offset, bias_adu FROM pipeline_camera_bias ORDER BY camera, offset"
         ),
+        # the file beside the database names each photo, the export carries it
+        "previews": previews.for_backup(conn, photos),
     }
 
 
@@ -174,7 +178,7 @@ def has_answers(data: dict[str, Any]) -> bool:
 
 _ANSWERS: Final = (
     "config", "sites", "folders", "instruments", "filters", "header_aliases", "declarations",
-    "camera_biases",
+    "camera_biases", "previews",
 )  # fmt: skip
 
 
@@ -192,9 +196,15 @@ def summary(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def restore(conn: sqlite3.Connection, data: dict[str, Any], *, this_machine: bool = True) -> None:
-    """Adds and updates, never deletes; ids re-linked by name; rigs come back by name at the end.
-    `this_machine=False` for an import: what the export leaves out does not come in (ADR 0017)."""
+def restore(
+    conn: sqlite3.Connection,
+    data: dict[str, Any],
+    *,
+    this_machine: bool = True,
+    db_path: str | Path | None = None,
+) -> None:
+    """Adds and updates, never deletes; ids and rigs re-linked by name. `this_machine=False`: what
+    the export leaves out stays out (ADR 0017). Previews come back only with `db_path`."""
     now = now_iso()
     with transaction(conn):
         for key, value in data.get("config", {}).items():
@@ -214,6 +224,8 @@ def restore(conn: sqlite3.Connection, data: dict[str, Any], *, this_machine: boo
         for f in data.get("filters", []):
             _restore_filter(conn, f, now)
         _restore_answers(conn, data, now)
+        if db_path is not None:
+            previews.restore(conn, db_path, data.get("previews", []))
         gear_usage.restore_rigs(conn, now)
 
 

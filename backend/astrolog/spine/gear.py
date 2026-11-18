@@ -10,7 +10,7 @@ from ..db import idlist
 from ..db.row import Row
 from ..vocab.filters import Passband, model_by_id, passband_from_bands
 from ..vocab.instruments import InstrumentKind
-from . import counts, gear_usage, rigs, signature
+from . import counts, gear_usage, previews, rigs, signature
 from .declarations import (
     ALIAS_KINDS,
     CAMERA_SPECS,
@@ -109,6 +109,7 @@ def _move_instrument_declarations(
     conn.execute(
         "DELETE FROM declarations WHERE entity_type = 'instrument' AND entity_key = ?", (old,)
     )
+    previews.follow_instrument(conn, kind, old_name, new_name, merging=merging)
     if kind == InstrumentKind.CAMERA:
         follow_not_same_as(conn, old_name, new_name)
 

@@ -9,7 +9,7 @@ from enum import StrEnum
 from ..catalog import NamedEntry, lookup
 from ..clock import now_iso
 from ..vocab.object_label import clean_object_name
-from . import objects
+from . import objects, previews
 from .declarations import (
     FRAME_OBJECT,
     EntityType,
@@ -169,6 +169,7 @@ def correct_object(
     take the frames back; a declaration is read every time and survives a reset."""
     target = _one_target(found_key, slug, name)
     write_declaration(conn, EntityType.OBJECT, found_key, CORRECTION, target_value(slug, name), now)
+    previews.follow_object(conn, found_key, target)
     if target != found_key and _leads_back(conn, target, found_key):
         # A second thought: the last word wins, so the older step that takes it back goes.
         forget(conn, EntityType.OBJECT, target, CORRECTION)

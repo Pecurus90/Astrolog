@@ -15,7 +15,7 @@ from ..db import config
 from ..db.connect import connect
 from ..db.transaction import transaction
 from ..site_of import home_site
-from ..spine import backup
+from ..spine import backup, previews
 from .camera_bias import declare_restored
 from .deps import get_db
 from .models_site import BackupCounts, BackupStatus
@@ -31,7 +31,7 @@ _USER_WRITES = re.compile(
     r"^/api/v1/(review/apply|gear/.+|settings|settings/wizard-done|weather/meteoblue-key"
     r"|services/sky-key"
     r"|sites(/\d+(/default|/sky/use|/sky/dismiss)?)?|folders|folders/\d+(/move)?"
-    r"|backup/(restore|import))$"
+    r"|backup/(restore|import)|archive/preview)$"
 )
 
 
@@ -104,7 +104,7 @@ def restore_backup(request: Request, conn: sqlite3.Connection = Depends(get_db))
         raise HTTPException(status_code=409, detail={"code": "no_backup_offered"})
     data = backup.read(backup.path_for(request.app.state.db_path))
     assert data is not None  # the status just said found
-    backup.restore(conn, data)
+    backup.restore(conn, data, db_path=request.app.state.db_path)
     declare_restored(conn, data)
     _moon_follows(conn, data)
     sky_follows(request)
@@ -121,11 +121,13 @@ def decline_backup(request: Request) -> BackupStatus:
 
 
 @router.get("/backup/export")
-def export_backup(conn: sqlite3.Connection = Depends(get_db)) -> Response:
+def export_backup(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Response:
     """The answers as a file to take to another computer, **without the service keys**: whoever
-    has the file does not get them; nor the solver path, wrong on another computer. Import it
-    there with `POST /backup/import`."""
-    body = backup.json_text(backup.collect(conn, this_machine=False))
+    has the file does not get them; nor the solver path, wrong on another computer. The
+    productions' previews travel inside it, the photos too (ADR 0017). Import it there
+    with `POST /backup/import`."""
+    photos = previews.folder_of(request.app.state.db_path)
+    body = backup.json_text(backup.collect(conn, this_machine=False, photos=photos))
     return Response(
         content=body,
         media_type="application/json",
@@ -150,7 +152,7 @@ def import_backup(
         raise HTTPException(status_code=422, detail={"code": "not_a_backup"}) from e
     try:
         data = {**data, "folders": _folders_here(data, request.app.state.data_root)}
-        backup.restore(conn, data, this_machine=False)
+        backup.restore(conn, data, this_machine=False, db_path=request.app.state.db_path)
         declare_restored(conn, data)
         _moon_follows(conn, data)
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:

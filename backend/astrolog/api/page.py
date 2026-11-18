@@ -14,8 +14,9 @@ ASSETS_PATH = "/assets"  # the files the build emits next to the page, with thei
 TOKEN_META = '<meta name="astrolog-token" content="{key}">'  # noqa: S105 - template, not a key
 API_PATH = "/api/"
 # The page carries the key: only the backend's own files load and run, nothing inline (MDN, CSP).
+# blob: for the previews, read with the key and shown from memory: an <img> sends no header.
 CSP = (
-    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self';"
+    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:;"
     " font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none';"
     " form-action 'self'; frame-ancestors 'none'"
 )

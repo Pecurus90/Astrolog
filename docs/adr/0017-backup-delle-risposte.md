@@ -38,6 +38,15 @@ sono gia' agganciate a chiavi stabili (impronta del frame, grafia dell'header, n
   chiavi segrete** (Marco) e senza `astap_path`: un percorso dichiarato vince sulla ricerca
   automatica, e sbagliato sull'altra macchina la ferma. L'importazione e' lo stesso ripristino.
 - **Il file non va mai nella Diagnostica** (ADR 0008).
+- **Le anteprime delle produzioni** (passo 33.2; Marco, 18/11/2026: dentro Esporta). La foto e'
+  un file `anteprime/<sha256>.jpg` accanto al database, scritto una volta per caricamento; il
+  file accanto ne porta solo il posto (chiave della riga, nomi di ottica e camera) e l'hash,
+  perche' e' riscritto a ogni Applica e i byte di cento foto costerebbero decine di MB a clic.
+  **Esporta porta anche la foto**, in base64; l'importazione la ricontrolla come un caricamento
+  (`previews.shrink`) e una foto che non si legge rende il file `not_a_backup`. Il ripristino
+  dal file accanto ritrova la foto per hash, solo se e' 64 cifre esadecimali (un '../' non
+  esce dalla cartella; lo stesso CHECK nello schema); un posto senza la sua foto si salta. La versione
+  del file resta 1: `previews` e' una chiave in piu', letta se c'e'.
 
 ## Conseguenze
 
@@ -45,3 +54,7 @@ sono gia' agganciate a chiavi stabili (impronta del frame, grafia dell'header, n
   `tools/reset_db.py`, che cancella solo il database.
 - Una risposta su un mosaico torna solo se la nuova lettura sceglie lo stesso frame piu' vecchio
   come chiave (date uguali): rischio dichiarato.
+- Un'anteprima resta sul posto in cui e' stata messa: segue la rinomina e l'unione dei pezzi e la
+  correzione dell'oggetto in Da confermare, ma non due mosaici uniti ne' un oggetto finito tutto
+  in un mosaico. Li' la foto resta scritta senza carta, e non si cancella solo perche' la riga
+  oggi non c'e': dopo un reset nessuna riga c'e' finche' non si scansiona. Rischio dichiarato.

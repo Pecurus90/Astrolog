@@ -277,6 +277,18 @@ sua; un mosaico ha le sue produzioni come ogni riga; stringendo la barra, le pro
 quelle dei frame chiesti. La carta ha un posto di anteprima **per produzione** e dice quante
 sono; l'elenco lo dice solo quando sono piu' d'una.
 
+**L'anteprima** (passo 33.2, 18/11/2026). Un mosaico ha un posto solo, di tutte le sue
+produzioni, come la tavola. Ogni posto arriva in `previews` della riga, con l'indirizzo per
+leggerlo, metterlo e toglierlo (`GET`, `PUT`, `DELETE /api/v1/archive/preview`) e `at`, null
+finche' non c'e' foto. La foto si sceglie fra JPEG, PNG e WebP; decidono i byte, non il tipo
+detto. Si rifiuta oltre **40 MB** (`too_large`, il testo di Marco lo dice) e oltre 60 megapixel
+(`too_many_pixels`), e cio' che non si legge (`not_an_image`). Si tiene ridotta a 1200 px sul
+lato lungo, in JPEG, dritta secondo l'EXIF, col suo profilo colore e **senza EXIF** (niente GPS
+in un backup esportato). Un PNG a 16 bit in grigio (come lo esporta un programma di elaborazione) si porta a 8 bit in scala.
+Il posto e' per nomi, non per id: segue la rinomina e l'unione dei pezzi e la correzione
+dell'oggetto in Da confermare; il backup in ADR 0017. Su un NAS dietro un reverse proxy, il
+proxy deve lasciar passare corpi di qualche MB (nginx: `client_max_body_size`).
+
 ## La finestra dell'oggetto (tavola v76, passo 33)
 
 Toccare una carta, o il nome nell'elenco, apre la **finestra dell'oggetto** sopra la pagina

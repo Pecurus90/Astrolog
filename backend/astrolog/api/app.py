@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import State
+from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES as NOT_GZIPPED
 
 from .. import __version__
 from ..catalog import load as catalog_load
@@ -44,6 +45,7 @@ from . import (
     objects,
     page,
     pipeline,
+    previews,
     review,
     scan,
     scan_history,
@@ -264,7 +266,8 @@ def create_app(  # noqa: PLR0913
         TrustedHostMiddleware, allowed_hosts=[*LOCAL_HOSTS, *(h for h in hosts if h)]
     )
     # the NAS is often watched from a phone; the stylesheet goes from 57.9 kB to 10.4
-    app.add_middleware(GZipMiddleware)
+    # a JPEG does not shrink: compressing the previews would only spend the NAS's CPU
+    app.add_middleware(GZipMiddleware, exclude_content_types=(*NOT_GZIPPED, "image/jpeg"))
 
     @app.middleware("http")
     async def require_token(
@@ -313,7 +316,7 @@ def create_app(  # noqa: PLR0913
         )
 
     for routes in (archive, backup, camera_bias, gear, gear_write, measures, night_measures, nights,
-                   objects, folders, scan, scan_history, services,
+                   objects, folders, previews, scan, scan_history, services,
                    search, pipeline, review, sites, settings, tonight, vocab, weather,
                    year):  # fmt: skip
         app.include_router(routes.router)

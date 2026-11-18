@@ -1573,3 +1573,16 @@ CREATE TABLE pipeline_filter_spellings (
   CHECK (standard IS NULL OR filter_name IS NULL)
 ) STRICT;
 CREATE INDEX pipeline_filter_spellings_key ON pipeline_filter_spellings (key);
+
+-- DICHIARATO. Anteprima di una produzione dell'Archivio, per nomi: regge backup e rinomina. Foto
+-- in anteprime/<sha256>.jpg accanto al DB; mosaico: ottica e camera NULL (docs/domini/archivio.md).
+CREATE TABLE production_previews (
+  owner_kind TEXT NOT NULL CHECK (owner_kind IN ('object', 'mosaic')),
+  owner_key  TEXT NOT NULL,                       -- la chiave della riga dell'Archivio
+  optics     TEXT,
+  camera     TEXT,
+  sha256     TEXT NOT NULL CHECK (length(sha256) = 64 AND sha256 NOT GLOB '*[^0-9a-f]*'),
+  updated_at TEXT NOT NULL
+) STRICT;
+CREATE UNIQUE INDEX production_previews_slot ON production_previews
+  (owner_kind, owner_key, ifnull(optics, ''), ifnull(camera, ''));
