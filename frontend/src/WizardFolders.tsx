@@ -224,7 +224,7 @@ export function WizardFolders({
             etichetta={t("wizard.folders.label")}
             valore={path}
             onScrivi={setPath}
-            aiuto={nas ? t("wizard.folders.pathHelp") : undefined}
+            aiuto={nas ? t("wizard.folders.pathHelp") : ""}
             dopo={
               <Comando
                 testo={t("wizard.folders.look")}

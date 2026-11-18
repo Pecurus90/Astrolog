@@ -82,6 +82,13 @@ body {
   text-decoration: none;
 }
 
+/* Five boards' heads grey a field's example text to the text colour at half; only pages whose
+   board says so (Primo avvio, Da confermare, Impostazioni): the others keep the browser's grey. */
+:where([class*="al-avvio__"], [class*="al-conf__"], [class*="al-imp__"]) input::placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+
 /* Old-sheet pages under the frame's data-modo stay dark until ported: the four tokens both
    sheets name, back to the old :root values (stili/astrolog.css). Goes with the Tema step. */
 [data-modo] :is(.as-pagina, .app-vecchio) {

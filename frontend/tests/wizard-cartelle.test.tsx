@@ -94,6 +94,16 @@ async function indica(percorso: string) {
 }
 
 describe("le cartelle del primo avvio", () => {
+  it("sotto il campo c'e' sempre la riga dell'aiuto, vuota sul computer, come la tavola", async () => {
+    // tavola v82 :61, `C.aiuto` vuoto: senza la riga la carta era 6 px piu' bassa (collaudo 18/11)
+    primoAvvio()
+    await alTerzoPasso()
+    const campo = await screen.findByLabelText(/percorso della cartella/i)
+    const aiuto = campo.closest(".al-avvio__colonna-10")?.querySelector(".al-avvio__testo-12")
+    expect(aiuto).not.toBeNull()
+    expect(aiuto?.textContent).toBe("")
+  })
+
   it("ne posso indicare piu' di una, e restano tutte", async () => {
     // Prima ne accettava **una**: aggiungerla timbrava, e il primo avvio si chiudeva in faccia.
     // Chi tiene le foto in due dischi -- il caso di chiunque abbia un NAS e un portatile --

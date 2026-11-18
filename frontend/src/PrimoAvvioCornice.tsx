@@ -427,7 +427,7 @@ export function CampoAvvio({
           {errore}
         </span>
       )}
-      {aiuto && <span className="al-avvio__testo-12">{aiuto}</span>}
+      {aiuto !== undefined && <span className="al-avvio__testo-12">{aiuto}</span>}
     </div>
   )
 }

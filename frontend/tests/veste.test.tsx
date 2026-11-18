@@ -208,6 +208,22 @@ describe("la veste", () => {
       expect(regola.slice(0, regola.indexOf("}"))).toContain(token)
   })
 
+  it("il testo d'esempio dei campi e' il colore del testo a meta', come l'helmet delle tavole", () => {
+    // ogni tavola v82 porta `input::placeholder{color:inherit;opacity:.5}`: senza, il grigio di
+    // Chrome rgb(117,117,117) (collaudo del Primo avvio, 18/11)
+    const fogli = ["app.css", "consegna/astrolog.css"].map((f) =>
+      readFileSync(resolve(process.cwd(), "src", "stili", f), "utf-8"),
+    )
+    const regola = /^(.*)input::placeholder\s*\{\s*color:\s*inherit;\s*opacity:\s*0?\.5;?\s*\}/m
+    const trovata = fogli.map((f) => regola.exec(f)).find(Boolean)
+    expect(trovata).toBeDefined()
+    // solo le pagine la cui tavola la porta: Archivio e Cerca tengono il grigio del browser
+    const portata = trovata?.[1] ?? ""
+    for (const pagina of ["al-avvio__", "al-conf__", "al-imp__"]) expect(portata).toContain(pagina)
+    for (const altra of ["al-arch__", "al-c-cerca"]) expect(portata).not.toContain(altra)
+    expect(portata.trim()).not.toBe("")
+  })
+
   it("il corpo e' il contenitore che le pagine col foglio vecchio misurano", async () => {
     // Il foglio vecchio si stringe con `@container telaio`: senza un contenitore con quel nome le
     // sue pagine non saprebbero di stare in un telefono.
