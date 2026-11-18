@@ -734,3 +734,4 @@ aggiungo un pezzo che nessun file nomina, scegliendone il genere - step 33, Sist
 cambiando genere non porto con me i campi del genere di prima - step 33, Sistema A: the kind is chosen on the Modulo's tiles (tavola v82 componenti/Modulo 18-19); replaced by cambiando tipo non porto con me i campi del tipo di prima
 test_a_push_gets_an_intel_mac_and_the_rest_keep_apple_silicon - Issue #50: macos-15-intel has no llvmlite wheel (ADR 0043); replaced by test_a_push_runs_no_mac_and_the_rest_keep_apple_silicon
 interrotta ieri: «ieri» con l'ora - Issue #20: the interrupted scan box says the phase it stopped in, then the time; replaced by interrotta ieri: la fase dove si e' fermata, poi «ieri» con l'ora
+tornando al passo dopo aver salvato, il sito non si offre di nuovo - Issue #20: the form keeps the saved site as the board v82 does, a second save edits it; replaced by tornando al passo dopo aver salvato, il sito resta scritto e non si salva due volte

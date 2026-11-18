@@ -420,11 +420,13 @@ describe("il posto da cui osservi", () => {
     expect(screen.getByRole("button", { name: /avanti/i }).className).toContain("al-bottone--pieno")
   })
 
-  it("tornando al passo dopo aver salvato, il sito non si offre di nuovo", async () => {
-    // Lo stato vive nel guscio e sopravvive al passo: coi campi ancora pieni, un secondo Salva
-    // sito rimanda lo stesso nome, la rotta risponde 409 e il passo dice non salvato un sito che
-    // lo e'.
-    senzaTimbro({ "/api/v1/sites": { stato: 201, corpo: { id: 1, name: "Casa" } } })
+  it("tornando al passo dopo aver salvato, il sito resta scritto e non si salva due volte", async () => {
+    // Issue #20: il modulo si svuotava (la tavola v82 no) per non rimandare lo stesso nome, che la
+    // rotta rifiuta con 409. Ora resta, e il secondo Salva sito cambia il sito gia' salvato.
+    senzaTimbro({
+      "PATCH /api/v1/sites/1": { stato: 200, corpo: { id: 1, name: "Casa alta" } },
+      "/api/v1/sites": { stato: 201, corpo: { id: 1, name: "Casa" } },
+    })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
@@ -436,10 +438,24 @@ describe("il posto da cui osservi", () => {
     await waitFor(() => expect(screen.queryByRole("button", { name: /salva sito/i })).toBeNull())
 
     fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
-    expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("")
-    expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("")
-    expect(screen.getAllByRole("radio").some((r) => r.getAttribute("aria-checked") === "true")).toBe(false)
-    expect(screen.getByRole("button", { name: /salva sito/i }).getAttribute("aria-disabled") === "true").toBe(true)
+    expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("Casa")
+    expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("45")
+    expect(screen.getByRole("radio", { name: /^Bortle 3 -/ }).getAttribute("aria-checked")).toBe("true")
+
+    const nuovi = () => scritture().filter((s) => s.metodo === "POST" && s.url.endsWith("/api/v1/sites"))
+    // invariato: si va avanti senza scrivere
+    fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
+    await waitFor(() => expect(screen.queryByRole("button", { name: /salva sito/i })).toBeNull())
+    expect(nuovi()).toHaveLength(1)
+
+    // cambiato: lo stesso sito, corretto
+    fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
+    fireEvent.change(screen.getByLabelText(/nome del sito/i), { target: { value: "Casa alta" } })
+    fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
+    await waitFor(() =>
+      expect(scritture().some((s) => s.metodo === "PATCH" && s.url.endsWith("/api/v1/sites/1"))).toBe(true),
+    )
+    expect(nuovi()).toHaveLength(1)
   })
 
   it("le parti del passo, i campi e i posti trovati hanno la forma del foglio", async () => {

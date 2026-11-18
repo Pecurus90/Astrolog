@@ -16,28 +16,39 @@ const chiave = (p: Posto) => `${p.name}-${p.latitude}-${p.longitude}`
 
 /**
  * The site step's state, held by the shell: the first site is the home one (without it no night
- * is born), and a failed write keeps the user on the step. Saved, the form empties: the state
- * outlives the step, and going back the same site would be saved twice.
+ * is born), and a failed write keeps the user on the step. Saved, the form stays as the board
+ * keeps it: going back, Salva sito with nothing changed moves on, a change edits the same site.
  */
 export function useSitoDelPasso(onSaved: () => void) {
   const campi = useCampiDelSito()
   const [rotto, setRotto] = useState(false)
   const [salvando, setSalvando] = useState(false)
+  const [salvato, setSalvato] = useState<{ id: number; firma: string } | null>(null)
 
   const salva = async () => {
     if (!campi.valido || salvando) return
+    const corpo = campi.corpo()
+    const firma = JSON.stringify(corpo)
+    if (salvato?.firma === firma) {
+      onSaved()
+      return
+    }
     setSalvando(true)
     // a request that never reaches the service rejects instead of returning `error`
-    const fallita = await api
-      .POST("/api/v1/sites", { body: { ...campi.corpo(), is_default: true } })
-      .then(
-        ({ error }) => Boolean(error),
-        () => true,
-      )
+    const scrivi = salvato
+      ? api.PATCH("/api/v1/sites/{site_id}", {
+          params: { path: { site_id: salvato.id } },
+          body: corpo,
+        })
+      : api.POST("/api/v1/sites", { body: { ...corpo, is_default: true } })
+    const id = await scrivi.then(
+      ({ data, error }) => (error || !data ? null : data.id),
+      () => null,
+    )
     setSalvando(false)
-    setRotto(fallita)
-    if (fallita) return
-    campi.azzera()
+    setRotto(id === null)
+    if (id === null) return
+    setSalvato({ id, firma })
     onSaved()
   }
   // leaving the step drops a failed write: back on it, nothing was retried yet

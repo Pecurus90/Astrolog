@@ -77,15 +77,6 @@ export function useCampiDelSito() {
       setLon(numeroNelCampo(p.longitude))
       setTrovate(true)
     },
-    /** After a save, where the form is not unmounted: full fields would offer the same site
-     *  again, and the name is unique. */
-    azzera: () => {
-      setNome("")
-      setLat("")
-      setLon("")
-      setCielo(undefined)
-      setTrovate(false)
-    },
   }
 }
 
