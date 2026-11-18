@@ -29,9 +29,13 @@ fetch_catalog() {
     unpacked="$astap_dir/.d50"
     # Unpacked aside, then moved in: the solver never sees half a catalog.
     rm -rf "$unpacked"
-    curl -fsSL --retry 3 -o "$tmp" "$catalog_url" &&
-        echo "$catalog_md5  $tmp" | md5sum -c - &&
-        unzip -q -o "$tmp" -d "$unpacked" &&
+    # A cut download resumes at the next start (-C -); only a wrong checksum starts it over.
+    curl -fsSL --retry 3 -C - -o "$tmp" "$catalog_url" || return 1
+    if ! echo "$catalog_md5  $tmp" | md5sum -c -; then
+        rm -f "$tmp"
+        return 1
+    fi
+    unzip -q -o "$tmp" -d "$unpacked" &&
         find "$unpacked" -type f -exec mv -f {} "$astap_dir/" \;
     status=$?
     rm -rf "$tmp" "$unpacked"
