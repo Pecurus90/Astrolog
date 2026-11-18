@@ -15,6 +15,14 @@ import { notte, nottiPerMese, numero, oreEMinuti, t } from "./i18n"
  * Quale domanda e' aperta: **una sola in tutta la pagina**. Lo tiene la pagina e lo leggono le
  * domande e le sezioni, senza passarlo di mano in mano per cinque file.
  */
+const titoloDi = (id: string) => `domanda-${id.replace(/[^\w-]/g, "_")}`
+
+/** After the gesture that opens a question: its row unmounts with the button that had the focus,
+ *  so the focus goes to the open question's title instead of falling back to the page's body. */
+export function fuocoSu(id: string) {
+  window.setTimeout(() => document.getElementById(titoloDi(id))?.focus(), 0)
+}
+
 export const DomandaAperta = createContext<{ aperta: string | null; apri: (id: string) => void }>({
   aperta: null,
   apri: () => {},
@@ -174,7 +182,10 @@ export function Domanda({
         <a
           href="#"
           role="button"
-          onClick={gesto(() => apri(id))}
+          onClick={gesto(() => {
+            apri(id)
+            fuocoSu(id)
+          })}
           aria-label={`${parola}: ${chi}`}
           className="al-bottone al-bottone--tenue al-bottone--rovescio al-conf__blocco-11"
         >
@@ -191,7 +202,12 @@ export function Domanda({
     >
       <div className="al-conf__colonna-17">
         <div className="al-conf__riga-12">
-          <h3 className="al-conf__blocco-12" style={{ fontSize: m.titoloDomanda }}>
+          <h3
+            id={titoloDi(id)}
+            tabIndex={-1}
+            className="al-conf__blocco-12"
+            style={{ fontSize: m.titoloDomanda }}
+          >
             {nome}
           </h3>
           {pillola}

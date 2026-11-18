@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
@@ -140,6 +140,16 @@ describe("Da confermare -- il telefono", () => {
     expect(dove()).toBe("caso 1 di 2")
     // niente salto di tipo: si torna ai tipi
     expect(screen.queryByRole("button", { name: /^Tipo (prima|dopo)/ })).toBeNull()
+  })
+
+  it("cambiando caso il fuoco va al titolo del caso nuovo (Issue #20)", async () => {
+    await aperta()
+    tipo("Frame senza tipo")
+    fireEvent.click(gesto("Caso dopo"))
+    await waitFor(() => expect(document.activeElement?.tagName).toBe("H3"))
+    expect(document.activeElement?.closest("article")?.getAttribute("aria-label")).toBe(
+      "D:/Astro/M51, salvata",
+    )
   })
 
   it("un tipo con un caso solo ha tutti e due i gesti spenti", async () => {

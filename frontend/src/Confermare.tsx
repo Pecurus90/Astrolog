@@ -24,7 +24,7 @@ import {
   spenta,
   statoDi,
 } from "./ConfermareGuscio"
-import { DomandaAperta, UnCaso } from "./Domanda"
+import { DomandaAperta, UnCaso, fuocoSu } from "./Domanda"
 import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
 import { SezioneAttrezzatura } from "./SezioneAttrezzatura"
 import { SezioneFiltri } from "./SezioneFiltri"
@@ -438,6 +438,9 @@ function LaPagina({ formato }: { formato: Formato }) {
     setTipo(s)
     setCaso(k)
     setFuoriCaso(undefined)
+    // the case's question takes the focus: the button pressed may not be there any more
+    const d = s === null ? undefined : domande[s][k]
+    if (s !== null && d) fuocoSu(`${s}:${d.chiave}`)
   }
   // Dopo un Applica il tipo scelto puo' non esserci piu': si torna ai tipi.
   const qui = tel && tipo !== null && presenti.includes(tipo) ? tipo : null

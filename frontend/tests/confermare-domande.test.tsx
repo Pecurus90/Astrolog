@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
@@ -76,6 +76,15 @@ describe("Da confermare -- una domanda aperta alla volta", () => {
     expect(within(chiusa("D:/Astro/M51")).getByRole("button", { name: "Cambia: D:/Astro/M51" }).textContent).toBe("Cambia")
     // i controlli stanno solo nella domanda aperta
     expect(screen.getAllByRole("radio")).toHaveLength(2)
+  })
+
+  it("aprendo una domanda il fuoco va al suo titolo, non al corpo della pagina (Issue #20)", async () => {
+    await apri()
+    const gesto = screen.getByRole("button", { name: "Rispondi: D:/Astro/dark" })
+    gesto.focus()
+    fireEvent.click(gesto)
+    await waitFor(() => expect(document.activeElement?.tagName).toBe("H3"))
+    expect(document.activeElement?.closest("article")?.getAttribute("aria-label")).toContain("D:/Astro/dark")
   })
 
   it("aprendone un'altra, quella di prima si chiude", async () => {
