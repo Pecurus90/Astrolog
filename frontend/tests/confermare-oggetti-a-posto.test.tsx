@@ -198,6 +198,9 @@ describe("Da confermare -- gli oggetti identificati", () => {
     fireEvent.click(scelta(correzione(sezione), "Altro nome"))
     fireEvent.change(within(correzione(sezione)).getByLabelText("Nome dell'oggetto"), { target: { value: " M 3 " } })
     expect(piede()).toBe("0modifiche da applicare")
+    // Issue #20: scritto senza spazio o in minuscolo e' lo stesso nome, non una risposta nuova
+    fireEvent.change(within(correzione(sezione)).getByLabelText("Nome dell'oggetto"), { target: { value: "m3" } })
+    expect(piede()).toBe("0modifiche da applicare")
   })
 
   it("senza domande aperte la sezione c'e' lo stesso: gli oggetti identificati si correggono da li'", async () => {

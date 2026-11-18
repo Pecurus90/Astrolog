@@ -28,6 +28,10 @@ type Risposta = components["schemas"]["ObjectEdit"]
 const ALTRO_NOME = "nome"
 const NON_OGGETTO = "nessuno"
 
+/** "m31" and "M 31" are one name to whoever types it: not a correction to send. */
+const stessoNome = (a: string, b: string) =>
+  a.replace(/\s+/g, "").toLocaleLowerCase() === b.replace(/\s+/g, "").toLocaleLowerCase()
+
 /**
  * **Che oggetto e'**: una scheda per gruppo di frame (ADR 0014, S3; tavola v82, 210-213) -- un
  * oggetto su cui l'app ha un dubbio, o frame che non dicono cosa e' stato ripreso e di cui il
@@ -202,7 +206,7 @@ function Identificato({
       return onRisposta(scheda.key, { key: scheda.key, not_an_object: true })
     const pulito = nuovo.trim()
     // il nome di adesso riscritto non e' una correzione
-    const nuovoNome = quale === ALTRO_NOME && pulito !== "" && pulito !== nome
+    const nuovoNome = quale === ALTRO_NOME && pulito !== "" && !stessoNome(pulito, nome)
     onRisposta(
       scheda.key,
       nuovoNome ? { key: scheda.key, name: pulito, not_an_object: false } : null,
@@ -371,7 +375,7 @@ function RigaOggetti({
     setScelta(quale)
     setScritto(nome)
     const pulito = nome.trim()
-    const uguale = quale === salvata && (quale !== ALTRO_NOME || pulito === nomeSalvato)
+    const uguale = quale === salvata && (quale !== ALTRO_NOME || stessoNome(pulito, nomeSalvato))
     if (uguale || (quale === ALTRO_NOME && pulito === "")) return onRisposta(scheda.key, null)
     if (quale === NON_OGGETTO)
       return onRisposta(scheda.key, { key: scheda.key, not_an_object: true })
