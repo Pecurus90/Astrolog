@@ -16,6 +16,7 @@ import {
   postoIgnoto,
   pulisci,
   rispondi,
+  scritture,
   vai,
 } from "./banco"
 
@@ -213,7 +214,7 @@ describe("Da confermare -- il guscio della pagina", () => {
 
   it("senza nessun frame dice da dove si comincia, e porta alle cartelle", async () => {
     // "Niente da confermare" a chi non ha ancora scelto le cartelle sarebbe vero e inutile.
-    aperta({ ...VUOTA, empty: true })
+    aperta({ ...VUOTA, empty: "no_folders" })
     await apri()
     expect(await screen.findByText("Nessun frame in archivio.")).toBeDefined()
     expect(screen.getByText("Le domande compaiono dopo la scansione.")).toBeDefined()
@@ -224,8 +225,18 @@ describe("Da confermare -- il guscio della pagina", () => {
     await waitFor(() => expect(window.location.pathname).toBe("/impostazioni/cartelle"))
   })
 
+  it("con cartelle mai lette il gesto e' Scansiona, non Aggiungi cartelle (Issue #20)", async () => {
+    aperta({ ...VUOTA, empty: "unread" }, { "/api/v1/scan": { stato: 202, corpo: { started: [], skipped: [] } } })
+    await apri()
+    expect(await screen.findByText("Cartelle non ancora lette.")).toBeDefined()
+    expect(screen.getByText("Le domande compaiono dopo la scansione.")).toBeDefined()
+    expect(screen.queryByRole("button", { name: "Aggiungi cartelle" })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Scansiona" }))
+    await waitFor(() => expect(scritture().some((s) => s.url.endsWith("/api/v1/scan"))).toBe(true))
+  })
+
   it("senza frame ma con una domanda, la domanda si vede: le risposte ripristinate ne portano", async () => {
-    aperta({ ...PAGINA, empty: true })
+    aperta({ ...PAGINA, empty: "no_frames" })
     await apri()
     expect(await screen.findByRole("region", { name: "Strumenti duplicati" })).toBeDefined()
     expect(screen.queryByText("Nessun frame in archivio.")).toBeNull()

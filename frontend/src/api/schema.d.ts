@@ -5084,9 +5084,9 @@ export interface components {
             mosaics: components["schemas"]["MosaicCandidate"][];
             /**
              * Empty
-             * @description The archive holds no frame yet: there is nothing to ask, not nothing left.
+             * @description Why the archive holds no frame yet: no folder chosen, folders never read, or folders read without frames; there is nothing to ask, not nothing left. `None` once there are frames.
              */
-            empty: boolean;
+            empty: ("no_folders" | "unread" | "no_frames") | null;
             /** To Confirm */
             to_confirm: number;
             /**

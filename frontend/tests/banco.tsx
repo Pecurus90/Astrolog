@@ -427,7 +427,7 @@ export const daConfermare = fatta<Schema["ReviewOut"]>({
   typeless: [],
   undated: [],
   mosaics: [],
-  empty: false,
+  empty: null,
   to_confirm: 0,
   sections: [],
 })

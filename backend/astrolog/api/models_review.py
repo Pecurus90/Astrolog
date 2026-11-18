@@ -221,8 +221,10 @@ class ReviewOut(BaseModel):
         description="The folders whose frames do not tell when they were taken."
     )
     mosaics: list[MosaicCandidate] = Field(description="The regions taken in side-by-side panels.")
-    empty: bool = Field(
-        description="The archive holds no frame yet: there is nothing to ask, not nothing left."
+    empty: Literal["no_folders", "unread", "no_frames"] | None = Field(
+        description="Why the archive holds no frame yet: no folder chosen, folders never read, or "
+        "folders read without frames; there is nothing to ask, not nothing left. `None` once "
+        "there are frames."
     )
     to_confirm: int
     sections: list["ReviewSectionOut"] = Field(

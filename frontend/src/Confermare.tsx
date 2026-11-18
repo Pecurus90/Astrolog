@@ -25,6 +25,7 @@ import {
   statoDi,
 } from "./ConfermareGuscio"
 import { DomandaAperta, UnCaso, fuocoSu } from "./Domanda"
+import { useGesto } from "./Scansiona"
 import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
 import { SezioneAttrezzatura } from "./SezioneAttrezzatura"
 import { SezioneFiltri } from "./SezioneFiltri"
@@ -105,6 +106,7 @@ function LaPagina({ formato }: { formato: Formato }) {
   const tel = formato === "telefono"
   const m = MISURE[formato]
   const vaiA = useNavigate()
+  const scansiona = useGesto()
   // Rispondi of the frame lands on its section: the router does not follow a hash
   const { hash } = useLocation()
   const [indirizzo] = useSearchParams()
@@ -318,16 +320,20 @@ function LaPagina({ formato }: { formato: Formato }) {
   // Primo avvio: non c'e' niente da chiedere perche' non c'e' ancora niente. Senza conto e senza piede.
   // Solo senza domande: risposte ripristinate su un archivio nuovo ne portano anche a zero frame.
   if (dati.empty && presenti.length === 0) {
+    // folders added and never read: the gesture is reading them, not adding more (Issue #20)
+    const daLeggere = dati.empty === "unread"
     return (
       <Guscio m={m}>
         <Avviso
           tipo="pagina"
           formato={formato}
           segno="?"
-          titolo={t("review.empty.title")}
+          titolo={t(daLeggere ? "review.empty.unread" : "review.empty.title")}
           testo={t("review.empty.text")}
-          azione={t("review.empty.how")}
-          onAzione={() => void vaiA("/impostazioni/cartelle")}
+          azione={t(daLeggere ? "scan.start" : "review.empty.how")}
+          onAzione={() =>
+            daLeggere ? scansiona.mutate("start") : void vaiA("/impostazioni/cartelle")
+          }
         />
       </Guscio>
     )

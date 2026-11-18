@@ -4,7 +4,7 @@ import json
 import sqlite3
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -117,10 +117,26 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         typeless=[TypelessFolder(**g) for g in typeless_rows],
         undated=undated_rows,
         mosaics=mosaics,
-        empty=conn.execute("SELECT NOT EXISTS (SELECT 1 FROM frames)").fetchone()[0] == 1,
+        empty=_empty(conn),
         to_confirm=to_confirm,
         sections=sections,
     )
+
+
+_EMPTY = """
+SELECT CASE
+  WHEN EXISTS (SELECT 1 FROM frames) THEN NULL
+  WHEN NOT EXISTS (SELECT 1 FROM folders WHERE retired_at IS NULL) THEN 'no_folders'
+  WHEN EXISTS (SELECT 1 FROM folders f WHERE f.retired_at IS NULL AND NOT EXISTS
+    (SELECT 1 FROM scan_runs r WHERE r.folder_id = f.id AND r.status = 'ok')) THEN 'unread'
+  ELSE 'no_frames'
+END
+"""
+
+
+def _empty(conn: sqlite3.Connection) -> Literal["no_folders", "unread", "no_frames"] | None:
+    """Without frames, why: the gesture differs, choosing folders or reading them (Issue #20)."""
+    return conn.execute(_EMPTY).fetchone()[0]
 
 
 @router.get("/review/objects/settled", response_model=SettledObjects)

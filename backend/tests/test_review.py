@@ -36,11 +36,30 @@ def _filtro(page, nome):
 def test_the_page_says_when_the_archive_holds_no_frame_yet(client_vuoto):
     """A mani vuote la pagina non ha domande perche' non c'e' ancora niente da leggere: lo dice
     l'API, o lo schermo direbbe "niente da confermare" a chi non ha ancora scelto le cartelle."""
-    assert review(client_vuoto)["empty"] is True
+    assert review(client_vuoto)["empty"] == "no_folders"
+
+
+def test_folders_added_and_never_read_are_said_apart(client_vuoto, db_path):
+    """Issue #20: con cartelle aggiunte e non lette il gesto giusto e' leggerle, non aggiungerne;
+    lette e senza frame, si'."""
+    conn = connect(db_path)
+    conn.execute(
+        "INSERT INTO folders (id, root_path, created_at)"
+        " VALUES (1, 'D:/Astro', '2026-11-18T00:00:00Z')"
+    )
+    conn.commit()
+    assert review(client_vuoto)["empty"] == "unread"
+    conn.execute(
+        "INSERT INTO scan_runs (folder_id, started_at, ended_at, status)"
+        " VALUES (1, '2026-11-18T00:00:00Z', '2026-11-18T00:01:00Z', 'ok')"
+    )
+    conn.commit()
+    conn.close()
+    assert review(client_vuoto)["empty"] == "no_frames"
 
 
 def test_an_archive_with_frames_is_not_empty(client):
-    assert review(client)["empty"] is False
+    assert review(client)["empty"] is None
 
 
 def test_the_filter_question_does_not_scan_the_whole_archive_per_filter(client):

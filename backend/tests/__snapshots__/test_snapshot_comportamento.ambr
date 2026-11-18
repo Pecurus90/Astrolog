@@ -3752,7 +3752,7 @@
 # ---
 # name: test_the_pages_of_the_synthetic_archive[review]
   dict({
-    'empty': False,
+    'empty': None,
     'filter_choices': list([
       dict({
         'id': 3,

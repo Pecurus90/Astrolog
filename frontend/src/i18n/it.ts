@@ -228,6 +228,7 @@ export const it = {
   "review.empty.title": "Nessun frame in archivio.",
   "review.empty.text": "Le domande compaiono dopo la scansione.",
   "review.empty.how": "Aggiungi cartelle",
+  "review.empty.unread": "Cartelle non ancora lette.",
   "review.none.title": "Niente da confermare",
   "review.none.text": "Nessuna domanda aperta.",
   "review.fix": "Correggi",

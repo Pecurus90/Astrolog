@@ -230,6 +230,7 @@ export const en = {
   "review.empty.title": "No frames in the archive.",
   "review.empty.text": "Questions appear after the scan.",
   "review.empty.how": "Add folders",
+  "review.empty.unread": "Folders not read yet.",
   "review.none.title": "Nothing to confirm",
   "review.none.text": "No open questions.",
   "review.fix": "Correct",
