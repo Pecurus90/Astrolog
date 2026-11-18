@@ -159,6 +159,21 @@ describe("Da confermare -- una domanda aperta alla volta", () => {
     expect(document.querySelector(".al-conf__riga-9")).toBeNull()
   })
 
+  it("una sezione riaperta resta aperta fino ad Applica, poi si richiude come la tavola", async () => {
+    // Issue #20: la prova che dopo Applica si riparte chiusi, dalla prima senza risposta
+    await apri({ ...PAGINA, typeless: [cartellaSenzaTipo({ key: "D:/Astro/M51", frames: 30, answer: "light" })] })
+    const chiusa = () => document.querySelector(".al-conf__riga-9")?.querySelector(".al-conf__blocco-7")?.textContent
+    expect(chiusa()).toBe("Frame senza tipo")
+    fireEvent.click(screen.getByRole("button", { name: "Riapri: Frame senza tipo" }))
+    expect(screen.getByRole("region", { name: "Frame senza tipo" })).toBeDefined()
+
+    fireEvent.click(screen.getByRole("radio", { name: /sono distinti/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^applica/i }))
+    await screen.findByRole("status")
+    expect(await screen.findByText("Frame senza tipo", { selector: ".al-conf__blocco-7" })).toBeDefined()
+    expect(screen.queryByRole("region", { name: "Frame senza tipo" })).toBeNull()
+  })
+
   it("una sezione chiusa con sole risposte salvate lo dice", async () => {
     await apri({ ...PAGINA, typeless: [cartellaSenzaTipo({ key: "D:/Astro/M51", frames: 30, answer: "light" })] })
     const riga = document.querySelector(".al-conf__riga-9") as HTMLElement
