@@ -735,3 +735,4 @@ cambiando genere non porto con me i campi del genere di prima - step 33, Sistema
 test_a_push_gets_an_intel_mac_and_the_rest_keep_apple_silicon - Issue #50: macos-15-intel has no llvmlite wheel (ADR 0043); replaced by test_a_push_runs_no_mac_and_the_rest_keep_apple_silicon
 interrotta ieri: «ieri» con l'ora - Issue #20: the interrupted scan box says the phase it stopped in, then the time; replaced by interrotta ieri: la fase dove si e' fermata, poi «ieri» con l'ora
 tornando al passo dopo aver salvato, il sito non si offre di nuovo - Issue #20: the form keeps the saved site as the board v82 does, a second save edits it; replaced by tornando al passo dopo aver salvato, il sito resta scritto e non si salva due volte
+automatico e' spento: non si sceglie e lo segna ai lettori di schermo - step 33.5: Automatico arrives, off only without a home site (board v82 SceltaTema); replaced by senza sito automatico e' spento, lo segna ai lettori di schermo e dice perche'

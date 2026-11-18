@@ -1,24 +1,31 @@
 // @vitest-environment jsdom
 /**
- * **SceltaTema** (componente v58): il modo e i cinque accenti, ciascuno col campione nel modo in
- * uso. Automatico spento fino al passo Tema (Marco 15/11/2026).
+ * **SceltaTema** (componente v82): il modo e i cinque accenti, ciascuno col campione nel modo in
+ * uso. Automatico segue tramonto e alba del sito di casa: senza sito e' spento e la nota dice
+ * perche'.
  */
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { SceltaTema } from "../src/componenti/SceltaTema"
+import { type ModoScelto, vesteDa } from "../src/componenti/Tema"
 import { pulisci } from "./banco"
 import { impronta } from "./impronta"
 
 afterEach(pulisci)
 
-function monta(formato: "desktop" | "telefono") {
+function monta(
+  formato: "desktop" | "telefono",
+  sito: string | null = "Cima Ekar",
+  modo: ModoScelto = "scuro",
+) {
   const modi: string[] = []
   const accenti: string[] = []
   const { container } = render(
     <SceltaTema
-      modo="scuro"
+      modo={modo}
       accento="turchese"
+      sito={sito}
       formato={formato}
       onModo={(m) => modi.push(m)}
       onAccento={(a) => accenti.push(a)}
@@ -44,14 +51,45 @@ describe("la scelta del tema", () => {
     ).toEqual(["false", "false", "true", "false", "false"])
   })
 
-  it("automatico e' spento: non si sceglie e lo segna ai lettori di schermo", () => {
-    const { modi } = monta("desktop")
+  it("senza sito automatico e' spento, lo segna ai lettori di schermo e dice perche'", () => {
+    const { modi } = monta("desktop", null)
     const auto = screen.getByRole("radio", { name: "Automatico" })
     expect(auto.getAttribute("aria-disabled")).toBe("true")
     expect(screen.getByRole("radio", { name: "Chiaro" }).getAttribute("aria-disabled")).toBeNull()
     fireEvent.click(auto)
     fireEvent.click(screen.getByRole("radio", { name: "Chiaro" }))
     expect(modi).toEqual(["chiaro"])
+    screen.getByText(
+      "Automatico ha bisogno di un sito di osservazione: tramonto e alba si calcolano da lì.",
+    )
+  })
+
+  it("con un sito automatico si sceglie e, scelto, la nota nomina il sito", () => {
+    const { modi } = monta("desktop")
+    expect(screen.queryByText(/tramonto/)).toBeNull()
+    fireEvent.click(screen.getByRole("radio", { name: "Automatico" }))
+    expect(modi).toEqual(["automatico"])
+    pulisci()
+    monta("desktop", "Cima Ekar", "automatico")
+    screen.getByText("Scuro dal tramonto all'alba di Cima Ekar, chiaro di giorno.")
+  })
+
+  it("automatico gia' scelto resta raggiungibile anche se il sito non c'e' piu'", () => {
+    monta("desktop", null, "automatico")
+    const auto = screen.getByRole("radio", { name: "Automatico" })
+    expect([auto.getAttribute("aria-checked"), auto.getAttribute("aria-disabled")]).toEqual([
+      "true",
+      null,
+    ])
+  })
+
+  it("automatico veste il modo che l'API dice in vigore, scuro finche' non lo sa", () => {
+    expect(vesteDa("automatico", "corallo", "chiaro")).toEqual({
+      modo: "chiaro",
+      accento: "corallo",
+    })
+    expect(vesteDa("automatico", "corallo", null).modo).toBe("scuro")
+    expect(vesteDa("chiaro", "corallo", "scuro").modo).toBe("chiaro")
   })
 
   it("toccare un accento lo chiede", () => {
@@ -68,6 +106,6 @@ describe("la scelta del tema", () => {
       pulisci()
       return impronta(html)
     })
-    expect(visti).toEqual(["d9208174", "c2acebbc"])
+    expect(visti).toEqual(["ade1506", "2b609e2e"])
   })
 })

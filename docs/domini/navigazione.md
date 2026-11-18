@@ -134,11 +134,16 @@ fuoco a chi l'aveva aperto, toccare fuori chiude, le frecce girano fra le voci d
 menu appena aperto porta il fuoco alla sua prima voce. Cambiare pagina chiude tutto.
 
 **Il tema** (Marco, 17/10/2026): modo Chiaro, Scuro, Automatico e cinque accenti, nel primo avvio
-e in Impostazioni. Il tondo del modo nella testa e "Modo automatico" nell'ingranaggio arrivano col
-passo Tema, quando tutte le pagine sono nel foglio nuovo (Marco, 10/11/2026). Chiaro, Scuro e
+e in Impostazioni. Il tondo del modo nella testa e "Modo automatico" nell'ingranaggio arrivano
+quando tutte le pagine sono nel foglio nuovo (Marco, 10/11/2026). Chiaro, Scuro, Automatico e
 gli accenti si salvano da Impostazioni, Generale, e vestono subito tutto il telaio; le pagine
-ancora col foglio vecchio stanno in un riquadro scuro, e Automatico resta spento fino al passo
-Tema (Marco, 15/11/2026). La lingua scelta li' cambia le parole subito.
+ancora col foglio vecchio stanno in un riquadro scuro. La lingua scelta li' cambia le parole subito.
+**Automatico** (passo 33.5, tavola v82): scuro dal tramonto all'alba del sito di casa, chiaro di
+giorno; tramonto e alba col Sole a -0,833 gradi (USNO), scritti dal giro del calendario della Luna
+(`moon_nights.sun_down_from/until`). `GET /settings` dice il modo in vigore (`theme_now`) e
+quando cambia; l'app rilegge le impostazioni a quell'ora, e ancora dopo ogni lettura che non
+porta il cambio (giro in ritardo, orologi diversi). Senza sito di casa Automatico non si
+sceglie e la nota dice perche' (`theme_site`); finche' il giro non ha scritto la notte vale scuro.
 
 **La Dashboard** (Marco, 15-16/10/2026): il tempo che manca alla scansione si stima dal ritmo
 finora della cartella in lettura, si dice "circa" e tace nel primo minuto; "prima scansione"

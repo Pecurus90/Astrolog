@@ -73,6 +73,8 @@ export function useScriviSito(casa: boolean) {
       if (casa) {
         void cache.invalidateQueries({ queryKey: ["tonight"] })
         void cache.invalidateQueries({ queryKey: ["moon-calendar"] })
+        // Automatico follows the home site's sky (`theme_site`, `theme_now`)
+        void cache.invalidateQueries({ queryKey: ["settings"] })
       }
     }
     return { data, status: response.status }

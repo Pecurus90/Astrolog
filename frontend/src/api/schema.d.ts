@@ -5687,6 +5687,13 @@ export interface components {
             choices: {
                 [key: string]: (string | number)[];
             };
+            /** @description With `theme_mode` automatico: the mode in force at the home site now, dark from sunset to sunrise. None with a fixed mode, or when the night is not written yet (no home site, the round still to come): the page keeps scuro, the board's fallback. */
+            theme_now: components["schemas"]["ThemeNowOut"] | null;
+            /**
+             * Theme Site
+             * @description The home site whose sunset and sunrise Automatico follows, by name. None without a home site: Automatico cannot be chosen (board v82, SceltaTema).
+             */
+            theme_site: string | null;
         };
         /**
          * SettingsPatch
@@ -6141,6 +6148,19 @@ export interface components {
             not_found: number;
             /** Not Yet */
             not_yet: number;
+        };
+        /** ThemeNowOut */
+        ThemeNowOut: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "scuro" | "chiaro";
+            /**
+             * Until
+             * @description The next change, ISO in the site's zone: read again then. None in a polar day or night, when no change comes.
+             */
+            until: string | null;
         };
         /**
          * TonightOut

@@ -4,13 +4,14 @@
  * telefono, nome, lingua e tema che si salvano e valgono subito, il salvataggio non riuscito.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   SALUTE,
   SITO_DI_CASA,
   SPINA,
   STANOTTE,
+  chiamate,
   disegna,
   impostazioni,
   pulisci,
@@ -24,8 +25,12 @@ afterEach(pulisci)
 
 const BASE = impostazioni(true)
 
-function app(extra: Record<string, Voce> = {}, valori: Record<string, unknown> = {}) {
-  const corpo = { ...BASE, values: { ...BASE.values, ...valori } }
+function app(
+  extra: Record<string, Voce> = {},
+  valori: Record<string, unknown> = {},
+  resto: Record<string, unknown> = {},
+) {
+  const corpo = { ...BASE, ...resto, values: { ...BASE.values, ...valori } }
   rispondi({
     ...extra,
     ...STANOTTE,
@@ -141,10 +146,10 @@ describe("Impostazioni, Generale", () => {
     const { container } = await app({ "PATCH /api/v1/settings": scritte({ theme_mode: "chiaro" }) })
 
     const modo = await screen.findByRole("radiogroup", { name: "Modo" })
-    // Automatico arriva col passo Tema (Marco 15/11/2026)
+    // c'e' il sito di casa: Automatico si sceglie (tavola v82)
     expect(
       within(modo).getByRole("radio", { name: "Automatico" }).getAttribute("aria-disabled"),
-    ).toBe("true")
+    ).toBeNull()
     fireEvent.click(within(modo).getByRole("radio", { name: "Chiaro" }))
 
     await waitFor(() =>
@@ -158,6 +163,40 @@ describe("Impostazioni, Generale", () => {
       ),
     )
     expect(container.querySelector(".al-imp__griglia-1")).not.toBeNull()
+  })
+
+  it("automatico veste il modo che l'API dice in vigore e nomina il sito di casa", async () => {
+    window.history.pushState({}, "", "/impostazioni/generale")
+    const ora = { mode: "chiaro", until: "2026-10-16T18:27:00+02:00" }
+    await app({}, { theme_mode: "automatico" }, { theme_now: ora })
+
+    const modo = await screen.findByRole("radiogroup", { name: "Modo" })
+    const auto = within(modo).getByRole("radio", { name: "Automatico" })
+    expect(auto.getAttribute("aria-checked")).toBe("true")
+    screen.getByText("Scuro dal tramonto all'alba di Vicenza, chiaro di giorno.")
+    expect(screen.getByRole("tablist").closest("[data-modo]")?.getAttribute("data-modo")).toBe(
+      "chiaro",
+    )
+    // l'indice dice la scelta, non il modo vestito
+    expect(document.body.textContent).not.toMatch(/modo chiaro/)
+  })
+
+  it("automatico senza la notte scritta rilegge ogni minuto, non una volta sola", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      window.history.pushState({}, "", "/impostazioni/generale")
+      await app({}, { theme_mode: "automatico" })
+      await screen.findByRole("radiogroup", { name: "Modo" })
+      const letture = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+      const prima = letture()
+      await vi.advanceTimersByTimeAsync(60_000)
+      await waitFor(() => expect(letture()).toBe(prima + 1))
+      // la rilettura riporta lo stesso: si rilegge ancora
+      await vi.advanceTimersByTimeAsync(60_000)
+      await waitFor(() => expect(letture()).toBe(prima + 2))
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("sul telefono Salva compare solo per un nome cambiato, e sparisce dopo", async () => {
@@ -193,7 +232,7 @@ describe("Impostazioni, Generale", () => {
       visti.push(impronta(container.querySelector(classe)?.outerHTML ?? ""))
       pulisci()
     }
-    expect(visti).toEqual(["78f1ffd4", "eee3e93e"])
+    expect(visti).toEqual(["517373ea", "fc6d2a74"])
   })
 
   it("un salvataggio non riuscito lo dice in testa, e Riprova riscrive", async () => {

@@ -11,7 +11,7 @@ from astrolog.api.app import create_app
 from astrolog.db import config
 from astrolog.db.connect import connect, create_database
 from astrolog.site_of import home_site
-from astrolog.spine import moon_calendar
+from astrolog.spine import moon_calendar, theme
 from astrolog.weather import forecast
 from group_bench import ROMA, corri, luogo, posa, prepara
 
@@ -76,6 +76,65 @@ def scritto_oggi(_scritto_oggi, db_path):
 
 def righe(conn):
     return conn.execute("SELECT * FROM moon_nights ORDER BY night_date").fetchall()
+
+
+def _giu(conn, notte):
+    return conn.execute(
+        "SELECT sun_down_from, sun_down_until FROM moon_nights WHERE night_date = ?", (notte,)
+    ).fetchone()
+
+
+@pytest.mark.parametrize(
+    ("adesso", "modo", "notte", "bordo"),
+    [
+        ("2026-10-16T13:00:00Z", "chiaro", "2026-10-16", "sun_down_from"),  # 15:00, prima
+        ("2026-10-16T19:00:00Z", "scuro", "2026-10-16", "sun_down_until"),  # 21:00, al buio
+        ("2026-10-17T08:00:00Z", "chiaro", "2026-10-17", "sun_down_from"),  # 10:00, dopo l'alba
+    ],
+)
+def test_automatic_is_dark_from_sunset_to_sunrise_and_says_until_when(
+    scritto, adesso, modo, notte, bordo
+):
+    """Tavola v82, SceltaTema: «Scuro dal tramonto all'alba di <sito>, chiaro di giorno». Si legge
+    dalle righe del calendario, scritte dal giro; il cambio dice quando rileggere."""
+    ora = theme.shown(scritto, home_site(scritto), dt.datetime.fromisoformat(adesso))
+    assert ora is not None
+    assert (ora.mode, ora.until) == (modo, _giu(scritto, notte)[bordo])
+
+
+def test_the_settings_say_the_automatic_mode_in_force(db_path, scritto, monkeypatch):
+    """GET /settings legge cio' che il giro ha scritto: alle 21 di Roma del 16/10 e' scuro fino
+    all'alba; con un modo fisso il campo non c'e'."""
+    import astrolog.api.settings as rotta
+
+    monkeypatch.setattr(rotta, "now_iso", lambda: "2026-10-16T19:00:00Z")
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        assert c.get("/api/v1/settings").json()["theme_now"] is None
+        r = c.patch("/api/v1/settings", json={"values": {"theme_mode": "automatico"}})
+    alba = _giu(scritto, "2026-10-16")["sun_down_until"]
+    assert r.json()["theme_now"] == {"mode": "scuro", "until": alba}
+    # la nota della tavola nomina il sito di casa: «Scuro dal tramonto all'alba di <sito>»
+    assert r.json()["theme_site"] == home_site(scritto).name
+
+
+def test_a_night_without_sunset_says_the_next_sunset_written(scritto):
+    """Sole di mezzanotte: la notte non ha tramonto, il cambio e' il primo tramonto scritto dopo;
+    senza, l'app non rileggerebbe piu'."""
+    for notte in ("2026-10-16", "2026-10-17"):
+        scritto.execute(
+            "UPDATE moon_nights SET sun_down_from = NULL, sun_down_until = NULL"
+            " WHERE night_date = ?",
+            (notte,),
+        )
+    adesso = dt.datetime(2026, 10, 16, 13, tzinfo=dt.UTC)
+    ora = theme.shown(scritto, home_site(scritto), adesso)
+    assert ora == theme.ThemeNow("chiaro", _giu(scritto, "2026-10-18")["sun_down_from"])
+
+
+def test_automatic_outside_the_written_nights_does_not_know(scritto):
+    adesso = dt.datetime(2027, 3, 1, 20, tzinfo=dt.UTC)
+    assert theme.shown(scritto, home_site(scritto), adesso) is None
+    assert theme.shown(scritto, None, adesso) is None
 
 
 def test_the_round_writes_this_month_and_the_next(conn):

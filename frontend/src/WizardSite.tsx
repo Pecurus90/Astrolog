@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { Avviso } from "./componenti/Avviso"
@@ -21,6 +22,7 @@ const chiave = (p: Posto) => `${p.name}-${p.latitude}-${p.longitude}`
  */
 export function useSitoDelPasso(onSaved: () => void) {
   const campi = useCampiDelSito()
+  const cache = useQueryClient()
   const [rotto, setRotto] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [salvato, setSalvato] = useState<{ id: number; firma: string } | null>(null)
@@ -49,6 +51,8 @@ export function useSitoDelPasso(onSaved: () => void) {
     setRotto(id === null)
     if (id === null) return
     setSalvato({ id, firma })
+    // the Tema step next: Automatico needs this site (`theme_site`)
+    void cache.invalidateQueries({ queryKey: ["settings"] })
     onSaved()
   }
   // leaving the step drops a failed write: back on it, nothing was retried yet

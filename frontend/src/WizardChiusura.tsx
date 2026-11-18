@@ -1,14 +1,14 @@
 import { Avviso } from "./componenti/Avviso"
 import { useFormato } from "./componenti/formato"
 import { NOMI_ACCENTO, NOMI_MODO } from "./componenti/SceltaTema"
-import type { Veste } from "./componenti/Tema"
+import type { Scelta } from "./componenti/Tema"
 import { Comando, CorniceAvvio, MISURE, type Passo, segno } from "./PrimoAvvioCornice"
 import { numero, t } from "./i18n"
 
 /** What the closing tells, read from the database once the stamp is written. */
 export interface Chiuso {
   nome: string | null
-  veste: Veste
+  scelta: Scelta
   chiave: boolean
   /** `null`: no site; `undefined`: the read failed, and the row stays silent. */
   sito: { nome: string; bortle: number | null } | null | undefined
@@ -66,7 +66,7 @@ export function ChiusuraAvvio({
         ]),
     {
       voce: t("wizard.step.theme"),
-      valore: `${t(NOMI_MODO[chiuso.veste.modo])}${PUNTO}${t(NOMI_ACCENTO[chiuso.veste.accento])}`,
+      valore: `${t(NOMI_MODO[chiuso.scelta.modo])}${PUNTO}${t(NOMI_ACCENTO[chiuso.scelta.accento])}`,
       dato: true,
     },
     ...(cartelle === null

@@ -61,6 +61,9 @@ export const enComponenti = {
   "theme.mode.light": "Light",
   "theme.mode.dark": "Dark",
   "theme.mode.auto": "Automatic",
+  "theme.auto.noSite":
+    "Automatic needs an observing site: sunset and sunrise are worked out from there.",
+  "theme.auto.site": "Dark from sunset to sunrise at {sito}, light by day.",
   "theme.accent": "Accent",
   "theme.accent.original": "original",
   "theme.accent.amber": "amber · night blue", // glifo-ok: testo della tavola

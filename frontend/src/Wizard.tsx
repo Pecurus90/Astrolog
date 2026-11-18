@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react"
 import { Avviso } from "./componenti/Avviso"
 import { useFormato } from "./componenti/formato"
 import { SceltaTema } from "./componenti/SceltaTema"
-import { vesteDa } from "./componenti/Tema"
+import { sceltaDa } from "./componenti/Tema"
 import { SalvataggioFallito, useScriviImpostazioni } from "./ImpostazioniGenerale"
 import { Comando, CorniceAvvio, type Passo as Voce, type Tappa } from "./PrimoAvvioCornice"
 import { ChiusuraAvvio, type Chiuso } from "./WizardChiusura"
@@ -118,7 +118,7 @@ export function Wizard({
       const dati = {
         mostra,
         nome: typeof nome === "string" ? nome : null,
-        veste: vesteDa(scritte.values["theme_mode"], scritte.values["theme_accent"]),
+        scelta: sceltaDa(scritte.values["theme_mode"], scritte.values["theme_accent"]),
         chiave: Boolean(scritte.values["meteoblue_key"]),
         sito: mostra ? await sitoDiCasa() : undefined,
       }
@@ -275,9 +275,10 @@ export function Wizard({
           </div>
         )}
         {qui === "sito" && <WizardSite sito={sito} formato={formato} />}
-        {qui === "tema" && valori && (
+        {qui === "tema" && preferenze.data && (
           <SceltaTema
-            {...vesteDa(valori["theme_mode"], valori["theme_accent"])}
+            {...sceltaDa(preferenze.data.values["theme_mode"], preferenze.data.values["theme_accent"])}
+            sito={preferenze.data.theme_site}
             formato={formato}
             onModo={(m) => scrivi.mutate({ theme_mode: m })}
             onAccento={(a) => scrivi.mutate({ theme_accent: a })}

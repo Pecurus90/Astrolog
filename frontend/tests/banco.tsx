@@ -66,6 +66,9 @@ export function impostazioni(fatto: boolean, manca?: readonly string[]) {
     missing: manca ?? (fatto ? [] : ["no_active_site"]),
     ranges: { moon_good_pct: { min: 0, max: 100 }, moon_limit_pct: { min: 0, max: 100 } },
     choices: { moon_above_deg: [-5, 0, 5, 10], language: ["it", "en"] },
+    // col timbro c'e' il sito di casa (`missing` vuoto); Automatico non scelto, niente ora
+    theme_now: null,
+    theme_site: fatto && !(manca ?? []).includes("no_active_site") ? "Vicenza" : null,
   }
 }
 

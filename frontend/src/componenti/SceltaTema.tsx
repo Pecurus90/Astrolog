@@ -2,7 +2,7 @@ import type { CSSProperties } from "react"
 
 import { type Chiave, t } from "../i18n"
 import { gesto } from "./gesto"
-import { ACCENTI, type Accento, type Formato, type Modo } from "./Tema"
+import { ACCENTI, type Accento, type Formato, type ModoScelto, useTema } from "./Tema"
 
 // [T] SceltaTema.dc.html `L`: the layout per format
 const MISURE: Record<
@@ -40,7 +40,7 @@ const MISURE: Record<
   },
 }
 
-export const NOMI_MODO: Record<Modo | "automatico", Chiave> = {
+export const NOMI_MODO: Record<ModoScelto, Chiave> = {
   chiaro: "theme.mode.light",
   scuro: "theme.mode.dark",
   automatico: "theme.mode.auto",
@@ -55,28 +55,39 @@ export const NOMI_ACCENTO: Record<Accento, Chiave> = {
 }
 
 /**
- * **SceltaTema** (v58 component): the mode and the five accents, each accent with its swatch in
- * the mode in use. The swatch wears the sheet's tokens under its own `data-accento`.
+ * **SceltaTema** (v82 component): the mode and the five accents, each accent with its swatch in
+ * the mode worn now (`useTema`). The swatch wears the sheet's tokens under its own `data-accento`.
  *
- * - **Automatico is off** until the Tema step (Marco 15/11/2026): it needs the site's sun times.
+ * - **Automatico** follows the home site's sunset and sunrise: without a site (`sito` null) it is
+ *   off and the note says why; chosen, the note names the site.
  */
 export function SceltaTema({
   modo,
   accento,
+  sito,
   formato,
   onModo,
   onAccento,
 }: {
-  modo: Modo
+  modo: ModoScelto
   accento: Accento
+  sito: string | null
   formato: Formato
-  onModo: (m: Modo) => void
+  onModo: (m: ModoScelto) => void
   onAccento: (a: Accento) => void
 }) {
   const L = MISURE[formato]
-  const voceModo = (k: Modo | "automatico") => {
+  const visto = useTema().modo
+  const nota =
+    sito === null
+      ? t("theme.auto.noSite")
+      : modo === "automatico"
+        ? t("theme.auto.site", { sito })
+        : null
+  const voceModo = (k: ModoScelto) => {
     const sel = k === modo
-    const no = k === "automatico"
+    // [T] v82: a chosen Automatico stays reachable even if the site went
+    const no = k === "automatico" && sito === null && !sel
     return (
       <a
         key={k}
@@ -86,7 +97,7 @@ export function SceltaTema({
         aria-checked={sel ? "true" : "false"}
         aria-disabled={no ? "true" : undefined}
         onClick={gesto(() => {
-          if (k !== "automatico") onModo(k)
+          if (!no) onModo(k)
         })}
         style={{ opacity: no ? 0.45 : 1, cursor: no ? "not-allowed" : "pointer" }}
       >
@@ -110,6 +121,7 @@ export function SceltaTema({
           {voceModo("scuro")}
           {voceModo("automatico")}
         </span>
+        {nota && <span className="al-c-scelta-tema__testo-2">{nota}</span>}
       </div>
       <div className="al-c-scelta-tema__colonna-2">
         <span className="al-c-scelta-tema__testo-1" id="st-acc">
@@ -144,7 +156,7 @@ export function SceltaTema({
                 <span
                   className="al-c-scelta-tema__riga-4"
                   aria-hidden="true"
-                  data-modo={modo}
+                  data-modo={visto}
                   data-accento={k}
                   style={{
                     width: L.campW,

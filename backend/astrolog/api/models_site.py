@@ -168,6 +168,23 @@ class SettingsOut(BaseModel):
     choices: dict[str, list[str | int]] = Field(
         description="The closed keys' allowed values, in order: anything else is `wrong_type`."
     )
+    theme_now: "ThemeNowOut | None" = Field(
+        description="With `theme_mode` automatico: the mode in force at the home site now, dark "
+        "from sunset to sunrise. None with a fixed mode, or when the night is not written yet "
+        "(no home site, the round still to come): the page keeps scuro, the board's fallback."
+    )
+    theme_site: str | None = Field(
+        description="The home site whose sunset and sunrise Automatico follows, by name. None "
+        "without a home site: Automatico cannot be chosen (board v82, SceltaTema)."
+    )
+
+
+class ThemeNowOut(BaseModel):
+    mode: Literal["scuro", "chiaro"]
+    until: str | None = Field(
+        description="The next change, ISO in the site's zone: read again then. None in a polar "
+        "day or night, when no change comes."
+    )
 
 
 class SolverOut(BaseModel):

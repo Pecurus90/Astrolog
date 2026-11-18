@@ -5,7 +5,7 @@ import { Carta } from "./componenti/Carta"
 import { useFormato } from "./componenti/formato"
 import { gesto } from "./componenti/gesto"
 import { SceltaTema } from "./componenti/SceltaTema"
-import { type Formato, vesteDa } from "./componenti/Tema"
+import { type Formato, sceltaDa } from "./componenti/Tema"
 import { api } from "./api/client"
 import { t } from "./i18n"
 import { LINGUE, NOMI_LINGUE } from "./i18n/lingue"
@@ -43,16 +43,25 @@ export function useScriviImpostazioni(dopo?: () => void) {
 export function Generale() {
   const formato = useFormato()
   const tel = formato === "telefono"
-  const valori = usePreferenze().data?.values
-  if (!valori) return null
+  const preferenze = usePreferenze().data
+  if (!preferenze) return null
+  const valori = preferenze.values
   const salvato = String(valori.user_name ?? "")
+  const tema = (
+    <Tema
+      formato={formato}
+      modo={valori.theme_mode}
+      accento={valori.theme_accent}
+      sito={preferenze.theme_site}
+    />
+  )
   return (
     <div className={tel ? "al-imp__colonna-18" : "al-imp__griglia-2"}>
       {tel ? (
         <>
           <Nome formato={formato} salvato={salvato} />
           <Lingua formato={formato} lingua={String(valori.language)} />
-          <Tema formato={formato} modo={valori.theme_mode} accento={valori.theme_accent} />
+          {tema}
         </>
       ) : (
         <>
@@ -60,7 +69,7 @@ export function Generale() {
             <Nome formato={formato} salvato={salvato} />
             <Lingua formato={formato} lingua={String(valori.language)} />
           </div>
-          <Tema formato={formato} modo={valori.theme_mode} accento={valori.theme_accent} />
+          {tema}
         </>
       )}
     </div>
@@ -182,10 +191,20 @@ function Lingua({ formato, lingua }: { formato: Formato; lingua: string }) {
   )
 }
 
-function Tema({ formato, modo, accento }: { formato: Formato; modo: unknown; accento: unknown }) {
+function Tema({
+  formato,
+  modo,
+  accento,
+  sito,
+}: {
+  formato: Formato
+  modo: unknown
+  accento: unknown
+  sito: string | null
+}) {
   const tel = formato === "telefono"
   const scrivi = useScriviImpostazioni()
-  const veste = vesteDa(modo, accento)
+  const scelta = sceltaDa(modo, accento)
   return (
     <Carta
       formato={formato}
@@ -204,8 +223,8 @@ function Tema({ formato, modo, accento }: { formato: Formato; modo: unknown; acc
         </span>
       )}
       <SceltaTema
-        modo={veste.modo}
-        accento={veste.accento}
+        {...scelta}
+        sito={sito}
         formato={formato}
         onModo={(m) => scrivi.mutate({ theme_mode: m })}
         onAccento={(a) => scrivi.mutate({ theme_accent: a })}

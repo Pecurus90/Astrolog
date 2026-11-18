@@ -63,6 +63,9 @@ export const itComponenti = {
   "theme.mode.light": "Chiaro",
   "theme.mode.dark": "Scuro",
   "theme.mode.auto": "Automatico",
+  "theme.auto.noSite":
+    "Automatico ha bisogno di un sito di osservazione: tramonto e alba si calcolano da lì.", // glifo-ok: testo della tavola
+  "theme.auto.site": "Scuro dal tramonto all'alba di {sito}, chiaro di giorno.",
   "theme.accent": "Accento",
   "theme.accent.original": "originale",
   "theme.accent.amber": "ambra · blu notte", // glifo-ok: testo della tavola

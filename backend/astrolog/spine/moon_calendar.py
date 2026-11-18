@@ -14,7 +14,8 @@ from ..site_of import Site
 
 COLUMNS = (
     "site_id", "night_date", "latitude", "longitude", "phase_key", "illumination_pct",
-    "dark_s", "moonless_dark_s", "event", "event_at", "moon_level",
+    "dark_s", "moonless_dark_s", "event", "event_at", "moon_level", "sun_down_from",
+    "sun_down_until",
 )  # fmt: skip
 
 
@@ -67,10 +68,19 @@ def rebuild(conn: sqlite3.Connection, site: Site, wanted: list[str]) -> None:
             n.moonless_dark_s,
             *events.get(n.night, (None, None)),
             moon_level(n.illumination_pct, rule),
+            *_in_zone(n.sun_down, start.tzinfo),
         )  # fmt: skip
         for n in nights
     ]
     replace_rows(conn, "moon_nights", COLUMNS, rows, where="site_id = ?", args=(site.id,))
+
+
+def _in_zone(
+    span: tuple[dt.datetime, dt.datetime] | None, zone: dt.tzinfo | None
+) -> tuple[str | None, str | None]:
+    if span is None:
+        return None, None
+    return span[0].astimezone(zone).isoformat(), span[1].astimezone(zone).isoformat()
 
 
 def refresh(conn: sqlite3.Connection, site: Site | None) -> None:

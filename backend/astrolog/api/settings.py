@@ -3,6 +3,7 @@ reopen the wizard. Key types and defaults live in `db/config.py`; here a refusal
 
 import sqlite3
 from dataclasses import asdict
+from datetime import datetime
 from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,8 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
-from ..site_of import home_site
-from ..spine import moon_calendar
+from ..site_of import Site, home_site
+from ..spine import moon_calendar, theme
 from ..spine.group import GroupReason
 from ..spine.solve import (
     NO_SOLVER,
@@ -24,7 +25,15 @@ from ..spine.solve import (
 )
 from ..weather import view
 from .deps import get_db
-from .models_site import Missing, Range, SettingsOut, SettingsPatch, SolverOut, SolverSource
+from .models_site import (
+    Missing,
+    Range,
+    SettingsOut,
+    SettingsPatch,
+    SolverOut,
+    SolverSource,
+    ThemeNowOut,
+)
 
 router = APIRouter(prefix="/api/v1", tags=["settings"])
 
@@ -48,13 +57,23 @@ def _missing(conn: sqlite3.Connection) -> list[Missing]:
 def _out(conn: sqlite3.Connection) -> SettingsOut:
     saved = asdict(config.read(conn))
     values = {k: config.hint(v) if k in config.SECRETS else v for k, v in saved.items()}
+    site = home_site(conn)
     return SettingsOut(
         values=values,
         wizard_done=values["onboarding_done_at"] is not None,
         missing=_missing(conn),
         ranges={k: Range(min=lo, max=hi) for k, (lo, hi) in config.RANGES.items()},
         choices={k: list(v) for k, v in config.CHOICES.items()},
+        theme_now=_theme_now(conn, saved["theme_mode"], site),
+        theme_site=None if site is None else site.name,
     )
+
+
+def _theme_now(conn: sqlite3.Connection, mode: str, site: Site | None) -> ThemeNowOut | None:
+    if mode != "automatico":
+        return None
+    now = theme.shown(conn, site, datetime.fromisoformat(now_iso()))
+    return None if now is None else ThemeNowOut(mode=now.mode, until=now.until)
 
 
 def _moon_rule_changed(conn: sqlite3.Connection) -> None:

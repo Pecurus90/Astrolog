@@ -28,6 +28,7 @@ from . import (
     SYNODIC_MONTH_DAYS,
     TRACK_STEP_MIN,
     bodies,
+    sun,
 )
 from .grid import first_crossing, night_grid
 
@@ -297,6 +298,8 @@ class CalendarNight:
     illumination_pct: int
     dark_s: int
     moonless_dark_s: int
+    # Sun under the rise/set line inside the window; None when it never sets (midnight sun)
+    sun_down: tuple[dt.datetime, dt.datetime] | None
 
 
 def calendar_nights(
@@ -309,7 +312,7 @@ def calendar_nights(
     astronomically dark with the Moon below `floor_deg`. One call per body for all."""
     if not nights:
         return []
-    darks = dark_seconds(nights, latitude, longitude, floor_deg)
+    skies = _night_skies(nights, latitude, longitude, floor_deg)
     # Middle found in UTC, asked in site zone: the phase name takes the site's noon-to-noon night.
     middles = phases(
         [
@@ -318,8 +321,8 @@ def calendar_nights(
         ]
     )
     return [
-        CalendarNight(date, p.phase_key, p.illumination_pct, dark_s, moonless_s)
-        for (date, _, _), p, (dark_s, moonless_s) in zip(nights, middles, darks, strict=True)
+        CalendarNight(date, p.phase_key, p.illumination_pct, dark_s, moonless_s, down)
+        for (date, _, _), p, (dark_s, moonless_s, down) in zip(nights, middles, skies, strict=True)
     ]
 
 
@@ -330,10 +333,20 @@ def dark_seconds(
     floor_deg: float,
 ) -> list[tuple[int, int]]:
     """For each night: seconds of astronomical dark, and of those with the Moon below the floor."""
+    return [(d, m) for d, m, _ in _night_skies(nights, latitude, longitude, floor_deg)]
+
+
+def _night_skies(
+    nights: Sequence[tuple[str, dt.datetime, float]],
+    latitude: float,
+    longitude: float,
+    floor_deg: float,
+) -> list[tuple[int, int, tuple[dt.datetime, dt.datetime] | None]]:
+    """Dark seconds, moonless dark seconds and the Sun-down span; one ephemeris call per body."""
     grids = [night_grid(start, hours=h, step_min=CALENDAR_STEP_MIN) for _, start, h in nights]
     everything = [i for g in grids for i in g]
     if not everything:
-        return [(0, 0) for _ in nights]
+        return [(0, 0, None) for _ in nights]
     suns = bodies.body_altitudes("sun", everything, latitude, longitude)
     moons = bodies.body_altitudes("moon", everything, latitude, longitude)
     step_s = CALENDAR_STEP_MIN * 60
@@ -341,6 +354,15 @@ def dark_seconds(
     for grid in grids:
         span = range(at, at + len(grid) - 1)  # the last sample closes the window
         dark = [k for k in span if suns[k] < ASTRO_DEG]
-        out.append((len(dark) * step_s, sum(1 for k in dark if moons[k] < floor_deg) * step_s))
+        moonless = sum(1 for k in dark if moons[k] < floor_deg) * step_s
+        out.append((len(dark) * step_s, moonless, _sun_down(grid, suns[at : at + len(grid)])))
         at += len(grid)
     return out
+
+
+def _sun_down(
+    grid: Sequence[dt.datetime], alts: Sequence[float]
+) -> tuple[dt.datetime, dt.datetime] | None:
+    """From sunset to sunrise; the window's edges where the Sun never rises."""
+    down = [b for b in sun.sky_bands(grid, alts) if b.kind != sun.Sky.DAY]
+    return (down[0].starts_at, down[-1].ends_at) if down else None

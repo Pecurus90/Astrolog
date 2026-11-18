@@ -2,6 +2,8 @@ import { type ReactNode, createContext, useContext, useMemo } from "react"
 
 /** The two modes of the v58 sheet (`data-modo`). */
 export type Modo = "scuro" | "chiaro"
+/** What the user picks: a mode, or Automatico, which wears the one the API says is in force. */
+export type ModoScelto = Modo | "automatico"
 /** The five accents of the v58 sheet (`data-accento`); the sheet's default is amber. */
 export type Accento = "originale" | "ambra" | "turchese" | "corallo" | "ghiaccio"
 /** Desktop or phone: the delivery's components take it as a parameter, never guess it. */
@@ -18,14 +20,32 @@ const Contesto = createContext<Veste>(PARTENZA)
 // The user's saved choice (Impostazioni, Tema): what a `Tema` without props wears.
 const Salvata = createContext<Veste>(PARTENZA)
 
-const MODI: readonly Modo[] = ["scuro", "chiaro"]
+const SCELTE: readonly ModoScelto[] = ["scuro", "chiaro", "automatico"]
 export const ACCENTI: readonly Accento[] = ["originale", "ambra", "turchese", "corallo", "ghiaccio"]
 
-/** The saved values as a `Veste`; an unknown one stays the sheet's default. */
-export function vesteDa(modo: unknown, accento: unknown): Veste {
+/** What the user saved: Automatico stays itself, unlike the `Veste` worn. */
+export interface Scelta {
+  modo: ModoScelto
+  accento: Accento
+}
+
+/** The saved values; an unknown one stays the sheet's default. */
+export function sceltaDa(modo: unknown, accento: unknown): Scelta {
   return {
-    modo: MODI.find((m) => m === modo) ?? PARTENZA.modo,
+    modo: SCELTE.find((m) => m === modo) ?? PARTENZA.modo,
     accento: ACCENTI.find((a) => a === accento) ?? PARTENZA.accento,
+  }
+}
+
+/**
+ * The saved values as the `Veste` worn. Automatico wears `ora`, the mode in force from the API
+ * (`theme_now`), and scuro while it is not known (board v82).
+ */
+export function vesteDa(modo: unknown, accento: unknown, ora?: Modo | null): Veste {
+  const scelta = sceltaDa(modo, accento)
+  return {
+    modo: scelta.modo === "automatico" ? (ora ?? PARTENZA.modo) : scelta.modo,
+    accento: scelta.accento,
   }
 }
 

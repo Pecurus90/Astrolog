@@ -5,7 +5,7 @@ import { ImpostazioniBackup } from "./Backup"
 import { Avviso } from "./componenti/Avviso"
 import { useFormato } from "./componenti/formato"
 import { NOMI_MODO } from "./componenti/SceltaTema"
-import { Tema, vesteDa } from "./componenti/Tema"
+import { Tema, sceltaDa } from "./componenti/Tema"
 import { useSiti } from "./api/siti"
 import { Cartelle } from "./ImpostazioniCartelle"
 import { Generale, SalvataggioFallito } from "./ImpostazioniGenerale"
@@ -216,7 +216,7 @@ function useRiassunti(): Record<string, string> {
   const fuori: Record<string, string> = {}
   if (valori) {
     const modo = t(
-      NOMI_MODO[vesteDa(valori.theme_mode, valori.theme_accent).modo],
+      NOMI_MODO[sceltaDa(valori.theme_mode, valori.theme_accent).modo],
     ).toLocaleLowerCase()
     const nome = String(valori.user_name ?? "").trim()
     fuori["/impostazioni/generale"] = nome

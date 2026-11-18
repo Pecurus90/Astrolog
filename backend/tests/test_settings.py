@@ -58,7 +58,7 @@ def test_an_unknown_setting_or_a_wrong_type_is_refused(client_vuoto):
 
 def test_theme_and_language_are_closed_choices(client_vuoto):
     """Tema e lingua si salvano e si leggono; fuori dalle scelte del foglio e delle lingue attive
-    si respinge. Automatico arriva col passo Tema (Marco 15/11/2026): oggi non si scrive."""
+    si respinge. Automatico arriva col passo Tema del Primo avvio (tavola v82)."""
     values = settings(client_vuoto)["values"]
     assert (values["theme_mode"], values["theme_accent"]) == ("scuro", "ambra")
 
@@ -69,9 +69,19 @@ def test_theme_and_language_are_closed_choices(client_vuoto):
     assert values["theme_accent"] == "corallo"
     assert values["language"] == "en"
 
-    for key, value in (("theme_mode", "automatico"), ("theme_accent", "viola"), ("language", "de")):
+    for key, value in (("theme_mode", "notte"), ("theme_accent", "viola"), ("language", "de")):
         r = client_vuoto.patch("/api/v1/settings", json={"values": {key: value}})
         assert r.status_code == 422 and r.json()["detail"]["code"] == "wrong_type", key
+
+
+def test_automatic_without_a_site_does_not_know_the_hour(client_vuoto):
+    """Automatico si scrive; senza sito ne' calendario il modo di adesso e' «non so» (null), mai
+    inventato; con un modo fisso il campo non c'e' (lo dice theme_mode)."""
+    assert settings(client_vuoto)["theme_now"] is None
+    assert patch(client_vuoto, theme_mode="automatico")["values"]["theme_mode"] == "automatico"
+    assert settings(client_vuoto)["theme_now"] is None
+    # tavola v82: senza sito Automatico si spegne e dice perche'
+    assert settings(client_vuoto)["theme_site"] is None
 
 
 def test_a_refused_write_leaves_the_good_keys_alone(client_vuoto):

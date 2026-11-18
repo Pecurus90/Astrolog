@@ -89,8 +89,8 @@ class Preferences:
 
 # The languages the app is translated into (`frontend/src/i18n/lingue.ts`).
 LANGUAGES = ("it", "en")
-# Automatico waits for the Tema step: it needs the home site's sun times.
-THEME_MODES = ("scuro", "chiaro")
+# Automatico: dark from sunset to sunrise at the home site (`spine/theme.py`).
+THEME_MODES = ("scuro", "chiaro", "automatico")
 THEME_ACCENTS = ("originale", "ambra", "turchese", "corallo", "ghiaccio")
 # A weather model outside this list would give an empty page with no reason.
 WEATHER_MODELS = ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")

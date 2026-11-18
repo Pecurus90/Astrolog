@@ -18,7 +18,7 @@ una password, quindi chiunque la raggiunga puo' usarla. Non aprire la sua porta 
 
 ## Il primo avvio
 
-La prima volta l'app ti fa **quattro domande**, e poi si toglie di mezzo.
+La prima volta l'app ti fa **cinque domande**, e poi si toglie di mezzo.
 
 A sinistra vedi i passi, col loro nome e quello dove sei; a destra la domanda di quel passo, e in
 fondo i comandi: *Salta*, *Indietro*, *Avanti*. Sul telefono i passi diventano una fila di segni in
@@ -38,14 +38,20 @@ alto e i comandi restano sempre in vista in fondo allo schermo.
    sito si salva lo stesso, e il cielo resta vuoto invece di prendersi un valore che non hai
    dato. Il sito si salva con **Salva sito**, in fondo insieme agli altri comandi, e poi si passa
    al passo dopo; **Avanti** va oltre senza salvare.
-3. **Cartelle.** Scrivi il percorso di una cartella e premi *Verifica*: l'app conta i
+3. **Tema.** Scegli come si vede l'app: **Chiaro**, **Scuro** o **Automatico**, e uno dei cinque
+   accenti, ognuno con un campione nel modo che stai usando. La scelta vale subito e la cambi
+   quando vuoi da *Impostazioni*, *Generale*. **Automatico** e' scuro dal tramonto all'alba del
+   tuo sito di casa e chiaro di giorno, e cambia da solo all'ora giusta: per questo ha bisogno di
+   un sito, e se hai saltato il passo prima non si puo' scegliere -- te lo dice sotto i tre modi.
+   Appena dichiarato un sito, finche' l'app non ha calcolato tramonto e alba resta scuro.
+4. **Cartelle.** Scrivi il percorso di una cartella e premi *Verifica*: l'app conta i
    FITS che ci sono **prima** di registrarla, cosi' ti accorgi subito se hai puntato la cartella
    sbagliata. Se la cartella non si raggiunge te lo dice, e non ti lascia aggiungerla. Se il
    conteggio non arriva in fondo -- un archivio enorme, o una sottocartella che non risponde --
    dice *Conteggio parziale*: potrebbero essercene altri. Sul NAS
    il percorso non lo scrivi: l'app gira dentro un container e i suoi percorsi non sono i tuoi,
    quindi ti fa **sfogliare** le cartelle e ti mostra in alto dove sei arrivato.
-4. **Seeing (Meteoblue).** Se hai una **chiave Meteoblue** la scrivi qui: l'app la prova
+5. **Seeing (Meteoblue).** Se hai una **chiave Meteoblue** la scrivi qui: l'app la prova
    sul tuo conto e la tiene solo se vale, e da li' il seeing arriva ora per ora per sette notti.
    Non e' obbligatoria, e la maggior parte di chi comincia non ce l'ha: senza, il seeing non c'e' e
    il resto del meteo funziona uguale. La puoi mettere anche dopo, nelle Impostazioni.
@@ -55,14 +61,14 @@ una scelta legittima: l'app cataloga e cerca lo stesso. L'unica cosa che non puo
 le **notti**, perche' una notte e' una data *piu' un sito*, e senza un sito non sa in che fuso
 comincia e finisce la tua nottata. Preferisce dirtelo piuttosto che inventarsene uno.
 
-Al terzo passo puoi indicare **quante cartelle vuoi**: ne aggiungi una, compare nell'elenco, ne
+Al quarto passo puoi indicare **quante cartelle vuoi**: ne aggiungi una, compare nell'elenco, ne
 aggiungi un'altra. Prima di registrarne una l'app la **guarda** e ti dice quanti file FITS ci sono
 dentro, cosi' ti accorgi subito se hai puntato la cartella sbagliata. Dove l'app ha una radice dei
 dati -- e' il caso del NAS -- le cartelle si **scelgono da un elenco** invece di scrivere il
 percorso a mano: entri dentro con un clic, risali con *Cartella superiore*, e quando sei dove
 vuoi premi *Seleziona cartella*. L'elenco parte dalla cartella dei dati e non esce da li'.
 
-Se l'app non trova **ASTAP** sul tuo computer, aggiunge un **quinto passo**: ASTAP e' il
+Se l'app non trova **ASTAP** sul tuo computer, aggiunge un **sesto passo**: ASTAP e' il
 programma gratuito con cui l'app riconosce cosa hai ripreso, confrontando le tue foto col cielo.
 Ti dice dove prenderlo, e se ce l'hai gia' ti lascia indicare dove sta -- il **programma**, non la
 cartella dove l'hai installato. Puoi incollarlo come te lo copia Windows, virgolette comprese.
@@ -194,7 +200,7 @@ Il catalogo va messo **nella stessa cartella del programma** -- l'autore dice ch
 stare tutti insieme -- ed e'
 li' che l'app lo cerca, **solo** li': se lo tieni altrove l'app ti dira' che manca, e ti conviene
 spostarlo dove ASTAP se lo aspetta. La
-stessa cosa te la dice il **primo avvio**, che aggiunge il suo quinto passo anche a chi ASTAP ce
+stessa cosa te la dice il **primo avvio**, che aggiunge il suo sesto passo anche a chi ASTAP ce
 l'ha ma senza catalogo: si finisce allo stesso punto -- una scansione che non riconosce niente --
 e conviene saperlo prima.
 
@@ -894,11 +900,9 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   computer il percorso si scrive.
 - **Un campo della scheda non si svuota**: si corregge scrivendo un altro valore, ma un valore
   scritto non si toglie dalla pagina.
-- **La veste nuova e' solo sul telaio**: il binario, la barra in alto e Stanotte sono quelli
-  disegnati, col carattere nuovo. Le pagine dentro -- Archivio, Notti, Da confermare,
-  Attrezzatura, Impostazioni -- funzionano come prima ma sono **spoglie** finche' non arriva il
-  loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
-  ancora accendere**.
+- **Il Meteo ha ancora la veste di prima**: col tema chiaro o con Automatico di giorno resta in
+  un riquadro scuro, finche' non arriva il suo disegno. Il modo non si cambia ancora dalla barra
+  in alto: si cambia da *Impostazioni*, *Generale*.
 - **Nella Dashboard**, nella volta le curve dei progetti arrivano coi
   progetti.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un

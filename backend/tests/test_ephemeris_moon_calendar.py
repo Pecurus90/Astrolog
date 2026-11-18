@@ -88,6 +88,35 @@ def test_the_calendar_names_the_night_of_the_site_not_of_utc(zone, place):
         assert {n.night for n in nights if n.phase_key == kind} == expected, kind
 
 
+def test_each_night_carries_its_sunset_and_sunrise():
+    """Il tema Automatico e' scuro dal tramonto all'alba (tavola v82, SceltaTema). Roma, notte del
+    16/10/2026: tramonto 18:27, alba del 17 alle 07:25, UTC+2 (USNO, aa.usno.navy.mil/api/rstt)."""
+    (night,) = moon.calendar_nights(
+        [("2026-10-16", *night_window("2026-10-16", "Europe/Rome"))], 41.89, 12.48, RISESET_DEG
+    )
+    plus2 = dt.timezone(dt.timedelta(hours=2))
+    assert night.sun_down is not None
+    sunset, sunrise = night.sun_down
+    assert abs(sunset - dt.datetime(2026, 10, 16, 18, 27, tzinfo=plus2)) < dt.timedelta(minutes=2)
+    assert abs(sunrise - dt.datetime(2026, 10, 17, 7, 25, tzinfo=plus2)) < dt.timedelta(minutes=2)
+
+
+def test_a_polar_night_is_all_down_and_a_midnight_sun_never_sets():
+    """Tromso: 21/12/2026 sotto l'orizzonte tutto il giorno, 21/6/2026 sempre sopra (USNO)."""
+    zone = "Europe/Oslo"
+    winter, summer = moon.calendar_nights(
+        [(d, *night_window(d, zone)) for d in ("2026-12-21", "2026-06-21")],
+        69.65,
+        18.96,
+        RISESET_DEG,
+    )
+    start, hours = night_window("2026-12-21", zone)
+    assert winter.sun_down is not None
+    assert winter.sun_down[0] < start + dt.timedelta(hours=1)
+    assert winter.sun_down[1] > start + dt.timedelta(hours=hours - 1)
+    assert summer.sun_down is None
+
+
 def test_without_the_moon_the_whole_dark_is_moonless_and_with_the_full_moon_none():
     nights = moon.calendar_nights(
         [(d, *_window(d)) for d in ("2024-12-30", "2025-01-13")], *CASA, RISESET_DEG

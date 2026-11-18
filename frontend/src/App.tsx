@@ -10,7 +10,7 @@ import { VesteSalvata, vesteDa } from "./componenti/Tema"
 import { usaLingua } from "./i18n"
 import { ComingSoon } from "./ComingSoon"
 import { PAGINE, sezioniAperte } from "./pagine"
-import { usePreferenze } from "./preferenze"
+import { useCambioDelTema, usePreferenze } from "./preferenze"
 
 /**
  * Il portiere dell'app: prima il **cancelletto** del primo avvio, poi la navigazione.
@@ -39,7 +39,8 @@ export function App() {
   // e' reattivo; il tema lo leggono i `Tema` senza props, primo avvio compreso.
   const valori = settings.data?.values
   const lingua = usaLingua(String(valori?.language ?? ""))
-  const veste = vesteDa(valori?.theme_mode, valori?.theme_accent)
+  const veste = vesteDa(valori?.theme_mode, valori?.theme_accent, settings.data?.theme_now?.mode)
+  useCambioDelTema()
 
   // Finche' non si sa, non si sceglie: mostrare l'app e poi sostituirla col primo avvio sarebbe
   // uno sfarfallio. E se la domanda non ha risposta non si tira a indovinare.

@@ -682,9 +682,14 @@ CREATE TABLE moon_nights (
                                                    -- d'altezza della regola (Impostazioni)
   event            TEXT CHECK (event IN ('new', 'full')),
   event_at         TEXT,                           -- l'istante della fase, nel fuso del sito
+  -- il Sole sotto la linea di alba e tramonto (-0,833 gradi, USNO), nel fuso del sito: il tema
+  -- Automatico. Notte polare: i bordi della notte; Sole di mezzanotte: tutti e due NULL
+  sun_down_from    TEXT,
+  sun_down_until   TEXT,
   -- il gradino sulla regola della Luna delle Impostazioni (di fabbrica ING 25/65): larga, al
   -- limite, solo stretta
   moon_level       TEXT NOT NULL CHECK (moon_level IN ('go', 'marginal', 'nogo')),
+  CHECK ((sun_down_from IS NULL) = (sun_down_until IS NULL)),
   PRIMARY KEY (site_id, night_date)
 ) STRICT;
 
