@@ -442,6 +442,23 @@ describe("Da confermare -- i filtri", () => {
     applicaSpento()
   })
 
+  it("le frecce spostano il fuoco fra i modelli, come un elenco ARIA (Issue #20)", async () => {
+    aperta()
+    const h = await suH()
+    cerca(h, "alp")
+    const [primo] = await within(h).findAllByRole("option", { name: /ALP-T/ })
+    const voci = within(h).getAllByRole("option")
+    primo!.focus()
+    fireEvent.keyDown(primo!, { key: "ArrowDown" })
+    expect(document.activeElement).toBe(voci[voci.indexOf(primo!) + 1])
+    fireEvent.keyDown(document.activeElement!, { key: "ArrowUp" })
+    expect(document.activeElement).toBe(primo)
+    fireEvent.keyDown(primo!, { key: "End" })
+    expect(document.activeElement).toBe(voci[voci.length - 1])
+    fireEvent.keyDown(document.activeElement!, { key: "Home" })
+    expect(document.activeElement).toBe(voci[0])
+  })
+
   it("un clic sbagliato si corregge: si sceglie un altro modello, o un'altra strada", async () => {
     // Una scelta non e' un vicolo cieco finche' non si preme Applica.
     aperta()

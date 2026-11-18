@@ -357,6 +357,12 @@ function Modelli({
               tabIndex={0}
               onClick={() => onScelta(m.id)}
               onKeyDown={(e) => {
+                const dove = spostaFuoco(e.currentTarget, e.key)
+                if (dove) {
+                  e.preventDefault()
+                  dove.focus()
+                  return
+                }
                 if (e.key !== "Enter" && e.key !== " ") return
                 e.preventDefault()
                 onScelta(m.id)
@@ -381,6 +387,16 @@ function Modelli({
 
 /** Marca e nome, senza ripetere la marca quando il nome la porta gia' dentro ("Antlia Quad Band"):
  *  vale anche per il nome che si scrive nella risposta, o il doppione finirebbe nell'archivio. */
+/** The listbox keys (WAI-ARIA APG, Listbox): Down and Up to the next and previous option, Home
+ *  and End to the ends; `null` for any other key. */
+function spostaFuoco(voce: HTMLElement, tasto: string): HTMLElement | null {
+  const elenco = voce.closest('[role="listbox"]')
+  const voci = elenco ? [...elenco.querySelectorAll<HTMLElement>('[role="option"]')] : []
+  const i = voci.indexOf(voce)
+  const dove = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: voci.length - 1 }[tasto]
+  return dove === undefined ? null : (voci[Math.max(0, Math.min(voci.length - 1, dove))] ?? null)
+}
+
 function etichetta(m: Modello) {
   return conMarca(m) ? m.name : `${m.brand} ${m.name}`
 }
