@@ -84,10 +84,10 @@ def _checks_oses(event: str) -> list[str]:
     return yaml.safe_load(push if event == "push" else other)
 
 
-def test_a_push_gets_an_intel_mac_and_the_rest_keep_apple_silicon():
-    """arm64 macOS runners are short (Issue #50): a push queued 15 min, then cancelled."""
-    assert "macos-15-intel" in _checks_oses("push")
-    assert "macos-latest" not in _checks_oses("push")
+def test_a_push_runs_no_mac_and_the_rest_keep_apple_silicon():
+    """arm64 macOS runners are short (Issue #50): a push queued 15 min, then cancelled.
+    Intel cannot stand in: llvmlite has no x86_64 macOS wheel (ADR 0043)."""
+    assert not [os_ for os_ in _checks_oses("push") if os_.startswith("macos")]
     assert "macos-latest" in _checks_oses("pull_request")
 
 

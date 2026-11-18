@@ -20,8 +20,9 @@ jobs:
       matrix:
         # Windows runner: 27 min vs 7 (astropy/erfa math, measured). A push gets it from the
         # pre-push hook on a Windows PC; pull requests (ruleset) and the nightly run it here.
-        # arm64 Macs short, a push waited 15 min then cancelled (#50): Intel at push, arm64 at night
-        os: ${{ fromJSON(github.event_name == 'push' && '["ubuntu-latest", "macos-15-intel"]' || '["ubuntu-latest", "windows-latest", "macos-latest"]') }}
+        # arm64 Macs short, a push waited 15 min then cancelled (#50); Intel has no llvmlite
+        # wheel (ADR 0043): no Mac at push, arm64 in PRs and at night
+        os: ${{ fromJSON(github.event_name == 'push' && '["ubuntu-latest"]' || '["ubuntu-latest", "windows-latest", "macos-latest"]') }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
