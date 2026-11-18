@@ -16,7 +16,7 @@ export const enSito = {
   "site.range": "Value between -{tetto} and {tetto}",
   "site.notANumber": "Invalid coordinate. Example: 46.4843 N",
   "site.notANumber.lon": "Invalid coordinate. Example: 12.0561 E",
-  "site.searchLabel": "Find a place",
+  "site.searchLabel": "Search for a place",
   "site.name": "Site name",
   "site.nameNeeded": "Name required",
   "site.searchFailed": "The service did not respond.",

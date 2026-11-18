@@ -6,7 +6,7 @@
  */
 export const enSolver = {
   "solver.withoutTitle": "Without ASTAP",
-  "solver.without": "Files are catalogued and hours are counted, but imaged objects are not identified.",
+  "solver.without": "Files are cataloged and hours are counted, but imaged objects are not identified.",
   "solver.whereGroup": "Download",
   "solver.haveItGroup": "Already installed",
   "solver.noDownload": "The app does not download or install ASTAP.",

@@ -7,7 +7,7 @@
  */
 export const enAttrezzatura = {
   "gear.failed": "Equipment not available",
-  "gear.retry": "Retry",
+  "gear.retry": "Try again",
   "gear.loading": "Loading…", // glifo-ok: ellipsis
   "gear.title": "Equipment",
   "gear.index": "Equipment index",
@@ -48,7 +48,7 @@ export const enAttrezzatura = {
   "gear.aperture": "aperture {mm} mm",
   "gear.focalNative": "focal length {mm} mm",
   "gear.pixel": "pixel {um} \u00b5m",
-  "gear.pixelFromSky": "pixel {um} \u00b5m (calculated)",
+  "gear.pixelFromSky": "pixel {um} \u00b5m (computed)",
   "gear.camera.mono": "monochrome",
   "gear.camera.color": "colour",
   "gear.payload": "payload {kg} kg",
@@ -96,7 +96,7 @@ export const enAttrezzatura = {
   "gear.write.rig.label": "Rename {nome}",
   "gear.rig.pair": "{ottica} · {camera}", // glifo-ok: separatore della tavola
   "gear.rig.ratio": "f/{n}",
-  "gear.rig.computed": "(calculated)",
+  "gear.rig.computed": "(computed)",
   "gear.parts": "Parts",
   "gear.part.toSay": "to specify",
   "gear.part.byHand": "(chosen by hand)",
@@ -127,8 +127,8 @@ export const enAttrezzatura = {
   "gear.field.scaleFromSky": "arcseconds per pixel · derived from the sky", // glifo-ok: board glyph
   "gear.field.scaleFromSky.one": "arcsecond per pixel · derived from the sky", // glifo-ok: board glyph
   "gear.field.moon": "Full Moon, for scale",
-  "gear.field.compare": "The field of {nome} compared with the other rigs and the full Moon",
-  "gear.field.compare.alone": "The field of {nome} compared with the full Moon",
+  "gear.field.compare": "The field of {nome} compared with the other rigs and the Full Moon",
+  "gear.field.compare.alone": "The field of {nome} compared with the Full Moon",
   "gear.numbers": "Rig data",
   "gear.numbers.from": "From the instruments' spec sheets.",
   "gear.n.focal_ratio": "Focal ratio",
@@ -251,7 +251,7 @@ export const enAttrezzatura = {
   "gear.form.written": "{n} of {m} entered",
   "gear.form.fromFiles": "from the files",
   "gear.form.declared": "entered",
-  "gear.form.computed": "calculated",
+  "gear.form.computed": "computed",
   "gear.form.otherBrand": "other…", // glifo-ok: board ellipsis
   "gear.form.yes": "yes",
   "gear.form.no": "no",

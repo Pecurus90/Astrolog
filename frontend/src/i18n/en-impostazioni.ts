@@ -32,7 +32,7 @@ export const enImpostazioni = {
   "settings.weather.opens": "Weather opens on",
   "settings.weather.deepSky": "Deep sky",
   "settings.weather.sun": "Sun",
-  "settings.weather.sunOff": "Sun is off: it arrives with the Sun, together with the Solar System.",
+  "settings.weather.sunOff": "Sun is off: it arrives with the Sun, together with the Solar system.",
   "settings.weather.sources": "Sources: Open-Meteo for the weather, Meteoblue for the seeing.",
   "settings.weather.sources.phone":
     "Sources: Open-Meteo for the weather, Meteoblue for the seeing. The Meteoblue key is in Services.",
@@ -59,7 +59,7 @@ export const enImpostazioni = {
     "Find it for me skips it; analysis stops here until you choose a path.",
   "settings.solver.foundAt": "{percorso} \u00b7 {come}",
   "settings.solver.from.declared": "path entered manually",
-  "settings.solver.from.env": "variable ASTROLOG_ASTAP",
+  "settings.solver.from.env": "ASTROLOG_ASTAP variable",
   "settings.solver.from.path": "system PATH",
   "settings.solver.from.known_place": "default install folder",
   "settings.solver.search": "Find it for me",
@@ -79,7 +79,7 @@ export const enImpostazioni = {
   "settings.solver.cats.none": "? no catalog", // glifo-ok: board text
   "settings.solver.cats.none.why": "Without a catalog, objects are not identified.",
   "settings.solver.advice":
-    "D50 recommended, in the ASTAP folder; D80 for very narrow fields. Catalogs are recognized by their file names.",
+    "D50 recommended, in the ASTAP folder; D80 for very narrow fields. Catalogs are recognised by their file names.",
   "settings.solver.site": "ASTAP and the catalogs, on the hnsky.org site ↗", // glifo-ok: board text
   "settings.site": "Sites",
   // Impostazioni.dc.html, Moon (v82); sources in the registry (config.py KEYS and MOON_FLOORS)
@@ -219,7 +219,7 @@ export const enImpostazioni = {
   "sites.zone": "Time zone",
   "sites.zone.value": "{fuso} \u00b7 {scarto}",
   "sites.zone.from": "from the coordinates",
-  "sites.zone.none": "not recognized",
+  "sites.zone.none": "not recognised",
   "sites.nights": "Nights",
   "sites.nights.n": "{n} nights",
   "sites.nights.one": "1 night",
@@ -261,7 +261,7 @@ export const enImpostazioni = {
   "sites.sky.sqm.range": "A number from {min} to {max}.",
   "sites.sky.note.frames": "It follows the measurements: when the measured class changes, it says so.",
   "sites.sky.note.frames.few": "Until the measurements are enough, the site has no sky.",
-  "sites.sky.note.scale": "From 1, dark sky, to 9, inner city.",
+  "sites.sky.note.scale": "From 1, dark sky, to 9, city centre.",
   "sites.sky.note.measured":
     "From an SQM meter, in magnitudes per square arcsecond; the class is derived with the ASTAP table.",
   "sites.sky.note.service":

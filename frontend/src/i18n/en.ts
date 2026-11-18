@@ -46,7 +46,7 @@ export const en = {
   "scan.blocked.why": "Scan stopped by an error.",
   "scan.blocked.see": "Details",
   "scan.stage.scan": "Reading files",
-  "scan.stage.normalize": "Normalizing names",
+  "scan.stage.normalize": "Normalising names",
   "scan.stage.solve": "Plate solving",
   "scan.stage.identify": "Identifying objects",
   "scan.stage.group": "Grouping into nights",
@@ -59,7 +59,7 @@ export const en = {
   "scan.error.worker_busy": "Operation already running",
   "review.filters": "Filters",
   "review.filters.why":
-    "Filters not recognized. The association also applies to future frames.",
+    "Filters not recognised. The association also applies to future frames.",
   "review.filters.mine": "Existing filter: {nome}",
   "review.filters.searchFor": "Search models for {nome}",
   "review.filters.how": "How to answer for {nome}",
@@ -156,7 +156,7 @@ export const en = {
   // Le parole della tavola v82 (Da confermare.dc.html 189-260, 302-311)
   "review.mosaics.yesNamed": "Mosaic: {nome}",
   "review.mosaics.proposed": "Name proposed by the app: {nome}. You can change it.",
-  "review.lookalikes.same.sub": "stays \u00ab{nome}\u00bb, the name with the most frames ({n} against {m})",
+  "review.lookalikes.same.sub": "stays \u201c{nome}\u201d, the name with the most frames ({n} against {m})",
   "review.lookalikes.otherFrames": "{frame} with {nome}",
   "review.filters.newNamed": "New filter: {nome} \u00b7 {bande}",
   "review.filters.bands": "Bands: one or more (dual-band filters have two)",
@@ -268,7 +268,7 @@ export const en = {
   "review.applied.one": "1 change applied, {frame} frames to reprocess",
   "review.applied.only": "{n} changes applied",
   "review.applied.only.one": "1 change applied",
-  "review.applied.noneFilter": "“No filter” was already in Gear: the frames use that one.", // glifo-ok: the board's quotes
+  "review.applied.noneFilter": "“No filter” was already in Equipment: the frames use that one.", // glifo-ok: the board's quotes
   "review.applied.queued": "Reprocessing is queued: it starts later, the numbers update on their own.",
   "review.apply.failed": "Changes not applied",
   "review.apply.unknownTarget": "Object not in the catalog. No changes saved.",

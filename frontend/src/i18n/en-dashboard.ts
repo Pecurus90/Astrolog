@@ -1,6 +1,6 @@
 /** The Dashboard's texts in English, from board v79 and the vocabulary of `docs/domini/meteo.md`. */
 export const enDashboard = {
-  "dashboard.retry": "Retry",
+  "dashboard.retry": "Try again",
   "dashboard.tonight.label": "Tonight",
   "dashboard.view.label": "Chart view",
   "dashboard.view.night": "Night",
@@ -21,7 +21,7 @@ export const enDashboard = {
   "dashboard.head.solar.pill": "{gradi}\u00b0 at {ora}",
   "dashboard.head.nextGood": "the next good night is {giorno}",
   "dashboard.head.nextGood.hours": "the next good night is {giorno}, with {ore} hours of exposure",
-  "dashboard.night.pill": "{segno} night {parola}",
+  "dashboard.night.pill": "{segno} night: {parola}",
   "dashboard.night.noWeather": "no weather",
   "dashboard.exposure.hours": "{ore} hours",
   "dashboard.exposure.none": "No hours",
@@ -96,7 +96,7 @@ export const enDashboard = {
   "dashboard.moon.detail.open": "The Moon in detail",
   "dashboard.moon.detail.close": "Close the detail",
   "dashboard.moon.detail.legend":
-    "Three steps: good for broadband with the Moon up to {buona}%, marginal up to {limite}%, then narrowband only. Beside it, the hours of dark with the Moon below the horizon (the thresholds come from the Meteo's Moon scale).",
+    "Three steps: good for broadband with the Moon up to {buona}%, marginal up to {limite}%, then narrowband only. Beside it, the hours of dark with the Moon below the horizon (the thresholds come from the Moon scale in Weather).",
   "dashboard.moon.age": "age",
   "dashboard.moon.age.value": "{n} days",
   "dashboard.moon.age.value.one": "1 day",
@@ -150,7 +150,7 @@ export const enDashboard = {
     "Open-Meteo has not answered since {ora}. Retrying every {minuti} minutes; dark, Moon and planets stay because they are computed.",
   "dashboard.weather.down.never":
     "Open-Meteo is not answering. Retrying every {minuti} minutes; dark, Moon and planets stay because they are computed.",
-  "dashboard.weather.down.how": "Retry now",
+  "dashboard.weather.down.how": "Try again now",
   "dashboard.seeing.noKey": "a Meteoblue key is needed",
   "dashboard.seeing.refused": "Meteoblue key invalid: check it in Settings",
   "dashboard.seeing.fromJet": "estimated from the wind aloft",
@@ -181,7 +181,7 @@ export const enDashboard = {
   "weather.sky.word.scattered": "Scattered clouds",
   "weather.sky.word.broken": "Cloudy",
   "weather.sky.word.overcast": "Overcast",
-  "dashboard.noZone.title": "Site time zone not recognized: nights cannot be computed.",
+  "dashboard.noZone.title": "Site time zone not recognised: nights cannot be computed.",
   "dashboard.noZone.text":
     "{sito} has no valid time zone. The Moon and its calendar stay; dark, hours of exposure and weather return with the time zone.",
   "dashboard.noZone.how": "Edit site",
@@ -217,7 +217,7 @@ export const enDashboard = {
   "dashboard.year.empty.title": "{anno}",
   "dashboard.year.empty.sub": "fills up after the first scan",
   "dashboard.year.empty.text": "Hours, nights and filters of the year, month by month.",
-  "dashboard.year.title": "{anno}, so far",
+  "dashboard.year.title": "{anno}, to date",
   "dashboard.year.short": "{anno}",
   "dashboard.year.failed":
     "{anno} did not load: hours, nights and filters of the year come back when AstroLog answers.",

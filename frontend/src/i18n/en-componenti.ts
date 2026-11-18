@@ -3,7 +3,7 @@
 export const enComponenti = {
   "ui.outcome.good": "good",
   "ui.outcome.uncertain": "uncertain",
-  "ui.outcome.unsuitable": "poor",
+  "ui.outcome.unsuitable": "unsuitable",
   "ui.outcome.missing": "Not available",
   "ui.loading": "Loading",
   "ui.close": "Close",
@@ -62,7 +62,7 @@ export const enComponenti = {
   "theme.mode.dark": "Dark",
   "theme.mode.auto": "Automatic",
   "theme.auto.noSite":
-    "Automatic needs an observing site: sunset and sunrise are worked out from there.",
+    "Automatic needs an observing site: sunset and sunrise are computed from there.",
   "theme.auto.site": "Dark from sunset to sunrise at {sito}, light by day.",
   "theme.accent": "Accent",
   "theme.accent.original": "original",
