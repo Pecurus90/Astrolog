@@ -255,6 +255,7 @@ describe("l'Archivio, produzioni, mosaici e frame senza oggetto", () => {
   const PIU = {
     ...M31,
     productions: [M31.productions[0], { ...M31.productions[0], optics: "Newton", optics_id: 3 }],
+    previews: [M31.previews[0], { url: "/api/v1/archive/preview?key=m-31&production=3%3A2", at: null }],
   }
 
   it("la carta ha un posto di anteprima per produzione, e dice quante sono", async () => {
@@ -267,7 +268,11 @@ describe("l'Archivio, produzioni, mosaici e frame senza oggetto", () => {
   })
 
   it("oltre tre produzioni le anteprime vanno su due righe, senza nasconderne", async () => {
-    const cinque = { ...M31, productions: Array.from({ length: 5 }, () => M31.productions[0]) }
+    const cinque = {
+      ...M31,
+      productions: Array.from({ length: 5 }, () => M31.productions[0]),
+      previews: Array.from({ length: 5 }, (_, i) => ({ url: `${M31.previews[0]!.url}&n=${i}`, at: null })),
+    }
     archivio([cinque])
     await apriArchivio()
 

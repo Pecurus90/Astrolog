@@ -306,6 +306,7 @@ describe("l accessibilita della prima pagina", () => {
       productions: [{ optics: "Newton", camera: "ASI2600", frames: 1, integration_s: 1, untimed: 0, filters: [] }],
       panels: null,
       panel_list: [],
+      previews: [{ url: "/api/v1/archive/preview?key=m-31&production=1%3A2", at: null }],
     }
     // e un mosaico, coi suoi pannelli: uno col suo oggetto, uno di cui il cielo non ne sa
     const mosaico = {

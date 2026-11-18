@@ -330,7 +330,12 @@ La pagina ha **due viste**, che scegli con le due icone accanto all'ordine:
 - **carte**, che e' come si apre. In alto il posto dell'immagine, col nome, diviso in un riquadro
   per ogni **produzione**, cioe' per ogni coppia di ottica e camera con cui hai ripreso
   quell'oggetto; sopra leggi quante sono (*2 produzioni*). Un riduttore non fa un'altra
-  produzione; i frame che non dicono il setup ne fanno una a parte;
+  produzione; i frame che non dicono il setup ne fanno una a parte. Nel riquadro di ogni
+  produzione puoi mettere la **tua foto finale**: tocca il tondo in basso a destra (la fotocamera
+  per aggiungerla, la matita per cambiarla) e scegli un JPEG, un PNG o un WebP fino a 40 MB.
+  L'app ne tiene una copia ridotta, senza i dati EXIF (niente posizione GPS), e la porta con se'
+  in **Esporta** del Backup. Un mosaico ha un riquadro solo. Se l'app sta su un NAS dietro un
+  reverse proxy, il proxy deve lasciar passare file di qualche MB;
 - **elenco**, a colonne, per confrontare a colpo d'occhio: sotto il nome leggi il **nome comune**
   che il catalogo conosce (in inglese, come lo scrive il catalogo), poi tipo e costellazione,
   integrazione, filtri, e quante produzioni (*una*, *2 produzioni*, *mosaico · 4*).

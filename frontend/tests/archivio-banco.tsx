@@ -37,6 +37,7 @@ export const M31 = {
   ],
   panels: null,
   panel_list: [],
+  previews: [{ url: "/api/v1/archive/preview?key=m-31&production=1%3A2", at: null }],
 }
 
 /** Cio' che il catalogo non sa dire, e frame di cui una parte non dice la durata. */
@@ -54,6 +55,7 @@ export const IGNOTO = {
   productions: [{ ...M31.productions[0], frames: 40, integration_s: 7200, untimed: 12 }],
   panels: null,
   panel_list: [],
+  previews: [{ url: "/api/v1/archive/preview?key=NGC+7000&production=1%3A2", at: null }],
 }
 
 /** Un mosaico confermato: una riga sola, col nome detto e i suoi quattro pannelli. */
@@ -72,6 +74,7 @@ export const MOSAICO = {
     { id: 13, object: "LDN 1516", ra_deg: 81.2, dec_deg: 33.6, frames: 30, integration_s: 10800, untimed: 0 },
     { id: 14, object: null, ra_deg: 79.9, dec_deg: 33.1, frames: 20, integration_s: 7200, untimed: 2 },
   ],
+  previews: [{ url: "/api/v1/archive/preview?key=mosaico", at: null }],
 }
 
 const voce = (value: string, rows: number, extra: Record<string, unknown> = {}) => ({

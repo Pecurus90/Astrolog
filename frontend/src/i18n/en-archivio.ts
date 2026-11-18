@@ -6,6 +6,16 @@
  */
 export const enArchivio = {
   "archive.title": "Archive",
+  "archive.preview.add": "Add the preview",
+  "archive.preview.change": "Change the preview",
+  "archive.preview.addNth": "Add the preview of production {n}",
+  "archive.preview.changeNth": "Change the preview of production {n}",
+  "archive.preview.nth": "production {n} of {nome}",
+  "archive.preview.aria.add": "Add the preview: {nome}",
+  "archive.preview.aria.change": "Change the preview: {nome}",
+  "archive.preview.unreadable": "This image cannot be read: use a JPEG, a PNG or a WebP.",
+  "archive.preview.tooBig": "The image is too big: export it smaller.",
+  "archive.preview.unreachable": "AstroLog does not answer, try again.",
   "archive.head": "The archive",
   "archive.head.object": "object",
   "archive.head.objects": "objects",

@@ -1,3 +1,4 @@
+import { type Anteprima, FotoParti, FotoTasti } from "./ArchivioAnteprime"
 import { Carta } from "./componenti/Carta"
 import { BarraFiltri } from "./componenti/BarraFiltri"
 import { gesto } from "./componenti/gesto"
@@ -10,21 +11,22 @@ interface Mostrata {
   chiave: string
   p: Pezzi
   barra: ReturnType<typeof filtri>
-  /** Quante anteprime: una per produzione, una sola per un mosaico (tavola v56.13). */
-  parti: number
+  /** I posti della foto dall'API: uno per produzione, uno per un mosaico; nessuno per i frame
+   *  senza oggetto, che hanno il riquadro ma non una riga a cui legare la foto. */
+  anteprime: Anteprima[]
   onApri?: () => void
 }
 
 function mostrate(righe: Riga[], fuori: Fuori | null, onApri: (k: string) => void): Mostrata[] {
   const prima: Mostrata[] = fuori
-    ? [{ chiave: "__fuori__", p: pezziFuori(fuori), barra: filtri(fuori), parti: 1 }]
+    ? [{ chiave: "__fuori__", p: pezziFuori(fuori), barra: filtri(fuori), anteprime: [] }]
     : []
   return prima.concat(
     righe.map((r) => ({
       chiave: r.key,
       p: pezzi(r),
       barra: filtri(r),
-      parti: r.panels !== null ? 1 : Math.max(1, r.productions.length),
+      anteprime: r.previews,
       onApri: () => onApri(r.key),
     })),
   )
@@ -47,7 +49,9 @@ export function CarteArchivio({
     <div className="al-arch__centro-1">
       {mostrate(righe, fuori, onApri).map((m, j) => {
         // fino a tre per riga, oltre su due righe (tavola, `pCols`)
-        const colonne = m.parti <= 3 ? m.parti : Math.ceil(m.parti / 2)
+        const parti = Math.max(1, m.anteprime.length)
+        const colonne = parti <= 3 ? parti : Math.ceil(parti / 2)
+        const senzaFoto = m.anteprime.every((a) => a.at === null)
         const corpo = (
           <>
             <span className="al-arch__riga-7">
@@ -56,11 +60,13 @@ export function CarteArchivio({
                 className="al-arch__foto-griglia"
                 style={{ gridTemplateColumns: `repeat(${colonne},minmax(0,1fr))` }}
               >
-                {Array.from({ length: m.parti }, (_, i) => (
-                  <span key={i} className="al-arch__foto-parte" />
-                ))}
+                {m.anteprime.length ? (
+                  <FotoParti anteprime={m.anteprime} />
+                ) : (
+                  <span className="al-arch__foto-parte" />
+                )}
               </span>
-              <span className="al-arch__blocco-7">{m.p.nome}</span>
+              {senzaFoto && <span className="al-arch__blocco-7">{m.p.nome}</span>}
               {m.p.tag && <span className="al-arch__strato-2">{m.p.tag}</span>}
             </span>
             <span className="al-arch__colonna-2 al-arch__carta-testo">
@@ -102,6 +108,14 @@ export function CarteArchivio({
                 <div className="al-arch__colonna-5" role="group" aria-label={m.p.aria}>
                   {corpo}
                 </div>
+              )}
+              {m.anteprime.length > 0 && (
+                <FotoTasti
+                  anteprime={m.anteprime}
+                  nome={m.p.nome}
+                  colonne={colonne}
+                  formato={formato}
+                />
               )}
             </div>
           </Carta>

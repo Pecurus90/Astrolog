@@ -281,10 +281,17 @@ sono; l'elenco lo dice solo quando sono piu' d'una.
 produzioni, come la tavola. Ogni posto arriva in `previews` della riga, con l'indirizzo per
 leggerlo, metterlo e toglierlo (`GET`, `PUT`, `DELETE /api/v1/archive/preview`) e `at`, null
 finche' non c'e' foto. La foto si sceglie fra JPEG, PNG e WebP; decidono i byte, non il tipo
-detto. Si rifiuta oltre **40 MB** (`too_large`, il testo di Marco lo dice) e oltre 60 megapixel
-(`too_many_pixels`), e cio' che non si legge (`not_an_image`). Si tiene ridotta a 1200 px sul
-lato lungo, in JPEG, dritta secondo l'EXIF, col suo profilo colore e **senza EXIF** (niente GPS
-in un backup esportato). Un PNG a 16 bit in grigio (come lo esporta un programma di elaborazione) si porta a 8 bit in scala.
+detto. Si rifiuta oltre **40 MB** (`too_large`) e oltre 60 megapixel (`too_many_pixels`), e cio'
+che non si legge (`not_an_image`). Si tiene ridotta a 1200 px sul lato lungo, in JPEG, dritta
+secondo l'EXIF, col suo profilo colore e **senza EXIF** (niente GPS in un backup esportato). Un
+PNG a 16 bit in grigio (come lo esporta un programma di elaborazione) si porta a 8 bit in scala.
+Sulla carta (tavola v56.12-13): un tondo per posto in basso a destra, fotocamera per aggiungere e
+matita per cambiare, fuori dal collegamento che apre la finestra; il nome resta nel riquadro
+finche' nessun posto ha una foto. La foto si legge con la chiave della pagina e si mostra da un
+`blob:`. Un rifiuto si dice in un avviso dentro la carta, sotto i filtri, con Chiudi (Marco, 18/11/2026): *Questa
+immagine non si legge: usa un JPEG, un PNG o un WebP.*; *L'immagine e' troppo grande: esportala
+piu' piccola.* per i byte e per i pixel; *AstroLog non risponde, riprova.* per il resto. La
+carta dei frame senza oggetto non ha tondo: non c'e' una riga a cui legare la foto.
 Il posto e' per nomi, non per id: segue la rinomina e l'unione dei pezzi e la correzione
 dell'oggetto in Da confermare; il backup in ADR 0017. Su un NAS dietro un reverse proxy, il
 proxy deve lasciar passare corpi di qualche MB (nginx: `client_max_body_size`).
@@ -318,8 +325,8 @@ dalla tavola sta in `handoff/differenze-dalle-tavole.md`.
 
 Non ha ancora l'etichetta dei **progetti**, che non esistono. I
 pannelli di un mosaico stanno nella **finestra** dell'oggetto, non nella carta (tavola v76). Non
-mostra **anteprime** finche' non si salvano (passo 33.2): il pozzo che le aspetta tiene gia' il
-suo posto nella carta. Non mostra **l'ultima notte** (Marco, 22/9/2026): ordina per lei, ma
+mostra l'anteprima nella finestra dell'oggetto ne' nell'elenco: la tavola la disegna solo sulla
+carta. Non mostra **l'ultima notte** (Marco, 22/9/2026): ordina per lei, ma
 quando l'hai ripreso l'ultima volta si guarda nelle Notti. Non ha ancora **Sole, Sistema solare
 e Aggiungi oggetto** della tavola (ADR 0019, passo 46.12): nessuna sorgente li scrive, e linguette
 che portano a niente non si mostrano.

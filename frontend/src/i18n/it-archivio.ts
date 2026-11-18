@@ -5,6 +5,16 @@
  */
 export const itArchivio = {
   "archive.title": "Archivio",
+  "archive.preview.add": "Aggiungi l'anteprima",
+  "archive.preview.change": "Cambia l'anteprima",
+  "archive.preview.addNth": "Aggiungi l'anteprima della {n}\u00aa produzione",
+  "archive.preview.changeNth": "Cambia l'anteprima della {n}\u00aa produzione",
+  "archive.preview.nth": "{n}\u00aa produzione di {nome}",
+  "archive.preview.aria.add": "Aggiungi l'anteprima: {nome}",
+  "archive.preview.aria.change": "Cambia l'anteprima: {nome}",
+  "archive.preview.unreadable": "Questa immagine non si legge: usa un JPEG, un PNG o un WebP.",
+  "archive.preview.tooBig": "L'immagine \u00e8 troppo grande: esportala pi\u00f9 piccola.",
+  "archive.preview.unreachable": "AstroLog non risponde, riprova.",
   "archive.head": "L'archivio",
   "archive.head.object": "oggetto",
   "archive.head.objects": "oggetti",

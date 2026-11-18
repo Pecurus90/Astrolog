@@ -397,8 +397,12 @@ Tavola v82 `Primo avvio.dc.html` (markup 14-103, logica 106-318). Diverso dalla 
   finestra Aggiungi oggetto (Archivio.dc.html 32, 86-94). App: assenti, la pagina e' il deep sky.
   Perche': nessuna sorgente scrive oggetti a mano, SER o log (ADR 0019, passo 46.12); linguette
   che portano a niente non si mostrano.
-- **Anteprime da caricare.** Tavola: un tasto per produzione che aggiunge o cambia la foto (63).
-  App: il posto c'e', col nome; il tasto arriva con l'anteprima salvata (passo 33.2).
+- **Anteprime da caricare.** Tavola: un tondo per produzione che aggiunge o cambia la foto (60),
+  `accept="image/*"`, foto tenuta per la sessione. App (18/11, passo 33.2): lo stesso tondo, la
+  foto salvata; `accept` solo JPEG, PNG e WebP (cio' che il backend legge: un HEIC o un TIFF
+  scelto darebbe solo un rifiuto). Un rifiuto la tavola non lo disegna: l'app lo dice in un avviso
+  riga dentro la carta, sotto i filtri, coi testi di Marco; finche' resta aperto la riga di carte
+  si allunga (vista da Marco il 18/11: va bene). La carta dei frame senza oggetto non ha il tondo.
 - **Tipo.** Tavola: la prima parola del tipo (139), quindi «ammasso di galassie» sta con gli
   ammassi. App: le famiglie galassia, nebulosa, ammasso, stella, altro, non si sa (archivio.md).
 - **Catalogo.** Tavola: Messier, NGC, IC, Sharpless, altro (128). App: le sigle che il catalogo
