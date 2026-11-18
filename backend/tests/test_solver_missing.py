@@ -8,7 +8,10 @@ legge la sua uscita) sta in `test_astap.py`.
 
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+
 from astrolog import astap
+from astrolog.api.app import create_app
 from astrolog.astap import find_exe as cerca_davvero
 from astrolog.astap import where_exe as cerca_col_canale
 from astrolog.db import config
@@ -317,3 +320,43 @@ def test_the_run_launches_the_path_written_in_settings(db_path, tmp_path, monkey
         conn.close()
 
     assert [c[0] for c in lanciati] == [str(mio)]
+
+
+def test_on_a_nas_the_run_ignores_a_path_written_in_settings(db_path, tmp_path, monkeypatch):
+    """Sul NAS (radice dei dati) senza login chiunque in rete scrive le Impostazioni: il solver lo
+    sceglie solo chi avvia il container, con `ASTROLOG_ASTAP` (#95)."""
+    dell_admin = tmp_path / "astap_cli"
+    dell_admin.write_text("x", encoding="utf-8")
+    altro = tmp_path / "altro_programma"
+    altro.write_text("x", encoding="utf-8")
+    write_light(tmp_path / "lib" / "a.fits")
+    monkeypatch.setattr(astap, "find_exe", cerca_davvero)
+    monkeypatch.setenv(astap.ENV_EXE, str(dell_admin))
+    monkeypatch.setenv("ASTROLOG_DATA_ROOT", str(tmp_path))
+    lanciati = []
+
+    def spia(cmd, timeout_s):
+        lanciati.append(cmd)
+        return 1, ""
+
+    conn = connect(db_path)
+    try:
+        list(scan_folder(conn, add_folder(conn, tmp_path / "lib")))
+        config.write(conn, "astap_path", str(altro))
+        list(solve_frames(conn, run=spia, cache=tmp_path / "cache"))
+    finally:
+        conn.close()
+
+    assert [c[0] for c in lanciati] == [str(dell_admin)]
+
+
+def test_on_a_nas_settings_refuse_the_solver_path(db_path, tmp_path):
+    """Scriverlo sul NAS e' un 422 con un codice, non un valore salvato e poi ignorato."""
+    altro = tmp_path / "altro_programma"
+    altro.write_text("x", encoding="utf-8")
+    app = create_app(db_path, data_root=str(tmp_path))
+    with TestClient(app, base_url="http://localhost") as c:
+        r = c.patch("/api/v1/settings", json={"values": {"astap_path": str(altro)}})
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "solver_set_by_admin"
+        assert settings_out(c)["values"]["astap_path"] is None

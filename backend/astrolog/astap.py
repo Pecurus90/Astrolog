@@ -127,7 +127,7 @@ def where_exe(
     candidates: Iterable[str | Path] = CANDIDATES,
 ) -> tuple[str | None, Source | None]:
     """The channel is shown because the automatic search is wrong exactly when it finds something
-    (an old ASTAP in PATH). The user's choice beats the variable, set by the NAS admin."""
+    (an old ASTAP in PATH). The user's choice beats the variable, except on a NAS (`solve`)."""
     return _search(declared, env, which, candidates)
 
 

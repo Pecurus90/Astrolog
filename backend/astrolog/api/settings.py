@@ -6,7 +6,7 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import cast
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..clock import now_iso
 from ..db import config
@@ -18,6 +18,7 @@ from ..spine.solve import (
     NO_SOLVER,
     NO_STAR_DATABASE,
     databases_next_to,
+    declared_path,
     solver_found,
     solver_path,
     solver_where,
@@ -104,7 +105,9 @@ def read_settings(conn: sqlite3.Connection = Depends(get_db)) -> SettingsOut:
 
 
 @router.patch("/settings", response_model=SettingsOut)
-def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_db)) -> SettingsOut:
+def write_settings(
+    body: SettingsPatch, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> SettingsOut:
     """Writes the given keys and returns the settings as they now are. Either all pass or nothing
     does: half the preferences written would be worse than none, and whoever got one key wrong
     must not guess which ones went in.
@@ -113,10 +116,14 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
     tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
     their `ranges`; 422 `moon_limit_below_good` when the Moon's marginal bound would fall under
     its good one; 422 `wrong_type` if a value has the wrong type or is not one of the key's
-    allowed choices. A change of the Moon rule rewrites at once what it judged."""
+    allowed choices; 422 `solver_set_by_admin` for `astap_path` on a NAS (a data root), where only
+    `ASTROLOG_ASTAP` picks the solver (#95). A change of the Moon rule rewrites at once what it
+    judged."""
     unknown = sorted(k for k in body.values if k not in config.KEYS)
     if unknown:
         raise HTTPException(status_code=422, detail={"code": "unknown_setting", "keys": unknown})
+    if request.app.state.data_root and "astap_path" in body.values:
+        raise HTTPException(status_code=422, detail={"code": "solver_set_by_admin"})
     tried = sorted(k for k in body.values if k in config.TRIED_ELSEWHERE)
     if tried:
         raise HTTPException(status_code=422, detail={"code": "tried_elsewhere", "keys": tried})
@@ -145,7 +152,7 @@ def _solver(conn: sqlite3.Connection, where: tuple[str | None, str | None]) -> S
         path=where[0],
         # The `SolverSource` Literal repeats `astap.Source` on purpose (`models_tonight`).
         source=cast("SolverSource | None", where[1]),
-        declared=config.read(conn).astap_path,
+        declared=declared_path(conn),
         wrong_env=solver_wrong_env(conn),
         databases=list(databases_next_to(where[0])),
     )

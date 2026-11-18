@@ -272,7 +272,9 @@ ASTAP c'e' dentro e nessuno ci pensa, ma chi installa da sorgente vedrebbe un ar
 senza sapere perche': lo dice il passo ASTAP del primo avvio (`sito.md`), **prima della prima
 scansione**. Dove sta il solver lo dice l'utente con la preferenza `astap_path`, che viene
 **prima** della ricerca automatica e della variabile d'ambiente `ASTROLOG_ASTAP` (quella la
-mette chi lancia l'app, non chi la usa). La ricerca ha una casa sola, `solve.solver_path`: la
+mette chi lancia l'app, non chi la usa). **Sul NAS** (radice dei dati) la preferenza non vale e
+non si scrive (422 `solver_set_by_admin`): senza login chiunque in rete scrive le Impostazioni,
+quindi il solver lo sceglie solo `ASTROLOG_ASTAP` (#95). La ricerca ha una casa sola, `solve.solver_path`: la
 leggono lo stadio che risolve e la riga di `missing` che avvisa a schermo, cosi' l'avviso non
 puo' dire una cosa e la corsa farne un'altra.
 

@@ -15,7 +15,7 @@ from typing import Final
 from .. import astap
 from ..clock import now_iso
 from ..db import config
-from ..db.paths import cache_dir
+from ..db.paths import cache_dir, data_root
 from ..db.transaction import transaction
 from ..fits.walk import long_path
 from ..units import field_deg, focal_from_scale, same_focal, scale_arcsec_px
@@ -61,20 +61,26 @@ class _Solver:
     cache: Path
 
 
+def declared_path(conn: sqlite3.Connection) -> str | None:
+    """The path written in Settings; on a NAS (a data root) none: anyone on the LAN writes Settings,
+    so only whoever starts the container picks the solver, with `ASTROLOG_ASTAP` (#95)."""
+    return None if data_root() else config.read(conn).astap_path
+
+
 def solver_path(conn: sqlite3.Connection) -> str | None:
     """One home for the run and for the warning, or they would disagree on whether ASTAP is there.
     The declared path wins over the automatic search."""
-    return astap.find_exe(config.read(conn).astap_path)
+    return astap.find_exe(declared_path(conn))
 
 
 def solver_where(conn: sqlite3.Connection) -> tuple[str | None, astap.Source | None]:
     """`(path, channel)`, so the user can say "not that one" (`astap.where_exe`)."""
-    return astap.where_exe(config.read(conn).astap_path)
+    return astap.where_exe(declared_path(conn))
 
 
 def solver_wrong_env(conn: sqlite3.Connection) -> str | None:
     """The variable that stops the run; a written preference beats it, so then none."""
-    return None if config.read(conn).astap_path else astap.wrong_env()
+    return None if declared_path(conn) else astap.wrong_env()
 
 
 def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:
