@@ -187,6 +187,9 @@ class ChartOut(BaseModel):
     ends_at: str = Field(description="Half an hour after the hour nearest the sunrise.")
     dark_from: str | None = Field(description="Where astronomical dark starts; `None` without it.")
     dark_until: str | None = Field(description="Where astronomical dark ends; `None` without it.")
+    dark_all_night: bool = Field(
+        description="Dark from the first instant to the last (above 84 degrees): no hours to say."
+    )
 
 
 class DarkStretchOut(BaseModel):

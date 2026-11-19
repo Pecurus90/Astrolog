@@ -2215,6 +2215,11 @@ export interface components {
              * @description Where astronomical dark ends; `None` without it.
              */
             dark_until: string | null;
+            /**
+             * Dark All Night
+             * @description Dark from the first instant to the last (above 84 degrees): no hours to say.
+             */
+            dark_all_night: boolean;
         };
         /**
          * CoordinatesEdit

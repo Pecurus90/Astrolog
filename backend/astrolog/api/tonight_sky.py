@@ -146,6 +146,7 @@ def sky_of(conn: sqlite3.Connection, home: Site, the_night: str) -> TonightOut |
             ends_at=span.ends_at.isoformat(),
             dark_from=_iso(span.dark_from),
             dark_until=_iso(span.dark_until),
+            dark_all_night=span.dark_all_night,
         )
         if span
         else None,

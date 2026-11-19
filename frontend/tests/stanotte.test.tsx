@@ -14,7 +14,7 @@ process.env.TZ = "UTC"
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { rileggiOgni } from "../src/Stanotte"
+import { buioDellaNotte, rileggiOgni } from "../src/Stanotte"
 import { FERMO, SALUTE, SITO_DI_CASA, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
 
 afterEach(pulisci)
@@ -42,6 +42,7 @@ const NOTTE = {
     ends_at: "2026-10-01T07:30:00+02:00",
     dark_from: "2026-09-30T20:48:00+02:00",
     dark_until: "2026-10-01T05:48:00+02:00",
+    dark_all_night: false,
   },
   moonless_dark: [{ starts_at: "2026-09-30T20:48:00+02:00", ends_at: "2026-09-30T23:40:00+02:00" }],
   moon_in_dark: {
@@ -153,6 +154,19 @@ describe("il pannello di Stanotte", () => {
     expect(within(pannello).getByRole("link", { name: "Piano della notte ↗" }).getAttribute("href")).toBe("/piano-della-notte")
     // i dati sono veri: la riga della tavola "dati simulati" non c'e'
     expect(within(pannello).queryByText(/simulati/)).toBeNull()
+  })
+
+  it("un buio da mezzogiorno a mezzogiorno (sopra gli 84 gradi) dice tutta la notte, non 12:00–12:00", () => {
+    const chart = {
+      starts_at: "2026-12-21T12:00:00+01:00",
+      ends_at: "2026-12-22T12:00:00+01:00",
+      dark_from: "2026-12-21T12:00:00+01:00",
+      dark_until: "2026-12-22T12:00:00+01:00",
+      dark_all_night: true,
+    }
+    expect(buioDellaNotte({ ...NOTTE, chart, moonless_dark: [] } as unknown as Parameters<typeof buioDellaNotte>[0])).toBe(
+      "buio tutta la notte",
+    )
   })
 
   const BUIO = { since: "2026-09-30T21:10:00+02:00", until: "2026-10-01T02:30:00+02:00" }

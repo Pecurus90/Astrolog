@@ -67,7 +67,7 @@ export const STANOTTE_PIENA = {
     { starts_at: D("07:25"), ends_at: D("12:00"), kind: "day" },
   ],
   dark_s: 32400,
-  chart: { starts_at: H("18:30"), ends_at: D("07:30"), dark_from: H("20:48"), dark_until: D("05:48") },
+  chart: { starts_at: H("18:30"), ends_at: D("07:30"), dark_from: H("20:48"), dark_until: D("05:48"), dark_all_night: false },
   planets: [
     { key: "saturn", track: [punto(H("20:00"), 20), punto(H("23:00"), 41), punto(D("03:00"), 10)], rise: null, set: D("04:10"), highest: punto(H("23:00"), 41) },
     { key: "jupiter", track: [punto(H("20:00"), -10), punto(D("03:00"), 30)], rise: H("23:05"), set: null, highest: punto(D("05:00"), 38) },

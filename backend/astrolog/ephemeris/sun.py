@@ -55,6 +55,8 @@ class ChartWindow:
     ends_at: dt.datetime
     dark_from: dt.datetime | None
     dark_until: dt.datetime | None
+    # noon to noon in the dark (above 84 degrees): no start nor end to tell
+    dark_all_night: bool
 
 
 _HALF_HOUR = dt.timedelta(minutes=30)  # [T] chart margin, Design board v37
@@ -78,6 +80,7 @@ def chart_window(bands: Sequence[SkyBand]) -> ChartWindow | None:
         ends_at=hour(last.starts_at + _HALF_HOUR) + _HALF_HOUR if rises else last.ends_at,
         dark_from=dark[0].starts_at if dark else None,
         dark_until=dark[-1].ends_at if dark else None,
+        dark_all_night=all(b.kind == Sky.DARK for b in bands),
     )
 
 

@@ -137,8 +137,9 @@ function quandoDelPianeta(p: Stanotte["planets"][number], conNome = true): strin
 /** The legend's dark: "20:48-05:48, senza Luna 20:48-23:40". */
 function notaDelBuio(s: Stanotte): string {
   const c = s.chart
-  const parti =
-    c?.dark_from && c.dark_until
+  const parti = c?.dark_all_night
+    ? [t("frame.tonight.stretch.all")]
+    : c?.dark_from && c.dark_until
       ? [t("frame.tonight.stretch", { da: oraDelSito(c.dark_from), a: oraDelSito(c.dark_until) })]
       : []
   const tratti = (s.moonless_dark ?? []).map((x) =>
@@ -401,8 +402,9 @@ export function DashboardNotte({
     { n: t("dashboard.band.nautical"), o: 2 },
     { n: t("dashboard.band.astronomical"), o: 3 },
     {
-      n:
-        chart?.dark_from && chart.dark_until
+      n: chart?.dark_all_night
+        ? t("frame.tonight.dark.all")
+        : chart?.dark_from && chart.dark_until
           ? t("dashboard.band.dark.span", {
               da: oraDelSito(chart.dark_from),
               a: oraDelSito(chart.dark_until),

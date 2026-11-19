@@ -759,3 +759,9 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
   carta che si apre (`aperto`); il Meteo di oggi usa ancora i suoi mattoni vecchi.
 - **Fuori, coi Planner** (passo 45): il vetro sul cielo, `PlannerSolare2`, `PlannerEventi2`.
 - **SceltaTema senza sito**: Automatico resta spento finche' non arriva il passo Tema (Marco 15/11).
+
+## Stanotte e Dashboard -- Il buio da mezzogiorno a mezzogiorno (passo 7, 19/11)
+
+- **Un caso che le tavole non disegnano**: sopra gli 84 gradi il buio puo' coprire la notte intera.
+  Dove la tavola scrive le ore del buio («buio 20:48-05:48»), l'app dice «buio tutta la notte»
+  (Marco 19/11), e la legenda del grafico «Buio tutta la notte»; prima «12:00-12:00» (Issue #18).

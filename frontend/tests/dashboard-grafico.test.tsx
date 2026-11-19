@@ -362,6 +362,27 @@ describe("il grafico della Notte", () => {
     ])
   })
 
+  it("un buio da mezzogiorno a mezzogiorno dice tutta la notte nella chiave e nella legenda", async () => {
+    await montaDashboard({
+      stanotte: {
+        sky_bands: [{ starts_at: H("12:00"), ends_at: D("12:00"), kind: "dark" }],
+        chart: {
+          starts_at: H("12:00"),
+          ends_at: D("12:00"),
+          dark_from: H("12:00"),
+          dark_until: D("12:00"),
+          dark_all_night: true,
+        },
+        moonless_dark: [],
+      },
+    })
+    await cursore()
+    expect([...document.querySelectorAll(".al-dash__riga-7")].map((k) => k.textContent)).toContain(
+      "buio tutta la notte",
+    )
+    expect(document.querySelectorAll(".al-dash__riga-9")[2]?.textContent).toBe("Buiotutta la notte")
+  })
+
   it("senza il buio nel grafico la chiave dice giorno e buio senza ore", async () => {
     await montaDashboard({
       stanotte: {

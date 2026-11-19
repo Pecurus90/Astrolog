@@ -313,6 +313,35 @@ def test_the_chart_ends_in_the_column_that_holds_the_sunrise(alba, fine):
     assert volta.ends_at == giorno.replace(hour=fine[0], minute=fine[1])
 
 
+def test_a_dark_that_touches_both_edges_is_dark_all_night():
+    """Sopra gli 84 gradi il buio puo' andare da mezzogiorno a mezzogiorno: e' tutta la notte, non
+    "dalle 12:00 alle 12:00". Un buio con tramonto e alba non lo e'."""
+    domani = MEZZOGIORNO + dt.timedelta(days=1)
+    polare = chart_window([SkyBand(MEZZOGIORNO, domani, Sky.DARK)])
+    sera = MEZZOGIORNO.replace(hour=18)
+    solita = chart_window(
+        [
+            SkyBand(MEZZOGIORNO, sera, Sky.DAY),
+            SkyBand(sera, domani.replace(hour=6), Sky.DARK),
+            SkyBand(domani.replace(hour=6), domani, Sky.DAY),
+        ]
+    )
+    # mezzogiorno dell'orologio lontano dal solare: il crepuscolo cade in mezzo, buio ai bordi
+    sfasata = chart_window(
+        [
+            SkyBand(MEZZOGIORNO, MEZZOGIORNO.replace(hour=13), Sky.DARK),
+            SkyBand(MEZZOGIORNO.replace(hour=13), MEZZOGIORNO.replace(hour=14), Sky.ASTRONOMICAL),
+            SkyBand(MEZZOGIORNO.replace(hour=14), domani, Sky.DARK),
+        ]
+    )
+    assert polare is not None and solita is not None and sfasata is not None
+    assert (polare.dark_all_night, solita.dark_all_night, sfasata.dark_all_night) == (
+        True,
+        False,
+        False,
+    )
+
+
 def _ha_buio(notte, lat, lon, fuso):
     inizio, ore = night_window(notte, fuso)
     return Sky.DARK in quali(night_bands(inizio, lat, lon, ore))

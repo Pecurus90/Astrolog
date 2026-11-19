@@ -109,7 +109,8 @@ export function buioDellaNotte(notte: Notte): string {
   const da = notte.chart?.dark_from ?? null
   const a = notte.chart?.dark_until ?? null
   const parti: string[] = []
-  if (da && a) parti.push(t("frame.tonight.dark", { da: oraDelSito(da), a: oraDelSito(a) }))
+  if (notte.chart?.dark_all_night) parti.push(t("frame.tonight.dark.all"))
+  else if (da && a) parti.push(t("frame.tonight.dark", { da: oraDelSito(da), a: oraDelSito(a) }))
   const tratti = (notte.moonless_dark ?? []).map((s) =>
     t("frame.tonight.stretch", { da: oraDelSito(s.starts_at), a: oraDelSito(s.ends_at) }),
   )
