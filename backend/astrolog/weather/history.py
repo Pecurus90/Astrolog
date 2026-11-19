@@ -6,7 +6,7 @@ import logging
 import sqlite3
 import zoneinfo
 from collections.abc import Mapping
-from dataclasses import asdict, astuple
+from dataclasses import asdict, astuple, dataclass
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -72,8 +72,19 @@ def _summary_json(hours: list[verdict.Hour]) -> str:
     return json.dumps({**asdict(summary), "sky_word": verdict.sky_word(summary.cloud_total_pct)})
 
 
-def _due_site(conn: sqlite3.Connection, now: datetime) -> tuple[dict[str, Any] | None, list[str]]:
-    """The first site with nights old enough for the reanalysis and no weather, and those nights."""
+@dataclass(frozen=True, slots=True)
+class _Round:
+    """What a round asks: `alone` after a failed round of many, `skipped_through` the last night
+    failed alone, passed over until the nights after it run out."""
+
+    site: dict[str, Any]
+    dates: list[str]
+    alone: str | None
+    skipped_through: str | None
+
+
+def _due_site(conn: sqlite3.Connection, now: datetime) -> _Round | None:
+    """The first site with nights old enough for the reanalysis and no weather, and what to ask."""
     per_site: dict[int, tuple[dict[str, Any], list[str]]] = {}
     for r in conn.execute(_MISSING, (KIND,)):
         today = night_date(iso_z(now), r["timezone"])
@@ -81,9 +92,17 @@ def _due_site(conn: sqlite3.Connection, now: datetime) -> tuple[dict[str, Any] |
             continue
         per_site.setdefault(r["site_id"], (dict(r), []))[1].append(r["night_date"])
     for site_id, (site, dates) in per_site.items():
-        if not fetches.failed_recently(fetches.last(conn, site_id, Source.ARCHIVE), now):
-            return site, dates
-    return None, []
+        attempt = fetches.last(conn, site_id, Source.ARCHIVE)
+        if fetches.failed_recently(attempt, now):
+            continue
+        through = attempt["skipped_through"] if attempt is not None else None
+        after = [d for d in dates if through is None or d > through]
+        if not after:  # every night passed over: from the start again
+            through, after = None, dates
+        if attempt is not None and attempt["status"] != Outcome.OK and not attempt["alone_night"]:
+            return _Round(site, after[:1], after[0], through)
+        return _Round(site, after, None, through)
+    return None
 
 
 def step(
@@ -92,9 +111,10 @@ def step(
     """One call at most: the outcome, or `None` when there was nothing to ask or a failed round is
     still waiting."""
     moment = now or datetime.now(UTC)
-    site, dates = _due_site(conn, moment)
-    if site is None:
+    due = _due_site(conn, moment)
+    if due is None:
         return None
+    site, dates = due.site, due.dates
     start = date.fromisoformat(dates[0])
     # up to the last night needed, never beyond a year: the archive refuses future days
     until = min(start + timedelta(days=MAX_DAYS - 1), date.fromisoformat(dates[-1]))
@@ -111,6 +131,10 @@ def step(
     answer, failure = net.ask_why(fetch or _fetch, query)
     outcome = failure or _write(conn, site, wanted, answer, moment)
     fetches.record(conn, site["site_id"], Source.ARCHIVE, outcome, moment)
+    failed_alone = due.alone is not None and outcome != Outcome.OK
+    fetches.record_pass(
+        conn, site["site_id"], due.alone, due.alone if failed_alone else due.skipped_through
+    )
     return outcome
 
 

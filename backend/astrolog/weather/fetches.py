@@ -22,7 +22,8 @@ class Source(StrEnum):
 
 def last(conn: sqlite3.Connection, site_id: int, source: Source) -> sqlite3.Row | None:
     return conn.execute(
-        "SELECT attempted_at, status FROM weather_fetches WHERE site_id = ? AND source = ?",
+        "SELECT attempted_at, status, alone_night, skipped_through FROM weather_fetches"
+        " WHERE site_id = ? AND source = ?",
         (site_id, source),
     ).fetchone()
 
@@ -35,6 +36,17 @@ def record(
         " ON CONFLICT(site_id, source) DO UPDATE SET attempted_at = excluded.attempted_at,"
         " status = excluded.status",
         (site_id, source, iso_z(now), status),
+    )
+
+
+def record_pass(
+    conn: sqlite3.Connection, site_id: int, alone: str | None, skipped_through: str | None
+) -> None:
+    """The archive's walk past nights it cannot give, after `record`."""
+    conn.execute(
+        "UPDATE weather_fetches SET alone_night = ?, skipped_through = ?"
+        " WHERE site_id = ? AND source = ?",
+        (alone, skipped_through, site_id, Source.ARCHIVE),
     )
 
 

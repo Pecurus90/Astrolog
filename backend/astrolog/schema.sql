@@ -626,6 +626,10 @@ CREATE TABLE weather_fetches (
   source       TEXT NOT NULL,
   attempted_at TEXT NOT NULL,
   status       TEXT NOT NULL CHECK (status IN ('ok', 'refused', 'unreachable', 'bad_answer')),
+  -- lo storico: la notte chiesta da sola dopo un giro fallito, e l'ultima saltata perche' fallita
+  -- da sola; i giri chiedono le notti dopo, e finite quelle si riparte da capo
+  alone_night     TEXT,
+  skipped_through TEXT,
   PRIMARY KEY (site_id, source)
 ) STRICT;
 

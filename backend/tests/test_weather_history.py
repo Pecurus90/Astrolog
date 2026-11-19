@@ -224,6 +224,50 @@ def test_a_call_covers_a_year_to_the_day(db):
     assert [r["night_date"] for r in scritte(db)] == ["2024-03-01", "2025-03-01"]
 
 
+def test_a_night_that_fails_its_call_does_not_stop_the_nights_after_it(db):
+    """Il 10 fa fallire ogni chiamata che lo comprende: il giro dopo lo chiede da solo, quello dopo
+    lo salta e porta le altre; si riprova poi, non si perde."""
+    for data in ("2026-03-10", "2026-03-20", "2026-04-15"):
+        notte(db, data)
+    chiesti = []
+
+    def archivio_rotto(url):
+        chiesti.append(url)
+        return "<html/>" if "start_date=2026-03-09" in url else archivio()
+
+    giri = [
+        history.step(db, fetch=archivio_rotto, now=ADESSO + timedelta(minutes=16 * i))
+        for i in range(3)
+    ]
+    assert giri == ["bad_answer", "bad_answer", "ok"]
+    assert "end_date=2026-03-12" in chiesti[1]
+    assert [r["night_date"] for r in scritte(db)] == ["2026-03-20", "2026-04-15"]
+    history.step(db, fetch=archivio_rotto, now=ADESSO + timedelta(minutes=48))
+    assert "start_date=2026-03-09" in chiesti[3]
+
+
+def test_two_failing_nights_in_a_row_do_not_stop_the_nights_after_them(db):
+    for data in ("2026-03-10", "2026-03-11", "2026-03-20"):
+        notte(db, data)
+
+    def archivio_rotto(url):
+        rotti = ("start_date=2026-03-09", "start_date=2026-03-10")
+        return "<html/>" if any(r in url for r in rotti) else archivio()
+
+    for i in range(8):
+        history.step(db, fetch=archivio_rotto, now=ADESSO + timedelta(minutes=16 * i))
+    assert [r["night_date"] for r in scritte(db)] == ["2026-03-20"]
+
+
+def test_a_lone_night_that_failed_twice_is_asked_again_when_the_archive_is_back(db):
+    """Due giri senza rete non sono colpa della notte: al ritorno dell'archivio arriva."""
+    notte(db, "2026-03-10")
+    finto = Finto(OSError(), OSError(), archivio())
+    giri = [history.step(db, fetch=finto, now=ADESSO + timedelta(minutes=16 * i)) for i in range(4)]
+    assert giri[:3] == ["unreachable", "unreachable", "ok"]
+    assert len(scritte(db)) == 1
+
+
 def test_a_night_the_archive_covers_only_in_part_is_not_written(db):
     """La notte del 10 finisce il mattino dell'11: un archivio che si ferma prima non la scrive a
     meta', e si riprova."""
