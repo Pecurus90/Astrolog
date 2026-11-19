@@ -59,9 +59,22 @@ def _shape(conn: sqlite3.Connection) -> set[tuple[object, ...]]:
     return shape
 
 
-def ensure_database(path: str | Path) -> Path:
-    """Creates it if missing; refuses one whose tables, columns, views, triggers or indexes are
-    not schema.sql's, which would otherwise break later with `no such column`."""
+def _set_aside(p: Path) -> None:
+    """Renames the database with its `-wal` and `-shm`, first free number: never deleted."""
+    n = 1
+    while p.with_name(f"{p.name}.schema-vecchio-{n}").exists():
+        n += 1
+    aside = p.with_name(f"{p.name}.schema-vecchio-{n}")
+    for suffix in ("-wal", "-shm"):
+        side = p.with_name(p.name + suffix)
+        if side.exists():
+            side.replace(aside.with_name(aside.name + suffix))
+    p.replace(aside)
+
+
+def ensure_database(path: str | Path, *, set_aside: bool = False) -> Path:
+    """Creates it if missing; one not of schema.sql (later `no such column`) is refused, or with
+    `set_aside` (a NAS: no terminal for tools/reset_db.py, #97) renamed and made again."""
     p = Path(path)
     if not p.exists() or p.stat().st_size == 0:
         create_database(p)
@@ -74,7 +87,10 @@ def ensure_database(path: str | Path) -> Path:
     finally:
         fresh.close()
         old.close()
-    if stale:
+    if stale and set_aside:
+        _set_aside(p)
+        create_database(p)
+    elif stale:
         raise StaleSchemaError(
             f"il database {p} viene da uno schema diverso: ricrealo con tools/reset_db.py"
         )

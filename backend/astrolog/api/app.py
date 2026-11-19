@@ -261,7 +261,8 @@ def create_app(  # noqa: PLR0913
         from ..db.paths import db_path as default_db_path
 
         db_path = default_db_path()
-    ensure_database(db_path)
+    root = data_root if data_root is not None else env_data_root()
+    ensure_database(db_path, set_aside=bool(root))
     _load_catalog(db_path)
 
     app = FastAPI(
@@ -272,7 +273,7 @@ def create_app(  # noqa: PLR0913
     )
     app.state.web_dir = Path(web_dir) if web_dir else page.WEB_DIR
     app.state.db_path = str(db_path)
-    app.state.data_root = data_root if data_root is not None else env_data_root()
+    app.state.data_root = root
     app.state.worker = Worker()
     app.state.behind = scan.behind(db_path)
     app.state.folder_locks = set()

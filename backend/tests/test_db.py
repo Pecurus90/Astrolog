@@ -49,6 +49,30 @@ def test_a_database_of_an_older_schema_is_refused_at_start(tmp_path, change):
         ensure_database(p)
 
 
+def test_on_a_nas_an_older_database_is_set_aside_and_the_app_starts(tmp_path):
+    """Sul NAS non c'e' terminale per tools/reset_db.py: il container ripartiva in loop (#97). Il
+    DB vecchio si rinomina accanto, mai cancellato, e l'app parte su uno nuovo."""
+    from astrolog.api.app import create_app
+
+    p = tmp_path / "astrolog.db"
+    ensure_database(p)
+    c = connect(p)
+    add_folder(c, "x")
+    c.execute("CREATE TABLE left_over (x INTEGER)")
+    c.close()
+
+    create_app(p, data_root=str(tmp_path))
+
+    aside = list(tmp_path.glob("astrolog.db.schema-vecchio-*"))
+    assert len(aside) == 1
+    old = connect(aside[0])
+    assert old.execute("SELECT COUNT(*) FROM folders").fetchone()[0] == 1
+    old.close()
+    c = connect(p)
+    assert c.execute("SELECT COUNT(*) FROM folders").fetchone()[0] == 0
+    c.close()
+
+
 def test_connection_pragmas(tmp_path):
     c = connect(tmp_path / "a.db")
     assert c.execute("PRAGMA foreign_keys").fetchone()[0] == 1
