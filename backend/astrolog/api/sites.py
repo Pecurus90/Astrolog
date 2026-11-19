@@ -16,6 +16,7 @@ from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from ..spine import declarations, home_nights, site_requeue
 from ..units import SQM_MAX, SQM_MIN, bortle_of
+from . import tonight_sky
 from .deps import get_db
 from .models_site import (
     PlaceList,
@@ -202,6 +203,7 @@ def create_site(
             home_nights.follow_home(conn)
     except sqlite3.IntegrityError as err:
         _name_taken_or_raise(err)
+    tonight_sky.follows(conn)
     sky_follows(request)
     return _out(_row(conn, site_id))
 
@@ -293,6 +295,7 @@ def edit_site(
             home_nights.follow_home(conn)
     except sqlite3.IntegrityError as err:
         _name_taken_or_raise(err)
+    tonight_sky.follows(conn)
     sky_follows(request)
     return _out(_row(conn, site_id))
 
@@ -313,6 +316,7 @@ def set_default(
             conn, near=[(row["latitude"], row["longitude"])], homeless=no_home
         )
         home_nights.follow_home(conn)
+    tonight_sky.follows(conn)
     sky_follows(request)
     return _out(_row(conn, site_id))
 
@@ -332,6 +336,7 @@ def delete_site(
         conn.execute("DELETE FROM sites WHERE id = ?", (site_id,))
         site_requeue.requeue_waiting(conn)
         home_nights.follow_home(conn)
+    tonight_sky.follows(conn)
     sky_follows(request)
     return SiteDeleted(site_id=site_id, deleted=True)
 

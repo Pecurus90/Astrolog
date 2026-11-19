@@ -693,6 +693,20 @@ CREATE TABLE moon_nights (
   PRIMARY KEY (site_id, night_date)
 ) STRICT;
 
+-- Il cielo di stanotte e della notte dopo dal sito di casa, pronto per Stanotte (DERIVATO: lo
+-- riscrive `api/tonight_sky.py` all'avvio, dal giro in background quando manca una notte o il sito
+-- si e' spostato, e subito quando cambiano i siti o la regola della Luna). Chi legge non calcola
+-- (#96): Sole, Luna e pianeti di una notte costano piu' di un secondo su un NAS.
+CREATE TABLE tonight_sky (
+  site_id    INTEGER NOT NULL REFERENCES sites (id) ON DELETE CASCADE,
+  night_date TEXT NOT NULL,                        -- YYYY-MM-DD nel fuso del sito
+  latitude   REAL NOT NULL,                        -- dove e' stato calcolato: un sito spostato si rifa'
+  longitude  REAL NOT NULL,
+  timezone   TEXT NOT NULL,
+  sky_json   TEXT NOT NULL,                        -- la risposta di GET /tonight senza sito e meteo
+  PRIMARY KEY (site_id, night_date)
+) STRICT;
+
 -- Una notte: da mezzogiorno a mezzogiorno nel fuso del sito. Due siti, stessa data: due notti.
 -- Porta i dati irripetibili (meteo, Luna, ore di buio) nelle caselle che li aggiungono.
 CREATE TABLE nights (

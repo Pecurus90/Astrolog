@@ -26,6 +26,13 @@ pytestmark = [
 ]
 
 
+def orologio(monkeypatch, quando: str) -> None:
+    """L'ora ferma per chi scrive il cielo e per chi lo legge: prima di creare il sito, che lo
+    scrive subito (#96)."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: quando)
+    monkeypatch.setattr("astrolog.api.tonight_sky.now_iso", lambda: quando)
+
+
 def crea_sito(client_vuoto, nome, lat, lon, sky_sqm=None):
     """Un sito di casa. Senza `sky_sqm` la classe del suo cielo resta **non dichiarata**, che e'
     lo stato di chi salta quella domanda al primo avvio."""
@@ -117,7 +124,7 @@ def test_the_night_is_the_one_of_the_site_not_of_the_server(client_vuoto, monkey
     le 20 di sera: dopo mezzogiorno, quindi la notte e' quella del **15**. Stesso istante, due
     notti diverse -- ed e' diverso **perche' si guarda il fuso del sito**. Chi leggesse l'ora del
     server ne direbbe una sola, e sarebbe sbagliata per uno dei due."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-07-15T08:00:00.000Z")
+    orologio(monkeypatch, "2026-07-15T08:00:00.000Z")
 
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
     qui = client_vuoto.get("/api/v1/tonight").json()
@@ -131,7 +138,7 @@ def test_the_night_is_the_one_of_the_site_not_of_the_server(client_vuoto, monkey
 def test_a_night_without_dark_says_when_the_dark_returns(client_vuoto, monkeypatch):
     """A Tromso a maggio il Sole non scende sotto -18 gradi: la rotta dice la notte in cui il buio
     torna, la tavola la scrive ("fino al 12 agosto"). Con il buio stanotte non dice niente."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2027-05-01T16:00:00.000Z")
+    orologio(monkeypatch, "2027-05-01T16:00:00.000Z")
     crea_sito(client_vuoto, "Tromso", 69.65, 18.96)
     polare = client_vuoto.get("/api/v1/tonight").json()
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
@@ -187,7 +194,8 @@ def test_the_phase_is_asked_in_the_middle_of_the_night_not_at_noon(client_vuoto,
 
     client_vuoto.get("/api/v1/tonight")
 
-    assert len(chiesto) == 1, chiesto
+    # una per notte scritta, stanotte e la dopo (#96); la lettura non la chiede
+    assert len(chiesto) == 2, chiesto
     # **Dentro la finestra**, non solo a un'ora che somiglia a mezzanotte: andando all'indietro
     # invece che in avanti si arriva lo stesso alle 00:00, ma della notte prima -- e guardando
     # solo l'ora la prova resterebbe verde (visto: il sabotaggio sopravviveva).
@@ -400,7 +408,7 @@ def test_the_route_sends_the_four_planets_of_the_chart(client_vuoto):
 def test_the_moon_says_how_high_it_climbs_inside_the_chart(client_vuoto, monkeypatch):
     """«Sale fino a 68 gradi alle 07:30» (Dashboard v79): il massimo dentro il grafico, non quello
     del mezzogiorno che apre la finestra della notte."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-11-10T16:00:00.000Z")
+    orologio(monkeypatch, "2026-11-10T16:00:00.000Z")
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
     detto = client_vuoto.get("/api/v1/tonight").json()
@@ -416,7 +424,7 @@ def test_the_moon_says_how_high_it_climbs_inside_the_chart(client_vuoto, monkeyp
 def test_with_every_planet_below_the_horizon_none_is_the_highest():
     """Un pianeta che non sorge mai nel grafico non e' "il piu' alto": la testa non lo nomina."""
     from astrolog.api.models_tonight import PlanetOut, SkyPointOut
-    from astrolog.api.tonight import _highest_planet
+    from astrolog.api.tonight_sky import _highest_planet
 
     sotto = PlanetOut(key="mars", track=[], highest=SkyPointOut(at="x", altitude_deg=-0.6))
     appena = PlanetOut(key="venus", track=[], highest=SkyPointOut(at="x", altitude_deg=-0.3))
@@ -454,7 +462,7 @@ def test_the_dark_comes_split_into_moonless_and_moon_up(client_vuoto, monkeypatc
     (Telaio v76): i tratti senza Luna e quello con la Luna su escono fatti, e insieme fanno il
     buio. Il 29/10/2026 a Vicenza la Luna (calante, 81%) sorge a buio fatto: consigliata banda
     stretta da allora alla fine."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-10-29T16:00:00.000Z")
+    orologio(monkeypatch, "2026-10-29T16:00:00.000Z")
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
     detto = client_vuoto.get("/api/v1/tonight").json()
@@ -473,7 +481,7 @@ def test_the_dark_comes_split_by_what_the_moon_lets_you_shoot(client_vuoto, monk
     """La fascia sotto il grafico della Dashboard e le due tessere della Luna (tavola v79):
     banda larga fin che la Luna e' giu', poi solo banda stretta, coi loro secondi. La stessa
     notte del 29/10/2026 a Vicenza: un tratto per banda, che insieme fanno il buio."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-10-29T16:00:00.000Z")
+    orologio(monkeypatch, "2026-10-29T16:00:00.000Z")
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
     detto = client_vuoto.get("/api/v1/tonight").json()
@@ -492,7 +500,7 @@ def test_the_dark_comes_split_by_what_the_moon_lets_you_shoot(client_vuoto, monk
 
 def test_a_night_without_the_moon_is_all_broadband(client_vuoto, monkeypatch):
     """Luna nuova (9/11/2026): tutto il buio e' banda larga, in un tratto solo."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-11-09T16:00:00.000Z")
+    orologio(monkeypatch, "2026-11-09T16:00:00.000Z")
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
     tratti = client_vuoto.get("/api/v1/tonight").json()["shooting"]
@@ -503,7 +511,7 @@ def test_a_night_without_the_moon_is_all_broadband(client_vuoto, monkeypatch):
 def test_a_moon_never_up_in_the_dark_has_no_moon_stretch(client_vuoto, monkeypatch):
     """Luna nuova (9/11/2026): col buio non c'e', e la rotta lo dice con `None`, non con un
     tratto vuoto; il buio e' tutto senza Luna."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-11-09T16:00:00.000Z")
+    orologio(monkeypatch, "2026-11-09T16:00:00.000Z")
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
     detto = client_vuoto.get("/api/v1/tonight").json()
@@ -535,7 +543,7 @@ def test_the_night_the_clocks_change_counts_its_true_dark(client_vuoto, monkeypa
     """La notte del cambio d'ora il buio non perde un'ora: il conto si fa in UTC, non sull'orologio
     da parete del fuso (effemeridi.md). Fasce e durata dicono lo stesso tempo, e sono piu' di 10 h
     a fine ottobre a Vicenza."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-10-24T16:00:00.000Z")
+    orologio(monkeypatch, "2026-10-24T16:00:00.000Z")
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
     detto = client_vuoto.get("/api/v1/tonight").json()
@@ -555,7 +563,7 @@ def test_the_night_the_clocks_change_counts_its_true_dark(client_vuoto, monkeypa
 def test_the_moonless_dark_left_never_grows_in_the_repeated_hour(client_vuoto, monkeypatch):
     """Il buio senza Luna che resta scende lungo la notte, anche nell'ora che l'orologio ripete
     (25-26/10/2025, Luna giu' alle due): due istanti con la stessa ora da parete restano due."""
-    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2025-10-25T16:00:00.000Z")
+    orologio(monkeypatch, "2025-10-25T16:00:00.000Z")
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
     lasciato = [

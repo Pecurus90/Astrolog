@@ -26,7 +26,7 @@ from ..clock import night_date, now_iso
 from ..db.connect import connect, ensure_database
 from ..db.paths import data_root as env_data_root
 from ..db.transaction import transaction
-from ..site_of import home_site
+from ..site_of import Site, home_site
 from ..spine import gear_usage, moon_calendar, object_candidates, stages
 from ..spine.stages import StageName
 from ..startup import LOCAL_HOSTS
@@ -54,6 +54,7 @@ from . import (
     settings,
     sites,
     tonight,
+    tonight_sky,
     vocab,
     weather,
     year,
@@ -127,6 +128,23 @@ def _weather_scheduler(db_path: str, every_s: float, stop_event: threading.Event
             return
 
 
+def _tonight_step(conn: sqlite3.Connection, site: Site | None) -> None:
+    """Tonight's sky written before anyone reads it: at start and every round (#96)."""
+    try:
+        if tonight_sky.step(conn, site):
+            conn.commit()
+    except Exception:
+        log.exception("stanotte: il giro del cielo e' caduto")
+
+
+def _tonight_at_start(db_path: str | Path) -> None:
+    conn = connect(db_path)
+    try:
+        _tonight_step(conn, home_site(conn))
+    finally:
+        conn.close()
+
+
 def _weather_round(db_path: str, cadence: forecast.Cadence) -> None:
     conn = connect(db_path)
     try:
@@ -142,6 +160,7 @@ def _weather_round(db_path: str, cadence: forecast.Cadence) -> None:
                 conn.commit()
         except Exception:
             log.exception("luna: il giro del calendario e' caduto")
+        _tonight_step(conn, site)
         if cadence.due(site, time.monotonic()):
             outcome = rounds.refresh(conn, site)
             log.debug("meteo: previsione a %.2f, esito %s", time.monotonic(), outcome)
@@ -191,6 +210,7 @@ def _lifespan(
         # Never the last close: that one locks the file to delete the WAL, and an antivirus on
         # Windows can stretch it past the busy timeout of whoever opens meanwhile.
         keepalive = connect(app.state.db_path, check_same_thread=False)
+        _tonight_at_start(app.state.db_path)
         stop_event = threading.Event()
         scheduler = threading.Thread(
             target=_scheduler,

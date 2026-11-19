@@ -225,9 +225,13 @@ stretta); due tratti vicini della stessa banda sono uno. Insieme fanno `dark_s`
 ## Dove vive
 
 `backend/astrolog/ephemeris/` -- puro: non tocca il database, la spina, le rotte ne' la rete, e un
-contratto di import-linter lo fa rispettare. La rotta e' `GET /api/v1/tonight`, in
-`backend/astrolog/api/tonight.py`, che e' l'unico posto dove le effemeridi incontrano un sito
-dell'utente. Il sito scritto nella scheda di una posa lo incontrano nello stadio `sky` della
+contratto di import-linter lo fa rispettare. Il cielo di stanotte dal sito di casa lo calcola
+`backend/astrolog/api/tonight_sky.py`, l'unico posto dove le effemeridi della notte incontrano un
+sito dell'utente, e lo scrive in `tonight_sky` per stanotte e la notte dopo: all'avvio, dal giro in
+background (ogni minuto, se manca una notte o il sito si e' spostato), e subito quando cambiano i
+siti o la regola della Luna. La rotta `GET /api/v1/tonight` legge la riga e non calcola (#96: sul
+NAS il calcolo costava 1,35 s a ogni lettura); un contratto di import-linter lo fa rispettare.
+Finche' la riga non c'e' la rotta risponde come per un sito senza fuso. Il sito scritto nella scheda di una posa lo incontrano nello stadio `sky` della
 pipeline (`ephemeris/frames.py`, passo 26.54): Luna e Sole a meta' posa, la distanza della Luna
 dal centro e la sua luce non arrotondata (`moon.lit_fractions`, la stessa della fase); contratto
 in [`misure.md`](misure.md), "Col cielo".

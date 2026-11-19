@@ -216,6 +216,15 @@ forbidden_modules = [
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
+# La stessa regola per Stanotte (#96): il cielo della notte lo scrive `api.tonight_sky`, e la rotta
+# legge la riga. Sugli import diretti: la Luna resta, il calendario chiede da che lato e' accesa.
+name = "Stanotte legge il cielo scritto: niente effemeridi della notte in lettura"
+type = "forbidden"
+source_modules = ["astrolog.api.tonight"]
+forbidden_modules = ["astrolog.api.tonight_sky", "astrolog.ephemeris.sun", "astrolog.ephemeris.planets"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
 # E per i candidati del cielo degli oggetti in dubbio: il cono sul catalogo lo fa chi identifica
 # (`spine.object_candidates`), e chi compone Da confermare li legge. Sugli import diretti, come
 # le altre: la rotta porta anche le risposte, che fanno ripartire identify.

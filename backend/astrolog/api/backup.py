@@ -16,6 +16,7 @@ from ..db.connect import connect
 from ..db.transaction import transaction
 from ..site_of import home_site
 from ..spine import backup, previews
+from . import tonight_sky
 from .camera_bias import declare_restored
 from .deps import get_db
 from .models_site import BackupCounts, BackupStatus
@@ -107,6 +108,7 @@ def restore_backup(request: Request, conn: sqlite3.Connection = Depends(get_db))
     backup.restore(conn, data, db_path=request.app.state.db_path)
     declare_restored(conn, data)
     _moon_follows(conn, data)
+    tonight_sky.follows(conn)
     sky_follows(request)
     request.app.state.backup_offer = False
     return _status(request)
@@ -157,6 +159,7 @@ def import_backup(
         _moon_follows(conn, data)
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         raise HTTPException(status_code=422, detail={"code": "not_a_backup"}) from e
+    tonight_sky.follows(conn)
     sky_follows(request)
     request.app.state.backup_offer = False
     return _status(request)

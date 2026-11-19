@@ -25,6 +25,7 @@ from ..spine.solve import (
     solver_wrong_env,
 )
 from ..weather import view
+from . import tonight_sky
 from .deps import get_db
 from .models_site import (
     Missing,
@@ -92,6 +93,7 @@ def moon_rule_follows(conn: sqlite3.Connection) -> None:
     """What the Moon rule judged, rewritten at once: the settings page and a restored backup."""
     home = home_site(conn)
     moon_calendar.refresh(conn, home)
+    tonight_sky.rebuild(conn, home)
     if home is not None:
         view.rebuild(conn, home)
 

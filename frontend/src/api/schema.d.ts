@@ -1558,9 +1558,7 @@ export interface paths {
          *     **The night is the app's**, noon to noon in the site's time zone (`clock.night_date`), not a
          *     calendar day: whoever looks at two in the morning is still in last night, and wants last
          *     night's Moon. The window is measured **between the two true noons**, not at a fixed
-         *     twenty-four hours: the clock-change night lasts 23 or 25. **The phase is asked at midnight**,
-         *     not at noon: asked at the window's start, whoever looks at the bar at eleven in the evening
-         *     would read the number of twelve hours earlier.
+         *     twenty-four hours: the clock-change night lasts 23 or 25. The phase is the one at midnight.
          *
          *     **Without a home site there is nothing to say**, and it says so: `night`, `site` and `moon`
          *     are `null`. A Moon computed on an invented place would be a number that looks true. The site,
@@ -1568,12 +1566,12 @@ export interface paths {
          *     one line, and asking two routes for them would leave a moment when the page is half done. A
          *     site whose time zone is missing or no longer known still comes out, without its night and its
          *     Moon (`night` and `moon` `null`): falling back to Greenwich would give another place's Moon
-         *     without anyone noticing.
+         *     without anyone noticing. The same reply comes while the sky of the night is not written yet.
          *
-         *     **The computation is costly**, because it samples a night of sky once per body: the Sun and
-         *     the Moon finely, the four planets of the chart at the curve's step. The
-         *     reply carries the night it refers to, so whoever shows it knows when it has expired without
-         *     asking again at every breath.
+         *     **Nothing is computed here** (#96): the sky is the one `tonight_sky` wrote for this night and
+         *     for where the site is now -- at start, every minute from the background round, and at once
+         *     when the sites or the Moon rule change. The reply carries the night it refers to, so whoever
+         *     shows it knows when it has expired without asking again at every breath.
          */
         get: operations["tonight"];
         put?: never;
