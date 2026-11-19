@@ -3,7 +3,7 @@
  * Impostazioni v82, il guscio e Generale: linguette e indirizzi delle sezioni, l'indice del
  * telefono, nome, lingua e tema che si salvano e valgono subito, il salvataggio non riuscito.
  */
-import { fireEvent, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
@@ -194,6 +194,93 @@ describe("Impostazioni, Generale", () => {
       // la rilettura riporta lo stesso: si rilegge ancora
       await vi.advanceTimersByTimeAsync(60_000)
       await waitFor(() => expect(letture()).toBe(prima + 2))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("automatico rilegge un secondo dopo il cambio annunciato, non prima, e riarma", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      vi.setSystemTime(new Date("2026-10-16T18:17:00+02:00"))
+      window.history.pushState({}, "", "/impostazioni/generale")
+      const ora = { mode: "chiaro", until: "2026-10-16T18:27:00+02:00" }
+      await app({}, { theme_mode: "automatico" }, { theme_now: ora })
+      await screen.findByRole("radiogroup", { name: "Modo" })
+      const letture = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+      const prima = letture()
+      await vi.advanceTimersByTimeAsync(600_200)
+      expect(letture()).toBe(prima)
+      await vi.advanceTimersByTimeAsync(1_000)
+      await waitFor(() => expect(letture()).toBe(prima + 1))
+      // la rilettura riporta lo stesso cambio, gia' passato: si rilegge un secondo dopo
+      await vi.advanceTimersByTimeAsync(1_100)
+      await waitFor(() => expect(letture()).toBe(prima + 2))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("automatico senza sito di casa, o un modo fisso, non rilegge", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      for (const [valori, resto] of [
+        [{ theme_mode: "automatico" }, { theme_site: null }],
+        [
+          { theme_mode: "scuro" },
+          { theme_now: { mode: "chiaro", until: new Date().toISOString() } },
+        ],
+      ] as const) {
+        pulisci()
+        window.history.pushState({}, "", "/impostazioni/generale")
+        await app({}, valori, resto)
+        await screen.findByRole("radiogroup", { name: "Modo" })
+        const letture = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+        const prima = letture()
+        await vi.advanceTimersByTimeAsync(120_000)
+        expect(letture()).toBe(prima)
+      }
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("chiusa l'app, l'attesa del tema si spegne", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      window.history.pushState({}, "", "/impostazioni/generale")
+      await app({}, { theme_mode: "automatico" })
+      await screen.findByRole("radiogroup", { name: "Modo" })
+      const letture = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+      const prima = letture()
+      cleanup()
+      await vi.advanceTimersByTimeAsync(120_000)
+      expect(letture()).toBe(prima)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("una rilettura che dice un altro cambio non riarma il vecchio", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      window.history.pushState({}, "", "/impostazioni/generale")
+      await app({}, { theme_mode: "automatico" })
+      await screen.findByRole("radiogroup", { name: "Modo" })
+      const letture = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+      const prima = letture()
+      const poi = new Date(Date.now() + 3_600_000).toISOString()
+      const corpo = {
+        ...BASE,
+        theme_now: { mode: "chiaro", until: poi },
+        values: { ...BASE.values, theme_mode: "automatico" },
+      }
+      rispondi({ ...STANOTTE, ...SPINA, "/api/v1/settings": { stato: 200, corpo } })
+      await vi.advanceTimersByTimeAsync(60_000)
+      await waitFor(() => expect(letture()).toBe(prima + 1))
+      // il cambio nuovo e' fra un'ora: nessuna rilettura al minuto
+      await vi.advanceTimersByTimeAsync(180_000)
+      expect(letture()).toBe(prima + 1)
     } finally {
       vi.useRealTimers()
     }

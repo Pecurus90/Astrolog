@@ -4,7 +4,7 @@
  * produzione che aggiunge o cambia la foto, la foto letta con la chiave della pagina, e il perche'
  * di un rifiuto in un avviso. I posti e i loro indirizzi arrivano dall'API.
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { chiamate, pulisci, rispondi } from "./banco"
@@ -105,6 +105,118 @@ describe("l'anteprima della carta", () => {
     ).toBeDefined()
     fireEvent.click(screen.getByRole("button", { name: "Chiudi" }))
     await waitFor(() => expect(screen.queryByText(/non si legge/)).toBeNull())
+  })
+
+  it("la foto si scrive all'indirizzo dell'API, col tipo del file o uno generico", async () => {
+    rispondi({
+      "PUT /api/v1/archive/preview": { stato: 200, corpo: { url: M31.previews[0]!.url, at: "x" } },
+      ...conArchivio(voceArchivio([M31])),
+    })
+    const vero = globalThis.fetch
+    const tipi: string[] = []
+    vi.stubGlobal("fetch", (i: RequestInfo | URL) => {
+      if (i instanceof Request && i.method === "PUT") tipi.push(i.headers.get("Content-Type") ?? "")
+      return vero(i)
+    })
+    await apriArchivio()
+    const tasto = await screen.findByLabelText("Aggiungi l'anteprima: M 31")
+    fireEvent.change(tasto, {
+      target: { files: [new File(["x"], "a.png", { type: "image/png" })] },
+    })
+    await waitFor(() => expect(tipi).toEqual(["image/png"]))
+    fireEvent.change(tasto, { target: { files: [new File(["x"], "senza")] } })
+    await waitFor(() => expect(tipi).toEqual(["image/png", "application/octet-stream"]))
+    const scritte = chiamate().filter((u) => u.includes("/archive/preview"))
+    expect(scritte.map((u) => new URL(u).search)).toEqual([
+      "?key=m-31&production=1%3A2",
+      "?key=m-31&production=1%3A2",
+    ])
+    // nessun file scelto: niente da scrivere
+    fireEvent.change(tasto, { target: { files: [] } })
+    expect(tipi).toHaveLength(2)
+  })
+
+  it("con la foto la legge col suo indirizzo, e un mosaico senza produzione", async () => {
+    const mosaico = { ...MOSAICO, previews: [{ ...MOSAICO.previews[0]!, at: "x" }] }
+    rispondi({
+      "GET /api/v1/archive/preview": { stato: 200, corpo: "jpeg" },
+      ...conArchivio(voceArchivio([CON_FOTO, mosaico])),
+    })
+    await apriArchivio()
+    await waitFor(() =>
+      expect(
+        chiamate()
+          .filter((u) => u.includes("/archive/preview"))
+          .map((u) => new URL(u).search)
+          .sort(),
+      ).toEqual(["?key=m-31&production=1%3A2", "?key=mosaico"]),
+    )
+  })
+
+  it("una foto mostrata si libera quando la carta esce", async () => {
+    const liberate: string[] = []
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, {
+        createObjectURL: () => "blob:foto",
+        revokeObjectURL: (u: string) => liberate.push(u),
+      }),
+    )
+    rispondi({
+      "GET /api/v1/archive/preview": { stato: 200, corpo: "jpeg" },
+      ...conArchivio(voceArchivio([CON_FOTO])),
+    })
+    await apriArchivio()
+    await waitFor(() =>
+      expect(
+        (document.querySelector(".al-arch__foto-parte") as HTMLElement).style.backgroundImage,
+      ).toContain("blob:foto"),
+    )
+    expect(liberate).toEqual([])
+    cleanup()
+    expect(liberate).toEqual(["blob:foto"])
+  })
+
+  it("piu' produzioni con la foto: il tondo cambia la sua, col numero", async () => {
+    const due = {
+      ...M31,
+      productions: [M31.productions[0], { ...M31.productions[0], optics_id: 3 }],
+      previews: [
+        { url: M31.previews[0]!.url, at: "x" },
+        { url: "/api/v1/archive/preview?key=m-31&production=3%3A2", at: null },
+      ],
+    }
+    rispondi({
+      "GET /api/v1/archive/preview": { stato: 200, corpo: "jpeg" },
+      ...conArchivio(voceArchivio([due])),
+    })
+    await apriArchivio()
+    const cambia = await screen.findByLabelText("Cambia l'anteprima: 1ª produzione di M 31")
+    expect(cambia.closest("label")?.getAttribute("title")).toBe(
+      "Cambia l'anteprima della 1ª produzione",
+    )
+    expect(screen.getByTitle("Aggiungi l'anteprima della 2ª produzione")).toBeDefined()
+    expect(
+      (document.querySelector(".al-arch__foto-tasti") as HTMLElement).style.gridTemplateColumns,
+    ).toBe("repeat(2, minmax(0px, 1fr))")
+  })
+
+  it("un rifiuto senza codice dice che AstroLog non risponde; la prova dopo lo toglie", async () => {
+    rispondi({
+      "PUT /api/v1/archive/preview": { stato: 500, corpo: {} },
+      ...conArchivio(voceArchivio([M31])),
+    })
+    await apriArchivio()
+    const tasto = await screen.findByLabelText("Aggiungi l'anteprima: M 31")
+    const foto = () => new File(["x"], "m31.jpg", { type: "image/jpeg" })
+    fireEvent.change(tasto, { target: { files: [foto()] } })
+    expect(await screen.findByText("AstroLog non risponde, riprova.")).toBeDefined()
+    rispondi({
+      "PUT /api/v1/archive/preview": { stato: 200, corpo: { url: M31.previews[0]!.url, at: "x" } },
+      ...conArchivio(voceArchivio([M31])),
+    })
+    fireEvent.change(tasto, { target: { files: [foto()] } })
+    await waitFor(() => expect(screen.queryByText(/non risponde/)).toBeNull())
   })
 
   it("troppo grande, in byte o in pixel, e' la stessa frase", async () => {
