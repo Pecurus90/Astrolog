@@ -213,6 +213,11 @@ class SolverOut(BaseModel):
         "Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a "
         "path only means ASTAP is not there."
     )
+    set_by_admin: bool = Field(
+        default=False,
+        description="True on a NAS (a data root): only `ASTROLOG_ASTAP`, set by whoever runs the "
+        "container, picks the solver; the screen shows the path and offers no field (#95).",
+    )
 
 
 class SettingsPatch(BaseModel):

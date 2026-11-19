@@ -149,7 +149,9 @@ def write_settings(
     return _out(conn)
 
 
-def _solver(conn: sqlite3.Connection, where: tuple[str | None, str | None]) -> SolverOut:
+def _solver(
+    conn: sqlite3.Connection, where: tuple[str | None, str | None], request: Request
+) -> SolverOut:
     return SolverOut(
         path=where[0],
         # The `SolverSource` Literal repeats `astap.Source` on purpose (`models_tonight`).
@@ -157,26 +159,31 @@ def _solver(conn: sqlite3.Connection, where: tuple[str | None, str | None]) -> S
         declared=declared_path(conn),
         wrong_env=solver_wrong_env(conn),
         databases=list(databases_next_to(where[0])),
+        set_by_admin=bool(request.app.state.data_root),
     )
 
 
 @router.get("/solver", response_model=SolverOut)
-def read_solver(conn: sqlite3.Connection = Depends(get_db)) -> SolverOut:
+def read_solver(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> SolverOut:
     """Where the app takes the solver from, and through which channel.
 
     The **declared** path always comes out, even when it leads nowhere: it is the only thing that
     can be corrected, and hiding it would leave a section saying "not found" without saying why."""
-    return _solver(conn, solver_where(conn))
+    return _solver(conn, solver_where(conn), request)
 
 
 @router.post("/solver/search", response_model=SolverOut)
-def search_solver(conn: sqlite3.Connection = Depends(get_db)) -> SolverOut:
+def search_solver(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> SolverOut:
     """*Find it for me*: what the app would find **ignoring the preference**.
 
     A POST because it looks at the machine's disk and PATH, not because it writes: **it writes
     nothing**. Adopting the proposal is the user's gesture -- silently overwriting a hand-written
-    path would remove the only way out when this search picks the wrong program."""
-    return _solver(conn, solver_found())
+    path would remove the only way out when this search picks the wrong program.
+
+    409 `solver_set_by_admin` on a NAS (a data root): there is no path to propose (#95)."""
+    if request.app.state.data_root:
+        raise HTTPException(status_code=409, detail={"code": "solver_set_by_admin"})
+    return _solver(conn, solver_found(), request)
 
 
 @router.post("/settings/wizard-done", response_model=SettingsOut)

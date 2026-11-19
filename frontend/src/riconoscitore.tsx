@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
 
 import { api } from "./api/client"
@@ -26,6 +26,18 @@ import { t } from "./i18n"
 export const DOVE_SI_SCARICA = "https://www.hnsky.org/astap.htm"
 
 export type DoveStaASTAP = ReturnType<typeof useDoveStaASTAP>
+
+/** Dove l'app prende ASTAP e da quale canale (`GET /solver`): la sezione e il primo avvio. */
+export function useSolver() {
+  return useQuery({
+    queryKey: ["solver"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/solver")
+      if (error) throw new Error(t("settings.solver.failed"))
+      return data
+    },
+  })
+}
 
 export function useDoveStaASTAP(iniziale = "") {
   const [path, setPath] = useState(iniziale)

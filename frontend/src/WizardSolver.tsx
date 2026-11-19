@@ -3,7 +3,7 @@ import type { Formato } from "./componenti/Tema"
 import { CampoAvvio, Comando } from "./PrimoAvvioCornice"
 import { t } from "./i18n"
 import { usePienoDelPasso } from "./pienoDelPasso"
-import { DOVE_SI_SCARICA, useDoveStaASTAP } from "./riconoscitore"
+import { DOVE_SI_SCARICA, useDoveStaASTAP, useSolver } from "./riconoscitore"
 
 /**
  * The ASTAP step, shown **only** when the recognizer is not ready (tavola v82 `Primo avvio`,
@@ -25,8 +25,12 @@ export function WizardSolver({
 }) {
   const dove = useDoveStaASTAP()
   const trovato = dove.esito === "found"
+  const solver = useSolver()
+  // on a NAS only ASTROLOG_ASTAP picks it (#95): no path to ask
+  const chiede = solver.data?.set_by_admin !== true
+  const admin = !chiede
   // tavola `cmd`: Verifica percorso is the full command until ASTAP is found
-  usePienoDelPasso(onOffre, !senzaCatalogo && !trovato)
+  usePienoDelPasso(onOffre, !senzaCatalogo && !trovato && chiede)
 
   if (senzaCatalogo)
     return (
@@ -72,47 +76,61 @@ export function WizardSolver({
             <span className="al-avvio__testo-13">{t("solver.withoutTitle")}</span>
             <span className="al-avvio__testo-20">{t("solver.without")}</span>
           </div>
-          <div className="al-avvio__colonna-22">
-            <span className="al-avvio__testo-13">{t("solver.whereGroup")}</span>
-            <a className="al-avvio__riga-15" href={DOVE_SI_SCARICA} target="_blank" rel="noopener">
-              {`${t("solver.download")} ↗` /* glifo-ok: freccia della tavola */}
-            </a>
-            <span className="al-avvio__testo-12">{t("solver.noDownload")}</span>
-          </div>
+          {admin ? (
+            <div className="al-avvio__colonna-22">
+              <span className="al-avvio__testo-13">{t("settings.solver.channel.admin")}</span>
+              <span className="al-avvio__testo-20">{t("settings.solver.channel.admin.sub")}</span>
+            </div>
+          ) : (
+            <div className="al-avvio__colonna-22">
+              <span className="al-avvio__testo-13">{t("solver.whereGroup")}</span>
+              <a
+                className="al-avvio__riga-15"
+                href={DOVE_SI_SCARICA}
+                target="_blank"
+                rel="noopener"
+              >
+                {`${t("solver.download")} ↗` /* glifo-ok: freccia della tavola */}
+              </a>
+              <span className="al-avvio__testo-12">{t("solver.noDownload")}</span>
+            </div>
+          )}
         </div>
-        <div className="al-avvio__colonna-12">
-          <span className="al-avvio__testo-13">{t("solver.haveItGroup")}</span>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              dove.manda()
-            }}
-          >
-            <CampoAvvio
-              id="pa-astap"
-              etichetta={t("solver.label")}
-              valore={dove.path}
-              onScrivi={(v) => {
-                dove.setPath(v)
-                // the outcome belongs to what was written before
-                dove.dimentica()
+        {chiede && (
+          <div className="al-avvio__colonna-12">
+            <span className="al-avvio__testo-13">{t("solver.haveItGroup")}</span>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                dove.manda()
               }}
-              // a path typed by hand is kept also when the field is left (riconoscitore.tsx)
-              onLascia={dove.manda}
-              segnaposto={t("solver.placeholder")}
-              aiuto={t("solver.pathHelp")}
-              dopo={
-                <Comando
-                  testo={t("solver.use")}
-                  verso={trovato ? "tenue" : "pieno"}
-                  spento={!dove.path.trim()}
-                  occupato={dove.salva.isPending ? t("wizard.checking") : undefined}
-                  onClick={dove.manda}
-                />
-              }
-            />
-          </form>
-        </div>
+            >
+              <CampoAvvio
+                id="pa-astap"
+                etichetta={t("solver.label")}
+                valore={dove.path}
+                onScrivi={(v) => {
+                  dove.setPath(v)
+                  // the outcome belongs to what was written before
+                  dove.dimentica()
+                }}
+                // a path typed by hand is kept also when the field is left (riconoscitore.tsx)
+                onLascia={dove.manda}
+                segnaposto={t("solver.placeholder")}
+                aiuto={t("solver.pathHelp")}
+                dopo={
+                  <Comando
+                    testo={t("solver.use")}
+                    verso={trovato ? "tenue" : "pieno"}
+                    spento={!dove.path.trim()}
+                    occupato={dove.salva.isPending ? t("wizard.checking") : undefined}
+                    onClick={dove.manda}
+                  />
+                }
+              />
+            </form>
+          </div>
+        )}
       </div>
       {esito && <Avviso tipo="blocco" formato={formato} {...esito} />}
       {dove.salva.error && (

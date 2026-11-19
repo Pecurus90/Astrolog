@@ -48,6 +48,10 @@ export const itImpostazioni = {
   "settings.solver.channel": "installato a parte, da hnsky.org",
   "settings.solver.channel.sub":
     "ASTAP non \u00e8 nel pacchetto di AstroLog: si installa e si aggiorna da solo.",
+  // sul NAS il percorso lo decide ASTROLOG_ASTAP (#95, Marco 19/11)
+  "settings.solver.channel.admin": "impostato da chi gestisce il NAS",
+  "settings.solver.channel.admin.sub":
+    "Qui non si cambia: lo decide la variabile ASTROLOG_ASTAP del container.",
   "settings.solver.path": "Percorso del programma",
   "settings.solver.pathHelp":
     "Il percorso deve terminare con il programma (astap_cli). \u00abCercalo tu\u00bb propone un percorso, non lo scrive.",

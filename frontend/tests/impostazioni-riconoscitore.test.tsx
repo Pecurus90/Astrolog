@@ -179,4 +179,21 @@ describe("Impostazioni / ASTAP", () => {
     expect(await within(carta).findByText("Gli oggetti ripresi verranno identificati.")).toBeTruthy()
     expect(await within(carta).findByText("Catalogo D50")).toBeTruthy()
   })
+
+  it("sul NAS il percorso si legge e non si cambia: lo decide chi gestisce il NAS (#95)", async () => {
+    const nas = { ...TROVATO, path: "/opt/astap/astap_cli", source: "env", declared: null, set_by_admin: true }
+    const carta = await vaiAdASTAP(nas)
+
+    expect(within(carta).getByText("impostato da chi gestisce il NAS")).toBeTruthy()
+    expect(
+      within(carta).getByText("Qui non si cambia: lo decide la variabile ASTROLOG_ASTAP del container."),
+    ).toBeTruthy()
+    expect(within(carta).getByText("/opt/astap/astap_cli")).toBeTruthy()
+    expect(within(carta).getByText(/· variabile ASTROLOG_ASTAP$/)).toBeTruthy()
+    expect(within(carta).queryByLabelText(/percorso di astap/i)).toBeNull()
+    expect(within(carta).queryByRole("button", { name: "Verifica percorso" })).toBeNull()
+    expect(within(carta).queryByRole("button", { name: "Cercalo tu" })).toBeNull()
+    expect(within(carta).queryByText("installato a parte, da hnsky.org")).toBeNull()
+    expect(within(carta).getByText("Catalogo D50")).toBeTruthy()
+  })
 })

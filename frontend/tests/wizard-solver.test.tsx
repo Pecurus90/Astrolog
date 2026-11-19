@@ -141,6 +141,24 @@ describe("il passo del riconoscitore, quando manca", () => {
     expect(screen.getByText("L'app non scarica n\u00e9 installa ASTAP.")).toBeDefined()
   })
 
+  it("sul NAS il passo non chiede un percorso: lo decide chi gestisce il NAS (#95)", async () => {
+    primoAvvio(["no_active_site", "no_solver"], {
+      "/api/v1/solver": {
+        stato: 200,
+        corpo: { path: null, source: null, declared: null, databases: [], set_by_admin: true },
+      },
+    })
+    await alPassoDelSolver()
+
+    expect(await screen.findByText("impostato da chi gestisce il NAS")).toBeDefined()
+    expect(
+      screen.getByText("Qui non si cambia: lo decide la variabile ASTROLOG_ASTAP del container."),
+    ).toBeDefined()
+    expect(screen.getByText(/gli oggetti ripresi non vengono identificati/i)).toBeDefined()
+    expect(screen.queryByLabelText(/percorso di astap/i)).toBeNull()
+    expect(screen.queryByRole("link", { name: /scarica astap/i })).toBeNull()
+  })
+
   it("scritto un percorso giusto, la conferma resta e la schermata non cambia sotto le mani", async () => {
     // Il passo si guarda mentre ci si scrive dentro: una risposta che arriva dopo e cambia
     // schermata si porta via il campo e la conferma di cio' che si e' appena scritto. Per questo

@@ -151,6 +151,7 @@ def test_at_empty_hands_the_route_says_nothing_found(client):
         "declared": None,
         "wrong_env": None,
         "databases": [],
+        "set_by_admin": False,
     }
 
 
@@ -360,3 +361,14 @@ def test_on_a_nas_settings_refuse_the_solver_path(db_path, tmp_path):
         assert r.status_code == 422
         assert r.json()["detail"]["code"] == "solver_set_by_admin"
         assert settings_out(c)["values"]["astap_path"] is None
+
+
+def test_on_a_nas_the_route_says_the_path_is_set_by_whoever_runs_it(db_path, tmp_path):
+    """Lo schermo toglie campo e *Cercalo tu* solo se la rotta glielo dice (#95); sul PC no."""
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        assert c.get("/api/v1/solver").json()["set_by_admin"] is False
+    with TestClient(create_app(db_path, data_root=str(tmp_path)), base_url="http://localhost") as c:
+        assert c.get("/api/v1/solver").json()["set_by_admin"] is True
+        r = c.post("/api/v1/solver/search")
+        assert r.status_code == 409
+        assert r.json()["detail"]["code"] == "solver_set_by_admin"

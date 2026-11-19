@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 
 import { Avviso, type SegnoAvviso } from "./componenti/Avviso"
@@ -10,7 +10,7 @@ import { Tema, type Formato } from "./componenti/Tema"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { type Chiave, t } from "./i18n"
-import { DOVE_SI_SCARICA, useDoveStaASTAP } from "./riconoscitore"
+import { DOVE_SI_SCARICA, useDoveStaASTAP, useSolver } from "./riconoscitore"
 
 type Solver = components["schemas"]["SolverOut"]
 
@@ -32,14 +32,7 @@ const CATALOGHI: Record<string, Chiave> = {
 export function Riconoscitore() {
   const formato = useFormato()
   const tel = formato === "telefono"
-  const solver = useQuery({
-    queryKey: ["solver"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/solver")
-      if (error) throw new Error(t("settings.solver.failed"))
-      return data
-    },
-  })
+  const solver = useSolver()
   let corpo
   if (solver.isPending) {
     corpo = (
@@ -153,6 +146,13 @@ function CartaASTAP({ formato, solver }: { formato: Formato; solver: Solver }) {
       {t(cerca.isPending ? "settings.solver.searching" : "settings.solver.search")}
     </a>
   )
+  // on a NAS only ASTROLOG_ASTAP picks it (#95): the path is read, not written
+  const admin = solver.set_by_admin
+  const sola = admin && solver.path !== null && (
+    <span className="al-imp__testo-7">{solver.path}</span>
+  )
+  const canale = t(admin ? "settings.solver.channel.admin" : "settings.solver.channel")
+  const canaleSotto = t(admin ? "settings.solver.channel.admin.sub" : "settings.solver.channel.sub")
   const cataloghi = solver.path !== null && <Cataloghi formato={formato} quali={solver.databases} />
   return (
     <Carta
@@ -169,13 +169,19 @@ function CartaASTAP({ formato, solver }: { formato: Formato; solver: Solver }) {
           <span className="al-imp__testo-5">{t("settings.solver.what")}</span>
           <span className="al-imp__colonna-1">
             <span className="al-imp__testo-5">{t("settings.solver.from")}</span>
-            <b className="al-imp__testo-7">{t("settings.solver.channel")}</b>
-            <span className="al-imp__testo-8">{t("settings.solver.channel.sub")}</span>
+            <b className="al-imp__testo-7">{canale}</b>
+            <span className="al-imp__testo-8">{canaleSotto}</span>
           </span>
           <span className="al-imp__testo-5">{t("settings.solver.path")}</span>
-          {campo}
-          {verifica}
-          {cercalo}
+          {admin ? (
+            sola
+          ) : (
+            <>
+              {campo}
+              {verifica}
+              {cercalo}
+            </>
+          )}
           {trovato}
           {riga}
           {cataloghi}
@@ -192,18 +198,24 @@ function CartaASTAP({ formato, solver }: { formato: Formato; solver: Solver }) {
           </span>
           <Voce etichetta={t("settings.solver.from")}>
             <span className="al-imp__colonna-1">
-              <b className="al-imp__testo-7">{t("settings.solver.channel")}</b>
-              <span className="al-imp__testo-8">{t("settings.solver.channel.sub")}</span>
+              <b className="al-imp__testo-7">{canale}</b>
+              <span className="al-imp__testo-8">{canaleSotto}</span>
             </span>
           </Voce>
           <Voce etichetta={t("settings.solver.path")}>
             <span className="al-imp__colonna-9">
-              <span className="al-imp__riga-4">
-                {campo}
-                {verifica}
-                {cercalo}
-              </span>
-              <span className="al-imp__testo-8">{t("settings.solver.pathHelp")}</span>
+              {admin ? (
+                sola
+              ) : (
+                <>
+                  <span className="al-imp__riga-4">
+                    {campo}
+                    {verifica}
+                    {cercalo}
+                  </span>
+                  <span className="al-imp__testo-8">{t("settings.solver.pathHelp")}</span>
+                </>
+              )}
               {trovato}
               {riga}
             </span>
@@ -252,7 +264,10 @@ function esitoDelPercorso(dove: ReturnType<typeof useDoveStaASTAP>, solver: Solv
     return {
       segno: "!",
       titolo: t("settings.solver.wrongEnv", { percorso: solver.wrong_env }),
-      testo: t("settings.solver.wrongEnv.why"),
+      // on a NAS there is no Cercalo tu nor a path to choose: the variable is the admin's
+      testo: solver.set_by_admin
+        ? t("settings.solver.channel.admin.sub")
+        : t("settings.solver.wrongEnv.why"),
     }
   }
   if (solver.path === null) {

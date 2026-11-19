@@ -1490,6 +1490,8 @@ export interface paths {
          *     A POST because it looks at the machine's disk and PATH, not because it writes: **it writes
          *     nothing**. Adopting the proposal is the user's gesture -- silently overwriting a hand-written
          *     path would remove the only way out when this search picks the wrong program.
+         *
+         *     409 `solver_set_by_admin` on a NAS (a data root): there is no path to propose (#95).
          */
         post: operations["search_solver"];
         delete?: never;
@@ -6094,6 +6096,12 @@ export interface components {
              * @description The star databases found next to the program, by name (`d80`, `v50`). Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a path only means ASTAP is not there.
              */
             databases: string[];
+            /**
+             * Set By Admin
+             * @description True on a NAS (a data root): only `ASTROLOG_ASTAP`, set by whoever runs the container, picks the solver; the screen shows the path and offers no field (#95).
+             * @default false
+             */
+            set_by_admin: boolean;
         };
         /** StageRecord */
         StageRecord: {

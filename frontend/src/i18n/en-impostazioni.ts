@@ -47,6 +47,9 @@ export const enImpostazioni = {
   "settings.solver.channel": "installed separately, from hnsky.org",
   "settings.solver.channel.sub":
     "ASTAP is not in the AstroLog package: it is installed and updated on its own.",
+  "settings.solver.channel.admin": "set by whoever runs the NAS",
+  "settings.solver.channel.admin.sub":
+    "It cannot be changed here: the container's ASTROLOG_ASTAP variable decides it.",
   "settings.solver.path": "Program path",
   "settings.solver.pathHelp":
     "The path must end with the program (astap_cli). \u201cFind it for me\u201d suggests a path, it does not write it.",
