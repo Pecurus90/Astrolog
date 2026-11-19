@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from astrolog.api import folders
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
+from astrolog.fits import walk as fits_walk
 from astrolog.fits.walk import walk_dir
 from astrolog.spine import folder_move, typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
@@ -367,6 +368,8 @@ def test_a_folder_that_has_not_said_whether_it_answers_is_not_skipped_as_gone(
     monkeypatch.setattr(folders, "PROBE_SECONDS", 0.3)
     monkeypatch.setattr(folders, "time", still)
     monkeypatch.setattr(folder_move, "time", still)
+    # the walk too: on a slow runner 0.3 s of real time ended it before the probe looked
+    monkeypatch.setattr(fits_walk, "time", still)
     try:
         p = _probe(client_vuoto, copy)
     finally:
@@ -400,6 +403,7 @@ def test_a_silent_unrelated_folder_does_not_hide_a_move(client_vuoto, tmp_path, 
     monkeypatch.setattr(folders, "PROBE_SECONDS", 0.3)
     monkeypatch.setattr(folders, "time", still)
     monkeypatch.setattr(folder_move, "time", still)
+    monkeypatch.setattr(fits_walk, "time", still)
     try:
         p = _probe(client_vuoto, new)
     finally:
