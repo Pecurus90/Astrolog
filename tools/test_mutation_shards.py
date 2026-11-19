@@ -368,6 +368,19 @@ def test_the_workflow_stop_lets_mutmut_save_on_ubuntu_26_04():
     assert all(" -k " not in line for line in stops)
 
 
+def test_a_mutant_that_eats_memory_fails_alone_instead_of_losing_the_runner():
+    """rest-5 lost its runner at 82 and 102 minutes, before the 120-minute stop, and saved
+    nothing (Nightly 44498987010, 44538093259): the run is capped per process."""
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    lines = workflow.splitlines()
+    run = next(i for i, line in enumerate(lines) if "mutmut run --max-children 4" in line)
+    cap = [line for line in lines[:run] if re.search(r"^\s*ulimit -v \d+\s*$", line)]
+    assert len(cap) == 1, cap
+    # 4 children on a 16 GB runner: two runaways at the cap still leave room for the others
+    assert 4 * 1024 * 1024 <= int(cap[0].split()[-1]) <= 6 * 1024 * 1024
+
+
 def test_the_workflow_runs_each_shard_on_its_files_and_what_they_have_left():
     root = Path(__file__).resolve().parent.parent
     workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")

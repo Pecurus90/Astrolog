@@ -46,6 +46,8 @@ jobs:
         # a new pytest_add_cli_args resets every cached verdict
         env:
           PYTEST_ADDOPTS: --snapshot-warn-unused
+          # glibc reserves 64 MB per arena, 8 per CPU: kept small under the ulimit -v below
+          MALLOC_ARENA_MAX: "2"
         run: |
           python ../tools/mutation_shards.py ${{ matrix.shard }} --only-mutate pyproject.toml
           python ../tools/mutation_shards.py --drop-broken mutants
@@ -65,6 +67,8 @@ jobs:
           fi
           # A runner lost saves nothing (rest: at 3 h, then shut down at 2 h 30): stopped earlier,
           # mutmut keeps each verdict it has. No -k: uutils timeout (Ubuntu 26.04) then KILLs at once.
+          # A mutant eating memory lost rest-5's runner (19/11/2026): capped, it fails alone.
+          ulimit -v 5242880
           timeout -s INT 120m mutmut run --max-children 4 || [ $? -eq 124 ]
           # stopped mid-write, a .meta stays empty: dropped before the cache and the report
           python ../tools/mutation_shards.py --drop-broken mutants
