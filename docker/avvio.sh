@@ -1,6 +1,6 @@
 #!/bin/sh
-# Container start: ASTAP and its D50 catalog live side by side in /data/astap (ASTAP reads the
-# catalog next to itself), the catalog downloaded once with its checksum (ADR 0003).
+# Container start: ASTAP and its catalogs live side by side in /data/astap (ASTAP reads them next
+# to itself): D05 from the image, D50 downloaded once with its checksum (ADR 0003).
 set -eu
 
 # As root only one step: hand /data itself to PUID:PGID (linuxserver.io convention), then rerun
@@ -30,10 +30,10 @@ fetch_catalog() {
     # Unpacked aside, then moved in: the solver never sees half a catalog.
     rm -rf "$unpacked"
     # A cut download resumes at the next start (-C -); only a wrong checksum starts it over.
-    curl -fsSL --retry 3 -C - -o "$tmp" "$catalog_url" || return 1
+    curl -fsSL --retry 5 --retry-all-errors -C - -o "$tmp" "$catalog_url" || return 1
     if ! echo "$catalog_md5  $tmp" | md5sum -c -; then
         rm -f "$tmp"
-        return 1
+        return 2
     fi
     unzip -q -o "$tmp" -d "$unpacked" &&
         find "$unpacked" -type f -exec mv -f {} "$astap_dir/" \;
@@ -42,16 +42,25 @@ fetch_catalog() {
     return $status
 }
 
-# The download runs beside the app, which starts at once and says the catalog is missing until
-# it lands. Any ASTAP catalog already there (`<code>_0101.<ext>`, as astap.py reads them) counts.
+# A catalog is `<code>_0101.<ext>`, as astap.py reads them. With none, the D05 of the image goes in:
+# the app solves at once while D50 downloads beside it, unless a catalog other than D05 is there.
 if ! ls "$astap_dir"/*_0101.* >/dev/null 2>&1; then
+    cp /opt/astap/d05/* "$astap_dir/"
+fi
+if ! ls "$astap_dir"/*_0101.* | grep -qv '/d05_0101\.'; then
     (
         echo "AstroLog: downloading the D50 star catalog (900 MB, once)..."
-        if fetch_catalog; then
-            echo "AstroLog: star catalog ready."
-        else
-            echo "AstroLog: star catalog download failed; it is retried at the next start." >&2
-        fi
+        # A dropped line or a busy mirror is retried every ten minutes, resuming where it stopped.
+        # A wrong checksum is not retried: 900 MB again every ten minutes would not change it.
+        until fetch_catalog; do
+            if [ $? = 2 ]; then
+                echo "AstroLog: star catalog checksum does not match; D05 stays in use." >&2
+                exit 0
+            fi
+            echo "AstroLog: star catalog download failed; retrying in 10 minutes." >&2
+            sleep 600
+        done
+        echo "AstroLog: star catalog ready."
     ) &
 fi
 

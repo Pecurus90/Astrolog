@@ -1,4 +1,4 @@
-# AstroLog for a NAS: one multi-arch image (amd64, arm64), ASTAP inside, star catalog on first run.
+# AstroLog for a NAS: one multi-arch image (amd64, arm64), ASTAP and D05 inside, D50 on first run.
 # Built and published by .github/workflows/immagine.yml; installed from compose.yaml.
 
 FROM node:24-bookworm-slim AS page
@@ -29,6 +29,14 @@ RUN set -eu; \
     echo "$m  /tmp/astap.zip" | md5sum -c -; \
     mkdir -p /opt/astap && unzip -q /tmp/astap.zip -d /opt/astap && rm /tmp/astap.zip; \
     chmod +x /opt/astap/astap_cli
+# D05 catalog (102 MB zip), md5 as published on SourceForge: solving works from the first start,
+# the deeper D50 follows in the background (avvio.sh; Marco 18/11).
+ARG D05_URL=https://sourceforge.net/projects/astap-program/files/star_databases/d05_star_database.zip/download
+ARG D05_MD5=c3e7cab5fe07fd3cc87b4bd344a32835
+RUN set -eu; \
+    curl -fsSL -o /tmp/d05.zip "$D05_URL"; \
+    echo "$D05_MD5  /tmp/d05.zip" | md5sum -c -; \
+    mkdir -p /opt/astap/d05 && unzip -q -j /tmp/d05.zip -d /opt/astap/d05 && rm /tmp/d05.zip
 COPY --from=wheel /wheel/ /wheel/
 RUN pip install --no-cache-dir /wheel/*.whl && rm -rf /wheel
 COPY docker/avvio.sh /usr/local/bin/avvio.sh

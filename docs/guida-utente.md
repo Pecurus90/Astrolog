@@ -26,8 +26,10 @@ Intel, AMD o ARM a 64 bit.
    [`compose.yaml`](../compose.yaml).
 2. Cambia le due righe segnate: l'indirizzo con cui apri il NAS nel browser (per esempio
    `192.168.1.10`), e la cartella dove tieni le foto astronomiche, che l'app legge soltanto.
-3. Avvia il progetto. Al primo avvio scarica il catalogo di stelle per risolvere le immagini
-   (circa 900 MB, una volta sola): finche' non ha finito, le immagini non si risolvono.
+3. Avvia il progetto. Le immagini si risolvono subito col catalogo di stelle D05, che e' dentro
+   l'immagine; intanto, in sottofondo, l'app scarica il D50 (circa 900 MB, una volta sola), piu'
+   profondo, che ASTAP usa da solo appena e' arrivato. Se la linea cade, riprova ogni 10 minuti
+   da dove si era fermata.
 4. Apri `http://<indirizzo del NAS>:8765` nel browser.
 
 E' un'**anteprima**: serve a provarla, non ancora a tenerci l'archivio.
