@@ -5,6 +5,7 @@ import datetime as dt
 import sqlite3
 from typing import Any
 
+from ..db.night_weather import OF_THE_NIGHT
 from ..levels import Verdict
 from . import counts, nights
 
@@ -13,8 +14,7 @@ SELECT n.id, n.night_date, s.name AS site,
        json_extract(w.summary_json, '$.verdict') AS verdict,
        {counts.counts_on(counts.Subject.NIGHT)}
 FROM nights n JOIN sites s ON s.id = n.site_id
-LEFT JOIN weather_nights w
-  ON w.site_id = n.site_id AND w.night_date = n.night_date AND w.kind = ?
+LEFT JOIN weather_nights w ON {OF_THE_NIGHT}
 WHERE n.night_date >= ? AND n.night_date < ?
 ORDER BY n.night_date, s.name COLLATE NOCASE, n.id
 """  # noqa: S608 - constant fragments of the spine

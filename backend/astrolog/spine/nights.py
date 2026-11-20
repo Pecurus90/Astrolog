@@ -10,6 +10,7 @@ from typing import Any
 
 from ..clock import midnight_of, night_window
 from ..db import idlist
+from ..db.night_weather import OF_THE_NIGHT
 from ..ephemeris import moon
 from ..levels import MoonRule
 from . import counts, filters_used, stages
@@ -62,8 +63,7 @@ SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, s.latitude
        w.summary_json AS weather,
        {counts.counts_on(counts.Subject.NIGHT)}
 FROM nights n JOIN sites s ON s.id = n.site_id
-LEFT JOIN weather_nights w
-  ON w.site_id = n.site_id AND w.night_date = n.night_date AND w.kind = ?
+LEFT JOIN weather_nights w ON {OF_THE_NIGHT}
 WHERE n.id IN {{listed}}
 ORDER BY n.night_date DESC, n.id DESC
 """  # noqa: S608 - constant fragments of the spine, `listed` a placeholder

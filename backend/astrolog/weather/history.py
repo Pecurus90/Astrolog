@@ -12,6 +12,7 @@ from typing import Any
 
 from .. import net
 from ..clock import iso_z, night_date
+from ..db.night_weather import OF_THE_NIGHT
 from . import fetches, nights, openmeteo, score, verdict
 from .fetches import Source
 from .forecast import COLUMNS, NightRow, Outcome, Status
@@ -31,15 +32,14 @@ VARIABLES = {k: v for k, v in openmeteo.VARIABLES.items() if "hPa" not in k and 
 # The real call, named in this module so tests replace it here.
 _fetch = net.fetch
 
-_MISSING = """
+_MISSING = f"""
 SELECT n.site_id, n.night_date, s.latitude, s.longitude, s.timezone
 FROM nights n JOIN sites s ON s.id = n.site_id
 WHERE s.timezone IS NOT NULL AND NOT EXISTS (
-  SELECT 1 FROM weather_nights w
-  WHERE w.site_id = n.site_id AND w.night_date = n.night_date AND w.kind = ?
+  SELECT 1 FROM weather_nights w WHERE {OF_THE_NIGHT}
 )
 ORDER BY n.site_id, n.night_date
-"""
+"""  # noqa: S608 - a constant fragment
 
 # The history is final: a night already written is never touched.
 _INSERT = (

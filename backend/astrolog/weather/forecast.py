@@ -117,7 +117,10 @@ def refresh(
     answer deletes nothing: the previous forecast stays with its time."""
     if site is None:
         return Outcome.NO_SITE
-    if not site.timezone:
+    zone, moment = site.timezone, now or datetime.now(UTC)
+    # a zone this machine's tzdata does not know has no night either
+    current = night_date(iso_z(moment), zone) if zone else None
+    if zone is None or current is None:
         return Outcome.NO_TIMEZONE
     answer = net.ask(fetch or _fetch, openmeteo.forecast_url(site.latitude, site.longitude))
     if answer is None:
@@ -127,14 +130,12 @@ def refresh(
     except openmeteo.BadAnswerError:
         log.info("meteo: il servizio non ha risposto una previsione")
         return Outcome.BAD_ANSWER
-    moment = now or datetime.now(UTC)
-    current = cast("str", night_date(iso_z(moment), site.timezone))  # a valid instant and zone
     # Whole nights only: beyond the model's horizon, better no night than half a night.
-    covered = nights.covered(site.timezone, times, current, whole=True)
+    covered = nights.covered(zone, times, current, whole=True)
     if not covered:
         log.info("meteo: la risposta non porta nessuna notte intera")
         return Outcome.BAD_ANSWER
-    rows = _rows(site, models, covered, iso_z(moment))
+    rows = _rows(site, models, covered, iso_z(now or datetime.now(UTC)))  # when it arrived
     if not rows:
         log.info("meteo: la risposta porta solo ore vuote")
         return Outcome.BAD_ANSWER

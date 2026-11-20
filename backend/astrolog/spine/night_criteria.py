@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from ..db.night_weather import OF_THE_NIGHT
 from ..levels import Verdict
 from . import filters_used, rigs
 from .archive import NAMED, folded
@@ -41,8 +42,7 @@ _FACTS: dict[Key, str] = {
     " JOIN objects o ON o.id = f.object_id JOIN catalog_entries e ON e.slug = o.catalog_slug"
     f" WHERE {_FRAMED}",
     Key.SKY: "SELECT n.id, COALESCE(json_extract(w.summary_json, '$.verdict'),"  # noqa: S608
-    f" '{SKY_UNKNOWN}') FROM nights n LEFT JOIN weather_nights w ON w.site_id = n.site_id"
-    " AND w.night_date = n.night_date AND w.kind = ?",
+    f" '{SKY_UNKNOWN}') FROM nights n LEFT JOIN weather_nights w ON {OF_THE_NIGHT}",
 }
 
 _ORDERED = "SELECT id FROM nights ORDER BY night_date DESC, id DESC"

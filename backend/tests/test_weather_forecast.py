@@ -189,6 +189,14 @@ def test_without_a_home_site_or_its_timezone_nothing_is_asked(db):
     assert righe(db) == []
 
 
+def test_a_timezone_this_machine_does_not_know_is_said_not_a_crash(db):
+    """Un fuso che il tzdata di questa macchina non conosce (piu' nuovo di lei): la notte di oggi
+    non si sa, e lo si dice come un sito senza fuso, senza cadere a meta' giro."""
+    ignoto = replace(SITO, timezone="Mars/Olympus_Mons")
+    assert forecast.refresh(db, ignoto, fetch=Finto(risposta()), now=ADESSO) == "no_timezone"
+    assert righe(db) == []
+
+
 def test_a_new_forecast_replaces_the_old_one_of_that_site(db):
     forecast.refresh(db, SITO, fetch=Finto(risposta(cloud_total_pct=80.0)), now=ADESSO)
     dopo = ADESSO + timedelta(days=1)

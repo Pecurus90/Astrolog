@@ -7,6 +7,7 @@ modelli, ore UTC senza fuso.
 
 import json
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
@@ -275,3 +276,16 @@ def test_a_night_the_archive_covers_only_in_part_is_not_written(db):
     corto = archivio(inizio="2026-03-09T00:00", giorni=2)
     assert history.step(db, fetch=Finto(corto), now=ADESSO) == "bad_answer"
     assert scritte(db) == []
+
+
+@pytest.mark.sorgente
+def test_the_weather_of_a_night_is_joined_in_one_place():
+    """Quale riga del meteo e' di quale notte si scrive una volta (Issue #16): Notti, storico,
+    calendario e criteri la leggono dalla stessa casa."""
+    radice = Path(history.__file__).parent.parent
+    scritte_qui = [
+        p.name
+        for p in radice.rglob("*.py")
+        if "w.night_date = n.night_date" in p.read_text(encoding="utf-8")
+    ]
+    assert scritte_qui == ["night_weather.py"]
