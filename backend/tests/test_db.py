@@ -1,8 +1,17 @@
 """Il DB nasce da schema.sql e da nient'altro; la connessione porta i suoi PRAGMA."""
 
+import sqlite3
+
 import pytest
 
-from astrolog.db.connect import StaleSchemaError, connect, create_database, ensure_database
+from astrolog.db.connect import (
+    StaleSchemaError,
+    _shape,
+    connect,
+    create_database,
+    ensure_database,
+    schema_sql,
+)
 from conftest import add_folder
 
 
@@ -13,6 +22,21 @@ def test_database_is_created_from_the_single_schema(tmp_path):
     tables = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"frames", "positions", "folders", "frame_stages", "scan_runs", "sites"} <= tables
     c.close()
+
+
+def test_the_created_file_has_every_table_index_view_and_trigger_of_the_schema_in_wal(tmp_path):
+    """La forma intera, non qualche tabella: e' la prova di chi cambia come lo schema si scrive."""
+    p = tmp_path / "a.db"
+    create_database(p)
+    fresh = sqlite3.connect(":memory:")
+    fresh.executescript(schema_sql())
+    made = sqlite3.connect(str(p))
+    try:
+        assert _shape(made) == _shape(fresh)
+        assert made.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
+    finally:
+        fresh.close()
+        made.close()
 
 
 def test_create_refuses_to_overwrite_and_ensure_is_idempotent(tmp_path):
