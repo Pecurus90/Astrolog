@@ -2,6 +2,7 @@
 rifrazione, distanza della Luna dal centro, frazione illuminata; tutte le pose in una chiamata
 per sito. Le date sono nel futuro, come negli altri file delle effemeridi."""
 
+import dataclasses
 import datetime as dt
 
 import pytest
@@ -60,8 +61,9 @@ def test_the_parallax_of_the_moon_counts():
 def test_each_site_keeps_its_own_frames_in_order():
     found = moon_and_sun(QUANDO + QUANDO, [CASA, SUD, SUD, CASA], [None] * 4)
     alone = moon_and_sun(QUANDO, [CASA, SUD], [None] * 2)
-    assert found[0] == alone[0]
-    assert found[1] == alone[1]
+    # all'ultima cifra: la nutazione 2000B somma diverso su liste lunghe diverse
+    for mixed, single in zip(found[:2], alone, strict=True):
+        assert dataclasses.astuple(mixed) == pytest.approx(dataclasses.astuple(single), abs=1e-9)
     assert found[3].moon_altitude_deg == pytest.approx(moon.altitudes([QUANDO[1]], *CASA)[0])
 
 

@@ -10,6 +10,7 @@ from typing import Literal
 
 from skyfield.api import load, load_file, wgs84
 from skyfield.jpllib import SpiceKernel
+from skyfield.nutationlib import iau2000b_radians
 from skyfield.positionlib import Apparent, Astrometric
 from skyfield.timelib import Time, Timescale
 
@@ -55,10 +56,14 @@ def _timescale() -> Timescale:
 
 
 def as_times(instants: Sequence[dt.datetime]) -> Time:
-    """One `Time` for the whole list. An instant without a zone is refused, never read as UTC."""
+    """One `Time` for the whole list. An instant without a zone is refused, never read as UTC.
+    Nutation IAU 2000B: half the cost of 2000A, within 1 mas (IERS Conventions 2010, 5.5.1)."""
     for instant in instants:
         require_zone(instant)
-    return _timescale().from_datetimes(list(instants))
+    times = _timescale().from_datetimes(list(instants))
+    # Skyfield docs, "Accuracy and efficiency": the pattern to skip the full 2000A series.
+    times._nutation_angles_radians = iau2000b_radians(times)  # pyright: ignore[reportAttributeAccessIssue]
+    return times
 
 
 def astrometric(

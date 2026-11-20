@@ -47,6 +47,10 @@ piene entro 12 s. Le soglie delle prove sono 5 s per gli orari e 20 s per le fas
 scarto e' l'errore del modello di astropy, non della DE421; a schermo un orario puo' cambiare
 di un minuto quando cade a cavallo dell'arrotondamento. Ed e' da 5 a 50 volte piu' veloce.
 
+**Nutazione IAU 2000B, non la 2000A completa.** La 2000B sta entro 1 millesimo d'arcsec dalla
+2000A (IERS Conventions 2010, par. 5.5.1) e costa la meta' di Luna e Sole. Provato il 20/11/2026
+su 500 notti e quattro siti: cio' che Notti mostra e' identico, il conto da 3,3 s a 1,1 s.
+
 **Dal 1899 al 2053, e fuori si dice "non so".** La DE421 copre dal 29/7/1899 all'8/10/2053;
 fuori, Skyfield solleva. Le date che arrivano da un header possono essere sbagliate (un orologio
 a 1970 c'e', a 2099 pure): `bodies.covers` lo dice prima del conto, e quel frame resta senza Luna

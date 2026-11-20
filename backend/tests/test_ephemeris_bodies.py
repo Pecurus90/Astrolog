@@ -58,3 +58,15 @@ def test_a_date_outside_de421_is_said_before_it_is_asked():
 def test_the_kernel_is_opened_once_for_the_whole_process():
     """Aprire la DE421 costa: chi la riaprisse a ogni chiamata pagherebbe a ogni rotta."""
     assert bodies.kernel() is bodies.kernel()
+
+
+def test_the_nutation_is_iau2000b_half_the_cost_a_milliarcsecond_off():
+    """La 2000A completa costa meta' di Luna e Sole per un millesimo d'arcsec (passo 6.12)."""
+    from skyfield.nutationlib import iau2000a_radians, iau2000b_radians
+
+    times = bodies.as_times([dt.datetime(2026, 11, 20, 22, tzinfo=dt.UTC)])
+    used = [float(a[0]) for a in times._nutation_angles_radians]  # pyright: ignore[reportGeneralTypeIssues, reportIndexIssue]
+    assert used == [float(a[0]) for a in iau2000b_radians(times)]
+    full = [float(a[0]) for a in iau2000a_radians(times)]
+    # 1 mas: IERS Conventions 2010, par. 5.5.1 (2000B against 2000A)
+    assert all(abs(u - f) * 206264806 < 1 for u, f in zip(used, full, strict=True))
