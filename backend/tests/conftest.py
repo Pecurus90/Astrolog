@@ -424,15 +424,15 @@ def add_folder(conn, root):
     ).lastrowid
 
 
-def sky_solved(conn, frame_id):
+def sky_solved(conn, frame_id, ra=202.47, dec=47.2):
     """Cio' che il solver scrive di una posa risolta, senza lanciarlo: il cielo trovato, poi lo
     stadio fatto (`spine/solve.py`). Lo stadio fatto da solo e' il segno di uno stacco, che ha
     tolto il cielo, e la regola dell'attesa lo legge come non riconosciuto."""
     solve_store.save_wcs(
         conn,
         frame_id,
-        ra_deg=202.47,
-        dec_deg=47.2,
+        ra_deg=ra,
+        dec_deg=dec,
         scale=1.0,
         rotation=0.0,
         width=1.0,
