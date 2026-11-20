@@ -20,7 +20,10 @@ def create_database(path: str | Path) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(p))
     try:
-        conn.executescript(schema_sql())
+        # One commit, not one fsync per statement (268 ms to 26 ms); WAL first: refused in a
+        # transaction, the script's own PRAGMA then finds it set.
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.executescript("BEGIN;\n" + schema_sql() + "\nCOMMIT;")
     finally:
         conn.close()
 
