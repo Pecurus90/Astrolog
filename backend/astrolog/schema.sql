@@ -1044,6 +1044,8 @@ CREATE UNIQUE INDEX pipeline_files_present ON pipeline_files (root_id, rel_path)
   WHERE state = 'present';
 CREATE INDEX pipeline_files_path ON pipeline_files (root_id, rel_path);
 CREATE INDEX pipeline_files_frame ON pipeline_files (root_id, frame_id);  -- spostati e doppioni
+-- il file di un frame nella serie delle misure: senza, una scansione intera per frame
+CREATE INDEX pipeline_files_of_frame ON pipeline_files (frame_id);
 
 -- RILEVATO. Spostati trovati da una scansione, scritti con lei: lo schermo legge, mai ricalcola.
 CREATE TABLE pipeline_moves (
@@ -1525,6 +1527,9 @@ CREATE UNIQUE INDEX object_measures_key ON object_measures
   (COALESCE(object_id, -1), COALESCE(mosaic_key, ''), COALESCE(panel_id, -1), every_production,
    COALESCE(optics_id, -1), COALESCE(camera_id, -1), COALESCE(night_id, -1), COALESCE(filter_id, -1),
    unfiltered, key);
+-- la lettura cerca con IS, che l'indice sui COALESCE non serve
+CREATE INDEX object_measures_owner ON object_measures
+  (object_id, mosaic_key, panel_id, every_production);
 
 -- RICAVATO. Lo stato di ogni gruppo di `object_measures`, scritto con lei.
 CREATE TABLE object_measure_groups (
@@ -1552,6 +1557,8 @@ CREATE UNIQUE INDEX object_measure_groups_key ON object_measure_groups
   (COALESCE(object_id, -1), COALESCE(mosaic_key, ''), COALESCE(panel_id, -1), every_production,
    COALESCE(optics_id, -1), COALESCE(camera_id, -1), COALESCE(night_id, -1), COALESCE(filter_id, -1),
    unfiltered);
+CREATE INDEX object_measure_groups_owner ON object_measure_groups
+  (object_id, mosaic_key, panel_id, every_production);  -- come object_measures_owner
 
 -- DICHIARATO. «Lascia»: la classe misurata che l'utente non ha voluto; si ripropone solo se cambia.
 CREATE TABLE site_sky_dismissed (
