@@ -219,7 +219,7 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   le misure dei pixel con la soluzione di `solve`, il sito e l'ora della scheda del file misurato,
   in `pipeline_sky`. Una posa senza soluzione si scrive subito e si riscrive quando la soluzione
   arriva; `solve.forget` porta via la sua riga. Nessun pixel letto: un conto erfa, uno di
-  astropy per sito (Luna e Sole) e una scrittura per cartella; una fermata vale prima del conto.
+  effemeridi per sito (Luna e Sole) e una scrittura per cartella; una fermata vale prima del conto.
   Il confronto calcola il cielo con la stessa funzione (`on_sky`, in `card_observation`).
   - **Ora**: meta' posa, inizio piu' meta' di `EXPTIME`; posa ignota, l'inizio.
   - **Altezza** del centro risolto, se no del puntamento (anche il bersaglio pianificato: in un

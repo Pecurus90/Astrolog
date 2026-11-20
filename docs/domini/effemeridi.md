@@ -26,18 +26,36 @@ Cosa l'utente ottiene, e la prova che lo difende.
 | Il numero che leggo e' quello della notte che sto guardando, non di dodici ore prima | `test_the_phase_is_asked_in_the_middle_of_the_night_not_at_noon` |
 | La notte del cambio d'ora non mi fa sparire un orario | `test_the_window_lasts_the_real_night_not_a_fixed_day`, `test_the_grid_covers_real_hours_even_when_the_clock_jumps` |
 | Se il fuso del mio sito non esiste piu', la pagina non cade | `test_a_site_whose_timezone_no_longer_exists_does_not_break_the_page` |
-| Funziona senza rete, che e' esattamente dove osservo | `test_importing_the_ephemeris_disarms_the_download`, e il **recinto di rete** su tutta la suite (`tests/conftest.py`) |
+| Funziona senza rete, che e' esattamente dove osservo | `test_the_ephemeris_works_with_no_network_and_says_nothing`, e il **recinto di rete** su tutta la suite (`tests/conftest.py`) |
+| Gli orari che leggo sono quelli di un'altra effemeride seria, entro pochi secondi | `test_rise_and_set_agree_with_astropy_within_five_seconds`, `test_new_and_full_moons_agree_with_astropy_within_twenty_seconds` (`test_ephemeris_against_astropy.py`) |
+| Un FITS con l'orologio sbagliato (1850, 2099) non mi toglie la Luna degli altri frame | `test_a_clock_outside_the_ephemeris_leaves_moon_and_sun_unknown_not_the_root`, `test_a_night_outside_the_ephemeris_says_nothing_about_the_moon`, `test_a_date_outside_de421_is_said_before_it_is_asked` |
 
 ## Le decisioni
 
-**Offline, sempre.** Importare `astrolog.ephemeris` disinnesca il download di `astropy` e usa il
-suo modello incorporato del sistema solare. Le due righe che lo fanno **lavorano insieme**,
-misurato su una macchina senza rete: col solo "non scaricare" astropy solleva lo stesso, perche'
-i dati impacchettati risultano troppo vecchi -- serve anche dire che vanno bene cosi'. L'app gira
-su un NAS in una casa senza rete e su un portatile in montagna, e li' un'effemeride che scarica
-non e' lenta, e' rotta. Il prezzo e' una precisione di arcosecondi che per dire quanta luce fa
-stanotte non si vede, e astropy lo dichiara con un avviso che le prove lasciano passare
-nominandolo.
+**Offline, sempre: Skyfield sulla DE421 (ADR 0046).** Sole, Luna e pianeti vengono da Skyfield
+sull'effemeride DE421 del JPL, che arriva **dentro la ruota** di `skyfield-data` (17 MB): niente
+da scaricare, niente cartella da scrivere, il file si apre in sola lettura. La rotazione della
+Terra e il delta T sono la tabella che Skyfield porta con se'; oltre la sua fine, la parabola di
+lungo periodo, senza avvisi. L'app gira su un NAS in una casa senza rete e su un portatile in
+montagna, e li' un'effemeride che scarica non e' lenta, e' rotta: lo prova un interprete nuovo
+col socket rotto che chiede il cielo del 2049 e non deve dire niente, nemmeno un avviso.
+
+**Uguale a un'altra effemeride seria, entro tolleranze scritte.** Contro astropy (modello
+incorporato), misurato il 20/11/2026 su due mesi e quattro siti: altezze entro 3,1" il Sole e
+9,7" la Luna, alba e tramonto entro 0,23 s, sorgere e tramonto della Luna entro 2,4 s, lune nuove e
+piene entro 12 s. Le soglie delle prove sono 5 s per gli orari e 20 s per le fasi principali. Lo
+scarto e' l'errore del modello di astropy, non della DE421; a schermo un orario puo' cambiare
+di un minuto quando cade a cavallo dell'arrotondamento. Ed e' da 5 a 50 volte piu' veloce.
+
+**Dal 1899 al 2053, e fuori si dice "non so".** La DE421 copre dal 29/7/1899 all'8/10/2053;
+fuori, Skyfield solleva. Le date che arrivano da un header possono essere sbagliate (un orologio
+a 1970 c'e', a 2099 pure): `bodies.covers` lo dice prima del conto, e quel frame resta senza Luna
+e Sole, quella notte senza fase, mentre le altre della stessa radice si calcolano. Stanotte e il
+calendario dei prossimi mesi stanno dentro fino al 2053.
+
+**astropy resta per gli header, senza rete.** Le coordinate degli header (FK4, FK5) passano
+ancora da astropy, che non chiede dati di rotazione della Terra; il disarmo del suo download sta
+in `fits/header_coords.py` per il giorno che una conversione li chiedesse.
 
 **La fase e' geocentrica, il sorgere e' topocentrico.** Quanto e' illuminata la Luna si vede
 uguale da tutta la Terra: calcolarla dal sito la farebbe ballare di pochissimo e senza motivo, e
@@ -138,19 +156,17 @@ l'ultimo punto sono i due estremi della notte: con una finestra che non e' un mu
 prendere un campione ogni tot scavalca l'ultimo e il grafico chiude prima della fine.
 
 **Un corpo, un campionamento.** Della Luna, sorgere, tramontare, punto piu' alto e curva escono
-dalla **stessa** griglia e dalla stessa unica chiamata ad astropy -- chiederla due volte sarebbe
+dalla **stessa** griglia e dalla stessa unica chiamata alle effemeridi -- chiederla due volte sarebbe
 pagarla due volte per gli stessi numeri. Il Sole e' un corpo diverso e ha il suo: sono due, non
-uno ripetuto. E' l'unica cosa cara che c'e' qui (misurato il 20/9/2026: 140 ms la Luna, 53 il
-Sole, contro i 2 ms di una rotta che legge e basta -- e il Sole costa meno perche' non passa da
-`get_body`, che per lui vale 87 ms in piu' e due centesimi di secondo d'arco: la ragione sta in
-`ephemeris/bodies.py`).
+uno ripetuto. E' l'unica cosa cara che c'e' qui: tutte passano da `bodies.observed`, che una
+prova conta.
 
 **Il conto si fa in UTC, la risposta torna nel fuso del sito.** Sommare ore a un istante con un
 fuso vero fa aritmetica da orologio da parete, e la notte del cambio d'ora "ventiquattro ore"
 diventano ventitre: la griglia tornava indietro, inventava un attraversamento, e il tramonto
 usciva sbagliato di otto ore con un orario che quella notte non era mai esistito.
 
-**Un istante senza fuso si rifiuta.** `astropy` lo leggerebbe come UTC in silenzio, e su un sito
+**Un istante senza fuso si rifiuta.** Letto come UTC in silenzio, e su un sito
 in Arizona la notte risulterebbe sbagliata di mezza giornata. E' la stessa regola con cui
 l'archivio legge le date degli header, applicata al cielo.
 

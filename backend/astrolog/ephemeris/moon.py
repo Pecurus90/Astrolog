@@ -9,13 +9,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Literal, cast
 
-from astropy.coordinates import (
-    BaseCoordinateFrame,
-    GeocentricMeanEcliptic,
-    SkyCoord,
-    get_body,
-    get_sun,
-)
+import numpy as np
+from skyfield.framelib import ecliptic_frame
+from skyfield.positionlib import Apparent
 
 from ..clock import night_span, seconds_between
 from . import (
@@ -92,9 +88,11 @@ def phase_name(start_deg: float, end_deg: float, lit_fraction: float) -> MoonPha
     return MoonPhase.WANING_CRESCENT if lit_fraction < 0.5 else MoonPhase.WANING_GIBBOUS
 
 
-def _ecliptic_longitudes(body: SkyCoord, ecliptic: BaseCoordinateFrame) -> Any:
-    """Degrees, one per instant asked: astropy types the angle as optional and the value loosely."""
-    return bodies.transformed(body, ecliptic).lon.deg  # pyright: ignore[reportOptionalMemberAccess]
+def _ecliptic_longitudes(body: Apparent) -> Any:
+    """Degrees, one per instant asked, on the true ecliptic of date: in the Moon-Sun difference
+    the equinox, true or mean, cancels out."""
+    _, lon, _ = body.frame_latlon(ecliptic_frame)
+    return lon.degrees
 
 
 def phase(instant: dt.datetime) -> Phase:
@@ -103,18 +101,14 @@ def phase(instant: dt.datetime) -> Phase:
 
 
 def _offsets_and_elongations(instants: Sequence[dt.datetime]) -> tuple[Any, Any]:
-    times = bodies.as_times(instants)
-    sun = get_sun(times)
-    moon = get_body("moon", times)
-    ecliptic = GeocentricMeanEcliptic(obstime=times)
-    offsets = _ecliptic_longitudes(moon, ecliptic) - _ecliptic_longitudes(sun, ecliptic)
-    elongations: Any = sun.separation(moon).deg  # pyright: ignore[reportArgumentType]
-    return offsets, elongations
+    sun, moon = bodies.observed("sun", instants), bodies.observed("moon", instants)
+    offsets = _ecliptic_longitudes(moon) - _ecliptic_longitudes(sun)
+    return offsets, sun.separation_from(moon).degrees
 
 
 def phases(instants: Sequence[dt.datetime]) -> list[Phase]:
-    """All in one astropy call, with each instant's night ends. Empty in, empty out: astropy
-    rejects `Time([])`."""
+    """All in one ephemeris call, with each instant's night ends. Empty in, empty out: nothing
+    to ask the ephemeris."""
     if not instants:
         return []
     spans = [night_span(i) for i in instants]
@@ -168,8 +162,8 @@ def night_track(start: dt.datetime, latitude: float, longitude: float, hours: fl
 def night_tracks(
     windows: Sequence[tuple[dt.datetime, float]], latitude: float, longitude: float
 ) -> list[MoonNight]:
-    """Each window (start, hours) from one sampling for all: an astropy call costs ~80 ms even
-    on a short grid, so forty nights one by one took seconds (#87)."""
+    """Each window (start, hours) from one sampling for all: one ephemeris call per night, forty
+    nights one by one, took seconds with astropy (#87)."""
     grids = [night_grid(start, hours=h, step_min=GRID_STEP_MIN) for start, h in windows]
     alts = bodies.body_altitudes("moon", [i for g in grids for i in g], latitude, longitude)
     out, at = [], 0
@@ -275,8 +269,7 @@ def age_days(instant: dt.datetime) -> float:
 
 def distance_km(instant: dt.datetime) -> float:
     """Between the centres (geocentric), the figure the almanacs publish."""
-    body = get_body("moon", bodies.as_time(instant))
-    return float(body.distance.km)  # pyright: ignore[reportOptionalMemberAccess, reportArgumentType]
+    return float(np.asarray(bodies.astrometric("moon", [instant]).distance().km)[0])
 
 
 @dataclass(frozen=True, slots=True)

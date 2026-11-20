@@ -4,8 +4,14 @@ undeclared file is left as is. Out of range or unconvertible -> None, never an i
 import astropy.units as u
 from astropy.coordinates import FK4, FK5, Angle, SkyCoord
 from astropy.time import Time
+from astropy.utils import iers
 
 from .header_keys import KEYS, HeaderLike, as_float, first, get, text
+
+# astropy never downloads Earth-rotation data: the app runs with no network. No header conversion
+# asks for it today; both lines, or a future date raises instead of using the bundled table.
+iers.conf.auto_download = False
+iers.conf.auto_max_age = None
 
 
 def coordinate(

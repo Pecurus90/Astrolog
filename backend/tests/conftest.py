@@ -74,10 +74,10 @@ def dentro_il_recinto(monkeypatch, tmp_path):
     monkeypatch.setattr(api_scan, "_feed_behind", lambda state, folder_ids: None)
 
     # **E nemmeno la rete.** L'app gira su un NAS in una casa senza collegamento e su un portatile
-    # in montagna: cio' che scarica non e' lento, e' rotto. Le effemeridi in particolare vivono
-    # solo perche' `astrolog.ephemeris` disinnesca il download di astropy all'import -- e senza
-    # questo recinto quella riga si poteva togliere lasciando la suite verde, perche' la macchina
-    # di chi sviluppa la rete ce l'ha. Il recinto sta qui e non nel file di chi l'ha introdotta:
+    # in montagna: cio' che scarica non e' lento, e' rotto. Senza questo recinto un download
+    # nascosto (astropy coi dati della Terra, Skyfield con un Loader) passerebbe lasciando la suite
+    # verde, perche' la macchina di chi sviluppa la rete ce l'ha. Il recinto sta qui e non nel file
+    # di chi l'ha introdotta:
     # chi lo mette li' protegge se stesso e lascia scoperti gli altri.
     # **Il giro di casa resta aperto, e non e' rete.** Su Windows `asyncio` sveglia il proprio
     # ciclo con una coppia di socket verso 127.0.0.1, perche' li' non esiste una pipe che il

@@ -230,21 +230,21 @@ def test_the_sun_is_asked_once_for_the_whole_night_not_once_per_sample():
     """Una chiamata sola per tutta la griglia, come per la Luna.
 
     Misurato chiedendolo campione per campione: **1.435 ms contro 56** su una notte a Vicenza,
-    cioe' un secondo e mezzo dentro `GET /tonight`. La Luna ha la sua guardia e passa da
-    `get_body`; il Sole passa da `get_sun`, e senza questa riga meta' della regola era scoperta."""
+    cioe' un secondo e mezzo dentro `GET /tonight`. La Luna ha la sua guardia; il Sole passa
+    dallo stesso `bodies.observed`, e senza questa riga meta' della regola era scoperta."""
     quante = 0
-    vera = bodies.get_sun
+    vera = bodies.observed
 
     def conta(*a, **k):
         nonlocal quante
         quante += 1
         return vera(*a, **k)
 
-    bodies.get_sun = conta
+    bodies.observed = conta
     try:
         night_bands(MEZZOGIORNO, 45.55, 11.55, hours=24)
     finally:
-        bodies.get_sun = vera
+        bodies.observed = vera
 
     assert quante == 1, quante
 
@@ -264,28 +264,8 @@ def test_a_step_that_climbs_across_two_bands_names_them_in_the_right_order():
         assert fascia.ends_at > fascia.starts_at, fascia
 
 
-def test_the_sun_asked_the_fast_way_agrees_with_the_slow_one():
-    """Le due strade per il Sole danno la stessa altezza, e la veloce si puo' tenere.
-
-    E' la macchina del ramo che `bodies.body_altitudes` prende per il Sole: **125 ms contro 38**
-    per una
-    differenza che qui si misura invece di scriverla in un commento. La soglia e' un centesimo di
-    grado -- trentasei secondi d'arco -- che e' mille volte meno del passo fra due soglie di
-    crepuscolo: se le due strade divergessero davvero, si vedrebbe molto prima."""
-    from astropy.coordinates import AltAz, EarthLocation, get_body
-    from astropy.time import Time
-
-    quando = night_grid(MEZZOGIORNO, hours=24, step_min=60)
-    dove = EarthLocation(lat=45.55, lon=11.55)
-    momenti = Time([bodies.as_time(i) for i in quando])
-    lenta = get_body("sun", momenti, dove).transform_to(AltAz(obstime=momenti, location=dove))
-
-    veloce = altitudes(quando, 45.55, 11.55)
-
-    scarti = [abs(a - float(b)) for a, b in zip(veloce, lenta.alt.deg, strict=True)]
-    assert max(scarti) < 0.01, max(scarti)
-
-
+# test-tolto: test_the_sun_asked_the_fast_way_agrees_with_the_slow_one -- con Skyfield il Sole ha
+# una strada sola; il confronto con astropy sta in test_ephemeris_against_astropy.py
 def test_the_sky_at_an_instant_is_the_band_that_holds_it():
     """Chi vuole solo in che cielo cade un'ora non paga la notte campionata minuto per minuto, e
     legge la stessa cosa: la fascia che contiene quell'istante."""

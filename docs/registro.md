@@ -990,3 +990,4 @@ Fonti: C norma: 197; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | 0043 | I cicli caldi delle misure compilati con numba; i Mac Intel escono dai bersagli | accettata, 4/11/2026 (Marco). Passo 26.57. |  |
 | 0044 | Il tilt e l'aberrazione fuori asse di ASTAP tornano accanto a Image Analysis <!-- software-ok --> | accettata, 7/11/2026 (Marco: scelte del 6/11 al passo 32.1 e del 7/11 al passo 32.2). |  |
 | 0045 | Le misure delle notti passano per il file, fino al passo 40 | accettata, 8/11/2026 (Marco, passo 33: "ponte per file, ora"). Anticipa una parte del |  |
+| 0046 | Sole, Luna e pianeti con Skyfield sulla DE421 | accettata, 20/11/2026 (Marco, scelta del 20/11 sul passo 6.9, Issue #87). I FITS restano |  |

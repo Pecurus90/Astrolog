@@ -11,7 +11,7 @@ from typing import Any
 from ..clock import midnight_of, night_window
 from ..db import idlist
 from ..db.night_weather import OF_THE_NIGHT
-from ..ephemeris import moon
+from ..ephemeris import bodies, moon
 from ..levels import MoonRule
 from . import counts, filters_used, stages
 from . import objects as obj
@@ -101,7 +101,8 @@ def _moons(rows: Sequence[sqlite3.Row]) -> dict[int, dict[str, Any]]:
     """One call to the sky, at midnight in the site's zone; a night without a known zone is left
     out. Not stored: a derivable number frozen in a column would outlive a corrected formula."""
     when = {r["id"]: midnight_of(r["night_date"], r["timezone"]) for r in rows}
-    known = {i: q for i, q in when.items() if q is not None}
+    # outside DE421 (a header's wrong clock) there is no Moon, as without a zone
+    known = {i: q for i, q in when.items() if q is not None and bodies.covers(q)}
     latitude = {r["id"]: r["latitude"] for r in rows}
     return {
         i: {**asdict(p), "lit_side": moon.lit_side(p.phase_key, latitude[i])}

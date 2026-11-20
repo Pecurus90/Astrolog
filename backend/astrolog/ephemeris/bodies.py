@@ -1,73 +1,104 @@
-"""Where a solar-system body stands as seen from a site: shared by the Moon and the Sun, so the
-most delicate computation exists once."""
+"""Where a solar-system body stands, from the Earth's centre or from a site: shared by the Moon,
+the Sun and the planets, so the most delicate computation exists once (ADR 0046)."""
 
+import atexit
 import datetime as dt
+import functools
 from collections.abc import Sequence
+from importlib.resources import files
 from typing import Literal
 
-from astropy.coordinates import (
-    AltAz,
-    BaseCoordinateFrame,
-    EarthLocation,
-    SkyCoord,
-    get_body,
-    get_sun,
-)
-from astropy.time import Time
+from skyfield.api import load, load_file, wgs84
+from skyfield.jpllib import SpiceKernel
+from skyfield.positionlib import Apparent, Astrometric
+from skyfield.timelib import Time, Timescale
 
 from . import GRID_STEP_MIN
 from .grid import night_grid, require_zone
 
 Body = Literal["sun", "moon", "saturn", "jupiter", "mars", "venus"]
 
+# DE421 has Jupiter and Saturn only as barycentres; their moons move them by milliarcseconds.
+_TARGET = {"sun": "sun", "moon": "moon", "venus": "venus", "mars": "mars",
+           "jupiter": "jupiter barycenter", "saturn": "saturn barycenter"}  # fmt: skip
 
-def as_time(instant: dt.datetime) -> Time:
-    require_zone(instant)
-    return Time(instant.astimezone(dt.UTC))
+
+@functools.cache
+def kernel() -> SpiceKernel:
+    """DE421 from the skyfield-data wheel: no download, no folder. Path built by hand, since
+    `get_skyfield_data_path` warns about a file of the wheel the app never reads."""
+    opened = load_file(str(files("skyfield_data") / "data" / "de421.bsp"))
+    atexit.register(opened.close)  # else an unclosed-file warning at every exit
+    return opened
+
+
+@functools.cache
+def covered() -> tuple[dt.datetime, dt.datetime]:
+    """The span every DE421 segment holds, a day in from each edge for the light time. Outside
+    it the kernel raises: a caller asks only inside."""
+    segments = [s.spk_segment for s in kernel().segments]  # pyright: ignore[reportAttributeAccessIssue]
+    first = max(s.start_jd for s in segments) + 1
+    last = min(s.end_jd for s in segments) - 1
+    return tuple(_timescale().tt_jd(jd).utc_datetime() for jd in (first, last))  # pyright: ignore[reportReturnType]
+
+
+def covers(instant: dt.datetime) -> bool:
+    """A frame's date comes from its header, and a wrong clock says 1970 or 2099."""
+    start, end = covered()
+    return start <= instant <= end
+
+
+@functools.cache
+def _timescale() -> Timescale:
+    # Bundled Earth-rotation table and delta T; past its end, the long-term parabola.
+    return load.timescale(builtin=True)
 
 
 def as_times(instants: Sequence[dt.datetime]) -> Time:
-    """One `Time` for the whole list: built instant by instant it costs fifteen times more."""
+    """One `Time` for the whole list. An instant without a zone is refused, never read as UTC."""
     for instant in instants:
         require_zone(instant)
-    return Time([i.astimezone(dt.UTC) for i in instants])
+    return _timescale().from_datetimes(list(instants))
 
 
-def transformed(body: SkyCoord, frame: BaseCoordinateFrame) -> SkyCoord:
-    """astropy declares the transform may return nothing: checked here, so callers get a
-    `SkyCoord` and don't silence the stub one by one."""
-    result = body.transform_to(frame)
-    if result is None:
-        raise RuntimeError(f"astropy non ha convertito in {type(frame).__name__}")
-    return result
+def astrometric(
+    body: Body, instants: Sequence[dt.datetime], site: tuple[float, float] | None = None
+) -> Astrometric:
+    """Light time in, aberration not: from the site (lat, lon East +) when given, else
+    geocentric."""
+    earth = kernel()["earth"]
+    observer = earth if site is None else earth + wgs84.latlon(site[0], site[1])
+    return observer.at(as_times(instants)).observe(kernel()[_TARGET[body]])  # pyright: ignore[reportAttributeAccessIssue]
 
 
-def _local(
+def observed(
+    body: Body, instants: Sequence[dt.datetime], site: tuple[float, float] | None = None
+) -> Apparent:
+    """Apparent: aberration and light bending in too. The call every altitude and phase goes
+    through."""
+    return astrometric(body, instants, site).apparent()
+
+
+def _altaz(
     body: Body, instants: Sequence[dt.datetime], latitude: float, longitude: float
-) -> SkyCoord:
-    """Topocentric (the Moon's parallax is nearly a degree) and geometric. One astropy call for
-    the whole grid."""
-    site = EarthLocation(lat=latitude, lon=longitude)
-    times = as_times(instants)
-    # get_sun is cheaper and agrees with get_body("sun"); the Moon and planets need the site.
-    astro = get_sun(times) if body == "sun" else get_body(body, times, site)
-    return transformed(astro, AltAz(obstime=times, location=site))
+) -> tuple[list[float], list[float]]:
+    """Topocentric (the Moon's parallax is nearly a degree), geometric: no refraction."""
+    alt, az, _ = observed(body, instants, (latitude, longitude)).altaz()
+    return [float(a) for a in alt.degrees], [float(a) for a in az.degrees]  # pyright: ignore[reportOptionalIterable, reportGeneralTypeIssues]
 
 
 def body_altitudes(
     body: Body, instants: Sequence[dt.datetime], latitude: float, longitude: float
 ) -> list[float]:
     """Refraction lives in `RISESET_DEG`, a threshold, not in the altitude."""
-    degrees = _local(body, instants, latitude, longitude).alt.deg  # pyright: ignore[reportOptionalMemberAccess]
-    return [float(a) for a in degrees]  # pyright: ignore[reportArgumentType, reportOptionalIterable]
+    return _altaz(body, instants, latitude, longitude)[0]
 
 
 def body_azimuths(
     body: Body, instants: Sequence[dt.datetime], latitude: float, longitude: float
 ) -> list[float]:
     """Degrees east of north."""
-    degrees = _local(body, instants, latitude, longitude).az.deg  # pyright: ignore[reportOptionalMemberAccess]
-    return [float(a) for a in degrees]  # pyright: ignore[reportArgumentType, reportOptionalIterable]
+    return _altaz(body, instants, latitude, longitude)[1]
 
 
 def sampled_night(

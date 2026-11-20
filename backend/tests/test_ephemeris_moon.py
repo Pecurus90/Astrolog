@@ -4,17 +4,18 @@ con cui ci arriva.
 Portate da `old/`, che le aveva sul giro intero di una rotta; qui difendono **una regola per
 prova**, e le regole sono quelle scritte nell'intestazione del modulo.
 
-Le date sono **nel futuro** apposta: e' li' che astropy, senza l'assetto offline, prova a
-scaricare i dati di orientamento della Terra e scoppia -- su una data passata la rete non le
-serve, e una prova che gira solo su ieri non dimostra niente.
+Le date sono **nel futuro** apposta: oltre i dati di rotazione della Terra impacchettati, dove
+un'effemeride che scarica proverebbe la rete -- su una data passata non le serve, e una prova
+che gira solo su ieri non dimostra niente.
 """
 
 import datetime as dt
 import inspect
+import subprocess
+import sys
 import zoneinfo
 
 import pytest
-from astropy.time import Time
 
 from astrolog.ephemeris import (
     GRID_STEP_MIN,
@@ -26,36 +27,44 @@ from astrolog.ephemeris import (
 )
 from astrolog.ephemeris.grid import first_crossing, night_grid
 
-# L'avviso che astropy da' sulle date oltre i suoi dati di orientamento della Terra: e' **cio'
-# che abbiamo chiesto** con `auto_max_age = None`, e riguarda una precisione di arcosecondi che
-# per sorgere e tramontare non si vede. Si dichiara qui invece di lasciarlo scorrere fra i rossi.
-pytestmark = pytest.mark.filterwarnings("ignore:Tried to get polar motions:")
-
 # Un posto vero, e uno dove la Luna puo' non sorgere affatto.
 CASA = (45.5455, 11.5354)  # Vicenza
 POLO = (78.2232, 15.6267)  # Longyearbyen, sopra il circolo polare
 QUANDO = dt.datetime(2027, 3, 14, 12, 0, tzinfo=dt.UTC)  # mezzogiorno UTC, nel futuro
 
+# Un interprete nuovo, la rete rotta prima di ogni import: nessuna cache di un altro test aiuta.
+_SENZA_RETE = """
+import socket
+def rotta(*a, **k):
+    raise OSError("niente rete")
+socket.socket.connect = rotta
+socket.create_connection = rotta
+socket.getaddrinfo = rotta
+import datetime as dt
+from astrolog.ephemeris import moon, sun
+quando = [dt.datetime(2049, 6, 1, 22, tzinfo=dt.UTC)]
+print(round(sun.altitudes(quando, 45.5, 11.5)[0]), moon.phase(quando[0]).illumination_pct)
+"""
 
-def test_importing_the_ephemeris_disarms_the_download():
-    """**L'offline ha una macchina.** Era una promessa scritta in un'intestazione e in un
-    contratto, e niente la difendeva: su una macchina con la rete -- cioe' in CI -- togliere le
-    tre righe di `ephemeris/__init__.py` lasciava tutte le prove verdi.
 
-    Qui si guarda l'assetto, non il risultato: il risultato dipende da quanto sono freschi i dati
-    impacchettati con astropy, e una prova che dipende da quello dice cose diverse a sei mesi di
-    distanza. Il recinto della rete per tutta la suite sta in `conftest.py`, che e' la sua casa.
+# test-tolto: test_importing_the_ephemeris_disarms_the_download -- le effemeridi non usano piu'
+# astropy; il suo disarmo sta coi FITS (test_fits_header.py), l'offline qui sotto si prova a
+# rete rotta
+def test_the_ephemeris_works_with_no_network_and_says_nothing(tmp_path):
+    """**L'offline si prova senza rete**, non guardando un'impostazione: un interprete nuovo
+    con il socket rotto chiede Sole e Luna nel 2049, dove nessun dato di rotazione impacchettato
+    arriva. `-W error`: un avviso -- un file "scaduto", un dato estrapolato -- e' un rosso.
+    Cartella di lavoro vuota: niente file trovati per caso accanto alla suite."""
+    fatto = subprocess.run(
+        [sys.executable, "-I", "-W", "error", "-c", _SENZA_RETE],
+        cwd=tmp_path, capture_output=True, text=True, timeout=120, check=False,
+    )  # fmt: skip
 
-    Due delle tre righe le ho viste rosse togliendole. La terza -- l'effemeride incorporata --
-    **non si puo' vedere rossa oggi**, perche' `builtin` e' anche il valore di partenza di
-    astropy: e' un chiodo, non una guardia, e varra' il giorno che qualcuno altrove ne scelga
-    un'altra. Lo dico invece di lasciarlo credere provato."""
-    from astropy.coordinates import solar_system_ephemeris
-    from astropy.utils import iers
-
-    assert iers.conf.auto_download is False
-    assert iers.conf.auto_max_age is None
-    assert solar_system_ephemeris.get() == "builtin"
+    assert fatto.returncode == 0, fatto.stderr
+    assert fatto.stderr == ""
+    altezza, luce = (int(x) for x in fatto.stdout.split())
+    assert -90 <= altezza <= 90 and 0 <= luce <= 100
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_rise_and_set_are_told_for_a_normal_place():
@@ -163,22 +172,22 @@ def test_the_window_and_the_step_have_no_fallback_value():
 
 
 def test_the_sky_is_asked_once_for_the_whole_night_not_once_per_sample():
-    """Le altezze si chiedono ad astropy **in un colpo solo**: una chiamata per campione sarebbero
-    quattrocentottantuno conversioni di coordinate per una notte, e chi riscrivesse questo ciclo
-    a uno a uno avrebbe solo una suite piu' lenta, senza che niente cada."""
+    """Le altezze si chiedono alle effemeridi **in un colpo solo**: una chiamata per campione
+    sarebbero quattrocentottantuno conversioni di coordinate per una notte, e chi riscrivesse
+    questo ciclo a uno a uno avrebbe solo una suite piu' lenta, senza che niente cada."""
     quante = 0
-    vera = bodies.get_body
+    vera = bodies.observed
 
     def conta(*a, **k):
         nonlocal quante
         quante += 1
         return vera(*a, **k)
 
-    bodies.get_body = conta
+    bodies.observed = conta
     try:
         moon.night_track(QUANDO, *CASA, hours=24)
     finally:
-        bodies.get_body = vera
+        bodies.observed = vera
 
     assert quante == 1, quante
 
@@ -384,10 +393,9 @@ def test_the_declination_bound_is_not_smaller_than_the_real_moon():
     difenderebbe da sola."""
     inizio = dt.datetime(2024, 1, 1, tzinfo=dt.UTC)
     ogni_ora = [inizio + dt.timedelta(hours=i) for i in range(3 * 365 * 24)]
-    dove_arriva = moon.get_body("moon", Time(ogni_ora)).dec.deg  # pyright: ignore[reportOptionalMemberAccess]
-    quanto = [abs(float(d)) for d in dove_arriva]  # pyright: ignore[reportArgumentType, reportOptionalIterable]
+    _, dove_arriva, _ = bodies.observed("moon", ogni_ora).radec(epoch="date")
 
-    assert max(quanto) <= MAX_DECLINATION_DEG
+    assert max(abs(dove_arriva.degrees)) <= MAX_DECLINATION_DEG
 
 
 def test_the_lit_limb_is_mirrored_south_of_the_equator():

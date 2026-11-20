@@ -29,6 +29,23 @@ def read(path):
     return extract_fields(read_header(path), path)
 
 
+def test_importing_the_coordinate_reader_disarms_the_download():
+    """astropy, dove resta (le coordinate degli header), **non scarica mai** i dati di rotazione
+    della Terra: l'app gira senza rete. Oggi nessuna conversione degli header li chiede; il disarmo
+    tiene il giorno che una li chiedesse. Interprete nuovo: nella suite qualcun altro l'avrebbe
+    gia' importato. Ripreso dalle effemeridi, che astropy non usano piu' (ADR 0046)."""
+    import subprocess
+    import sys
+
+    guarda = ("import astrolog.fits.header_coords; from astropy.utils import iers; "
+              "print(iers.conf.auto_download, iers.conf.auto_max_age)")  # fmt: skip
+    fatto = subprocess.run(
+        [sys.executable, "-I", "-c", guarda], capture_output=True, text=True, timeout=120,
+        check=False,
+    )  # fmt: skip
+    assert fatto.stdout.split() == ["False", "None"], fatto.stderr
+
+
 CLEAN = {
     "OBJECT": "M 31",
     "EXPTIME": 300.0,

@@ -57,7 +57,7 @@ class SkyResult:
 def sky_root(
     conn: sqlite3.Connection, root_id: int, now: str, *, stop: threading.Event | None = None
 ) -> SkyResult:
-    """No pixels read: the root's sky in one erfa call and one astropy call per site, then
+    """No pixels read: the root's sky in one erfa call and one ephemeris call per site, then
     one write."""
     with busy(root_id):
         rows = conn.execute(PENDING, {"root": root_id}).fetchall()
@@ -132,7 +132,7 @@ class OnSky:
 
 def on_sky(rows: Sequence[Mapping[str, Any]]) -> list[OnSky]:
     """Centre solved, else the card's pointing; the card's site; mid exposure; one erfa call and
-    one astropy call per site. The comparison tool calls it too, on a card."""
+    one ephemeris call per site. The comparison tool calls it too, on a card."""
     timed = [
         (i, (row["site_lat_deg"], row["site_lon_deg"]), dt.datetime.fromisoformat(mid),
          _centre(row))

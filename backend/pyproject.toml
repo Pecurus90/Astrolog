@@ -36,6 +36,10 @@ dependencies = [
   "pillow>=13.0.0",            # MIT-CMU - l'anteprima di una produzione (passo 33.2): legge
                              #         JPEG, PNG e WebP dell'utente, li riduce e li riscrive
                              #         in JPEG; ruote per le quattro, nessuna dipendenza
+  "skyfield>=1.55",            # MIT   - Sole, Luna e pianeti (ADR 0046, #87): 5-50 volte
+                             #         piu' veloce di astropy, Python puro; porta jplephem e sgp4 (MIT)
+  "skyfield-data>=7.0.0",      # MIT   - la DE421 del JPL dentro la ruota (17 MB, 1899-2053):
+                             #         nessun download, mai
 ]
 
 [project.optional-dependencies]
@@ -286,9 +290,9 @@ forbidden_modules = ["sqlite3", "astrolog.db", "astrolog.catalog.lookup", "astro
 name = "le effemeridi sono pure: niente db, niente spina, niente api, niente rete"
 type = "forbidden"
 source_modules = ["astrolog.ephemeris"]
-# La rete in particolare: il package disinnesca il download di astropy proprio perche' l'app
-# gira su un NAS senza rete e su un portatile in montagna. Un import che la riapre da un'altra
-# porta vanificherebbe quell'assetto senza che niente cada.
+# La rete in particolare: l'app gira su un NAS senza rete e su un portatile in montagna. Il
+# contratto non vede dentro skyfield (che ha un Loader capace di scaricare): contro quello regge
+# test_the_ephemeris_works_with_no_network_and_says_nothing, a interprete nuovo e socket rotto.
 forbidden_modules = ["astrolog.db", "astrolog.spine", "astrolog.worker", "astrolog.api", "sqlite3", "urllib", "httpx", "requests", "subprocess"]
 
 [[tool.importlinter.contracts]]
@@ -311,10 +315,9 @@ type = "forbidden"
 source_modules = ["astrolog.pipeline"]
 forbidden_modules = ["astrolog.fits", "astrolog.vocab", "astrolog.spine", "astrolog.worker", "astrolog.api", "astropy"]
 # astap.py e' di tutte e due: legge il .ini di ASTAP col lettore WCS di fits. La nuova lo usa, mai fits.
-# astropy fuori: la nuova legge da se' header e pixel, coordinate con erfa. Una porta sola: Luna e
-# Sole sul frame dalle effemeridi dell'app, una chiamata per sito (Marco 4/11/2026, passo 26.54).
-ignore_imports = ["astrolog.astap -> astrolog.fits.header_wcs", "astrolog.astap -> astrolog.fits.header_keys",
-                  "astrolog.pipeline.sky_measure -> astrolog.ephemeris.frames"]
+# astropy fuori: la nuova legge da se' header e pixel, coordinate con erfa. Luna e Sole sul frame
+# dalle effemeridi dell'app (passo 26.54), che da ADR 0046 non portano astropy: nessuna eccezione.
+ignore_imports = ["astrolog.astap -> astrolog.fits.header_wcs", "astrolog.astap -> astrolog.fits.header_keys"]
 
 [[tool.importlinter.contracts]]
 name = "la vecchia non importa la nuova"

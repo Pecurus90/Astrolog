@@ -17,8 +17,8 @@ test-tolto: test_every_one_of_the_eight_phases_is_reachable
 test-tolto: test_the_phase_does_not_care_where_the_angle_started
 test-tolto: test_the_illuminated_fraction_does_not_depend_on_where_you_are
 
-Le date sono **nel futuro** apposta, come nell'altro file: e' li' che astropy, senza l'assetto
-offline, proverebbe a scaricare i dati di orientamento della Terra.
+Le date sono **nel futuro** apposta, come nell'altro file: oltre i dati di rotazione della Terra
+impacchettati, dove un'effemeride che scarica proverebbe la rete.
 """
 
 import datetime as dt
@@ -29,8 +29,6 @@ import pytest
 
 from astrolog.clock import midnight_of, night_date, night_window
 from astrolog.ephemeris import moon
-
-pytestmark = pytest.mark.filterwarnings("ignore:Tried to get polar motions:")
 
 QUANDO = dt.datetime(2027, 3, 14, 12, 0, tzinfo=dt.UTC)  # mezzogiorno UTC, nel futuro
 CASA = (45.5455, 11.5354)  # Vicenza
@@ -62,12 +60,13 @@ def test_two_lists_of_different_length_are_refused_instead_of_paired(monkeypatch
     **in silenzio** darebbe a ogni istante il numero di un altro: la fase di una notte con
     l'illuminazione di un'altra, e nessuno potrebbe accorgersene guardando.
 
-    Non e' un caso che astropy possa produrre oggi -- e' la ragione per cui l'accoppiamento e'
-    dichiarato stretto -- quindi si forza qui, ed e' l'unico modo di vedere questa guardia rossa."""
+    Non e' un caso che le effemeridi possano produrre oggi -- e' la ragione per cui
+    l'accoppiamento e' dichiarato stretto -- quindi si forza qui, ed e' l'unico modo di vedere
+    questa guardia rossa."""
     corte = moon._ecliptic_longitudes
 
-    def una_di_meno(corpo, eclittica):
-        return corte(corpo, eclittica)[:-1]
+    def una_di_meno(corpo):
+        return corte(corpo)[:-1]
 
     monkeypatch.setattr(moon, "_ecliptic_longitudes", una_di_meno)
 
@@ -76,13 +75,13 @@ def test_two_lists_of_different_length_are_refused_instead_of_paired(monkeypatch
 
 
 def test_asking_for_no_phases_asks_astropy_nothing():
-    """Una pagina di notti puo' essere vuota, e un `Time([])` in astropy non e' un elenco vuoto:
-    e' un errore. Il caso si chiude qui, non in chi chiama."""
+    """Una pagina di notti puo' essere vuota: niente da chiedere alle effemeridi. Il caso si
+    chiude qui, non in chi chiama."""
     assert moon.phases([]) == []
 
 
 def test_asking_the_phases_together_is_worth_it(monkeypatch):
-    """Il conto in blocco esiste per il costo: cento istanti, **una** chiamata ad astropy. Si
+    """Il conto in blocco esiste per il costo: cento istanti, **una** chiamata alle effemeridi. Si
     contano le chiamate e non i secondi: un rapporto di tempi dipende dalla macchina (7 volte in
     locale, 3 su un runner di GitHub) e una soglia scelta su una cade sull'altra."""
     vera = moon._offsets_and_elongations

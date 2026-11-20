@@ -1,5 +1,5 @@
 """Tonight's sky written once, read by `tonight` (#96): over a second per read on a NAS. In `api/`,
-not `spine/`: it stores the route's reply. Ephemerides imported eagerly: that disarms astropy."""
+not `spine/`: it stores the route's reply. Ephemerides imported eagerly."""
 
 import logging
 import sqlite3

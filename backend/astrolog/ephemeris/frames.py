@@ -1,21 +1,12 @@
 """The Moon and the Sun on a shot (Image Analysis par. 2.1.1): what the sky stage writes beside
-each frame. One astropy call per site, for all its frames."""
+each frame. One ephemeris call per body and site, for all its frames."""
 
 import datetime as dt
-import warnings
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
 
-from astropy.coordinates import (
-    ICRS,
-    AltAz,
-    EarthLocation,
-    NonRotationTransformationWarning,
-    SkyCoord,
-    get_body,
-    get_sun,
-)
+import numpy as np
+from skyfield.functions import angle_between
 
 from . import bodies, moon
 
@@ -32,15 +23,24 @@ def moon_and_sun(
     instants: Sequence[dt.datetime],
     sites: Sequence[tuple[float, float]],
     centres: Sequence[tuple[float, float] | None],
-) -> list[MoonAndSun]:
-    """One per frame: its instant, its site (lat, lon East +), its centre (RA, Dec J2000)."""
+) -> list[MoonAndSun | None]:
+    """One per frame: its instant, its site (lat, lon East +), its centre (RA, Dec J2000). None:
+    an instant outside DE421, a header's wrong clock, so one frame never sinks the others."""
     found: list[MoonAndSun | None] = [None] * len(instants)
     for site in dict.fromkeys(sites):
-        at = [i for i, s in enumerate(sites) if s == site]
+        at = [i for i, s in enumerate(sites) if s == site and bodies.covers(instants[i])]
+        if not at:
+            continue
         for i, seen in zip(at, _from_site([instants[i] for i in at], site,
                                           [centres[i] for i in at]), strict=True):  # fmt: skip
             found[i] = seen
-    return [f for f in found if f is not None]
+    return found
+
+
+def _directions(centres: list[tuple[float, float] | None]) -> np.ndarray:
+    """Unit vectors on ICRS axes, (3, n); an unknown centre points anywhere, its answer is None."""
+    ra, dec = (np.radians([(c or (0.0, 0.0))[k] for c in centres]) for k in (0, 1))
+    return np.array([np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec)])
 
 
 def _from_site(
@@ -48,19 +48,12 @@ def _from_site(
     site: tuple[float, float],
     centres: list[tuple[float, float] | None],
 ) -> list[MoonAndSun]:
-    """The Moon seen from the site (its parallax is nearly a degree); the centre taken into the
-    Moon's frame, so the separation is topocentric too."""
-    location = EarthLocation(lat=site[0], lon=site[1])
-    times = bodies.as_times(instants)
-    local = AltAz(obstime=times, location=location)
-    seen = get_body("moon", times, location)
-    moon_alt: Any = bodies.transformed(seen, local).alt.deg  # pyright: ignore[reportOptionalMemberAccess]
-    sun_alt: Any = bodies.transformed(get_sun(times), local).alt.deg  # pyright: ignore[reportOptionalMemberAccess]
-    placed = [c or (0.0, 0.0) for c in centres]
-    sky = SkyCoord([c[0] for c in placed], [c[1] for c in placed], unit="deg", frame=ICRS())
-    with warnings.catch_warnings():  # the direction is the point: a star has no parallax
-        warnings.simplefilter("ignore", NonRotationTransformationWarning)
-        separation: Any = seen.separation(sky).deg  # pyright: ignore[reportArgumentType]
+    """The Moon seen from the site (parallax nearly a degree). Separation without aberration on
+    both sides: a catalogue star has none, and the Moon's light time is in."""
+    toward = bodies.astrometric("moon", instants, site)
+    moon_alt = np.asarray(toward.apparent().altaz()[0].degrees)
+    sun_alt = np.asarray(bodies.observed("sun", instants, site).altaz()[0].degrees)
+    separation = np.degrees(angle_between(toward.position.au, _directions(centres)))
     lit = moon.lit_fractions(instants)
     return [
         MoonAndSun(float(moon_alt[k]), None if centres[k] is None else float(separation[k]),

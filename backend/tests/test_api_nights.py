@@ -315,6 +315,17 @@ def test_a_night_whose_site_has_no_timezone_says_nothing_about_the_moon(archivio
     assert all(n["moon"] is None for n in notti(archivio)["items"])
 
 
+def test_a_night_outside_the_ephemeris_says_nothing_about_the_moon():
+    """Una notte del 2099 (un orologio sbagliato nell'header) e' fuori dalla DE421: tace sulla
+    Luna come senza fuso, e le altre notti della pagina la tengono (ADR 0046)."""
+    from astrolog.spine.nights import _moons
+
+    def notte(i, data):
+        return {"id": i, "night_date": data, "timezone": "Europe/Rome", "latitude": 45.5}
+
+    assert list(_moons([notte(1, "2099-01-01"), notte(2, "2027-03-14")])) == [2]
+
+
 def test_the_moon_of_a_whole_page_costs_one_call(archivio):
     """Una pagina di cento notti chiede al cielo **una volta**, non cento.
 

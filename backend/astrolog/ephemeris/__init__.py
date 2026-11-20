@@ -1,19 +1,10 @@
 """What the sky does from a site at a moment, always offline (contract: docs/domini/effemeridi.md).
-Importing the package switches off astropy's network access, deliberately for everything inside."""
-
-from astropy.coordinates import solar_system_ephemeris
-from astropy.utils import iers
+Skyfield on JPL DE421 from the skyfield-data wheel, no download ever (ADR 0046)."""
 
 from ..twilight import ASTRO_DEG as ASTRO_DEG  # read here by the ephemeris and its callers
 from ..twilight import CIVIL_DEG as CIVIL_DEG
 from ..twilight import NAUTICAL_DEG as NAUTICAL_DEG
 from ..twilight import RISESET_DEG as RISESET_DEG
-
-# Both together: without auto_max_age astropy raises on a future date instead of using its
-# bundled tables, and the app runs on a NAS or a laptop with no network.
-iers.conf.auto_download = False
-iers.conf.auto_max_age = None
-solar_system_ephemeris.set("builtin")
 
 # Crossings are interpolated, so the step sets how dense the search is, not the error. [T]
 GRID_STEP_MIN = 3

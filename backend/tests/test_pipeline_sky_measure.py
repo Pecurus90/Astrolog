@@ -85,6 +85,7 @@ def test_a_shot_gets_where_it_pointed_and_the_moon_and_sun_of_its_moment(conn, t
     [row] = _sky(conn)
     [seen] = observed([_CENTRE], [_MID], [_SITE])
     [lit] = moon_and_sun([_MID], [_SITE], [_CENTRE])
+    assert lit is not None
     assert row["azimuth_deg"] == pytest.approx(seen.azimuth_deg)
     assert row["hour_angle_h"] == pytest.approx(seen.hour_angle_h)
     assert row["moon_altitude_deg"] == pytest.approx(lit.moon_altitude_deg)
@@ -100,6 +101,20 @@ def test_without_a_centre_the_moon_and_sun_stay_but_not_the_distance(conn, tmp_p
     [row] = _sky(conn)
     assert (row["azimuth_deg"], row["hour_angle_h"], row["moon_separation_deg"]) == (None,) * 3
     assert row["moon_altitude_deg"] is not None and row["sun_altitude_deg"] is not None
+
+
+def test_a_clock_outside_the_ephemeris_leaves_moon_and_sun_unknown_not_the_root(conn, tmp_path):
+    """Un header col 2099 (orologio sbagliato) e' fuori dalla DE421 (1899-2053): Luna e Sole di
+    quel frame sono "non so", il resto della posa si misura, e la radice non cade (ADR 0046)."""
+    cards = ("DATE-OBS= '2099-06-29T21:30:00.000'", *_CARDS[1:])
+    root = _measured(conn, tmp_path, *cards)
+    _solve(conn)
+    assert sky_root(conn, root, LATER).written == 1
+    [row] = _sky(conn)
+    assert row["altitude_deg"] is not None and row["azimuth_deg"] is not None
+    for name in ("moon_altitude_deg", "moon_separation_deg", "moon_illumination",
+                 "sun_altitude_deg"):  # fmt: skip
+        assert row[name] is None, name
 
 
 def test_round_stars_and_a_flat_sky_have_no_direction(conn, tmp_path):
