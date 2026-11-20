@@ -211,6 +211,18 @@ describe("il cielo di una notte", () => {
       "1 ora visibile col Sole sotto l’orizzonte",
     )
   })
+
+  it("col buio nautico (senza buio astronomico) lo dice, senza tacche", () => {
+    const c = cielo(conMeteo({ verdict: "marginal", window: "nautical", dark_hours: 3.2 }))
+    expect([c.sotto, c.corto, c.tacche]).toEqual([
+      "3 ore visibili col buio nautico",
+      "3 ore visibili, buio nautico",
+      null,
+    ])
+    expect(cielo(conMeteo({ window: "nautical", dark_hours: 1 })).sotto).toBe(
+      "1 ora visibile col buio nautico",
+    )
+  })
 })
 
 describe("la ripresa e la Luna", () => {

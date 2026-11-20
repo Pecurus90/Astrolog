@@ -161,6 +161,10 @@ def _rows(
     return rows
 
 
+# The keys of a written hour that are not its quantities.
+_NOT_VALUES = ("at", "sky", "dark", "nautical", "down")
+
+
 def rebuild(conn: sqlite3.Connection, site: Site) -> None:
     """All of the site's nights or none; other sites stay."""
     sky = _sky_by_hour(conn, site.id)
@@ -177,8 +181,9 @@ def rebuild(conn: sqlite3.Connection, site: Site) -> None:
                 sky=o["sky"],
                 dark=o.get("dark"),
                 down=o.get("down"),
+                nautical=o.get("nautical"),
                 values={
-                    **{k: v for k, v in o.items() if k not in ("at", "sky", "dark", "down")},
+                    **{k: v for k, v in o.items() if k not in _NOT_VALUES},
                     **dict.fromkeys(SKY_FIELDS),
                     **sky.get(o["at"], {}),
                     "moon_pct": lit[o["at"]],

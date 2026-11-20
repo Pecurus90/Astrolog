@@ -27,7 +27,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
 | Senza sito di casa la pagina mi manda a dichiararlo, e non chiede niente a nessuno | `test_without_a_home_site_the_page_says_so_and_asks_nothing`, *senza sito di casa manda a dichiararlo* |
 | Un sito di casa senza fuso orario lo dice, invece di aspettare una previsione che non arrivera' | `test_a_home_site_without_a_timezone_is_said`, *un sito di casa senza fuso orario lo dice, e porta a sistemarlo* |
 | Una risposta senza notti intere non cancella la previsione di prima, e una nuova non tocca gli altri siti ne' il meteo osservato | `test_an_answer_that_brings_no_whole_night_leaves_the_last_forecast_alone`, `test_a_new_forecast_leaves_other_sites_and_the_observed_weather_alone` |
-| D'estate al nord, dove il buio non arriva, il verdetto guarda le ore col Sole sotto l'orizzonte e lo dice (deciso il buio nautico, Sole sotto -12°: ADR 0035, non ancora nel codice); dove il Sole non tramonta non c'e' verdetto | `test_without_dark_the_night_is_the_hours_with_the_sun_down`, `test_where_the_sun_never_sets_there_is_no_verdict` |
+| D'estate al nord, dove il buio astronomico non arriva, il verdetto guarda il buio nautico (Sole sotto -12°, ADR 0035) e lo dice; dove manca anche quello, le ore col Sole sotto l'orizzonte, detto; dove il Sole non tramonta non c'e' verdetto (tre gradini: Marco, 19/11/2026) | `test_without_astronomical_dark_the_night_is_the_nautical_dark`, `test_without_astronomical_dark_the_nautical_dark_is_judged_by_its_minutes`, `test_the_nautical_dark_shares_of_a_june_night_at_fifty_degrees`, `test_without_dark_the_night_is_the_hours_with_the_sun_down`, `test_where_the_sun_never_sets_there_is_no_verdict`, *dove il buio non arriva conta le ore col Sole sotto l'orizzonte, e dove il Sole non tramonta non da' un verdetto finto* |
 | Le prime tre notti hanno le ore; dalla quarta alla settima vedo solo la tendenza, detta meno affidabile | `test_three_nights_are_full_and_the_following_are_a_trend`, *dalla quarta notte mostra la tendenza, senza ore* |
 | Accanto al verdetto leggo quanti modelli sono d'accordo | `test_each_night_says_how_many_models_agree`, *in testa le ore serene col semaforo, da che ora a che ora e l'accordo, con l'ora del posto* |
 | Per la planetaria vedo il jet stream, l'aerosol e, con la chiave Meteoblue, il seeing; nessun dato a fasce o ogni tre ore | `test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour`, `test_without_a_key_the_sky_is_asked_only_to_cams`, *un seeing che copre solo parte della notte lo dice nella media e nel picco* |
@@ -95,7 +95,9 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   porting della Dashboard (11/11/2026): la Trasparenza di ogni ora (`transparency` dell'ora) e la
   divisione per banda della Luna (`broadband_exposure_hours`, `narrowband_exposure_hours`: un'ora
   con la Luna dal 65%, la scala della Luna qui sotto, e' solo banda stretta; le due fanno il
-  totale). Il buio nautico arriva con ADR 0035. Le ore serene (`usable_*`) restano le nuvole sole, per le pagine di
+  totale). Il buio nautico (ADR 0035, 19/11/2026): ogni ora pesa i suoi minuti col Sole sotto
+  -12; senza nemmeno quello, i minuti col Sole sotto l'orizzonte. Il gradino del peso e' quello
+  della finestra (fascia all'istante): qualche minuto oltre -12 o -18 non lo cambia. Le ore serene (`usable_*`) restano le nuvole sole, per le pagine di
   oggi. Prove: `backend/tests/test_weather_score.py`.
 - **Ogni misura ha anche la sua parola.** Ogni misura con soglia ha la sua parola
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e

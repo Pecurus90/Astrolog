@@ -1,6 +1,6 @@
 # 0035 -- Le regole del cielo con le fonti verificate
 
-**Stato:** accettata, 24/10/2026; costruiti classe 1 a 22,00, Garstang, SQM 7-23, Luna a -0,833 topocentrica, nomi delle fasi (commit 26656192, 9046559a, 1f464d3d); non costruiti tabella Bortle di ASTAP (Issue #28, aspetta il foglio di Design) e buio nautico.
+**Stato:** accettata, 24/10/2026; costruiti classe 1 a 22,00, Garstang, SQM 7-23, Luna a -0,833 topocentrica, nomi delle fasi (commit 26656192, 9046559a, 1f464d3d); buio nautico (19/11/2026, a tre gradini: senza nemmeno il nautico le ore col Sole sotto, scelta di Marco); non costruita la tabella Bortle di ASTAP (Issue #28, aspetta il foglio di Design).
 Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1); conferma la
 tabella Bortle di ADR 0033 R2 e ne verifica la fonte.
 

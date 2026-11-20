@@ -155,8 +155,9 @@ class WeatherAgreementOut(BaseModel):
 
 class WeatherSkyOut(BaseModel):
     """A night's sky as the verdict sums it up: the word, the mean cloud cover, and the usable hours
-    out of the night's. `window` tells which hours were judged: the dark, or -- where the dark
-    never comes -- the arc with the Sun below the horizon; `None` where the Sun does not set. The
+    out of the night's. `window` tells which hours were judged: the dark; where the dark never
+    comes, the nautical dark (Sun below -12, ADR 0035); without that either, the arc with the Sun
+    below the horizon; `None` where the Sun does not set. The
     same shape serves the forecast (Weather) and the history (Nights)."""
 
     verdict: Literal["go", "marginal", "nogo"] | None = Field(
@@ -165,7 +166,7 @@ class WeatherSkyOut(BaseModel):
     )
     cloud_total_pct: float | None
     usable_hours: int | None
-    window: Literal["dark", "sun_down"] | None
+    window: Literal["dark", "nautical", "sun_down"] | None
     window_hours: int | None
     transparency: float | None = Field(
         default=None,
@@ -186,7 +187,9 @@ class WeatherSkyOut(BaseModel):
         "the hours do not know the Moon (the history).",
     )
     dark_hours: float = Field(
-        default=0.0, description="The window's length in hours, tenths: the dark, or the Sun down."
+        default=0.0,
+        description="The window's length in hours, tenths: the dark, the nautical dark, or the "
+        "Sun down.",
     )
     without_aerosol: bool = Field(
         default=False,

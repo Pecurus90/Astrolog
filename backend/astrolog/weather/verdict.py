@@ -41,23 +41,31 @@ def sky_word(cloud_pct: float | None) -> SkyWord | None:
 
 class Window(StrEnum):
     DARK = "dark"
+    NAUTICAL = "nautical"
     SUN_DOWN = "sun_down"
 
 
 @dataclass(frozen=True, slots=True)
 class Hour:
-    """An hour: local instant, sky band, quantities by our names. `dark`/`down`: share of the hour
-    around `at` in the dark and with the Sun set; without them the band at `at` stands for all."""
+    """An hour: local instant, sky band, quantities by our names. `dark`/`nautical`/`down`: share of
+    the hour around `at` with the Sun below -18, -12 and the horizon; else the band stands in."""
 
     at: str
     sky: Sky | None
     values: dict[str, Any]
     dark: float | None = None
     down: float | None = None
+    nautical: float | None = None
 
     @property
     def dark_share(self) -> float:
         return self.dark if self.dark is not None else float(self.sky == Sky.DARK)
+
+    @property
+    def nautical_share(self) -> float:
+        if self.nautical is not None:
+            return self.nautical
+        return float(self.sky in (Sky.ASTRONOMICAL, Sky.DARK))
 
     @property
     def down_share(self) -> float:
@@ -67,7 +75,8 @@ class Hour:
         """As written in `hourly_json`: a source without sky bands has no `sky` key."""
         if self.sky is None:
             return {"at": self.at, **self.values}
-        return {"at": self.at, "sky": self.sky, "dark": self.dark, "down": self.down, **self.values}
+        shares = {"dark": self.dark, "nautical": self.nautical, "down": self.down}
+        return {"at": self.at, "sky": self.sky, **shares, **self.values}
 
 
 type Bites = Callable[[Hour], bool]
@@ -97,24 +106,38 @@ class Summary:
     without_aerosol: bool = False
 
 
+# Each window with the bands it takes, darkest first: the first that has an hour is the night.
+# An hour without a band is not day, as it always was here.
+_STEPS: tuple[tuple[Window, set[Sky | None]], ...] = (
+    (Window.DARK, {Sky.DARK}),
+    (Window.NAUTICAL, {Sky.ASTRONOMICAL}),
+    (Window.SUN_DOWN, {Sky.CIVIL, Sky.NAUTICAL, Sky.ASTRONOMICAL, None}),
+)
+
+
 def window(hours: Sequence[Hour]) -> tuple[list[Hour], Window | None]:
-    """The dark, else the hours with the Sun below the horizon, and which of the two; none where
-    the Sun never sets. Afternoon clouds never weigh on the night."""
-    dark = [h for h in hours if h.sky == Sky.DARK]
-    if dark:
-        return dark, Window.DARK
-    down = [h for h in hours if h.sky != Sky.DAY]
-    return (down, Window.SUN_DOWN) if down else ([], None)
+    """The dark, else the nautical dark (ADR 0035), else the hours with the Sun below the horizon,
+    and which; none where the Sun never sets. Afternoon clouds never weigh on the night."""
+    for span, floor in _STEPS:
+        picked = [h for h in hours if h.sky in floor]
+        if picked:
+            return picked, span
+    return [], None
 
 
 def weighted(hours: Sequence[Hour]) -> tuple[list[tuple[Hour, float]], Window | None]:
-    """Every hour holding some of the dark, with its share; else of the Sun set. Only the score
-    weighs edge hours: the clear hours and the measures keep `window`."""
-    dark = [(h, h.dark_share) for h in hours if h.dark_share > 0]
-    if dark:
-        return dark, Window.DARK
-    down = [(h, h.down_share) for h in hours if h.down_share > 0]
-    return (down, Window.SUN_DOWN) if down else ([], None)
+    """Every hour holding some of `window`'s step, with its share: one step for both, so the
+    weight never shrinks below the window. Only the score weighs edge hours."""
+    _, span = window(hours)
+    if span is None:
+        return [], None
+    return [(h, s) for h in hours if (s := _share(h, span)) > 0], span
+
+
+def _share(hour: Hour, span: Window) -> float:
+    if span == Window.DARK:
+        return hour.dark_share
+    return hour.nautical_share if span == Window.NAUTICAL else hour.down_share
 
 
 def _values(hours: Sequence[Hour], field: str) -> list[Any]:

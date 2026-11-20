@@ -765,3 +765,13 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
 - **Un caso che le tavole non disegnano**: sopra gli 84 gradi il buio puo' coprire la notte intera.
   Dove la tavola scrive le ore del buio («buio 20:48-05:48»), l'app dice «buio tutta la notte»
   (Marco 19/11), e la legenda del grafico «Buio tutta la notte»; prima «12:00-12:00» (Issue #18).
+
+## Notti e Dashboard -- Il buio nautico (passo 7, ADR 0035, 19/11)
+
+- **Un terzo gradino che le tavole non disegnano**: senza buio astronomico la tavola ha un testo
+  solo, «{sb} ore visibili col Sole sotto l'orizzonte», corto «{sb} ore visibili, senza buio»
+  (Notti.dc.html riga 211). L'app ne ha due: col buio nautico (Sole sotto -12) «{n} ore visibili
+  col buio nautico», corto «{n} ore visibili, buio nautico»; senza nemmeno quello il testo della
+  tavola (Marco 19/11: tre gradini, testo nello stesso stampo).
+- **Dashboard, le ore serene**: accanto a «di buio sereno» e «serene col Sole sotto l'orizzonte»
+  l'app dice «di buio nautico sereno», e senza ore «Nessuna ora di buio nautico sereno».

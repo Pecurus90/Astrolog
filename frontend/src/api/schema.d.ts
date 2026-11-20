@@ -4406,7 +4406,7 @@ export interface components {
             /** Usable Hours */
             usable_hours: number | null;
             /** Window */
-            window: ("dark" | "sun_down") | null;
+            window: ("dark" | "nautical" | "sun_down") | null;
             /** Window Hours */
             window_hours: number | null;
             /**
@@ -4431,7 +4431,7 @@ export interface components {
             narrowband_exposure_hours?: number | null;
             /**
              * Dark Hours
-             * @description The window's length in hours, tenths: the dark, or the Sun down.
+             * @description The window's length in hours, tenths: the dark, the nautical dark, or the Sun down.
              * @default 0
              */
             dark_hours: number;
@@ -6515,7 +6515,7 @@ export interface components {
             /** Usable Hours */
             usable_hours: number | null;
             /** Window */
-            window: ("dark" | "sun_down") | null;
+            window: ("dark" | "nautical" | "sun_down") | null;
             /** Window Hours */
             window_hours: number | null;
             /**
@@ -6540,7 +6540,7 @@ export interface components {
             narrowband_exposure_hours?: number | null;
             /**
              * Dark Hours
-             * @description The window's length in hours, tenths: the dark, or the Sun down.
+             * @description The window's length in hours, tenths: the dark, the nautical dark, or the Sun down.
              * @default 0
              */
             dark_hours: number;
@@ -6767,7 +6767,7 @@ export interface components {
             /** Usable Hours */
             usable_hours: number | null;
             /** Window */
-            window: ("dark" | "sun_down") | null;
+            window: ("dark" | "nautical" | "sun_down") | null;
             /** Window Hours */
             window_hours: number | null;
             /**
@@ -6792,7 +6792,7 @@ export interface components {
             narrowband_exposure_hours?: number | null;
             /**
              * Dark Hours
-             * @description The window's length in hours, tenths: the dark, or the Sun down.
+             * @description The window's length in hours, tenths: the dark, the nautical dark, or the Sun down.
              * @default 0
              */
             dark_hours: number;

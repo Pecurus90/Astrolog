@@ -568,8 +568,10 @@ l'ultima volta e la pagina te lo dice. Se il seeing copre solo una parte della n
 dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al giorno, perche' la
 chiave gratuita ha un tetto di chiamate l'anno.
 
-D'estate molto a nord, dove il buio astronomico non arriva, le ore serene si contano col Sole sotto
-l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Nessun buio* e, sotto,
+D'estate al nord, dove il buio astronomico non arriva, le ore serene si contano nel buio nautico
+(il Sole sotto i 12 gradi) e la scheda lo dice; ancora piu' a nord, dove manca anche quello, si
+contano col Sole sotto l'orizzonte, e la scheda dice anche questo. Dove il Sole non tramonta legge
+*Nessun buio* e, sotto,
 che non c'e' nessuna ora di buio, senza carte. Se il modello non da' le nuvole di tutte le ore la
 notte dice solo *Non disponibile*, senza ore serene, e sotto perche' non si puo' valutare.
 

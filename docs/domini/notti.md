@@ -45,7 +45,7 @@ Le prove del backend stanno in `backend/tests/test_api_nights.py` e nei file acc
 | Se di una notte la Luna non si puo' sapere, la riga non mi mette un trattino | `test_a_night_whose_site_has_no_timezone_says_nothing_about_the_moon`; *una notte di cui non si sa la luna non scrive un trattino muto* |
 | Vedo com'era il cielo: l'esito (buona, incerta, non adatta), le nuvole in parole e in media, le **ore di posa su quelle di buio** | `test_a_past_night_is_judged_by_its_transparency`, `test_a_past_night_says_its_exposure_hours_out_of_its_dark`, `test_a_past_night_without_aerosol_says_so`; *una notte ripresa dice com'era il cielo* |
 | Di una notte di pochi giorni fa so il giorno in cui arriva il meteo; se il servizio non ha risposto, lo dice | `test_a_young_night_says_the_day_its_weather_arrives`, `test_the_day_the_weather_arrives_is_counted_in_the_site_time_zone`; *una notte giovane dice il giorno in cui arriva il meteo* |
-| Una notte senza buio (estate al nord) dice le ore col Sole sotto l'orizzonte | `test_a_night_without_dark_is_judged_with_the_sun_down` |
+| Una notte senza buio astronomico (estate al nord) dice le ore di buio nautico; senza nemmeno quello, le ore col Sole sotto l'orizzonte | `test_a_night_without_dark_is_judged_with_the_sun_down`; *col buio nautico (senza buio astronomico) lo dice, senza tacche* |
 | Dalla ricerca apro una notte precisa (`/notti?notte=<id>`), anche vecchia, e torno a tutte; una notte che non c'e' piu' lo dice | `test_a_night_is_asked_by_its_id_wherever_it_falls_in_the_list`, `test_a_night_that_does_not_exist_is_an_empty_list_not_an_error`; *con ?notte= chiede quella notte sola*; *una notte che non c'e' piu' lo dice* |
 | Vedo com'erano i miei frame quella notte | `test_a_night_with_its_objects_filters_sets_and_frames`, `test_the_night_counts_its_frames_as_the_nights_page` (backend); a schermo con la finestra (passo 33) |
 | Fondo, rumore e luminosita' del cielo di piu' filtri dicono "per filtro": ogni filtro ha la sua scala (tavola v76, MisureFrame 236) | `test_background_and_sky_brightness_compare_per_filter` |
@@ -92,8 +92,9 @@ buio, piene quante le ore di posa: una proporzione, non un orario, e la riga lo 
 dicono nelle quattro classi okta con la media accanto: «Nuvole sparse, in media 8%» (WMO 2700,
 come il Meteo). Lo storico **non ha l'aerosol** (Open-Meteo archive): la Trasparenza resta quella
 delle nuvole e delle ore che bloccano, e accanto alle ore di posa c'e' «senza aerosol». Una notte
-senza buio astronomico si giudica sulle ore col Sole sotto l'orizzonte e lo dice: «N ore visibili
-col Sole sotto l'orizzonte».
+senza buio astronomico si giudica sul buio nautico e lo dice: «N ore visibili col buio nautico»;
+senza nemmeno quello, sulle ore col Sole sotto l'orizzonte: «N ore visibili col Sole sotto
+l'orizzonte» (ADR 0035; Marco, 19/11/2026).
 
 **Quando il cielo non si sa, si dice perche'.** *Meteo in arrivo*: una notte giovane dice il
 giorno in cui il meteo arriva (l'archivio e' definitivo dopo 5 giorni). *Senza meteo*: e' ora,

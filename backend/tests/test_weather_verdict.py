@@ -5,8 +5,10 @@ qualcuno sposta un numero, cade la prova che dice da dove veniva.
 """
 
 import dataclasses
+from datetime import UTC, datetime
 
-from astrolog.weather import score, verdict
+from astrolog.ephemeris.sun import Sky
+from astrolog.weather import nights, score, verdict
 
 
 def ora(at, sky="dark", **campi):
@@ -64,6 +66,38 @@ def test_without_dark_the_night_is_the_hours_with_the_sun_down():
     detto = score.assess(ore)
     assert detto.window == "sun_down"
     assert detto.verdict == "nogo"
+
+
+def test_without_astronomical_dark_the_night_is_the_nautical_dark():
+    """Sole sotto -12 ma mai sotto -18 (giugno a 50 gradi): si giudica il buio nautico, detto, e
+    non le ore del crepuscolo civile o nautico chiaro (ADR 0035; Marco, 19/11/2026)."""
+    ore = [ora("2026-06-21T22:00:00+02:00", sky="nautical", cloud_total_pct=0.0)]
+    ore.append(ora("2026-06-21T23:00:00+02:00", sky="astronomical", cloud_total_pct=80.0))
+    ore.append(ora("2026-06-21T12:00:00+02:00", sky="day", cloud_total_pct=0.0))
+    detto = score.assess(ore)
+    assert (detto.window, detto.window_hours, detto.verdict) == ("nautical", 1, "nogo")
+
+
+def test_the_nautical_dark_shares_of_a_june_night_at_fifty_degrees():
+    """Francoforte, 21/6/2027 all'una: il Sole sta fra -12 e -18 tutta l'ora."""
+    notte = [("2027-06-20", [(0, datetime(2027, 6, 20, 23, tzinfo=UTC))])]
+    cielo = nights.sky(50.11, 8.68, notte)[datetime(2027, 6, 20, 23, tzinfo=UTC)]
+    assert (cielo.dark, cielo.nautical, cielo.down) == (0.0, 1.0, 1.0)
+
+
+def test_the_nautical_share_goes_into_the_written_hour_and_back():
+    ora_scritta = verdict.Hour(
+        "2026-06-21T23:00:00+02:00",
+        sky=Sky.ASTRONOMICAL,
+        values={},
+        dark=0.0,
+        nautical=0.5,
+        down=1.0,
+    )
+    assert ora_scritta.row()["nautical"] == 0.5
+    assert ora_scritta.nautical_share == 0.5
+    assert verdict.Hour("x", sky=Sky.ASTRONOMICAL, values={}).nautical_share == 1.0
+    assert verdict.Hour("x", sky=Sky.NAUTICAL, values={}).nautical_share == 0.0
 
 
 def test_where_the_sun_never_sets_there_is_no_verdict():

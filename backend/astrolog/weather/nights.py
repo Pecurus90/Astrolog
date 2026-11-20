@@ -9,7 +9,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from ..clock import night_window
-from ..ephemeris import ASTRO_DEG, RISESET_DEG, sun
+from ..ephemeris import ASTRO_DEG, NAUTICAL_DEG, RISESET_DEG, sun
 from .verdict import Hour
 
 # A night's date and its hours as `(index in the series, instant)`.
@@ -39,11 +39,13 @@ def covered(timezone: str, times: Sequence[datetime], first: str, *, whole: bool
 
 @dataclass(frozen=True, slots=True)
 class HourSky:
-    """The band at the hour's instant; the share of the hour in the dark and with the Sun set."""
+    """The band at the hour's instant; the share of the hour in the dark, in the nautical dark
+    (Sun below -12) and with the Sun set."""
 
     band: sun.Sky
     dark: float
     down: float
+    nautical: float
 
 
 def hours(
@@ -60,6 +62,7 @@ def hours(
             values={name: values[i] for name, values in series.items()},
             dark=None if sky is None else sky[instant].dark,
             down=None if sky is None else sky[instant].down,
+            nautical=None if sky is None else sky[instant].nautical,
         )
         for i, instant in pairs
     ]
@@ -88,7 +91,12 @@ def sky(
     bands = sun.sky_at(instants, latitude, longitude)
     if not shares:
         return {
-            t: HourSky(b, float(b == sun.Sky.DARK), float(b != sun.Sky.DAY))
+            t: HourSky(
+                b,
+                float(b == sun.Sky.DARK),
+                float(b != sun.Sky.DAY),
+                float(b in (sun.Sky.ASTRONOMICAL, sun.Sky.DARK)),
+            )
             for t, b in zip(instants, bands, strict=True)
         }
     grid = [t + d for t in instants for d in _OFFSETS]
@@ -99,5 +107,6 @@ def sky(
         mine = alts[i * n : (i + 1) * n]
         dark = sum(a <= ASTRO_DEG for a in mine) / n
         down = sum(a <= RISESET_DEG for a in mine) / n
-        out[t] = HourSky(bands[i], dark, down)
+        nautical = sum(a <= NAUTICAL_DEG for a in mine) / n
+        out[t] = HourSky(bands[i], dark, down, nautical)
     return out

@@ -144,6 +144,11 @@ describe("il Meteo, la notte", () => {
     expect((await scheda()).textContent).toContain("serene col Sole sotto l'orizzonte")
     pulisci()
 
+    conNotti({ ...NOTTE, window: "nautical" })
+    await apriMeteo()
+    expect((await scheda()).textContent).toContain("di buio nautico sereno")
+    pulisci()
+
     conNotti({ ...NOTTE, verdict: null, usable_hours: null, usable_since: null, usable_until: null, window: null, window_hours: 0 })
     await apriMeteo()
     const polo = await scheda()

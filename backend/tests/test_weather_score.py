@@ -12,7 +12,7 @@ import pytest
 from astrolog.weather import score, verdict
 
 
-def ora(at="2026-09-25T22:00:00+02:00", sky="dark", dark=None, down=None, **campi):
+def ora(at="2026-09-25T22:00:00+02:00", sky="dark", dark=None, down=None, nautical=None, **campi):
     riga = {
         "cloud_total_pct": 0.0,
         "precip_mm": 0.0,
@@ -20,7 +20,7 @@ def ora(at="2026-09-25T22:00:00+02:00", sky="dark", dark=None, down=None, **camp
         "wind_gust_kmh": 10.0,
     }
     riga.update(campi)
-    return verdict.Hour(at=at, sky=sky, values=riga, dark=dark, down=down)
+    return verdict.Hour(at=at, sky=sky, values=riga, dark=dark, nautical=nautical, down=down)
 
 
 def notte(*campi):
@@ -160,6 +160,46 @@ def test_without_dark_the_hours_with_the_sun_down_are_judged():
     assert detto.window == "sun_down"
     assert detto.dark_hours == 1.5
     assert detto.exposure_hours == 1.3
+
+
+def test_without_astronomical_dark_the_nautical_dark_is_judged_by_its_minutes():
+    """Il buio nautico prima delle ore col Sole sotto (ADR 0035): ogni ora pesa i suoi minuti
+    col Sole sotto -12; il crepuscolo piu' chiaro resta fuori."""
+    ore = [
+        ora("2026-06-21T22:00:00+02:00", sky="nautical", dark=0.0, nautical=0.0, down=1.0),
+        ora("2026-06-21T23:00:00+02:00", sky="astronomical", dark=0.0, nautical=1.0, down=1.0),
+        ora(
+            "2026-06-22T00:00:00+02:00",
+            sky="astronomical",
+            dark=0.0,
+            nautical=0.5,
+            down=1.0,
+            cloud_total_pct=40.0,
+        ),
+    ]
+    detto = score.assess(ore)
+    assert detto.window == "nautical"
+    assert detto.dark_hours == 1.5
+    assert detto.exposure_hours == 1.3
+
+
+@pytest.mark.parametrize(
+    ("fascia", "gradino", "quota"),
+    [
+        ("nautical", "sun_down", {"dark": 0.0, "nautical": 0.25}),
+        ("astronomical", "nautical", {"dark": 0.25, "nautical": 1.0}),
+    ],
+)
+def test_a_few_minutes_past_a_step_do_not_shrink_the_window(fascia, gradino, quota):
+    """Qualche minuto oltre -12 (o -18) senza la fascia all'istante (Danzica al solstizio):
+    finestra e peso stanno sullo stesso gradino, la posa non scende ai soli minuti di sotto."""
+    ore = [
+        ora("2026-06-21T23:00:00+02:00", sky=fascia, down=1.0, **quota),
+        ora("2026-06-22T00:00:00+02:00", sky=fascia, down=1.0, **quota),
+    ]
+    detto = score.assess(ore)
+    assert (detto.window, detto.window_hours, detto.dark_hours) == (gradino, 2, 2.0)
+    assert detto.exposure_hours == 2.0
 
 
 def test_where_the_sun_never_sets_there_is_no_score():

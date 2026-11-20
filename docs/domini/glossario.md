@@ -193,7 +193,7 @@ backfocus, setup, Deep sky.
 | la parola di una misura in un'ora o nella notte: buona, incerta, non adatta (aerosol: limpido, molto fosco; Luna: banda larga al limite, consigliata banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio (e' `score`), semaforo (che e' il verdetto) |
 | le misure con soglia | `cloud`, `cloud_low`, `rain`, `gust`, `wind`, `condensation`, `jet`, `seeing`, `aerosol`, `moon`, `visibility` | nuvole, nuvole basse, pioggia, raffiche, vento, condensa, jet stream, seeing, aerosol, Luna, visibilita' | umidita' (che e' neutra) |
 | le soglie di ogni misura, dalla peggiore, come le usa il giudizio | `scales`, `steps` | soglie | limiti |
-| su quali ore si giudica una notte: il buio, o dove il buio non arriva l'arco col Sole sotto l'orizzonte | `window` (`dark`, `sun_down`) | le ore di buio / col Sole sotto l'orizzonte | finestra osservativa |
+| su quali ore si giudica una notte: il buio; dove non arriva il buio nautico (Sole sotto -12); senza nemmeno quello l'arco col Sole sotto l'orizzonte | `window` (`dark`, `nautical`, `sun_down`) | le ore di buio / di buio nautico / col Sole sotto l'orizzonte | finestra osservativa |
 | il modello numerico da cui viene la previsione, che l'utente sceglie | `weather_model`, `model` (`best_match`, `ecmwf_ifs025`, `icon_seamless`, `gfs_seamless`) | modello della previsione | fonte, servizio (il servizio e' Open-Meteo) |
 | quando e' arrivata la previsione che si legge | `fetched_at` | Previsione del..., ... | arrivata il... alle..., aggiornata, scaricata |
 | una notte oltre la terza: il verdetto, le nuvole, le ore di buio e l'accordo, detti meno affidabili | `trend` | tendenza | previsione lunga |

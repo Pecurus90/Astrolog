@@ -121,12 +121,12 @@ export function cielo(n: Notte): Cielo {
     : ""
   const posa = unDecimale(m.exposure_hours)
   const buio = numero(Math.round(m.dark_hours))
-  const senzaBuio = m.window === "sun_down"
-  const sotto = senzaBuio
-    ? t("nights.sky.sunDown", { n: buio })
-    : t("nights.sky.exposure", { h: posa, b: buio })
+  // no astronomical dark: the visible hours, of nautical dark or with the Sun down (ADR 0035)
+  const senzaBuio = m.window === "sun_down" || m.window === "nautical"
+  const chiave = m.window === "nautical" ? "nights.sky.nautical" : "nights.sky.sunDown"
+  const sotto = senzaBuio ? t(chiave, { n: buio }) : t("nights.sky.exposure", { h: posa, b: buio })
   const corto = senzaBuio
-    ? t("nights.sky.sunDown.short", { n: buio })
+    ? t(`${chiave}.short`, { n: buio })
     : t("nights.sky.exposure.short", { h: posa, b: buio })
   return {
     esito: e,
