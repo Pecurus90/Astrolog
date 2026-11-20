@@ -68,14 +68,38 @@ def _moon_by_hour(site: Site, instants: Sequence[str], floor_deg: float) -> dict
     }
 
 
-def _moon_night(site: Site, summary: verdict.Summary) -> dict[str, Any]:
+def _moon_nights(site: Site, summaries: Sequence[verdict.Summary]) -> list[dict[str, Any]]:
+    """Each summary's Moon; the models of a night share its drawn hours, so each window is
+    sampled once, all in one ephemeris call."""
+    windows = sorted(
+        {
+            (s.shown_from, s.shown_until)
+            for s in summaries
+            if s.shown_from is not None and s.shown_until is not None
+        }
+    )
+    starts = [datetime.fromisoformat(a) for a, _ in windows]
+    hours = [
+        (datetime.fromisoformat(b) - start).total_seconds() / 3600
+        for start, (_, b) in zip(starts, windows, strict=True)
+    ]
+    tracks = (
+        moon.night_tracks(list(zip(starts, hours, strict=True)), site.latitude, site.longitude)
+        if windows
+        else []
+    )
+    by_window = dict(zip(windows, tracks, strict=True))
+    return [
+        _moon_night(by_window[s.shown_from, s.shown_until])
+        if s.shown_from is not None and s.shown_until is not None
+        else {"moon_event": None, "moon_event_at": None, "moon_track": []}
+        for s in summaries
+    ]
+
+
+def _moon_night(night: moon.MoonNight) -> dict[str, Any]:
     """The Moon over the drawn hours, every quarter hour, and its first crossing: up at the start
     it sets or stays (`up`), down it rises or stays (`down`)."""
-    if summary.shown_from is None or summary.shown_until is None:
-        return {"moon_event": None, "moon_event_at": None, "moon_track": []}
-    start = datetime.fromisoformat(summary.shown_from)
-    hours = (datetime.fromisoformat(summary.shown_until) - start).total_seconds() / 3600
-    night = moon.night_track(start, site.latitude, site.longitude, hours=hours)
     up = night.grid[0].altitude_deg > RISESET_DEG
     at = night.set if up else night.rise
     track = [
@@ -131,7 +155,8 @@ def _rows(
     site: Site, written: Sequence[_Night], usual: list[float] | None, rule: MoonRule
 ) -> list[tuple[Any, ...]]:
     rows = []
-    for w in written:
+    moons = _moon_nights(site, [w.summary for w in written])
+    for w, moon_night in zip(written, moons, strict=True):
         said = [x.summary.verdict for x in written if x.night == w.night]
         wind = w.summary.wind_700hpa_kmh
         summary = {
@@ -146,7 +171,7 @@ def _rows(
                 1 for h in w.hours if h.sky == Sky.DARK and h.values.get("moon_pct") is None
             ),
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary, rule)],
-            **_moon_night(site, w.summary),
+            **moon_night,
         }
         rows.append(
             (

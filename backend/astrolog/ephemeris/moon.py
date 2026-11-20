@@ -162,9 +162,24 @@ def sky_ceiling(latitude: float) -> int:
 
 
 def night_track(start: dt.datetime, latitude: float, longitude: float, hours: float) -> MoonNight:
-    """From one sampling, the only costly thing here."""
-    instants, alts = bodies.sampled_night("moon", start, latitude, longitude, hours)
+    return night_tracks([(start, hours)], latitude, longitude)[0]
 
+
+def night_tracks(
+    windows: Sequence[tuple[dt.datetime, float]], latitude: float, longitude: float
+) -> list[MoonNight]:
+    """Each window (start, hours) from one sampling for all: an astropy call costs ~80 ms even
+    on a short grid, so forty nights one by one took seconds (#87)."""
+    grids = [night_grid(start, hours=h, step_min=GRID_STEP_MIN) for start, h in windows]
+    alts = bodies.body_altitudes("moon", [i for g in grids for i in g], latitude, longitude)
+    out, at = [], 0
+    for (start, _), grid in zip(windows, grids, strict=True):
+        out.append(_track(start, grid, alts[at : at + len(grid)]))
+        at += len(grid)
+    return out
+
+
+def _track(start: dt.datetime, instants: list[dt.datetime], alts: list[float]) -> MoonNight:
     # Computed in UTC, answered in the caller's zone, where astimezone knows about DST.
     def local(instant: dt.datetime | None) -> dt.datetime | None:
         return instant.astimezone(start.tzinfo) if instant else None
@@ -342,19 +357,26 @@ def _night_skies(
     longitude: float,
     floor_deg: float,
 ) -> list[tuple[int, int, tuple[dt.datetime, dt.datetime] | None]]:
-    """Dark seconds, moonless dark seconds and the Sun-down span; one ephemeris call per body."""
+    """Dark seconds, moonless dark seconds and the Sun-down span; one ephemeris call per body.
+    The Moon only on dark samples: it costs three times the Sun per sample (#87)."""
     grids = [night_grid(start, hours=h, step_min=CALENDAR_STEP_MIN) for _, start, h in nights]
     everything = [i for g in grids for i in g]
     if not everything:
         return [(0, 0, None) for _ in nights]
     suns = bodies.body_altitudes("sun", everything, latitude, longitude)
-    moons = bodies.body_altitudes("moon", everything, latitude, longitude)
-    step_s = CALENDAR_STEP_MIN * 60
-    out, at = [], 0
+    darks, at = [], 0
     for grid in grids:
         span = range(at, at + len(grid) - 1)  # the last sample closes the window
-        dark = [k for k in span if suns[k] < ASTRO_DEG]
-        moonless = sum(1 for k in dark if moons[k] < floor_deg) * step_s
+        darks.append([k for k in span if suns[k] < ASTRO_DEG])
+        at += len(grid)
+    dark_instants = [everything[k] for dark in darks for k in dark]
+    moons = iter(
+        bodies.body_altitudes("moon", dark_instants, latitude, longitude) if dark_instants else []
+    )
+    step_s = CALENDAR_STEP_MIN * 60
+    out, at = [], 0
+    for grid, dark in zip(grids, darks, strict=True):
+        moonless = sum(1 for _ in dark if next(moons) < floor_deg) * step_s
         out.append((len(dark) * step_s, moonless, _sun_down(grid, suns[at : at + len(grid)])))
         at += len(grid)
     return out
