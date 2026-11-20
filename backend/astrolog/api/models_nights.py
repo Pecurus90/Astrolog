@@ -39,7 +39,7 @@ class FilterUsed(BaseModel):
 
 
 class MoonThatNight(BaseModel):
-    """Which moon there was: the phase and how lit it was. **Computed**, not stored."""
+    """Which moon there was: the phase and how lit it was, as `night_moons` wrote it."""
 
     # The same phases and bound as tonight's route: it is the same Moon, and two OpenAPI shapes
     # for one fact would be two contracts to keep in agreement.

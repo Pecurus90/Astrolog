@@ -1446,7 +1446,7 @@ export interface paths {
          *     its good one; 422 `wrong_type` if a value has the wrong type or is not one of the key's
          *     allowed choices; 422 `solver_set_by_admin` for `astap_path` on a NAS (a data root), where only
          *     `ASTROLOG_ASTAP` picks the solver (#95). A change of the Moon rule rewrites at once what it
-         *     judged.
+         *     judged; the dark of the archive nights follows behind (ADR 0047).
          */
         patch: operations["write_settings"];
         trace?: never;
@@ -3981,7 +3981,7 @@ export interface components {
         };
         /**
          * MoonThatNight
-         * @description Which moon there was: the phase and how lit it was. **Computed**, not stored.
+         * @description Which moon there was: the phase and how lit it was, as `night_moons` wrote it.
          */
         MoonThatNight: {
             /**

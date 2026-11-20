@@ -52,6 +52,8 @@ PAGE_ROUTES = [
     "/api/v1/weather",
     "/api/v1/nights?limit=20&offset=0",
     "/api/v1/nights?limit=7",
+    # non la chiede una pagina: e' l'elenco piu' lungo che l'API da', e Notti la Luna la legge
+    "/api/v1/nights?limit=500",
     "/api/v1/nights/calendar?month={month}",
     "/api/v1/nights/{night}",
     "/api/v1/nights/{night}/measures",

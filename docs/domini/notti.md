@@ -101,11 +101,12 @@ giorno in cui il meteo arriva (l'archivio e' definitivo dopo 5 giorni). *Senza m
 ma il servizio non ha ancora risposto. *Non disponibile*: il sito non ha un fuso riconosciuto, e
 la carta porta a «Modifica sito». Nei criteri, *senza meteo* raccoglie le tre.
 
-**La Luna di una notte passata si calcola, non si conserva** -- ed e' l'eccezione dichiarata a
-*"una lettura non calcola mai"* (Marco, 23/9/2026): e' astronomia pura, e non dipende da niente
-che l'utente abbia scritto. Si chiede **in un colpo per l'intera pagina**
-(`test_asking_the_phases_together_is_worth_it`, `test_the_moon_of_a_whole_page_costs_one_call`),
-alla **mezzanotte della notte nel fuso del sito** (`clock.midnight_of`, il perche' in
+**La Luna di una notte passata la scrive chi scrive** (ADR 0047, che supera l'eccezione del
+23/9/2026): `night_moons`, una riga per notte con la versione della formula, scritta a fine
+`group`, quando cambiano siti o regola della Luna, e all'avvio per una formula vecchia. Si chiede
+**in un colpo per tutte le notti da scrivere** (`test_asking_the_phases_together_is_worth_it`,
+`test_reading_the_nights_asks_the_sky_nothing_and_writing_them_asks_once`), alla **mezzanotte
+della notte nel fuso del sito** (`clock.midnight_of`, il perche' in
 [`effemeridi.md`](effemeridi.md)); senza fuso riconoscibile la riga **tace**. Il disco ha il lato
 illuminato che manda l'app, giusto anche a sud.
 

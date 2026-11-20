@@ -1,34 +1,34 @@
 {
  "/api/v1/settings": {
-  "misura_ms": 2.2,
-  "soglia_ms": 100
- },
- "/api/v1/backup": {
-  "misura_ms": 0.8,
-  "soglia_ms": 100
- },
- "/api/v1/review": {
-  "misura_ms": 30.4,
-  "soglia_ms": 122
- },
- "/api/v1/pipeline/status": {
   "misura_ms": 2.3,
   "soglia_ms": 100
  },
+ "/api/v1/backup": {
+  "misura_ms": 0.7,
+  "soglia_ms": 100
+ },
+ "/api/v1/review": {
+  "misura_ms": 31.1,
+  "soglia_ms": 125
+ },
+ "/api/v1/pipeline/status": {
+  "misura_ms": 2.5,
+  "soglia_ms": 100
+ },
  "/api/v1/tonight": {
-  "misura_ms": 3.2,
+  "misura_ms": 3.5,
   "soglia_ms": 100
  },
  "/api/v1/nights?limit=1": {
-  "misura_ms": 44.2,
-  "soglia_ms": 177
+  "misura_ms": 37.0,
+  "soglia_ms": 148
  },
  "/api/v1/folders": {
-  "misura_ms": 3.4,
+  "misura_ms": 3.6,
   "soglia_ms": 100
  },
  "/api/v1/moon/calendar": {
-  "misura_ms": 2.1,
+  "misura_ms": 2.3,
   "soglia_ms": 100
  },
  "/api/v1/year": {
@@ -36,71 +36,75 @@
   "soglia_ms": 100
  },
  "/api/v1/weather": {
-  "misura_ms": 2.4,
+  "misura_ms": 2.6,
   "soglia_ms": 100
  },
  "/api/v1/nights?limit=20&offset=0": {
-  "misura_ms": 89.4,
-  "soglia_ms": 358
+  "misura_ms": 38.7,
+  "soglia_ms": 155
  },
  "/api/v1/nights?limit=7": {
-  "misura_ms": 62.4,
-  "soglia_ms": 250
+  "misura_ms": 37.4,
+  "soglia_ms": 150
+ },
+ "/api/v1/nights?limit=500": {
+  "misura_ms": 81.1,
+  "soglia_ms": 325
  },
  "/api/v1/nights/calendar?month={month}": {
-  "misura_ms": 2.8,
+  "misura_ms": 2.9,
   "soglia_ms": 100
  },
  "/api/v1/nights/{night}": {
-  "misura_ms": 9.7,
+  "misura_ms": 3.2,
   "soglia_ms": 100
  },
  "/api/v1/nights/{night}/measures": {
-  "misura_ms": 4.6,
+  "misura_ms": 4.8,
   "soglia_ms": 100
  },
  "/api/v1/archive?limit=20&offset=0&sort=name": {
-  "misura_ms": 66.0,
-  "soglia_ms": 264
+  "misura_ms": 68.6,
+  "soglia_ms": 275
  },
  "/api/v1/objects/{key}": {
-  "misura_ms": 69.4,
-  "soglia_ms": 278
+  "misura_ms": 7.3,
+  "soglia_ms": 100
  },
  "/api/v1/objects/{key}/measures": {
-  "misura_ms": 91.7,
-  "soglia_ms": 367
+  "misura_ms": 101.2,
+  "soglia_ms": 405
  },
  "/api/v1/gear": {
-  "misura_ms": 5.0,
+  "misura_ms": 5.4,
   "soglia_ms": 100
  },
  "/api/v1/vocab/filter-models": {
-  "misura_ms": 0.8,
+  "misura_ms": 0.9,
   "soglia_ms": 100
  },
  "/api/v1/review/objects/settled?limit=5&offset=0": {
-  "misura_ms": 12.1,
+  "misura_ms": 12.5,
   "soglia_ms": 100
  },
  "/api/v1/sites": {
-  "misura_ms": 2.2,
+  "misura_ms": 2.4,
   "soglia_ms": 100
  },
  "/api/v1/scans?limit=20&offset=0": {
-  "misura_ms": 2.2,
+  "misura_ms": 2.5,
   "soglia_ms": 100
  },
  "/api/v1/solver": {
-  "misura_ms": 2.0,
+  "misura_ms": 2.2,
   "soglia_ms": 100
  },
  "/api/v1/folders/path-info": {
-  "misura_ms": 0.6,
+  "misura_ms": 0.7,
   "soglia_ms": 100
  },
  "/api/v1/search?q=M": {
-  "misura_ms": 39.9,
-  "soglia_ms": 160
+  "misura_ms": 41.0,
+  "soglia_ms": 164
  }
 }

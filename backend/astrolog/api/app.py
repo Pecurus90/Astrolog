@@ -27,7 +27,7 @@ from ..db.connect import connect, ensure_database
 from ..db.paths import data_root as env_data_root
 from ..db.transaction import transaction
 from ..site_of import Site, home_site
-from ..spine import gear_usage, moon_calendar, object_candidates, stages
+from ..spine import gear_usage, moon_calendar, night_moons, object_candidates, stages
 from ..spine.stages import StageName
 from ..startup import LOCAL_HOSTS
 from ..weather import climate, forecast, history, rounds
@@ -141,6 +141,10 @@ def _tonight_at_start(db_path: str | Path) -> None:
     conn = connect(db_path)
     try:
         _tonight_step(conn, home_site(conn))
+        try:
+            night_moons.refresh(conn)  # rows of an older formula: once, at the first start
+        except Exception:
+            log.exception("notti: la Luna delle notti non riscritta all'avvio")
     finally:
         conn.close()
 

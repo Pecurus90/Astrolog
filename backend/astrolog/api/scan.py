@@ -13,7 +13,7 @@ from ..clock import elapsed_s, now_iso
 from ..db.connect import connect
 from ..db.paths import cache_dir
 from ..pipeline.behind import Behind
-from ..spine import backup
+from ..spine import backup, night_moons
 from ..spine.run import ORDER, queue, queue_folders
 from ..spine.scan import root_readable
 from ..spine.scan_store import (
@@ -151,7 +151,7 @@ def _stages_with_cleanup(
 def behind(db_path: str | Path) -> Behind:
     """The new pipeline behind the app's scans, on its own thread, never shown: it learns on the
     real archive until the pages are ported (ADR 0030); the app's Stop kills its ASTAP."""
-    return Behind(db_path, cache_dir() / "astap", solver_path)
+    return Behind(db_path, cache_dir() / "astap", solver_path, night_moons.refresh)
 
 
 def sky_follows(request: Request) -> None:

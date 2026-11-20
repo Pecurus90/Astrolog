@@ -724,6 +724,28 @@ CREATE TABLE nights (
 -- L'ordine della pagina delle Notti: senza, conta tutte le notti e le ordina prima del `LIMIT`.
 CREATE INDEX nights_date ON nights (night_date DESC, id DESC);
 
+-- La Luna e il buio di ogni notte dell'archivio, pronti per Notti (DERIVATO: li scrive
+-- `spine/night_moons.py` a fine `group`, dalla porta del cielo che segue siti, backup e regola
+-- della Luna, e all'avvio per le righe di una formula vecchia). Chi legge non calcola: a ogni GET
+-- costavano ~7 ms a notte. La Luna e' quella della mezzanotte nel fuso del sito, non del calendario.
+CREATE TABLE night_moons (
+  night_id         INTEGER PRIMARY KEY REFERENCES nights (id) ON DELETE CASCADE,
+  version          INTEGER NOT NULL,               -- la versione del calcolo: un'altra la riscrive
+  -- come e' stata calcolata: un sito spostato o una regola cambiata la rifanno
+  night_date       TEXT NOT NULL,
+  latitude         REAL NOT NULL,
+  longitude        REAL NOT NULL,
+  timezone         TEXT,
+  floor_deg        REAL NOT NULL,                  -- l'altezza della Luna della regola (Impostazioni)
+  -- NULL senza fuso valido o fuori dalla DE421 (ADR 0046): la notte tace sulla Luna
+  phase_key        TEXT,
+  illumination_pct INTEGER,
+  dark_s           INTEGER,                        -- buio astronomico della notte
+  moonless_dark_s  INTEGER,                        -- di quel buio, con la Luna sotto `floor_deg`
+  CHECK ((phase_key IS NULL) = (illumination_pct IS NULL)),
+  CHECK ((dark_s IS NULL) = (moonless_dark_s IS NULL))
+) STRICT;
+
 -- Una sessione: oggetto x notte x corredo.
 CREATE TABLE sessions (
   id        INTEGER PRIMARY KEY,

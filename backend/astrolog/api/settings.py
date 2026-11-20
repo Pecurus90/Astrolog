@@ -36,6 +36,7 @@ from .models_site import (
     SolverSource,
     ThemeNowOut,
 )
+from .scan import sky_follows
 
 router = APIRouter(prefix="/api/v1", tags=["settings"])
 
@@ -120,7 +121,7 @@ def write_settings(
     its good one; 422 `wrong_type` if a value has the wrong type or is not one of the key's
     allowed choices; 422 `solver_set_by_admin` for `astap_path` on a NAS (a data root), where only
     `ASTROLOG_ASTAP` picks the solver (#95). A change of the Moon rule rewrites at once what it
-    judged."""
+    judged; the dark of the archive nights follows behind (ADR 0047)."""
     unknown = sorted(k for k in body.values if k not in config.KEYS)
     if unknown:
         raise HTTPException(status_code=422, detail={"code": "unknown_setting", "keys": unknown})
@@ -146,6 +147,8 @@ def write_settings(
                 _moon_rule_changed(conn)
     except ValueError as err:
         raise HTTPException(status_code=422, detail={"code": "wrong_type"}) from err
+    if config.MOON_KEYS & body.values.keys():
+        sky_follows(request)  # the floor moves every night's dark without the Moon: behind
     return _out(conn)
 
 

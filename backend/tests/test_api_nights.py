@@ -15,7 +15,7 @@ from astrolog.api.app import create_app
 from astrolog.clock import midnight_of
 from astrolog.db.connect import connect
 from astrolog.ephemeris import moon
-from astrolog.spine import nights
+from astrolog.spine import night_moons, nights
 from conftest import db
 from group_bench import ROMA, corri, filtro, luogo, posa, prepara
 
@@ -295,9 +295,9 @@ def test_a_night_says_which_moon_there_was(archivio):
     nottata, e una piena cambia cosa si e' potuto riprendere.
 
     Si chiede alla **mezzanotte** della notte, nel fuso del sito: la Luna cambia mentre la notte
-    passa, e un istante va scelto. Il numero non si conserva -- si ricalcola -- quindi qui si
-    guarda che sia quello che le effemeridi dicono per quell'istante, non un valore atteso
-    scritto a mano."""
+    passa, e un istante va scelto. Il numero lo scrive `night_moons` (ADR 0047): qui si guarda
+    che sia quello che le effemeridi dicono per quell'istante, non un valore atteso scritto a
+    mano."""
     prima = notti(archivio)["items"][0]
 
     fase = moon.phase(midnight_of(prima["night_date"], "Europe/Rome"))
@@ -310,6 +310,7 @@ def test_a_night_whose_site_has_no_timezone_says_nothing_about_the_moon(archivio
     prendersi quella di Greenwich, che sarebbe il cielo di un altro posto."""
     with db(archivio) as conn:
         conn.execute("UPDATE sites SET timezone = 'Nowhere/Nohow'")
+        night_moons.refresh(conn)  # il fuso cambiato rende vecchia la riga: chi scrive la rifa'
         conn.commit()
 
     assert all(n["moon"] is None for n in notti(archivio)["items"])
@@ -318,20 +319,19 @@ def test_a_night_whose_site_has_no_timezone_says_nothing_about_the_moon(archivio
 def test_a_night_outside_the_ephemeris_says_nothing_about_the_moon():
     """Una notte del 2099 (un orologio sbagliato nell'header) e' fuori dalla DE421: tace sulla
     Luna come senza fuso, e le altre notti della pagina la tengono (ADR 0046)."""
-    from astrolog.spine.nights import _moons
 
     def notte(i, data):
-        return {"id": i, "night_date": data, "timezone": "Europe/Rome", "latitude": 45.5}
+        return night_moons._Night(i, data, "Europe/Rome", 45.5, 11.5)
 
-    assert list(_moons([notte(1, "2099-01-01"), notte(2, "2027-03-14")])) == [2]
+    assert list(night_moons._phases([notte(1, "2099-01-01"), notte(2, "2027-03-14")])) == [2]
 
 
-def test_the_moon_of_a_whole_page_costs_one_call(archivio):
-    """Una pagina di cento notti chiede al cielo **una volta**, non cento.
+def test_reading_the_nights_asks_the_sky_nothing_and_writing_them_asks_once(archivio):
+    """Notti legge cio' che `night_moons` ha scritto: nessuna chiamata al cielo in lettura. Chi
+    scrive chiede **una volta** per tutte le notti, non una a notte.
 
     La guardia e' sul numero di chiamate, non sul tempo: un tempo dipende dalla macchina, il
-    conto delle chiamate no -- ed e' quello che cambia se un domani la fase si chiede dentro il
-    giro delle righe."""
+    conto delle chiamate no."""
     quante = []
     vero = moon.phases
 
@@ -347,25 +347,52 @@ def test_the_moon_of_a_whole_page_costs_one_call(archivio):
 
     with mock.patch.object(moon, "phases", contando):
         pagina = notti(archivio)
-
     assert len(pagina["items"]) > 10, "servono abbastanza notti perche' la domanda abbia senso"
+    assert quante == [], "in lettura nessuna chiamata"
+
+    with db(archivio) as conn, mock.patch.object(moon, "phases", contando):
+        conn.execute("UPDATE night_moons SET version = 0")
+        night_moons.refresh(conn)
     assert quante == [len(pagina["items"])], "una chiamata sola, con dentro tutte le notti"
 
 
 def test_a_night_never_gets_another_nights_moon(archivio):
     """Le lune tornano **in fila** con le notti che le hanno chieste: se il cielo ne rendesse una
     di meno, accoppiarle a scorrimento darebbe a ogni notte la luna di un'altra -- un dato
-    plausibile e sbagliato, che a schermo nessuno puo' smentire. Meglio non rispondere affatto.
+    plausibile e sbagliato, che a schermo nessuno puo' smentire. Meglio non scriverle affatto.
 
     Si forza, perche' oggi non puo' succedere: e' l'unico modo di vedere questa guardia rossa."""
     vero = moon.phases
 
     # si ferma: meglio un guasto dichiarato di una luna attribuita alla notte sbagliata
     with (
+        db(archivio) as conn,
         mock.patch.object(moon, "phases", lambda istanti: vero(istanti)[:-1]),
         pytest.raises(ValueError, match="zip"),
     ):
-        archivio.get("/api/v1/nights")
+        conn.execute("UPDATE night_moons SET version = 0")
+        night_moons.refresh(conn)
+
+
+def test_a_new_formula_rewrites_every_night_and_an_unchanged_one_writes_none(archivio):
+    """La versione della formula sta nella riga: alzarla riscrive tutte le notti all'avvio, e
+    a formula ferma chi scrive non tocca niente (una query sola)."""
+    with db(archivio) as conn:
+        prima = notti(archivio)["items"]
+        assert night_moons.refresh(conn) == 0
+        conn.execute("UPDATE night_moons SET version = version - 1, illumination_pct = 0")
+        conn.commit()
+        assert night_moons.refresh(conn) == len(prima)
+        conn.commit()
+    assert notti(archivio)["items"] == prima
+
+
+def test_a_moved_moon_floor_rewrites_the_dark_of_every_night(archivio):
+    """La soglia d'altezza della regola sposta il buio senza Luna: le righe scritte con
+    un'altra soglia sono vecchie."""
+    with db(archivio) as conn:
+        conn.execute("UPDATE night_moons SET floor_deg = floor_deg + 10")
+        assert night_moons.refresh(conn) == len(notti(archivio)["items"])
 
 
 def test_the_nights_list_is_paged_like_every_other(archivio):
@@ -393,3 +420,27 @@ def test_a_night_that_does_not_exist_is_an_empty_list_not_an_error(archivio):
     """Un indirizzo vecchio, di una notte che non c'e' piu': nessuna riga, e la pagina lo dice."""
     vuota = notti(archivio, night=999_999)
     assert (vuota["items"], vuota["total"]) == ([], 0)
+
+
+def test_a_changed_moon_rule_asks_the_nights_sky_again_behind(archivio, monkeypatch):
+    """La soglia della regola sposta il buio senza Luna di ogni notte: lo riscrive Behind, dalla
+    porta del cielo che segue, non la richiesta (500 notti sono secondi su un NAS)."""
+    chiesti = []
+    monkeypatch.setattr(archivio.app.state.behind, "refresh_sky", lambda: chiesti.append(1))
+    r = archivio.patch("/api/v1/settings", json={"values": {"moon_above_deg": 10}})
+    assert r.status_code == 200, r.text
+    assert chiesti == [1]
+    archivio.patch("/api/v1/settings", json={"values": {"theme_mode": "scuro"}})
+    assert chiesti == [1], "una chiave che non e' della Luna non chiede niente"
+
+
+def test_the_start_rewrites_the_nights_of_an_older_formula(archivio):
+    """Un'app aggiornata con una formula nuova: le notti si riscrivono all'avvio, una volta."""
+    with db(archivio) as conn:
+        conn.execute("UPDATE night_moons SET version = 0")
+        conn.commit()
+    with TestClient(create_app(archivio.app.state.db_path), base_url="http://localhost"):
+        pass
+    with db(archivio) as conn:
+        formule = {r[0] for r in conn.execute("SELECT version FROM night_moons")}
+    assert formule == {night_moons.VERSION}

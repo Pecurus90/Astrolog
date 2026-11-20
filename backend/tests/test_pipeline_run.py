@@ -89,6 +89,29 @@ def test_the_sky_of_the_sites_is_written_again_behind_even_after_a_stop(
     assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 0
 
 
+def test_what_follows_the_sites_runs_after_their_sky_and_a_failure_is_only_logged(
+    db_path, tmp_path, monkeypatch, caplog
+):
+    """`follow` e' dell'app (la Luna delle notti): dopo il cielo dei siti, sia da solo sia a fine
+    giro di cartelle; se cade, Behind lo scrive nel log e va avanti."""
+    monkeypatch.setattr(run_module, "rebuild", lambda conn_, now: None)
+    followed = []
+    behind = Behind(db_path, tmp_path / "work", lambda conn: None, followed.append)
+    behind.refresh_sky()
+    behind.join(10.0)
+    behind.kick([str(tmp_path / "none")])
+    behind.join(10.0)
+    assert len(followed) == 2
+
+    def broken(conn_):
+        raise RuntimeError("x")
+
+    behind = Behind(db_path, tmp_path / "work", lambda conn: None, broken)
+    behind.refresh_sky()
+    behind.join(10.0)
+    assert "cio' che segue i siti non riscritto" in caplog.text
+
+
 def test_a_stopped_behind_starts_again_at_the_next_kick(conn, db_path, tmp_path):
     nina_light(tmp_path / "a" / "x.fits", 1)
     behind = _behind(db_path, tmp_path)

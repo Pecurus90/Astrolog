@@ -9,18 +9,23 @@ from pathlib import Path
 
 from ..clock import now_iso
 from ..db.connect import connect
+from ..db.transaction import transaction
 
 log = logging.getLogger(__name__)
 
 type Exe = Callable[[sqlite3.Connection], str | None]
+type Follow = Callable[[sqlite3.Connection], object]
 
 
 class Behind:
     """The new pipeline's own thread, one only, never the user's worker: nothing on screen waits
     on it. Folders kicked while it runs wait their turn; a stop kills its ASTAP, a kick goes on."""
 
-    def __init__(self, db_path: str | Path, work: Path, exe: Exe) -> None:
-        self._db_path, self._work, self._exe = db_path, work, exe
+    # `follow`: what the app derives from sites, given by the app, run after the sites' sky
+    def __init__(
+        self, db_path: str | Path, work: Path, exe: Exe, follow: Follow | None = None
+    ) -> None:
+        self._db_path, self._work, self._exe, self._follow = db_path, work, exe, follow
         self._lock = threading.Lock()
         self._pending: list[str] = []
         self._sky = False  # the site's sky asked again
@@ -88,6 +93,7 @@ class Behind:
         try:
             for _ in run.run_roots(conn, paths, now_iso(), self._exe(conn), (self._work, stop)):
                 pass
+            self._followed(conn)  # a sky asked with the folders was taken by this round
         finally:
             conn.close()
 
@@ -97,5 +103,15 @@ class Behind:
         conn = connect(self._db_path, check_same_thread=False)
         try:
             run.sky_of_sites(conn, now_iso())
+            self._followed(conn)
         finally:
             conn.close()
+
+    def _followed(self, conn: sqlite3.Connection) -> None:
+        if self._follow is None:
+            return
+        try:
+            with transaction(conn):
+                self._follow(conn)
+        except Exception:  # behind the scenes, as the sites' sky
+            log.warning("pipeline nuova: cio' che segue i siti non riscritto", exc_info=True)

@@ -176,12 +176,14 @@ def test_the_archive_is_asked_for_the_same_hours_as_the_forecast_without_the_win
 def test_the_nights_page_reads_the_weather_of_each_night_as_written(db):
     """Chi legge non ricalcola: `ok` col riassunto scritto, `waiting` finche' non c'e', `unknown`
     senza fuso."""
+    from astrolog.spine import night_moons
     from astrolog.spine import nights as notti
 
     notte(db, "2026-03-10")
     notte(db, "2026-09-22")
     notte(db, "2026-03-11", sito=2)
     history.step(db, fetch=Finto(archivio()), now=ADESSO)
+    night_moons.refresh(db)  # notti scritte a mano: la loro Luna la scrive chi scrive, come group
     per_data = {
         r["night_date"]: r["weather"]
         for r in notti.page(

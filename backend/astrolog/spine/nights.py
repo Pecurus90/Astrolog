@@ -4,14 +4,13 @@ objects and filters inside, or the hours would split and two rows look like dupl
 import json
 import sqlite3
 from collections.abc import Callable, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from ..clock import midnight_of, night_window
 from ..db import idlist
 from ..db.night_weather import OF_THE_NIGHT
-from ..ephemeris import bodies, moon
+from ..ephemeris import moon
 from ..levels import MoonRule
 from . import counts, filters_used, stages
 from . import objects as obj
@@ -60,10 +59,12 @@ _PAGE = f"""
 SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, s.latitude, s.longitude,
        EXISTS (SELECT 1 FROM frames f WHERE f.night_id = n.id AND f.site_lat IS NOT NULL)
          AS from_frames,
-       w.summary_json AS weather,
+       w.summary_json AS weather, m.phase_key, m.illumination_pct, m.dark_s, m.moonless_dark_s,
+       m.latitude AS moon_latitude,
        {counts.counts_on(counts.Subject.NIGHT)}
 FROM nights n JOIN sites s ON s.id = n.site_id
 LEFT JOIN weather_nights w ON {OF_THE_NIGHT}
+LEFT JOIN night_moons m ON m.night_id = n.id
 WHERE n.id IN {{listed}}
 ORDER BY n.night_date DESC, n.id DESC
 """  # noqa: S608 - constant fragments of the spine, `listed` a placeholder
@@ -98,16 +99,18 @@ GROUP BY s.reason ORDER BY frames DESC, s.reason
 
 
 def _moons(rows: Sequence[sqlite3.Row]) -> dict[int, dict[str, Any]]:
-    """One call to the sky, at midnight in the site's zone; a night without a known zone is left
-    out. Not stored: a derivable number frozen in a column would outlive a corrected formula."""
-    when = {r["id"]: midnight_of(r["night_date"], r["timezone"]) for r in rows}
-    # outside DE421 (a header's wrong clock) there is no Moon, as without a zone
-    known = {i: q for i, q in when.items() if q is not None and bodies.covers(q)}
-    latitude = {r["id"]: r["latitude"] for r in rows}
-    return {
-        i: {**asdict(p), "lit_side": moon.lit_side(p.phase_key, latitude[i])}
-        for i, p in zip(known, moon.phases(list(known.values())), strict=True)
-    }
+    """As `night_moons` wrote it (with its formula's version); a night without a zone, or
+    outside DE421, is left out."""
+    out = {}
+    for r in rows:
+        if r["phase_key"] is not None:
+            phase = moon.MoonPhase(r["phase_key"])
+            out[r["id"]] = {
+                "phase_key": phase,
+                "illumination_pct": r["illumination_pct"],
+                "lit_side": moon.lit_side(phase, r["moon_latitude"]),  # the row's place, all one
+            }
+    return out
 
 
 # Under this a bar would vanish and read as "no time"; the floor is for time, never for none. [T]
@@ -127,26 +130,20 @@ def _shooting(
     rows: Sequence[sqlite3.Row], moons: dict[int, dict[str, Any]], rule: MoonRule
 ) -> dict[int, dict[str, Any]]:
     """Broadband dark the Moon left: all under the rule's good bound, else the dark with the Moon
-    under its floor. Computed like the Moon, one call per site; none without Moon or dark."""
-    by_site: dict[tuple[float, float], list[sqlite3.Row]] = {}
-    for r in rows:
-        if r["id"] in moons:
-            by_site.setdefault((r["latitude"], r["longitude"]), []).append(r)
+    under its floor (`night_moons`); none without Moon or dark."""
     out = {}
-    for (lat, lon), mine in by_site.items():
-        windows = [(r["night_date"], *night_window(r["night_date"], r["timezone"])) for r in mine]
-        darks = moon.dark_seconds(windows, lat, lon, rule.floor_deg)
-        for r, (dark_s, moonless_s) in zip(mine, darks, strict=True):
-            if not dark_s:
-                continue
-            lit = moons[r["id"]]["illumination_pct"]
-            free = dark_s if lit < rule.good_pct else moonless_s
-            kind = "broadband" if free >= dark_s else "narrowband" if not free else "mixed"
-            out[r["id"]] = {
-                "kind": kind,
-                "broadband_hours": round(free / 3600, 1),
-                "dark_hours": round(dark_s / 3600, 1),
-            }
+    for r in rows:
+        dark_s = r["dark_s"]
+        if r["id"] not in moons or not dark_s:
+            continue
+        lit = moons[r["id"]]["illumination_pct"]
+        free = dark_s if lit < rule.good_pct else r["moonless_dark_s"]
+        kind = "broadband" if free >= dark_s else "narrowband" if not free else "mixed"
+        out[r["id"]] = {
+            "kind": kind,
+            "broadband_hours": round(free / 3600, 1),
+            "dark_hours": round(dark_s / 3600, 1),
+        }
     return out
 
 
