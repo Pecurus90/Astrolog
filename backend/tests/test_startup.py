@@ -8,12 +8,22 @@ solo l'utente. Sono tre regole, e fino al 14/9/2026 erano scritte in un commento
 """
 
 import os
+import subprocess
 import sys
 
 import pytest
 
 import astrolog.__main__ as avvio
 from astrolog.startup import AlreadyRunningError, single_instance, token_for
+
+
+def test_the_app_starts_without_the_measuring_pipeline():
+    """Passo 6.14: la misura (scipy, numba) si carica nel thread che la usa, non all'avvio."""
+    codice = "import sys, astrolog.api.app; print('astrolog.pipeline.measure' in sys.modules)"
+    uscita = subprocess.run(
+        [sys.executable, "-c", codice], capture_output=True, text=True, check=True
+    )
+    assert uscita.stdout.strip() == "False"
 
 
 def test_the_key_is_born_only_for_who_listens_at_home(tmp_path):

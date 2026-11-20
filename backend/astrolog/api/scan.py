@@ -12,7 +12,7 @@ from starlette.datastructures import State
 from ..clock import elapsed_s, now_iso
 from ..db.connect import connect
 from ..db.paths import cache_dir
-from ..pipeline.run import Behind
+from ..pipeline.behind import Behind
 from ..spine import backup
 from ..spine.run import ORDER, queue, queue_folders
 from ..spine.scan import root_readable

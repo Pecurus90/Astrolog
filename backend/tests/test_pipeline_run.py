@@ -5,8 +5,9 @@ import threading
 
 from astrolog import astap
 from astrolog.pipeline import run as run_module
+from astrolog.pipeline.behind import Behind
 from astrolog.pipeline.changes import add_root
-from astrolog.pipeline.run import Behind, run_roots
+from astrolog.pipeline.run import run_roots
 from astrolog.pipeline.scan import busy
 from conftest import NOW, nina_light
 from test_pipeline_solve import _SKY, FakeAstap, _solutions
