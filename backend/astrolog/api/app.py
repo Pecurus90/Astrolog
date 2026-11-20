@@ -288,7 +288,10 @@ def create_app(  # noqa: PLR0913
     )
     # the NAS is often watched from a phone; the stylesheet goes from 57.9 kB to 10.4
     # a JPEG does not shrink: compressing the previews would only spend the NAS's CPU
-    app.add_middleware(GZipMiddleware, exclude_content_types=(*NOT_GZIPPED, "image/jpeg"))
+    app.add_middleware(
+        GZipMiddleware,
+        exclude_content_types=(*NOT_GZIPPED, "image/jpeg", *page.FONT_TYPES.values()),
+    )
 
     @app.middleware("http")
     async def require_token(

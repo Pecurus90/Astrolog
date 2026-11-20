@@ -1,4 +1,7 @@
 /// <reference types="vitest/config" />
+import { readFileSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
+import { brotliCompressSync, gzipSync, constants as zlibConstants } from "node:zlib"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config"
 
@@ -28,8 +31,40 @@ function chiaveNellaPagina() {
   }
 }
 
+// Testo che si comprime; i font woff/woff2 e le immagini sono gia' compressi.
+const DA_COMPRIMERE = /\.(js|css|svg|json|txt|map)$/
+
+/**
+ * Copia .br e .gz accanto a ogni asset di testo, al massimo livello: il backend le serve cosi'
+ * come sono (`astrolog/api/page.py`, `Assets`) invece di ricomprimere a ogni richiesta.
+ * zlib di Node, nessuna dipendenza. Una copia che non pesa meno dell'originale non si scrive.
+ */
+function comprimiNelBuild() {
+  return {
+    name: "astrolog-comprimi-nel-build",
+    apply: "build" as const,
+    writeBundle(opzioni: { dir?: string }, bundle: Record<string, unknown>) {
+      const cartella = opzioni.dir ?? PAGINA_COSTRUITA
+      for (const nome of Object.keys(bundle)) {
+        if (!nome.startsWith("assets/") || !DA_COMPRIMERE.test(nome)) continue
+        const percorso = join(cartella, nome)
+        const dati = readFileSync(percorso)
+        const br = brotliCompressSync(dati, {
+          params: {
+            [zlibConstants.BROTLI_PARAM_QUALITY]: zlibConstants.BROTLI_MAX_QUALITY,
+            [zlibConstants.BROTLI_PARAM_SIZE_HINT]: dati.length,
+          },
+        })
+        const gz = gzipSync(dati, { level: zlibConstants.Z_BEST_COMPRESSION })
+        if (br.length < dati.length) writeFileSync(`${percorso}.br`, br)
+        if (gz.length < dati.length) writeFileSync(`${percorso}.gz`, gz)
+      }
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), chiaveNellaPagina()],
+  plugins: [react(), chiaveNellaPagina(), comprimiNelBuild()],
   build: {
     outDir: PAGINA_COSTRUITA,
     // Ripulisce prima di ricostruire: senza, i file di un build vecchio -- che hanno l'impronta

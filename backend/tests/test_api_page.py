@@ -294,3 +294,93 @@ def test_the_names_in_the_openapi_are_unique(db_path):
         schema = c.get("/openapi.json").json()
     operazioni = [d["operationId"] for p in schema["paths"].values() for d in p.values()]
     assert len(operazioni) == len(set(operazioni)), sorted(operazioni)
+
+
+@pytest.fixture
+def compressa(costruita):
+    """Il build mette accanto a ogni file la sua copia .br e .gz (vite.config.ts): contenuti
+    diversi dall'originale apposta, cosi' si vede quale file e' partito."""
+    js = costruita / "assets" / "app-1a2b3c.js"
+    (js.parent / (js.name + ".br")).write_bytes(b"BROTLI")
+    (js.parent / (js.name + ".gz")).write_bytes(b"GZIP")
+    return costruita
+
+
+@pytest.mark.parametrize(
+    ("accetta", "codifica", "corpo"),
+    [("gzip, deflate, br", "br", b"BROTLI"), ("gzip", "gzip", b"GZIP")],
+)
+def test_an_asset_leaves_already_compressed(db_path, compressa, accetta, codifica, corpo):
+    """Il JS compresso una volta nel build, non a ogni richiesta: GZipMiddleware lo
+    ricomprimeva ogni volta (35 ms contro 5, scansione del 20/11)."""
+    with (
+        _client(db_path, compressa) as c,
+        c.stream("GET", "/assets/app-1a2b3c.js", headers={"Accept-Encoding": accetta}) as r,
+    ):
+        crudo = b"".join(r.iter_raw())  # raw: the client would try to decode the fake bytes
+    assert r.status_code == 200
+    assert r.headers["content-encoding"] == codifica
+    assert r.headers["content-type"] == "text/javascript; charset=utf-8"
+    assert r.headers["vary"] == "Accept-Encoding"
+    assert crudo == corpo
+
+
+def test_without_accept_encoding_the_plain_file_leaves(db_path, compressa):
+    """Chi non dichiara di saper decomprimere riceve il file com'e'."""
+    with _client(db_path, compressa) as c:
+        r = c.get("/assets/app-1a2b3c.js", headers={"Accept-Encoding": "identity"})
+    assert "content-encoding" not in r.headers
+    assert r.headers.get_list("vary") in ([], ["Accept-Encoding"])
+    assert r.content == (compressa / "assets" / "app-1a2b3c.js").read_bytes()
+
+
+@pytest.mark.parametrize(
+    ("intestazione", "prese"),
+    [
+        ("gzip, deflate, br", ["gzip", "deflate", "br"]),
+        ("br;q=0, gzip;q=0.8", ["gzip"]),
+        ("BR ; q=0.000, gzip", ["gzip"]),
+        ("br;Q=0, gzip", ["gzip"]),
+        ("", []),
+    ],
+)
+def test_q_zero_refuses_a_coding(intestazione, prese):
+    """q=0 vuol dire 'non questa' (RFC 9110 12.5.3): un br rifiutato non deve partire."""
+    assert page.accepted(intestazione) == prese
+
+
+def test_a_compressed_copy_keeps_the_static_files_defences(db_path, compressa):
+    """La copia compressa passa dalle stesse difese del file semplice: metodo, byte nullo, 304."""
+    br = {"Accept-Encoding": "br"}
+    with _client(db_path, compressa) as c:
+        assert c.post("/assets/app-1a2b3c.js", headers=br).status_code == 405
+        assert c.get("/assets/app-1a2b3c.js%00", headers=br).status_code == 404
+        etag = c.get("/assets/app-1a2b3c.js", headers=br).headers["etag"]
+        again = c.get("/assets/app-1a2b3c.js", headers={**br, "If-None-Match": etag})
+    assert again.status_code == 304
+
+
+def test_a_font_leaves_as_it_is(db_path, compressa):
+    """woff2 e' gia' compresso dentro: gzip lo faceva piu' grande (10 056 -> 10 079 byte)."""
+    font = compressa / "assets" / "mono-400-abc123.woff2"
+    font.write_bytes(b"wOF2" + bytes(range(256)) * 8)
+    with _client(db_path, compressa) as c:
+        r = c.get(f"/assets/{font.name}", headers={"Accept-Encoding": "gzip, br"})
+    assert r.headers["content-type"] == "font/woff2"
+    assert "content-encoding" not in r.headers
+
+
+@pytest.mark.parametrize("accetta", ["br", "identity"])
+def test_an_asset_is_cached_for_good(db_path, compressa, accetta):
+    """L'impronta nel nome cambia a ogni contenuto nuovo: il browser lo tiene per sempre e
+    non chiede piu' (RFC 9111 max-age, RFC 8246 immutable)."""
+    with _client(db_path, compressa) as c:
+        r = c.get("/assets/app-1a2b3c.js", headers={"Accept-Encoding": accetta})
+    assert r.headers["cache-control"] == page.ASSETS_CACHE
+
+
+def test_the_page_has_no_long_cache(db_path, compressa):
+    """index.html porta la chiave e i nomi degli asset nuovi: mai in cache."""
+    with _client(db_path, compressa) as c:
+        r = c.get("/")
+    assert r.headers["cache-control"] == "no-store"
