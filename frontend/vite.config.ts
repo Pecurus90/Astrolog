@@ -100,6 +100,7 @@ export default defineConfig({
     // direbbe verde su una suite che non ha eseguito.
     include: ["tests/**/*.test.{ts,tsx}"],
     environment: "node",
+    setupFiles: ["tests/pagine-pronte.ts"],
     // Il pavimento della copertura, **bloccante** come quello del backend: fino al 14/9/2026
     // meta' del prodotto era misurata e meta' no, e ogni difetto sfuggito quel giorno stava
     // nella meta' senza pavimento. Il numero e' lo stesso del backend -- una regola sola per

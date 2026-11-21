@@ -23,6 +23,7 @@ import { beforeAll, vi } from "vitest"
 
 import type { components } from "../src/api/schema"
 import { FRESCHI_MS, nuoviDati } from "../src/dati"
+import { pagineArrivate } from "./pagine-pronte"
 
 // Cold transform of the App graph is file setup, not the first test's time (Issue #89).
 // Only under jsdom: the App reads `document` at import.
@@ -296,6 +297,7 @@ export function rispondi(mappa: Record<string, Voce>) {
 export async function disegna() {
   vi.resetModules()
   const { App } = await import("../src/App")
+  await pagineArrivate()
   // `retry: false`: senza, la prova sull'errore aspetterebbe i tentativi di react-query, e il
   // rosso arriverebbe come un timeout invece che come l'asserzione che e' fallita davvero.
   const dati = nuoviDati({ retry: false })

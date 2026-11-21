@@ -11,6 +11,7 @@ import { vi } from "vitest"
 
 import { nuoviDati } from "../src/dati"
 import { chiamate, rispondi, type Voce } from "./banco"
+import { pagineArrivate } from "./pagine-pronte"
 
 export const CIELO = {
   state: "ok",
@@ -218,6 +219,7 @@ export async function apri(mappa: Record<string, Voce>, indirizzo = "/notti") {
   vi.resetModules()
   const { Notti } = await import("../src/Notti")
   const { FinestraDellOggetto } = await import("../src/FinestraDellOggetto")
+  await pagineArrivate()
   const dati = nuoviDati({ retry: false })
   return render(
     <QueryClientProvider client={dati}>
