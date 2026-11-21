@@ -36,7 +36,7 @@ describe("a richiesta", () => {
     // React 19 trattiene 300 ms ogni pagina che compare dopo l'attesa: la suite triplicava
     const pagine = PAGINE.filter((p) => p.elemento !== undefined && !p.sezioni)
     for (const p of pagine) {
-      const tipo = p.elemento?.type as { _payload: { _status: number } }
+      const tipo = p.elemento?.type as unknown as { _payload: { _status: number } }
       expect(tipo._payload._status, p.a).toBe(1)
     }
   })
