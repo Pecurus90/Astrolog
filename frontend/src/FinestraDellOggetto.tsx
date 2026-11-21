@@ -1,9 +1,12 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react"
+import { type ReactNode, Suspense, useCallback, useEffect, useState } from "react"
 import { useLocation } from "react-router"
 
 import { ApriOggettoContesto } from "./apriOggetto"
 import { useFormato } from "./componenti/formato"
-import { TuttoDellOggetto } from "./TuttoDellOggetto"
+import { pigra } from "./pigra"
+
+// downloaded the first time a window opens: the frame does not carry it
+const TuttoDellOggetto = pigra(() => import("./TuttoDellOggetto"), "TuttoDellOggetto")
 
 type Aperto = { chiave: string; nome: string }
 
@@ -23,13 +26,15 @@ export function FinestraDellOggetto({ children }: { children: ReactNode }) {
     <ApriOggettoContesto.Provider value={apri}>
       {children}
       {aperto && (
-        <TuttoDellOggetto
-          key={aperto.chiave}
-          chiave={aperto.chiave}
-          nome={aperto.nome}
-          formato={formato}
-          onChiudi={() => setAperto(null)}
-        />
+        <Suspense>
+          <TuttoDellOggetto
+            key={aperto.chiave}
+            chiave={aperto.chiave}
+            nome={aperto.nome}
+            formato={formato}
+            onChiudi={() => setAperto(null)}
+          />
+        </Suspense>
       )}
     </ApriOggettoContesto.Provider>
   )

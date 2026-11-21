@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef, useState } from "react"
 
 import { Avviso } from "./Avviso"
@@ -12,26 +12,14 @@ import { giraIlFuoco, useRiquadro } from "./riquadro"
 import { type Chiave, fa, giornoBreve, orario, t } from "./i18n"
 import { CapoDellaNotte, CapoDellaTendenza, NotaDellaTendenza, SchedaDellaNotte, TendenzaDellaNotte, VoceDellaNotte, idDellaCarta, nomeDellaNotte, quando } from "./NotteDelMeteo"
 import { Semaforo } from "./Semaforo"
+import { useAggiorna, usePrevisione, useRileggi } from "./api/previsione"
 
 type Meteo = components["schemas"]["WeatherOut"]
 type Notte = Meteo["nights"][number]
 type Codice = Notte["measures"][number]["code"]
-type Esito = components["schemas"]["WeatherRefreshOut"]["status"]
 type Richiesta = NonNullable<Meteo["last_request"]>
 // l'ultima richiesta andata storta: da quando, e come
 type Tace = { at: Richiesta["at"]; status: Exclude<Richiesta["status"], "ok"> }
-
-/** La previsione del sito di casa: la leggono il Meteo e la Dashboard. */
-export function usePrevisione() {
-  return useQuery({
-    queryKey: ["weather"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/weather")
-      if (error) throw new Error(t("weather.failed"))
-      return data
-    },
-  })
-}
 
 /** Cio' che la pagina dice prima della previsione: che arriva, che non e' arrivata, o che senza un
  *  sito di casa non arrivera'. Lo dicono il Meteo e la Dashboard; il Meteo ha il suo senza sito. */
@@ -80,25 +68,6 @@ function SenzaSito() {
  *   il verdetto va in testa e apre gli altri fattori, le misure sono carte piccole. I dati sono
  *   gli stessi.
  */
-/** Rilegge la previsione e Stanotte, che dice la notte in corso dalla stessa previsione. */
-function useRileggi() {
-  const cache = useQueryClient()
-  return () => Promise.all(["weather", "tonight"].map((q) => cache.invalidateQueries({ queryKey: [q] })))
-}
-
-/** Aggiorna: chiede la previsione subito e rilegge. Lo usano il Meteo e la Dashboard. */
-export function useAggiorna() {
-  const rileggi = useRileggi()
-  return useMutation({
-    mutationFn: async (): Promise<Esito> => {
-      const { data, error } = await api.POST("/api/v1/weather/refresh")
-      if (error) throw new Error(t("weather.refresh.failed"))
-      return data.status
-    },
-    onSuccess: rileggi,
-  })
-}
-
 /** L'ultima richiesta andata storta, se lo e'. */
 export function silenzio(detto: Meteo): Tace | null {
   const r = detto.last_request

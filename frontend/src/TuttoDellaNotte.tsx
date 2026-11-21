@@ -19,7 +19,7 @@ import type { Formato } from "./componenti/Tema"
 import { dataLunga, numero, oraDelSito, oreEMinuti, t } from "./i18n"
 import { MisureDeiFrame } from "./MisureDeiFrame"
 import { medianeInTesta } from "./MisureDati"
-import { MENTRE_LEGGE_MS } from "./Notti"
+import { MENTRE_LEGGE_MS } from "./api/rilettura"
 import { cielo, segnoDi } from "./NottiDati"
 import {
   CroceDegliStati,

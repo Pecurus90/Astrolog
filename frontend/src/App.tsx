@@ -1,16 +1,21 @@
-import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Suspense, useState } from "react"
 import { BrowserRouter, Route, Routes } from "react-router"
 
 import { RipristinoProposto, useBackup } from "./Backup"
 import { Layout } from "./Layout"
 import { PaginaCheNonCe } from "./PaginaCheNonCe"
 import { AvvioInAttesa, AvvioNonRisponde } from "./PrimoAvvioCornice"
-import { Wizard } from "./Wizard"
 import { VesteSalvata, vesteDa } from "./componenti/Tema"
-import { usaLingua } from "./i18n"
+import { caricaLingua, usaLingua } from "./i18n"
+import { LINGUA_SORGENTE } from "./i18n/lingue"
 import { ComingSoon } from "./ComingSoon"
 import { PAGINE, sezioniAperte } from "./pagine"
+import { pigra } from "./pigra"
 import { useCambioDelTema, usePreferenze } from "./preferenze"
+
+// only the first start opens it: out of every other download
+const Wizard = pigra(() => import("./Wizard"), "Wizard")
 
 /**
  * Il portiere dell'app: prima il **cancelletto** del primo avvio, poi la navigazione.
@@ -38,7 +43,17 @@ export function App() {
   // Lingua e tema dalle preferenze: cambiata la lingua, `key` rimonta tutto, perche' `t()` non
   // e' reattivo; il tema lo leggono i `Tema` senza props, primo avvio compreso.
   const valori = settings.data?.values
-  const lingua = usaLingua(String(valori?.language ?? ""))
+  const scelta = String(valori?.language ?? "")
+  // its texts download once; on a change the old language stays until the new one arrives.
+  // Waits for the settings: else '' resolves to Italian and becomes the placeholder at start
+  const testi = useQuery({
+    queryKey: ["lingua", scelta],
+    queryFn: () => caricaLingua(scelta),
+    enabled: settings.data !== undefined,
+    staleTime: Infinity,
+    placeholderData: (prima) => prima,
+  })
+  const lingua = usaLingua(testi.data ?? LINGUA_SORGENTE)
   const veste = vesteDa(valori?.theme_mode, valori?.theme_accent, settings.data?.theme_now?.mode)
   useCambioDelTema()
 
@@ -53,15 +68,19 @@ export function App() {
     if (settings.isPending || backupInLettura) return <AvvioInAttesa />
     if (settings.error && !settings.data)
       return <AvvioNonRisponde onRiprova={() => void settings.refetch()} />
+    // a language that fails to download leaves the source: texts in Italian, not a blank app
+    if (testi.isPending) return <AvvioInAttesa />
     if (backup.data?.offer === "found") return <RipristinoProposto stato={backup.data} />
     if (settings.data && (inChiusura || !settings.data.wizard_done))
       return (
-        <Wizard
-          onChiusura={() => setInChiusura(true)}
-          // Si spegne a impostazioni rilette: prima, per un attimo varrebbe il timbro vecchio.
-          onDone={() => void settings.refetch().then(() => setInChiusura(false))}
-          manca={settings.data.missing}
-        />
+        <Suspense fallback={<AvvioInAttesa />}>
+          <Wizard
+            onChiusura={() => setInChiusura(true)}
+            // Si spegne a impostazioni rilette: prima, per un attimo varrebbe il timbro vecchio.
+            onDone={() => void settings.refetch().then(() => setInChiusura(false))}
+            manca={settings.data.missing}
+          />
+        </Suspense>
       )
     return null
   })()
@@ -70,6 +89,8 @@ export function App() {
     <BrowserRouter key={lingua}>
       {porta ?? (
       <Layout>
+        {/* a page downloads when opened (pagine.tsx): the frame stays while it arrives */}
+        <Suspense>
         <Routes>
           {PAGINE.map((p) => (
             <Route key={p.a} path={p.a} element={p.elemento ?? <ComingSoon pagina={p.chiave} />} />
@@ -82,6 +103,7 @@ export function App() {
           )}
           <Route path="*" element={<PaginaCheNonCe />} />
         </Routes>
+        </Suspense>
       </Layout>
       )}
     </BrowserRouter>

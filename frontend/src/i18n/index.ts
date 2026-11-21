@@ -15,28 +15,45 @@
  *   la lingua), migliaia con lo spazio sottile solo da 10 000 in su (glossario): `formatta()` e' la
  *   sola casa di questa regola.
  */
-import { en } from "./en"
 import { it } from "./it"
 import { LINGUA_SORGENTE, LINGUE, type Lingua } from "./lingue"
 
-export const DIZIONARI: Record<Lingua, Record<string, string>> = { it, en }
+// Only the source ships in the first download: a language arrives when chosen (caricaLingua).
+export const DIZIONARI: Partial<Record<Lingua, Record<string, string>>> = { it }
+
+const CARICA: Record<Lingua, () => Promise<Record<string, string>>> = {
+  it: () => Promise.resolve(it),
+  en: async () => (await import("./en")).en,
+}
 
 export type Chiave = keyof typeof it
 
 // La lingua di adesso: quella delle preferenze, scelta dall'App prima di montare le pagine.
 let lingua: Lingua = LINGUA_SORGENTE
 
+function linguaDa(scelta: string): Lingua {
+  return (LINGUE as readonly string[]).includes(scelta) ? (scelta as Lingua) : LINGUA_SORGENTE
+}
+
+/** Scarica i testi di una lingua, una volta sola; una che l'app non ha resta la sorgente. L'App
+ *  la aspetta prima di montare le pagine: finche' non arriva, `t()` scrive la sorgente. */
+export async function caricaLingua(scelta: string): Promise<Lingua> {
+  const quale = linguaDa(scelta)
+  DIZIONARI[quale] ??= await CARICA[quale]()
+  return quale
+}
+
 /** Sceglie la lingua dei testi; una che l'app non ha resta la sorgente. Chi la chiama rimonta
  *  le pagine (`App`, `key`): `t()` non e' reattivo. */
 export function usaLingua(scelta: string): Lingua {
-  lingua = (LINGUE as readonly string[]).includes(scelta) ? (scelta as Lingua) : LINGUA_SORGENTE
+  lingua = linguaDa(scelta)
   // screen readers' voice and the sheet's hyphenation read the page's language
   if (typeof document !== "undefined") document.documentElement.lang = lingua
   return lingua
 }
 
 export function t(chiave: Chiave, valori?: Record<string, string | number>): string {
-  const testo = singolare(chiave, valori) ?? DIZIONARI[lingua][chiave] ?? it[chiave]
+  const testo = singolare(chiave, valori) ?? DIZIONARI[lingua]?.[chiave] ?? it[chiave]
   if (!valori) return testo
   return elisione(
     testo.replace(/\{(\w+)\}/g, (intero, nome: string) => {
@@ -63,7 +80,7 @@ function elisione(testo: string): string {
 function singolare(chiave: string, valori?: Record<string, string | number>): string | undefined {
   if (valori?.n !== 1 && valori?.n !== "1") return undefined
   const una = `${chiave}.one`
-  return DIZIONARI[lingua][una] ?? it[una as Chiave]
+  return DIZIONARI[lingua]?.[una] ?? it[una as Chiave]
 }
 
 /** Un punto del cielo come si legge accanto a un gruppo: `RA 98 Dec 4,9`, al decimo di grado. Dove

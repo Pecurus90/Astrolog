@@ -9,9 +9,9 @@
  * sempre "tutto a posto", e senza una violazione finta il verde delle prove sopra non
  * distinguerebbe "le traduzioni ci sono" da "il confronto non guarda niente".
  */
-import { describe, expect, it as prova } from "vitest"
+import { beforeAll, describe, expect, it as prova } from "vitest"
 
-import { DIZIONARI, numero, t } from "../src/i18n"
+import { DIZIONARI, caricaLingua, numero, t } from "../src/i18n"
 import { it } from "../src/i18n/it"
 import { LINGUE } from "../src/i18n/lingue"
 
@@ -21,14 +21,17 @@ function mancanti(sorgente: Record<string, string>, altra: Record<string, string
 }
 
 describe("le traduzioni", () => {
+  // each language downloads when chosen: here all of them, to compare
+  beforeAll(() => Promise.all(LINGUE.map(caricaLingua)))
+
   prova.each([...LINGUE])("la lingua %s dice tutto quello che dice la sorgente", (lingua) => {
-    expect(mancanti(it, DIZIONARI[lingua])).toEqual([])
+    expect(mancanti(it, DIZIONARI[lingua]!)).toEqual([])
   })
 
   prova.each([...LINGUE])("e la lingua %s non dice niente che la sorgente non dica", (lingua) => {
     // Una chiave in piu' e' una stringa che nessuno mostra: o la sorgente l'ha persa, o e'
     // l'avanzo di un testo tolto. In tutti e due i casi qualcuno deve guardarla.
-    expect(mancanti(DIZIONARI[lingua], it)).toEqual([])
+    expect(mancanti(DIZIONARI[lingua]!, it)).toEqual([])
   })
 
   prova("un segnaposto senza valore resta visibile invece di sparire", () => {

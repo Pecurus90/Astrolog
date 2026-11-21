@@ -70,6 +70,11 @@ export default defineConfig({
     // Ripulisce prima di ricostruire: senza, i file di un build vecchio -- che hanno l'impronta
     // nel nome -- si accumulerebbero nel pacchetto per sempre.
     emptyOutDir: true,
+    // Libraries in a file of their own: they change less than our code, so a new release
+    // leaves them in the browser's cache (Rolldown, codeSplitting.groups).
+    rolldownOptions: {
+      output: { codeSplitting: { groups: [{ name: "librerie", test: /[\\/]node_modules[\\/]/ }] } },
+    },
   },
   server: {
     port: 5173,

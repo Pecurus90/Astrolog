@@ -136,12 +136,12 @@ describe("le coordinate di un posto", () => {
     // `12,0561 O` -- e la guardia delle traduzioni non se ne accorgerebbe, perche' quelle lettere
     // non passerebbero da `t()`. Qui si cambia la parola nel dizionario e si guarda se cambia a
     // valle: scritta a mano nel formattatore, non cambierebbe.
-    const salva = DIZIONARI.it["coord.w"]!
+    const salva = DIZIONARI.it!["coord.w"]!
     try {
-      DIZIONARI.it["coord.w"] = "ZZ"
+      DIZIONARI.it!["coord.w"] = "ZZ"
       expect(coordinate(1, -1)).toBe("1,0000 N - 1,0000 ZZ")
     } finally {
-      DIZIONARI.it["coord.w"] = salva
+      DIZIONARI.it!["coord.w"] = salva
     }
     expect(testiIt["coord.w"]).toBe("O")
   })

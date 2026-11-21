@@ -19,6 +19,7 @@ import { api } from "./api/client"
 import { costellazione } from "./costellazioni"
 import { type Chiave, maiuscola, meseEAnno, numero, t } from "./i18n"
 import { AConfronto, Protagonista, TuttoLArchivio, type VoceFuori } from "./NottiCarte"
+import { MENTRE_LEGGE_MS } from "./api/rilettura"
 import { TuttoDellaNotte } from "./TuttoDellaNotte"
 import {
   type Elenco,
@@ -75,9 +76,6 @@ const SCHELETRO_TEL: CartaScheletro[] = [
   { h: "420px", blocchi: [{ h: "100%" }] },
 ]
 
-// Mentre la lettura mette i frame nelle notti la pagina si rilegge: non al ritmo della scansione,
-// perche' ogni pagina di notti chiede la Luna all'effemeride.
-export const MENTRE_LEGGE_MS = 15000
 
 type Criterio = Elenco["criteria"][number]
 type Scelte = Partial<Record<Criterio["key"], string[]>>

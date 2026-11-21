@@ -31,7 +31,7 @@ import {
   t,
   alPiu,
 } from "./i18n"
-import { useAggiorna } from "./Meteo"
+import { useAggiorna } from "./api/previsione"
 
 type Misura = NotteMeteo["measures"][number]
 type Codice = Misura["code"]

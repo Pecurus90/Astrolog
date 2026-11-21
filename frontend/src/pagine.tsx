@@ -1,13 +1,16 @@
 import type { ReactElement } from "react"
 
-import { Archivio } from "./Archivio"
-import { Attrezzatura } from "./Attrezzatura"
-import { Confermare } from "./Confermare"
-import { Dashboard } from "./Dashboard"
-import { Meteo } from "./Meteo"
-import { Notti } from "./Notti"
 import { Impostazioni, SEZIONI } from "./Impostazioni"
 import type { Chiave } from "./i18n"
+import { pigra } from "./pigra"
+
+// Each page downloads when opened. Impostazioni stays: search reads its sections.
+const Archivio = pigra(() => import("./Archivio"), "Archivio")
+const Attrezzatura = pigra(() => import("./Attrezzatura"), "Attrezzatura")
+const Confermare = pigra(() => import("./Confermare"), "Confermare")
+const Dashboard = pigra(() => import("./Dashboard"), "Dashboard")
+const Meteo = pigra(() => import("./Meteo"), "Meteo")
+const Notti = pigra(() => import("./Notti"), "Notti")
 
 /**
  * Le pagine dell'app in un posto solo: il telaio le legge da qui, e le rotte pure. Due elenchi

@@ -29,7 +29,7 @@ import {
   t,
 } from "./i18n"
 import { MisureDeiFrame } from "./MisureDeiFrame"
-import { MENTRE_LEGGE_MS } from "./Notti"
+import { MENTRE_LEGGE_MS } from "./api/rilettura"
 import { type EsitoDelGruppo, type Misure, medianeInTesta } from "./MisureDati"
 import { cielo, luna, segnoDi } from "./NottiDati"
 import {

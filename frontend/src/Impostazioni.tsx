@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { Suspense, useCallback, useState } from "react"
 import { Link, useLocation } from "react-router"
 
 import { ImpostazioniBackup } from "./Backup"
@@ -7,17 +7,21 @@ import { useFormato } from "./componenti/formato"
 import { NOMI_MODO } from "./componenti/SceltaTema"
 import { Tema, sceltaDa } from "./componenti/Tema"
 import { useSiti } from "./api/siti"
-import { Cartelle } from "./ImpostazioniCartelle"
 import { Generale, SalvataggioFallito } from "./ImpostazioniGenerale"
 import { Scansioni } from "./ImpostazioniScansioni"
-import { Luna } from "./ImpostazioniLuna"
-import { Meteo } from "./ImpostazioniMeteo"
-import { Riconoscitore } from "./ImpostazioniRiconoscitore"
 import { Servizi } from "./ImpostazioniServizi"
-import { PilloleSiti, Siti } from "./ImpostazioniSiti"
 import { numero, t } from "./i18n"
 import { type Sezione, sezioniAperte } from "./pagine"
+import { pigra } from "./pigra"
 import { usePreferenze } from "./preferenze"
+
+// Downloaded when opened; Generale, Scansioni, Servizi and Backup stay, the frame imports them.
+const Cartelle = pigra(() => import("./ImpostazioniCartelle"), "Cartelle")
+const Luna = pigra(() => import("./ImpostazioniLuna"), "Luna")
+const Meteo = pigra(() => import("./ImpostazioniMeteo"), "Meteo")
+const Riconoscitore = pigra(() => import("./ImpostazioniRiconoscitore"), "Riconoscitore")
+const Siti = pigra(() => import("./ImpostazioniSiti"), "Siti")
+const PilloleSiti = pigra(() => import("./ImpostazioniSiti"), "PilloleSiti")
 
 /**
  * **Impostazioni** (tavola v82): one section at a time, under tabs on the desktop and from an
@@ -141,7 +145,7 @@ export function Impostazioni() {
                 </>
               )}
             </Tema>
-            {!indice && qui.elemento}
+            {!indice && <Suspense>{qui.elemento}</Suspense>}
           </div>
         ) : (
           <div className="al-imp__griglia-1">
@@ -152,7 +156,7 @@ export function Impostazioni() {
                   <span className="al-imp__testo-1 al-solo-voce">{t("nav.settings")}</span>
                   {qui.sotto && <span className="al-imp__testo-2">{t(qui.sotto)}</span>}
                 </span>
-                {qui.testa}
+                <Suspense>{qui.testa}</Suspense>
               </div>
               <div
                 role="tablist"
@@ -172,7 +176,7 @@ export function Impostazioni() {
                 ))}
               </div>
             </Tema>
-            {qui.elemento}
+            <Suspense>{qui.elemento}</Suspense>
           </div>
         )}
       </SalvataggioFallito.Provider>

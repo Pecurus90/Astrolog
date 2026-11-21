@@ -27,6 +27,15 @@ import "./stili/app.css"
 // stessa pagina potrebbero mostrare due versioni dello stesso numero.
 const dati = new QueryClient()
 
+// A page opened after an update asks for a file the new build renamed: the page reloads, as
+// Vite advises (vite.dev/guide/build, "Load Error Handling"). Once a minute, or it would loop.
+window.addEventListener("vite:preloadError", () => {
+  const ultima = Number(sessionStorage.getItem("astrolog-ricarica") ?? 0)
+  if (Date.now() - ultima < 60_000) return
+  sessionStorage.setItem("astrolog-ricarica", String(Date.now()))
+  window.location.reload()
+})
+
 const radice = document.getElementById("root")
 if (!radice) {
   // La pagina la serve il backend da `index.html`: se questo nodo manca, il file servito non e'

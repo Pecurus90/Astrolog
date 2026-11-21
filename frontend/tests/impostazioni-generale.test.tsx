@@ -141,6 +141,20 @@ describe("Impostazioni, Generale", () => {
     expect(screen.getByRole("radio", { name: "English" }).getAttribute("aria-checked")).toBe("true")
   })
 
+  it("con l'inglese salvato l'app si apre in inglese, senza un attimo d'italiano", async () => {
+    window.history.pushState({}, "", "/impostazioni/generale")
+    let italiano = false
+    const spia = new MutationObserver(() => {
+      if (document.body.textContent?.includes("Cartelle e scansione")) italiano = true
+    })
+    spia.observe(document.body, { childList: true, subtree: true, characterData: true })
+    await app({}, { language: "en" })
+
+    expect(await screen.findByRole("tab", { name: "General" })).toBeDefined()
+    spia.disconnect()
+    expect(italiano).toBe(false)
+  })
+
   it("il tema scelto si salva e veste l'app", async () => {
     window.history.pushState({}, "", "/impostazioni/generale")
     const { container } = await app({ "PATCH /api/v1/settings": scritte({ theme_mode: "chiaro" }) })
