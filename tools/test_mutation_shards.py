@@ -491,6 +491,45 @@ def test_the_workflow_runs_every_frontend_shard_and_scores_them_together():
     assert "frontend --filter reports/stryker-*.json" in workflow
 
 
+def test_a_timeout_left_in_the_cache_is_dropped_so_the_night_runs_it_again(tmp_path, capsys):
+    """Incremental Stryker reuses a Timeout: one cut by a crowded runner stays 'detected'."""
+    report = {
+        "files": {
+            "src/a.ts": {"mutants": [{"status": "Timeout"}, {"status": "Killed"}]},
+            "src/b.ts": {"mutants": [{"status": "Survived"}, {"status": "Timeout"}]},
+        },
+        "testFiles": {"tests/a.test.ts": {"tests": []}},
+    }
+    path = tmp_path / "stryker-0.json"
+    path.write_text(json.dumps(report), encoding="utf-8")
+    assert main(["mutation_shards.py", "frontend", "--drop-timeouts", str(path)]) == 0
+    kept = json.loads(path.read_text(encoding="utf-8"))
+    assert [m["status"] for f in kept["files"].values() for m in f["mutants"]] == [
+        "Killed",
+        "Survived",
+    ]
+    assert kept["testFiles"] == report["testFiles"]
+    assert "2 Timeout dropped" in capsys.readouterr().err
+
+
+def test_a_first_night_without_a_cache_has_no_timeout_to_drop(tmp_path, capsys):
+    path = tmp_path / "stryker-0.json"
+    assert main(["mutation_shards.py", "frontend", "--drop-timeouts", str(path)]) == 0
+    assert not path.exists()
+    assert "no report" in capsys.readouterr().err
+
+
+def test_the_frontend_mutants_run_two_per_runner_and_skip_the_static_ones():
+    """4 vCPU are 2 cores with 2 threads (lscpu, 21/11/2026): 4 runners cut a mutant that
+    survives with 2. A static mutant reruns the whole suite: Stryker leaves it out."""
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    assert "--concurrency 2" in workflow
+    assert "mutation_shards.py frontend --drop-timeouts" in workflow
+    config = json.loads((FRONTEND_DIR / "stryker.config.json").read_text(encoding="utf-8"))
+    assert config["ignoreStatic"] is True
+
+
 def test_the_saved_reference_names_only_real_shards():
     reference = json.loads(REFERENCE.read_text(encoding="utf-8"))
     assert set(reference) <= {*FIXED, *REST_SHARDS, FRONTEND}

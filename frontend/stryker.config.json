@@ -6,5 +6,6 @@
   "reporters": ["json", "progress"],
   "incremental": true,
   "concurrency": 4,
-  "timeoutMS": 10000
+  "timeoutMS": 10000,
+  "ignoreStatic": true
 }

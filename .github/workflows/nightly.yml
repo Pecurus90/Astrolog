@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
+    inputs:
+      retry_timeouts:
+        description: "Frontend: drop cached Timeout mutants so they run again"
+        type: boolean
+        default: false
 
 # Read only; the signal job alone also writes Issues.
 permissions:
@@ -111,11 +116,15 @@ jobs:
           path: frontend/reports/stryker-${{ matrix.part }}.json
           key: stryker-${{ matrix.part }}-${{ github.run_id }}
           restore-keys: stryker-${{ matrix.part }}-
+      - name: Cached Timeout mutants run again
+        if: inputs.retry_timeouts
+        run: python ../tools/mutation_shards.py frontend --drop-timeouts reports/stryker-${{ matrix.part }}.json
       # In place: a test reads ../backend, which Stryker's sandbox copy does not hold.
+      # 4 vCPU are 2 cores with 2 threads: 4 runners cut mutants that survive with 2.
       - name: Mutants of frontend part ${{ matrix.part }}
         timeout-minutes: 270
         run: >-
-          timeout -s INT 160m npx stryker run --inPlace
+          timeout -s INT 160m npx stryker run --inPlace --concurrency 2
           --mutate "$(python ../tools/mutation_shards.py frontend ${{ matrix.part }})"
           --incrementalFile reports/stryker-${{ matrix.part }}.json
           || [ $? -eq 124 ]

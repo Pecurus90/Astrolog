@@ -39,6 +39,7 @@ FILTER = "--filter"
 ONLY_MUTATE = "--only-mutate"
 REOPEN = "--reopen"
 DROP_BROKEN = "--drop-broken"
+DROP_TIMEOUTS = "--drop-timeouts"
 MUTANT = re.compile(r"\S+__mutmut_\d+")
 # mutmut exit codes of a final verdict (mutmut/stats.py): killed, skipped, timeout, type check
 FINAL = {1, 3, 34, 36, 37, 24, -24, 152, 255, -9, -11}
@@ -234,6 +235,8 @@ def stryker_statuses(paths: list[str], parts: list[list[str]]) -> Counter[str]:
 def frontend(argv: list[str], reference: Path, parts: list[list[str]] | None = None) -> int:
     """`frontend <part>` prints its files for `--mutate`; `frontend --filter <report>...` scores
     every part together, so a file moving between parts never moves the score."""
+    if argv[:1] == [DROP_TIMEOUTS] and len(argv) == 2:
+        return drop_timeouts(Path(argv[1]))
     if argv[:1] == [FILTER]:
         paths = argv[1:]
         if len(paths) != FRONTEND_SHARDS:
@@ -248,6 +251,23 @@ def frontend(argv: list[str], reference: Path, parts: list[list[str]] | None = N
         sys.stderr.write(f"usage: mutation_shards.py {FRONTEND} {{0..{FRONTEND_SHARDS - 1}}}\n")
         return 2
     sys.stdout.write(",".join(frontend_shards()[int(argv[0])]) + "\n")
+    return 0
+
+
+def drop_timeouts(report: Path) -> int:
+    """Incremental Stryker reuses a Timeout, one cut by a crowded runner too: dropped from the
+    cache, the mutant is new again and tonight's run gives it a verdict."""
+    if not report.exists():
+        sys.stderr.write(f"{report}: no report, no Timeout to drop\n")
+        return 0
+    data = json.loads(report.read_text(encoding="utf-8"))
+    dropped = 0
+    for f in data["files"].values():
+        kept = [m for m in f["mutants"] if m["status"] != "Timeout"]
+        dropped += len(f["mutants"]) - len(kept)
+        f["mutants"] = kept
+    report.write_text(json.dumps(data), encoding="utf-8")
+    sys.stderr.write(f"{report}: {dropped} Timeout dropped\n")
     return 0
 
 
