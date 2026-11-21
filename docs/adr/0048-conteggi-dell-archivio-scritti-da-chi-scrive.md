@@ -25,7 +25,9 @@ Scansione del 20/11 (passo 6.10), archivio sintetico del budget (passo 6.15), mi
   (cosi' un codice nuovo riconta una volta, senza versione da alzare). Etichette e ordine restano
   in lettura dalle tabelle piccole: una rinomina si legge subito.
 - **`derived_fresh`, il segno:** chi scrive la tabella lascia la riga; un trigger su ogni suo
-  ingresso (frame, oggetti, catalogo, risposte sui mosaici, notti, setup, filtri) la toglie. Senza
+  ingresso (frame, oggetti, risposte sui mosaici, notti, setup, filtri; il catalogo con la sua
+  versione, scritta una volta a caricamento: un trigger su ognuna delle 22.080 voci portava il
+  caricamento da 0,23 a 0,99 s) la toglie. Senza
   la riga la pagina conta dai frame come prima. Conta e segno in una transazione `BEGIN IMMEDIATE`:
   uno scrittore che committa fra le letture e il segno aspetta, e non lascia fresca una conta
   vecchia. Diverso da `gear_usage`, che si fida dei giri:

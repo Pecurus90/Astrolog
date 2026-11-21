@@ -1670,17 +1670,10 @@ CREATE TRIGGER archive_options_object_out AFTER DELETE ON objects BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
 CREATE TRIGGER archive_options_object_moved AFTER UPDATE OF catalog_slug ON objects BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
-CREATE TRIGGER archive_options_entry_in AFTER INSERT ON catalog_entries BEGIN
+-- il catalogo si scrive solo intero e segna la sua versione: un trigger per voce lo rallenta 4 volte
+CREATE TRIGGER archive_options_catalog_in AFTER INSERT ON catalog_version BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
-CREATE TRIGGER archive_options_entry_out AFTER DELETE ON catalog_entries BEGIN
-  DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
-CREATE TRIGGER archive_options_entry_moved AFTER UPDATE ON catalog_entries BEGIN
-  DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
-CREATE TRIGGER archive_options_name_in AFTER INSERT ON catalog_names BEGIN
-  DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
-CREATE TRIGGER archive_options_name_out AFTER DELETE ON catalog_names BEGIN
-  DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
-CREATE TRIGGER archive_options_name_moved AFTER UPDATE ON catalog_names BEGIN
+CREATE TRIGGER archive_options_catalog_moved AFTER UPDATE ON catalog_version BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
 CREATE TRIGGER archive_options_answer_in AFTER INSERT ON declarations
   WHEN NEW.entity_type = 'mosaic' BEGIN

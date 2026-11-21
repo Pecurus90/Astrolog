@@ -6,9 +6,11 @@ from dataclasses import replace
 
 import pytest
 
+from astrolog.catalog import load
 from astrolog.spine import archive, archive_criteria
 from astrolog.spine.archive_criteria import Key
 from astrolog.spine.counts import Scope
+from conftest import real_bundle
 from perf_archive import build, write_archive
 from test_spine_archive import oggetto
 from test_spine_archive_mosaic import mosaico
@@ -100,10 +102,19 @@ SCRITTURE = {
     "un filtro rinominato": lambda c, p: c.execute(
         "UPDATE filters SET name = 'H-alpha' WHERE id = ?", (p["ha"],)
     ),
-    "una costellazione del catalogo": lambda c, p: c.execute(
-        "UPDATE catalog_entries SET constellation = 'Ori' WHERE slug = 'ngc-7000'"
-    ),
 }
+
+
+def test_a_catalog_loaded_again_makes_the_page_count_again(archivio):
+    """Il catalogo si scrive solo intero, e segna `catalog_version` una volta: li' il trigger, non
+    sulle 22.080 voci, che costerebbero il caricamento quattro volte (test_perf_catalog)."""
+    banco(archivio)
+    archivio.execute("UPDATE catalog_version SET version = 'di prima'")
+    archive_criteria.write(archivio)
+
+    assert load.load_catalog(archivio, real_bundle()) > 20000
+
+    assert fresca(archivio) == 0
 
 
 @pytest.mark.parametrize("scrittura", list(SCRITTURE))
