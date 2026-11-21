@@ -6,6 +6,8 @@ ne' in una cronologia. Qui si prova che la consegna avviene **senza aprire un bu
 dell'API continuano a pretendere la chiave come prima.
 """
 
+import mimetypes
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -323,6 +325,24 @@ def test_an_asset_leaves_already_compressed(db_path, compressa, accetta, codific
     assert r.headers["content-type"] == "text/javascript; charset=utf-8"
     assert r.headers["vary"] == "Accept-Encoding"
     assert crudo == corpo
+
+
+@pytest.mark.parametrize("dal_registro", ["application/javascript", "text/plain"])
+def test_the_type_of_a_script_does_not_come_from_the_windows_registry(
+    db_path, compressa, dal_registro
+):
+    """Su Windows `mimetypes` legge il registro, e il registro di ogni macchina dice la sua per
+    .js (Nightly #102): con text/plain il browser rifiuta il modulo e la pagina resta bianca."""
+    prima = mimetypes.guess_type("x.js")[0] or "text/javascript"
+    mimetypes.add_type(dal_registro, ".js")  # what that registry says
+    try:
+        with _client(db_path, compressa) as c:
+            semplice = c.get("/assets/app-1a2b3c.js", headers={"Accept-Encoding": "identity"})
+            compresso = c.get("/assets/app-1a2b3c.js", headers={"Accept-Encoding": "br"})
+    finally:
+        mimetypes.add_type(prima, ".js")
+    assert semplice.headers["content-type"] == "text/javascript; charset=utf-8"
+    assert compresso.headers["content-type"] == "text/javascript; charset=utf-8"
 
 
 def test_without_accept_encoding_the_plain_file_leaves(db_path, compressa):

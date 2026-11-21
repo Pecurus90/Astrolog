@@ -21,11 +21,11 @@ ASSETS_PATH = "/assets"  # the files the build emits next to the page, with thei
 ASSETS_CACHE = "public, max-age=31536000, immutable"
 # Copies written by the build (vite.config.ts), best first: brotli is smaller than gzip.
 PRECOMPRESSED = (("br", ".br"), ("gzip", ".gz"))
-# Fonts already compressed inside (W3C WOFF2 5.2): never gzipped again. Types per RFC 8081;
-# registered here since Windows mimetypes can miss them (octet-stream there).
+# Fonts already compressed inside (W3C WOFF2 5.2): never gzipped again. Types per RFC 8081.
 FONT_TYPES = {".woff2": "font/woff2", ".woff": "font/woff"}
-for _suffix, _mime in FONT_TYPES.items():
-    mimetypes.add_type(_mime, _suffix)
+# Windows mimetypes reads the registry, each machine its own: .js as text/plain blocks the module.
+# JS per RFC 9239, CSS per RFC 2318.
+ASSET_TYPES = {".js": "text/javascript", ".css": "text/css", **FONT_TYPES}
 TOKEN_META = '<meta name="astrolog-token" content="{key}">'  # noqa: S105 - template, not a key
 API_PATH = "/api/"
 # The page carries the key: only the backend's own files load and run, nothing inline (MDN, CSP).
@@ -64,6 +64,8 @@ def mount(app: FastAPI) -> None:
         would be a type describing nothing."""
         return _served(app)
 
+    for suffix, mime in ASSET_TYPES.items():  # after the registry was read, so ours wins
+        mimetypes.add_type(mime, suffix)
     assets = app.state.web_dir / ASSETS_PATH.lstrip("/")
     if assets.is_dir():
         app.mount(ASSETS_PATH, Assets(directory=assets), name="assets")
