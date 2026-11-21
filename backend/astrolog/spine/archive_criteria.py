@@ -6,6 +6,7 @@ from dataclasses import replace
 from enum import StrEnum
 from typing import Any
 
+from ..db.replace_table import replace_rows
 from . import archive, counts, filters_used
 from .archive import Criteria, Family, Form
 
@@ -110,13 +111,18 @@ def chosen_of(criteria: Criteria, key: Key) -> tuple[str, ...]:
     return tuple(str(v) for v in getattr(criteria, _IN_CRITERIA[key]))
 
 
-def _frame_universe(conn: sqlite3.Connection, key: Key) -> list[dict[str, Any]]:
-    """From the small table: a value is held as soon as one frame of a row reaches it."""
+def _frame_universe(conn: sqlite3.Connection, key: Key, written: bool) -> list[dict[str, Any]]:
+    """From the small table: a value is held as soon as one frame of a row reaches it. `written`:
+    the held values are `archive_options`', label and order still the small table's."""
     value, label, order, owner, link = _FRAME_FACTS[key]
+    held = (
+        f"{value} IN (SELECT a.value FROM archive_options a WHERE a.key = '{key}')"  # noqa: S608
+        if written
+        else f"EXISTS (SELECT 1 FROM frames f WHERE {link} AND {archive.SHOT})"  # noqa: S608
+    )
     sql = (
         f"SELECT {value} AS value, {label} AS label FROM {owner}"  # noqa: S608 - constants
-        f" WHERE {value} IS NOT NULL AND EXISTS (SELECT 1 FROM frames f WHERE {link}"
-        f" AND {archive.SHOT}) GROUP BY 1 ORDER BY {order}"
+        f" WHERE {value} IS NOT NULL AND {held} GROUP BY 1 ORDER BY {order}"
     )
     return [dict(r) for r in conn.execute(sql)]
 
@@ -156,14 +162,51 @@ def _frame_branch(key: Key, criteria: Criteria) -> tuple[str, list[Any]]:
     return sql, [*forms, *asked, *scope_values, *values]
 
 
-def _frame_counts(conn: sqlite3.Connection, criteria: Criteria) -> dict[Key, dict[str, int]]:
-    """The five frame-level keys in one statement, over the frames read once."""
-    branches = [_frame_branch(key, criteria) for key in Key if key in _ON_FRAMES]
+type Counted = dict[Key, dict[str, int]]
+
+
+def _frame_counts(conn: sqlite3.Connection, criteria: Criteria, written: Counted | None) -> Counted:
+    """The five frame-level keys in one statement, over the frames read once; a key with nothing
+    else chosen reads `written` when there is one."""
+    out: Counted = {key: {} for key in Key if key in _ON_FRAMES}
+    asked = [k for k in out if written is None or choosing(criteria, k, ()) != Criteria()]
+    if written is not None:
+        out |= {k: written[k] for k in out if k not in asked}
+    if not asked:
+        return out
+    branches = [_frame_branch(key, criteria) for key in asked]
     sql = f"WITH {_SHOT_GROUPS} " + " UNION ALL ".join(s for s, _ in branches)
-    out: dict[Key, dict[str, int]] = {key: {} for key in Key if key in _ON_FRAMES}
     for key, value, rows in conn.execute(sql, [v for _, values in branches for v in values]):
         out[Key(key)][value] = rows
     return out
+
+
+_FRESH = "SELECT 1 FROM derived_fresh WHERE name = 'archive_options'"
+
+
+def _written(conn: sqlite3.Connection) -> Counted | None:
+    """`archive_options` by key, or `None` if a write since has made it stale (ADR 0048)."""
+    if conn.execute(_FRESH).fetchone() is None:
+        return None
+    out: Counted = {key: {} for key in Key}
+    for key, value, rows in conn.execute("SELECT key, value, rows FROM archive_options"):
+        out[Key(key)][value] = rows
+    return out
+
+
+def write(conn: sqlite3.Connection) -> None:
+    """Whole, nothing chosen: called after a round moving frames, rows or names, inside BEGIN
+    IMMEDIATE (no writer between the reads). Frame-level value held by no row stays, at zero."""
+    held = _frame_counts(conn, Criteria(), None)
+    rows: list[tuple[str, str, int]] = []
+    for key in Key:
+        if key in _ON_FRAMES:
+            universe = _frame_universe(conn, key, False)
+            rows += [(key, o["value"], held[key].get(o["value"], 0)) for o in universe]
+        else:
+            rows += [(key, v, n) for v, n in _row_counts(conn, key, Criteria()).items()]
+    replace_rows(conn, "archive_options", ("key", "value", "rows"), rows)
+    conn.execute("INSERT OR IGNORE INTO derived_fresh(name) VALUES ('archive_options')")
 
 
 def _row_values(key: Key, criteria: Criteria) -> tuple[str, list[Any]]:
@@ -193,12 +236,16 @@ def _row_counts(conn: sqlite3.Connection, key: Key, criteria: Criteria) -> dict[
 
 
 def _options(
-    conn: sqlite3.Connection, key: Key, criteria: Criteria, on_frames: dict[Key, dict[str, int]]
+    conn: sqlite3.Connection,
+    key: Key,
+    criteria: Criteria,
+    on_frames: Counted,
+    written: Counted | None,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """The options the archive holds, in order, and each one's rows under `criteria`."""
     if key in _ON_FRAMES:
-        return _frame_universe(conn, key), on_frames[key]
-    held_rows = _row_counts(conn, key, Criteria())
+        return _frame_universe(conn, key, written is not None), on_frames[key]
+    held_rows = written[key] if written is not None else _row_counts(conn, key, Criteria())
     order: list[str] = list(Family) if key == Key.TYPE else list(Form) if key == Key.FORM else []
     values = sorted(held_rows, key=lambda v: (order.index(v) if v in order else 0, v.casefold()))
     # nothing else chosen: the counts are what the archive holds, already asked
@@ -211,10 +258,11 @@ def offered(conn: sqlite3.Connection, criteria: Criteria) -> list[dict[str, Any]
     """`[{key, options: [{value, label, passband, rows, chosen}]}]`: a chosen option nobody holds
     stays listed, chosen, at zero, or it could not be taken off."""
     passbands = {r[0]: r[1] for r in conn.execute("SELECT name, passband FROM filters")}
-    on_frames = _frame_counts(conn, criteria)
+    written = _written(conn)
+    on_frames = _frame_counts(conn, criteria, written)
     out = []
     for key in Key:
-        held, rows = _options(conn, key, criteria, on_frames)
+        held, rows = _options(conn, key, criteria, on_frames, written)
         chosen = chosen_of(criteria, key)
         held_values = {o["value"] for o in held}
         listed = held + [{"value": v, "label": None} for v in chosen if v not in held_values]

@@ -122,13 +122,15 @@ def _whole(column: str) -> str:
     return _WHOLE.format(f=f"REPLACE(LOWER({column}), ' ', '')")
 
 
-# A frame of an object so named: the two names', each `_WHOLE`.
+# A frame of an object so named: the two names', each `_WHOLE`. The objects first, then their
+# frames on `frames_object`: names are few, frames grow with the archive.
 _BY_OBJECT = (
-    "n.id IN (SELECT f.night_id FROM frames f JOIN objects o ON o.id = f.object_id"  # noqa: S608
-    " WHERE f.copy_of IS NULL AND f.night_id IS NOT NULL AND"
-    " (EXISTS (SELECT 1 FROM object_names m WHERE m.object_id = o.id AND " + _whole("m.name") + ")"
+    "n.id IN (SELECT f.night_id FROM frames f WHERE f.object_id IN"  # noqa: S608
+    " (SELECT o.id FROM objects o WHERE EXISTS"
+    " (SELECT 1 FROM object_names m WHERE m.object_id = o.id AND " + _whole("m.name") + ")"
     " OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = o.catalog_slug AND "
-    + _whole("k.catalog || k.designation") + ")))"
+    + _whole("k.catalog || k.designation") + "))"
+    " AND f.copy_of IS NULL AND f.night_id IS NOT NULL)"
 )  # fmt: skip
 _NIGHTS = f"""
 SELECT n.id, n.night_date, s.name AS site, {counts.counts_on(counts.Subject.NIGHT)}

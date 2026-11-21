@@ -94,12 +94,28 @@ class _Group:
     sqm_silent: set[Silent | None] = field(default_factory=set)  # measured frames' reasons
 
 
+# A camera's offsets through the bridge (ADR 0045): the bias belongs to the camera as the files
+# write it, so a camera of the page reaches it through its frames' files.
+_OFFSETS = """
+SELECT g.camera_id, c.camera, c.offset, COUNT(DISTINCT f.id) AS frames
+FROM frames f JOIN rigs g ON g.id = f.rig_id
+JOIN night_measure_frames b ON b.frame_id = f.id
+JOIN pipeline_files pf ON pf.frame_id = b.pipeline_frame_id
+JOIN pipeline_cards c ON c.file_id = pf.id
+WHERE g.camera_id IS NOT NULL AND f.copy_of IS NULL AND c.camera IS NOT NULL
+  AND c.frame_type = 'light'
+GROUP BY g.camera_id, c.camera, c.offset
+"""
+
+
 def rebuild(conn: sqlite3.Connection) -> None:
     """All of it, in one transaction: whoever changes frames, files or nights calls it at its end
     (pipeline/run.py, spine/group.py, a camera's bias). The nights' and the Archive rows'."""
     with transaction(conn):
         bridge = ("frame_id", "pipeline_frame_id", "skip_reason")
         replace_rows(conn, "night_measure_frames", bridge, _bridge(conn))
+        offsets = ("camera_id", "camera", "offset", "frames")
+        replace_rows(conn, "camera_offsets", offsets, conn.execute(_OFFSETS).fetchall())
         nights: dict[GroupKey, _Group] = defaultdict(_Group)
         rows: dict[GroupKey, _Group] = defaultdict(_Group)
         for row in conn.execute(_FRAMES).fetchall():

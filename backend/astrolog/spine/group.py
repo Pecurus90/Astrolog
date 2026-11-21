@@ -12,7 +12,7 @@ from .. import night_measures
 from ..clock import night_date, now_iso
 from ..db.transaction import transaction
 from ..site_of import Site, Sites, known_sites, site_at
-from . import gear_usage, mosaic, night_moons, undated
+from . import archive_criteria, gear_usage, mosaic, night_moons, undated
 from . import group_store as store
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
 from .stages import StageName, StageStatus, ready, set_status
@@ -50,6 +50,8 @@ def group_frames(conn: sqlite3.Connection) -> Iterator[Event]:
     def at_end() -> None:
         if seen:  # each piece's nights, only if some frame was worked
             gear_usage.write(conn)
+            with transaction(conn):  # a writer between its reads would leave stale counts fresh
+                archive_criteria.write(conn)
             night_measures.rebuild(conn)
             try:  # the Moon of the nights just made: if it falls, only the Moon waits
                 night_moons.refresh(conn)

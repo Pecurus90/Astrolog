@@ -70,18 +70,10 @@ ORDER BY 1, 2, 3
 
 _MAKERS = "SELECT id, optics_id, camera_id FROM rigs ORDER BY id"
 
-# A camera's offsets through the bridge (ADR 0045): the bias belongs to the camera as the files
-# write it, so a camera of the page reaches it through its frames' files.
+# A camera's offsets as `night_measures.rebuild` wrote them, with the bridge (ADR 0048).
 _OFFSETS = """
-SELECT g.camera_id, c.camera, c.offset, COUNT(DISTINCT f.id) AS frames
-FROM frames f JOIN rigs g ON g.id = f.rig_id
-JOIN night_measure_frames b ON b.frame_id = f.id
-JOIN pipeline_files pf ON pf.frame_id = b.pipeline_frame_id
-JOIN pipeline_cards c ON c.file_id = pf.id
-WHERE g.camera_id IS NOT NULL AND f.copy_of IS NULL AND c.camera IS NOT NULL
-  AND c.frame_type = 'light'
-GROUP BY g.camera_id, c.camera, c.offset
-ORDER BY g.camera_id, c.camera, c.offset
+SELECT camera_id, camera, offset, frames FROM camera_offsets
+ORDER BY camera_id, camera, offset
 """
 
 _DECLARED_BIAS = "SELECT camera, offset, bias_adu FROM pipeline_camera_bias"

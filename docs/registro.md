@@ -992,3 +992,4 @@ Fonti: C norma: 197; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | 0045 | Le misure delle notti passano per il file, fino al passo 40 | accettata, 8/11/2026 (Marco, passo 33: "ponte per file, ora"). Anticipa una parte del |  |
 | 0046 | Sole, Luna e pianeti con Skyfield sulla DE421 | accettata, 20/11/2026 (Marco, scelta del 20/11 sul passo 6.9, Issue #87). I FITS restano |  |
 | 0047 | La Luna delle notti scritta da chi scrive, con la versione della formula | accettata, 20/11/2026 (Marco, passo 6.16: "dati derivati materializzati con la versione |  |
+| 0048 | Conteggi sull'intero archivio scritti da chi scrive, con un segno di freschezza | accettata, 21/11/2026 (passo 6.19; regola di Marco del 22/9/2026, "una lettura non |  |

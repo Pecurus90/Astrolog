@@ -14,8 +14,8 @@ from ..clock import now_iso
 from ..db.transaction import transaction
 from ..vocab.header_value import normalize_header_value
 from ..vocab.object_label import clean_object_name
+from . import archive_criteria, gear_usage, object_answer, object_candidates, unnamed
 from . import declarations as decl
-from . import gear_usage, object_answer, object_candidates, unnamed
 from . import identify_decide as rule
 from . import identify_geometry as geometry
 from . import identify_link as link
@@ -86,6 +86,8 @@ def identify_frames(conn: sqlite3.Connection) -> Iterator[Event]:
 def _at_round_end(conn: sqlite3.Connection) -> None:
     """Rewrites what a name move affects."""
     gear_usage.write(conn)
+    with transaction(conn):  # a writer between its reads would leave stale counts fresh
+        archive_criteria.write(conn)
     object_candidates.write(conn)
 
 

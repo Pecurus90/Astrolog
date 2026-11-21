@@ -195,6 +195,18 @@ def test_two_spellings_of_one_camera_add_up_per_offset_and_the_unknown_offset_go
     assert pezzo_["biases"] == attesi
 
 
+def test_the_offsets_are_read_as_the_bridge_rebuild_wrote_them(conn, tmp_path):
+    """Una lettura non conta le pose (ADR 0048): un numero scritto a mano si vede, e la
+    ricostruzione del ponte lo rifa' dalle pose."""
+    camera = _camera_che_scrive(conn, tmp_path, [(50, "ZWO ASI2600MM"), (50, "ZWO ASI2600MM")])
+    from astrolog.spine import inventory
+
+    conn.execute("UPDATE camera_offsets SET frames = 7")
+    assert inventory.camera_biases(conn, camera) == [{"offset": 50, "bias_adu": 480.0, "frames": 7}]
+    night_measures.rebuild(conn)
+    assert inventory.camera_biases(conn, camera) == [{"offset": 50, "bias_adu": 480.0, "frames": 2}]
+
+
 def _biases(client, camera):
     pagina = client.get("/api/v1/gear").json()
     return next(p for p in pagina["instruments"] if p["id"] == camera)["biases"]

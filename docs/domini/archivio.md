@@ -139,7 +139,10 @@ costellazione, produzioni, catalogo), e una sola per i cinque dei frame (periodo
 ottica, camera), che legge i frame una volta raggruppati per riga, notte, setup e filtro: ogni
 loro voce cambia i frame contati, e filtro e produzioni si chiedono a quei frame, come fa la
 regola. Una prova la confronta
-con la pagina che la voce darebbe. Una voce a zero resta a schermo, spenta: sparire farebbe
+con la pagina che la voce darebbe. Le voci con nient'altro scelto (la pagina come si apre) le
+scrive chi scrive, in `archive_options`, e la pagina le legge finche' nessuna scrittura su frame,
+oggetti, catalogo, mosaici, notti, setup o filtri le ha rese vecchie; vecchie, conta come sopra
+(ADR 0048, `tests/test_spine_archive_options.py`). Una voce a zero resta a schermo, spenta: sparire farebbe
 saltare le altre sotto il dito. **Un criterio si offre solo da due voci in su**: con una sola,
 sceglierla non stringe niente; una voce scelta resta in elenco anche a zero. Ottica e camera si
 leggono dal setup della posa (`rigs`), come le conta l'Attrezzatura.

@@ -7,8 +7,8 @@ from collections.abc import Iterable
 from typing import Any
 
 from ..db.inserted import inserted_id
+from . import archive_criteria, mosaic_describe, mosaic_proposals, mosaic_weight, object_answer
 from . import declarations as decl
-from . import mosaic_describe, mosaic_proposals, mosaic_weight, object_answer
 from .identify_geometry import frame_radius_deg, frame_shape
 from .mosaic_geometry import Relation, overlap, same_pointing
 
@@ -151,6 +151,7 @@ def write_answer(conn: sqlite3.Connection, key: str, value: str, now: str | None
         raise LookupError(f"mosaico {key}")
     decl.write_declaration(conn, decl.EntityType.MOSAIC, key, decl.MOSAIC_FIELD, value, now)
     _write_key(conn, row["id"])
+    archive_criteria.write(conn)  # no round follows: the answer itself moves the rows
 
 
 def answer_of(conn: sqlite3.Connection, key: str) -> str | None:

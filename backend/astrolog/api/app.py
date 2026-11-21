@@ -27,7 +27,14 @@ from ..db.connect import connect, ensure_database
 from ..db.paths import data_root as env_data_root
 from ..db.transaction import transaction
 from ..site_of import Site, home_site
-from ..spine import gear_usage, moon_calendar, night_moons, object_candidates, stages
+from ..spine import (
+    archive_criteria,
+    gear_usage,
+    moon_calendar,
+    night_moons,
+    object_candidates,
+    stages,
+)
 from ..spine.stages import StageName
 from ..startup import LOCAL_HOSTS
 from ..weather import climate, forecast, history, rounds
@@ -145,6 +152,11 @@ def _tonight_at_start(db_path: str | Path) -> None:
             night_moons.refresh(conn)  # rows of an older formula: once, at the first start
         except Exception:
             log.exception("notti: la Luna delle notti non riscritta all'avvio")
+        try:  # counted by the code now running, not the one that wrote them (ADR 0048)
+            with transaction(conn):
+                archive_criteria.write(conn)
+        except Exception:
+            log.exception("archivio: le voci non riscritte all'avvio")
     finally:
         conn.close()
 
@@ -199,6 +211,8 @@ def _load_catalog(db_path: str | Path) -> None:
             # object names in gear usage and the candidates of the questions come from the catalog
             try:
                 gear_usage.write(conn)
+                with transaction(conn):
+                    archive_criteria.write(conn)
                 object_candidates.write(conn)
             except Exception:
                 log.exception("catalogo caricato, ma l'uso e i candidati che ne vengono no")

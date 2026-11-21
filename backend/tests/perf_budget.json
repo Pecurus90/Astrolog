@@ -64,8 +64,8 @@
   "soglia_ms": 100
  },
  "/api/v1/archive?limit=20&offset=0&sort=name": {
-  "misura_ms": 68.6,
-  "soglia_ms": 275
+  "misura_ms": 38.1,
+  "soglia_ms": 153
  },
  "/api/v1/objects/{key}": {
   "misura_ms": 7.3,
@@ -104,7 +104,7 @@
   "soglia_ms": 100
  },
  "/api/v1/search?q=M": {
-  "misura_ms": 41.0,
-  "soglia_ms": 164
+  "misura_ms": 19.5,
+  "soglia_ms": 100
  }
 }
