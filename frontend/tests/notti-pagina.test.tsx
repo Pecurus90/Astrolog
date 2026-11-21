@@ -32,21 +32,25 @@ afterEach(() => {
 })
 
 describe("cosa la pagina chiede", () => {
-  it("l'elenco 20 alla volta, la striscia le ultime 7, il mese della protagonista; niente notte sola", async () => {
+  it("l'elenco 20 alla volta, la striscia le ultime 7, il mese dell'ultima notte; niente notte sola", async () => {
     await apri(rotte(TRE))
     await notte()
     await calendario()
     expect(chieste("/api/v1/nights?limit=20&offset=0").length).toBeGreaterThan(0)
     expect(chieste("/api/v1/nights?limit=7").length).toBeGreaterThan(0)
-    expect(chieste("calendar?month=2024-05").length).toBeGreaterThan(0)
+    // the newest night's month, asked beside the nights: the API names it, the page does not
+    expect(chieste("calendar").map((u) => u.slice(u.indexOf("/api")))).toEqual([
+      "/api/v1/nights/calendar",
+    ])
     expect(chieste("limit=1")).toEqual([])
   })
 
-  it("senza notti non chiede ne' una notte sola ne' un mese", async () => {
+  it("senza notti non chiede una notte sola, e il mese solo quello di partenza", async () => {
     await apri(rotte(pagina([])))
     await screen.findByText("Nessuna notte con questi criteri")
     expect(chieste("limit=1")).toEqual([])
-    expect(chieste("calendar")).toEqual([])
+    expect(chieste("calendar")).toHaveLength(1)
+    expect(chieste("month=")).toEqual([])
   })
 
   it("con ?notte= chiede solo quella: niente striscia, calendario, criteri, archivio", async () => {

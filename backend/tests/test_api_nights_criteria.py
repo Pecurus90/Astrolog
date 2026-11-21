@@ -238,6 +238,18 @@ def test_a_month_without_nights_is_an_empty_month_not_an_error(client):
     assert (mese["days"], mese["nights"], mese["good"]) == ([], 0, 0)
 
 
+def test_without_a_month_the_calendar_is_the_newest_nights(client):
+    """La pagina lo chiede insieme alle notti, senza aspettarle: mese della notte piu' recente."""
+    risposta = client.get("/api/v1/nights/calendar")
+    assert risposta.status_code == 200, risposta.text
+    assert risposta.json() == calendario(client, "2025-01")
+
+
+def test_without_a_month_and_without_nights_the_calendar_is_tonights(client_vuoto):
+    mese = client_vuoto.get("/api/v1/nights/calendar").json()
+    assert (mese["month"], mese["days"]) == (mese["tonight"][:7], [])
+
+
 def test_a_month_that_is_not_a_month_is_refused(client):
     for mese in ("maggio", "0000-01", "9999-12"):
         assert client.get("/api/v1/nights/calendar", params={"month": mese}).status_code == 422

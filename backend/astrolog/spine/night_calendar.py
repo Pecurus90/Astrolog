@@ -20,6 +20,14 @@ ORDER BY n.night_date, s.name COLLATE NOCASE, n.id
 """  # noqa: S608 - constant fragments of the spine
 
 _FIRST = "SELECT substr(MIN(night_date), 1, 7) FROM nights"
+_LAST = "SELECT substr(MAX(night_date), 1, 7) FROM nights"
+
+
+def newest_month(conn: sqlite3.Connection, tonight: dt.date) -> dt.date:
+    """First day of the newest night's month; without nights, tonight's."""
+    last: str | None = conn.execute(_LAST).fetchone()[0]
+    return dt.date.fromisoformat(f"{last}-01") if last else tonight.replace(day=1)
+
 
 _SHOTS = f"""
 SELECT n.id, n.night_date, s.name AS site, {counts.counts_on(counts.Subject.NIGHT)}

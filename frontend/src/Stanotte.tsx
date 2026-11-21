@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { queryOptions, useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 
 import { api } from "./api/client"
@@ -17,20 +17,23 @@ import { type Chiave, giornoEMese, numero, oraDelSito, t, unDecimale } from "./i
  */
 
 export function useStanotte() {
-  return useQuery({
-    queryKey: ["tonight"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/tonight")
-      if (error) throw new Error(t("tonight.failed"))
-      return data
-    },
-    // Questa rotta campiona una notte di cielo e costa cento volte una lettura: la Luna cambia una
-    // volta al giorno e il meteo ogni tre ore, e chi li cambia a mano la butta via. Finche' la prima
-    // previsione non arriva la si richiede piu' spesso.
-    staleTime: 60 * 60 * 1000,
-    refetchInterval: (q) => rileggiOgni(q.state.data),
-  })
+  return useQuery(STANOTTE)
 }
+
+// the App asks it beside the settings, before the shell mounts
+export const STANOTTE = queryOptions({
+  queryKey: ["tonight"],
+  queryFn: async () => {
+    const { data, error } = await api.GET("/api/v1/tonight")
+    if (error) throw new Error(t("tonight.failed"))
+    return data
+  },
+  // Questa rotta campiona una notte di cielo e costa cento volte una lettura: la Luna cambia una
+  // volta al giorno e il meteo ogni tre ore, e chi li cambia a mano la butta via. Finche' la prima
+  // previsione non arriva la si richiede piu' spesso.
+  staleTime: 60 * 60 * 1000,
+  refetchInterval: (q) => rileggiOgni(q.state.data),
+})
 
 type Notte = components["schemas"]["TonightOut"]
 

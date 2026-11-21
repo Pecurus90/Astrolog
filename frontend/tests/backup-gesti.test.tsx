@@ -17,6 +17,7 @@ import {
   pulisci,
   rispondi,
   scritture,
+  tornaSullaScheda,
 } from "./banco"
 
 afterEach(pulisci)
@@ -237,7 +238,7 @@ describe("il backup nelle Impostazioni", () => {
     await screen.findByRole("region", { name: "il file delle risposte" })
     expect(screen.queryByText("Stato del backup non disponibile.")).toBeNull()
     stato.stato = 500
-    window.dispatchEvent(new Event("visibilitychange"))
+    tornaSullaScheda()
     expect(await screen.findByText("Stato del backup non disponibile.")).toBeDefined()
     const prima = letture()
     fireEvent.click(screen.getByRole("button", { name: "Riprova" }))

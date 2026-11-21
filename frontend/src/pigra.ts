@@ -19,8 +19,8 @@ export class PaginaNonArrivata extends Error {
 export function pigra<M extends Record<K, ComponentType<any>>, K extends keyof M & string>(
   carica: () => Promise<M>,
   nome: K,
-): LazyExoticComponent<M[K]> {
-  return lazy(async () => {
+): Pigra<M[K]> {
+  const componente = lazy(async () => {
     let modulo: M
     try {
       modulo = await carica()
@@ -29,4 +29,9 @@ export function pigra<M extends Record<K, ComponentType<any>>, K extends keyof M
     }
     return { default: modulo[nome] }
   })
+  // the browser keeps one download per module: asking it early is not asking it twice
+  return Object.assign(componente, { precarica: () => void carica().catch(() => undefined) })
 }
+
+// a failed early download stays silent: the page asks again when it mounts, and Pigre tells it
+export type Pigra<C extends ComponentType<any>> = LazyExoticComponent<C> & { precarica: () => void }

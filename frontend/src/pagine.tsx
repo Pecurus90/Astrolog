@@ -2,7 +2,7 @@ import type { ReactElement } from "react"
 
 import { Impostazioni, SEZIONI } from "./Impostazioni"
 import type { Chiave } from "./i18n"
-import { pigra } from "./pigra"
+import { type Pigra, pigra } from "./pigra"
 
 // Each page downloads when opened. Impostazioni stays: search reads its sections.
 const Archivio = pigra(() => import("./Archivio"), "Archivio")
@@ -91,6 +91,18 @@ export const ALTRO_TELEFONO: readonly string[] = [
 /** Le pagine di un indirizzo dell'elenco, nell'ordine dato. */
 export function pagineDi(indirizzi: readonly string[]): Pagina[] {
   return indirizzi.flatMap((a) => PAGINE.filter((p) => p.a === a))
+}
+
+/** Scarica il file della pagina di un indirizzo, e della sua sezione, prima che si monti: l'App lo
+ *  chiede mentre aspetta le impostazioni, invece che dopo. */
+export function precaricaPagina(percorso: string): void {
+  for (const p of PAGINE) {
+    for (const voce of [p, ...sezioniAperte(p.sezioni)]) {
+      if (voce.a !== percorso) continue
+      const quale: unknown = voce.elemento?.type
+      if (quale && typeof quale === "object" && "precarica" in quale) (quale as Pigra<never>).precarica()
+    }
+  }
 }
 
 /** Le sezioni di una pagina che esistono davvero, nell'ordine del contratto. */

@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { type ReactNode, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 
@@ -110,6 +110,7 @@ export function Notti() {
   const formato = useFormato()
   const tel = formato === "telefono"
   const vai = useNavigate()
+  const cache = useQueryClient()
   const [indirizzo] = useSearchParams()
   const scritto = indirizzo.get("notte")
   const una = scritto !== null && /^[1-9][0-9]*$/.test(scritto) ? Number(scritto) : null
@@ -157,18 +158,22 @@ export function Notti() {
   })
   const protagonista = nota ?? sola.data?.items[0]
   const solaPersa = nota === undefined && (sola.isError || (sola.isSuccess && !sola.data.items.length))
-  const meseVisto = mese ?? protagonista?.night_date.slice(0, 7)
+  // Nothing chosen: the newest night's month, asked beside the nights and not after them; the
+  // reply is kept under its month too, so choosing a night of that month asks nothing.
+  const cercato = mese ?? (sel === null ? undefined : protagonista?.night_date.slice(0, 7))
   const calendario = useQuery({
-    queryKey: ["nights", "calendar", meseVisto],
-    enabled: meseVisto !== undefined && una === null,
+    queryKey: ["nights", "calendar", cercato ?? "ultimo"],
+    enabled: una === null && !storta,
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/nights/calendar", {
-        params: { query: { month: meseVisto ?? "" } },
+        params: { query: cercato ? { month: cercato } : {} },
       })
       if (error) throw new Error(t("nights.failed"))
+      if (!cercato) cache.setQueryData(["nights", "calendar", data.month], data)
       return data
     },
   })
+  const meseVisto = cercato ?? (protagonista ? calendario.data?.month : undefined)
 
   // dal calendario il mese resta quello sfogliato; dalla striscia e dall'elenco segue la notte
   const scegli = (id: number, tieniMese = false) => {

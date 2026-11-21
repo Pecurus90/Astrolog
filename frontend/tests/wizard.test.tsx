@@ -16,7 +16,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { CASA, SALUTE, SPINA, STANOTTE, cambia, chiamate, disegna, fuoriDaiMattoni, impostazioni, nomiDeiPassi, pulisci, quantiControlli, rispondi, scritture } from "./banco"
+import { CASA, SALUTE, SPINA, STANOTTE, cambia, chiamate, disegna, fuoriDaiMattoni, impostazioni, nomiDeiPassi, pulisci, quantiControlli, rispondi, scritture, tornaSullaScheda } from "./banco"
 
 afterEach(pulisci)
 
@@ -639,7 +639,7 @@ describe("il primo avvio", () => {
     })
     const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
     const prima = quante()
-    window.dispatchEvent(new Event("visibilitychange"))
+    tornaSullaScheda()
     await waitFor(() => expect(quante()).toBeGreaterThan(prima))
     // la risposta nuova deve arrivare ed essere disegnata, prima di guardare
     await new Promise((r) => setTimeout(r, 50))
@@ -664,7 +664,7 @@ describe("il primo avvio", () => {
     cambia({ ...STANOTTE, "/api/v1/settings": { stato: 500, corpo: {} }, ...DOPO })
     const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
     const prima = quante()
-    window.dispatchEvent(new Event("visibilitychange"))
+    tornaSullaScheda()
     await waitFor(() => expect(quante()).toBeGreaterThan(prima))
     await new Promise((r) => setTimeout(r, 50))
     expect(screen.getByRole("region", { name: "Primo avvio completato" })).toBeDefined()

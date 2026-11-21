@@ -740,3 +740,5 @@ test_a_conversion_that_does_not_happen_is_said_not_ignored - step 6.9, ADR 0046:
 test_importing_the_ephemeris_disarms_the_download - step 6.9, ADR 0046: the ephemeris no longer uses astropy; replaced by test_the_ephemeris_works_with_no_network_and_says_nothing and test_importing_the_coordinate_reader_disarms_the_download
 test_the_sun_asked_the_fast_way_agrees_with_the_slow_one - step 6.9, ADR 0046: one road for the Sun now; replaced by test_the_altitude_agrees_with_astropy_within_thirty_arcseconds
 test_the_moon_of_a_whole_page_costs_one_call - step 6.16, ADR 0047: Nights reads the written Moon; replaced by test_reading_the_nights_asks_the_sky_nothing_and_writing_them_asks_once
+l'elenco 20 alla volta, la striscia le ultime 7, il mese della protagonista; niente notte sola - step 6.18: the calendar starts beside the nights, without a month; replaced by l'elenco 20 alla volta, la striscia le ultime 7, il mese dell'ultima notte; niente notte sola
+senza notti non chiede ne' una notte sola ne' un mese - step 6.18: the starting month is asked before knowing the archive is empty; replaced by senza notti non chiede una notte sola, e il mese solo quello di partenza

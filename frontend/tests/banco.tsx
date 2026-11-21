@@ -16,12 +16,13 @@
  *   piegare il codice per farsi dire di si'. Provato togliendolo: senza, tutte e due le prove
  *   tornano rosse con "Failed to parse URL from /api/v1/review".
  */
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import axe from "axe-core"
 import { beforeAll, vi } from "vitest"
 
 import type { components } from "../src/api/schema"
+import { FRESCHI_MS, nuoviDati } from "../src/dati"
 
 // Cold transform of the App graph is file setup, not the first test's time (Issue #89).
 // Only under jsdom: the App reads `document` at import.
@@ -297,7 +298,7 @@ export async function disegna() {
   const { App } = await import("../src/App")
   // `retry: false`: senza, la prova sull'errore aspetterebbe i tentativi di react-query, e il
   // rosso arriverebbe come un timeout invece che come l'asserzione che e' fallita davvero.
-  const dati = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const dati = nuoviDati({ retry: false })
   return render(
     <QueryClientProvider client={dati}>
       <App />
@@ -634,8 +635,17 @@ export function nomiDeiPassi() {
   )
 }
 
+/** Tornare sulla scheda dopo che i dati sono invecchiati (`FRESCHI_MS`): react-query 5 rilegge le
+ *  domande vecchie su visibilitychange. L'orologio va avanti, i timer restano veri. */
+export function tornaSullaScheda() {
+  const ora = Date.now() + FRESCHI_MS + 1
+  vi.spyOn(Date, "now").mockReturnValue(ora)
+  window.dispatchEvent(new Event("visibilitychange"))
+}
+
 export function pulisci() {
   cleanup()
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   richieste.length = 0
   scritte.length = 0

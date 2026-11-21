@@ -96,16 +96,22 @@ def _one(conn: sqlite3.Connection, night: int) -> list[int]:
 @router.get("/nights/calendar", response_model=NightMonth)
 def night_month(
     # [T] years 1000-9899: the dates around stay inside Python's calendar
-    month: str = Query(pattern=r"^(1\d|[2-8]\d|9[0-8])\d\d-(0[1-9]|1[0-2])$"),
+    month: str | None = Query(None, pattern=r"^(1\d|[2-8]\d|9[0-8])\d\d-(0[1-9]|1[0-2])$"),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> NightMonth:
     """A month of nights for the calendar: one sign per night with its verdict, the month's nights,
     good ones and hours; and the months it moves between, from the first with nights to tonight's
-    at home. A month without nights is an empty month."""
-    first_day = dt.date.fromisoformat(f"{month}-01")
-    return NightMonth.model_validate(
-        night_calendar.month(conn, first_day, history.KIND, home_tonight(conn))
+    at home. A month without nights is an empty month.
+
+    Without `month`, the newest night's month (tonight's if there are none): the page asks it
+    beside the nights instead of after them."""
+    tonight = home_tonight(conn)
+    first_day = (
+        dt.date.fromisoformat(f"{month}-01")
+        if month
+        else night_calendar.newest_month(conn, tonight)
     )
+    return NightMonth.model_validate(night_calendar.month(conn, first_day, history.KIND, tonight))
 
 
 # After `/nights/calendar`: the first route that matches wins.

@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
 import { BrowserRouter, Route, Routes } from "react-router"
 
 import { RipristinoProposto, useBackup } from "./Backup"
@@ -10,7 +10,10 @@ import { VesteSalvata, vesteDa } from "./componenti/Tema"
 import { caricaLingua, usaLingua } from "./i18n"
 import { LINGUA_SORGENTE } from "./i18n/lingue"
 import { ComingSoon } from "./ComingSoon"
-import { PAGINE, sezioniAperte } from "./pagine"
+import { REVISIONE } from "./api/revisione"
+import { PAGINE, precaricaPagina, sezioniAperte } from "./pagine"
+import { STATO } from "./Scansiona"
+import { STANOTTE } from "./Stanotte"
 import { Pigre } from "./Pigre"
 import { pigra } from "./pigra"
 import { useCambioDelTema, usePreferenze } from "./preferenze"
@@ -35,6 +38,15 @@ const Wizard = pigra(() => import("./Wizard"), "Wizard")
 export function App() {
   const settings = usePreferenze()
   const backup = useBackup()
+  const cache = useQueryClient()
+  // Beside the gate, not after it: the shell's three questions and the page's file. A first
+  // start pays three reads it does not show; every other start waits one round less.
+  useEffect(() => {
+    void cache.prefetchQuery(REVISIONE)
+    void cache.prefetchQuery(STANOTTE)
+    void cache.prefetchQuery(STATO)
+    precaricaPagina(window.location.pathname)
+  }, [cache])
   // Dopo "Fine" il timbro e' scritto, ma il primo avvio resta a schermo con la sua chiusura
   // finche' non si preme "Apri AstroLog": senza questo, una rilettura delle impostazioni (basta
   // tornare sulla scheda) la toglierebbe da sotto gli occhi. Lo accende il primo avvio stesso,

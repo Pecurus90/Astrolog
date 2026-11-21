@@ -558,6 +558,9 @@ export interface paths {
          * @description A month of nights for the calendar: one sign per night with its verdict, the month's nights,
          *     good ones and hours; and the months it moves between, from the first with nights to tonight's
          *     at home. A month without nights is an empty month.
+         *
+         *     Without `month`, the newest night's month (tonight's if there are none): the page asks it
+         *     beside the nights instead of after them.
          */
         get: operations["night_month"];
         put?: never;
@@ -7887,8 +7890,8 @@ export interface operations {
     };
     night_month: {
         parameters: {
-            query: {
-                month: string;
+            query?: {
+                month?: string | null;
             };
             header?: never;
             path?: never;

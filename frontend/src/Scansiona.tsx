@@ -1,5 +1,11 @@
-import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type CSSProperties, Fragment, type ReactNode, useEffect } from "react"
+import {
+  queryOptions,
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
+import { type CSSProperties, Fragment, type ReactNode, useEffect, useRef } from "react"
 import { Link, useNavigate } from "react-router"
 
 import { api } from "./api/client"
@@ -71,18 +77,20 @@ const FASI: Record<string, Chiave> = {
 
 /** Lo stato del lavoro di sottofondo: il telaio e la Dashboard leggono questo. */
 export function useStato() {
-  return useQuery({
-    queryKey: ["pipeline"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/pipeline/status")
-      if (error) throw new Error(t("scan.failed"))
-      return data
-    },
-    refetchInterval: (q) =>
-      q.state.data?.worker.state === "running" ? MENTRE_GIRA_MS : DA_FERMO_MS,
-    refetchIntervalInBackground: false,
-  })
+  return useQuery(STATO)
 }
+
+// the App asks it beside the settings, before the shell mounts
+export const STATO = queryOptions({
+  queryKey: ["pipeline"],
+  queryFn: async () => {
+    const { data, error } = await api.GET("/api/v1/pipeline/status")
+    if (error) throw new Error(t("scan.failed"))
+    return data
+  },
+  refetchInterval: (q) => (q.state.data?.worker.state === "running" ? MENTRE_GIRA_MS : DA_FERMO_MS),
+  refetchIntervalInBackground: false,
+})
 
 export function useGesto() {
   const cache = useQueryClient()
@@ -136,13 +144,19 @@ export function nomeConScansione(nome: string, stato: StatoScansione): string {
  *  mostrano va riletto. Lo monta il telaio, che c'e' su ogni pagina. */
 export function useFineDelLavoro() {
   const cache = useQueryClient()
-  const finita = useStato().data?.worker.ended_at ?? null
+  const stato = useStato()
+  const finita = stato.data?.worker.ended_at ?? null
+  // the stamp read at opening is no news: the pages read after it already
+  const vista = useRef<string | null | undefined>(undefined)
   useEffect(() => {
-    if (finita === null) return
+    if (!stato.isSuccess) return
+    const prima = vista.current
+    vista.current = finita
+    if (prima === undefined || finita === null || finita === prima) return
     for (const chiave of ["review", "scans", "nights", "year", "folders"]) {
       void cache.invalidateQueries({ queryKey: [chiave] })
     }
-  }, [finita, cache])
+  }, [finita, cache, stato.isSuccess])
 }
 
 /** Il segno della scansione: l'anello che gira mentre lavora, "!" ambra interrotta o bloccata.

@@ -4,11 +4,12 @@
  * Sta qui perche' lo usano due file (`notti-pagina.test.tsx`, `notti-pagina-navigazione.test.tsx`):
  * due copie delle stesse notti un giorno raccontano due archivi.
  */
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router"
 import { vi } from "vitest"
 
+import { nuoviDati } from "../src/dati"
 import { chiamate, rispondi, type Voce } from "./banco"
 
 export const CIELO = {
@@ -217,7 +218,7 @@ export async function apri(mappa: Record<string, Voce>, indirizzo = "/notti") {
   vi.resetModules()
   const { Notti } = await import("../src/Notti")
   const { FinestraDellOggetto } = await import("../src/FinestraDellOggetto")
-  const dati = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const dati = nuoviDati({ retry: false })
   return render(
     <QueryClientProvider client={dati}>
       <MemoryRouter initialEntries={[indirizzo]}>
