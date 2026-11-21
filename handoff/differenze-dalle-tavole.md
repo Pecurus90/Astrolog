@@ -517,6 +517,11 @@ Diverse dalla tavola:
 - **Carta del meteo «Non disponibile».** Tavola: «Non tutti i modelli danno la visibilità.» App:
   «La previsione non la dà per stanotte.» per ogni misura senza ore (Marco, 11/11, Issue #59).
   Perche': la riga della tavola vale solo per la visibilità. A Design.
+- **Il punto della Trasparenza sul cursore.** Tavola: punto e riquadro leggono lo stesso valore
+  per passo (Dashboard.dc.html 454-456). App: il punto sta sulla linea disegnata fra i centri
+  delle ore, il riquadro dice il valore dell'ora intera; fuori dalle :30 i due differiscono (a
+  mezzanotte 55 contro 50). Perche': la previsione e' oraria e il cursore va a 15 minuti; un
+  valore interpolato nel riquadro sarebbe un testo nuovo, da decidere (21/11).
 
 ## Dashboard -- Il 2026 e Filtri del 2026 (passo 33, commit D, 11/11)
 

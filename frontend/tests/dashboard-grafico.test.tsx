@@ -226,6 +226,23 @@ describe("il grafico della Notte", () => {
     expect(posto((tratto as HTMLElement).style.left)).toBe("26.92")
   })
 
+  it("sul cursore un punto luminoso per ogni curva sopra l'orizzonte, alla sua altezza", async () => {
+    await montaDashboard(conOre())
+    const c = await cursore()
+    // il punto chiaro col bagliore del colore della curva (tavola, Dashboard.dc.html 456)
+    const punti = () =>
+      [...c.querySelectorAll("span")].filter((s) => stile(s).includes("var(--punto-chiaro)"))
+    const contenitore = (p: Element) => p.parentElement as HTMLElement
+    // alle 22:00 la Luna e' sotto e la linea della Trasparenza parte alle 22:30: nessun punto
+    expect(punti()).toHaveLength(0)
+    fireEvent.keyDown(c, { key: "ArrowRight" })
+    // a mezzanotte la Trasparenza sulla sua linea, 70,4 verso 50 a tre quarti (55,1), e la
+    // Luna, 15 gradi su 90
+    expect(punti().map((p) => posto(contenitore(p).style.top))).toEqual(["46.53", "82.08"])
+    expect(posto(contenitore(punti()[0]!).style.left)).toBe("42.31")
+    expect(stile(punti()[0])).toContain("0 0 10px var(--prot-barra)")
+  })
+
   it("le frecce, Maiuscolo, Inizio e Fine spostano il cursore senza uscire dalla notte", async () => {
     await montaDashboard(conOre())
     const c = await cursore()

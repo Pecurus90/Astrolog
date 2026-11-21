@@ -288,6 +288,15 @@ export function DashboardNotte({
     }
     return d
   }
+  // dove la linea disegnata passa all'ascissa `xx`: fuori dai suoi tratti, null
+  const sullaLinea = (punti: Serie["punti"], xx: number) => {
+    const k = punti.findIndex((p) => p.x >= xx)
+    const b = punti[k]
+    const a = punti[k - 1]
+    if (b && b.x === xx) return b.v < 0 ? null : b.v
+    if (!a || !b || a.v < 0 || b.v < 0) return null
+    return a.v + ((b.v - a.v) * (xx - a.x)) / (b.x - a.x)
+  }
   const prima = serie[0]
   const area =
     prima && v === "notte" && ore.length
@@ -590,8 +599,52 @@ export function DashboardNotte({
               bottom: 0,
               borderLeft: "1.5px dashed var(--prot-tenue)",
               pointerEvents: "none",
+              transition: "left .16s ease-out",
             }}
           />
+          {serie.map((sr, k) => {
+            const val = qui ? sullaLinea(sr.punti, x(qui.at)) : null
+            return val == null ? null : (
+              <span
+                key={`p${sr.n}`}
+                style={{
+                  position: "absolute",
+                  left: `${sinistra}%`,
+                  top: `${y(val) / 2}%`,
+                  width: 0,
+                  height: 0,
+                  pointerEvents: "none",
+                  zIndex: k === 0 ? 2 : 1,
+                  transition: "left .16s ease-out, top .16s ease-out",
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    left: -11,
+                    top: -11,
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    background: sr.c,
+                    opacity: 0.22,
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    left: -5.5,
+                    top: -5.5,
+                    width: 11,
+                    height: 11,
+                    borderRadius: "50%",
+                    background: "var(--punto-chiaro)",
+                    boxShadow: `0 0 0 2px ${sr.c}, 0 0 10px ${sr.c}`,
+                  }}
+                />
+              </span>
+            )
+          })}
           {qui && (!tel || sopra !== null) && (
             <div
               className="al-riquadro al-riquadro--lista"
