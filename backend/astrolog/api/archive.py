@@ -7,7 +7,16 @@ from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Query
 
-from ..spine import archive, archive_criteria, filters_used, objects, previews, productions
+from ..db import derived_fresh
+from ..spine import (
+    archive,
+    archive_criteria,
+    archive_rows,
+    filters_used,
+    objects,
+    previews,
+    productions,
+)
 from ..spine.archive import Family, Form
 from ..spine.counts import Scope, Subject
 from ..spine.solve import solver_where
@@ -105,13 +114,9 @@ def items_of(
     conn: sqlite3.Connection, rows: list[dict[str, Any]], scope: Scope
 ) -> list[ArchiveObject]:
     """One query per kind of row for the whole page; an object row carries only its frames outside
-    mosaics, like its hours."""
-    object_ids = [r["id"] for r in rows if r["mosaic_key"] is None]
-    filters_by_key = filters_used.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
+    mosaics, like its hours. Nothing narrowing, what `archive_rows` wrote while fresh."""
     mosaic_keys = [r["mosaic_key"] for r in rows if r["mosaic_key"]]
-    filters_by_key |= filters_used.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
-    made_by_key = productions.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
-    made_by_key |= productions.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
+    filters_by_key, made_by_key = _filters_and_productions(conn, rows, scope)
     panels_by_key = archive.panels(conn, mosaic_keys, scope)
     put = previews.of(conn, (r["key"] for r in rows))
     return [
@@ -125,16 +130,37 @@ def items_of(
             untimed=r["untimed"],
             constellation=r["constellation"],
             type_code=r["type_code"],
-            filters=filters_by_key.get(r["mosaic_key"] or r["id"], []),
-            productions=[
-                ArchiveProduction(**p) for p in made_by_key.get(r["mosaic_key"] or r["id"], [])
-            ],
+            filters=filters_by_key.get(r["row_key"], []),
+            productions=[ArchiveProduction(**p) for p in made_by_key.get(r["row_key"], [])],
             panels=r["panels"],
             panel_list=[ArchivePanel(**p) for p in panels_by_key.get(r["mosaic_key"], [])],
-            previews=_previews(r, made_by_key.get(r["mosaic_key"] or r["id"], []), put),
+            previews=_previews(r, made_by_key.get(r["row_key"], []), put),
         )
         for r in rows
     ]
+
+
+type ByRow = dict[Any, list[Any]]
+
+
+def _filters_and_productions(
+    conn: sqlite3.Connection, rows: list[dict[str, Any]], scope: Scope
+) -> tuple[ByRow, ByRow]:
+    """`({row key: filters}, {row key: productions})`: written ones with nothing narrowing."""
+    if scope == Scope() and derived_fresh.is_fresh(conn):
+        keys = [r["row_key"] for r in rows]
+        return archive_rows.filters_of(conn, keys), archive_rows.productions_of(conn, keys)
+    object_ids = [r["id"] for r in rows if r["mosaic_key"] is None]
+    mosaic_keys = [r["mosaic_key"] for r in rows if r["mosaic_key"]]
+    filters = filters_used.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
+    filters |= filters_used.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
+    made = productions.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
+    made |= productions.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
+    key_of = {r["mosaic_key"] or r["id"]: r["row_key"] for r in rows}
+    return (
+        {key_of[k]: v for k, v in filters.items()},
+        {key_of[k]: v for k, v in made.items()},
+    )
 
 
 def _previews(

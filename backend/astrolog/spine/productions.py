@@ -51,7 +51,14 @@ def of(
     ORDER BY {filters_used.order_by("x")}
     """  # noqa: S608 - as above
     filters = idlist.grouped(conn, (by_filter, values), ids, "owner", dict)
-    out = idlist.grouped(conn, (sql, values), ids, "owner", dict)
+    return with_filters(idlist.grouped(conn, (sql, values), ids, "owner", dict), filters)
+
+
+def with_filters(
+    out: dict[Any, list[dict[str, Any]]], filters: dict[Any, list[dict[str, Any]]]
+) -> dict[Any, list[dict[str, Any]]]:
+    """Each production with its filters, both keyed by owner and carrying optics and camera ids;
+    `out` changed in place, and returned."""
     for owner, rows in out.items():
         theirs = filters.get(owner, [])
         for row in rows:

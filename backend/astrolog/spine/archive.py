@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from ..db import idlist
+from ..db import derived_fresh, idlist
 from . import counts, filters_used
 from .declarations import MOSAIC_FIELD, EntityType
 from .object_answer import CATALOG, NAME
@@ -46,6 +46,17 @@ LEFT JOIN catalog_entries e ON e.slug = t.slug
 LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608
 
 ROWS = f"({_OBJECTS} UNION ALL {_MOSAICS}) r"
+# What a row says of itself, live in `ROWS` or written in `archive_rows` (ADR 0048).
+ROW_COLUMNS = (
+    "row_key", "id", "mosaic_key", "catalog_slug", "primary_name", "catalog_name",
+    "constellation", "type_code", "common_name", "catalog", "designation", "panels",
+)  # fmt: skip
+STAT_COLUMNS = ("frames", "integration_s", "untimed", "last_night")
+BASE = ", ".join(f"r.{c}" for c in ROW_COLUMNS)
+_WRITTEN = "archive_rows r"
+# Narrowed, the written rows without their stats: those of the scope are counted.
+_WRITTEN_BARE = f"(SELECT {', '.join(ROW_COLUMNS)} FROM archive_rows) r"  # noqa: S608
+_WRITTEN_STATS = ", ".join(f"r.{c}" for c in STAT_COLUMNS)
 
 
 class Order(StrEnum):
@@ -279,6 +290,17 @@ def where(c: Criteria) -> tuple[str, list[Any]]:
     return " AND ".join(parts), values
 
 
+def stats(narrowed: str) -> str:
+    """Frames, hours, untimed and last night of the frames a row counts; the scope's values go
+    four times."""
+    return f"{counts.counts_on(counts.Subject.ROW, narrowed)}, {_LAST_NIGHT.format(scope=narrowed)}"
+
+
+def _rows(conn: sqlite3.Connection) -> str:
+    """The written rows while fresh, else counted from the frames (ADR 0048)."""
+    return _WRITTEN if derived_fresh.is_fresh(conn) else ROWS
+
+
 def page(
     conn: sqlite3.Connection,
     *,
@@ -293,15 +315,17 @@ def page(
     criteria = Criteria(**conditions)
     cond, values = where(criteria)
     narrowed, scope_values = criteria.scope.sql
-    hours = counts.counts_on(counts.Subject.ROW, narrowed)
-    last = _LAST_NIGHT.format(scope=narrowed)
+    source = _rows(conn)
+    if source == _WRITTEN and narrowed:
+        source = _WRITTEN_BARE
+    counted = _WRITTEN_STATS if source == _WRITTEN else stats(narrowed)
     rows = conn.execute(
-        f"SELECT r.*, {_KEY} AS key, {hours}, {last} FROM {ROWS}"  # noqa: S608
+        f"SELECT {BASE}, {_KEY} AS key, {counted} FROM {source}"  # noqa: S608
         f" WHERE {cond} {order} LIMIT ? OFFSET ?",
         (*scope_values * 4, *values, limit, offset),
     )
     total = conn.execute(
-        f"SELECT COUNT(*) FROM {ROWS} WHERE {cond}",  # noqa: S608 - `where` are placeholders
+        f"SELECT COUNT(*) FROM {_rows(conn)} WHERE {cond}",  # noqa: S608 - `where` are placeholders
         values,
     ).fetchone()[0]
     return [dict(r) for r in rows], total
@@ -313,7 +337,7 @@ def found(conn: sqlite3.Connection, **conditions: Any) -> dict[str, int]:
     # `where` are placeholders, hence the `noqa`
     sql = (
         "SELECT COALESCE(SUM(r.mosaic_key IS NULL), 0), COALESCE(SUM(r.mosaic_key IS NOT NULL), 0)"  # noqa: S608
-        f" FROM {ROWS} WHERE {cond}"
+        f" FROM {_rows(conn)} WHERE {cond}"
     )
     n_objects, n_mosaics = conn.execute(sql, values).fetchone()
     return {"objects": n_objects, "mosaics": n_mosaics}
@@ -328,20 +352,39 @@ SHOT = (
 ROW_OF_FRAME = (
     "CASE WHEN f.mosaic_key IS NOT NULL THEN 'm:' || f.mosaic_key ELSE 'o:' || f.object_id END"
 )
-_TOTALS = (
+TOTALS = (
     f"SELECT {counts.AGGREGATE}, {counts.UNTIMED}, COUNT(DISTINCT f.night_id) AS nights"  # noqa: S608
     f" FROM frames f WHERE {SHOT}"
 )
 # Light frames that no object and no mosaic took: unsolved, or solved on a sky with nothing named.
-_UNRESOLVED = (
+UNRESOLVED = (
     "f.copy_of IS NULL AND f.image_type = 'light' AND f.object_id IS NULL AND f.mosaic_key IS NULL"
 )
+LEFT = f"SELECT {counts.AGGREGATE}, {counts.UNTIMED} FROM frames f WHERE {UNRESOLVED}"  # noqa: S608
+# The same, as `archive_rows.write` left them.
+_WHOLE = "SELECT frames, integration_s, untimed, nights FROM archive_whole"
+_WRITTEN_LEFT = (
+    "SELECT left_frames AS frames, left_integration_s AS integration_s, left_untimed AS untimed"
+    " FROM archive_whole"
+)
+_LEFT_BY_FILTER = (
+    "SELECT x.name, x.passband, {aggregate} FROM {source}"  # noqa: S608 - constants
+    " JOIN filters x ON x.id = f.filter_id WHERE {where}"
+    " {group} ORDER BY " + filters_used.order_by("x")
+)
+_LIVE_LEFT_BY_FILTER = _LEFT_BY_FILTER.format(
+    aggregate=counts.AGGREGATE, source="frames f", where=UNRESOLVED, group="GROUP BY x.id"
+)
+_WRITTEN_LEFT_BY_FILTER = _LEFT_BY_FILTER.format(
+    aggregate="f.frames, f.integration_s", source="archive_row_filters f",
+    where="f.row_key IS NULL", group="",
+)  # fmt: skip
 
 
 def totals(conn: sqlite3.Connection) -> dict[str, Any]:
     """The whole archive, whatever the bar asks: rows, mosaics among them, frames, nights."""
     rows = found(conn)
-    frames = dict(conn.execute(_TOTALS).fetchone())
+    frames = dict(conn.execute(_WHOLE if derived_fresh.is_fresh(conn) else TOTALS).fetchone())
     return {
         "rows": rows["objects"] + rows["mosaics"],
         "mosaics": rows["mosaics"],
@@ -354,18 +397,11 @@ def totals(conn: sqlite3.Connection) -> dict[str, Any]:
 
 def unresolved(conn: sqlite3.Connection) -> dict[str, Any] | None:
     """The frames without an object, counted like a row, with filters; None if none."""
-    head = dict(
-        conn.execute(
-            f"SELECT {counts.AGGREGATE}, {counts.UNTIMED} FROM frames f WHERE {_UNRESOLVED}"  # noqa: S608
-        ).fetchone()
-    )
+    written = derived_fresh.is_fresh(conn)
+    head = dict(conn.execute(_WRITTEN_LEFT if written else LEFT).fetchone())
     if not head["frames"]:
         return None
-    by_filter = conn.execute(
-        f"SELECT x.name, x.passband, {counts.AGGREGATE} FROM frames f"  # noqa: S608
-        f" JOIN filters x ON x.id = f.filter_id WHERE {_UNRESOLVED}"
-        f" GROUP BY x.id ORDER BY {filters_used.order_by('x')}"
-    )
+    by_filter = conn.execute(_WRITTEN_LEFT_BY_FILTER if written else _LIVE_LEFT_BY_FILTER)
     return {**head, "filters": [dict(r) for r in by_filter]}
 
 

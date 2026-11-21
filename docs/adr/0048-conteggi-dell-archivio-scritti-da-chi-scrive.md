@@ -44,7 +44,16 @@ Scansione del 20/11 (passo 6.10), archivio sintetico del budget (passo 6.15), mi
 
 - Sull'archivio da 10.000 frame: Archivio da 68 a 38 ms, Cerca `M` da 41 a 20 ms, `2024` da 53 a
   5 ms, Attrezzatura piatta; risposte identiche byte per byte a 1.000 e 10.000 frame.
-- L'Archivio non e' ancora piatto: produzioni e filtri delle righe della pagina, la pagina stessa,
-  i totali e i frame senza oggetto leggono i frame (17, 8, 5 e 5 ms a 10.000). Passo 6.19.1.
+- **Passo 6.19.1, le righe:** `archive_rows` (righe con ore e ultima notte), `archive_productions`
+  e `archive_production_filters`, `archive_row_filters` (anche i frame senza oggetto, `row_key`
+  NULL), `archive_whole`, `archive_object_nights` (Cerca). Le scrive `archive_criteria.write`
+  con le voci, sotto lo stesso segno `archive_options`; ottiche, camere e filtri restano id, il
+  nome in lettura. Trigger nuovi: durata e tipo del frame, nomi degli oggetti. Con periodo,
+  sito o attrezzatura scelti, le righe vengono dalla tabella e le ore si contano in lettura.
+  Cerca sceglie prima le venti notti, poi ne conta i frame. Misurato il 21/11, migliore di
+  cinque, da 1.000 a 10.000 frame: Archivio da 5,0 a 5,8 ms (era da 8,2 a 38,7), Cerca `M` da
+  3,7 a 4,1 (era da 5,5 a 19,2); 22 risposte identiche byte per byte, lette o contate.
+- Restano in lettura, e crescono coi frame, le pagine con un criterio scelto (`year=2024` 63 ms a
+  10.000): le combinazioni sono troppe per scriverle.
 - Chi aggiunge un ingresso alle voci dell'Archivio (una tabella nuova nella regola) aggiunge i suoi
   trigger in `schema.sql`, o le voci restano fresche su dati vecchi.

@@ -142,7 +142,9 @@ regola. Una prova la confronta
 con la pagina che la voce darebbe. Le voci con nient'altro scelto (la pagina come si apre) le
 scrive chi scrive, in `archive_options`, e la pagina le legge finche' nessuna scrittura su frame,
 oggetti, catalogo, mosaici, notti, setup o filtri le ha rese vecchie; vecchie, conta come sopra
-(ADR 0048, `tests/test_spine_archive_options.py`). Una voce a zero resta a schermo, spenta: sparire farebbe
+(ADR 0048, `tests/test_spine_archive_options.py`). Allo stesso modo le righe senza periodo, sito
+o attrezzatura scelti, con produzioni, filtri, totali e frame senza oggetto: scritte in
+`archive_rows` e accanto, identiche a quelle contate (`tests/test_spine_archive_rows.py`). Una voce a zero resta a schermo, spenta: sparire farebbe
 saltare le altre sotto il dito. **Un criterio si offre solo da due voci in su**: con una sola,
 sceglierla non stringe niente; una voce scelta resta in elenco anche a zero. Ottica e camera si
 leggono dal setup della posa (`rigs`), come le conta l'Attrezzatura.

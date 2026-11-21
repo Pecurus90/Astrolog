@@ -1649,20 +1649,98 @@ CREATE TABLE archive_options (
   PRIMARY KEY (key, value)
 ) STRICT;
 
+-- DERIVATO (ADR 0048, passo 6.19.1): le righe dell'Archivio senza periodo, sito o attrezzatura
+-- scelti, con ore e ultima notte. Colonne come `archive.ROWS`, ANY perche' tornino tali e quali.
+CREATE TABLE archive_rows (
+  row_key       TEXT PRIMARY KEY,
+  id            ANY,
+  mosaic_key    ANY,
+  catalog_slug  ANY,
+  primary_name  ANY,
+  catalog_name  ANY,
+  constellation ANY,
+  type_code     ANY,
+  common_name   ANY,
+  catalog       ANY,
+  designation   ANY,
+  panels        ANY,
+  frames        ANY,
+  integration_s ANY,
+  untimed       ANY,
+  last_night    ANY
+) STRICT;
+
+-- DERIVATO (ADR 0048): le produzioni di ogni riga, per id di ottica e camera; i nomi in lettura.
+CREATE TABLE archive_productions (
+  row_key       TEXT NOT NULL,
+  optics_id     INTEGER,
+  camera_id     INTEGER,
+  frames        INTEGER NOT NULL,
+  integration_s ANY NOT NULL,
+  untimed       ANY
+) STRICT;
+CREATE INDEX archive_productions_row ON archive_productions (row_key);
+
+-- DERIVATO (ADR 0048): i filtri di ogni produzione.
+CREATE TABLE archive_production_filters (
+  row_key       TEXT NOT NULL,
+  optics_id     INTEGER,
+  camera_id     INTEGER,
+  filter_id     INTEGER NOT NULL,
+  frames        INTEGER NOT NULL,
+  integration_s ANY NOT NULL
+) STRICT;
+CREATE INDEX archive_production_filters_row ON archive_production_filters (row_key);
+
+-- DERIVATO (ADR 0048): i filtri di ogni riga; `row_key` NULL, i frame che nessuna riga ha preso.
+CREATE TABLE archive_row_filters (
+  row_key       TEXT,
+  filter_id     INTEGER NOT NULL,
+  frames        INTEGER NOT NULL,
+  integration_s ANY NOT NULL
+) STRICT;
+CREATE INDEX archive_row_filters_row ON archive_row_filters (row_key);
+
+-- DERIVATO (ADR 0048): l'archivio intero e i frame senza oggetto, una riga sola.
+CREATE TABLE archive_whole (
+  frames             INTEGER NOT NULL,
+  integration_s      ANY NOT NULL,
+  untimed            ANY,
+  nights             INTEGER NOT NULL,
+  left_frames        INTEGER NOT NULL,
+  left_integration_s ANY NOT NULL,
+  left_untimed       ANY
+) STRICT;
+
+-- DERIVATO (ADR 0048): le notti di ogni oggetto, per Cerca.
+CREATE TABLE archive_object_nights (
+  object_id INTEGER NOT NULL,
+  night_id  INTEGER NOT NULL,
+  PRIMARY KEY (object_id, night_id)
+) STRICT, WITHOUT ROWID;
+
 -- DERIVATO (ADR 0048). Una riga per tabella derivata fresca: la scrive chi la riscrive, la toglie
 -- SQLite a ogni scrittura di un suo ingresso. Senza la riga, chi legge conta dalle tabelle vere.
 CREATE TABLE derived_fresh (
+  -- `archive_options` vale per tutte le `archive_*`: uno scrittore, gli stessi ingressi
   name TEXT PRIMARY KEY CHECK (name IN ('archive_options'))
 ) STRICT;
 
--- Gli ingressi di `archive_options`: frame, oggetti, catalogo, risposte sui mosaici, notti,
--- corredi, filtri. Siti e strumenti no: la voce e' il loro id, il nome si legge in lettura.
+-- Gli ingressi delle tabelle `archive_*`: frame, oggetti e loro nomi, catalogo, risposte sui
+-- mosaici, notti, corredi, filtri. Siti e strumenti no: id nella tabella, nome in lettura.
 CREATE TRIGGER archive_options_frame_in AFTER INSERT ON frames BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
 CREATE TRIGGER archive_options_frame_out AFTER DELETE ON frames BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
 CREATE TRIGGER archive_options_frame_moved AFTER UPDATE OF copy_of, mosaic_key, panel_id,
-  object_id, night_id, rig_id, filter_id ON frames BEGIN
+  object_id, night_id, rig_id, filter_id, exposure_s, image_type ON frames BEGIN
+  DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
+CREATE TRIGGER archive_options_name_in AFTER INSERT ON object_names BEGIN
+  DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
+CREATE TRIGGER archive_options_name_out AFTER DELETE ON object_names BEGIN
+  DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
+CREATE TRIGGER archive_options_name_moved AFTER UPDATE OF object_id, name, is_primary
+  ON object_names BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
 CREATE TRIGGER archive_options_object_in AFTER INSERT ON objects BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;

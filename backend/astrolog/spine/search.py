@@ -6,6 +6,7 @@ import sqlite3
 from datetime import date
 from typing import Any
 
+from ..db import derived_fresh
 from . import archive, counts, inventory, objects
 
 # One group of the answer: `items`, `total`, and for the nights `why`.
@@ -124,20 +125,30 @@ def _whole(column: str) -> str:
 
 # A frame of an object so named: the two names', each `_WHOLE`. The objects first, then their
 # frames on `frames_object`: names are few, frames grow with the archive.
-_BY_OBJECT = (
-    "n.id IN (SELECT f.night_id FROM frames f WHERE f.object_id IN"  # noqa: S608
-    " (SELECT o.id FROM objects o WHERE EXISTS"
+_NAMED_OBJECTS = (
+    "(SELECT o.id FROM objects o WHERE EXISTS"  # noqa: S608 - constant fragments
     " (SELECT 1 FROM object_names m WHERE m.object_id = o.id AND " + _whole("m.name") + ")"
     " OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = o.catalog_slug AND "
     + _whole("k.catalog || k.designation") + "))"
-    " AND f.copy_of IS NULL AND f.night_id IS NOT NULL)"
 )  # fmt: skip
+_BY_OBJECT = (
+    "n.id IN (SELECT f.night_id FROM frames f WHERE f.object_id IN "  # noqa: S608
+    + _NAMED_OBJECTS
+    + " AND f.copy_of IS NULL AND f.night_id IS NOT NULL)"
+)
+# The same nights, as `archive_rows.write` left them (ADR 0048).
+_WRITTEN_BY_OBJECT = (
+    "n.id IN (SELECT a.night_id FROM archive_object_nights a WHERE a.object_id IN "  # noqa: S608
+    + _NAMED_OBJECTS
+    + ")"
+)
+# The page's nights first, then their frames: counted for the twenty shown, not for all found.
+_LATEST = "ORDER BY n.night_date DESC, n.id DESC"
 _NIGHTS = f"""
 SELECT n.id, n.night_date, s.name AS site, {counts.counts_on(counts.Subject.NIGHT)}
-FROM nights n JOIN sites s ON s.id = n.site_id
-WHERE {{where}}
-ORDER BY n.night_date DESC, n.id DESC
-LIMIT ?
+FROM (SELECT n.id FROM nights n WHERE {{where}} {_LATEST} LIMIT ?) shown
+JOIN nights n ON n.id = shown.id JOIN sites s ON s.id = n.site_id
+{_LATEST}
 """  # noqa: S608 - constant fragments; `where` holds placeholders
 
 
@@ -149,7 +160,8 @@ def _nights(conn: sqlite3.Connection, q: str, limit: int, objects: Found) -> Fou
         where = "(" + " OR ".join("n.night_date LIKE ?" for _ in dates) + ")"
         values: list[str] = dates
     else:
-        where, values = _BY_OBJECT, [archive.plain(q)] * (2 * _WHOLE_ARGS)
+        where = _WRITTEN_BY_OBJECT if derived_fresh.is_fresh(conn) else _BY_OBJECT
+        values = [archive.plain(q)] * (2 * _WHOLE_ARGS)
     rows = conn.execute(_NIGHTS.format(where=where), (*values, limit)).fetchall()
     total = conn.execute(
         f"SELECT COUNT(*) FROM nights n WHERE {where}",  # noqa: S608 - placeholders

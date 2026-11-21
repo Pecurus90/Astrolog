@@ -6,8 +6,9 @@ from dataclasses import replace
 from enum import StrEnum
 from typing import Any
 
+from ..db import derived_fresh
 from ..db.replace_table import replace_rows
-from . import archive, counts, filters_used
+from . import archive, archive_rows, counts, filters_used
 from .archive import Criteria, Family, Form
 
 
@@ -181,12 +182,9 @@ def _frame_counts(conn: sqlite3.Connection, criteria: Criteria, written: Counted
     return out
 
 
-_FRESH = "SELECT 1 FROM derived_fresh WHERE name = 'archive_options'"
-
-
 def _written(conn: sqlite3.Connection) -> Counted | None:
     """`archive_options` by key, or `None` if a write since has made it stale (ADR 0048)."""
-    if conn.execute(_FRESH).fetchone() is None:
+    if not derived_fresh.is_fresh(conn):
         return None
     out: Counted = {key: {} for key in Key}
     for key, value, rows in conn.execute("SELECT key, value, rows FROM archive_options"):
@@ -195,8 +193,8 @@ def _written(conn: sqlite3.Connection) -> Counted | None:
 
 
 def write(conn: sqlite3.Connection) -> None:
-    """Whole, nothing chosen: called after a round moving frames, rows or names, inside BEGIN
-    IMMEDIATE (no writer between the reads). Frame-level value held by no row stays, at zero."""
+    """Whole, nothing chosen, with `archive_rows`: after a round moving frames, rows or names,
+    inside BEGIN IMMEDIATE (no writer between the reads). Frame-level value held by none: zero."""
     held = _frame_counts(conn, Criteria(), None)
     rows: list[tuple[str, str, int]] = []
     for key in Key:
@@ -206,7 +204,8 @@ def write(conn: sqlite3.Connection) -> None:
         else:
             rows += [(key, v, n) for v, n in _row_counts(conn, key, Criteria()).items()]
     replace_rows(conn, "archive_options", ("key", "value", "rows"), rows)
-    conn.execute("INSERT OR IGNORE INTO derived_fresh(name) VALUES ('archive_options')")
+    archive_rows.write(conn)
+    derived_fresh.mark_fresh(conn)
 
 
 def _row_values(key: Key, criteria: Criteria) -> tuple[str, list[Any]]:
