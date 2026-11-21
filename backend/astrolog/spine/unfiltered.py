@@ -2,8 +2,9 @@
 The card first, then the files' vote; what sat in front is the gear answer (`signature.py`)."""
 
 import sqlite3
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
+from ..db.declared import declared_by_key
 from ..vocab.filters import Passband, normalize_filter, passband_of
 from ..vocab.instruments import InstrumentKind
 from . import declarations as decl
@@ -11,6 +12,7 @@ from .declarations import CameraType
 from .stages import StageName, invalidate
 
 _COLOUR = "SELECT camera_type FROM instruments WHERE kind = 'camera' AND name = ?"
+_COLOURS = "SELECT name, camera_type FROM instruments WHERE kind = 'camera'"
 
 _OF_CAMERA = """
 SELECT f.id FROM frames f JOIN rigs r ON r.id = f.rig_id
@@ -39,6 +41,20 @@ def is_colour(
     if voted is not None:
         return voted.get(camera_name) == CameraType.COLOR
     return _voted_colour(conn, camera_name)
+
+
+def colour_reader(conn: sqlite3.Connection) -> Callable[[str | None], bool]:
+    """`is_colour` for many cameras, same rule: the cards and the files' votes read once each."""
+    written = declared_by_key(conn, decl.EntityType.INSTRUMENT, "camera_type")
+    voted = {r["name"]: r["camera_type"] for r in conn.execute(_COLOURS)}
+
+    def colour(camera_name: str | None) -> bool:
+        if not camera_name:
+            return False
+        said = written.get(decl.instrument_key(InstrumentKind.CAMERA, camera_name))
+        return (said if said is not None else voted.get(camera_name)) == CameraType.COLOR
+
+    return colour
 
 
 def written_colour(conn: sqlite3.Connection, camera_name: str) -> str | None:

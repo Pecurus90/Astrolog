@@ -3,6 +3,7 @@
 
 import logging
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 
@@ -248,14 +249,24 @@ def mosaic_word(value: str | None) -> str | None:
 
 def shown_target(conn: sqlite3.Connection, value: str) -> Answer | None:
     """A catalog entry that is gone counts as no target: its slug would show a name nobody wrote."""
-    read = read_target(value)
-    if read is None:
-        return None
-    kind, target = read
-    if kind == TargetKind.NAME:
-        return Answer(kind, target, target)
-    entry = lookup.by_slug(conn, target)
-    return None if entry is None else Answer(kind, target, entry.name)
+    return shown_targets(conn, [value])[value]
+
+
+def shown_targets(conn: sqlite3.Connection, values: Iterable[str]) -> dict[str, Answer | None]:
+    """`shown_target` of many values, the catalog names read in one query."""
+    read = {v: read_target(v) for v in set(values)}
+    slugs = {t[1] for t in read.values() if t and t[0] == TargetKind.CATALOG}
+    names = lookup.names_by_slug(conn, slugs)
+    out: dict[str, Answer | None] = {}
+    for value, target in read.items():
+        if target is None:
+            out[value] = None
+        elif target[0] == TargetKind.NAME:
+            out[value] = Answer(target[0], target[1], target[1])
+        else:
+            name = names.get(target[1])
+            out[value] = None if name is None else Answer(target[0], target[1], name)
+    return out
 
 
 def correction_of(conn: sqlite3.Connection, found_key: str) -> tuple[TargetKind, str] | None:

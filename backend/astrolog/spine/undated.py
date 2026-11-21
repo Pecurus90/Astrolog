@@ -5,6 +5,7 @@ import json
 import sqlite3
 from typing import Any
 
+from ..db.declared import declared_by_key
 from . import declarations as decl
 from . import frame_folder as folder
 from .stages import StageName, invalidate
@@ -52,20 +53,35 @@ def by_folder(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     out = sorted(
         (g for g in groups.values() if g["frames"]), key=lambda g: (-g["frames"], g["key"])
     )
+    said = declared_by_key(conn, decl.EntityType.FOLDER, FOLDER_NIGHT) if out else {}
     for g in out:
         g["file_nights"] = sorted(g["file_nights"])
-        g["answer"] = answer(conn, g["key"])
+        g["answer"] = _night_said(said.get(g["key"]))
     return out
 
 
 def rig_nights(conn: sqlite3.Connection, rig_ids: set[int]) -> list[str]:
     """Most recent first: the shot without a date is usually a recent one being sorted out."""
-    rows = conn.execute(_RIG_NIGHTS, (json.dumps(sorted(rig_ids)),))
-    return sorted({r["night_date"] for r in rows}, reverse=True)
+    return nights_of(nights_by_rig(conn, rig_ids), rig_ids)
+
+
+def nights_by_rig(conn: sqlite3.Connection, rig_ids: set[int]) -> dict[int, set[str]]:
+    """The nights of many rigs in one query, for a page with many folders."""
+    out: dict[int, set[str]] = {}
+    for r in conn.execute(_RIG_NIGHTS, (json.dumps(sorted(rig_ids)),)):
+        out.setdefault(r["rig_id"], set()).add(r["night_date"])
+    return out
+
+
+def nights_of(by_rig: dict[int, set[str]], rig_ids: set[int]) -> list[str]:
+    return sorted(set().union(*(by_rig.get(i, set()) for i in rig_ids)), reverse=True)
 
 
 def answer(conn: sqlite3.Connection, key: str) -> str | None:
-    value = decl.declared(conn, decl.EntityType.FOLDER, key, FOLDER_NIGHT)
+    return _night_said(decl.declared(conn, decl.EntityType.FOLDER, key, FOLDER_NIGHT))
+
+
+def _night_said(value: object) -> str | None:
     return value if isinstance(value, str) else None
 
 

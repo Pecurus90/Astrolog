@@ -3,8 +3,7 @@ filter its frames leave out. A part the night or the camera's colour settles is 
 
 import sqlite3
 from collections.abc import Callable
-from dataclasses import asdict, replace
-from functools import cache
+from dataclasses import asdict, dataclass, replace
 from typing import Any
 
 from ..clock import NIGHT_SQL
@@ -17,9 +16,9 @@ from . import declarations as decl
 from . import frame_folder as folder
 from . import objects as obj
 from .night_rig import NightRig, night_rigs
-from .signature import Answer, Parts, answer_for, answers, as_page, key_of, parts_of
+from .signature import Answer, Parts, answer_for, answers, as_page, filter_ids, key_of, parts_of
 from .stages import WAITING_SQL
-from .unfiltered import is_colour
+from .unfiltered import colour_reader
 
 # Grouped in SQL, never a row per frame; the rig's camera says what normalize settled.
 _COLUMNS = """
@@ -37,7 +36,26 @@ WHERE f.asks_camera = 1 OR f.names_optics = 0 OR (f.asks_filter = 1 AND f.bayer_
 GROUP BY {_COLUMNS}, night, rig_camera, silent_filter, subject
 """  # noqa: S608 - constant fragments of the spine, not user values
 
-_NATIVE_FOCAL = "SELECT focal_mm FROM instruments WHERE kind = 'optics' AND name = ?"
+_NATIVE_FOCALS = "SELECT name, focal_mm FROM instruments WHERE kind = 'optics'"
+
+
+@dataclass(frozen=True, slots=True)
+class _Read:
+    """What every card looks up, read once for the page: never a query per row or per card."""
+
+    name: Callable[[InstrumentKind, str | None], str | None]
+    colour: Callable[[str | None], bool]
+    focals: dict[str, float | None]
+    filter_ids: dict[str, int]
+
+    @classmethod
+    def of(cls, conn: sqlite3.Connection) -> "_Read":
+        return cls(
+            name=decl.instrument_namer(conn),
+            colour=colour_reader(conn),
+            focals={r["name"]: r["focal_mm"] for r in conn.execute(_NATIVE_FOCALS)},
+            filter_ids=filter_ids(conn),
+        )
 
 
 def _bucketed(rows: list[sqlite3.Row]) -> list[tuple[sqlite3.Row, Parts]]:
@@ -54,40 +72,31 @@ def _bucketed(rows: list[sqlite3.Row]) -> list[tuple[sqlite3.Row, Parts]]:
     return out
 
 
-def _camera_of(
-    conn: sqlite3.Connection, r: Row, night: NightRig | None, given: Answer | None
-) -> str | None:
+def _camera_of(r: Row, night: NightRig | None, given: Answer | None, read: _Read) -> str | None:
     """What normalize settled, else what the header, the answer or the night would give."""
     return (
         r["rig_camera"]
-        or decl.instrument_name(conn, InstrumentKind.CAMERA, r["instrument_raw"])
+        or read.name(InstrumentKind.CAMERA, r["instrument_raw"])
         or (given.camera if given else None)
         or (night.camera if night is not None else None)
     )
 
 
 def _asks(
-    conn: sqlite3.Connection,
-    r: Row,
-    night: NightRig | None,
-    given: Answer | None,
-    colour: Callable[[str | None], bool],
+    r: Row, night: NightRig | None, given: Answer | None, read: _Read
 ) -> tuple[bool, bool, bool]:
     """(camera, optics, filter): what this row needs, answered or not. The night settles a frame
     with no camera, and its optics too when it names one."""
     camera = bool(r["asks_camera"]) and night is None
     optics = not r["names_optics"] and not (night is not None and night.optics)
-    filter_asked = bool(r["silent_filter"]) and not colour(_camera_of(conn, r, night, given))
+    filter_asked = bool(r["silent_filter"]) and not read.colour(_camera_of(r, night, given, read))
     return camera, optics, filter_asked
 
 
-def _native_focal(conn: sqlite3.Connection, optics_name: str | None) -> float | None:
+def _native_focal(read: _Read, optics_name: str | None) -> float | None:
     """Proposed when the frames are silent: without a focal the answer's rig would stay a twin of
     the detected one forever (`rigs.rig_for`)."""
-    if not optics_name:
-        return None
-    row = conn.execute(_NATIVE_FOCAL, (optics_name,)).fetchone()
-    return None if row is None else row["focal_mm"]
+    return read.focals.get(optics_name) if optics_name else None
 
 
 def _only[T](values: set[T | None]) -> T | None:
@@ -122,7 +131,7 @@ def by_signature(conn: sqlite3.Connection, only: str | None = None) -> list[dict
     stored = answers(conn)
     asking_nights = {r["night"] for r in frame_rows if r["night"] and r["asks_camera"]}
     nights = night_rigs(conn, asking_nights) if asking_nights else {}
-    colour = cache(lambda name: is_colour(conn, name))
+    read = _Read.of(conn)
     cards: dict[str, dict[str, Any]] = {}
     answer_by_card: dict[str, Answer | None] = {}
     for r, parts in _bucketed(frame_rows):
@@ -131,12 +140,12 @@ def by_signature(conn: sqlite3.Connection, only: str | None = None) -> list[dict
         if only is not None and card_key != only:
             continue
         its_night = nights.get(r["night"]) if r["asks_camera"] else None
-        asked = _asks(conn, r, its_night, data, colour)
+        asked = _asks(r, its_night, data, read)
         if not any(asked) and data is None:
             continue
         this_card = cards.setdefault(card_key, _card(card_key, r))
-        _add(conn, this_card, r, asked)
-        this_card["cameras"].add(_camera_of(conn, r, its_night, data))
+        _add(this_card, r, asked, read)
+        this_card["cameras"].add(_camera_of(r, its_night, data, read))
         answer_by_card[card_key] = data
     # with the ASIAIR `TELESCOP` is the mount, on every card with that spelling
     mount_spellings = {
@@ -145,28 +154,23 @@ def by_signature(conn: sqlite3.Connection, only: str | None = None) -> list[dict
         if telescope_is_mount(normalize_software(r["software_raw"]))
     }
     with_subjects = obj.subjects(conn, cards.values())
-    out = [_shown(conn, s, answer_by_card[s["key"]], mount_spellings) for s in with_subjects]
+    out = [_shown(s, answer_by_card[s["key"]], mount_spellings, read) for s in with_subjects]
     return sorted(out, key=lambda s: (-s["frames"], s["key"]))
 
 
-def _add(
-    conn: sqlite3.Connection,
-    card: dict[str, Any],
-    r: Row,
-    asks: tuple[bool, bool, bool],
-) -> None:
+def _add(card: dict[str, Any], r: Row, asks: tuple[bool, bool, bool], read: _Read) -> None:
     card["frames"] += r["n"] or 0
     if r["n"]:  # an object with only copies in the card is not another frame
         obj.count_subject(card, r["subject"], r["n"])
     for field, asked in zip(("asks_camera", "asks_optics", "asks_filter"), asks, strict=True):
         card[field] = card[field] or asked
     card["spellings"].add(normalize_header_value(r["telescope_raw"]))
-    card["optics"].add(decl.instrument_name(conn, InstrumentKind.OPTICS, r["telescope_raw"]))
+    card["optics"].add(read.name(InstrumentKind.OPTICS, r["telescope_raw"]))
     card["focal"].add(known_focal(r["focal_mm_raw"]))
 
 
 def _shown(
-    conn: sqlite3.Connection, card: dict[str, Any], data: Answer | None, mounts: set[str]
+    card: dict[str, Any], data: Answer | None, mounts: set[str], read: _Read
 ) -> dict[str, Any]:
     """Complete when every part asked has its answer; the native focal only where frames are
     silent. A spelling some file calls the mount is never offered as the optics."""
@@ -183,8 +187,8 @@ def _shown(
         "settled_camera": camera,
         "optics": optics,
         "focal_mm": focal,
-        "focal_suggested": None if focal is not None else _native_focal(conn, optics),
-        "answer": asdict(as_page(conn, data)) if data else None,
+        "focal_suggested": None if focal is not None else _native_focal(read, optics),
+        "answer": asdict(as_page(data, read.filter_ids)) if data else None,
         "complete": not any(missing),
     }
 

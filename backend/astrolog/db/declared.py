@@ -14,3 +14,14 @@ def declared(conn: sqlite3.Connection, entity_type: str, entity_key: str | None,
         (entity_type, entity_key, field),
     ).fetchone()
     return None if row is None else row["value"]
+
+
+def declared_by_key(conn: sqlite3.Connection, entity_type: str, field: str) -> dict[str, Any]:
+    """`declared` of every key at once: a page with many questions reads its answers in one go."""
+    return {
+        r["entity_key"]: r["value"]
+        for r in conn.execute(
+            "SELECT entity_key, value FROM declarations WHERE entity_type = ? AND field = ?",
+            (entity_type, field),
+        )
+    }

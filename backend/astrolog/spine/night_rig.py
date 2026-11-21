@@ -63,18 +63,11 @@ def night_rigs(
     """Nights whose headers name one camera. Optics and focal only if the night says one: the
     ASIAIR's "no optics" is an answer too. `nights` spares reading the whole archive."""
     by_night: dict[str, list[_Seen]] = {}
-    names: dict[tuple[InstrumentKind, str | None], str | None] = {}
+    name_of = decl.instrument_namer(conn)
     if nights is None:
         raw_rows = conn.execute(rigs_by_night(False))
     else:
         raw_rows = conn.execute(rigs_by_night(True), (json.dumps(sorted(nights)),))
-
-    # once per spelling, not per night
-    def name_of(kind: InstrumentKind, spelling: str | None) -> str | None:
-        if (kind, spelling) not in names:
-            names[kind, spelling] = decl.instrument_name(conn, kind, spelling) if spelling else None
-        return names[kind, spelling]
-
     for r in raw_rows:
         if (camera := name_of(InstrumentKind.CAMERA, r["instrument_raw"])) is None:
             continue

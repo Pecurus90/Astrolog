@@ -7,7 +7,7 @@ from dataclasses import asdict
 from typing import Any, Final
 
 from ..place import by_distance, distance_km
-from ..site_of import known_sites, site_at
+from ..site_of import coordinates_answers, known_sites, site_at
 from ..spine import coordinates as places
 from ..spine import filters_used, frame_proofs, gear, object_answer, rigs, undated, unnamed
 from ..spine import objects as obj
@@ -213,13 +213,18 @@ def _group_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
 
 
 def subjects_by(
-    conn: sqlite3.Connection, owner: str, where: str, args: tuple[Any, ...]
+    conn: sqlite3.Connection,
+    owner: str,
+    where: str,
+    args: tuple[Any, ...],
+    *,
+    source: str = "frames f",
 ) -> dict[Any, list[Subject]]:
-    """The objects in the field per `owner` (a column of `frames f`), the most taken first: the
-    same names and order as the other groups' subjects (`objects.subjects`)."""
+    """The objects in the field per `owner` (a column of `frames f` or of `source`), the most taken
+    first: the same names and order as the other groups' subjects (`objects.subjects`)."""
     groups: dict[Any, dict[str, Any]] = {}
     for r in conn.execute(
-        f"SELECT {owner} AS owner, f.object_id, COUNT(*) AS n FROM frames f"  # noqa: S608
+        f"SELECT {owner} AS owner, f.object_id, COUNT(*) AS n FROM {source}"  # noqa: S608
         f" WHERE f.copy_of IS NULL AND f.object_id IS NOT NULL {where}"
         " GROUP BY owner, f.object_id",
         args,
@@ -229,17 +234,26 @@ def subjects_by(
     return {k: [Subject(**s) for s in g["subjects"]["found"]] for k, g in groups.items()}
 
 
+# Each frame with the index of its folder on the page: one query for every folder's proofs.
+_OF_FOLDER = """frames f JOIN (SELECT json_extract(value, '$[0]') AS frame_id,
+  json_extract(value, '$[1]') AS folder FROM json_each(?)) u ON u.frame_id = f.id"""
+
+
 def undated_folders(conn: sqlite3.Connection) -> list[UndatedFolder]:
-    """The folders are few, so one query per folder for its proofs, never one per frame."""
+    """The proofs of every folder read together: one query each, never one per folder."""
     rows = undated.by_folder(conn)
     if not rows:
         return []
     known = known_sites(conn)
+    said = coordinates_answers(conn)
+    owners = (json.dumps([[f, i] for i, g in enumerate(rows) for f in g["frame_ids"]]),)
+    proofs = frame_proofs.of(conn, "u.folder", source=_OF_FOLDER, args=owners)
+    subjects = subjects_by(conn, "u.folder", "", owners, source=_OF_FOLDER)
+    by_rig = undated.nights_by_rig(conn, set().union(*(g["rig_ids"] for g in rows)))
     out = []
-    for g in rows:
-        narrow = ("AND f.id IN (SELECT value FROM json_each(?))", (json.dumps(g["frame_ids"]),))
-        seen = frame_proofs.of(conn, "1", where=narrow[0], args=narrow[1]).get(1)
-        found = site_at(conn, g["site_lat"], g["site_lon"], known)
+    for i, g in enumerate(rows):
+        seen = proofs.get(i)
+        found = site_at(conn, g["site_lat"], g["site_lon"], known, said)
         out.append(
             UndatedFolder(
                 key=g["key"],
@@ -248,8 +262,8 @@ def undated_folders(conn: sqlite3.Connection) -> list[UndatedFolder]:
                 untimed=g["untimed"],
                 site=found[0].name if isinstance(found, tuple) else None,
                 file_nights=g["file_nights"],
-                rig_nights=undated.rig_nights(conn, g["rig_ids"]),
-                subjects=subjects_by(conn, "1", *narrow).get(1, []),
+                rig_nights=undated.nights_of(by_rig, g["rig_ids"]),
+                subjects=subjects.get(i, []),
                 rigs=[FrameRig(**asdict(r)) for r in seen.rigs] if seen else [],
                 answer=g["answer"],
             )

@@ -3,12 +3,13 @@ site's sky from the frames, below both pipelines (ADR 0030). Reads sites and dec
 
 import datetime as dt
 import sqlite3
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Self
 
 from .clock import night_date, now_iso
-from .db.declared import declared
+from .db.declared import declared, declared_by_key
 from .place import by_distance, coordinates_key, distance_km
 
 # Below this the header's coordinates and the site's are the same place: two decimals already
@@ -86,24 +87,43 @@ def site_by_name(conn: sqlite3.Connection, name: str) -> Site | None:
 
 
 def site_for_coordinates(conn: sqlite3.Connection, key: str | None) -> str | None:
-    value = declared(conn, COORDINATES, key, COORDINATES_SITE)
+    return _said_name(declared(conn, COORDINATES, key, COORDINATES_SITE))
+
+
+def _said_name(value: object) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
+def coordinates_answers(conn: sqlite3.Connection) -> dict[str, str]:
+    """`site_for_coordinates` of every place at once, for a page that asks about many."""
+    said = declared_by_key(conn, COORDINATES, COORDINATES_SITE)
+    return {k: name for k, v in said.items() if (name := _said_name(v))}
+
+
+def named(sites_known: Iterable[Site], name: str) -> Site | None:
+    """`site_by_name` among sites already read."""
+    return next((s for s in sites_known if s.name == name), None)
+
+
 def site_at(
-    conn: sqlite3.Connection, lat: float | None, lon: float | None, known: Sites
+    conn: sqlite3.Connection,
+    lat: float | None,
+    lon: float | None,
+    known: Sites,
+    said: Mapping[str, str] | None = None,
 ) -> tuple[Site, bool] | SiteMiss:
     """Home within 1 km (or anywhere without coordinates), then the user's answer for those
-    coordinates, then the nearest within 1 km. True: the user said it."""
+    coordinates, then the nearest within 1 km. True: the user said it. `said`: answers read once."""
     home, all_sites = known
     away_km = None if home is None else distance_km(lat, lon, home.latitude, home.longitude)
     if home is not None and (away_km is None or away_km <= SAME_PLACE_KM):
         return home, False
     if lat is None or lon is None:
         return SiteMiss.NO_ACTIVE_SITE
-    said_site = site_for_coordinates(conn, coordinates_key(lat, lon))
+    place = coordinates_key(lat, lon)
+    said_site = site_for_coordinates(conn, place) if said is None else said.get(place or "")
     if said_site:
-        site = site_by_name(conn, said_site)
+        site = site_by_name(conn, said_site) if said is None else named(all_sites, said_site)
         if site is None:
             # The declared site was deleted (a rename carries the answer): ask again, not home.
             return SiteMiss.SITE_UNCLEAR

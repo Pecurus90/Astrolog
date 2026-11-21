@@ -1,8 +1,10 @@
 """The cone search goes through the unit vector: a circle on the sky becomes an indexed box on
 x, y, z, then the dot product decides, with no right ascension wrap at 0/360 to remember."""
 
+import json
 import math
 import sqlite3
+from collections.abc import Collection
 from dataclasses import fields
 
 from .. import units
@@ -14,6 +16,17 @@ _FIELDS = tuple(f.name for f in fields(CatalogEntry))
 
 def _columns(prefix: str = "") -> str:
     return ", ".join(prefix + f for f in _FIELDS)
+
+
+def names_by_slug(conn: sqlite3.Connection, slugs: Collection[str]) -> dict[str, str]:
+    """The names of many entries in one query; a slug that is gone is missing."""
+    if not slugs:
+        return {}
+    rows = conn.execute(
+        "SELECT slug, name FROM catalog_entries WHERE slug IN (SELECT value FROM json_each(?))",
+        (json.dumps(sorted(slugs)),),
+    )
+    return {r["slug"]: r["name"] for r in rows}
 
 
 def by_designation(conn: sqlite3.Connection, raw: str | None) -> NamedEntry | None:

@@ -48,17 +48,20 @@ def unclear_coordinates(conn: sqlite3.Connection, reason: str) -> list[dict[str,
         obj.count_subject(spot, r["subject"], 1)
         if r["local_night"]:
             spot["nights"].add(r["local_night"])
+    if not places:
+        return []
+    # Only if that site still exists, found the way the stage finds it: deleted, the answer no
+    # longer hooks, and the stage, the page and the counter ask again. A rename carries it.
+    said = site_of.coordinates_answers(conn)
+    existing = {s.name for s in site_of.sites(conn)}
     return [
-        {**p, "nights": sorted(p["nights"]), "site": _answered(conn, p["key"])}
+        {
+            **p,
+            "nights": sorted(p["nights"]),
+            "site": said[p["key"]] if said.get(p["key"]) in existing else None,
+        }
         for p in obj.subjects(conn, places.values())
     ]
-
-
-def _answered(conn: sqlite3.Connection, key: str) -> str | None:
-    """Only if that site still exists, found the way the stage finds it: deleted, the answer no
-    longer hooks, and the stage, the page and the counter ask again. A rename carries it."""
-    site_name = site_of.site_for_coordinates(conn, key)
-    return site_name if site_name and site_of.site_by_name(conn, site_name) else None
 
 
 def frames_at(conn: sqlite3.Connection, coordinates: str, reason: str) -> list[int]:

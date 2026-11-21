@@ -2,7 +2,7 @@
 not import another. A declaration hangs on a key that survives a reset, never a row id."""
 
 import sqlite3
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from enum import StrEnum
 from typing import Any
 
@@ -86,6 +86,25 @@ def instrument_name(conn: sqlite3.Connection, kind: InstrumentKind, raw: str | N
     readings would propose a renamed piece's old name and give birth to a second one."""
     key = normalize_header_value(raw)
     return _named(raw, alias_target(conn, kind, key)) if key else None
+
+
+def instrument_namer(
+    conn: sqlite3.Connection,
+) -> Callable[[InstrumentKind, str | None], str | None]:
+    """`instrument_name` for many raw values: the camera and optics rules read in one query."""
+    rules = {
+        (r["kind"], r["header_value"]): r["target_key"]
+        for r in conn.execute(
+            "SELECT kind, header_value, target_key FROM header_aliases WHERE kind IN (?, ?)",
+            (InstrumentKind.CAMERA, InstrumentKind.OPTICS),
+        )
+    }
+
+    def name(kind: InstrumentKind, raw: str | None) -> str | None:
+        key = normalize_header_value(raw)
+        return _named(raw, rules.get((kind, key))) if key else None
+
+    return name
 
 
 def _named(raw: str | None, rule: str | None) -> str:

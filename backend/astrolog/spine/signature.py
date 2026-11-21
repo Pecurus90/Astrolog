@@ -4,6 +4,7 @@ leave out, answered for frames to come with that signature too, on any night."""
 import json
 import logging
 import sqlite3
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, replace
 from enum import StrEnum
 
@@ -199,14 +200,17 @@ def follow_filter(conn: sqlite3.Connection, old_name: str, new_name: str) -> Non
             declare(conn, answer_key, replace(stored_answer, filter_name=new_name))
 
 
-def as_page(conn: sqlite3.Connection, given: Answer) -> AnswerOnPage:
-    filter_row = conn.execute(
-        "SELECT id FROM filters WHERE name = ?", (given.filter_name,)
-    ).fetchone()
+def filter_ids(conn: sqlite3.Connection) -> dict[str, int]:
+    """Every filter by name, for the answers of a whole page."""
+    return {r["name"]: r["id"] for r in conn.execute("SELECT id, name FROM filters")}
+
+
+def as_page(given: Answer, ids: Mapping[str, int]) -> AnswerOnPage:
+    """`ids` from `filter_ids`."""
     return AnswerOnPage(
         given.camera,
         given.optics,
         given.focal_mm,
         given.filter,
-        None if filter_row is None else filter_row["id"],
+        None if given.filter_name is None else ids.get(given.filter_name),
     )

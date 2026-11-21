@@ -3,6 +3,7 @@ question, and the answer `identify` reads, which also holds for frames still to 
 
 import json
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Literal
 
@@ -58,6 +59,11 @@ _ANSWERS_OF_GROUP = f"""
 SELECT DISTINCT d.value FROM frames f CROSS JOIN declarations d ON d.entity_type = ?
   AND d.entity_key = f.frame_hash AND d.field = ?
 WHERE f.unnamed_key = ? AND {_ASKED} LIMIT 2
+"""  # noqa: S608 - constant fragment of this file
+_ANSWERS_OF_GROUPS = f"""
+SELECT DISTINCT f.unnamed_key AS key, d.value FROM frames f JOIN declarations d
+  ON d.entity_type = ? AND d.entity_key = f.frame_hash AND d.field = ?
+WHERE f.unnamed_key IS NOT NULL AND {_ASKED}
 """  # noqa: S608 - constant fragment of this file
 
 
@@ -128,16 +134,16 @@ def _written(value: str | None) -> str | None:
 
 def by_group(conn: sqlite3.Connection) -> list[Group]:
     """Largest first. A group of only copies asks nothing."""
+    rows = [r for r in conn.execute(_BY_GROUP) if r["n"]]
+    answers = _answers(conn) if rows else {}
     out = []
-    for r in conn.execute(_BY_GROUP):
-        if not r["n"]:
-            continue
+    for r in rows:
         night, _, _, ra, dec = json.loads(r["key"])
         out.append(Group(
             key=r["key"], night=night, camera=_written(r["instrument_raw"]),
             telescope=_written(r["telescope_raw"]), ra_deg=ra, dec_deg=dec,
             frames=r["n"], integration_s=r["integration_s"], untimed=r["untimed"],
-            answer=answer(conn, r["key"]),
+            answer=answers.get(r["key"]),
             # without a zone it stays UTC
             first_frame=local_iso(r["first_frame"], r["tz"]),
             last_frame=local_iso(r["last_frame"], r["tz"]),
@@ -181,11 +187,25 @@ def _said(conn: sqlite3.Connection, key: str | None) -> str | None:
 def answer(conn: sqlite3.Connection, key: str | None) -> Answer | None:
     """A gone catalog entry is no answer: its frames stay a question."""
     value = _said(conn, key)
-    if value is None:
-        return None
-    if value == TargetKind.NONE:
-        return Answer(TargetKind.NONE, None, None)
-    return object_answer.shown_target(conn, value)
+    return None if value is None else _shown(conn, [value])[value]
+
+
+def _answers(conn: sqlite3.Connection) -> dict[str, Answer | None]:
+    """`answer` of every group in one query."""
+    said: dict[str, set[str]] = {}
+    for r in conn.execute(_ANSWERS_OF_GROUPS, (decl.EntityType.FRAME, decl.FRAME_OBJECT)):
+        said.setdefault(r["key"], set()).add(r["value"])
+    one = {k: v.pop() for k, v in said.items() if len(v) == 1}
+    shown = _shown(conn, one.values())
+    return {k: shown[v] for k, v in one.items()}
+
+
+def _shown(conn: sqlite3.Connection, values: Iterable[str]) -> dict[str, Answer | None]:
+    wanted = set(values)
+    shown = object_answer.shown_targets(conn, wanted - {TargetKind.NONE})
+    if TargetKind.NONE in wanted:
+        shown[TargetKind.NONE] = Answer(TargetKind.NONE, None, None)
+    return shown
 
 
 def requeue(conn: sqlite3.Connection, key: str) -> list[int]:
