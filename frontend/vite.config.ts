@@ -5,6 +5,8 @@ import { brotliCompressSync, gzipSync, constants as zlibConstants } from "node:z
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config"
 
+import { guardieDelBuild } from "./guardieDelBuild"
+
 // Il build finisce DENTRO il pacchetto Python, non in `dist/`: dopo un'installazione
 // `frontend/` non esiste piu', e "il frontend si serve da se'" resterebbe vero solo dal
 // sorgente. Il backend la cerca esattamente li' (`astrolog/api/page.py`, `WEB_DIR`).
@@ -64,7 +66,13 @@ function comprimiNelBuild() {
 }
 
 export default defineConfig({
-  plugins: [react(), chiaveNellaPagina(), comprimiNelBuild()],
+  plugins: [
+    react(),
+    chiaveNellaPagina(),
+    comprimiNelBuild(),
+    // measured 610 103 bytes on 21/11/2026 (step 6.17.1); +5% for growth, not for a whole page
+    guardieDelBuild({ pagina: "/src/Dashboard.tsx", tetto: 640_000 }),
+  ],
   build: {
     outDir: PAGINA_COSTRUITA,
     // Ripulisce prima di ricostruire: senza, i file di un build vecchio -- che hanno l'impronta

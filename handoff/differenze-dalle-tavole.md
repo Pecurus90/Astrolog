@@ -775,3 +775,16 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
   tavola (Marco 19/11: tre gradini, testo nello stesso stampo).
 - **Dashboard, le ore serene**: accanto a «di buio sereno» e «serene col Sole sotto l'orizzonte»
   l'app dice «di buio nautico sereno», e senza ore «Nessuna ora di buio nautico sereno».
+
+## Tutte le pagine -- Il file della pagina che non arriva (passo 6.17.1, 21/11)
+
+- **Uno stato che le tavole non disegnano**: una pagina si scarica quando la si apre (passo 6.17);
+  se il suo file non arriva due volte nel minuto, al posto della pagina c'e' l'`Avviso` di pagina
+  della v58 con segno «!», «Questa pagina non si è caricata», «Può succedere se la rete si è
+  interrotta o l'app è stata aggiornata.» e «Riprova», che ricarica l'app (testo di Marco 21/11).
+  Il telaio resta. Prima: pagina bianca.
+- **La finestra dell'oggetto** (dalla ricerca e dagli oggetti di *Le notti*): se il suo file non
+  arriva, gli stessi testi stanno in una `Finestra` della v58, stretta, col segno «!», la x e
+  «Riprova», sopra la pagina; si chiude con la x, Esc o fuori. Prima: non succedeva nulla.
+- **Il primo avvio** (il file del Wizard): senza telaio, lo stesso `Avviso` sta nella colonna del
+  primo avvio, come «non risponde» (`appErr`, Primo avvio.dc.html). Prima: pagina bianca.

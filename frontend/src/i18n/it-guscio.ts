@@ -17,6 +17,9 @@ export const itGuscio = {
   "notFound.why":
     "L'indirizzo non corrisponde a nessuna pagina.",
   "notFound.home": "Torna alla Dashboard",
+  "lazy.failed": "Questa pagina non si \u00e8 caricata",
+  "lazy.failed.why": "Pu\u00f2 succedere se la rete si \u00e8 interrotta o l'app \u00e8 stata aggiornata.",
+  "lazy.retry": "Riprova",
   "soon.title": "{pagina}: non ancora disponibile",
   "soon.why": "Questa pagina sar\u00e0 disponibile in una prossima versione.",
   "frame.skip": "Vai al contenuto",

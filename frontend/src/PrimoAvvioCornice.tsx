@@ -273,6 +273,28 @@ export function AvvioInAttesa() {
 
 /** Settings that do not answer (`appErr`): nothing is guessed, and the retry is there. */
 export function AvvioNonRisponde({ onRiprova }: { onRiprova: () => void }) {
+  return (
+    <AvvisoDiAvvio
+      titolo={t("wizard.unreachable")}
+      testo={t("wizard.unreachable.text")}
+      azione={t("wizard.retry")}
+      onAzione={onRiprova}
+    />
+  )
+}
+
+/** A page notice in the first start's frame (`appErr`): its margins, not the edges of the window. */
+export function AvvisoDiAvvio({
+  titolo,
+  testo,
+  azione,
+  onAzione,
+}: {
+  titolo: string
+  testo: string
+  azione: string
+  onAzione: () => void
+}) {
   const formato = useFormato()
   const m = MISURE[formato]
   return (
@@ -290,10 +312,10 @@ export function AvvioNonRisponde({ onRiprova }: { onRiprova: () => void }) {
           tipo="pagina"
           formato={formato}
           segno="!"
-          titolo={t("wizard.unreachable")}
-          testo={t("wizard.unreachable.text")}
-          azione={t("wizard.retry")}
-          onAzione={onRiprova}
+          titolo={titolo}
+          testo={testo}
+          azione={azione}
+          onAzione={onAzione}
         />
       </div>
     </Fondo>

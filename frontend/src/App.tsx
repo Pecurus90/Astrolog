@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Suspense, useState } from "react"
+import { useState } from "react"
 import { BrowserRouter, Route, Routes } from "react-router"
 
 import { RipristinoProposto, useBackup } from "./Backup"
@@ -11,6 +11,7 @@ import { caricaLingua, usaLingua } from "./i18n"
 import { LINGUA_SORGENTE } from "./i18n/lingue"
 import { ComingSoon } from "./ComingSoon"
 import { PAGINE, sezioniAperte } from "./pagine"
+import { Pigre } from "./Pigre"
 import { pigra } from "./pigra"
 import { useCambioDelTema, usePreferenze } from "./preferenze"
 
@@ -73,14 +74,14 @@ export function App() {
     if (backup.data?.offer === "found") return <RipristinoProposto stato={backup.data} />
     if (settings.data && (inChiusura || !settings.data.wizard_done))
       return (
-        <Suspense fallback={<AvvioInAttesa />}>
+        <Pigre attesa={<AvvioInAttesa />} fuoriDalTelaio>
           <Wizard
             onChiusura={() => setInChiusura(true)}
             // Si spegne a impostazioni rilette: prima, per un attimo varrebbe il timbro vecchio.
             onDone={() => void settings.refetch().then(() => setInChiusura(false))}
             manca={settings.data.missing}
           />
-        </Suspense>
+        </Pigre>
       )
     return null
   })()
@@ -90,7 +91,7 @@ export function App() {
       {porta ?? (
       <Layout>
         {/* a page downloads when opened (pagine.tsx): the frame stays while it arrives */}
-        <Suspense>
+        <Pigre>
         <Routes>
           {PAGINE.map((p) => (
             <Route key={p.a} path={p.a} element={p.elemento ?? <ComingSoon pagina={p.chiave} />} />
@@ -103,7 +104,7 @@ export function App() {
           )}
           <Route path="*" element={<PaginaCheNonCe />} />
         </Routes>
-        </Suspense>
+        </Pigre>
       </Layout>
       )}
     </BrowserRouter>

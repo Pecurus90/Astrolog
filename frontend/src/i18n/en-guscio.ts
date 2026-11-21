@@ -13,6 +13,9 @@ export const enGuscio = {
   "notFound.why":
     "The address does not match any page.",
   "notFound.home": "Back to the Dashboard",
+  "lazy.failed": "This page did not load",
+  "lazy.failed.why": "This can happen if the network dropped or the app was updated.",
+  "lazy.retry": "Try again",
   "soon.title": "{pagina}: not available yet",
   "soon.why": "This page will be available in a future version.",
   "frame.skip": "Skip to content",
