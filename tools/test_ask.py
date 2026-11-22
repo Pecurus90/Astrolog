@@ -92,3 +92,18 @@ def test_the_hook_blocks_once_and_never_loops(tmp_path):
 
     assert run(False)["decision"] == "block"
     assert run(True) is None
+
+
+def test_the_last_message_counts_even_before_the_transcript_has_it(tmp_path):
+    """Allo Stop il transcript puo' non avere ancora l'ultima risposta: vale
+    `last_assistant_message`, che l'hook riceve."""
+    transcript = tmp_path / "t.jsonl"
+    transcript.write_text(json.dumps(user("ok che si fa?")) + "\n", encoding="utf-8")
+    hook = os.path.join(ROOT, ".claude", "hooks", "ask.py")
+    payload = json.dumps(
+        {"transcript_path": str(transcript), "last_assistant_message": "Parto dalla 1?"}
+    )
+    out = subprocess.run(
+        [sys.executable, hook], input=payload, capture_output=True, text=True, check=True
+    ).stdout
+    assert json.loads(out)["decision"] == "block"

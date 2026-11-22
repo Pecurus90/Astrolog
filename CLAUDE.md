@@ -25,9 +25,9 @@ fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
    la piu' corta, col suo costo. Soglie tecniche, metodo, ordine interno di un passo: li decido io
    e lo dico in una riga. Una decisione scritta in un contratto o in un ADR vale: se sembra
    sbagliata si porta a Marco, non si aggira; un numero tecnico smentito da una misura lo correggo
-   io e lo dico. **Un difetto non e'
-   una domanda**: si ripara subito con `/ripara`, o diventa Issue `bloccato` col motivo.
-   Ogni resoconto apre con *cosa funziona ora e prima no*.
+   io e lo dico. **Un difetto non e' una domanda**: si ripara subito con `/ripara`, o diventa
+   Issue `bloccato` col motivo. Ogni resoconto apre con *cosa funziona ora e prima no*; ogni
+   risposta chiude con `Prossimo:` (`/clear` e cosa, un lavoro, o cosa si aspetta: `prossimo.py`).
 3. **Il database non conta finche' non si rilascia.** Si ricrea da `backend/astrolog/schema.sql`:
    niente migrazioni, niente backfill.
 

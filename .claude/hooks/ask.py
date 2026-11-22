@@ -52,6 +52,10 @@ def reason(entries: list[dict]) -> str | None:
     return WHY if texts and _asks(texts[-1]) else None
 
 
+def _said(text: str) -> dict:
+    return {"type": "assistant", "message": {"content": [{"type": "text", "text": text}]}}
+
+
 def _read(path: str) -> list[dict]:
     entries = []
     with open(path, encoding="utf-8") as lines:
@@ -69,7 +73,10 @@ def main() -> int:
         payload = json.load(sys.stdin)
         if payload.get("stop_hook_active") or not payload.get("transcript_path"):
             return 0
-        why = reason([e for e in _read(payload["transcript_path"]) if isinstance(e, dict)])
+        entries = [e for e in _read(payload["transcript_path"]) if isinstance(e, dict)]
+        # at Stop the transcript may lack the final answer; the payload carries it
+        last = payload.get("last_assistant_message")
+        why = reason(entries + ([_said(last)] if isinstance(last, str) and last else []))
     except (OSError, ValueError, AttributeError):
         return 0
     if why:
