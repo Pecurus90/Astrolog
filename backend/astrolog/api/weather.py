@@ -194,6 +194,16 @@ def next_good_of(conn: sqlite3.Connection, site_id: int, night: str) -> NextGood
 REMOVED: Final = "removed"
 
 
+def _same_key_status(conn: sqlite3.Connection, key: str) -> KeyStatus | None:
+    """The key already saved, last heard ok or limited: nothing to ask, the brake stays."""
+    if key != config.read(conn).meteoblue_key:
+        return None
+    home = home_site(conn)
+    last = meteoblue.last_attempt(conn, home.id) if home is not None else None
+    status = last["status"] if last is not None else forecast.Outcome.OK
+    return cast(KeyStatus, status) if status in (forecast.Outcome.OK, net.Failure.LIMITED) else None
+
+
 @router.put("/weather/meteoblue-key", response_model=MeteoblueKeyOut)
 def put_meteoblue_key(
     body: MeteoblueKeyIn, conn: sqlite3.Connection = Depends(get_db)
@@ -207,7 +217,8 @@ def put_meteoblue_key(
     no idea why. `limited` (429: credits or requests run out) is a key the account knows: saved,
     asked again after the minimum gap. **A new key is used at once**: the previous seeing and the
     last attempt are forgotten, and the weather round starts now instead of after Meteoblue's
-    minimum gap (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key."""
+    minimum gap (`meteoblue.MIN_GAP_H`). **The same key saved again** asks nothing and keeps the
+    brake, unless its last round failed otherwise. Only the hint (`config.hint`) comes out."""
     trimmed = (body.key or "").strip()
     if not trimmed:
         with transaction(conn):
@@ -217,6 +228,9 @@ def put_meteoblue_key(
             if home is not None:
                 view.rebuild(conn, home)
         return MeteoblueKeyOut(status=REMOVED, hint=None)
+    kept = _same_key_status(conn, trimmed)
+    if kept is not None:
+        return MeteoblueKeyOut(status=kept, hint=config.hint(trimmed))
     outcome = meteoblue.check_key(trimmed)
     if outcome not in (forecast.Outcome.OK, net.Failure.LIMITED):
         return MeteoblueKeyOut(

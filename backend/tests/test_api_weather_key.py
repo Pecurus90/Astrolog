@@ -76,6 +76,26 @@ def test_a_key_whose_credits_ran_out_is_kept_and_says_so(app, monkeypatch):
     assert app.get("/api/v1/settings").json()["values"]["meteoblue_key"] == "..." + CHIAVE[-4:]
 
 
+def test_saving_the_same_key_again_keeps_the_brake_and_asks_nothing(app, monkeypatch, db_path):
+    """Crediti finiti, poi Salva di nuovo la stessa chiave: niente chiamata, il freno resta."""
+    monkeypatch.setattr(meteoblue, "_fetch", servizi(**{"account/usage": guasto(429)}))
+    app.put("/api/v1/weather/meteoblue-key", json={"key": CHIAVE})
+    conn = connect(db_path)
+    prima = meteoblue.last_attempt(conn, home_site(conn).id)["attempted_at"]
+    conn.close()
+    finto = servizi()
+    monkeypatch.setattr(meteoblue, "_fetch", finto)
+    monkeypatch.setattr(sky, "_fetch", finto)
+    monkeypatch.setattr(forecast, "_fetch", finto)
+    detto = app.put("/api/v1/weather/meteoblue-key", json={"key": " " + CHIAVE}).json()
+    assert detto == {"status": "limited", "hint": "..." + CHIAVE[-4:]}
+    assert finto.chiesti == []
+    conn = connect(db_path)
+    attempt = meteoblue.last_attempt(conn, home_site(conn).id)
+    conn.close()
+    assert (attempt["attempted_at"], attempt["status"]) == (prima, "limited")
+
+
 def test_the_key_cannot_be_written_without_being_tried(app):
     risposta = app.patch("/api/v1/settings", json={"values": {"meteoblue_key": CHIAVE}})
     assert risposta.status_code == 422
