@@ -99,7 +99,8 @@ jobs:
       matrix:
         part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    # GitHub-hosted job cap 360 min; a survivor covered by many tests reruns ~90 s.
+    timeout-minutes: 350
     defaults:
       run:
         working-directory: frontend
@@ -123,9 +124,9 @@ jobs:
       # In place: a test reads ../backend, which Stryker's sandbox copy does not hold.
       # 4 vCPU are 2 cores with 2 threads: 4 runners cut mutants that survive with 2.
       - name: Mutants of frontend part ${{ matrix.part }}
-        timeout-minutes: 270
+        timeout-minutes: 330
         run: >-
-          timeout -s INT 160m npx stryker run --inPlace --concurrency 2
+          timeout -s INT 300m npx stryker run --inPlace --concurrency 2
           --mutate "$(python ../tools/mutation_shards.py frontend ${{ matrix.part }})"
           --incrementalFile reports/stryker-${{ matrix.part }}.json
           || [ $? -eq 124 ]

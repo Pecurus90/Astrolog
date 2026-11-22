@@ -530,6 +530,20 @@ def test_the_frontend_mutants_run_two_per_runner_and_skip_the_static_ones():
     assert config["ignoreStatic"] is True
 
 
+def test_the_frontend_parts_run_as_long_as_a_github_job_allows():
+    """A survivor reruns when a test covering it changes: 582 are covered by >300 tests, ~90 s
+    each, and 7 parts stopped at 160 min with part 0 at 101 of 532 (Nightly 45010205147)."""
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    stop = re.search(r"timeout -s INT (\d+)m npx stryker run", workflow)
+    assert stop, "stryker stop not found"
+    limits = [int(v) for v in re.findall(r"^\s*timeout-minutes:\s*(\d+)", workflow, re.M)]
+    job, step = limits[2], limits[3]
+    # GitHub-hosted job cap: 360 min (docs.github.com, usage limits for GitHub Actions)
+    assert int(stop.group(1)) >= 300
+    assert int(stop.group(1)) < step < job <= 360
+
+
 def test_the_saved_reference_names_only_real_shards():
     reference = json.loads(REFERENCE.read_text(encoding="utf-8"))
     assert set(reference) <= {*FIXED, *REST_SHARDS, FRONTEND}
