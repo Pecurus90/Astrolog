@@ -131,6 +131,7 @@ export const itImpostazioni = {
   "settings.services.ok": "Chiave valida, salvata.",
   "settings.services.removed": "Chiave tolta.",
   "settings.services.refused": "Chiave rifiutata: controlla la chiave sul sito del servizio e incollala di nuovo.",
+  "settings.services.limited": "Meteoblue non risponde per ora: crediti o richieste esauriti. La chiave \u00e8 buona, riprovo pi\u00f9 tardi.",
   "settings.services.unreachable": "{servizio} non risponde: chiave non verificata e non salvata. Riprova più tardi.", // glifo-ok: testo della tavola
   "settings.services.bad_answer": "Risposta non valida da {servizio}: chiave non salvata.",
   "settings.services.sendFailed": "AstroLog non risponde: chiave non inviata. Riprova.",

@@ -222,6 +222,7 @@ export const enMeteo = {
   "weather.attribution.meteoblue": "Seeing: meteoblue",
   "weather.seeing.why.unreachable": "Last seeing update failed: previous data.",
   "weather.seeing.why.bad_answer": "Invalid response from Meteoblue: previous data.",
+  "weather.seeing.why.limited": "Meteoblue is not answering for now: credits or requests used up. The key is good, I will try again later.",
   "meteoblue.label": "Meteoblue key",
   "meteoblue.none": "No key: seeing not available.",
   "meteoblue.current": "Key saved (ends in {fine}).",
@@ -231,6 +232,7 @@ export const enMeteo = {
   "meteoblue.removed": "Key removed: seeing not available.",
   "meteoblue.refused": "Key not recognised by Meteoblue: not saved.",
   "meteoblue.unreachable": "Meteoblue is not responding: key not checked and not saved.",
+  "meteoblue.limited": "Meteoblue is not answering for now: credits or requests used up. The key is good, I will try again later.",
   "meteoblue.badAnswer": "Invalid response from Meteoblue: key not saved.",
   "meteoblue.failed": "Sending the key failed",
   // La licenza Copernicus chiede queste parole, con l'anno dei dati, e la frase sulla responsabilita'.

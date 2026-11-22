@@ -112,6 +112,14 @@ describe("il Meteo, gli stati della pagina", () => {
     expect(a.azione?.textContent).toBe("Aggiorna")
     expect(a.azione?.className).toContain("as-bottone--tenue")
   })
+
+  it("crediti Meteoblue finiti, anche senza seeing di prima: la chiave e' buona, si riprova", async () => {
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: true, source: null, meteoblue: "limited" } })
+    await apriMeteo()
+
+    const a = await avviso(/^Meteoblue non risponde per ora: crediti o richieste esauriti\. La chiave è buona, riprovo più tardi\.$/)
+    expect(a.classi).toBe("as-avviso as-avviso--attesa")
+  })
 })
 
 describe("il Meteo, gli stati della notte", () => {

@@ -13,7 +13,7 @@ from astrolog.db.connect import connect
 from astrolog.site_of import home_site
 from astrolog.weather import forecast, meteoblue, sky, view
 from test_api_weather import dintorni_del_cielo, metti_casa
-from test_weather_meteoblue import CHIAVE, rifiuto, seeing
+from test_weather_meteoblue import CHIAVE, guasto, rifiuto, seeing
 
 CONTO = {"items": [{"request_type": "seeing-1h", "request_credits": 8000}], "metadata": {}}
 OTHER_KEY = "unaltrachiave5678"  # gitleaks:allow
@@ -66,6 +66,14 @@ def test_a_refused_key_leaves_the_previous_key_and_its_hint(app, monkeypatch):
     assert before is not None
     assert answer == {"status": "refused", "hint": before}
     assert app.get("/api/v1/settings").json()["values"]["meteoblue_key"] == before
+
+
+def test_a_key_whose_credits_ran_out_is_kept_and_says_so(app, monkeypatch):
+    """Il conto risponde 429 a una chiave che riconosce: e' buona, e si tiene."""
+    monkeypatch.setattr(meteoblue, "_fetch", servizi(**{"account/usage": guasto(429)}))
+    detto = app.put("/api/v1/weather/meteoblue-key", json={"key": CHIAVE}).json()
+    assert detto == {"status": "limited", "hint": "..." + CHIAVE[-4:]}
+    assert app.get("/api/v1/settings").json()["values"]["meteoblue_key"] == "..." + CHIAVE[-4:]
 
 
 def test_the_key_cannot_be_written_without_being_tried(app):

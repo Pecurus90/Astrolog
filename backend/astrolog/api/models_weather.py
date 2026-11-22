@@ -256,13 +256,14 @@ class WeatherSourceOut(BaseModel):
 
 class WeatherSeeingOut(BaseModel):
     """Whether the user has a Meteoblue key, whether seeing is there (`meteoblue`, its only
-    source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`,
-    `unreachable`, `bad_answer`, or `None` if it has not been asked yet for this site. `key` tells
-    "no key" from "not asked yet", which `meteoblue` alone cannot."""
+    source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`, `limited`
+    (credits or requests run out, the key holds), `unreachable`, `bad_answer`, or `None` if it has
+    not been asked yet for this site. `key` tells "no key" from "not asked yet", which
+    `meteoblue` alone cannot."""
 
     key: bool
     source: Literal["meteoblue"] | None
-    meteoblue: Literal["ok", "refused", "unreachable", "bad_answer"] | None
+    meteoblue: Literal["ok", "refused", "limited", "unreachable", "bad_answer"] | None
 
 
 class WeatherRequestOut(BaseModel):
@@ -295,7 +296,7 @@ class WeatherOut(BaseModel):
 # Repeated rather than imported from `weather`, so the route contract does not change shape with
 # an internal module.
 RefreshStatus = Literal["ok", "no_site", "no_timezone", "unreachable", "bad_answer"]
-KeyStatus = Literal["ok", "removed", "refused", "unreachable", "bad_answer"]
+KeyStatus = Literal["ok", "removed", "refused", "limited", "unreachable", "bad_answer"]
 
 
 class WeatherRefreshOut(BaseModel):

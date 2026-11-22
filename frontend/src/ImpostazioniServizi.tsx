@@ -11,7 +11,8 @@ import { type Chiave, t } from "./i18n"
 import { Sezione } from "./ImpostazioniScansioni"
 import { usePreferenze } from "./preferenze"
 
-type Esito = components["schemas"]["SkyKeyOut"]["status"]
+type Esito =
+  components["schemas"]["SkyKeyOut"]["status"] | components["schemas"]["MeteoblueKeyOut"]["status"]
 
 // Where the keys are asked: addresses, not texts to translate (tavola `SezioneServizi`).
 export const METEOBLUE = "https://www.meteoblue.com/it/weather-api"
@@ -21,6 +22,7 @@ const SEGNI: Record<Esito, string> = {
   ok: "✓", // glifo-ok: segno della tavola
   removed: "",
   refused: "✕", // glifo-ok: segno della tavola
+  limited: "!", // glifo-ok: segno della tavola
   unreachable: "!", // glifo-ok: segno della tavola
   bad_answer: "!", // glifo-ok: segno della tavola
 }
@@ -118,7 +120,7 @@ function CartaServizio({ s, fine }: { s: Servizio; fine: string | null }) {
   const invia = useMutation({
     mutationFn: s.manda,
     onSuccess: async (esito) => {
-      if (esito === "ok" || esito === "removed") {
+      if (esito === "ok" || esito === "removed" || esito === "limited") {
         setChiave("")
         setCambia(false)
       }

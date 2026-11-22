@@ -214,7 +214,8 @@ def check_sky_key(key: str, *, fetch: net.Fetch | None = None) -> SkyKeyCheck:
     ("Invalid authentication.")."""
     answer, failure = net.ask_why(fetch or _fetch, _sky_point_url(_KEY_PROBE, key))
     if failure is not None:
-        return SkyKeyCheck(failure.value)
+        limited = failure == net.Failure.LIMITED  # still a refusal here, as before
+        return SkyKeyCheck.REFUSED if limited else SkyKeyCheck(failure.value)
     if isinstance(answer, str) and answer.strip().lower().startswith("invalid"):
         return SkyKeyCheck.REFUSED
     return SkyKeyCheck.BAD_ANSWER if _bare_number(answer) is None else SkyKeyCheck.OK

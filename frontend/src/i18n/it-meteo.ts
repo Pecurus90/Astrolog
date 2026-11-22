@@ -237,6 +237,7 @@ export const itMeteo = {
   // Il seeing viene solo da Meteoblue: se manca, perche'.
   "weather.seeing.why.unreachable": "Ultimo aggiornamento del seeing non riuscito: dati precedenti.",
   "weather.seeing.why.bad_answer": "Risposta non valida da Meteoblue: dati precedenti.",
+  "weather.seeing.why.limited": "Meteoblue non risponde per ora: crediti o richieste esauriti. La chiave \u00e8 buona, riprovo pi\u00f9 tardi.",
   // La chiave Meteoblue, nel primo avvio e nelle Impostazioni.
   "meteoblue.label": "Chiave Meteoblue",
   "meteoblue.none": "Nessuna chiave: seeing non disponibile.",
@@ -247,6 +248,7 @@ export const itMeteo = {
   "meteoblue.removed": "Chiave rimossa: seeing non disponibile.",
   "meteoblue.refused": "Chiave non riconosciuta da Meteoblue: non salvata.",
   "meteoblue.unreachable": "Meteoblue non risponde: chiave non verificata e non salvata.",
+  "meteoblue.limited": "Meteoblue non risponde per ora: crediti o richieste esauriti. La chiave \u00e8 buona, riprovo pi\u00f9 tardi.",
   "meteoblue.badAnswer": "Risposta non valida da Meteoblue: chiave non salvata.",
   "meteoblue.failed": "Invio della chiave non riuscito",
   // La licenza Copernicus chiede queste parole, con l'anno dei dati, e la frase sulla responsabilita'.

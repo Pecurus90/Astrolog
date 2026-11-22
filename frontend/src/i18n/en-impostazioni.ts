@@ -127,6 +127,7 @@ export const enImpostazioni = {
   "settings.services.ok": "Key valid, saved.",
   "settings.services.removed": "Key removed.",
   "settings.services.refused": "Key refused: check the key on the service's site and paste it again.",
+  "settings.services.limited": "Meteoblue is not answering for now: credits or requests used up. The key is good, I will try again later.",
   "settings.services.unreachable": "{servizio} is not responding: key not checked and not saved. Try again later.", // glifo-ok: board text
   "settings.services.bad_answer": "Invalid response from {servizio}: key not saved.",
   "settings.services.sendFailed": "AstroLog is not responding: key not sent. Try again.",

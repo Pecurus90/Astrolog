@@ -140,6 +140,19 @@ def test_a_silent_service_keeps_the_seeing_it_gave_last_time(db):  # noqa: F811
     assert meteoblue.last_attempt(db, SITO.id)["status"] == "unreachable"
 
 
+def test_credits_run_out_keep_the_key_and_the_seeing_it_gave(db):  # noqa: F811
+    """Un 429 sono richieste o crediti finiti (RFC 6585 4), non la chiave sbagliata: il seeing
+    di prima resta, e il prossimo tentativo aspetta il freno delle dodici ore."""
+    con_la_chiave(db)
+    sky.refresh(db, SITO, fetch=servizi(), now=ADESSO)
+    prima = [tuple(r) for r in righe(db) if r["source"] == "meteoblue"]
+    finiti = servizi(**{"packages/seeing-1h": guasto(429)})
+    sky.refresh(db, SITO, fetch=finiti, now=ADESSO + timedelta(hours=12))
+    assert [tuple(r) for r in righe(db) if r["source"] == "meteoblue"] == prima
+    assert meteoblue.last_attempt(db, SITO.id)["status"] == "limited"
+    assert not meteoblue.due(db, SITO.id, ADESSO + timedelta(hours=13))
+
+
 def test_the_key_never_reaches_the_log(db, caplog):  # noqa: F811
     caplog.set_level("DEBUG")
     con_la_chiave(db)
@@ -190,7 +203,7 @@ def guasto(codice):
         (400, "refused"),
         (401, "refused"),
         (403, "refused"),
-        (429, "refused"),
+        (429, "limited"),
         (500, "unreachable"),
         (503, "unreachable"),
     ],

@@ -9,6 +9,7 @@ from typing import Final, cast
 
 from fastapi import APIRouter, Depends
 
+from .. import net
 from ..clock import night_date, now_iso
 from ..db import config
 from ..db.transaction import transaction
@@ -203,9 +204,10 @@ def put_meteoblue_key(
 
     **A key the account does not recognise is not saved**, and the hint stays the previous key's:
     saving it would mean finding out only at the next round, with seeing that does not arrive and
-    no idea why. **A new key is used at once**: the previous seeing and the last attempt are
-    forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
-    (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key."""
+    no idea why. `limited` (429: credits or requests run out) is a key the account knows: saved,
+    asked again after the minimum gap. **A new key is used at once**: the previous seeing and the
+    last attempt are forgotten, and the weather round starts now instead of after Meteoblue's
+    minimum gap (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key."""
     trimmed = (body.key or "").strip()
     if not trimmed:
         with transaction(conn):
@@ -216,14 +218,17 @@ def put_meteoblue_key(
                 view.rebuild(conn, home)
         return MeteoblueKeyOut(status=REMOVED, hint=None)
     outcome = meteoblue.check_key(trimmed)
-    if outcome != forecast.Outcome.OK:
+    if outcome not in (forecast.Outcome.OK, net.Failure.LIMITED):
         return MeteoblueKeyOut(
             status=cast(KeyStatus, outcome), hint=config.hint(config.read(conn).meteoblue_key)
         )
+    now = datetime.now(UTC)
+    home = home_site(conn)
     with transaction(conn):
         config.write(conn, "meteoblue_key", trimmed)
-        meteoblue.forget(conn, now=datetime.now(UTC))
-    home = home_site(conn)
-    if home is not None:
+        meteoblue.forget(conn, now=now)
+        if outcome == net.Failure.LIMITED and home is not None:
+            meteoblue.record(conn, home.id, outcome, now)  # asking now would be refused again
+    if home is not None and outcome == forecast.Outcome.OK:
         rounds.refresh(conn, home)
     return MeteoblueKeyOut(status=cast(KeyStatus, outcome), hint=config.hint(trimmed))

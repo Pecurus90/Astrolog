@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 391; senza fonte: 0.
-Fonti: C norma: 197; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 98.
+Valori: 392; senza fonte: 0.
+Fonti: C norma: 198; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 98.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -269,7 +269,8 @@ Fonti: C norma: 197; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | simbolo | valore | fonte |
 |---|---|---|
 | TIMEOUT_S | `15` | P ADR 0038 |
-| _REFUSALS | `frozenset({400, 401, 403, 429})` | C RFC 9110 15.5.1-15.5.4; RFC 6585 4 |
+| _REFUSALS | `frozenset({400, 401, 403})` | C RFC 9110 15.5.1-15.5.4 |
+| _LIMIT | `429` | C RFC 6585 4 |
 
 ### night_measures.py
 

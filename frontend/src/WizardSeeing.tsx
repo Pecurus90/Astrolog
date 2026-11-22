@@ -18,6 +18,7 @@ const ESITI: Record<Esito, { frase: Chiave; segno: SegnoAvviso }> = {
   ok: { frase: "meteoblue.saved", segno: "\u2713" },
   removed: { frase: "meteoblue.removed", segno: "?" },
   refused: { frase: "meteoblue.refused", segno: "!" },
+  limited: { frase: "meteoblue.limited", segno: "!" },
   unreachable: { frase: "meteoblue.unreachable", segno: "!" },
   bad_answer: { frase: "meteoblue.badAnswer", segno: "!" },
 }
@@ -46,7 +47,7 @@ export function WizardSeeing({
       return data.status
     },
     onSuccess: async (esito) => {
-      if (esito === "ok" || esito === "removed") setChiave("")
+      if (esito === "ok" || esito === "removed" || esito === "limited") setChiave("")
       await cache.invalidateQueries({ queryKey: ["settings"] })
       await cache.invalidateQueries({ queryKey: ["weather"] })
     },

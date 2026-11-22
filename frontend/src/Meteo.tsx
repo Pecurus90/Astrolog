@@ -416,9 +416,9 @@ function RichiestaSenzaRisposta({ detto, tace, senzaPrevisione, aggiorna, occupa
 /** Meteoblue che tace o risponde storto: resta il seeing di prima, con la sua eta' in testa. Il
  *  seeing che manca del tutto lo dice la sua carta. */
 function SeeingCheTace({ seeing, aggiorna, occupato }: { seeing: Meteo["seeing"]; aggiorna: () => void; occupato: boolean }) {
-  // senza un seeing di prima non c'e' niente che resti: lo dice la sua carta
-  if (seeing.source === null) return null
-  if (seeing.meteoblue !== "unreachable" && seeing.meteoblue !== "bad_answer") return null
+  // crediti finiti: la chiave e' buona anche senza seeing di prima
+  if (seeing.source === null && seeing.meteoblue !== "limited") return null
+  if (seeing.meteoblue !== "unreachable" && seeing.meteoblue !== "bad_answer" && seeing.meteoblue !== "limited") return null
   return (
     <Avviso esito="attesa" titolo={t(`weather.seeing.why.${seeing.meteoblue}`)}
       azioni={<Bottone verso="tenue" onClick={aggiorna} disabled={occupato}>{t("weather.refresh")}</Bottone>} />

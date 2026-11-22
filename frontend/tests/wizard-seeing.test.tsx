@@ -86,6 +86,18 @@ describe("il passo Seeing del primo avvio", () => {
     expect(screen.getByRole("button", { name: /^rimuovi chiave$/i })).toBeDefined()
   })
 
+  it("crediti finiti: la chiave si salva, la frase lo dice e il campo si vuota", async () => {
+    await alSeeing(null, { stato: 200, corpo: { status: "limited", hint: "...1234" } })
+    fireEvent.change(campo(), { target: { value: "abcd1234" } })
+    fireEvent.click(salva())
+    await waitFor(() =>
+      expect(avvisi()).toContain(
+        "! Meteoblue non risponde per ora: crediti o richieste esauriti. La chiave è buona, riprovo più tardi.",
+      ),
+    )
+    expect(campo().value).toBe("")
+  })
+
   it.each([
     ["refused", "! Chiave non riconosciuta da Meteoblue: non salvata."],
     ["unreachable", "! Meteoblue non risponde: chiave non verificata e non salvata."],

@@ -21,12 +21,21 @@ TIMEOUT_S = 15  # [P ADR 0038]
 
 class Failure(StrEnum):
     REFUSED = "refused"
+    LIMITED = "limited"
     UNREACHABLE = "unreachable"
 
 
-# What a service answers when the request is not valid: the key, or the credits run out. The rest
-# (a 500, a 503) is the service down, and says nothing about the key.
-_REFUSALS = frozenset({400, 401, 403, 429})  # [C RFC 9110 15.5.1-15.5.4; RFC 6585 4]
+# What a service answers when the request is not valid, the key first. The rest (a 500, a 503)
+# is the service down, and says nothing about the key.
+_REFUSALS = frozenset({400, 401, 403})  # [C RFC 9110 15.5.1-15.5.4]
+# Too many requests or credits run out: the key holds, a later try may pass.
+_LIMIT = 429  # [C RFC 6585 4]
+
+_SAID = {
+    Failure.REFUSED: "rete: il servizio rifiuta",
+    Failure.LIMITED: "rete: il servizio chiede di aspettare",
+    Failure.UNREACHABLE: "rete: servizio non raggiungibile",
+}
 
 
 def service_of(url: str) -> str:
@@ -51,12 +60,13 @@ def ask_why(fetch_: Fetch, url: str) -> tuple[Any, Failure | None]:
     try:
         return fetch_(url), None
     except urllib.error.HTTPError as err:
-        refused = err.code in _REFUSALS
-        log.info(
-            "rete: il servizio rifiuta" if refused else "rete: servizio non raggiungibile",
-            extra={"service": service_of(url), "code": err.code},
-        )
-        return None, Failure.REFUSED if refused else Failure.UNREACHABLE
+        failure = Failure.UNREACHABLE
+        if err.code in _REFUSALS:
+            failure = Failure.REFUSED
+        elif err.code == _LIMIT:
+            failure = Failure.LIMITED
+        log.info(_SAID[failure], extra={"service": service_of(url), "code": err.code})
+        return None, failure
     except Exception as err:  # noqa: BLE001 - any network failure is "unknown"
         # The socket's reason (an unresolved name, an invalid certificate) is the diagnosis
         # needed, and does not carry the request.

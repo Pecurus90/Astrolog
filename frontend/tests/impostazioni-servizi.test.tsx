@@ -162,6 +162,7 @@ describe("Impostazioni / Servizi, gli esiti uno per uno", () => {
     ["ok", "✓ Chiave valida, salvata."],
     ["refused", "✕ Chiave rifiutata: controlla la chiave sul sito del servizio e incollala di nuovo."],
     ["unreachable", "! Meteoblue non risponde: chiave non verificata e non salvata. Riprova più tardi."],
+    ["limited", "! Meteoblue non risponde per ora: crediti o richieste esauriti. La chiave è buona, riprovo più tardi."],
     ["bad_answer", "! Risposta non valida da Meteoblue: chiave non salvata."],
   ])("l'esito %s ha la sua frase col suo segno", async (esito, frase) => {
     const c = await prova({ stato: 200, corpo: { status: esito, hint: null } }, /^meteoblue$/i)

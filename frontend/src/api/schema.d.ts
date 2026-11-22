@@ -1675,7 +1675,8 @@ export interface paths {
          *
          *     **A key the account does not recognise is not saved**, and the hint stays the previous key's:
          *     saving it would mean finding out only at the next round, with seeing that does not arrive and
-         *     no idea why. **A new key is used at once**: the previous seeing and the last attempt are
+         *     no idea why. `limited` (429: credits or requests run out) is a key the account knows: saved,
+         *     asked again after the minimum gap. **A new key is used at once**: the previous seeing and the last attempt are
          *     forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
          *     (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key.
          */
@@ -3760,7 +3761,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "ok" | "removed" | "refused" | "unreachable" | "bad_answer";
+            status: "ok" | "removed" | "refused" | "limited" | "unreachable" | "bad_answer";
             /** Hint */
             hint: string | null;
         };
@@ -6926,9 +6927,10 @@ export interface components {
         /**
          * WeatherSeeingOut
          * @description Whether the user has a Meteoblue key, whether seeing is there (`meteoblue`, its only
-         *     source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`,
-         *     `unreachable`, `bad_answer`, or `None` if it has not been asked yet for this site. `key` tells
-         *     "no key" from "not asked yet", which `meteoblue` alone cannot.
+         *     source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`, `limited`
+         *     (credits or requests run out, the key holds), `unreachable`, `bad_answer`, or `None` if it has
+         *     not been asked yet for this site. `key` tells "no key" from "not asked yet", which
+         *     `meteoblue` alone cannot.
          */
         WeatherSeeingOut: {
             /** Key */
@@ -6936,7 +6938,7 @@ export interface components {
             /** Source */
             source: "meteoblue" | null;
             /** Meteoblue */
-            meteoblue: ("ok" | "refused" | "unreachable" | "bad_answer") | null;
+            meteoblue: ("ok" | "refused" | "limited" | "unreachable" | "bad_answer") | null;
         };
         /**
          * WeatherSourceOut
