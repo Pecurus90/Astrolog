@@ -4396,8 +4396,9 @@ export interface components {
         /**
          * NightWeather
          * @description The actual weather of that night, from the archive: `ok` with its sky; `waiting` until it
-         *     has arrived (a young night waits for the reanalysis); `unknown` if the site's time zone is not
-         *     recognised.
+         *     has arrived (a young night waits for the reanalysis); `unavailable` when the archive refused
+         *     the night on three different days and it is asked no more; `unknown` if the site's time zone
+         *     is not recognised.
          */
         NightWeather: {
             /**
@@ -4449,7 +4450,7 @@ export interface components {
              * State
              * @enum {string}
              */
-            state: "ok" | "waiting" | "unknown";
+            state: "ok" | "waiting" | "unavailable" | "unknown";
             /**
              * Sky Word
              * @description The mean cover in the dark in okta classes (WMO 2700), written with the history; null without the clouds.

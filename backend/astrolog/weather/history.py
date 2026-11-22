@@ -12,7 +12,7 @@ from typing import Any
 
 from .. import net
 from ..clock import iso_z, night_date
-from ..db.night_weather import OF_THE_NIGHT
+from ..db.night_weather import GIVEN_UP, OF_THE_NIGHT
 from . import fetches, nights, openmeteo, score, verdict
 from .fetches import Source
 from .forecast import COLUMNS, NightRow, Outcome, Status
@@ -35,7 +35,7 @@ _fetch = net.fetch
 _MISSING = f"""
 SELECT n.site_id, n.night_date, s.latitude, s.longitude, s.timezone
 FROM nights n JOIN sites s ON s.id = n.site_id
-WHERE s.timezone IS NOT NULL AND NOT EXISTS (
+WHERE s.timezone IS NOT NULL AND NOT {GIVEN_UP} AND NOT EXISTS (
   SELECT 1 FROM weather_nights w WHERE {OF_THE_NIGHT}
 )
 ORDER BY n.site_id, n.night_date
@@ -135,7 +135,24 @@ def step(
     fetches.record_pass(
         conn, site["site_id"], due.alone, due.alone if failed_alone else due.skipped_through
     )
+    if due.alone is not None and outcome == Outcome.BAD_ANSWER:
+        _count_refusal(conn, site, due.alone, moment)
     return outcome
+
+
+_REFUSED = """
+INSERT INTO weather_missing(site_id, night_date, failed_days, last_failed_on) VALUES(?, ?, 1, ?)
+ON CONFLICT(site_id, night_date) DO UPDATE SET failed_days = failed_days + 1,
+  last_failed_on = excluded.last_failed_on WHERE last_failed_on <> excluded.last_failed_on
+"""
+
+
+def _count_refusal(
+    conn: sqlite3.Connection, site: Mapping[str, Any], night: str, now: datetime
+) -> None:
+    """The archive answered and had nothing for the night alone: one more day, once a day."""
+    today = night_date(iso_z(now), site["timezone"])
+    conn.execute(_REFUSED, (site["site_id"], night, today))
 
 
 def _write(

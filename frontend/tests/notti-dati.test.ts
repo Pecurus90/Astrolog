@@ -150,6 +150,19 @@ describe("il cielo di una notte", () => {
     })
   })
 
+  it("una notte che l'archivio non da' dice che non lo chiedo piu'", () => {
+    expect(cielo(conMeteo({ state: "unavailable", verdict: null }))).toEqual({
+      esito: -1,
+      pillola: "meteo non disponibile",
+      titolo: "Il servizio del meteo non ha questa notte",
+      sotto: "L’archivio del meteo non ha dati per questa notte e luogo: non lo chiedo più.",
+      corto: "non disponibile",
+      striscia: "non disponibile",
+      tacche: null,
+      modificaSito: false,
+    })
+  })
+
   it("una notte in attesa senza giorno d'arrivo e' senza meteo", () => {
     expect(cielo(conMeteo({ state: "waiting", arrives_on: null }))).toEqual(SILENZIO)
   })

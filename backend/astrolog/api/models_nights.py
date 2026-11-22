@@ -61,10 +61,11 @@ class Shooting(BaseModel):
 
 class NightWeather(WeatherSkyOut):
     """The actual weather of that night, from the archive: `ok` with its sky; `waiting` until it
-    has arrived (a young night waits for the reanalysis); `unknown` if the site's time zone is not
-    recognised."""
+    has arrived (a young night waits for the reanalysis); `unavailable` when the archive refused
+    the night on three different days and it is asked no more; `unknown` if the site's time zone
+    is not recognised."""
 
-    state: Literal["ok", "waiting", "unknown"]
+    state: Literal["ok", "waiting", "unavailable", "unknown"]
     sky_word: Literal["clear", "scattered", "broken", "overcast"] | None = Field(
         default=None,
         description="The mean cover in the dark in okta classes (WMO 2700), written with the "

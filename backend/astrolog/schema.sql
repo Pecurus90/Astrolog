@@ -633,6 +633,17 @@ CREATE TABLE weather_fetches (
   PRIMARY KEY (site_id, source)
 ) STRICT;
 
+-- Le notti che l'archivio rifiuta da sole (RILEVATO: `weather/history.py`): in quanti giorni
+-- diversi, e l'ultimo. Al terzo non si chiedono piu' e le Notti dicono "meteo non disponibile";
+-- un archivio muto non conta, la notte non ha colpa.
+CREATE TABLE weather_missing (
+  site_id        INTEGER NOT NULL REFERENCES sites (id) ON DELETE CASCADE,
+  night_date     TEXT NOT NULL,
+  failed_days    INTEGER NOT NULL,
+  last_failed_on TEXT NOT NULL,                    -- YYYY-MM-DD nel fuso del sito
+  PRIMARY KEY (site_id, night_date)
+) STRICT;
+
 -- Il vento in quota tipico di un sito: i 101 percentili del vento a 700 hPa medio nelle ore di
 -- ogni notte dell'ultimo anno, quante notti li hanno fatti e le coordinate del posto che hanno
 -- misurato (`weather/climate.py`). Una riga per sito, rifatta una volta l'anno o se il sito si sposta.

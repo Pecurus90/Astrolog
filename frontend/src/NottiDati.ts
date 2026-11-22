@@ -89,6 +89,18 @@ export function cielo(n: Notte): Cielo {
       modificaSito: true,
     }
   }
+  if (m.state === "unavailable") {
+    return {
+      esito: -1,
+      pillola: t("nights.sky.unavailable"),
+      titolo: t("nights.sky.unavailable.title"),
+      sotto: t("nights.sky.unavailable.why"),
+      corto: t("nights.sky.unavailable.short"),
+      striscia: t("nights.sky.unavailable.short"),
+      tacche: null,
+      modificaSito: false,
+    }
+  }
   if (m.state === "waiting" || e === -1 || m.exposure_hours == null) {
     const arriva = m.state === "waiting" && m.arrives_on ? dataBreve(m.arrives_on) : null
     return arriva

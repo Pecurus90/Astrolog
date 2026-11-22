@@ -271,6 +271,37 @@ def test_a_lone_night_that_failed_twice_is_asked_again_when_the_archive_is_back(
     assert len(scritte(db)) == 1
 
 
+def test_a_night_the_archive_never_gives_is_no_longer_asked_and_says_unavailable(db):
+    """Una notte che l'archivio rifiuta da sola in tre giorni diversi non si chiede piu' e la
+    pagina lo dice; due giri lo stesso giorno contano uno."""
+    from astrolog.spine import night_moons
+    from astrolog.spine import nights as notti
+
+    notte(db, "2026-03-10")
+    storta = Finto(*["<html/>"] * 8)
+    momenti = [ADESSO + timedelta(minutes=16 * i) for i in range(3)]  # stesso giorno
+    momenti += [ADESSO + timedelta(days=d) for d in (1, 2, 3, 4)]
+    giri = [history.step(db, fetch=storta, now=m) for m in momenti]
+    assert giri == ["bad_answer"] * 6 + [None]
+    night_moons.refresh(db)
+    (riga,) = notti.page(
+        db,
+        ids=[r[0] for r in db.execute("SELECT id FROM nights")],
+        weather=notti.Observed(history.KIND, history.arrives_on),
+        rule=MoonRule(),
+    )
+    assert riga["weather"]["state"] == "unavailable"
+    assert riga["weather"]["arrives_on"] is None
+
+
+def test_a_silent_archive_never_makes_a_night_unavailable(db):
+    """Senza rete la notte non ha colpa: si riprova sempre."""
+    notte(db, "2026-03-10")
+    muto = Finto(*[OSError()] * 6, archivio())
+    giri = [history.step(db, fetch=muto, now=ADESSO + timedelta(days=d)) for d in range(7)]
+    assert giri[-1] == "ok"
+
+
 def test_a_night_the_archive_covers_only_in_part_is_not_written(db):
     """La notte del 10 finisce il mattino dell'11: un archivio che si ferma prima non la scrive a
     meta', e si riprova."""

@@ -9,7 +9,7 @@ from enum import StrEnum
 from typing import Any
 
 from ..db import idlist
-from ..db.night_weather import OF_THE_NIGHT
+from ..db.night_weather import GIVEN_UP, OF_THE_NIGHT
 from ..ephemeris import moon
 from ..levels import MoonRule
 from . import counts, filters_used, stages
@@ -59,7 +59,8 @@ _PAGE = f"""
 SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, s.latitude, s.longitude,
        EXISTS (SELECT 1 FROM frames f WHERE f.night_id = n.id AND f.site_lat IS NOT NULL)
          AS from_frames,
-       w.summary_json AS weather, m.phase_key, m.illumination_pct, m.dark_s, m.moonless_dark_s,
+       w.summary_json AS weather, {GIVEN_UP} AS weather_given_up,
+       m.phase_key, m.illumination_pct, m.dark_s, m.moonless_dark_s,
        m.latitude AS moon_latitude,
        {counts.counts_on(counts.Subject.NIGHT)}
 FROM nights n JOIN sites s ON s.id = n.site_id
@@ -193,12 +194,14 @@ def page(
 def _weather(
     row: sqlite3.Row, arrives_on: Callable[[str, str], str | None] | None
 ) -> dict[str, Any]:
-    """`unknown` without the site's zone (no `arrives_on`, as no Moon); `waiting` when the night
-    is too young for the reanalysis, with the day it comes, or the history has not reached it."""
+    """`unknown` without the site's zone (no `arrives_on`, as no Moon); `unavailable` given up;
+    `waiting` when young, with the day it comes, or the history has not reached it."""
     if row["weather"] is not None:
         return {"state": "ok", **json.loads(row["weather"]), "arrives_on": None}
     if arrives_on is None:
         return {"state": "unknown", **_NO_SKY, "arrives_on": None}
+    if row["weather_given_up"]:
+        return {"state": "unavailable", **_NO_SKY, "arrives_on": None}
     when = arrives_on(row["night_date"], row["timezone"])
     return {"state": "waiting", **_NO_SKY, "arrives_on": when}
 

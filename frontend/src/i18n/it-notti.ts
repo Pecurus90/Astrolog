@@ -82,6 +82,11 @@ export const itNotti = {
   "nights.sky.silent.title": "Il meteo non \u00E8 ancora arrivato",
   "nights.sky.silent.why": "Il servizio del meteo non ha ancora risposto per questa notte.",
   "nights.sky.silent.short": "non ancora arrivato",
+  "nights.sky.unavailable": "meteo non disponibile",
+  "nights.sky.unavailable.title": "Il servizio del meteo non ha questa notte",
+  "nights.sky.unavailable.why":
+    "L\u2019archivio del meteo non ha dati per questa notte e luogo: non lo chiedo pi\u00F9.",
+  "nights.sky.unavailable.short": "non disponibile",
   "nights.sky.unknown": "non disponibile",
   "nights.sky.unknown.title": "Non disponibile",
   "nights.sky.unknown.why": "Fuso orario del sito non riconosciuto.",

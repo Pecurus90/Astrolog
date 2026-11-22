@@ -77,6 +77,11 @@ export const enNotti = {
   "nights.sky.silent.title": "The weather has not arrived yet",
   "nights.sky.silent.why": "The weather service has not answered for this night yet.",
   "nights.sky.silent.short": "not arrived yet",
+  "nights.sky.unavailable": "weather not available",
+  "nights.sky.unavailable.title": "The weather service does not have this night",
+  "nights.sky.unavailable.why":
+    "The weather archive has no data for this night and place: I no longer ask for it.",
+  "nights.sky.unavailable.short": "not available",
   "nights.sky.unknown": "not available",
   "nights.sky.unknown.title": "Not available",
   "nights.sky.unknown.why": "Site time zone not recognised.",
