@@ -169,6 +169,16 @@ describe("Impostazioni / Servizi, gli esiti uno per uno", () => {
     await waitFor(() => expect(nota(c)).toEqual([frase]))
   })
 
+  it("richieste del giorno finite (#104): la carta del cielo lo dice, e la chiave resta scritta", async () => {
+    const c = await prova({ stato: 200, corpo: { status: "spent_today", hint: null } }, /servizio del cielo/i, "k")
+    await waitFor(() =>
+      expect(nota(c)).toEqual([
+        "! Il servizio del cielo ha finito le richieste di oggi: chiave non verificata e non salvata. Riprova domani.",
+      ]),
+    )
+    expect(campoDi(c).value).toBe("k")
+  })
+
   it("chiave valida: il campo si vuota; rifiutata: resta com'era scritta", async () => {
     const buona = await prova({ stato: 200, corpo: { status: "ok", hint: null } }, /^meteoblue$/i, "buona")
     await waitFor(() => expect(nota(buona)).toHaveLength(1))

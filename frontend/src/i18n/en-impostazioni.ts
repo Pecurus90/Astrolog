@@ -130,6 +130,8 @@ export const enImpostazioni = {
   "settings.services.limited": "Meteoblue is not answering for now: credits or requests used up. The key is good, I will try again later.",
   "settings.services.unreachable": "{servizio} is not responding: key not checked and not saved. Try again later.", // glifo-ok: board text
   "settings.services.bad_answer": "Invalid response from {servizio}: key not saved.",
+  "settings.services.spent_today":
+    "The sky service has used up today's requests: key not checked and not saved. Try again tomorrow.",
   "settings.services.sendFailed": "AstroLog is not responding: key not sent. Try again.",
 
   // Impostazioni.dc.html, Folders and scan (v82)

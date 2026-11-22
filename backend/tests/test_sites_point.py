@@ -3,6 +3,8 @@ universale accanto al fuso, l'anteprima di un punto prima di salvarlo, il cielo 
 quando lo si sceglie."""
 
 import datetime as dt
+import io
+import urllib.error
 import zoneinfo
 
 import pytest
@@ -103,6 +105,22 @@ def test_the_sky_key_is_tried_before_it_is_saved(client_vuoto, monkeypatch):
 def test_a_silent_sky_service_saves_no_key(client_vuoto, offline):
     r = client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"}).json()
     assert r == {"status": "unreachable", "hint": None}
+
+
+def test_a_sky_key_tried_after_the_day_s_requests_is_not_called_refused(client_vuoto, monkeypatch):
+    """#104: un 429 sono le richieste del giorno finite (RFC 6585 4), non la chiave sbagliata. Non
+    dice se la chiave e' buona: non si salva, e si dice di riprovare domani (Marco, 22/11)."""
+
+    def finite(url, **_):
+        raise urllib.error.HTTPError(url, 429, "Too Many Requests", {}, io.BytesIO(b""))  # type: ignore[arg-type]
+
+    url = "/api/v1/services/sky-key"
+    answers(monkeypatch, {"lightpollutionmap": "0.04"})
+    client_vuoto.put(url, json={"key": "buona1234"})
+    monkeypatch.setattr(place, "_fetch", finite)
+    r = client_vuoto.put(url, json={"key": "nuova5678"}).json()
+    assert r == {"status": "spent_today", "hint": "...1234"}
+    assert client_vuoto.get("/api/v1/settings").json()["values"]["sky_service_key"] == "...1234"
 
 
 def test_a_silent_map_leaves_the_sky_as_it_was(client_vuoto, offline, monkeypatch):

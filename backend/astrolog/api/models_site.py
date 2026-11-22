@@ -246,9 +246,10 @@ class SkyKeyIn(BaseModel):
 
 class SkyKeyOut(BaseModel):
     """How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
-    there now."""
+    there now. `spent_today` (429): the day's requests are used up, the key is neither known good
+    nor bad, and is not saved."""
 
-    status: Literal["ok", "removed", "refused", "unreachable", "bad_answer"]
+    status: Literal["ok", "removed", "refused", "unreachable", "bad_answer", "spent_today"]
     hint: str | None
 
 

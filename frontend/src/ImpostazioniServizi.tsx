@@ -25,6 +25,7 @@ const SEGNI: Record<Esito, string> = {
   limited: "!", // glifo-ok: segno della tavola
   unreachable: "!", // glifo-ok: segno della tavola
   bad_answer: "!", // glifo-ok: segno della tavola
+  spent_today: "!", // glifo-ok: segno della tavola
 }
 
 type Servizio = {

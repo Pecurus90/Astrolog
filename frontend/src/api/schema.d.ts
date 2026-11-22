@@ -6042,14 +6042,15 @@ export interface components {
         /**
          * SkyKeyOut
          * @description How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
-         *     there now.
+         *     there now. `spent_today` (429): the day's requests are used up, the key is neither known good
+         *     nor bad, and is not saved.
          */
         SkyKeyOut: {
             /**
              * Status
              * @enum {string}
              */
-            status: "ok" | "removed" | "refused" | "unreachable" | "bad_answer";
+            status: "ok" | "removed" | "refused" | "unreachable" | "bad_answer" | "spent_today";
             /** Hint */
             hint: string | null;
         };

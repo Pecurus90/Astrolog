@@ -224,8 +224,9 @@ Scelte diverse:
   tornano da sole dopo un database rovinato). A Design.
 - **«la Ricerca»** tolta dall'intro di Servizi: senza AAVSO e TNS nessuna Ricerca legge le chiavi.
 - **Verifica**: l'esito sotto la riga («✓ Chiave valida, salvata.», «✕ Chiave rifiutata: ...»,
-  «! {servizio} non risponde ...», «! Risposta non valida ...»), al posto della riga Ultimo
-  tentativo. «Cambia» apre il campo con *Annulla* (tavola: nessun campo dopo Cambia).
+  «! {servizio} non risponde ...», «! Risposta non valida ...»; per il cielo anche «! Il
+  servizio del cielo ha finito le richieste di oggi ...», #104, Marco 22/11), al posto della
+  riga Ultimo tentativo. «Cambia» apre il campo con *Annulla* (tavola: nessun campo dopo Cambia).
 - **«4 doppioni dello stesso file»** diventa «4 duplicati»: `duplicato` e' la parola del
   glossario, «doppione» e' vietata.
 - **Rimasti fuori**: i motivi dell'app (gia' in archivio, duplicati, calibrazione, immagini

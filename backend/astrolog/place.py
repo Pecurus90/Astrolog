@@ -203,6 +203,8 @@ class SkyKeyCheck(StrEnum):
     REFUSED = "refused"
     UNREACHABLE = "unreachable"
     BAD_ANSWER = "bad_answer"
+    # 429, the day's requests used up: says nothing of the key, so not saved.
+    SPENT_TODAY = "spent_today"
 
 
 # Any point answers a number with a good key; this one is not a user's place. [T]
@@ -213,9 +215,10 @@ def check_sky_key(key: str, *, fetch: net.Fetch | None = None) -> SkyKeyCheck:
     """One request of the day's 500. A bad key gets a 200 with a sentence, not a number
     ("Invalid authentication.")."""
     answer, failure = net.ask_why(fetch or _fetch, _sky_point_url(_KEY_PROBE, key))
+    if failure == net.Failure.LIMITED:
+        return SkyKeyCheck.SPENT_TODAY
     if failure is not None:
-        limited = failure == net.Failure.LIMITED  # still a refusal here, as before
-        return SkyKeyCheck.REFUSED if limited else SkyKeyCheck(failure.value)
+        return SkyKeyCheck(failure.value)
     if isinstance(answer, str) and answer.strip().lower().startswith("invalid"):
         return SkyKeyCheck.REFUSED
     return SkyKeyCheck.BAD_ANSWER if _bare_number(answer) is None else SkyKeyCheck.OK
