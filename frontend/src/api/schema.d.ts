@@ -1676,9 +1676,9 @@ export interface paths {
          *     **A key the account does not recognise is not saved**, and the hint stays the previous key's:
          *     saving it would mean finding out only at the next round, with seeing that does not arrive and
          *     no idea why. `limited` (429: credits or requests run out) is a key the account knows: saved,
-         *     asked again after the minimum gap. **A new key is used at once**: the previous seeing and the last attempt are
-         *     forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
-         *     (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key.
+         *     asked again after the minimum gap. **A new key is used at once**: the previous seeing and the
+         *     last attempt are forgotten, and the weather round starts now instead of after Meteoblue's
+         *     minimum gap (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key.
          */
         put: operations["put_meteoblue_key"];
         post?: never;
