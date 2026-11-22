@@ -14,6 +14,7 @@ problema, spostato di un anello.
 
 import json
 import sys
+import time
 import tomllib
 import urllib.request
 from importlib.metadata import PackageNotFoundError, distribution
@@ -22,6 +23,8 @@ from pathlib import Path
 PYPROJECT = Path(__file__).resolve().parents[1] / "backend" / "pyproject.toml"
 PYPI = "https://pypi.org/pypi/{}/{}/json"
 TIMEOUT_S = 30
+ATTEMPTS = 3
+PAUSE_S = 5
 
 # Bersaglio -> i frammenti che una ruota deve avere nel nome per valere per lui. Una ruota
 # `py3-none-any` (Python puro) vale per tutti e non compare qui.
@@ -79,8 +82,19 @@ def closure(names):
     return found
 
 
-def wheels(name, version):
+def wheels(name: str, version: str) -> list[str]:
     """I nomi dei file pubblicati su PyPI per quella versione."""
+    for _ in range(ATTEMPTS - 1):
+        try:
+            return published(name, version)
+        except OSError:
+            # errore di rete (handshake scaduto, 404): si richiede dopo una pausa
+            time.sleep(PAUSE_S)
+    return published(name, version)
+
+
+def published(name: str, version: str) -> list[str]:
+    """Una richiesta a PyPI; l'errore di rete esce verso chi chiama."""
     with urllib.request.urlopen(PYPI.format(name, version), timeout=TIMEOUT_S) as r:  # noqa: S310 - solo https, host costante
         data = json.loads(r.read())
     return [f["filename"] for f in data.get("urls", []) if f.get("packagetype") == "bdist_wheel"]

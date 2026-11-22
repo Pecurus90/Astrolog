@@ -4,6 +4,11 @@ Non tocca la rete: si prova la REGOLA (quali nomi di ruota coprono quale bersagl
 di file, che e' l'unica parte che puo' sbagliare. Il giro su PyPI e' un lavoro di CI.
 """
 
+import io
+import json
+
+import pytest
+
 import ruote
 
 
@@ -59,3 +64,32 @@ def test_the_declared_dependencies_are_read_from_the_one_place_they_live():
     nomi = ruote.declared()
     assert "astropy" in nomi and "tzfpy" in nomi and "tzdata" in nomi
     assert all(c not in n for n in nomi for c in "<>=!~ #")
+
+
+def test_one_pypi_timeout_is_asked_again_not_counted_as_missing(monkeypatch):
+    """Run 44998813777: un handshake scaduto su sep 1.4.1 rendeva rossa la CI; si richiede."""
+    calls = []
+    body = json.dumps({"urls": [{"packagetype": "bdist_wheel", "filename": "x-py3-none-any.whl"}]})
+
+    def urlopen(url, timeout):
+        calls.append(url)
+        if len(calls) == 1:
+            raise TimeoutError("_ssl.c:994: The handshake operation timed out")
+        return io.BytesIO(body.encode())
+
+    monkeypatch.setattr(ruote.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(ruote.time, "sleep", lambda s: None)
+    assert ruote.wheels("x", "1.0") == ["x-py3-none-any.whl"]
+    assert len(calls) == 2
+
+
+def test_pypi_down_for_good_is_still_reported(monkeypatch):
+    """Dopo l'ultimo tentativo l'errore esce: check() lo segna come mancante."""
+
+    def urlopen(url, timeout):
+        raise TimeoutError("down")
+
+    monkeypatch.setattr(ruote.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(ruote.time, "sleep", lambda s: None)
+    with pytest.raises(OSError):
+        ruote.wheels("x", "1.0")
