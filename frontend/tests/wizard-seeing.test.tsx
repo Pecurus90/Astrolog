@@ -129,6 +129,52 @@ describe("il passo Seeing del primo avvio", () => {
     expect(campo().value).toBe("k")
   })
 
+  it("Fine con la chiave scritta la verifica e la salva, poi va avanti", async () => {
+    await alSeeing(null, { stato: 200, corpo: { status: "ok", hint: "...0001" } })
+    fireEvent.change(campo(), { target: { value: " k0001 " } })
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+    await waitFor(() => expect(mandate().map((s) => s.corpo)).toEqual([{ key: "k0001" }]))
+    await waitFor(() => expect(scritture().some((s) => s.url.includes("/wizard-done"))).toBe(true))
+    // la chiusura conta il passo fatto: la chiave salvata adesso, non quella letta prima
+    await waitFor(() =>
+      expect(
+        [...document.querySelectorAll(".al-avvio__riga-1")].map((li) =>
+          li.getAttribute("aria-label"),
+        ),
+      ).toContain("Seeing (Meteoblue), fatto"),
+    )
+  })
+
+  it("due Fine mentre la chiave si verifica: una verifica e una chiusura", async () => {
+    let lascia: (v: unknown) => void = () => {}
+    await alSeeing(null, {
+      stato: 200,
+      corpo: { status: "ok", hint: "...0001" },
+      attesa: new Promise((r) => (lascia = r)),
+    })
+    fireEvent.change(campo(), { target: { value: "k0001" } })
+    const fine = screen.getByRole("button", { name: /^fine$/i })
+    fireEvent.click(fine)
+    fireEvent.click(fine)
+    lascia(undefined)
+    await waitFor(() => expect(scritture().some((s) => s.url.includes("/wizard-done"))).toBe(true))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(mandate()).toHaveLength(1)
+    expect(scritture().filter((s) => s.url.includes("/wizard-done"))).toHaveLength(1)
+  })
+
+  it("Fine con una chiave rifiutata resta sul passo e dice perche'", async () => {
+    await alSeeing(null, { stato: 200, corpo: { status: "refused", hint: null } })
+    fireEvent.change(campo(), { target: { value: "sbagliata" } })
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+    await waitFor(() =>
+      expect(avvisi()).toContain("! Chiave non riconosciuta da Meteoblue: non salvata."),
+    )
+    await new Promise((r) => setTimeout(r, 20))
+    expect(scritture().some((s) => s.url.includes("/wizard-done"))).toBe(false)
+    expect(screen.getByRole("region", { name: "Seeing (Meteoblue)" })).toBeDefined()
+  })
+
   it("Invio nel campo manda la chiave come il comando", async () => {
     await alSeeing(null, { stato: 200, corpo: { status: "ok", hint: "...0001" } })
     fireEvent.change(campo(), { target: { value: "k0001" } })

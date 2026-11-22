@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Avviso, type SegnoAvviso } from "./componenti/Avviso"
 import type { Formato } from "./componenti/Tema"
@@ -31,9 +31,12 @@ const ESITI: Record<Esito, { frase: Chiave; segno: SegnoAvviso }> = {
 export function WizardSeeing({
   formato,
   onOffre,
+  onPrimaDiAvanti,
 }: {
   formato: Formato
   onOffre: (offre: boolean) => void
+  /** Avanti with a key written: verify and save first; `false` stays on the step. */
+  onPrimaDiAvanti?: (prima: (() => Promise<boolean>) | null) => void
 }) {
   const cache = useQueryClient()
   const impostazioni = usePreferenze()
@@ -61,6 +64,21 @@ export function WizardSeeing({
   const manda = () => {
     if (scritta && !salva.isPending) salva.mutate(chiave.trim())
   }
+  const { mutateAsync } = salva
+  useEffect(() => {
+    if (!onPrimaDiAvanti) return
+    const scritto = chiave.trim()
+    onPrimaDiAvanti(
+      scritto
+        ? () =>
+            mutateAsync(scritto).then(
+              (e) => e === "ok" || e === "limited",
+              () => false,
+            )
+        : null,
+    )
+    return () => onPrimaDiAvanti(null)
+  }, [chiave, mutateAsync, onPrimaDiAvanti])
 
   return (
     <div className="al-avvio__colonna-21">

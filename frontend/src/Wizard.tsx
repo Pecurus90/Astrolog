@@ -104,6 +104,11 @@ export function Wizard({
   // a step with a full command of its own (add, verify and save): Avanti steps down to tenue
   const [pienoDelPasso, setPienoDelPasso] = useState(false)
   const fallito = useCallback((f: (() => void) | null) => setNonScritto(f !== null), [])
+  // a step that writes on Avanti (the key typed in Seeing): `false` stays on it
+  const primaDiAvanti = useRef<(() => Promise<boolean>) | null>(null)
+  const registraPrima = useCallback((f: (() => Promise<boolean>) | null) => {
+    primaDiAvanti.current = f
+  }, [])
   const scrivi = useScriviImpostazioni()
 
   const [chiuso, setChiuso] = useState<Chiuso>()
@@ -156,7 +161,22 @@ export function Wizard({
     return dato[p] ? "fatto" : "saltato"
   }
 
+  // one key check at a time: a second click meanwhile would check, and step, twice
+  const inCorso = useRef(false)
+  const [attende, setAttende] = useState(false)
+  const verifica = async (prima: () => Promise<boolean>) => {
+    inCorso.current = true
+    setAttende(true)
+    try {
+      return await prima()
+    } finally {
+      inCorso.current = false
+      setAttende(false)
+    }
+  }
+
   const avanti = async () => {
+    if (inCorso.current) return
     // the name is written leaving the step, and not rewritten if unchanged
     const scritto = name.trim()
     if (qui === "nome" && scritto && scritto !== saved.current) {
@@ -168,9 +188,13 @@ export function Wizard({
       saved.current = scritto
       void cache.invalidateQueries({ queryKey: ["settings"] })
     }
+    // written just now: the settings read before the click do not know it yet
+    const prima = primaDiAvanti.current
+    const salvato = prima ? await verifica(prima) : null
+    if (salvato === false) return
     setNonScritto(false)
     sito.dimentica()
-    setSegnati((s) => ({ ...s, [qui]: esito(qui) }))
+    setSegnati((s) => ({ ...s, [qui]: salvato ? "fatto" : esito(qui) }))
     if (last) stamp.mutate(true)
     else setStep((n) => n + 1)
   }
@@ -225,7 +249,7 @@ export function Wizard({
       <Comando
         testo={t(last ? "wizard.done" : "wizard.next")}
         verso={proprio ? "tenue" : "pieno"}
-        spento={stamp.isPending}
+        spento={stamp.isPending || attende}
         onClick={() => void avanti()}
       />
     </>
@@ -285,7 +309,13 @@ export function Wizard({
           />
         )}
         {qui === "cartelle" && <WizardFolders formato={formato} onOffre={setPienoDelPasso} />}
-        {qui === "seeing" && <WizardSeeing formato={formato} onOffre={setPienoDelPasso} />}
+        {qui === "seeing" && (
+          <WizardSeeing
+            formato={formato}
+            onOffre={setPienoDelPasso}
+            onPrimaDiAvanti={registraPrima}
+          />
+        )}
         {qui === "astap" && (
           <WizardSolver formato={formato} senzaCatalogo={senzaCatalogo} onOffre={setPienoDelPasso} />
         )}
