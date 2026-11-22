@@ -1678,7 +1678,8 @@ export interface paths {
          *     no idea why. `limited` (429: credits or requests run out) is a key the account knows: saved,
          *     asked again after the minimum gap. **A new key is used at once**: the previous seeing and the
          *     last attempt are forgotten, and the weather round starts now instead of after Meteoblue's
-         *     minimum gap (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key.
+         *     minimum gap (`meteoblue.MIN_GAP_H`). **The same key saved again** asks nothing and keeps the
+         *     brake, unless its last round failed otherwise. Only the hint (`config.hint`) comes out.
          */
         put: operations["put_meteoblue_key"];
         post?: never;
@@ -2224,6 +2225,12 @@ export interface components {
              * @description Dark from the first instant to the last (above 84 degrees): no hours to say.
              */
             dark_all_night: boolean;
+            /**
+             * Dark
+             * @description The astronomical dark's stretches in time order: more than one where twilight breaks it (the clock's noon far from the Sun's); empty without dark.
+             * @default []
+             */
+            dark: components["schemas"]["DarkStretchOut"][];
         };
         /**
          * CoordinatesEdit
@@ -6217,6 +6224,12 @@ export interface components {
              * @default []
              */
             moonless_dark: components["schemas"]["DarkStretchOut"][];
+            /**
+             * Moonless All Night
+             * @description Dark all night and the Moon never up in it: no stretch to say.
+             * @default false
+             */
+            moonless_all_night: boolean;
             /** @description `None` when the Moon is never up in the dark, or no night. */
             moon_in_dark?: components["schemas"]["MoonInDarkOut"] | null;
             /**

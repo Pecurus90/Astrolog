@@ -424,7 +424,12 @@ export function dateLette(date: readonly { year: number | null; month: number; d
       year: d.year === null ? undefined : "numeric",
       timeZone: "UTC",
     }).format(Date.UTC(d.year ?? 2000, d.month - 1, d.day ?? 1))
-  return new Intl.ListFormat(lingua, { type: "conjunction" }).format(date.map(una))
+  return unite(date.map(una))
+}
+
+/** Parti unite come la lingua unisce: *12:00-12:41 e 14:07-12:00*. */
+export function unite(parti: readonly string[]): string {
+  return new Intl.ListFormat(lingua, { type: "conjunction" }).format(parti)
 }
 
 /** I dodici mesi in breve, senza punto: *gen*, *feb*. */

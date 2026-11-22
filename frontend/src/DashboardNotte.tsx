@@ -15,7 +15,7 @@ import {
   sottoDellaNotte,
 } from "./DashboardDati"
 import { giornoDelMese, numero, oraDelSito, oreEMinuti, t } from "./i18n"
-import { buioDellaNotte } from "./Stanotte"
+import { buioDellaNotte, trattiDelBuio, trattiSenzaLuna } from "./Stanotte"
 
 /**
  * The Dashboard's big card (board v79): tonight's chart, the Night view (Transparency hour by hour
@@ -136,16 +136,10 @@ function quandoDelPianeta(p: Stanotte["planets"][number], conNome = true): strin
 
 /** The legend's dark: "20:48-05:48, senza Luna 20:48-23:40". */
 function notaDelBuio(s: Stanotte): string {
-  const c = s.chart
-  const parti = c?.dark_all_night
-    ? [t("frame.tonight.stretch.all")]
-    : c?.dark_from && c.dark_until
-      ? [t("frame.tonight.stretch", { da: oraDelSito(c.dark_from), a: oraDelSito(c.dark_until) })]
-      : []
-  const tratti = (s.moonless_dark ?? []).map((x) =>
-    t("frame.tonight.stretch", { da: oraDelSito(x.starts_at), a: oraDelSito(x.ends_at) }),
-  )
-  if (tratti.length) parti.push(t("frame.tonight.moonless", { tratti: tratti.join(", ") }))
+  const buio = trattiDelBuio(s)
+  const senza = trattiSenzaLuna(s)
+  const parti = buio ? [buio] : []
+  if (senza) parti.push(t("frame.tonight.moonless", { tratti: senza }))
   return parti.join(" \u00b7 ")
 }
 
@@ -400,6 +394,7 @@ export function DashboardNotte({
   const tramonto = fasce[0]?.kind === "day" ? fasce[0].ends_at : null
   const alba =
     fasce[fasce.length - 1]?.kind === "day" ? (fasce[fasce.length - 1]?.starts_at ?? null) : null
+  const buio = trattiDelBuio(s)
   const chiave: { n: string; o: number }[] = [
     {
       n: tramonto
@@ -411,14 +406,7 @@ export function DashboardNotte({
     { n: t("dashboard.band.nautical"), o: 2 },
     { n: t("dashboard.band.astronomical"), o: 3 },
     {
-      n: chart?.dark_all_night
-        ? t("frame.tonight.dark.all")
-        : chart?.dark_from && chart.dark_until
-          ? t("dashboard.band.dark.span", {
-              da: oraDelSito(chart.dark_from),
-              a: oraDelSito(chart.dark_until),
-            })
-          : t("dashboard.band.dark"),
+      n: buio ? t("frame.tonight.dark", { tratti: buio }) : t("dashboard.band.dark"),
       o: 4,
     },
     ...(alba ? [{ n: t("dashboard.band.sunrise", { ora: oraDelSito(alba) }), o: 0 }] : []),

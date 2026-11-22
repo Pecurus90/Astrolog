@@ -63,6 +63,7 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
         "chart": None,
         "planets": [],
         "moonless_dark": [],
+        "moonless_all_night": False,
         "moon_in_dark": None,
         "shooting": [],
         "broadband_dark_s": None,
@@ -147,6 +148,36 @@ def test_a_night_without_dark_says_when_the_dark_returns(client_vuoto, monkeypat
     assert polare["dark_s"] == 0, polare["dark_s"]
     assert polare["dark_returns"] is not None and polare["dark_returns"] > "2027-07-01"
     assert qui["dark_s"] > 0 and qui["dark_returns"] is None
+
+
+def test_a_dark_broken_by_twilight_comes_in_its_stretches(client_vuoto):
+    """Lat 85, lon 100, 2/1/2026 (Issue #18): il mezzogiorno dell'orologio e' lontano dal solare,
+    il crepuscolo cade a meta' finestra; il buio arriva in due tratti, non come 12:00-12:00."""
+    from astrolog.api.tonight_sky import sky_of
+    from astrolog.site_of import home_site
+
+    crea_sito(client_vuoto, "Polo", 85.0, 100.0)
+    conn = db(client_vuoto)
+    conn.execute("UPDATE sites SET timezone = 'Asia/Shanghai'")  # in mare e' Etc/GMT-7
+    casa = home_site(conn)
+    assert casa is not None
+    detto = sky_of(conn, casa, "2026-01-02")
+    conn.close()
+
+    assert detto is not None and detto.chart is not None
+    tratti = [(s.starts_at[11:16], s.ends_at[11:16]) for s in detto.chart.dark]
+    assert tratti == [("12:00", "12:41"), ("14:07", "12:00")]
+    assert detto.chart.dark_all_night is False
+    assert detto.moonless_all_night is False
+
+
+def test_a_dark_night_with_the_moon_always_down_is_moonless_all_night(client_vuoto, monkeypatch):
+    """Lat 85, 20/12/2025: buio da bordo a bordo e Luna sempre sotto, senza Luna tutta la notte."""
+    orologio(monkeypatch, "2025-12-20T10:00:00.000Z")
+    crea_sito(client_vuoto, "Polo", 85.0, 100.0)
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    assert detto["chart"]["dark_all_night"] is True
+    assert detto["moonless_all_night"] is True
 
 
 def test_the_window_lasts_the_real_night_not_a_fixed_day(client_vuoto, monkeypatch):

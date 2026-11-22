@@ -4,7 +4,7 @@ import { Link } from "react-router"
 import { api } from "./api/client"
 import { Avviso } from "./componenti/Avviso"
 import type { components } from "./api/schema"
-import { type Chiave, giornoEMese, numero, oraDelSito, t, unDecimale } from "./i18n"
+import { type Chiave, giornoEMese, numero, oraDelSito, t, unDecimale, unite } from "./i18n"
 
 /**
  * Stanotte (Telaio v76, pastiglia v70): la pastiglia dice il sito e apre il pannello col sito, la
@@ -107,17 +107,34 @@ function verdettoDelMeteo(notte: Notte): string {
     : t("frame.tonight.exposure", { verdetto, ore: unDecimale(ore) })
 }
 
+type Tratto = { starts_at: string; ends_at: string }
+const tratto = (s: Tratto) =>
+  t("frame.tonight.stretch", { da: oraDelSito(s.starts_at), a: oraDelSito(s.ends_at) })
+
+/** I tratti del buio, uniti come la lingua unisce; `null` senza buio. Il crepuscolo puo' romperlo. */
+export function trattiDelBuio(notte: Pick<Notte, "chart">): string | null {
+  const c = notte.chart
+  if (c?.dark_all_night) return t("frame.tonight.stretch.all")
+  if (c?.dark && c.dark.length > 1) return unite(c.dark.map(tratto))
+  return c?.dark_from && c.dark_until
+    ? tratto({ starts_at: c.dark_from, ends_at: c.dark_until })
+    : null
+}
+
+/** I tratti senza Luna: "20:48-23:40", o tutta la notte se la Luna non sale mai nel buio. */
+export function trattiSenzaLuna(notte: Pick<Notte, "moonless_dark" | "moonless_all_night">) {
+  if (notte.moonless_all_night) return t("frame.tonight.stretch.all")
+  const tratti = (notte.moonless_dark ?? []).map(tratto)
+  return tratti.length > 0 ? tratti.join(", ") : null
+}
+
 /** Il buio della notte e i suoi tratti senza Luna: "buio 20:48-05:48, senza Luna 20:48-23:40". */
 export function buioDellaNotte(notte: Notte): string {
-  const da = notte.chart?.dark_from ?? null
-  const a = notte.chart?.dark_until ?? null
+  const buio = trattiDelBuio(notte)
+  const senza = trattiSenzaLuna(notte)
   const parti: string[] = []
-  if (notte.chart?.dark_all_night) parti.push(t("frame.tonight.dark.all"))
-  else if (da && a) parti.push(t("frame.tonight.dark", { da: oraDelSito(da), a: oraDelSito(a) }))
-  const tratti = (notte.moonless_dark ?? []).map((s) =>
-    t("frame.tonight.stretch", { da: oraDelSito(s.starts_at), a: oraDelSito(s.ends_at) }),
-  )
-  if (tratti.length > 0) parti.push(t("frame.tonight.moonless", { tratti: tratti.join(", ") }))
+  if (buio) parti.push(t("frame.tonight.dark", { tratti: buio }))
+  if (senza) parti.push(t("frame.tonight.moonless", { tratti: senza }))
   return parti.join(" \u{00b7} ")
 }
 

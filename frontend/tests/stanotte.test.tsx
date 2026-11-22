@@ -15,7 +15,16 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { buioDellaNotte, rileggiOgni } from "../src/Stanotte"
-import { FERMO, SALUTE, SITO_DI_CASA, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import {
+  FERMO,
+  SALUTE,
+  SITO_DI_CASA,
+  STANOTTE,
+  disegna,
+  impostazioni,
+  pulisci,
+  rispondi,
+} from "./banco"
 
 afterEach(pulisci)
 
@@ -74,7 +83,10 @@ function app(stanotte: Record<string, unknown>, formato = "") {
     "/api/health": { stato: 200, corpo: SALUTE },
     "/api/v1/pipeline/status": { stato: 200, corpo: FERMO },
     "/api/v1/tonight": { stato: 200, corpo: { ...NOTTE, ...stanotte } },
-    "/api/v1/sites": { stato: 200, corpo: { items: [SITO_DI_CASA], total: 1, limit: 50, offset: 0 } },
+    "/api/v1/sites": {
+      stato: 200,
+      corpo: { items: [SITO_DI_CASA], total: 1, limit: 50, offset: 0 },
+    },
   })
   return disegna()
 }
@@ -97,13 +109,17 @@ function righe(pannello: HTMLElement) {
 describe("la pastiglia", () => {
   it("dice Stanotte e il sito, e apre il pannello", async () => {
     await app({})
-    const pastiglia = await screen.findByRole("link", { name: "Stanotte a Cima Ekar: sito, Luna e meteo" })
+    const pastiglia = await screen.findByRole("link", {
+      name: "Stanotte a Cima Ekar: sito, Luna e meteo",
+    })
     expect(pastiglia.textContent).toBe("StanotteCima Ekar▾")
     // v78: a long name gets the dots, the whole name in the title; the arrow apart
     const sito = pastiglia.querySelector(".al-c-telaio__stanotte-sito")
     expect(sito?.textContent).toBe("Cima Ekar")
     expect(sito?.getAttribute("title")).toBe("Cima Ekar")
-    expect(pastiglia.querySelector(".al-c-telaio__stanotte-giu")?.getAttribute("aria-hidden")).toBe("true")
+    expect(pastiglia.querySelector(".al-c-telaio__stanotte-giu")?.getAttribute("aria-hidden")).toBe(
+      "true",
+    )
     expect(pastiglia.getAttribute("aria-haspopup")).toBe("dialog")
     expect(pastiglia.getAttribute("aria-expanded")).toBe("false")
     expect(screen.queryByRole("dialog", { name: "Stanotte" })).toBeNull()
@@ -114,8 +130,18 @@ describe("la pastiglia", () => {
   })
 
   it("senza sito porta ad aggiungerlo", async () => {
-    await app({ night: null, site: null, moon: null, chart: null, moonless_dark: [], moon_in_dark: null, weather: null })
-    const pastiglia = await screen.findByRole("link", { name: "Nessun sito: aggiungine uno nelle Impostazioni" })
+    await app({
+      night: null,
+      site: null,
+      moon: null,
+      chart: null,
+      moonless_dark: [],
+      moon_in_dark: null,
+      weather: null,
+    })
+    const pastiglia = await screen.findByRole("link", {
+      name: "Nessun sito: aggiungine uno nelle Impostazioni",
+    })
     expect(pastiglia.textContent).toBe("Aggiungi sito")
     expect(pastiglia.getAttribute("href")).toBe("/impostazioni/siti")
   })
@@ -142,16 +168,26 @@ describe("il pannello di Stanotte", () => {
     // 23:40 e' l'ora a Cima Ekar: la macchina sta su UTC, quindi passando da Date direbbe 21:40.
     await app({})
     const pannello = await apri(/^stanotte a cima ekar/i)
-    expect(pannello.querySelector(".al-c-telaio__notte-tit")?.textContent).toBe("Stanotte · mercoledì 30 settembre")
+    expect(pannello.querySelector(".al-c-telaio__notte-tit")?.textContent).toBe(
+      "Stanotte · mercoledì 30 settembre",
+    )
     expect(righe(pannello)).toEqual([
       ["Sito", "Cima Ekar", "Bortle 4 · il sito predefinito"],
       ["Luna", "◐ 62% · sorge alle 23:40", "dopo le 23:40 la banda larga è al limite"],
       ["Meteo", "✓ notte buona · 7,5 ore di posa", "buio 20:48–05:48 · senza Luna 20:48–23:40"],
     ])
-    expect(within(pannello).getByRole("link", { name: "Cambia ↗" }).getAttribute("href")).toBe("/impostazioni/siti")
-    expect(within(pannello).getByRole("link", { name: "Meteo ↗" }).getAttribute("href")).toBe("/meteo")
-    expect(within(pannello).getByRole("link", { name: "Apri il Meteo ↗" }).getAttribute("href")).toBe("/meteo")
-    expect(within(pannello).getByRole("link", { name: "Piano della notte ↗" }).getAttribute("href")).toBe("/piano-della-notte")
+    expect(within(pannello).getByRole("link", { name: "Cambia ↗" }).getAttribute("href")).toBe(
+      "/impostazioni/siti",
+    )
+    expect(within(pannello).getByRole("link", { name: "Meteo ↗" }).getAttribute("href")).toBe(
+      "/meteo",
+    )
+    expect(
+      within(pannello).getByRole("link", { name: "Apri il Meteo ↗" }).getAttribute("href"),
+    ).toBe("/meteo")
+    expect(
+      within(pannello).getByRole("link", { name: "Piano della notte ↗" }).getAttribute("href"),
+    ).toBe("/piano-della-notte")
     // i dati sono veri: la riga della tavola "dati simulati" non c'e'
     expect(within(pannello).queryByText(/simulati/)).toBeNull()
   })
@@ -164,20 +200,66 @@ describe("il pannello di Stanotte", () => {
       dark_until: "2026-12-22T12:00:00+01:00",
       dark_all_night: true,
     }
-    expect(buioDellaNotte({ ...NOTTE, chart, moonless_dark: [] } as unknown as Parameters<typeof buioDellaNotte>[0])).toBe(
-      "buio tutta la notte",
+    expect(
+      buioDellaNotte({ ...NOTTE, chart, moonless_dark: [] } as unknown as Parameters<
+        typeof buioDellaNotte
+      >[0]),
+    ).toBe("buio tutta la notte")
+  })
+
+  it("un buio rotto dal crepuscolo dice i suoi tratti; Luna sempre sotto: senza Luna tutta la notte", () => {
+    const notte = (chart: object, moonless_all_night: boolean) =>
+      ({ ...NOTTE, chart, moonless_dark: [], moonless_all_night }) as unknown as Parameters<
+        typeof buioDellaNotte
+      >[0]
+    const rotta = {
+      starts_at: "2026-01-02T12:00:00+08:00",
+      ends_at: "2026-01-03T12:00:00+08:00",
+      dark_from: "2026-01-02T12:00:00+08:00",
+      dark_until: "2026-01-03T12:00:00+08:00",
+      dark_all_night: false,
+      dark: [
+        { starts_at: "2026-01-02T12:00:00+08:00", ends_at: "2026-01-02T12:41:00+08:00" },
+        { starts_at: "2026-01-02T14:07:00+08:00", ends_at: "2026-01-03T12:00:00+08:00" },
+      ],
+    }
+    expect(buioDellaNotte(notte(rotta, false))).toBe("buio 12:00–12:41 e 14:07–12:00")
+    const tutta = { ...rotta, dark_all_night: true, dark: [rotta.dark[0]] }
+    expect(buioDellaNotte(notte(tutta, true))).toBe(
+      "buio tutta la notte · senza Luna tutta la notte",
     )
   })
 
   const BUIO = { since: "2026-09-30T21:10:00+02:00", until: "2026-10-01T02:30:00+02:00" }
   it.each([
-    [{ level: "marginal", ...BUIO, from_start: false, to_end: true }, "dopo le 21:10 la banda larga è al limite"],
-    [{ level: "marginal", ...BUIO, from_start: true, to_end: false }, "fino alle 02:30 la banda larga è al limite"],
-    [{ level: "marginal", ...BUIO, from_start: false, to_end: false }, "dalle 21:10 alle 02:30 la banda larga è al limite"],
-    [{ level: "marginal", ...BUIO, from_start: true, to_end: true }, "tutta la notte la banda larga è al limite"],
-    [{ level: "nogo", ...BUIO, from_start: false, to_end: true }, "dopo le 21:10 consigliata banda stretta"],
-    [{ level: "nogo", ...BUIO, from_start: true, to_end: true }, "tutta la notte consigliata banda stretta"],
-    [{ level: "go", ...BUIO, from_start: false, to_end: true }, "la Luna non disturba la banda larga"],
+    [
+      { level: "marginal", ...BUIO, from_start: false, to_end: true },
+      "dopo le 21:10 la banda larga è al limite",
+    ],
+    [
+      { level: "marginal", ...BUIO, from_start: true, to_end: false },
+      "fino alle 02:30 la banda larga è al limite",
+    ],
+    [
+      { level: "marginal", ...BUIO, from_start: false, to_end: false },
+      "dalle 21:10 alle 02:30 la banda larga è al limite",
+    ],
+    [
+      { level: "marginal", ...BUIO, from_start: true, to_end: true },
+      "tutta la notte la banda larga è al limite",
+    ],
+    [
+      { level: "nogo", ...BUIO, from_start: false, to_end: true },
+      "dopo le 21:10 consigliata banda stretta",
+    ],
+    [
+      { level: "nogo", ...BUIO, from_start: true, to_end: true },
+      "tutta la notte consigliata banda stretta",
+    ],
+    [
+      { level: "go", ...BUIO, from_start: false, to_end: true },
+      "la Luna non disturba la banda larga",
+    ],
     [null, "col buio la Luna non c'è"],
   ])("la Luna nel buio %j si dice: %s", async (nelBuio, frase) => {
     await app({ moon_in_dark: nelBuio })
@@ -191,24 +273,39 @@ describe("il pannello di Stanotte", () => {
   })
 
   it("un sito col fuso irriconoscibile si legge lo stesso, e dice cosa manca", async () => {
-    await app({ night: null, moon: null, chart: null, moonless_dark: [], moon_in_dark: null, weather: null })
+    await app({
+      night: null,
+      moon: null,
+      chart: null,
+      moonless_dark: [],
+      moon_in_dark: null,
+      weather: null,
+    })
     const pannello = await apri(/^stanotte a cima ekar/i)
     expect(pannello.querySelector(".al-c-telaio__notte-tit")?.textContent).toBe("Stanotte")
-    expect(righe(pannello)[1]?.[1]).toBe("Fuso orario del sito non riconosciuto: Luna non calcolabile.")
+    expect(righe(pannello)[1]?.[1]).toBe(
+      "Fuso orario del sito non riconosciuto: Luna non calcolabile.",
+    )
   })
 
   it("un cielo mai dichiarato si legge, non sparisce", async () => {
     await app({ site: { name: "Passo Giau", sky_sqm: null, bortle: null } })
-    expect(righe(await apri(/^stanotte a passo giau/i))[0]?.[2]).toBe("Bortle non indicato · il sito predefinito")
+    expect(righe(await apri(/^stanotte a passo giau/i))[0]?.[2]).toBe(
+      "Bortle non indicato · il sito predefinito",
+    )
   })
 
   it("senza la previsione lo dice; una notte incerta e una senza ore di posa pure", async () => {
     await app({ weather: null })
-    expect(righe(await apri(/^stanotte a cima ekar/i))[2]?.[1]).toBe("Previsione non disponibile. Dettagli nella pagina Meteo.")
+    expect(righe(await apri(/^stanotte a cima ekar/i))[2]?.[1]).toBe(
+      "Previsione non disponibile. Dettagli nella pagina Meteo.",
+    )
     pulisci()
 
     await app({ weather: { ...NOTTE.weather, verdict: "marginal", exposure_hours: 0 } })
-    expect(righe(await apri(/^stanotte a cima ekar/i))[2]?.[1]).toBe("! notte incerta · nessuna ora di posa")
+    expect(righe(await apri(/^stanotte a cima ekar/i))[2]?.[1]).toBe(
+      "! notte incerta · nessuna ora di posa",
+    )
   })
 
   it("se stanotte non si legge lo dice, invece di restare vuoto", async () => {
@@ -222,14 +319,18 @@ describe("il pannello di Stanotte", () => {
     })
     await disegna()
     const pannello = await apri(/^stanotte$/i)
-    expect((await within(pannello).findByRole("status")).textContent).toContain("Dati di stanotte non disponibili.")
+    expect((await within(pannello).findByRole("status")).textContent).toContain(
+      "Dati di stanotte non disponibili.",
+    )
   })
 })
 
 describe("Stanotte sul telefono", () => {
   it("il titolo della pagina apre Stanotte sotto la testa", async () => {
     await app({}, "telefono")
-    const titolo = await screen.findByRole("link", { name: "Dashboard · Stanotte a Cima Ekar: sito, Luna e meteo" })
+    const titolo = await screen.findByRole("link", {
+      name: "Dashboard · Stanotte a Cima Ekar: sito, Luna e meteo",
+    })
     expect(titolo.textContent).toBe("DashboardCima Ekar▾")
     expect(titolo.querySelector("span[title='Cima Ekar']")?.textContent).toBe("Cima Ekar▾")
     fireEvent.click(titolo)
@@ -255,6 +356,11 @@ describe("quando Stanotte si rilegge da sola", () => {
     // la previsione che manca vince se arriva prima
     expect(rileggiOgni({ moon: LUNA, weather: null, night_ends_at: fine }, ora)).toBe(5 * 60 * 1000)
     // passato il mezzogiorno, subito
-    expect(rileggiOgni({ moon: LUNA, weather: { verdict: "go" }, night_ends_at: fine }, ora + 3 * 3600_000)).toBe(1000)
+    expect(
+      rileggiOgni(
+        { moon: LUNA, weather: { verdict: "go" }, night_ends_at: fine },
+        ora + 3 * 3600_000,
+      ),
+    ).toBe(1000)
   })
 })

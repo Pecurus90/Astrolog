@@ -48,7 +48,6 @@ export const itDashboard = {
   "dashboard.band.nautical": "nautico",
   "dashboard.band.astronomical": "astronomico",
   "dashboard.band.dark": "buio",
-  "dashboard.band.dark.span": "buio {da}\u2013{a}",
   "dashboard.band.sunrise": "alba {ora}",
   "dashboard.legend.transparency": "Trasparenza della notte",
   "dashboard.legend.needsForecast": "serve la previsione",

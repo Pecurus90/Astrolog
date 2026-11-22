@@ -46,7 +46,6 @@ export const enDashboard = {
   "dashboard.band.nautical": "nautical",
   "dashboard.band.astronomical": "astronomical",
   "dashboard.band.dark": "dark",
-  "dashboard.band.dark.span": "dark {da}\u2013{a}",
   "dashboard.band.sunrise": "sunrise {ora}",
   "dashboard.legend.transparency": "Transparency of the night",
   "dashboard.legend.needsForecast": "needs the forecast",

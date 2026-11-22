@@ -190,6 +190,11 @@ class ChartOut(BaseModel):
     dark_all_night: bool = Field(
         description="Dark from the first instant to the last (above 84 degrees): no hours to say."
     )
+    dark: list["DarkStretchOut"] = Field(
+        default=[],
+        description="The astronomical dark's stretches in time order: more than one where "
+        "twilight breaks it (the clock's noon far from the Sun's); empty without dark.",
+    )
 
 
 class DarkStretchOut(BaseModel):
@@ -253,6 +258,10 @@ class TonightOut(BaseModel):
     planets: list[PlanetOut] = Field(default=[], description="Empty without a night.")
     moonless_dark: list[DarkStretchOut] = Field(
         default=[], description="The dark's stretches with the Moon down; empty without a night."
+    )
+    moonless_all_night: bool = Field(
+        default=False,
+        description="Dark all night and the Moon never up in it: no stretch to say.",
     )
     moon_in_dark: MoonInDarkOut | None = Field(
         default=None, description="`None` when the Moon is never up in the dark, or no night."

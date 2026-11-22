@@ -57,6 +57,8 @@ class ChartWindow:
     dark_until: dt.datetime | None
     # noon to noon in the dark (above 84 degrees): no start nor end to tell
     dark_all_night: bool
+    # in time order: twilight can break the dark when the clock's noon is far from the Sun's
+    dark: tuple[tuple[dt.datetime, dt.datetime], ...] = ()
 
 
 _HALF_HOUR = dt.timedelta(minutes=30)  # [T] chart margin, Design board v37
@@ -81,6 +83,7 @@ def chart_window(bands: Sequence[SkyBand]) -> ChartWindow | None:
         dark_from=dark[0].starts_at if dark else None,
         dark_until=dark[-1].ends_at if dark else None,
         dark_all_night=all(b.kind == Sky.DARK for b in bands),
+        dark=tuple((b.starts_at, b.ends_at) for b in dark),
     )
 
 

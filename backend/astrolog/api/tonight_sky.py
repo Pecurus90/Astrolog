@@ -147,6 +147,9 @@ def sky_of(conn: sqlite3.Connection, home: Site, the_night: str) -> TonightOut |
             dark_from=_iso(span.dark_from),
             dark_until=_iso(span.dark_until),
             dark_all_night=span.dark_all_night,
+            dark=[
+                DarkStretchOut(starts_at=a.isoformat(), ends_at=b.isoformat()) for a, b in span.dark
+            ],
         )
         if span
         else None,
@@ -161,6 +164,7 @@ def sky_of(conn: sqlite3.Connection, home: Site, the_night: str) -> TonightOut |
             DarkStretchOut(starts_at=a.isoformat(), ends_at=b.isoformat())
             for a, b in spans.moonless
         ],
+        moonless_all_night=bool(span and span.dark_all_night and not spans.moon_up),
         moon_in_dark=_moon_in_dark(spans.moon_up, dark, word),
         moon=MoonOut(
             phase_key=cast(PhaseKey, moon_phase.phase_key),
