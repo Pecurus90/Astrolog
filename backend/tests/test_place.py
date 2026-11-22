@@ -229,7 +229,34 @@ def test_the_search_says_who_is_asking(monkeypatch):
 
     assert visti["agent"] == net.USER_AGENT
     assert visti["agent"].startswith("AstroLog/") and "http" in visti["agent"]
-    assert visti["timeout"] == net.TIMEOUT_S  # una rete lenta non blocca una pagina per sempre
+    assert visti["timeout"] == 10  # chi cerca un posto aspetta, e oltre i 10 s smette di guardare
+
+
+def test_only_the_search_waits_less_the_background_keeps_its_time(monkeypatch):
+    """La ricerca la guarda chi scrive il nome, e oltre 10 s se ne va; l'altitudine la chiede un
+    giro che nessuno guarda, e tiene i suoi 15 s (ADR 0038)."""
+    attese = []
+
+    class Risposta:
+        def read(self):
+            return b'{"elevation": [1000]}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    def finta_urlopen(req, timeout=None):
+        attese.append(timeout)
+        return Risposta()
+
+    monkeypatch.setattr(place, "_fetch", net.fetch)  # lo scaricamento vero, la rete finta
+    monkeypatch.setattr(place.urllib.request, "urlopen", finta_urlopen)
+    place.search("Asiago")
+    place.elevation_of(45.87, 11.51)
+
+    assert attese == [10, 15]
 
 
 def test_a_service_that_answers_a_bare_number_is_understood(monkeypatch):

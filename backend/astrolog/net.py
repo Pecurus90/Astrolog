@@ -16,7 +16,9 @@ type Fetch = Callable[[str], Any]
 
 # The services' policy demands that the caller name itself, and blocks it otherwise.
 USER_AGENT = "AstroLog/0.1 (https://github.com/Pecurus90/Astrolog)"
-TIMEOUT_S = 15  # [P ADR 0038]
+TIMEOUT_S = 15  # [P ADR 0038] rounds nobody watches
+# A call someone watches: Nielsen, *Response Times: The 3 Important Limits*, 1993.
+WATCHED_TIMEOUT_S = 10  # [C Nielsen 1993: 10 s attention limit]
 
 
 class Failure(StrEnum):
@@ -43,10 +45,10 @@ def service_of(url: str) -> str:
     return url.split("?", 1)[0]
 
 
-def fetch(url: str) -> Any:
+def fetch(url: str, *, timeout_s: float = TIMEOUT_S) -> Any:
     # S310: https only, and the URLs are the callers' constants.
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
-    with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:  # noqa: S310 - same as above
+    with urllib.request.urlopen(req, timeout=timeout_s) as r:  # noqa: S310 - same as above
         body = r.read().decode("utf-8", "replace")
     try:
         return json.loads(body)

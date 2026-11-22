@@ -282,7 +282,8 @@ def search(
         return []
     _wait_turn(now, sleep)
     query = urllib.parse.urlencode({"q": name.strip(), "format": "jsonv2", "limit": limit})
-    data = _ask(fetch, f"{SEARCH_URL}?{query}")
+    url = f"{SEARCH_URL}?{query}"
+    data = net.ask(fetch or (lambda u: _fetch(u, timeout_s=net.WATCHED_TIMEOUT_S)), url)
     if not isinstance(data, list):
         return []
     out = []

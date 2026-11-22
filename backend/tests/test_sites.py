@@ -23,7 +23,7 @@ ASIAGO = {"name": "Asiago", "latitude": 45.8667, "longitude": 11.5167}
 def answers(monkeypatch, by_url):
     """Un servizio finto che risponde in base a cosa c'e' nell'URL."""
 
-    def fetch(url):
+    def fetch(url, **_):
         for piece, payload in by_url.items():
             if piece in url:
                 return payload
