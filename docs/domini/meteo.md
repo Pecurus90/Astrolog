@@ -179,8 +179,8 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   lo faceva pesare oltre il 60esimo percentile, un numero scelto sul suo archivio: nessuna
   convenzione pubblica dice quando il vento a 700 hPa rovina una notte. La notte dice quante notti
   su dieci dell'ultimo anno, **da quel sito**, avevano meno vento nelle ore su cui si giudica la notte; la distribuzione si
-  chiede una volta l'anno (`weather_climate`) e sotto 120 notti non si scrive, e il confronto tace
-  (ADR 0039 porta il minimo a 250: quantili senza ipotesi su notti autocorrelate; non ancora nel codice).
+  chiede una volta l'anno (`weather_climate`) e sotto 250 notti non si scrive, e il confronto tace
+  (ADR 0039: quantili senza ipotesi su notti autocorrelate).
 - **Quanti modelli sono d'accordo** si dice accanto al verdetto (Marco, 26/9/2026): e' cio' che fa
   capire quanto fidarsi di una notte senza cambiare modello a mano.
 - **La Luna non pesa nel punteggio, decide la ripresa** (ADR 0020): banda larga o solo banda

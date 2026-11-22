@@ -20,9 +20,9 @@ from .forecast import Outcome, Status
 URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 VARIABLE = "wind_speed_700hPa"
 YEAR_DAYS = 365  # [T] one request a year
-# [P docs/domini/meteo.md: a third of a year] fewer nights would be one season's usual, and better
-# no comparison than a wrong one.
-MIN_NIGHTS = 120
+# [D docs/adr/0039: Conover distribution-free quantiles, nights autocorrelated] fewer nights would
+# be one season's usual, and better no comparison than a wrong one.
+MIN_NIGHTS = 250
 # A year too short is still short at the next `forecast.RETRY_S` retry: wait a day instead.
 BAD_ANSWER_WAIT = timedelta(days=1)
 

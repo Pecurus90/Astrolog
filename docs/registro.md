@@ -7,7 +7,7 @@ un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura n
 P decisione di Marco, T tecnico (non una regola).
 
 Valori: 393; senza fonte: 0.
-Fonti: C norma: 199; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T tecnico: 98.
+Fonti: C norma: 199; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 39; T tecnico: 98.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -865,7 +865,7 @@ Fonti: C norma: 199; U usanza: 3; D metodo: 33; M misura: 22; P decisione: 40; T
 | simbolo | valore | fonte |
 |---|---|---|
 | YEAR_DAYS | `365` | T |
-| MIN_NIGHTS | `120` | P docs/domini/meteo.md: a third of a year |
+| MIN_NIGHTS | `250` | D docs/adr/0039: Conover distribution-free quantiles, nights autocorrelated |
 
 ### weather/forecast.py
 

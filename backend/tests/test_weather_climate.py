@@ -110,6 +110,16 @@ def test_too_few_nights_make_no_climate(db, monkeypatch):  # noqa: F811
     )
 
 
+def test_two_hundred_nights_are_still_too_few_for_the_usual(db):  # noqa: F811
+    """ADR 0039: notti vicine si somigliano, i quantili senza ipotesi ne vogliono 250."""
+    assert climate.step(db, SITO, fetch=Finto(anno(giorni=201)), now=ADESSO) == "bad_answer"
+    assert db.execute("SELECT COUNT(*) FROM weather_climate").fetchone()[0] == 0
+    assert (
+        climate.step(db, SITO, fetch=Finto(anno(giorni=251)), now=ADESSO + timedelta(days=1))
+        == "ok"
+    )
+
+
 def test_a_year_too_short_is_not_asked_again_every_quarter_of_an_hour(db):  # noqa: F811
     """Un anno corto torna corto: si riprova il giorno dopo, non a ogni giro."""
     corto = Finto(anno(giorni=60))
