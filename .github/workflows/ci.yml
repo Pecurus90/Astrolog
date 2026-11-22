@@ -13,11 +13,13 @@ permissions:
 
 jobs:
   checks:
-    name: checks (${{ matrix.os }})
+    name: checks ${{ matrix.part }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        # Two parallel parts, not one: the critical path was backend then vitest (Issue #101)
+        part: [backend, frontend]
         # Windows runner: 27 min vs 7 (astropy/erfa math, measured). A push gets it from the
         # pre-push hook on a Windows PC; pull requests (ruleset) and the nightly run it here.
         # arm64 Macs short, a push waited 15 min then cancelled (#50); Intel has no llvmlite
@@ -28,14 +30,34 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
       - run: python -m pip install --quiet -e "backend[dev]"
+        if: matrix.part == 'backend'
+      # The frontend hooks are npm commands: pre-commit alone runs them
+      - run: python -m pip install --quiet "pre-commit>=4.7.0"
+        if: matrix.part == 'frontend'
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - uses: actions/setup-node@v7
         with:
           node-version: "24"
       - run: npm install --no-audit --no-fund
         working-directory: frontend
-      - name: All checks (the same ones that run on commit and push)
+      - name: All checks but the frontend build and tests (the ones of commit and push)
+        if: matrix.part == 'backend'
+        env:
+          SKIP: frontend-build,vitest
         run: python -m pre_commit run --all-files --hook-stage manual --show-diff-on-failure
+      - name: Frontend build and tests
+        if: matrix.part == 'frontend'
+        # bash -e on Windows too: pwsh would judge only the last line's exit code
+        shell: bash
+        run: |
+          python -m pre_commit run --all-files --hook-stage manual frontend-build
+          python -m pre_commit run --all-files --hook-stage manual vitest
 
   falle:
     name: vulnerabilita' note (ubuntu)
@@ -94,6 +116,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
       - run: python -m pip install --quiet -e backend
       - name: Ogni dipendenza ha la ruota per Windows, Mac ARM, Linux x64 e ARM?
         run: python tools/ruote.py
@@ -136,6 +160,8 @@ jobs:
         if: hashFiles('backend/pyproject.toml') != ''
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
       - run: python -m pip install --quiet -e "backend[dev]"
         if: hashFiles('backend/pyproject.toml') != ''
       - run: python -m pytest -q --strict-markers -m lento
@@ -145,6 +171,8 @@ jobs:
   # Five parallel runs of the fast suite: flaky tests show up under load.
   instabilita:
     name: instabilita (giro ${{ matrix.giro }})
+    # Only in the Nightly (Issue #101): a push runs the suite once, a rare flake shows next night
+    if: contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name)
     runs-on: ubuntu-latest
     # Five runners at once, not five rounds in a row: same rounds, a third of the wait.
     strategy:
@@ -157,6 +185,8 @@ jobs:
         if: hashFiles('backend/pyproject.toml') != ''
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
       - run: python -m pip install --quiet -e "backend[dev]"
         if: hashFiles('backend/pyproject.toml') != ''
       # Nessuna deselezione: la voce che ne giustificava una si e' chiusa il 16/9/2026 (la

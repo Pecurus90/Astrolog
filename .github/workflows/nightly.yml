@@ -2,8 +2,9 @@
 name: Nightly
 
 on:
+  # 02:00 UTC started 6-8 h late and landed in the work morning: an off-peak odd minute (Issue #101)
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "17 23 * * *"
   workflow_dispatch:
     inputs:
       retry_timeouts:

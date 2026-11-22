@@ -2,6 +2,7 @@
 chiude, salvo una Issue `bloccato` che nomina il run; dopo un push si segue la CI fino all'esito."""
 
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -89,6 +90,39 @@ def test_a_push_runs_no_mac_and_the_rest_keep_apple_silicon():
     Intel cannot stand in: llvmlite has no x86_64 macOS wheel (ADR 0043)."""
     assert not [os_ for os_ in _checks_oses("push") if os_.startswith("macos")]
     assert "macos-latest" in _checks_oses("pull_request")
+
+
+def _ci_jobs() -> dict:
+    with open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8") as f:
+        return yaml.safe_load(f)["jobs"]
+
+
+def test_the_flaky_rounds_run_at_night_not_at_push():
+    """Issue #101: five rounds are 32 of 48 runner-minutes of a push; the Nightly runs them."""
+    cond = _ci_jobs()["instabilita"]["if"]
+    events = json.loads(cond.split("fromJSON('")[1].split("')")[0])
+    assert "push" not in events and "pull_request" not in events
+    assert {"schedule", "workflow_dispatch"} <= set(events)
+
+
+def test_the_frontend_part_runs_exactly_the_hooks_the_backend_part_skips():
+    """Issue #101: checks in two parallel parts; a hook in neither would run nowhere."""
+    steps = _ci_jobs()["checks"]["steps"]
+    skipped = {h for s in steps if "SKIP" in s.get("env", {}) for h in s["env"]["SKIP"].split(",")}
+    run = {
+        line.split("--hook-stage manual ")[1].strip()
+        for s in steps
+        if "frontend" in str(s.get("if", ""))
+        for line in s.get("run", "").splitlines()
+        if "--hook-stage manual " in line
+    }
+    with open(os.path.join(ROOT, ".pre-commit-config.yaml"), encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    manual = {
+        h["id"] for r in config["repos"] for h in r["hooks"] if "manual" in h.get("stages", [])
+    }
+    assert skipped and skipped == run
+    assert skipped <= manual
 
 
 RED = {"databaseId": 123, "status": "completed", "conclusion": "failure", "url": "https://x/123"}
