@@ -40,6 +40,8 @@ ONLY_MUTATE = "--only-mutate"
 REOPEN = "--reopen"
 DROP_BROKEN = "--drop-broken"
 DROP_TIMEOUTS = "--drop-timeouts"
+REMEMBER = "--remember"
+KNOWN = "known-"
 MUTANT = re.compile(r"\S+__mutmut_\d+")
 # mutmut exit codes of a final verdict (mutmut/stats.py): killed, skipped, timeout, type check
 FINAL = {1, 3, 34, 36, 37, 24, -24, 152, 255, -9, -11}
@@ -218,7 +220,7 @@ def stryker_statuses(paths: list[str], parts: list[list[str]]) -> Counter[str]:
     statuses: Counter[str] = Counter()
     left_out = 0
     for path in paths:
-        part = re.fullmatch(r"stryker-(\d+)\.json", Path(path).name)
+        part = re.fullmatch(rf"(?:{KNOWN})?stryker-(\d+)\.json", Path(path).name)
         if part is None:
             raise ValueError(f"{path}: not a stryker-<part>.json report")
         own = set(parts[int(part[1])])
@@ -232,11 +234,44 @@ def stryker_statuses(paths: list[str], parts: list[list[str]]) -> Counter[str]:
     return statuses
 
 
+def remember(report: Path) -> int:
+    """Stryker cut by the time cap leaves unreached mutants out of its report, mostly known
+    survivors: the score rose for nothing and fell the night they ran (Nightly 45107602197).
+    `known-<report>` keeps every mutant's last verdict across nights; the score reads it."""
+    known = report.with_name(f"{KNOWN}{report.name}")
+    data = json.loads(report.read_text(encoding="utf-8"))
+    last = json.loads(known.read_text(encoding="utf-8"))["files"] if known.exists() else {}
+    kept = 0
+    for name, f in data["files"].items():
+        unreached = not_reached(f, last.get(name))
+        f["mutants"] += unreached
+        kept += len(unreached)
+    known.write_text(json.dumps(data), encoding="utf-8")
+    sys.stderr.write(f"{report}: {kept} mutants not reached tonight keep their last verdict\n")
+    return 0
+
+
+def not_reached(tonight: dict, last: dict | None) -> list[dict]:
+    """Same source, same mutants: one missing tonight was not reached; in a changed file it may
+    be deleted code, so a changed file keeps only tonight's."""
+    if last is None or last.get("source") != tonight.get("source"):
+        return []
+    seen = {mutant_key(m) for m in tonight["mutants"]}
+    return [m for m in last["mutants"] if mutant_key(m) not in seen]
+
+
+def mutant_key(mutant: dict) -> str:
+    """What names a Stryker mutant across nights; its id is renumbered every run."""
+    return json.dumps([mutant["mutatorName"], mutant.get("replacement"), mutant["location"]])
+
+
 def frontend(argv: list[str], reference: Path, parts: list[list[str]] | None = None) -> int:
     """`frontend <part>` prints its files for `--mutate`; `frontend --filter <report>...` scores
     every part together, so a file moving between parts never moves the score."""
     if argv[:1] == [DROP_TIMEOUTS] and len(argv) == 2:
         return drop_timeouts(Path(argv[1]))
+    if argv[:1] == [REMEMBER] and len(argv) == 2:
+        return remember(Path(argv[1]))
     if argv[:1] == [FILTER]:
         paths = argv[1:]
         if len(paths) != FRONTEND_SHARDS:

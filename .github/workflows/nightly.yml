@@ -142,6 +142,12 @@ jobs:
           path: frontend/reports/stryker-${{ matrix.part }}.json
           key: stryker-${{ matrix.part }}-${{ github.run_id }}
           restore-keys: stryker-${{ matrix.part }}-
+      # Own key: a path added to the Stryker cache would change its version and lose it.
+      - uses: actions/cache/restore@v6
+        with:
+          path: frontend/reports/known-stryker-${{ matrix.part }}.json
+          key: stryker-known-${{ matrix.part }}-${{ github.run_id }}
+          restore-keys: stryker-known-${{ matrix.part }}-
       - name: Cached Timeout mutants run again
         if: inputs.retry_timeouts
         run: python ../tools/mutation_shards.py frontend --drop-timeouts reports/stryker-${{ matrix.part }}.json
@@ -154,16 +160,25 @@ jobs:
           --mutate "$(python ../tools/mutation_shards.py frontend ${{ matrix.part }})"
           --incrementalFile reports/stryker-${{ matrix.part }}.json
           || [ $? -eq 124 ]
+      # The time cap leaves unreached mutants out of the report: they keep their last verdict.
+      - name: Last verdict of every mutant
+        if: always()
+        run: python ../tools/mutation_shards.py frontend --remember reports/stryker-${{ matrix.part }}.json
       - uses: actions/cache/save@v6
         if: always()
         with:
           path: frontend/reports/stryker-${{ matrix.part }}.json
           key: stryker-${{ matrix.part }}-${{ github.run_id }}
+      - uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: frontend/reports/known-stryker-${{ matrix.part }}.json
+          key: stryker-known-${{ matrix.part }}-${{ github.run_id }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: stryker-${{ matrix.part }}
-          path: frontend/reports/stryker-${{ matrix.part }}.json
+          path: frontend/reports/known-stryker-${{ matrix.part }}.json
 
   # Every part together against one reference: a file moving between parts never moves it.
   mutation-frontend-score:
@@ -181,7 +196,7 @@ jobs:
           path: reports
           merge-multiple: true
       - name: Frontend score against the reference
-        run: python tools/mutation_shards.py frontend --filter reports/stryker-*.json
+        run: python tools/mutation_shards.py frontend --filter reports/known-stryker-*.json
 
   # The full CI, Windows included: a push skips the Windows runner.
   ci:

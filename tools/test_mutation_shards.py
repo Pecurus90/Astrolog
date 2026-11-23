@@ -195,8 +195,9 @@ def test_the_workflow_runs_every_shard_and_filters_each_report_to_its_own():
     limits = [int(v) for v in re.findall(r"^\s*timeout-minutes:\s*(\d+)", workflow, re.M)]
     assert limits[1] < limits[0] and limits[3] < limits[2]  # mutation, then mutation-frontend
     # Each night resumes the last one, and saves even when cut short.
-    assert workflow.count("actions/cache/save@") == 2
-    assert workflow.count("actions/cache/restore@") == 2
+    # mutmut, Stryker, the last verdict of every Stryker mutant
+    assert workflow.count("actions/cache/save@") == 3
+    assert workflow.count("actions/cache/restore@") == 3
     # mutmut refreshes the .py of a resumed mutants/, never the data: schema.sql must follow.
     assert "rsync -a --exclude='*.py' astrolog/ mutants/astrolog/" in workflow
     assert "rm -rf mutants/tests" in workflow and 'rm -f "$f" "$f.meta"' in workflow
@@ -437,6 +438,82 @@ def test_a_frontend_report_counts_only_the_files_of_its_part(tmp_path, capsys):
     assert "6 mutants of files outside their part left out" in err
 
 
+def mutant(line: int, status: str) -> dict:
+    """A Stryker mutant with the fields that name it across nights."""
+    span = {"start": {"line": line, "column": 1}, "end": {"line": line, "column": 9}}
+    return {
+        "mutatorName": "BooleanLiteral",
+        "replacement": "false",
+        "location": span,
+        "status": status,
+    }
+
+
+def write_stryker(path: Path, files: dict) -> None:
+    report = {
+        "files": {name: {"source": source, "mutants": m} for name, (source, m) in files.items()}
+    }
+    path.write_text(json.dumps(report), encoding="utf-8")
+
+
+def remembered(tmp_path: Path, last: dict, tonight: dict) -> list[str]:
+    """Statuses in known-stryker-0.json after a night that left `tonight` in its report."""
+    report = tmp_path / "stryker-0.json"
+    write_stryker(tmp_path / "known-stryker-0.json", last)
+    write_stryker(report, tonight)
+    assert main(["mutation_shards.py", "frontend", "--remember", str(report)]) == 0
+    known = json.loads((tmp_path / "known-stryker-0.json").read_text(encoding="utf-8"))
+    return [m["status"] for f in known["files"].values() for m in f["mutants"]]
+
+
+def test_a_mutant_a_cut_night_did_not_reach_keeps_its_last_verdict(tmp_path, capsys):
+    """Stryker stopped at the time cap leaves unreached mutants out: mostly known survivors, the
+    score rose for nothing and fell the night they ran (Nightly 45107602197)."""
+    last = {"src/a.ts": ("same", [mutant(1, "Survived"), mutant(2, "Survived")])}
+    tonight = {"src/a.ts": ("same", [mutant(1, "Killed")])}
+    assert remembered(tmp_path, last, tonight) == ["Killed", "Survived"]
+    assert "1 mutants not reached tonight keep their last verdict" in capsys.readouterr().err
+
+
+def test_a_mutant_of_a_changed_file_is_gone_not_unreached(tmp_path):
+    """A file whose source changed has new mutants: last night's ones are deleted code."""
+    last = {"src/a.ts": ("old", [mutant(1, "Survived"), mutant(2, "Survived")])}
+    tonight = {"src/a.ts": ("new", [mutant(1, "Killed")])}
+    assert remembered(tmp_path, last, tonight) == ["Killed"]
+
+
+def test_a_deleted_file_leaves_the_known_verdicts(tmp_path):
+    last = {"src/gone.ts": ("x", [mutant(1, "Survived")]), "src/a.ts": ("y", [])}
+    assert remembered(tmp_path, last, {"src/a.ts": ("y", [mutant(1, "Killed")])}) == ["Killed"]
+
+
+def test_the_first_night_knows_what_it_ran(tmp_path, capsys):
+    report = tmp_path / "stryker-0.json"
+    write_stryker(report, {"src/a.ts": ("y", [mutant(1, "Killed")])})
+    assert main(["mutation_shards.py", "frontend", "--remember", str(report)]) == 0
+    assert json.loads((tmp_path / "known-stryker-0.json").read_text(encoding="utf-8")) == (
+        json.loads(report.read_text(encoding="utf-8"))
+    )
+    assert "0 mutants not reached tonight" in capsys.readouterr().err
+
+
+def test_the_score_reads_the_known_reports(tmp_path, capsys):
+    paths, table = write_reports(tmp_path)
+    known = []
+    for p in paths:
+        moved = Path(p).with_name(f"known-{Path(p).name}")
+        Path(p).rename(moved)
+        known.append(str(moved))
+    reference = write_reference(tmp_path, frontend=1.0)
+    assert (
+        main(
+            ["mutation_shards.py", "frontend", "--filter", *known], reference=reference, parts=table
+        )
+        == 0
+    )
+    assert f"({FRONTEND_SHARDS} of {FRONTEND_SHARDS} detected" in capsys.readouterr().err
+
+
 def test_a_frontend_shard_without_its_report_fails_the_night(tmp_path, capsys):
     """A part lost with its runner leaves no report: never a score of the parts left."""
     paths, table = write_reports(tmp_path)
@@ -489,7 +566,21 @@ def test_the_workflow_runs_every_frontend_shard_and_scores_them_together():
     assert [s.strip() for s in found[0].split(",")] == [str(k) for k in range(FRONTEND_SHARDS)]
     assert "mutation_shards.py frontend ${{ matrix.part }}" in workflow
     assert "--incrementalFile reports/stryker-${{ matrix.part }}.json" in workflow
-    assert "frontend --filter reports/stryker-*.json" in workflow
+    assert "frontend --filter reports/known-stryker-*.json" in workflow
+
+
+def test_the_workflow_keeps_every_mutant_last_verdict_in_its_own_cache():
+    """A path added to the Stryker cache changes its version: the incremental report is lost."""
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    known = "frontend/reports/known-stryker-${{ matrix.part }}.json"
+    assert workflow.count(f"path: {known}") == 3  # restore, save, upload
+    assert "path: frontend/reports/stryker-${{ matrix.part }}.json\n" in workflow
+    remember = "frontend --remember reports/stryker-${{ matrix.part }}.json"
+    assert workflow.index("npx stryker run") < workflow.index(remember)
+    assert workflow.index(remember) < workflow.rindex(
+        f"path: {known}\n          key: stryker-known"
+    )
 
 
 def test_a_timeout_left_in_the_cache_is_dropped_so_the_night_runs_it_again(tmp_path, capsys):
