@@ -105,7 +105,10 @@ class WeatherMeasureOut(BaseModel):
     say whether they reach the window's first/last hour. Neutral measures have no `level`.
     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
     (`axis_curve` `sqrt`: the chart grows with the square root of the value).
-    `value` is the cold at its lowest (temperature, condensation), and so the visibility."""
+    `value` is the cold at its lowest (temperature, condensation), and so the visibility.
+    `estimated_from` `jet`: seeing without Meteoblue's number, its word from the jet stream's
+    no-go hours, said "poor, estimated from the upper wind" (ADR 0034); no value, peak, axis or
+    known hours: no seeing number is known; it does not weigh, the jet already does."""
 
     code: MeasureCode
     level: Level | None
@@ -126,6 +129,7 @@ class WeatherMeasureOut(BaseModel):
     known_until: str | None
     known_from_start: bool
     known_to_end: bool
+    estimated_from: Literal["jet"] | None
 
 
 class WeatherStepOut(BaseModel):

@@ -118,7 +118,7 @@ export const enImpostazioni = {
   "settings.services.failed": "Services not available.",
   "settings.services.meteoblue": "Meteoblue",
   "settings.services.meteoblue.what": "The night's seeing in arcseconds, in Weather.",
-  "settings.services.meteoblue.without": "Without the key, Weather does not show the seeing.",
+  "settings.services.meteoblue.without": "Without the key, seeing is only an estimate from the upper wind, when it is strong: “poor”.", // glifo-ok: board text
   "settings.services.sky": "Sky service · lightpollutionmap.info", // glifo-ok: board text
   "settings.services.sky.what":
     "A site's sky from the World Atlas of artificial light, without measurements: one of the four ways to set the sky, in Sites. The key is free: you ask for it by email from the site's author; it allows 500 requests per day.", // glifo-ok: board text

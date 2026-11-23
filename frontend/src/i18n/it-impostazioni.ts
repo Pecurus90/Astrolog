@@ -121,7 +121,7 @@ export const itImpostazioni = {
   "settings.services.failed": "Servizi non disponibili.",
   "settings.services.meteoblue": "Meteoblue",
   "settings.services.meteoblue.what": "Il seeing della notte in secondi d'arco, nel Meteo.",
-  "settings.services.meteoblue.without": "Senza la chiave il Meteo non mostra il seeing.",
+  "settings.services.meteoblue.without": "Senza la chiave il seeing è solo una stima dal vento in quota, quando è forte: «scarso».", // glifo-ok: testo della tavola
   "settings.services.sky": "Servizio del cielo · lightpollutionmap.info", // glifo-ok: testo della tavola
   "settings.services.sky.what":
     "Il cielo di un sito dal World Atlas della luce artificiale, senza misure: una delle quattro vie del cielo, in Siti. La chiave è gratuita: si chiede con una email all'autore del sito; vale 500 richieste al giorno.", // glifo-ok: testo della tavola

@@ -47,7 +47,8 @@ export function misura(code: string, campi: Record<string, unknown> = {}) {
   return {
     code, level: null, weighs: false, value: null, peak: null, peak_at: null, peak_until: null,
     spans: [], axis_min: 0, axis_max: 100, axis_curve: "linear", since: null, until: null, hours: 0, known_hours: 3,
-    known_since: null, known_until: null, known_from_start: false, known_to_end: false, ...campi,
+    known_since: null, known_until: null, known_from_start: false, known_to_end: false, estimated_from: null,
+    ...campi,
   }
 }
 

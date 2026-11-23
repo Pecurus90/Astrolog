@@ -12,7 +12,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
 | richiesta | prova |
 |---|---|
 | Apro Meteo e vedo le prossime notti del mio sito, ognuna col verdetto, le ore utili e cosa lo decide | `test_each_model_writes_its_nights_from_the_current_one`, `test_the_summary_is_written_with_the_forecast`, *in testa le ore serene col semaforo, da che ora a che ora e l'accordo, con l'ora del posto*, *accanto al semaforo pesa solo cio' che il backend dice incerto o niente, con la parola e le ore* |
-| Oggi il semaforo viene dalle nuvole, finche' non si costruisce il punteggio di ADR 0034; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
+| Il verdetto viene dalla Trasparenza (ADR 0034), la parola delle nuvole sta accanto; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
 | Le misure arrivano in ordine d'importanza, con la media delle ore vere, il picco, e la parte di notte che coprono; le soglie arrivano dal backend | `test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then_neutral`, `test_the_night_value_is_the_mean_of_the_true_numbers_and_rain_is_a_total`, `test_the_peak_is_the_worst_hour_and_says_when`, `test_a_measure_known_only_in_part_of_the_night_says_which_part`, `test_every_scale_is_sent_with_its_steps`, `test_the_page_gets_the_thresholds_the_judgement_used` |
 | La Luna pesa per la banda larga solo quando e' sopra l'orizzonte col buio | `test_the_moon_up_brings_its_lit_part_and_down_brings_nothing`, `test_the_moon_is_left_out_when_it_is_never_up_in_the_dark` |
 | Quando la Luna pesa leggo cosa riprendere e in che ore: la banda consigliata, quanto e' illuminata, da che ora a che ora e' su, e cosa resta nelle ore senza | `test_a_measure_says_whether_its_known_hours_reach_the_ends_of_the_night`, *la Luna (...) consiglia la banda e dice le ore senza Luna* |
@@ -34,6 +34,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
 | Una fonte del cielo che tace tiene le sue righe e non ferma le altre, e la previsione non le tocca | `test_each_source_writes_only_its_rows_and_a_silent_one_keeps_them` |
 | Con la mia chiave Meteoblue, che metto nel primo avvio o nelle Impostazioni, ho il seeing Meteoblue ora per ora | `test_with_the_key_the_seeing_comes_from_meteoblue_hour_by_hour`, `test_the_seeing_is_read_hour_by_hour_in_utc_as_a_single_value`, *una chiave che vale si manda al backend, e dopo si vede solo come finisce* |
 | La chiave si prova sul conto prima di salvarla, e non esce mai intera: ne' dall'API, ne' nel log | `test_a_key_the_account_refuses_is_not_kept`, `test_the_key_cannot_be_written_without_being_tried`, `test_a_good_key_is_kept_and_shown_only_by_its_last_four_characters`, `test_the_other_service_key_does_not_come_out_whole_either`, `test_a_short_key_never_comes_out_whole`, `test_the_key_never_reaches_the_log` |
+| Senza il numero di Meteoblue, un jet stream da 126 km/h dice seeing scarso, detto come stima dal vento in quota (meteoblue), con le sue ore; sotto, nessuna parola: solo l'invito alla chiave (ADR 0034; Marco, 6/11/2026) | `test_without_seeing_a_strong_jet_says_poor_seeing_as_an_estimate`, `test_the_jet_says_nothing_of_seeing_below_its_threshold_or_beside_the_number`, `test_the_seeing_estimated_from_the_jet_sorts_last_among_the_judged_measures`, *senza il numero, un jet forte fa dire alla carta seeing scarso, come stima, e la chiave resta*, *con la chiave buona ma senza il numero, la stima dal jet resta e non chiede una chiave*, *il seeing senza chiave stimato dal jet nel backend e' la stima di Meteoblue*, *con la chiave buona ma senza il numero, la stima dal jet resta senza parlare di chiavi* |
 | Senza chiave la pagina dice che il seeing la vuole; se Meteoblue non accetta la chiave il seeing sparisce da stanotte in poi, se tace resta quello di prima; e la pagina dice perche' | `test_without_a_key_there_is_no_seeing_and_meteoblue_is_not_mentioned`, `test_a_refused_key_leaves_the_night_without_seeing_and_says_why`, `test_a_key_the_service_refuses_drops_its_seeing_and_says_why`, `test_a_refused_key_keeps_the_seeing_of_the_nights_gone_by`, `test_a_silent_service_keeps_the_seeing_it_gave_last_time`, `test_only_a_refusal_of_the_key_is_a_refusal_and_a_broken_service_is_not`, `test_the_hours_meteoblue_does_not_cover_stay_without_seeing`, *senza chiave la carta dice che serve una chiave Meteoblue, e porta alle Impostazioni*, *con la chiave appena messa e Meteoblue non ancora chiesto non chiede la chiave*, *se Meteoblue non accetta la chiave la carta lo dice* |
 | Crediti o richieste finiti (429, RFC 6585) non sono una chiave sbagliata: la chiave si salva e resta, il seeing di prima resta, si riprova dopo il freno; la pagina lo dice con la frase di Marco (22/11/2026) | `test_credits_run_out_keep_the_key_and_the_seeing_it_gave`, `test_a_key_whose_credits_ran_out_is_kept_and_says_so`, *crediti Meteoblue finiti, anche senza seeing di prima: la chiave e' buona, si riprova*, *crediti finiti: la chiave si salva, la frase lo dice e il campo si vuota* |
 | Salvare di nuovo la chiave gia' salvata non chiede niente e non azzera il freno: risponde com'e' andato l'ultimo giro; solo se l'ultimo giro e' fallito per altro la chiave si riprova | `test_saving_the_same_key_again_keeps_the_brake_and_asks_nothing` |
@@ -69,11 +70,15 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   stanotte in poi (le notti passate lo tengono, per le statistiche); se tace, resta quello di
   prima. In tutti e due i casi la pagina dice perche'.
 - **7Timer esce** (Marco, 3/10/2026): dava seeing e trasparenza a fasce e ogni tre ore. In tutta
-  l'app nessun dato a fasce e nessun dato ogni tre ore: senza chiave Meteoblue il seeing non c'e', e
-  la pagina dice che per averlo serve la chiave, gratuita. La limpidezza la dice l'aerosol.
-- **Il seeing non lo stimiamo noi**: una formula pubblicata "vento in quota -> seeing in secondi
-  d'arco" non esiste, e le app che la mostrano usano soglie senza fonte. Il vento in quota si
-  mostra com'e'.
+  l'app nessun dato a fasce e nessun dato ogni tre ore: senza chiave Meteoblue il seeing in secondi
+  d'arco non c'e', e la pagina dice che per averlo serve la chiave, gratuita. La limpidezza la dice
+  l'aerosol.
+- **Il numero del seeing non lo stimiamo noi**: una formula pubblicata "vento in quota -> seeing in
+  secondi d'arco" non esiste. C'e' solo la frase di meteoblue, un jet oltre 35 m/s "di solito"
+  vuol dire seeing cattivo: da li', senza numero, la parola "scarso" con le ore del jet
+  (`judge._seeing_from_jet`, `estimated_from: jet`); sotto i 126 km/h nessuna parola (ADR 0034;
+  Marco, 6/11/2026). La stima non pesa (negli Altri fattori c'e' gia' il jet, con le stesse ore) e
+  si ordina in fondo alle misure giudicate, come nella tavola v82.
 - **Piu' modelli con uno switch**: di fabbrica il modello che Open-Meteo sceglie per il posto
   (`best_match`). Il riassunto -- verdetto, misure, ore utili -- si scrive per ogni modello quando
   arriva la previsione, e lo switch legge soltanto.
@@ -91,7 +96,8 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   **verdetto** viene da li': buona da 70, incerta da 40, sotto non adatta (misurato sull'archivio
   di Marco, ADR 0034). Le **Ore di posa** sono le ore di buio contate per quanto rendono, divise
   per banda della Luna ("4,6 ore di posa: 3,1 in banda larga"). Il **Seeing** ha la sua parola,
-  fuori dal voto; senza chiave Meteoblue viene dal jet stream, detto. Un dato che manca (aerosol)
+  fuori dal voto; senza chiave Meteoblue viene dal jet stream, detto (costruito 23/11/2026, solo
+  "scarso" da 126 km/h). Un dato che manca (aerosol)
   esce dal conto e la pagina dice quale. Condensa e vento incerto sono avvisi accanto. Costruiti
   (`weather/score.py`, 7/11/2026): Trasparenza, verdetto, Ore di posa in tutto, "senza aerosol";
   ogni ora pesa per la sua parte di buio, letta ogni 5 minuti attorno all'ora. Costruite col

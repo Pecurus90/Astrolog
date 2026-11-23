@@ -100,8 +100,9 @@ export function CartaDelParametro({
   const forma = FORME[m.code]
   if (!forma) return null
   const nome = t(`weather.measure.${m.code}` as Chiave)
-  if (m.code === "seeing" && m.known_hours === 0 && (!seeing.key || seeing.meteoblue === "refused")) {
-    return <SeeingSenzaChiave nome={nome} rifiutata={seeing.key} />
+  const senzaChiave = !seeing.key || seeing.meteoblue === "refused"
+  if (m.code === "seeing" && m.known_hours === 0 && (senzaChiave || m.estimated_from === "jet")) {
+    return <SeeingSenzaChiave nome={nome} chiave={senzaChiave ? seeing.key : null} stimato={m.estimated_from === "jet"} />
   }
   // le piccole del desktop non hanno l'avviso nella tavola: restano carte, col "Non disponibile"
   if (m.known_hours === 0 && !forma.piccola) {
@@ -262,14 +263,28 @@ function CartaDellAvviso({ nome, children }: { nome: string; children: ReactNode
   )
 }
 
-function SeeingSenzaChiave({ nome, rifiutata }: { nome: string; rifiutata: boolean }) {
+function SeeingSenzaChiave({ nome, chiave, stimato }: { nome: string; chiave: boolean | null; stimato: boolean }) {
+  // chiave null: the key works but Meteoblue gave no number; the jet's estimate stands alone
+  if (chiave === null) {
+    return (
+      <CartaDellAvviso nome={nome}>
+        <Avviso esito="attesa" titolo={t("weather.card.seeing.fromJet")} />
+      </CartaDellAvviso>
+    )
+  }
+  const rifiutata = chiave
+  const perche = t(rifiutata ? "weather.card.seeing.refused" : "weather.card.seeing.none")
+  const azioni = <Bottone a="/impostazioni/servizi">{t("weather.card.seeing.how")}</Bottone>
   return (
     <CartaDellAvviso nome={nome}>
-      <Avviso
-        esito={rifiutata ? "allarme" : "attesa"}
-        titolo={t(rifiutata ? "weather.card.seeing.refused" : "weather.card.seeing.none")}
-        azioni={<Bottone a="/impostazioni/servizi">{t("weather.card.seeing.how")}</Bottone>}
-      />
+      {stimato ? (
+        // the backend's estimate from a strong jet; the key's sentence stays below (tavola v59)
+        <Avviso esito={rifiutata ? "allarme" : "attesa"} titolo={t("weather.card.seeing.fromJet")} azioni={azioni}>
+          {perche}
+        </Avviso>
+      ) : (
+        <Avviso esito={rifiutata ? "allarme" : "attesa"} titolo={perche} azioni={azioni} />
+      )}
     </CartaDellAvviso>
   )
 }

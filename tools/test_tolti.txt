@@ -748,3 +748,4 @@ test_the_objects_of_a_piece_do_not_search_the_rigs_row_by_row - step 11, Marco 2
 test_what_a_piece_shot_comes_most_shot_first - step 11, Marco 24/10: objects no longer sent, no order to keep
 test_a_frame_with_no_rig_still_says_what_you_shot_with_the_wheel - step 11, Marco 24/10: the wheel says its hours, not its objects; replaced by test_a_frame_with_no_rig_still_gives_the_wheel_its_hours
 test_a_new_catalog_rewrites_the_names_it_gives - step 11: a new catalog no longer rewrites gear_usage; replaced by test_a_new_catalog_rewrites_the_names_it_gives_and_not_the_gear
+il seeing senza chiave con un jet forte e' la stima di Meteoblue - step 13: the estimate comes from the backend, not from the jet in the frontend; replaced by il seeing senza chiave stimato dal jet nel backend e' la stima di Meteoblue

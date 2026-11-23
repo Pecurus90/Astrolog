@@ -1,6 +1,6 @@
 # 0034 -- Le regole del meteo con le fonti verificate, e il punteggio della notte v4
 
-**Stato:** accettata, 24/10/2026 (Marco); costruite le soglie (`weather/judge.py`, commit 07077958) e il buio nautico (19/11/2026, ADR 0035); punteggio v4 e Ore di posa (`weather/score.py`, 7/11 e 11/11/2026), calendario a tre gradini (`levels.moon_level`); 70/40 e 25/65 in una casa sola, prova `test_the_night_score_and_moon_numbers_live_in_one_home` (23/11/2026). Non costruito: seeing dal jet.
+**Stato:** accettata, 24/10/2026 (Marco); costruite le soglie (`weather/judge.py`, commit 07077958) e il buio nautico (19/11/2026, ADR 0035); punteggio v4 e Ore di posa (`weather/score.py`, 7/11 e 11/11/2026), calendario a tre gradini (`levels.moon_level`); 70/40 e 25/65 in una casa sola, prova `test_the_night_score_and_moon_numbers_live_in_one_home` (23/11/2026); seeing dal jet, solo "scarso" da 126 km/h (`judge._seeing_from_jet`, 23/11/2026).
 Supera in parte ADR 0020 (pesi, ora utile da 60, seeing nel voto) e ADR 0013 (Luna da -5°).
 Superata in parte da ADR 0039: condensa (Beysens), seeing (rispetto al setup), raffiche (per setup).
 

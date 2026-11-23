@@ -206,9 +206,6 @@ logica 76-112). Fuori:
 - **AAVSO e TNS**. Perche': nessuna pagina legge quelle chiavi (Piano della notte › Ricerca non
   c'e'); entrano con la loro pagina.
 - **Diagnostica**. Perche': simulata nella tavola (lista fissa del 14/11).
-- **Meteoblue senza chiave**: tavola «il seeing è solo una stima dal vento in quota, quando è
-  forte: «scarso»». App: «Senza la chiave il Meteo non mostra il seeing.» Perche': l'app non stima
-  il seeing dal jet (`weather/openmeteo.py`); arriva con «seeing dal jet senza chiave» del passo 33.
 - **«Ho trovato le tue risposte del ...: le rimetto?» dentro Backup**. App: la proposta prende lo
   schermo prima di ogni pagina (`App.tsx`, `RipristinoProposto`), quindi in Backup non si vede mai.
   Perche': la tavola stessa la segna «Al primo avvio»; si porta col Primo avvio.
@@ -518,6 +515,16 @@ Diverse dalla tavola:
 - **Carta del meteo «Non disponibile».** Tavola: «Non tutti i modelli danno la visibilità.» App:
   «La previsione non la dà per stanotte.» per ogni misura senza ore (Marco, 11/11, Issue #59).
   Perche': la riga della tavola vale solo per la visibilità. A Design.
+- **Seeing stimato dal jet con la chiave buona.** Tavola v59: la stima «scarso» solo accanto a
+  «serve una chiave» o «chiave non valida». App (23/11): anche con la chiave buona, se Meteoblue
+  non da' il numero (ultima notte oltre i suoi 7 giorni) la carta dice «scarso · stima dal vento
+  in quota», senza frase sulla chiave; Meteo uguale, avviso d'attesa senza bottone. Perche': il
+  backend stima ogni volta che il numero manca (ADR 0034). A Design.
+- **Seeing stimato negli Altri fattori.** Tavola Meteo v82: la stima sta negli Altri fattori, in
+  fondo, con la pillola «scarso · stima dal vento in quota» (Meteo.dc.html 413, 451-452). App
+  (23/11): la stima non pesa, quindi non c'e' negli Altri fattori (c'e' gia' il jet, con le stesse
+  ore); la dice la carta Seeing. Perche': la pagina di oggi mostra solo «non adatta», senza la
+  pillola della stima; torna con /porta-tavola della pagina Meteo v82.
 - **Il punto della Trasparenza sul cursore.** Tavola: punto e riquadro leggono lo stesso valore
   per passo (Dashboard.dc.html 454-456). App: il punto sta sulla linea disegnata fra i centri
   delle ore, il riquadro dice il valore dell'ora intera; fuori dalle :30 i due differiscono (a

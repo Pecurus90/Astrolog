@@ -350,6 +350,40 @@ describe("il Meteo, il seeing", () => {
     expect(porta.classList.contains("as-bottone--tenue")).toBe(true)
   })
 
+  it("senza il numero, un jet forte fa dire alla carta seeing scarso, come stima, e la chiave resta", async () => {
+    const stimata = {
+      ...NOTTE,
+      measures: NOTTE.measures.map((m) =>
+        m.code === "seeing" ? misura("seeing", { level: "nogo", known_hours: 0, estimated_from: "jet" }) : m,
+      ),
+    }
+    conNotti(stimata)
+    await apriMeteo()
+
+    await scheda()
+    const avviso = carta(/^Seeing$/).querySelector(".as-avviso") as HTMLElement
+    expect(avviso.querySelector(".as-avviso__titolo")?.textContent).toBe("Scarso · stima dal vento in quota (meteoblue).")
+    expect(avviso.querySelector(".as-avviso__testo")?.textContent).toBe("Il seeing richiede una chiave Meteoblue.")
+    expect(within(avviso).getByRole("link", { name: /apri le impostazioni/i })).toBeTruthy()
+  })
+
+  it("con la chiave buona ma senza il numero, la stima dal jet resta e non chiede una chiave", async () => {
+    const stimata = {
+      ...NOTTE,
+      measures: NOTTE.measures.map((m) =>
+        m.code === "seeing" ? misura("seeing", { level: "nogo", known_hours: 0, estimated_from: "jet" }) : m,
+      ),
+    }
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [stimata], seeing: { key: true, source: "meteoblue", meteoblue: "ok" } })
+    await apriMeteo()
+
+    await scheda()
+    const avviso = carta(/^Seeing$/).querySelector(".as-avviso") as HTMLElement
+    expect(avviso.querySelector(".as-avviso__titolo")?.textContent).toBe("Scarso · stima dal vento in quota (meteoblue).")
+    expect(avviso.querySelector(".as-avviso__testo")).toBeNull()
+    expect(within(avviso).queryByRole("link")).toBeNull()
+  })
+
   it("se Meteoblue non accetta la chiave la carta lo dice con un allarme", async () => {
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: true, source: null, meteoblue: "refused" } })
     await apriMeteo()

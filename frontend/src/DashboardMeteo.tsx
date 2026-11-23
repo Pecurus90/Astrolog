@@ -119,19 +119,19 @@ function cartaDi(codice: Codice, n: NotteMeteo, meteo: Meteo): Carta6 {
     esito: "mancante" as const,
     giudizio: "",
   }
-  if (
-    codice === "seeing" &&
-    (!m || m.known_hours === 0) &&
-    (!meteo.seeing.key || meteo.seeing.meteoblue === "refused")
-  ) {
-    // no key, no seeing: say so; a strong jet is Meteoblue's own estimate
-    const jet = n.measures.find((x) => x.code === "jet")?.level === "nogo"
-    const perche = t(meteo.seeing.key ? "dashboard.seeing.refused" : "dashboard.seeing.noKey")
+  const jet = m?.estimated_from === "jet"
+  const senzaChiave = !meteo.seeing.key || meteo.seeing.meteoblue === "refused"
+  if (codice === "seeing" && (!m || m.known_hours === 0) && (senzaChiave || jet)) {
+    // no number: the backend's estimate from a strong jet, and why no key when that's the cause
+    const perche = senzaChiave
+      ? t(meteo.seeing.key ? "dashboard.seeing.refused" : "dashboard.seeing.noKey")
+      : ""
+    const stima = t("dashboard.seeing.fromJet")
     return {
       ...vuota,
       stato: "normale",
       valore: jet ? t("dashboard.seeing.poor") : "?",
-      nota: jet ? `${t("dashboard.seeing.fromJet")} \u00b7 ${perche}` : perche,
+      nota: jet ? (perche ? `${stima} \u00b7 ${perche}` : stima) : perche,
       giudizio: t(jet ? "dashboard.seeing.estimate" : "ui.outcome.missing"),
     }
   }

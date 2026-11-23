@@ -6683,6 +6683,9 @@ export interface components {
          *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
          *     (`axis_curve` `sqrt`: the chart grows with the square root of the value).
          *     `value` is the cold at its lowest (temperature, condensation), and so the visibility.
+         *     `estimated_from` `jet`: seeing without Meteoblue's number, its word from the jet stream's
+         *     no-go hours, said "poor, estimated from the upper wind" (ADR 0034); no value, peak, axis or
+         *     known hours: no seeing number is known; it does not weigh, the jet already does.
          */
         WeatherMeasureOut: {
             /**
@@ -6729,6 +6732,8 @@ export interface components {
             known_from_start: boolean;
             /** Known To End */
             known_to_end: boolean;
+            /** Estimated From */
+            estimated_from: "jet" | null;
         };
         /**
          * WeatherMoonPointOut

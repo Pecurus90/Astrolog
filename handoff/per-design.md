@@ -33,8 +33,8 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
   servizi stanno nel file delle risposte accanto al database e tornano dopo un database rovinato;
   solo Esporta non le porta (Marco 16/11, ADR 0017): l'intro di Servizi dice «non vanno nel file
   esportato», la nota di Backup «Il file porta le risposte e le impostazioni. Esporta non porta le
-  chiavi dei servizi né il percorso di ASTAP; ...»; (b) Meteoblue senza chiave: «Senza la chiave il
-  Meteo non mostra il seeing.» finche' l'app non stima il seeing dal jet; (c) «doppioni dello stesso
+  chiavi dei servizi né il percorso di ASTAP; ...»; (b) superata il 23/11: l'app stima il seeing
+  dal jet e usa la frase della tavola; (c) «doppioni dello stesso
   file» e' «duplicati» (glossario); (d) la proposta «Ho trovato le tue risposte del ...» sta nel
   Primo avvio, non dentro Backup (la tavola la segna «Al primo avvio»); (e) l'esito di Verifica sta
   sotto la riga della chiave finche' «Ultimo tentativo» non e' vero; Cambia apre il campo con

@@ -141,15 +141,15 @@ describe("le sei carte", () => {
     expect(c.testo).toContain("incerta")
   })
 
-  it("il seeing senza chiave con un jet forte e' la stima di Meteoblue", async () => {
+  it("il seeing senza chiave stimato dal jet nel backend e' la stima di Meteoblue", async () => {
     await montaDashboard({
       previsione: {
         nights: [
           {
             ...NOTTE,
             measures: [
-              ...NOTTE.measures.filter((m) => m.code !== "jet"),
-              misura("jet", { level: "nogo", value: 150, axis_max: 200 }),
+              ...NOTTE.measures.filter((m) => m.code !== "seeing"),
+              misura("seeing", { level: "nogo", known_hours: 0, estimated_from: "jet" }),
             ],
           },
         ],
@@ -159,6 +159,28 @@ describe("le sei carte", () => {
     const c = carta("Seeing")
     expect(c.valore).toBe("scarso")
     expect(c.nota).toBe("stima dal vento in quota \u00b7 serve una chiave Meteoblue")
+    expect(c.testo).toContain("stima")
+  })
+
+  it("con la chiave buona ma senza il numero, la stima dal jet resta senza parlare di chiavi", async () => {
+    await montaDashboard({
+      previsione: {
+        seeing: { key: true, source: "meteoblue", meteoblue: "ok" },
+        nights: [
+          {
+            ...NOTTE,
+            measures: [
+              ...NOTTE.measures.filter((m) => m.code !== "seeing"),
+              misura("seeing", { level: "nogo", known_hours: 0, estimated_from: "jet" }),
+            ],
+          },
+        ],
+      },
+    })
+    await screen.findByText("Meteo della notte")
+    const c = carta("Seeing")
+    expect(c.valore).toBe("scarso")
+    expect(c.nota).toBe("stima dal vento in quota")
     expect(c.testo).toContain("stima")
   })
 

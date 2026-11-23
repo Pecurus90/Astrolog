@@ -59,7 +59,7 @@ describe("Impostazioni / Servizi", () => {
     await app(null, { stato: 200, corpo: { status: "ok", hint: "...1234" } })
     await vaiAiServizi()
     const meteoblue = await carta(/^meteoblue$/i)
-    expect(within(meteoblue).getByText(/senza la chiave il meteo non mostra il seeing/i)).toBeDefined()
+    expect(within(meteoblue).getByText(/senza la chiave il seeing è solo una stima dal vento in quota, quando è forte: «scarso»/i)).toBeDefined()
 
     fireEvent.change(within(meteoblue).getByLabelText("Chiave di Meteoblue"), {
       target: { value: "segretissima1234" },

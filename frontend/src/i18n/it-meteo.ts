@@ -230,6 +230,8 @@ export const itMeteo = {
   "weather.card.seeing.none": "Il seeing richiede una chiave Meteoblue.",
   "weather.card.seeing.refused": "Chiave Meteoblue non valida o scaduta.",
   "weather.card.seeing.how": "Apri le Impostazioni",
+  // Senza chiave, da 126 km/h di jet: la stima di meteoblue (tavola v59, Marco 6/11).
+  "weather.card.seeing.fromJet": "Scarso · stima dal vento in quota (meteoblue).", // glifo-ok: testo della tavola
   // Le fonti, con le parole che i servizi chiedono: restano cosi' in ogni lingua.
   "weather.sources.forecast": "Previsione:",
   "weather.attribution": "Weather data by Open-Meteo.com",

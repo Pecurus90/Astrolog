@@ -211,6 +211,7 @@ backfocus, setup, Deep sky.
 | la chiave che la finestra del desktop porta a ogni rotta dell'API, nuova a ogni avvio; sul NAS non c'e' (ADR 0002) | `X-AstroLog-Token`, file `token` | chiave di avvio | token, password |
 | l'ultimo tentativo di una fonte che non deve ripetersi troppo spesso (Meteoblue, lo storico), e com'e' andato | `weather_fetches`, `status` (`ok`, `refused`, `unreachable`, `bad_answer`) | ultimo tentativo | log, cronologia |
 | se il seeing c'e': viene solo da Meteoblue, con la chiave dell'utente | `seeing.source` (`meteoblue` o vuoto) | seeing attivo | il seeing viene da Meteoblue, fonte del seeing |
+| il seeing senza numero, "scarso" dalle ore di jet stream da 126 km/h, detto come stima (ADR 0034) | `estimated_from` (`jet`) della misura `seeing` | stima dal vento in quota | seeing calcolato, seeing previsto |
 | la sezione delle Impostazioni con le chiavi dei servizi | `/impostazioni/servizi` | Servizi | account, integrazioni |
 | quanto il cielo e' limpido, come fattore della qualita': lo spessore ottico degli aerosol (Marco, 20/10/2026). **Superata da ADR 0034** (fase 4): la **Trasparenza** e' la risposta "si esce?" di ogni ora, nuvole x aerosol, non un fattore fra gli altri | `transparency` | trasparenza («limita la trasparenza») | limpidezza, smog |
 | il dato della trasparenza e le polveri, da CAMS, nelle loro carte | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | smog |

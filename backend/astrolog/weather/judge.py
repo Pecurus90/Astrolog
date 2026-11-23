@@ -265,6 +265,8 @@ class MeasureNight:
     # the known hours reach the window's first / last hour
     known_from_start: bool
     known_to_end: bool
+    # the word comes from another measure: seeing from the jet, without its own number
+    estimated_from: Measure | None = None
 
 
 def _crosses(scale: Scale, step: Step, v: float) -> bool:
@@ -417,6 +419,31 @@ def shown_hours(hours: Sequence[Hour], summary: Summary) -> list[Hour]:
     return list(hours[ats.index(summary.shown_from) : ats.index(summary.shown_until) + 1])
 
 
+def _seeing_from_jet(m: MeasureNight, judged: Sequence[MeasureNight]) -> MeasureNight:
+    """No seeing number: the jet's no-go hours say poor, as an estimate that does not weigh (the jet
+    does); below 126 km/h unknown, no "good" without a source (ADR 0034)."""
+    jet = next(j for j in judged if j.code == Measure.JET)
+    if m.code != Measure.SEEING or m.known_hours or jet.level != NOGO:
+        return m
+    return replace(
+        jet,
+        code=Measure.SEEING,
+        weighs=False,
+        value=None,
+        peak=None,
+        peak_at=None,
+        peak_until=None,
+        axis_min=None,
+        axis_max=None,
+        known_hours=0,
+        known_since=None,
+        known_until=None,
+        known_from_start=False,
+        known_to_end=False,
+        estimated_from=Measure.JET,
+    )
+
+
 def measures(hours: Sequence[Hour], summary: Summary, rule: levels.MoonRule) -> list[MeasureNight]:
     """The clouds and the low clouds first, then the judged measures from the worst word, earliest
     first, then the neutral ones. The Moon is left out when it is never up in the window."""
@@ -425,9 +452,16 @@ def measures(hours: Sequence[Hour], summary: Summary, rule: levels.MoonRule) -> 
     after = {h.at: n.at for h, n in zip(hours, hours[1:], strict=False)}
     clouds_said = cloud_word(summary.cloud_total_pct)
     judged = [_night(s, night, shown, after, clouds_said) for s in table(rule).values()]
-    judged = [m for m in judged if m.code != Measure.MOON or m.known_hours]
+    judged = [
+        _seeing_from_jet(m, judged) for m in judged if m.code != Measure.MOON or m.known_hours
+    ]
     clouds, rest = judged[:2], judged[2:]
-    rest.sort(key=lambda m: (_RANK[m.level] if m.known_hours else len(_RANK), m.since or "~"))
+    rest.sort(
+        key=lambda m: (
+            _RANK[m.level] if m.known_hours else len(_RANK),
+            m.since or "~",
+        )
+    )
     return [*clouds, *rest, *(_night(s, night, shown, after, None) for s in NEUTRAL.values())]
 
 

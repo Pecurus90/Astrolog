@@ -256,6 +256,38 @@ def test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then
     assert neutre == [c for c in judge.NEUTRAL if c in neutre]
 
 
+def test_without_seeing_a_strong_jet_says_poor_seeing_as_an_estimate():
+    """Senza il numero di Meteoblue, un jet da 126 km/h dice seeing scarso, detto come stima
+    (ADR 0034; Marco, 6/11): le sue ore, nessun numero in km/h spacciato per secondi d'arco."""
+    ore = notte({"wind_250hpa_kmh": 100.0}, {"wind_250hpa_kmh": 130.0}, {"wind_250hpa_kmh": 140.0})
+    seeing = misure(ore)["seeing"]
+    # non pesa: negli Altri fattori c'e' gia' il jet, con le stesse ore
+    assert (seeing.level, seeing.estimated_from, seeing.weighs) == ("nogo", "jet", False)
+    assert (seeing.since, seeing.hours) == ("2026-09-25T21:00:00+02:00", 2)
+    assert (seeing.value, seeing.peak, seeing.axis_max, seeing.known_hours) == (None, None, None, 0)
+    assert (seeing.peak_at, seeing.peak_until) == (None, None)
+
+
+def test_the_seeing_estimated_from_the_jet_sorts_last_among_the_judged_measures():
+    """Rango piu' basso, come nella tavola v82: la stima non sta fra le misure non adatte."""
+    ore = notte({"wind_250hpa_kmh": 130.0, "wind_kmh": 5.0}, {"wind_250hpa_kmh": 130.0})
+    codici = [m.code for m in judge.measures(ore, score.assess(ore), MoonRule())]
+    assert codici.index("seeing") > codici.index("wind")
+
+
+@pytest.mark.parametrize(
+    "ora",
+    [
+        {"wind_250hpa_kmh": 125.0},  # sotto la soglia: nessun "buono" senza fonte
+        {"wind_250hpa_kmh": 130.0, "seeing_arcsec": 1.5},  # col numero vale il numero
+    ],
+)
+def test_the_jet_says_nothing_of_seeing_below_its_threshold_or_beside_the_number(ora):
+    seeing = misure(notte(ora, ora))["seeing"]
+    assert seeing.estimated_from is None
+    assert seeing.level == (None if "seeing_arcsec" not in ora else "go")
+
+
 def test_every_scale_is_sent_with_its_steps():
     """Le soglie arrivano dal backend, le stesse del giudizio: la scala a destra le disegna."""
     passi = {s.code: s.steps for s in judge.scales(MoonRule())}

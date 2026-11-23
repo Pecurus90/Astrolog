@@ -561,8 +561,11 @@ La carta del **vento a 700 hPa** (circa 3000 metri) lo legge accanto allo **stor
 puo' essere raro, e viceversa. Lo storico l'app lo scarica da sola una volta l'anno; finche' non c'e'
 la carta dice che il confronto non e' ancora disponibile.
 
-Il **seeing** viene solo da **Meteoblue**, ora per ora e in arcosecondi, se hai messo la tua
-chiave: senza, la sua carta ti dice che per averlo serve, gratuita, e ti porta alle Impostazioni. Se
+Il **seeing** in arcosecondi viene solo da **Meteoblue**, ora per ora, se hai messo la tua
+chiave: senza, la sua carta ti dice che per averlo serve, gratuita, e ti porta alle Impostazioni.
+Senza il numero, se il vento in quota (il jet stream) arriva a 126 km/h la carta dice **scarso**,
+come stima dal vento in quota: Meteoblue stessa scrive che un jet cosi' forte di solito vuol dire
+seeing cattivo. Sotto quella soglia non ti dice niente: nessun "buono" senza una fonte. Se
 Meteoblue non accetta la chiave la carta lo dice; se non risponde, resta il seeing che aveva dato
 l'ultima volta e la pagina te lo dice. Se il seeing copre solo una parte della notte, la media lo
 dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al giorno, perche' la

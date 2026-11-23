@@ -217,6 +217,7 @@ export const enMeteo = {
   "weather.card.seeing.none": "Seeing requires a Meteoblue key.",
   "weather.card.seeing.refused": "Meteoblue key invalid or expired.",
   "weather.card.seeing.how": "Open Settings",
+  "weather.card.seeing.fromJet": "Poor · estimated from the upper wind (meteoblue).", // glifo-ok: board text
   "weather.sources.forecast": "Forecast:",
   "weather.attribution": "Weather data by Open-Meteo.com",
   "weather.attribution.meteoblue": "Seeing: meteoblue",
