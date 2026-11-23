@@ -8,7 +8,7 @@ import { gesto } from "./componenti/gesto"
 import { Pillola } from "./componenti/Pillola"
 import { Ripresa } from "./componenti/Ripresa"
 import type { Formato } from "./componenti/Tema"
-import { FORME, parola, picco, quota, sotto, tondo } from "./CartaDelParametro"
+import { FORME, giudizioDi as giudizioDellaMisura, picco, quota, sotto, tondo } from "./MeteoDati"
 import {
   ESITO,
   type Meteo,
@@ -160,26 +160,18 @@ function cartaDi(codice: Codice, n: NotteMeteo, meteo: Meteo): Carta6 {
     valore: m.value === null ? "?" : numero(tondo(codice, m.value)),
     unita: forma.unita ? t(forma.unita) : "",
     celle,
-    nota: [sotto(m, n, forma), picco(m, n, forma, scala)].filter(Boolean).join(" \u00b7 "),
+    nota: [sotto(m, n), picco(m, n, scala)].filter(Boolean).join(" \u00b7 "),
     ...giudizioDi(m, scala),
   }
 }
 
-/** The pill: the measure's word; a value between two bounds with no word says the bounds. */
+/** The pill, as the Weather words it; the Dashboard's missing word starts upper case. */
 function giudizioDi(
   m: Misura,
   scala: Meteo["scales"][number] | undefined,
 ): Pick<Carta6, "esito" | "giudizio"> {
-  if (m.level) return { esito: ESITO[m.level], giudizio: parola(m.code, m.level) }
-  const limiti = (scala?.steps ?? []).map((p) => p.bound).sort((a, b) => a - b)
-  const [da, a] = [limiti[0], limiti[limiti.length - 1]]
-  if (m.value === null || da === undefined || a === undefined || da === a) {
-    return { esito: "mancante", giudizio: t("ui.outcome.missing") }
-  }
-  return {
-    esito: "neutra",
-    giudizio: t("dashboard.weather.between", { da: numero(da), a: numero(a) }),
-  }
+  const g = giudizioDellaMisura(m, scala)
+  return { esito: g.esito, giudizio: g.esito === "mancante" ? t("ui.outcome.missing") : g.parola }
 }
 
 export function MeteoDellaNotte({ meteo, formato }: { meteo: Meteo; formato: Formato }) {

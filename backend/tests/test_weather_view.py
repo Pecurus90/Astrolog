@@ -153,6 +153,18 @@ def test_each_night_carries_its_sky_bands_to_the_minute_over_the_drawn_hours(db)
     assert any(f["starts_at"][14:16] != "00" for f in fasce)
 
 
+def test_each_hour_carries_its_exposure_weighed_by_its_dark_and_they_add_up_to_the_night(db):  # noqa: F811
+    """Il lettore del grafico dice le ore di posa di un'ora: scritte qui, pesate per il buio
+    dell'ora come il numero grande, cosi' sommate lo ritrovano; fuori dal buio non ci sono."""
+    detto = notte_di_ottobre(db)
+    ore = json.loads(detto["hours_json"])
+    somma = sum(o["exposure_hours"] or 0 for o in ore)
+    assert round(somma, 1) == riassunto(detto)["exposure_hours"]
+    assert {o["exposure_hours"] for o in ore if o["sky"] == "day"} == {None}
+    bordo = [o for o in ore if o["exposure_hours"] and o["sky"] != "dark"]
+    assert all(o["exposure_hours"] < (o["transparency"] or 0) / 100 for o in bordo)
+
+
 def test_the_moon_event_follows_the_moon_at_the_first_drawn_hour(db):  # noqa: F811
     """Su all'inizio: tramonta o resta tutta la notte; giu': sorge o non sorge."""
     scritta(db, Finto(risposta()))

@@ -59,6 +59,13 @@ def _verdict(value: float | None) -> Verdict | None:
     return Verdict.MARGINAL if value >= UNCERTAIN_FROM else Verdict.NOGO
 
 
+def hourly_exposure(hours: Sequence[Hour]) -> dict[str, float]:
+    """Each window hour's Ore di posa, weighed by its share of dark as `assess` weighs it: summed
+    they make the night's. Hours outside the window, or without clouds, are absent."""
+    shares, _ = weighted(hours)
+    return {h.at: round(t * w / 100, 2) for h, w in shares if (t := transparency(h)) is not None}
+
+
 def assess(hours: Sequence[Hour], rule: MoonRule = _FACTORY) -> Summary:
     """Verdict, Transparency, exposure `None` unless every window hour has clouds. Without the
     Moon (the history) any rule says the same: the factory one by default."""

@@ -49,8 +49,11 @@ export function Striscia({
   etichetta,
   rientro = 20,
   formato = "desktop",
+  intestazione = false,
 }: {
   notti: NotteStriscia[]
+  /** Desktop: "ora per ora" over the full nights, "tendenza, meno affidabile" over the trend. */
+  intestazione?: boolean
   /** The tab list's name; without it, the dictionary's. */
   etichetta?: string
   /** Phone side margin in px. */
@@ -75,6 +78,7 @@ export function Striscia({
   const telefono = formato === "telefono"
   const scorre = !telefono && notti.length > 8
   const nome = etichetta || t("ui.strip.label")
+  const piene = notti.filter((n) => !n.tend).length
   const tessere = notti.map((n) => {
     const vuota = n.tend && !n.sel
     return {
@@ -154,6 +158,21 @@ export function Striscia({
         paddingBottom: scorre ? "4px" : "0",
       }}
     >
+      {intestazione && (
+        <>
+          <span className="al-c-striscia__blocco-3" style={{ gridColumn: `span ${piene}` }}>
+            {t("ui.strip.hourly")}
+          </span>
+          {notti.length > piene && (
+            <span
+              className="al-c-striscia__blocco-3"
+              style={{ gridColumn: `span ${notti.length - piene}` }}
+            >
+              {t("ui.strip.trend")}
+            </span>
+          )}
+        </>
+      )}
       {tessere.map(({ n, clic, stile }, i) => (
         <a
           key={i}

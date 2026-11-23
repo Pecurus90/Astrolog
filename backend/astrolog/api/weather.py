@@ -72,9 +72,9 @@ def _scales(conn: sqlite3.Connection) -> list[WeatherScaleOut]:
 def _night(row: sqlite3.Row, rank: int) -> WeatherNightOut:
     summary = json.loads(row["summary_json"])
     if rank >= FULL_NIGHTS:
-        # the trend carries nothing read from the hours
+        # the trend carries nothing read from the forecast's hours; the Moon is an ephemeris
         summary.update(
-            measures=[],
+            measures=[m for m in summary["measures"] if m["code"] == "moon"],
             usable_hours=None,
             usable_since=None,
             usable_until=None,

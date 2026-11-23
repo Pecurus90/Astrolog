@@ -52,6 +52,19 @@ export function misura(code: string, campi: Record<string, unknown> = {}) {
   }
 }
 
+export function banda(kind: string, starts_at: string, ends_at: string) {
+  return { kind, starts_at, ends_at }
+}
+
+// the bands cover shown_from..shown_until, as the backend writes them
+const FASCE = [
+  banda("day", "2026-09-26T19:00:00+02:00", "2026-09-26T19:20:00+02:00"),
+  banda("civil", "2026-09-26T19:20:00+02:00", "2026-09-26T19:50:00+02:00"),
+  banda("nautical", "2026-09-26T19:50:00+02:00", "2026-09-26T20:25:00+02:00"),
+  banda("astronomical", "2026-09-26T20:25:00+02:00", "2026-09-26T21:00:00+02:00"),
+  banda("dark", "2026-09-26T21:00:00+02:00", "2026-09-26T23:00:00+02:00"),
+]
+
 export const NOTTE = {
   night: "2026-09-26",
   trend: false,
@@ -65,8 +78,15 @@ export const NOTTE = {
   usable_until: "2026-09-27T02:00:00+02:00",
   window: "dark",
   window_hours: 8,
+  dark_hours: 8,
+  exposure_hours: 3,
+  broadband_exposure_hours: 3,
+  narrowband_exposure_hours: 0,
+  transparency: 64,
+  without_aerosol: false,
   shown_from: "2026-09-26T19:00:00+02:00",
   shown_until: "2026-09-26T23:00:00+02:00",
+  sky_bands: FASCE,
   measures: [
     misura("cloud", { level: "marginal", value: 40, peak: 80, peak_at: "2026-09-26T22:00:00+02:00", peak_until: "2026-09-26T23:00:00+02:00" }),
     misura("cloud_low", { level: "go", value: 5 }),
@@ -96,7 +116,8 @@ export const NOTTE = {
   hours: [
     ora("2026-09-26T12:00:00+02:00", "day", { shown: false }),
     ora("2026-09-26T19:00:00+02:00", "civil"),
-    ora("2026-09-26T22:00:00+02:00", "dark", { wind_kmh: null, wind_gust_kmh: 35 }),
+    // un'ora senza vento non ha nemmeno il suo giudizio
+    ora("2026-09-26T22:00:00+02:00", "dark", { wind_kmh: null, wind_gust_kmh: 35, levels: { ...GIUDIZI, wind: null } }),
     ora("2026-09-26T23:00:00+02:00", "dark"),
   ],
 }
@@ -110,6 +131,14 @@ export const TENDENZA = {
   usable_until: null,
   verdict: "go",
   agreement: { go: 2, marginal: 1, nogo: 1, unknown: 0, total: 4 },
+  sky_word: "scattered",
+  shown_from: "2026-09-29T19:00:00+02:00",
+  shown_until: "2026-09-30T07:00:00+02:00",
+  sky_bands: [
+    banda("day", "2026-09-29T19:00:00+02:00", "2026-09-29T19:20:00+02:00"),
+    banda("dark", "2026-09-29T19:20:00+02:00", "2026-09-30T06:40:00+02:00"),
+    banda("day", "2026-09-30T06:40:00+02:00", "2026-09-30T07:00:00+02:00"),
+  ],
   measures: [],
   hours: [],
 }
@@ -155,10 +184,28 @@ export async function apriMeteo() {
   return reso
 }
 
+/** Il telefono si chiede dall'indirizzo, come la consegna (`?formato=telefono`). */
+export async function apriMeteoTelefono() {
+  window.history.pushState({}, "", "/meteo?formato=telefono")
+  const reso = await disegna()
+  await screen.findByRole("heading", { level: 1, name: /meteo/i })
+  return reso
+}
+
 export const conNotti = (...notti: unknown[]) => meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: notti })
-export const scheda = () => screen.findByRole("tabpanel")
+
+/** La carta "La notte": il numero grande, il grafico e la scala "Sul grafico". */
+export const scheda = () => screen.findByRole("region", { name: "La notte" })
+/** La carta "Come va": gli altri fattori e i fatti della notte. */
+export const comeVa = () => screen.getByRole("region", { name: "Come va" })
+/** La carta "Le misure", e quella "Altre misure". */
+export const misure = () => screen.getByRole("region", { name: "Le misure" })
+export const altreMisure = () => screen.getByRole("region", { name: "Altre misure" })
+
+/** Le carte delle misure della pagina larga, per nome. */
+export const carte = () => [...misure().querySelectorAll<HTMLElement>(".al-c-card-meteo__colonna-1")]
+export const nomeDi = (c: HTMLElement) => c.querySelector(".al-c-card-meteo__testo-1")?.textContent ?? ""
 
 export function carta(nome: RegExp) {
-  const titolo = screen.getAllByRole("heading", { level: 3 }).find((h) => nome.test(h.textContent ?? ""))
-  return titolo?.closest("article") as HTMLElement
+  return carte().find((c) => nome.test(nomeDi(c))) as HTMLElement
 }

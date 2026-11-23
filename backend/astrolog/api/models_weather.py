@@ -86,6 +86,12 @@ class WeatherHourOut(BaseModel):
         description="0-100, tenths: the light the hour lets through (score v4, ADR 0034); zero "
         "when a rule blocks it, `None` without its clouds.",
     )
+    exposure_hours: float | None = Field(
+        default=None,
+        description="The hour's Ore di posa, hundredths, weighed by its share of the window as "
+        "the night's are: summed they make `exposure_hours` of the night. `None` outside the "
+        "window or without clouds.",
+    )
     shown: bool = Field(
         description="Whether the page draws this hour (`shown_from`-`shown_until`)."
     )
@@ -102,7 +108,7 @@ class WeatherMoonPointOut(BaseModel):
 
 
 class WeatherSpanOut(BaseModel):
-    """The hours with one word: from the first to the end of the last, and how many."""
+    """An unbroken run of hours with one word: from its first to its end, and how many."""
 
     level: Level
     since: str
@@ -117,8 +123,8 @@ class WeatherMeasureOut(BaseModel):
     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
     say whether they reach the window's first/last hour. Neutral measures have no `level`.
-    `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
-    (`axis_curve` `sqrt`: the chart grows with the square root of the value).
+    `spans` gives each unbroken run of a bad word; `axis_*` is the chart's scale over the shown
+    hours (`axis_curve` `sqrt`: the chart grows with the square root of the value).
     `value` is the cold at its lowest (temperature, condensation), and so the visibility.
     `estimated_from` `jet`: seeing without Meteoblue's number, its word from the jet stream's
     no-go hours, said "poor, estimated from the upper wind" (ADR 0034); no value, peak, axis or

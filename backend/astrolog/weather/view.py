@@ -159,6 +159,7 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary, rule: M
     shown = {h.at for h in judge.shown_hours(hours, summary)}
     night, _ = verdict.window(hours)
     judged = {h.at for h in night}
+    exposure = score.hourly_exposure(hours)
     return json.dumps(
         [
             {
@@ -166,6 +167,7 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary, rule: M
                 **judge.shown_values({**h.values, "dew_spread_c": judge.spread(h)}),
                 "levels": judge.hour_levels(h, rule),
                 "transparency": _tenths(score.transparency(h)),
+                "exposure_hours": exposure.get(h.at),
                 "shown": h.at in shown,
                 "clear": summary.usable_hours is not None
                 and h.at in judged

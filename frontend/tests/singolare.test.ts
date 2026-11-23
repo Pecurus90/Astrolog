@@ -25,7 +25,7 @@ describe("il singolare dei conti", () => {
 
   it("le frasi con un conto solo si leggono al singolare", () => {
     expect(t("review.applied", { n: 1, frame: 3 })).toBe("1 modifica applicata, 3 frame da rielaborare")
-    expect(t("weather.usable.dark", { n: 1, su: 8 })).toBe("1 ora utile su 8 di buio.")
+    expect(t("meteo.when", { tratti: "dalle 22:00 alle 23:00", n: 1 })).toBe("dalle 22:00 alle 23:00, 1 ora")
     expect(t("settings.scans.out.duplicates", { n: 1 })).toBe("1 duplicato")
     expect(t("nights.waiting.review", { n: 1 })).toBe("1 frame da confermare")
   })

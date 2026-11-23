@@ -6638,6 +6638,11 @@ export interface components {
              */
             transparency?: number | null;
             /**
+             * Exposure Hours
+             * @description The hour's Ore di posa, hundredths, weighed by its share of the window as the night's are: summed they make `exposure_hours` of the night. `None` outside the window or without clouds.
+             */
+            exposure_hours?: number | null;
+            /**
              * Shown
              * @description Whether the page draws this hour (`shown_from`-`shown_until`).
              */
@@ -6685,8 +6690,8 @@ export interface components {
          *     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
          *     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
          *     say whether they reach the window's first/last hour. Neutral measures have no `level`.
-         *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
-         *     (`axis_curve` `sqrt`: the chart grows with the square root of the value).
+         *     `spans` gives each unbroken run of a bad word; `axis_*` is the chart's scale over the shown
+         *     hours (`axis_curve` `sqrt`: the chart grows with the square root of the value).
          *     `value` is the cold at its lowest (temperature, condensation), and so the visibility.
          *     `estimated_from` `jet`: seeing without Meteoblue's number, its word from the jet stream's
          *     no-go hours, said "poor, estimated from the upper wind" (ADR 0034); no value, peak, axis or
@@ -6958,7 +6963,7 @@ export interface components {
         };
         /**
          * WeatherSpanOut
-         * @description The hours with one word: from the first to the end of the last, and how many.
+         * @description An unbroken run of hours with one word: from its first to its end, and how many.
          */
         WeatherSpanOut: {
             /**

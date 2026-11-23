@@ -1,285 +1,194 @@
 // @vitest-environment jsdom
 /**
- * Il **Meteo sul telefono** (colonna sotto i 900, foglio v37): gli stessi dati della pagina larga,
- * in un markup suo. In testa il verdetto, che toccato apre gli altri fattori; le misure sono carte
- * piccole, quattro per riga, e una alla volta apre la sua carta intera sulla riga sotto.
+ * Il **Meteo sul telefono** (tavola v82, sotto i 700 o `?formato=telefono`): gli stessi dati della
+ * pagina larga, in un markup suo. Le misure sono carte piccole, due per riga, e una alla volta apre
+ * il suo dettaglio sotto la sua coppia.
  */
-import { fireEvent, within } from "@testing-library/react"
+import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { colonna, pulisci } from "./banco"
-import { NOTTE, TENDENZA, apriMeteo, conNotti, misura, ora, scheda } from "./meteo-banco"
+import { impostazioni, pulisci } from "./banco"
+import { NOTTE, TENDENZA, apriMeteo, apriMeteoTelefono, comeVa, conNotti, meteo, misura, ora, scheda } from "./meteo-banco"
 
 afterEach(pulisci)
 afterEach(() => vi.unstubAllGlobals())
 
 async function sulTelefono(...notti: unknown[]) {
   conNotti(...notti)
-  // dopo `conNotti`: il banco non deve togliere la misura
-  colonna(390)
-  const { container } = await apriMeteo()
+  const { container } = await apriMeteoTelefono()
   await scheda()
   return container
 }
 
-const piccole = (dove: HTMLElement) => [...dove.querySelectorAll<HTMLButtonElement>("button.as-tel-carta")]
-const nomi = (dove: HTMLElement) => piccole(dove).map((c) => c.querySelector(".as-tel-carta__nome")?.textContent)
-const piccola = (dove: HTMLElement, nome: string) => piccole(dove).find((c) => c.querySelector(".as-tel-carta__nome")?.textContent === nome) as HTMLButtonElement
+const piccole = (dove: HTMLElement) => [...dove.querySelectorAll<HTMLElement>("a.al-c-card-meteo__colonna-7")]
+const nomeDi = (c: HTMLElement) => c.querySelector(".al-c-card-meteo__riga-8 > span")?.textContent
+const nomi = (dove: HTMLElement) => piccole(dove).map(nomeDi)
+const piccola = (dove: HTMLElement, nome: string) => piccole(dove).find((c) => nomeDi(c) === nome) as HTMLElement
+const dettagli = (dove: HTMLElement) => [...dove.querySelectorAll<HTMLElement>(".al-meteo__colonna-24")]
+const sulGrafico = (nome: string) => within(screen.getByRole("group", { name: "Sul grafico" })).getByRole("checkbox", { name: nome })
 
 describe("il Meteo sul telefono", () => {
   it("sulla pagina larga le carte sono quelle grandi, e le piccole del telefono non ci sono", async () => {
     conNotti(NOTTE)
-    colonna(1440)
     const { container } = await apriMeteo()
-
     await scheda()
-    expect(container.querySelector(".as-tel-meteo")).toBeNull()
-    expect(container.querySelector(".as-tel-carte")).toBeNull()
-    expect(container.querySelectorAll(".as-parametri article.as-parametro").length).toBeGreaterThan(0)
+
+    expect(piccole(container)).toHaveLength(0)
+    expect(container.querySelectorAll(".al-c-card-meteo__colonna-1").length).toBeGreaterThan(0)
   })
 
   it("le misure sono carte piccole, ognuna al suo posto, col nome, il valore e la parola sola", async () => {
     const pagina = await sulTelefono(NOTTE)
 
-    expect(pagina.querySelector(".as-meteo")?.classList.contains("as-tel-meteo")).toBe(true)
-    expect(pagina.querySelector(".as-parametri")).toBeNull()
-    expect(nomi(pagina)).toEqual([
-      "Nuvole", "Nuvole basse", "Pioggia", "Visibilità", "Vento", "Seeing", "Aerosol",
-      "Temperatura e punto di rugiada", "Polvere", "Vento a 700 hPa",
-    ])
+    expect(pagina.querySelector(".al-c-card-meteo__colonna-1")).toBeNull()
+    expect(nomi(pagina)).toEqual(["Nuvole", "Nuvole basse", "Pioggia", "Visibilità", "Vento", "Seeing", "Aerosol"])
     const vento = piccola(pagina, "Vento")
-    expect(vento.querySelector(".as-tel-carta__valore")?.textContent).toBe("20km/h")
-    // la parola sola: le ore le dice la carta aperta
-    expect(vento.querySelector(".as-semaforo")?.textContent).toBe("non adatta")
+    expect(vento.querySelector(".al-c-card-meteo__testo-9")?.textContent).toBe("20")
+    expect(vento.querySelector(".al-c-card-meteo__testo-10")?.textContent).toBe("km/h")
+    // la parola sola: le ore le dice il dettaglio aperto
+    expect(vento.textContent).toContain("non adatta")
+    expect(vento.textContent).not.toContain("dalle")
     expect(vento.getAttribute("aria-expanded")).toBe("false")
-    // le nuvole non hanno parola: e' il verdetto
-    expect(piccola(pagina, "Nuvole").querySelector(".as-semaforo")).toBeNull()
-    // nessuna carta intera finche' non se ne tocca una
-    expect(pagina.querySelector("article.as-parametro")).toBeNull()
+    // nessun dettaglio finche' non se ne tocca una
+    expect(dettagli(pagina)).toHaveLength(0)
   })
 
   it("una misura senza valore ha la carta piccola vuota, col semaforo spento e la parola che lo dice", async () => {
-    // Design, DECISIONI 14/10: niente trattino, la stessa parola a schermo e allo screen reader
     const cieca = { ...NOTTE, measures: NOTTE.measures.map((m) => (m.code === "wind" ? { ...m, value: null, level: null, known_hours: 0 } : m)) }
     const pagina = await sulTelefono(cieca)
 
-    // come la tavola meteo-stati v37.1: niente righe del valore e delle barrette, la parola minuscola
     const vento = piccola(pagina, "Vento")
-    expect(vento.querySelector(".as-tel-carta__valore, .as-tel-carta__barre")).toBeNull()
-    const semaforo = vento.querySelector(".as-semaforo") as HTMLElement
-    expect(semaforo.classList.contains("as-semaforo--ignoto")).toBe(true)
-    expect(semaforo.textContent).toBe("non disponibile")
-    expect(vento.querySelector(".as-solo-lettori")).toBeNull()
+    expect(vento.querySelector(".al-c-card-meteo__testo-9")?.textContent).toBe("?")
+    expect(vento.querySelector(".al-c-card-meteo__testo-10")).toBeNull()
+    const barre = [...vento.querySelectorAll<HTMLElement>(".al-c-card-meteo__pillola-3")]
+    expect(barre.every((b) => b.style.background.startsWith("repeating-linear-gradient"))).toBe(true)
+    expect(vento.textContent).toContain("non disponibile")
   })
 
   it("toccata, una carta apre la sua carta intera sotto; un'altra la sostituisce, lo stesso tocco la chiude", async () => {
     const pagina = await sulTelefono(NOTTE)
 
     fireEvent.click(piccola(pagina, "Vento"))
-    const vento = piccola(pagina, "Vento")
-    expect(vento.getAttribute("aria-expanded")).toBe("true")
-    const dettaglio = document.getElementById(vento.getAttribute("aria-controls") ?? "") as HTMLElement
-    expect(dettaglio.classList.contains("as-tel-dettaglio")).toBe(true)
-    expect(within(dettaglio).getByRole("heading", { level: 3 }).textContent).toBe("Vento")
-    expect(dettaglio.textContent).toContain("non adatta dalle 21:00")
+    expect(piccola(pagina, "Vento").getAttribute("aria-expanded")).toBe("true")
+    const [dettaglio] = dettagli(pagina)
+    expect(dettaglio?.querySelector("b")?.textContent).toBe("Vento")
+    expect(dettaglio?.textContent).toContain("media nel buio · a 10 m")
+    expect(dettaglio?.textContent).toContain("non adatta dalle 21:00 alle 23:00, 2 ore")
 
     fireEvent.click(piccola(pagina, "Pioggia"))
     expect(piccola(pagina, "Vento").getAttribute("aria-expanded")).toBe("false")
-    expect(pagina.querySelectorAll("article.as-parametro")).toHaveLength(1)
-    expect(within(pagina).getByRole("heading", { level: 3 }).textContent).toBe("Pioggia")
+    expect(dettagli(pagina)).toHaveLength(1)
+    expect(dettagli(pagina)[0]?.querySelector("b")?.textContent).toBe("Pioggia")
 
     fireEvent.click(piccola(pagina, "Pioggia"))
-    expect(pagina.querySelector("article.as-parametro")).toBeNull()
+    expect(dettagli(pagina)).toHaveLength(0)
   })
 
-  it("in testa il verdetto della notte e il modello; sotto, da quando e' la previsione e Aggiorna", async () => {
-    const pagina = await sulTelefono(NOTTE)
+  it("in testa il modello, Aggiorna e da quando e' la previsione, che toccato si dice per intero", async () => {
+    await sulTelefono(NOTTE)
 
-    const testa = pagina.querySelector(".as-tel-testa") as HTMLElement
-    expect(testa.querySelector(".as-tel-verdetto")?.textContent).toContain("Notte di sabato 26 · stanotte")
-    expect(testa.querySelector(".as-tel-verdetto")?.textContent).toContain("3 ore di buio sereno")
-    expect(testa.querySelector(".as-menu--telefono .as-menu__apri")?.textContent).toContain("Automatico")
-    const arrivo = pagina.querySelector(".as-tel-arrivo") as HTMLElement
-    expect(arrivo.textContent).toContain("Previsione del")
-    expect(within(arrivo).getByRole("button", { name: "Aggiorna" })).toBeTruthy()
-    // il verdetto sta in testa: la scheda non lo ripete
-    expect((await scheda()).querySelector(".as-meteo__notte")).toBeNull()
+    const testa = screen.getByRole("region", { name: "Le prossime notti" })
+    expect(within(testa).getByRole("button", { name: "Modello: Automatico" })).toBeTruthy()
+    expect(within(testa).getByRole("button", { name: "Aggiorna la previsione" })).toBeTruthy()
+    const arrivo = within(testa).getByRole("button", { name: /^Previsione Open-Meteo del/ })
+    expect(arrivo.textContent).toMatch(/^Open-Meteo .+ fa$/)
+    fireEvent.click(arrivo)
+    expect(arrivo.getAttribute("aria-expanded")).toBe("true")
+    expect(arrivo.textContent).toContain("ora locale del sito")
   })
 
-  it("toccato il verdetto si aprono gli altri fattori; una misura li chiude e apre la sua carta", async () => {
-    const pagina = await sulTelefono(NOTTE)
+  it("fra gli altri fattori una misura del grafico si accende toccandola; la Luna e le raffiche no", async () => {
+    const luna = misura("moon", {
+      level: "nogo", weighs: true, value: 62, known_from_start: false, known_to_end: true,
+      known_since: "2026-09-26T23:00:00+02:00", known_until: "2026-09-27T02:00:00+02:00",
+    })
+    await sulTelefono({ ...NOTTE, measures: [...NOTTE.measures, luna] })
 
-    const verdetto = within(pagina).getByRole("button", { name: /Altri fattori/ })
-    expect(verdetto.getAttribute("aria-expanded")).toBe("false")
-    const riquadro = document.getElementById(verdetto.getAttribute("aria-controls") ?? "") as HTMLElement
-    expect(riquadro.hidden).toBe(true)
-
-    fireEvent.click(verdetto)
-    expect(verdetto.getAttribute("aria-expanded")).toBe("true")
-    expect(riquadro.hidden).toBe(false)
-    expect(riquadro.textContent).toContain("Altri fattori (non modificano il verdetto)")
-    expect(riquadro.textContent).toContain("Vento dalle 21:00 alle 23:00 · 2 ore")
-
-    fireEvent.click(within(riquadro).getByRole("button", { name: /Vento/ }))
-    expect(riquadro.hidden).toBe(true)
-    expect(piccola(pagina, "Vento").getAttribute("aria-expanded")).toBe("true")
-    // il fuoco va alla carta che si e' aperta, non si perde
-    expect(document.activeElement).toBe(piccola(pagina, "Vento"))
-  })
-
-  it("con Tab il fuoco gira dentro gli altri fattori; richiusi col verdetto, il fuoco torna li'", async () => {
-    const luna = misura("moon", { level: "nogo", weighs: true, value: 62, known_hours: 2 })
-    const pagina = await sulTelefono({ ...NOTTE, measures: [...NOTTE.measures, luna] })
-
-    const verdetto = within(pagina).getByRole("button", { name: /Altri fattori/ })
-    fireEvent.click(verdetto)
-    const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
-    const bottoni = [...riquadro.querySelectorAll("button")]
-    const ultimo = bottoni[bottoni.length - 1] as HTMLElement
-    ultimo.focus()
-    fireEvent.keyDown(ultimo, { key: "Tab" })
-    expect(document.activeElement).toBe(bottoni[0])
-    fireEvent.keyDown(bottoni[0] as HTMLElement, { key: "Tab", shiftKey: true })
-    expect(document.activeElement).toBe(ultimo)
-
-    fireEvent.click(verdetto)
-    expect(riquadro.hidden).toBe(true)
-    expect(document.activeElement).toBe(verdetto)
-  })
-
-  it("aperti, gli altri fattori prendono il fuoco; Esc li chiude e lo rende al verdetto", async () => {
-    const calma = { ...NOTTE, measures: NOTTE.measures.map((m) => ({ ...m, weighs: false })) }
-    const pagina = await sulTelefono(calma)
-
-    const verdetto = within(pagina).getByRole("button", { name: /Altri fattori/ })
-    fireEvent.click(verdetto)
-    const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
-    expect(riquadro.hidden).toBe(false)
-    expect(riquadro.textContent).toContain("Nessun altro fattore.")
-    expect(riquadro.contains(document.activeElement)).toBe(true)
-    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Escape" })
-    expect(riquadro.hidden).toBe(true)
-    expect(document.activeElement).toBe(verdetto)
-  })
-
-  it("toccando fuori gli altri fattori si chiudono; toccando dentro restano", async () => {
-    const pagina = await sulTelefono(NOTTE)
-
-    const verdetto = within(pagina).getByRole("button", { name: /Altri fattori/ })
-    fireEvent.click(verdetto)
-    const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
-    fireEvent.mouseDown(riquadro.querySelector("li") as HTMLElement)
-    expect(riquadro.hidden).toBe(false)
-    fireEvent.mouseDown(piccola(pagina, "Pioggia"))
-    expect(riquadro.hidden).toBe(true)
-    // il verdetto toccato di nuovo li riapre, non li chiude e riapre
-    fireEvent.mouseDown(verdetto)
-    fireEvent.click(verdetto)
-    expect(riquadro.hidden).toBe(false)
+    fireEvent.click(within(comeVa()).getByRole("button", { name: /^Altri \d+ fattori$/ }))
+    expect(comeVa().textContent).toContain("Luna")
+    expect(within(comeVa()).queryByRole("button", { name: /^Luna/ })).toBeNull()
+    expect(within(comeVa()).queryByRole("button", { name: /^Raffiche/ })).toBeNull()
+    fireEvent.click(within(comeVa()).getByRole("button", { name: /^Vento/ }))
+    expect(sulGrafico("vento").getAttribute("aria-checked")).toBe("true")
   })
 
   it("cambiando modello la carta aperta si chiude", async () => {
-    const pagina = await sulTelefono(NOTTE)
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE] }, {
+      "PATCH /api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+    })
+    const { container: pagina } = await apriMeteoTelefono()
+    await scheda()
 
     fireEvent.click(piccola(pagina, "Vento"))
-    expect(pagina.querySelector("article.as-parametro")).not.toBeNull()
-    const menu = pagina.querySelector(".as-tel-testa .as-menu--telefono") as HTMLElement
-    fireEvent.click(menu.querySelector(".as-menu__apri") as HTMLElement)
-    fireEvent.click(within(menu).getAllByRole("menuitemradio")[1] as HTMLElement)
-    expect(pagina.querySelector("article.as-parametro")).toBeNull()
+    expect(dettagli(pagina)).toHaveLength(1)
+    fireEvent.click(screen.getByRole("button", { name: "Modello: Automatico" }))
+    fireEvent.click(screen.getAllByRole("menuitemradio")[1] as HTMLElement)
+    expect(dettagli(pagina)).toHaveLength(0)
   })
 
-  it("la Luna fra gli altri fattori non e' un bottone: non ha una carta da aprire", async () => {
-    const luna = misura("moon", {
-      level: "nogo", weighs: true, value: 62, known_hours: 2, known_from_start: false, known_to_end: true,
-      known_since: "2026-09-26T23:00:00+02:00", known_until: "2026-09-27T02:00:00+02:00",
-    })
-    const pagina = await sulTelefono({ ...NOTTE, measures: [...NOTTE.measures, luna] })
-
-    fireEvent.click(within(pagina).getByRole("button", { name: /Altri fattori/ }))
-    const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
-    expect(riquadro.textContent).toContain("Luna")
-    expect(within(riquadro).queryByRole("button", { name: /Luna/ })).toBeNull()
-  })
-
-  it("senza notti il telefono ha la testa degli stati: il sito, da quando e' la previsione, Aggiorna e il modello", async () => {
+  it("senza notti il telefono ha la testa: da quando e' la previsione, Aggiorna e il modello", async () => {
     conNotti()
-    colonna(390)
-    const { container: pagina } = await apriMeteo()
+    await apriMeteoTelefono()
 
-    await within(pagina).findByText("Nessuna notte disponibile per questo modello.")
-    expect(pagina.querySelector(".as-tel-testa")).toBeNull()
-    expect(pagina.querySelector(".as-tel-meteo")).toBeNull()
-    const testa = pagina.querySelector(".as-meteo__testa") as HTMLElement
-    expect(testa.textContent).toContain("meteo a Casa")
-    expect(testa.querySelector(".as-menu--telefono .as-menu__apri")?.textContent).toContain("Automatico")
-    expect(within(testa).getByRole("button", { name: "Aggiorna" })).toBeTruthy()
+    await screen.findByText("Nessuna notte disponibile per questo modello.")
+    const testa = screen.getByRole("region", { name: "Le prossime notti" })
+    expect(within(testa).getByRole("button", { name: /^Previsione Open-Meteo del/ })).toBeTruthy()
+    expect(within(testa).getByRole("button", { name: "Modello: Automatico" })).toBeTruthy()
+    expect(within(testa).getByRole("button", { name: "Aggiorna la previsione" })).toBeTruthy()
+    expect(screen.queryByRole("tablist")).toBeNull()
   })
 
-  it("le raffiche fra gli altri fattori aprono la carta del vento", async () => {
-    const raffiche = misura("gust", { level: "nogo", weighs: true, peak: 45, since: "2026-09-26T21:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 2 })
-    const pagina = await sulTelefono({ ...NOTTE, measures: [...NOTTE.measures.filter((m) => m.code !== "gust"), raffiche] })
+  it("nella fila delle notti le Ore di posa e la finestra stanno su due righe", async () => {
+    await sulTelefono(NOTTE)
 
-    fireEvent.click(within(pagina).getByRole("button", { name: /Altri fattori/ }))
-    fireEvent.click(within(pagina.querySelector(".as-tel-pesanti") as HTMLElement).getByRole("button", { name: /Raffiche/ }))
-    expect(pagina.querySelector("article.as-parametro .as-parametro__nome")?.textContent).toBe("Vento")
-    expect(document.activeElement).toBe(piccola(pagina, "Vento"))
+    const tessera = screen.getAllByRole("tab")[0] as HTMLElement
+    expect(tessera.querySelector(".al-c-striscia__testo-7")?.textContent).toBe("3,0 ore")
+    expect(tessera.querySelector(".al-c-striscia__testo-8")?.textContent).toBe("23–02")
   })
 
-  it("nella fila delle notti le ore serene e la finestra stanno su due righe", async () => {
-    const pagina = await sulTelefono(NOTTE)
+  it("il cielo ha la tela del telefono: le ore ogni quattro, solo i confini del buio, e la legenda senza note", async () => {
+    const ore = [19, 20, 21, 22, 23].map((h) => ora(`2026-09-26T${h}:00:00+02:00`, "dark"))
+    const notte = await sulTelefono({ ...NOTTE, hours: [...ore, ora("2026-09-27T00:00:00+02:00", "dark")] })
 
-    const ore = pagina.querySelector(".as-voce-notte .as-voce-notte__ore") as HTMLElement
-    expect([...ore.children].map((s) => s.textContent)).toEqual(["3 ore", "23–02"])
+    const laNotte = screen.getByRole("region", { name: "La notte" })
+    const sotto = laNotte.querySelector(".al-meteo__riga-26") as HTMLElement
+    expect([...sotto.children].map((s) => s.textContent)).toEqual(["20", "00"])
+    const tela = screen.getByRole("slider", { name: /^Il cielo/ }).parentElement?.parentElement as HTMLElement
+    expect([...(tela.firstElementChild?.children ?? [])].map((s) => s.textContent)).toEqual(["21:00"])
+    fireEvent.click(sulGrafico("pioggia"))
+    expect(laNotte.textContent).toContain("Pioggia")
+    expect(laNotte.textContent).not.toContain("a destra, col colore del giudizio")
+    expect(notte.querySelector(".al-meteo__riga-6")).toBeNull()
   })
 
-  it("il cielo ha la tela del telefono: un'ora si e una no, e la legenda senza la riga della notte", async () => {
-    const ore = Array.from({ length: 6 }, (_, i) => ora(`2026-09-26T${String(19 + i).padStart(2, "0")}:00:00+02:00`, "dark"))
-    const pagina = await sulTelefono({ ...NOTTE, hours: ore })
+  it("una notte in tendenza sul telefono: il buio in grande, e niente carte delle misure", async () => {
+    await sulTelefono(NOTTE, TENDENZA)
 
-    const cielo = pagina.querySelector(".as-cielo") as HTMLElement
-    expect(cielo.querySelector("svg")?.getAttribute("viewBox")).toBe("0 0 358 220")
-    expect([...cielo.querySelectorAll(".as-volta__ora")].map((o) => o.textContent)).toEqual(["19", "21", "23"])
-    expect(cielo.querySelector(".as-cielo__legenda")?.textContent).toBe("bassemediealte")
-    // il nome dice cio' che la tela disegna: l'umidita' solo quando e' accesa
-    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nuvole basse, medie e alte, dal tramonto all'alba")
-    fireEvent.click(within(cielo).getByRole("menuitemcheckbox", { name: /umidit/, hidden: true }))
-    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nuvole basse, medie e alte e umidità, dal tramonto all'alba")
+    fireEvent.click(screen.getAllByRole("tab")[1] as HTMLElement)
+    const notte = await scheda()
+    expect(notte.textContent).toMatch(/Buio · notte di \S+ 29 · tendenza/)
+    expect(notte.querySelector(".al-meteo__testo-25")?.textContent).toBe("8 ore")
+    expect(notte.textContent).toContain("Dalla quarta notte")
+    expect(screen.queryByRole("region", { name: "Le misure" })).toBeNull()
   })
 
-  it("una notte in tendenza ha il verdetto in testa e nessun riquadro da aprire", async () => {
-    const pagina = await sulTelefono(NOTTE, TENDENZA)
-
-    fireEvent.click(within(pagina).getAllByRole("tab")[1] as HTMLElement)
-    const testa = pagina.querySelector(".as-tel-testa") as HTMLElement
-    expect(testa.textContent).toContain("tendenza")
-    expect(within(testa).queryByRole("button", { name: /Altri fattori/ })).toBeNull()
-    expect(pagina.querySelector(".as-tel-carte")).toBeNull()
-    expect((await scheda()).textContent).toContain("Dalla quarta notte")
-  })
-
-  it("cambiando notte la carta aperta e gli altri fattori si chiudono", async () => {
+  it("cambiando notte la carta aperta si chiude", async () => {
     const pagina = await sulTelefono(NOTTE, { ...NOTTE, night: "2026-09-27" })
 
     fireEvent.click(piccola(pagina, "Vento"))
-    fireEvent.click(within(pagina).getByRole("button", { name: /Altri fattori/ }))
-    expect(pagina.querySelector("article.as-parametro")).not.toBeNull()
-    expect((pagina.querySelector(".as-tel-pesanti") as HTMLElement).hidden).toBe(false)
-    fireEvent.click(within(pagina).getAllByRole("tab")[1] as HTMLElement)
-    expect(pagina.querySelector("article.as-parametro")).toBeNull()
-    expect((pagina.querySelector(".as-tel-pesanti") as HTMLElement).hidden).toBe(true)
+    expect(dettagli(pagina)).toHaveLength(1)
+    fireEvent.click(screen.getAllByRole("tab")[1] as HTMLElement)
+    expect(dettagli(pagina)).toHaveLength(0)
+    expect(piccola(pagina, "Vento").getAttribute("aria-expanded")).toBe("false")
   })
 
-  it("l'umidita' si accende dal menu della scala di destra, con le altre voci", async () => {
-    const pagina = await sulTelefono(NOTTE)
+  it("l'umidita' si accende fra le voci di «Sul grafico», con le altre", async () => {
+    await sulTelefono(NOTTE)
 
-    const menu = pagina.querySelector(".as-cielo .as-menu--telefono") as HTMLElement
-    fireEvent.click(menu.querySelector(".as-menu__apri") as HTMLElement)
-    const umidita = within(menu).getByRole("menuitemcheckbox", { name: /umidit/i })
-    expect(umidita.getAttribute("aria-checked")).toBe("false")
-    fireEvent.click(umidita)
-    expect(within(menu).getByRole("menuitemcheckbox", { name: /umidit/i }).getAttribute("aria-checked")).toBe("true")
-    // il bottone a parte e' della pagina larga
-    expect(pagina.querySelector(".as-cielo .as-strati > button.as-strato:not(.as-meteo__solo-largo)")).toBeNull()
+    const voci = within(screen.getByRole("group", { name: "Sul grafico" })).getAllByRole("checkbox")
+    expect(voci.map((v) => v.textContent)).toEqual(["umidità %", "pioggia", "vento", "seeing", "aerosol", "visibilità"])
+    expect(sulGrafico("umidità %").getAttribute("aria-checked")).toBe("false")
+    fireEvent.click(sulGrafico("umidità %"))
+    expect(sulGrafico("umidità %").getAttribute("aria-checked")).toBe("true")
   })
 })

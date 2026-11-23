@@ -493,58 +493,59 @@ la pagina tace invece di scrivere un numero che nessuno ha misurato.
 
 ## Meteo
 
-**Com'e' il cielo nelle prossime notti del tuo sito predefinito, e in quali ore si riprende.** In
-testa leggi per quale sito e' la previsione, **quando e' arrivata** e da quanto (*2 ore fa*), e
-se hai la chiave Meteoblue anche quando e' arrivato il seeing, che ha un'eta' sua. Le ore della
-pagina sono quelle del sito. Accanto scegli il **modello** e c'e' *Aggiorna*.
+**Com'e' il cielo nelle prossime notti del tuo sito predefinito, e quante ore ci riprendi.** In
+testa, nella carta **Le prossime notti**, leggi **quando e' arrivata** la previsione e da quanto
+(*2 ore fa*) e, se hai la chiave Meteoblue, quando e' arrivato il seeing, che ha un'eta' sua. Le
+ore della pagina sono quelle del sito. Accanto scegli il **modello** e con la freccia circolare
+chiedi subito la previsione.
 
-Sotto c'e' la **fila delle sette notti**: ogni notte col suo giorno (*sab 26*), il **semaforo** --
-*buona*, *incerta*, *non adatta* -- e le ore serene (*3 ore, 23-02*). Le **prime tre** sono ora per
-ora; dalla quarta alla settima vedi solo la **tendenza** -- il semaforo, le ore di buio, le nuvole
-e l'accordo dei modelli -- perche' cosi' avanti la previsione ora per ora vale poco, e l'app lo
-dice invece di farti credere a ore precise. Tocchi una notte e sotto si apre la sua scheda, una
-alla volta.
+Sotto c'e' la **striscia delle sette notti**: ogni notte col suo giorno (*mer 30*), il verdetto --
+*buona*, *incerta*, *non adatta*, ognuno col suo segno --, cosa permette la Luna, le **ore di
+posa** e le barrette delle nuvole ora per ora. Le **prime tre** sono ora per ora; dalla quarta
+alla settima vedi solo la **tendenza** -- il verdetto, le ore di buio, le nuvole e l'accordo dei
+modelli -- perche' cosi' avanti la previsione ora per ora vale poco, e l'app lo dice invece di
+farti credere a ore precise. Tocchi una notte e la pagina mostra quella.
 
-In testa alla scheda leggi **quante ore di buio sereno** avra' la notte, il semaforo, **da che ora
-a che ora** (*dalle 23:00 alle 02:00, 3 ore*: se il conto e' piu' piccolo dell'intervallo, in mezzo
-c'e' un'ora coperta) e **quanti modelli sono d'accordo**, che e' cio' che ti dice quanto fidarti.
-Il semaforo lo decide la **Trasparenza** della notte, da 0 a 100: quanta luce lasciano passare le
-nuvole e la foschia (l'aerosol) in ogni ora di buio. Un'ora vale 0 se piove, se c'e' nebbia, se le
-nuvole sono oltre la meta' del cielo, se il vento arriva a 29 km/h o le raffiche passano i 25. La
-notte e' la media delle sue ore, ognuna per la parte di buio che contiene: **buona** da 70,
-**incerta** da 40, **non adatta** sotto. Le ore serene restano quelle con al massimo due ottavi
-di cielo coperto.
+Nella carta **della notte** il numero grande sono le **ore di posa**: le ore di buio contate per
+quanta luce lascia passare il cielo, divise fra banda larga e solo banda stretta quando la Luna
+e' alta (*3,1 in banda larga, 1,5 solo banda stretta*). Accanto c'e' il verdetto, sotto cosa
+permette la Luna (*Luna al 62% dalle 23:40 · banda larga fino alle 23:40*) e **quanti modelli
+sono d'accordo**, che e' cio' che ti dice quanto fidarti. Il verdetto lo decide la
+**Trasparenza** della notte, da 0 a 100: quanta luce lasciano passare le nuvole e la foschia
+(l'aerosol) in ogni ora di buio. Un'ora vale 0 se piove, se c'e' nebbia, se le nuvole sono oltre
+la meta' del cielo, se il vento arriva a 29 km/h o le raffiche passano i 25. La notte e' la media
+delle sue ore, ognuna per la parte di buio che contiene: **buona** da 70, **incerta** da 40,
+**non adatta** sotto. In cima alla carta scegli l'**obiettivo**: *Deep sky*, oppure *Sole*, che
+per ora dice che il meteo del Sole arriva col Sistema solare.
 
-Accanto ci sono gli **altri fattori**, che non modificano il verdetto: le misure che in qualche ora della notte
-diventano *incerte* o *non adatte* -- le nuvole basse, la pioggia, il vento, la condensa, il jet stream,
-il seeing, l'aerosol (*molto fosco*) e la Luna (*banda larga al limite* o *consigliata banda stretta*, e solo
-se e' sopra l'orizzonte col buio). Ognuna dice la sua parola e quando. La Luna dice anche quanto e'
-illuminata, in che ore e' su e cosa resta nelle altre: "Luna al 55% dalle 23:00 · banda larga fino
-alle 23:00". In vista ci sono i primi due, i piu' gravi; se ce ne sono altri, **Altri N fattori**
-li apre sotto. Le soglie
+Accanto, in **Gli altri fattori**, ci sono le misure che pesano accanto al verdetto senza
+cambiarlo -- le nuvole basse, la pioggia, il vento, le raffiche, la condensa, il jet stream, il
+seeing, l'aerosol (*molto fosco*) e la Luna (*banda larga al limite* o *consigliata banda stretta*,
+e solo se e' sopra l'orizzonte col buio) --, le piu' gravi prima. Ognuna dice la sua parola e
+quando; toccane una e va sul grafico. La Luna dice anche quanto e' illuminata, in che ore e' su e
+cosa resta nelle altre: "al 55% dalle 23:00 · banda larga fino alle 23:00". In vista ci sono le
+prime due; se ce ne sono altre, **Altri N fattori** le apre sotto. In fondo leggi le ore del buio
+e la Trasparenza della notte. Le soglie
 vengono da convenzioni pubbliche: la scala Beaufort per il vento medio, la regola di chiusura
 dell'osservatorio iTelescope per le raffiche (oltre 25 km/h), le classi di Astronomy Tools per il
 seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, il buio, il grigio e il
 chiaro dell'osservatorio ING (sotto il 25%, fino al 65%, oltre). La condensa, sotto i 3 gradi fra
 aria e rugiada, e' incerta e mai *non adatta*: la scaccia una fascia anticondensa.
 
-Sotto c'e' **il cielo della notte**, dall'ultima ora di giorno all'alba sullo sfondo del
-crepuscolo: le nuvole basse, medie e alte, ognuna dal suo zero perche' si coprono e non si sommano,
-e in cima un tratto chiaro sulle ore di buio sereno. All'apertura ci sono solo le nuvole. L'umidita'
-la accendi col suo interruttore, a tratteggio sulla stessa scala in percento. A destra scegli **una misura alla volta** -- pioggia, vento
-con le raffiche, condensa come aria e rugiada, seeing, jet stream, aerosol -- con la sua scala, le
-soglie tratteggiate e il colore del giudizio ora per ora (per la condensa, la cui soglia e' la
-distanza fra aria e rugiada, si colora la fascia fra le due dove si toccano); un'ora che il servizio
-non da' e' a tratteggio, mai uno zero. Sotto la linea c'e' il **valore di ogni ora** (sul telefono
-di un'ora si' e una no), e accanto all'ultima ora una parola dice quale linea sono le raffiche,
-quale l'aria e quale il punto di rugiada. Il seeing senza chiave c'e' fra le misure ma non si sceglie, e il
-suo bottone dice perche'. La legenda sotto dice solo cio' che e' sul grafico.
-Passando sul cielo, toccandolo o con le frecce, un filo indica l'ora e un riquadro dice i valori;
-**tutte le carte vanno a quell'ora**.
+Sotto il numero c'e' **il cielo della notte**, dal tramonto all'alba sullo sfondo del crepuscolo,
+con le sue ore al minuto: le nuvole basse, medie e alte, ognuna dal suo zero perche' si coprono e
+non si sommano, e la linea della **Trasparenza** ora per ora. Un'ora che il servizio non da' e' a
+tratteggio, mai uno zero. In **Sul grafico** accendi l'umidita', in percento sulla scala di
+sinistra, e **una misura alla volta** sulla scala di destra -- condensa, pioggia, vento, seeing,
+jet stream, aerosol, visibilita' --, col colore del giudizio ora per ora e la sua parola dove
+cambia. Il seeing senza chiave c'e' ma non si accende, e dice perche'. Passando sul cielo,
+toccandolo o con le frecce, un filo indica l'ora e un riquadro dice i valori, fino alle ore di posa
+di quell'ora; **tutte le carte vanno a quell'ora**, ed Esc ti riporta alla notte.
 
-Sotto ci sono le **carte**, ognuna sempre allo stesso posto: nuvole, nuvole basse, condensa, pioggia,
-visibilita', vento, seeing, jet stream e aerosol, e in piccolo temperatura e punto di rugiada,
-polvere e il vento a 700 hPa. La **visibilita'** dice la minima nel buio in chilometri: sotto 1 km
+Sotto ci sono **le misure della notte**, ognuna sempre allo stesso posto: nuvole, nuvole basse,
+condensa, pioggia, visibilita', vento, seeing, jet stream e aerosol; clicchi una carta e la sua
+misura va sul grafico. Poi le **altre misure**, senza giudizio: temperatura e punto di rugiada,
+polveri e il vento a 700 hPa. La **visibilita'** dice la minima nel buio in chilometri: sotto 1 km
 e' **nebbia** (la definizione dei manuali meteo per i piloti della FAA americana e dei bollettini
 METAR), e la carta dice da che
 ora; non tutti i modelli la danno, e allora la carta dice *Non disponibile*. Le sue barrette
@@ -552,7 +553,7 @@ arrivano a 20 km e si schiacciano in alto, cosi' la soglia della nebbia si legge
 limpida. Ogni carta dice il **valore della notte** e cosa vuol dire (*media nel
 buio*, *totale nel buio*, *la minima*), la parola con l'ora in cui comincia (*incerta dalle 22:00,
 non adatta dalle 01:00*), il **picco** con le sue ore, e ha le barrette **ora per ora** dall'ultima ora
-di giorno all'alba, col colore del giudizio di ogni ora e le soglie tratteggiate. Un'ora che il
+di giorno all'alba, col colore del giudizio di ogni ora nel buio. Un'ora che il
 servizio non da' e' a tratteggio, mai uno zero. Tocchi una barretta (o usi le frecce) e la carta va
 a quell'ora e ci resta, col valore e la parola di quell'ora; la *x* la riporta alla notte.
 
@@ -571,29 +572,28 @@ l'ultima volta e la pagina te lo dice. Se il seeing copre solo una parte della n
 dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al giorno, perche' la
 chiave gratuita ha un tetto di chiamate l'anno.
 
-D'estate al nord, dove il buio astronomico non arriva, le ore serene si contano nel buio nautico
-(il Sole sotto i 12 gradi) e la scheda lo dice; ancora piu' a nord, dove manca anche quello, si
-contano col Sole sotto l'orizzonte, e la scheda dice anche questo. Dove il Sole non tramonta legge
-*Nessun buio* e, sotto,
-che non c'e' nessuna ora di buio, senza carte. Se il modello non da' le nuvole di tutte le ore la
-notte dice solo *Non disponibile*, senza ore serene, e sotto perche' non si puo' valutare.
+D'estate al nord, dove il buio astronomico non arriva, le ore di posa si contano nel buio nautico
+(il Sole sotto i 12 gradi) e la notte lo dice: *ore di posa nel buio nautico*; ancora piu' a nord,
+dove manca anche quello, si contano col Sole sotto l'orizzonte, e la notte dice anche questo. Dove
+il Sole non tramonta legge *Nessun buio* e, sotto, che non c'e' nessuna ora di buio, senza carte.
+Se il modello non da' le nuvole di tutte le ore la notte dice solo *Non disponibile*, senza ore di
+posa, e sotto perche' non si puo' valutare.
 
 Il **modello** della previsione: il predefinito e' *Automatico*, quello che il servizio sceglie per il tuo posto,
-oppure l'europeo (ECMWF), il tedesco (ICON) o l'americano (GFS). Sul telefono lo scegli da un
-elenco che dice cos'e' ogni voce. Cambiarlo non chiede niente a nessuno -- ogni previsione li porta
-tutti insieme -- e la scelta resta. Se un modello quella volta non ha dato notti intere, la pagina
-te lo dice e puoi guardarne un altro.
+oppure l'europeo (ECMWF), il tedesco (ICON) o l'americano (GFS), da un elenco che dice cos'e'
+ogni voce. Cambiarlo non chiede niente a nessuno -- ogni previsione li porta tutti insieme -- e la
+scelta resta. Se un modello quella volta non ha dato notti intere, la pagina te lo dice e puoi
+guardarne un altro; se il cambio non riesce, una riga lo dice, dice quale modello resta e c'e'
+*Riprova*.
 
-Sul **telefono** la pagina ha un'altra forma, con gli stessi dati. In testa c'e' il verdetto della
-notte scelta: toccalo e si aprono gli *Altri fattori*; toccando una misura dell'elenco si apre la sua
-carta (le raffiche aprono quella del vento), toccando fuori dall'elenco si richiude. Nella fila
-delle notti le ore serene e la finestra stanno su due righe. Le misure sono carte piccole, quattro per riga,
-ognuna col valore della notte e la sua parola (*non disponibile* se quella misura non arriva): toccane
-una e sotto si apre la carta intera, con le ore e il picco; un'altra la sostituisce. Sul
-grafico del cielo l'umidita' si accende dal menu *Scala di destra*, insieme alle altre voci.
+Sul **telefono** la pagina ha le stesse carte in una colonna, con gli stessi dati. Da quando e'
+arrivata la previsione sta in una riga corta (*Open-Meteo 2 ore fa*) che toccata si allunga. Le
+misure sono carte piccole, due per riga, ognuna col valore della notte e la sua parola: toccane
+una e sotto la coppia si apre il dettaglio, con le barrette da toccare per un'ora, la parola e
+*Metti sul grafico*; la *x* la chiude.
 
 La previsione **arriva da sola** appena hai un sito predefinito, e si rinnova ogni tre ore; con
-*Aggiorna* la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
+la freccia circolare la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
 quella di prima, e una riga sotto la testa dice a che ora e' stata l'ultima richiesta senza risposta e di
 che ora e' la previsione che stai leggendo, con *Aggiorna* accanto per riprovare (e solo li').
 Se invece della previsione di prima non resta nessuna notte valida, la pagina lo dice con un

@@ -355,12 +355,23 @@ def _axis(scale: Scale, shown: Sequence[Hour]) -> tuple[float | None, float | No
 
 
 def _spans(scale: Scale, night: Sequence[Hour], after: dict[str, str]) -> list[Span]:
-    found = []
-    for word in (MARGINAL, NOGO):
-        since, until, count = when(night, lambda h, w=word: level(scale, scale.read(h)) == w, after)
-        if since is not None and until is not None:
-            found.append(Span(word, since, until, count))
-    return sorted(found, key=lambda s: s.since)
+    """Each unbroken run of a bad word, in time order: two runs are two spans, never one
+    interval wider than its hours."""
+    found: list[Span] = []
+    run: list[Hour] = []
+    word: str | None = None
+    for h in [*night, None]:
+        now = None if h is None else level(scale, scale.read(h))
+        bad = now if now in (MARGINAL, NOGO) else None
+        if run and word and bad != word:
+            since, until, count = when(run, lambda _: True, after)
+            if since is not None and until is not None:
+                found.append(Span(word, since, until, count))
+            run = []
+        if h is not None and bad is not None:
+            run.append(h)
+        word = bad
+    return found
 
 
 def _night(

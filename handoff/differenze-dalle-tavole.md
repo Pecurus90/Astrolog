@@ -801,3 +801,41 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
   «Riprova», sopra la pagina; si chiude con la x, Esc o fuori. Prima: non succedeva nulla.
 - **Il primo avvio** (il file del Wizard): senza telaio, lo stesso `Avviso` sta nella colonna del
   primo avvio, come «non risponde» (`appErr`, Primo avvio.dc.html). Prima: pagina bianca.
+
+## Meteo -- La pagina (passo 13, tavola v82, 23/11)
+
+- **Il racconto della notte** (Meteo.dc.html 61-66, 462-499): fuori fino al passo 13.1 (eventi
+  della notte dal backend, testi di Marco). Al suo posto i due fatti che la tavola mostra senza
+  racconto (riga 511): il buio con le sue ore e la Trasparenza della notte.
+- **Il campionamento dei setup** (righe 80-83, 440): fuori fino al passo 14 (seeing rispetto al
+  pavimento del setup, ADR 0039); la tavola usa scale inventate.
+- **Il Sole** (riga 187): «Sole non disponibile» come la tavola; «Meteo apre su» non si salva
+  (gia' scritto sotto Impostazioni). I sette giorni del Sole al passo 46.11.
+- **Il grafico a ore, non a quarti d'ora** (righe 337-338, 538): la tavola interpola le ore a 57
+  punti; l'app disegna le ore che il backend scrive e il filo si sposta di un'ora (una lettura non
+  calcola). Le fasce del crepuscolo invece sono al minuto, scritte con la previsione (`sky_bands`).
+- **Il buio nautico** (riga 516, Oslo): dove manca il buio astronomico l'app conta il buio
+  nautico (ADR 0035, 19/11, piu' recente della tavola) e lo dice: «Ore di posa nel buio nautico»,
+  nei fatti «Buio nautico 22:10-03:20 · mai buio astronomico» (Marco 23/11). Senza nemmeno quello,
+  il testo della tavola «col Sole sotto l'orizzonte», nei fatti «mai buio nautico» (testo nuovo).
+- **«decide il verdetto»** (righe 53-54, 119): blocco che la tavola non riempie mai (`verdict:
+  null`, riga 448): non portato; il verdetto sta nel numero grande.
+- **«Non disponibile» di una misura**: vale il testo della pagina (riga 416, «Il servizio non ha
+  mandato questa misura per la notte: torna col prossimo aggiornamento.») su quello del componente
+  (CardMeteo.dc.html 63, «Non tutti i modelli danno la visibilità.»).
+- **La Luna negli altri fattori**: «Luna» e accanto «al 55% dalle 23:00 · banda larga fino alle
+  23:00», senza ripetere «Luna»; sotto il numero grande la frase intera della tavola.
+- **Le ore nel dettaglio del telefono** (riga 142, scritte a mano 18 21 01 05 07): cinque ore a
+  passo uguale fra le ore disegnate della notte.
+- **La frase Copernicus** in inglese come la tavola (riga 86); prima l'app la traduceva.
+- **Errore dell'app**: «AstroLog non risponde, riprova» con Riprova nella pagina, non nel telaio.
+- **Ore e picchi con i minuti** (righe 375, 384): la tavola scrive «picco 40% alle 05» e «dalle 04
+  alle 06»; l'app «picco 54% tra le 19:00 e le 20:00» e «dalle 19:00 alle 21:00», come la carta
+  della Dashboard (CardMeteo v79, «picco 40% tra le 05 e le 06») e il resto dell'app (l'ora del
+  posto sempre con i minuti): una forma sola per Meteo e Dashboard.
+- **Condensa e temperatura: la minima, non la media** (righe 383, 386): il backend scrive il
+  valore piu' freddo della notte (contratto meteo, «il freddo al suo minimo»), perche' la condensa
+  si decide sull'ora peggiore; la riga sotto lo dice («minimo di temperatura meno punto di
+  rugiada», «minima nel buio»).
+- **La barretta delle ore fuori dal buio nella notte scelta** della striscia: grigia come le altre
+  (`--carta-2`), non `rgba(inchiostro,.25)`; minuzia del componente Striscia, a Design se conta.

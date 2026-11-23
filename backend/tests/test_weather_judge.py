@@ -328,11 +328,13 @@ def test_fog_weighs_beside_the_verdict_with_its_hours():
 
 
 def test_a_measure_says_each_bad_word_with_its_hours():
-    """Vento incerto alle 20 e alle 22, niente alle 21: "incerta dalle 20, niente dalle 21"."""
+    """Vento incerto alle 20 e alle 22, niente alle 21: ogni tratto continuo col suo intervallo,
+    mai un intervallo di tre ore per due (tavola v82, `intervallo` unisce i tratti)."""
     ore = notte({"wind_kmh": 22.0}, {"wind_kmh": 30.0}, {"wind_kmh": 22.0})
     assert misure(ore)["wind"].spans == [
-        judge.Span("marginal", "2026-09-25T20:00:00+02:00", "2026-09-25T23:00:00+02:00", 2),
+        judge.Span("marginal", "2026-09-25T20:00:00+02:00", "2026-09-25T21:00:00+02:00", 1),
         judge.Span("nogo", "2026-09-25T21:00:00+02:00", "2026-09-25T22:00:00+02:00", 1),
+        judge.Span("marginal", "2026-09-25T22:00:00+02:00", "2026-09-25T23:00:00+02:00", 1),
     ]
     assert misure(notte({}))["wind"].spans == []
 

@@ -455,8 +455,8 @@ describe("l accessibilita della prima pagina", () => {
   })
 
   it("e nemmeno il Meteo, con la scheda di una notte aperta", async () => {
-    // Piena, col fattore che dice l'ora e la tabella aperta: la tabella, le intestazioni di riga e
-    // lo switch dei modelli sono proprio le forme che axe guarda.
+    // Piena, col fattore che dice l'ora e la riga del servizio muto: il menu dei modelli, le
+    // spunte "Sul grafico" e le barrette sono proprio le forme che axe guarda.
     const ora = (at: string, sky: string) => ({
       at,
       sky,
@@ -515,6 +515,11 @@ describe("l accessibilita della prima pagina", () => {
               window_hours: 2,
               shown_from: "2026-09-26T22:00:00+02:00",
               shown_until: "2026-09-26T23:00:00+02:00",
+              sky_bands: [{ kind: "dark", starts_at: "2026-09-26T22:00:00+02:00", ends_at: "2026-09-26T23:00:00+02:00" }],
+              dark_hours: 2,
+              without_aerosol: false,
+              exposure_hours: 2,
+              transparency: 80,
               measures: [
                 {
                   code: "wind", level: "go", weighs: false, value: 5, peak: 5,
@@ -544,9 +549,9 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /meteo/i }))
-    // la scheda della notte, coi semafori, le carte e il loro grafico
-    await screen.findByRole("tabpanel")
-    await screen.findAllByRole("article")
+    // la carta della notte col grafico, gli altri fattori e le carte con le loro barrette
+    await screen.findByRole("region", { name: "La notte" })
+    await screen.findByRole("region", { name: "Le misure" })
 
     expect(await violazioni(container)).toEqual([])
   })

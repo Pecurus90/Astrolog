@@ -15,15 +15,11 @@ src/Attrezzatura.tsx
 src/Avviso.tsx
 src/Backup.tsx
 src/Campo.tsx
-src/CartaDelParametro.tsx
-src/CieloDelleNubi.tsx
 src/FiltriUsati.tsx
 src/GestiDelPezzo.tsx
 src/Icons.tsx
 src/ImpostazioniCartelle.tsx
 src/ImpostazioniLuna.tsx
-src/Meteo.tsx
-src/NotteDelMeteo.tsx
 src/Notti.tsx
 src/Ricerca.tsx
 src/Semaforo.tsx

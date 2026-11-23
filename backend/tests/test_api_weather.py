@@ -6,8 +6,10 @@ chi scrive -- misurato, e' cio' che portava il cancello sopra il suo tetto. Sull
 le prove che la provano davvero: il pulsante, il giro in sottofondo, il servizio muto.
 """
 
+import json
 import logging
 import shutil
+import sqlite3
 import threading
 import time
 from datetime import UTC, datetime, timedelta
@@ -208,7 +210,9 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
     assert len(notti) > 3
     assert [n["trend"] for n in notti[:3]] == [False, False, False]
     assert all(n["hours"] and n["measures"] for n in notti[:3])
-    assert all(n["trend"] and not n["hours"] and not n["measures"] for n in notti[3:])
+    # the trend keeps only the Moon: an ephemeris, not a forecast (tavola v82, Luna in tendenza)
+    assert all(n["trend"] and not n["hours"] for n in notti[3:])
+    assert all({m["code"] for m in n["measures"]} <= {"moon"} for n in notti[3:])
     assert all(n["verdict"] and n["agreement"] for n in notti[3:])
     # la tendenza non porta cio' che si legge dalle ore, e le notti si fermano alla settima
     assert all(n["usable_hours"] is None and n["usable_since"] is None for n in notti[3:])
@@ -217,6 +221,20 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
     detto = letto.get("/api/v1/weather").json()
     assert detto["full_nights"] == 3
     assert {f["source"] for f in detto["sources"]} == {"cams"}
+
+
+def test_a_trend_night_keeps_the_moon_as_written(letto, db_path):
+    """La Luna non e' una previsione: anche la tendenza dice cosa permette (tavola v82, 344)."""
+    notti = letto.get("/api/v1/weather").json()["nights"]
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        scritte = {
+            r["night_date"]: json.loads(r["summary_json"])
+            for r in conn.execute("SELECT night_date, summary_json FROM weather_view")
+        }
+    for n in notti[3:]:
+        luna = [m for m in scritte[n["night"]]["measures"] if m["code"] == "moon"]
+        assert [m["code"] for m in n["measures"]] == [m["code"] for m in luna]
 
 
 def test_every_night_brings_its_sky_bands_as_written(letto):
