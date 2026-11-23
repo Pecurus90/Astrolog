@@ -131,8 +131,9 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
     riga dice le ore in cui e' su e cosa resta nelle altre (Marco, 12/10/2026): "Luna al 55% dalle
     23 · banda larga fino alle 23". Il calendario della Luna usa gli stessi tre gradini
     (`effemeridi.md`). Di fabbrica 25 e 65, dall'orizzonte; i due gradini si cambiano nelle
-    Impostazioni, una casa sola per Meteo e calendario (Marco, 24/10/2026; oggi il Meteo li ha
-    fissi in `judge.py`). Su tutta la notte, solo il dato. Nessuna soglia al
+    Impostazioni, una casa sola per Meteo e calendario (Marco, 24/10/2026; `config.moon_rule`,
+    prova `test_weather_and_calendar_read_the_same_setting`). Su tutta la notte, solo il dato.
+    Nessuna soglia al
     75% per la banda stretta: e' un'abitudine riportata da una fonte sola (Telescope Live), non una
     convenzione.
   - visibilita': niente sotto 1 km, la nebbia (FAA-H-8083-28, 18.1.1: "less than 5/8 sm (1 km)";

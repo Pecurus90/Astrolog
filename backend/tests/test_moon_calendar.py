@@ -229,6 +229,22 @@ def test_changing_the_percentages_rewrites_the_steps_at_once(db_path, scritto):
         assert row["moon_level"] == atteso, row["night_date"]
 
 
+def test_weather_and_calendar_read_the_same_setting(db_path, scritto):
+    """Una casa sola (Marco 24/10): la regola cambiata arriva uguale al Meteo e al calendario."""
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.patch(
+            "/api/v1/settings", json={"values": {"moon_good_pct": 10, "moon_limit_pct": 50}}
+        )
+        assert r.status_code == 200, r.text
+        scale = {s["code"]: s["steps"] for s in c.get("/api/v1/weather").json()["scales"]}
+        calendario = c.get("/api/v1/moon/calendar").json()
+    assert scale["moon"] == [
+        {"level": "nogo", "bound": 50.0, "strict": False},
+        {"level": "marginal", "bound": 10.0, "strict": False},
+    ]
+    assert (calendario["good_pct"], calendario["limit_pct"]) == (10, 50)
+
+
 def test_a_higher_floor_gives_more_dark_without_the_moon(db_path, scritto):
     """'La Luna conta sopra' 10 gradi: sotto i 10 non conta, il buio senza Luna cresce."""
     prima = {r["night_date"]: r["moonless_dark_s"] for r in righe(scritto)}
