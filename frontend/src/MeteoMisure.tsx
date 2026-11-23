@@ -242,17 +242,18 @@ export function ComeVa({
         <span className={tel ? "al-meteo__testo-14" : "al-meteo__testo-2"}>{f.testo}</span>
       </>
     )
-    const classe = tel
-      ? aperta
-        ? "al-meteo__colonna-19"
-        : "al-meteo__colonna-20"
-      : aperta
-        ? "al-meteo__colonna-7"
-        : "al-meteo__colonna-8"
     return f.mette ? (
       <a
         key={f.code}
-        className={classe}
+        className={
+          tel
+            ? aperta
+              ? "al-meteo__colonna-19"
+              : "al-meteo__colonna-20"
+            : aperta
+              ? "al-meteo__colonna-7"
+              : "al-meteo__colonna-8"
+        }
         href="#"
         role="button"
         title={t("meteo.card.plot")}
@@ -264,7 +265,18 @@ export function ComeVa({
         {dentro}
       </a>
     ) : (
-      <span key={f.code} className={classe}>
+      <span
+        key={f.code}
+        className={
+          tel
+            ? aperta
+              ? "al-meteo__colonna-19"
+              : "al-meteo__colonna-20"
+            : aperta
+              ? "al-meteo__colonna-7"
+              : "al-meteo__colonna-8"
+        }
+      >
         {dentro}
       </span>
     )
@@ -295,7 +307,11 @@ export function ComeVa({
       role="button"
       aria-expanded={altri}
       onClick={gesto(() => setAltri(!altri))}
-      className={`al-bottone al-bottone--tenue${tel ? "" : " al-bottone--piccolo"} al-bottone--blocco al-bottone--a-sinistra al-meteo__blocco-7`}
+      className={
+        tel
+          ? "al-bottone al-bottone--tenue al-bottone--blocco al-bottone--a-sinistra al-meteo__blocco-7"
+          : "al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra al-meteo__blocco-7"
+      }
     >
       {t(resto.length === 1 ? "weather.weighs.more.one" : "weather.weighs.more", {
         n: numero(resto.length),
@@ -520,7 +536,7 @@ export function LeMisure({
           formato="telefono"
           compatta
           stato={k.stato.stato}
-          parole={k.stato.parole}
+          dette={k.stato.parole}
           nome={k.nome}
           valore={k.valore}
           unita={k.unita}
@@ -590,7 +606,7 @@ export function LeMisure({
             <CardMeteo
               key={k.code}
               stato={k.stato.stato}
-              parole={k.stato.parole}
+              dette={k.stato.parole}
               nome={k.nome}
               valore={k.valore}
               unita={k.unita}

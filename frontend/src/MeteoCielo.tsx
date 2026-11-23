@@ -1,5 +1,6 @@
 import { type KeyboardEvent, type MouseEvent, type TouchEvent, useState } from "react"
 
+import { confiniDi, FasceDelCielo, OreDeiConfini, ScalaDelCielo } from "./CieloFasce"
 import { ESITO } from "./DashboardDati"
 import { type Chiave, numero, oraDelSito, t, unDecimale } from "./i18n"
 import {
@@ -22,7 +23,6 @@ import {
  */
 
 const W = 1000
-const LIVELLO = { day: 0, civil: 1, nautical: 2, astronomical: 3, dark: 4 } as const
 const COLORE = ["var(--buono-testo)", "var(--incerto-testo)", "var(--non-adatto-testo)"] as const
 const FONDO = ["var(--buono-fondo)", "var(--incerto-fondo)", "var(--non-adatto-fondo)"] as const
 const SEGNO = ["\u2713", "!", "\u2715"] as const
@@ -99,11 +99,7 @@ export function MeteoCielo({
   const CH = telefono ? 180 : 250
 
   const fasce = n.sky_bands ?? []
-  const confini = fasce.slice(1).map((b, k) => ({
-    x: x(b.starts_at),
-    l: oraDelSito(b.starts_at),
-    forte: b.kind === "dark" || fasce[k]?.kind === "dark",
-  }))
+  const confini = confiniDi(fasce, x)
   const etichette = telefono ? confini.filter((c) => c.forte) : confini
 
   // the first hour without the clouds: hatched from there, and said
@@ -220,50 +216,9 @@ export function MeteoCielo({
 
   return (
     <div style={{ position: "relative", paddingTop: 34 }}>
-      <div
-        style={{
-          position: "absolute",
-          left: PADL,
-          right: PADR,
-          top: 0,
-          height: 34,
-          pointerEvents: "none",
-        }}
-      >
-        {etichette.map((b, k) => (
-          <span
-            key={b.x}
-            style={{
-              position: "absolute",
-              left: `${b.x / 10}%`,
-              top: k % 2 ? 17 : 0,
-              transform: "translateX(-50%)",
-              fontSize: 11,
-              color: "var(--prot-tenue)",
-              whiteSpace: "nowrap",
-              fontWeight: b.forte ? 600 : 400,
-            }}
-          >
-            {b.l}
-          </span>
-        ))}
-      </div>
+      <OreDeiConfini confini={etichette} sinistra={PADL} destra={PADR} />
       <div style={{ position: "relative", height: CH }}>
-        {["100%", "50%", "0"].map((l, k) => (
-          <span
-            key={l}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: `${[5, 51.25, 97.5][k]}%`,
-              transform: "translateY(-50%)",
-              fontSize: 11,
-              color: "var(--prot-tenue)",
-            }}
-          >
-            {l}
-          </span>
-        ))}
+        <ScalaDelCielo etichette={["100%", "50%", "0"]} />
         <div
           onMouseMove={interattivo ? muovi : undefined}
           onMouseLeave={interattivo && !telefono ? () => scegliOra(null) : undefined}
@@ -325,43 +280,7 @@ export function MeteoCielo({
                 />
               </pattern>
             </defs>
-            {fasce.map((b) => (
-              <rect
-                key={b.starts_at}
-                x={x(b.starts_at)}
-                y={0}
-                width={Math.max(0, x(b.ends_at) - x(b.starts_at))}
-                height={200}
-                fill="var(--banda-colore)"
-                style={{ fillOpacity: `var(--banda-${LIVELLO[b.kind]})` }}
-              />
-            ))}
-            {confini.map((b) => (
-              <line
-                key={b.x}
-                x1={b.x}
-                x2={b.x}
-                y1={0}
-                y2={200}
-                stroke="var(--prot-tenue)"
-                strokeOpacity={0.45}
-                vectorEffect="non-scaling-stroke"
-                strokeDasharray="1 3"
-              />
-            ))}
-            {[10, 102.5, 195].map((yy) => (
-              <line
-                key={yy}
-                x1={0}
-                x2={1000}
-                y1={yy}
-                y2={yy}
-                stroke="var(--prot-tenue)"
-                strokeOpacity={0.25}
-                vectorEffect="non-scaling-stroke"
-                strokeDasharray="2 4"
-              />
-            ))}
+            <FasceDelCielo fasce={fasce} confini={confini} x={x} />
             {!n.trend &&
               STRATI.map((s) => {
                 const p = punti((o) => o[s.campo])

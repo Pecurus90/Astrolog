@@ -1,5 +1,6 @@
 import { type KeyboardEvent, type MouseEvent, type TouchEvent, useState } from "react"
 
+import { confiniDi, FasceDelCielo, OreDeiConfini, ScalaDelCielo } from "./CieloFasce"
 import { Carta } from "./componenti/Carta"
 import { PillolaScelta } from "./componenti/PillolaScelta"
 import { Ripresa } from "./componenti/Ripresa"
@@ -34,7 +35,6 @@ type Serie = {
 }
 
 const W = 1000
-const LIVELLO = { day: 0, civil: 1, nautical: 2, astronomical: 3, dark: 4 } as const
 const PIANETI = ["saturn", "jupiter", "mars", "venus"] as const
 const COLORE_PIANETA = {
   saturn: "var(--pianeta-0)",
@@ -301,11 +301,7 @@ export function DashboardNotte({
   const fasce = s.sky_bands.filter(
     (b) => Date.parse(b.ends_at) > t0 && Date.parse(b.starts_at) < t1,
   )
-  const confini = fasce.slice(1).map((b, k) => ({
-    x: x(b.starts_at),
-    l: oraDelSito(b.starts_at),
-    forte: b.kind === "dark" || fasce[k]?.kind === "dark",
-  }))
+  const confini = confiniDi(fasce, x)
   const mostrati = tel
     ? confini.filter((_, k) => k === 0 || k === confini.length - 1 || confini[k]?.forte)
     : confini
@@ -422,53 +418,15 @@ export function DashboardNotte({
 
   const grafico = chart && (
     <div style={{ position: "relative", paddingTop: 34 }}>
-      <div
-        style={{
-          position: "absolute",
-          left: PADL,
-          right: 0,
-          top: 0,
-          height: 34,
-          pointerEvents: "none",
-        }}
-      >
-        {mostrati.map((b, k) => (
-          <span
-            key={b.x}
-            style={{
-              position: "absolute",
-              left: `${b.x / 10}%`,
-              top: k % 2 ? 17 : 0,
-              transform: "translateX(-50%)",
-              fontSize: 11,
-              color: "var(--prot-tenue)",
-              whiteSpace: "nowrap",
-              fontWeight: b.forte ? 600 : 400,
-            }}
-          >
-            {b.l}
-          </span>
-        ))}
-      </div>
+      <OreDeiConfini confini={mostrati} sinistra={PADL} />
       <div style={{ position: "relative", height: CH }}>
-        {(v === "notte"
-          ? ["100", "50", "0"]
-          : [ZENIT_DEG, ZENIT_DEG / 2, 0].map((g) => `${g}\u00b0`)
-        ).map((l, k) => (
-          <span
-            key={l}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: `${[5, 51.25, 97.5][k]}%`,
-              transform: "translateY(-50%)",
-              fontSize: 11,
-              color: "var(--prot-tenue)",
-            }}
-          >
-            {l}
-          </span>
-        ))}
+        <ScalaDelCielo
+          etichette={
+            v === "notte"
+              ? ["100", "50", "0"]
+              : [ZENIT_DEG, ZENIT_DEG / 2, 0].map((g) => `${g}\u00b0`)
+          }
+        />
         <div
           onMouseMove={muovi}
           onTouchStart={muovi}
@@ -518,43 +476,7 @@ export function DashboardNotte({
                 <stop offset="100%" stopColor="var(--prot-barra)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            {fasce.map((b) => (
-              <rect
-                key={b.starts_at}
-                x={x(b.starts_at)}
-                y={0}
-                width={x(b.ends_at) - x(b.starts_at)}
-                height={200}
-                fill="var(--banda-colore)"
-                style={{ fillOpacity: `var(--banda-${LIVELLO[b.kind]})` }}
-              />
-            ))}
-            {confini.map((b) => (
-              <line
-                key={b.x}
-                x1={b.x}
-                x2={b.x}
-                y1={0}
-                y2={200}
-                stroke="var(--prot-tenue)"
-                strokeOpacity={0.45}
-                vectorEffect="non-scaling-stroke"
-                strokeDasharray="1 3"
-              />
-            ))}
-            {[10, 102.5, 195].map((yy) => (
-              <line
-                key={yy}
-                x1={0}
-                x2={1000}
-                y1={yy}
-                y2={yy}
-                stroke="var(--prot-tenue)"
-                strokeOpacity={0.25}
-                vectorEffect="non-scaling-stroke"
-                strokeDasharray="2 4"
-              />
-            ))}
+            <FasceDelCielo fasce={fasce} confini={confini} x={x} />
             {area && <path d={area} fill="url(#dash-area)" />}
             {serie.map((sr, k) => (
               <path

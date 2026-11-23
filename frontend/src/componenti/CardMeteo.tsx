@@ -74,7 +74,7 @@ export function CardMeteo({
   giudizio,
   link,
   impostazioni = "/impostazioni/servizi",
-  parole,
+  dette,
   anello,
   etichetta,
   aggiornamento,
@@ -101,7 +101,7 @@ export function CardMeteo({
   link?: string
   /** Where the key states send. */
   impostazioni?: string
-  parole?: ParoleDellAvviso | undefined
+  dette?: ParoleDellAvviso | undefined
   /** The colour of the measure on the chart. */
   anello?: string | undefined
   /** "sul grafico". */
@@ -138,7 +138,7 @@ export function CardMeteo({
   const pillola = av
     ? {
         esito: (av.segno === "!" ? 2 : "mancante") as Esito,
-        testo: parole?.pillola ?? t(`ui.weather.${av.k}.pill` as Chiave),
+        testo: dette?.pillola ?? t(`ui.weather.${av.k}.pill` as Chiave),
       }
     : { esito, testo: giudizio ?? t("ui.outcome.good") }
   const barre = av
@@ -277,11 +277,11 @@ export function CardMeteo({
             </span>
             <span className="al-c-card-meteo__colonna-5">
               <b className="al-c-card-meteo__testo-4">
-                {parole?.titolo ?? t(`ui.weather.${av.k}.title` as Chiave)}
+                {dette?.titolo ?? t(`ui.weather.${av.k}.title` as Chiave)}
               </b>
-              {(parole?.testo ?? (av.testo ? t(`ui.weather.${av.k}.text` as Chiave) : "")) && (
+              {(dette?.testo ?? (av.testo ? t(`ui.weather.${av.k}.text` as Chiave) : "")) && (
                 <span className="al-c-card-meteo__testo-5">
-                  {parole?.testo ?? t(`ui.weather.${av.k}.text` as Chiave)}
+                  {dette?.testo ?? t(`ui.weather.${av.k}.text` as Chiave)}
                 </span>
               )}
             </span>
