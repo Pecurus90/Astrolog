@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 from ..clock import now_iso
-from ..levels import MoonRule
+from ..levels import MOON_BRIGHT_PCT, MOON_GREY_PCT, MoonRule
 from ..twilight import RISESET_DEG
 
 
@@ -15,6 +15,11 @@ class Key(NamedTuple):
     factory: str | int | None
     # where the factory value comes from: a public convention or a product choice
     source: str
+
+
+def _fraction(pct: float) -> str:
+    """ING writes the Moon as a lit fraction: 25 -> "0,25", Italian comma."""
+    return f"{pct / 100:.2f}".replace(".", ",")
 
 
 KEYS: dict[str, Key] = {
@@ -47,15 +52,15 @@ KEYS: dict[str, Key] = {
     ),
     "moon_good_pct": Key(
         int,
-        25,  # [C ING Technical Note 127: dark time lit fraction under 0.25]
+        int(MOON_GREY_PCT),
         "banda larga buona con la Luna sotto questa percentuale, come il buio dell'osservatorio"
-        " ING (illuminata sotto lo 0,25)",
+        f" ING (illuminata sotto lo {_fraction(MOON_GREY_PCT)})",
     ),
     "moon_limit_pct": Key(
         int,
-        65,  # [C ING Technical Note 127: grey time to 0.65, then bright]
+        int(MOON_BRIGHT_PCT),
         "banda larga al limite fino a questa percentuale, poi solo banda stretta: il grigio di"
-        " ING (fino allo 0,65)",
+        f" ING (fino allo {_fraction(MOON_BRIGHT_PCT)})",
     ),
     "moon_above_deg": Key(
         int,

@@ -12,7 +12,7 @@ from typing import get_args
 
 import pytest
 
-from astrolog import astap, net, place
+from astrolog import astap, levels, net, place
 from astrolog.api import archive as api_archive
 from astrolog.api import (
     instrument_answer,
@@ -25,6 +25,7 @@ from astrolog.api import (
     models_weather,
 )
 from astrolog.api import weather as api_weather
+from astrolog.db import config
 from astrolog.db.connect import SCHEMA_PATH
 from astrolog.ephemeris import moon, sun
 from astrolog.fits.frame_type import FrameType
@@ -49,7 +50,7 @@ from astrolog.spine.scan_store import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
 from astrolog.vocab.instruments import FilterSize, InstrumentKind, OpticalDesign
-from astrolog.weather import fetches, forecast, judge, verdict
+from astrolog.weather import fetches, forecast, judge, score, verdict
 from astrolog.worker.worker import STRUCTURAL_KEYS, State
 from conftest import add_folder
 
@@ -417,6 +418,31 @@ def test_the_weather_words_are_the_same_in_the_models_and_the_weather_package():
     assert set(get_args(models_weather.RefreshStatus)) == set(forecast.Outcome) | {
         net.Failure.UNREACHABLE
     }
+
+
+def test_the_night_score_and_moon_numbers_live_in_one_home():
+    """70/40 in `weather/score.py`, 25/65 in `levels.py`: the API prose and the factory settings
+    read them, so a changed step cannot leave a stale number behind."""
+    sky = models_weather.WeatherSkyOut.model_fields
+    verdict_text = sky["verdict"].description or ""
+    assert f"go from {score.GOOD_FROM:g}" in verdict_text
+    assert f"marginal from {score.UNCERTAIN_FROM:g}" in verdict_text
+    assert f"{levels.MOON_BRIGHT_PCT:g}%" in (sky["narrowband_exposure_hours"].description or "")
+    assert config.KEYS["moon_good_pct"].factory == levels.MOON_GREY_PCT
+    assert config.KEYS["moon_limit_pct"].factory == levels.MOON_BRIGHT_PCT
+    numbers = {score.GOOD_FROM, score.UNCERTAIN_FROM, levels.MOON_GREY_PCT, levels.MOON_BRIGHT_PCT}
+    api_models = Path(inspect.getfile(models_weather)).parent.glob("models*.py")
+    for path in (*api_models, Path(inspect.getfile(config))):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        literals = {
+            n.value
+            for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, int | float)
+        }
+        assert not literals & numbers, path.name
+        texts = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant)]
+        prose = " ".join(t for t in texts if isinstance(t, str))
+        assert not re.search(r"\b(70|40|65)\b|\b25/", prose), path.name
 
 
 def test_the_nights_and_archive_words_are_the_same_in_the_routes_and_the_spine():

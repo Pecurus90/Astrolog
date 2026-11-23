@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+from ..levels import MOON_BRIGHT_PCT, MOON_GREY_PCT
 from .models_weather import WeatherBriefOut
 
 # Repeated rather than imported from `ephemeris`, so the route contract does not change shape with
@@ -48,8 +49,9 @@ class MoonCalendarNightOut(BaseModel):
         description="As `MoonOut.lit_side`, for the day's disc."
     )
     level: Literal["go", "marginal", "nogo"] = Field(
-        description="The Moon's step on the settings' Moon rule (factory ING 25/65): broadband "
-        "good, broadband marginal, narrowband only.",
+        description="The Moon's step on the Moon rule of the Settings (factory ING "
+        f"{MOON_GREY_PCT:g}/{MOON_BRIGHT_PCT:g}): broadband good, broadband marginal, "
+        "narrowband only.",
     )
     shots: list[MoonCalendarShotOut] = Field(default=[], description="Empty: nothing shot.")
 
@@ -204,7 +206,7 @@ class DarkStretchOut(BaseModel):
 
 class MoonInDarkOut(BaseModel):
     """The Moon above the horizon in tonight's dark: from the first instant to the last, with the
-    broadband word of its lit fraction on the Meteo's Moon scale (ING 25/65)."""
+    broadband word of its lit fraction on the Moon rule of the Settings."""
 
     level: Literal["go", "marginal", "nogo"]
     since: str
@@ -215,7 +217,7 @@ class MoonInDarkOut(BaseModel):
 
 class ShootingStretchOut(BaseModel):
     """A stretch of tonight's dark and what the Moon lets you shoot in it: broadband while it is
-    down or below the Meteo's Moon scale's no-go (ING 65%), narrowband only above."""
+    down or below the no-go of the Moon rule of the Settings, narrowband only above."""
 
     band: Literal["broadband", "narrowband"]
     starts_at: str

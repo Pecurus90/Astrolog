@@ -5,6 +5,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from ..levels import MOON_BRIGHT_PCT
+from ..weather.score import GOOD_FROM, UNCERTAIN_FROM
+
 Level = Literal["go", "marginal", "nogo"]
 # Repeated rather than imported from `weather.judge`, so the route contract does not change shape
 # with an internal module; a test holds the two lists equal.
@@ -161,8 +164,8 @@ class WeatherSkyOut(BaseModel):
     same shape serves the forecast (Weather) and the history (Nights)."""
 
     verdict: Literal["go", "marginal", "nogo"] | None = Field(
-        description="From the night's Transparency (score v4, ADR 0034): go from 70, marginal "
-        "from 40, nogo below; null without every window hour's clouds."
+        description=f"From the night's Transparency (score v4, ADR 0034): go from {GOOD_FROM:g}, "
+        f"marginal from {UNCERTAIN_FROM:g}, nogo below; null without every window hour's clouds."
     )
     cloud_total_pct: float | None
     usable_hours: int | None
@@ -182,9 +185,9 @@ class WeatherSkyOut(BaseModel):
     )
     narrowband_exposure_hours: float | None = Field(
         default=None,
-        description="Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale "
-        "(ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where "
-        "the hours do not know the Moon (the history).",
+        description="Of `exposure_hours`, the hours with the Moon up past the Moon rule of the "
+        f"Settings (factory ING, from {MOON_BRIGHT_PCT:g}%): narrowband only. The two add up "
+        "to `exposure_hours`; `None` where the hours do not know the Moon (the history).",
     )
     dark_hours: float = Field(
         default=0.0,

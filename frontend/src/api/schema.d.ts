@@ -3808,7 +3808,7 @@ export interface components {
             lit_side: "left" | "right";
             /**
              * Level
-             * @description The Moon's step on the settings' Moon rule (factory ING 25/65): broadband good, broadband marginal, narrowband only.
+             * @description The Moon's step on the Moon rule of the Settings (factory ING 25/65): broadband good, broadband marginal, narrowband only.
              * @enum {string}
              */
             level: "go" | "marginal" | "nogo";
@@ -3866,7 +3866,7 @@ export interface components {
         /**
          * MoonInDarkOut
          * @description The Moon above the horizon in tonight's dark: from the first instant to the last, with the
-         *     broadband word of its lit fraction on the Meteo's Moon scale (ING 25/65).
+         *     broadband word of its lit fraction on the Moon rule of the Settings.
          */
         MoonInDarkOut: {
             /**
@@ -4416,7 +4416,7 @@ export interface components {
             broadband_exposure_hours?: number | null;
             /**
              * Narrowband Exposure Hours
-             * @description Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale (ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
+             * @description Of `exposure_hours`, the hours with the Moon up past the Moon rule of the Settings (factory ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
              */
             narrowband_exposure_hours?: number | null;
             /**
@@ -5739,7 +5739,7 @@ export interface components {
         /**
          * ShootingStretchOut
          * @description A stretch of tonight's dark and what the Moon lets you shoot in it: broadband while it is
-         *     down or below the Meteo's Moon scale's no-go (ING 65%), narrowband only above.
+         *     down or below the no-go of the Moon rule of the Settings, narrowband only above.
          */
         ShootingStretchOut: {
             /**
@@ -6526,7 +6526,7 @@ export interface components {
             broadband_exposure_hours?: number | null;
             /**
              * Narrowband Exposure Hours
-             * @description Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale (ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
+             * @description Of `exposure_hours`, the hours with the Moon up past the Moon rule of the Settings (factory ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
              */
             narrowband_exposure_hours?: number | null;
             /**
@@ -6778,7 +6778,7 @@ export interface components {
             broadband_exposure_hours?: number | null;
             /**
              * Narrowband Exposure Hours
-             * @description Of `exposure_hours`, the hours with the Moon up past the Meteo's Moon scale (ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
+             * @description Of `exposure_hours`, the hours with the Moon up past the Moon rule of the Settings (factory ING, from 65%): narrowband only. The two add up to `exposure_hours`; `None` where the hours do not know the Moon (the history).
              */
             narrowband_exposure_hours?: number | null;
             /**
