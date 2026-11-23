@@ -346,15 +346,16 @@ def test_the_ceiling_is_the_highest_the_moon_can_ever_get_from_there():
     piu'**. E' il bordo alto del grafico della notte, e dipende solo da dove sei -- per questo la
     stessa scala vale tutte le notti di quel posto, e due notti si confrontano a occhio.
 
-    Vicenza sta a 45,5 gradi e la Luna arriva a 28,6 di declinazione: 90 meno la differenza fa
-    73, che salito al multiplo di quindici fa **75**."""
+    Vicenza sta a 45,5 gradi e il tetto della declinazione e' `MAX_DECLINATION_DEG`, 28,8: 90
+    meno la differenza fa 73,3, che salito al multiplo di quindici fa **75**."""
     assert moon.sky_ceiling(45.5455) == 75
     assert moon.sky_ceiling(38.1) == 90  # Palermo: 80,5 -> 90
     assert moon.sky_ceiling(69.7) == 60  # Tromso: 48,9 -> 60
 
 
 def test_in_the_tropics_the_moon_reaches_the_zenith_and_the_ceiling_stops_at_ninety():
-    """Sotto i 28,6 gradi di latitudine la Luna passa **allo zenit**, e sopra i 90 non si va.
+    """Sotto i 28,8 gradi di latitudine (`MAX_DECLINATION_DEG`) la Luna puo' passare **allo
+    zenit**, e sopra i 90 non si va.
 
     La formula che ci e' arrivata dal disegno -- `90 - |lat| + 28,6` -- non lo sa: alle Canarie
     darebbe 90,5 e a Singapore **117**, cioe' un tetto di 120 contro i 90 che servono. E' la prova

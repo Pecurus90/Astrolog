@@ -46,7 +46,7 @@ const FILTRI = [
 function anno(altro: Record<string, unknown> = {}) {
   const filters = (altro.filters as Filtro[] | undefined) ?? FILTRI
   return {
-    year: 2026, until: "2026-09-30", nights: 41, integration_s: 463200, per_night_s: 11280, per_month: 4.6,
+    year: 2026, previous_year: 2025, until: "2026-09-30", nights: 41, integration_s: 463200, per_night_s: 11280, per_month: 4.6,
     months: MESI, previous_same_period_s: 471600, previous_known: true, vs_previous_s: -8400,
     filters, rows: righeDi(filters),
     ...altro,

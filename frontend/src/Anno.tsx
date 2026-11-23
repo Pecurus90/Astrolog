@@ -178,7 +178,7 @@ function Anello({ anno, telefono }: { anno: Anno; telefono: boolean }) {
 
 function Desktop({ anno }: { anno: Anno }) {
   const a = String(anno.year)
-  const prima = String(anno.year - 1)
+  const prima = String(anno.previous_year)
   const media = anno.per_night_s === null ? "\u2014" : ore(anno.per_night_s)
   return (
     <>
@@ -291,7 +291,7 @@ function Telefono({ anno }: { anno: Anno }) {
       {anno.previous_known && (
         <span className="al-dash__testo-13">
           {t("dashboard.year.tel.vs", {
-            anno: String(anno.year - 1),
+            anno: String(anno.previous_year),
             scarto: scarto(anno.vs_previous_s),
           })}
         </span>

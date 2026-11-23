@@ -9,6 +9,14 @@
 /** Il raggio del disco nel suo `viewBox`, che e' `-12 -12 24 24` come nel foglio. */
 const RAGGIO = 10
 
+/** [C] Lo zenit, il bordo alto dei grafici dell'altezza della Luna. */
+export const ZENIT_DEG = 90
+
+/** L'altezza in centesimi dello zenit; sotto l'orizzonte `-1`, che i grafici posano sul fondo. */
+export function quotaSulloZenit(altezzaDeg: number): number {
+  return altezzaDeg < 0 ? -1 : (altezzaDeg / ZENIT_DEG) * 100
+}
+
 /**
  * Il tracciato della parte illuminata, o `null` quando non c'e' niente da illuminare.
  *

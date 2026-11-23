@@ -19,6 +19,7 @@ import {
   ripresaDellaNotte,
 } from "./DashboardDati"
 import { useCalendario } from "./DashboardLuna"
+import { quotaSulloZenit } from "./disegnoDellaLuna"
 import {
   type Chiave,
   fa,
@@ -301,7 +302,7 @@ function Curva({ notte: n }: { notte: NotteMeteo }) {
   const luna = (n.moon_track ?? [])
     .map((p, i) => {
       const x = ((Date.parse(p.at) - t0) / 3_600_000 + 0.5) * passo
-      const v = p.altitude_deg < 0 ? -1 : (p.altitude_deg / 90) * 100
+      const v = quotaSulloZenit(p.altitude_deg)
       return `${i ? "L" : "M"}${x.toFixed(1)} ${y(v).toFixed(1)}`
     })
     .join(" ")

@@ -275,7 +275,7 @@ export function WizardSite({ sito, formato }: { sito: Sito; formato: Formato }) 
             onScrivi={campi.setLat}
             onLascia={lascia("lat")}
             segnaposto={t("site.latPlaceholder")}
-            errore={lasciati["lat"] ? campi.fuoriScala(campi.lat, "lat", 90) : undefined}
+            errore={lasciati["lat"] ? campi.fuoriScala(campi.lat, "lat") : undefined}
           />
           <CampoAvvio
             id="pa-lon"
@@ -284,7 +284,7 @@ export function WizardSite({ sito, formato }: { sito: Sito; formato: Formato }) 
             onScrivi={campi.setLon}
             onLascia={lascia("lon")}
             segnaposto={t("site.lonPlaceholder")}
-            errore={lasciati["lon"] ? campi.fuoriScala(campi.lon, "lon", 180) : undefined}
+            errore={lasciati["lon"] ? campi.fuoriScala(campi.lon, "lon") : undefined}
           />
         </div>
         <span className="al-avvio__testo-12">{t("wizard.site.coordsHelp")}</span>

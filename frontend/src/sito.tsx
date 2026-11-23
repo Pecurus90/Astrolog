@@ -10,6 +10,9 @@ type Posto = components["schemas"]["PlaceOut"]
 export const CLASSI = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 export type ClasseDiCielo = (typeof CLASSI)[number]
 
+/** [C WGS 84] latitude up to 90 degrees from the equator, longitude up to 180 from Greenwich. */
+export const TETTO: Record<Asse, number> = { lat: 90, lon: 180 }
+
 /**
  * A site being written at the first run: name, point, sky.
  *
@@ -30,12 +33,12 @@ export function useCampiDelSito() {
   // coordinates taken from a place found by name, until someone rewrites them by hand
   const [trovate, setTrovate] = useState(false)
 
-  const fuoriScala = (scritto: string, asse: Asse, tetto: number) => {
+  const fuoriScala = (scritto: string, asse: Asse) => {
     if (scritto.trim() === "") return undefined
     const n = coordinataDa(scritto, asse)
     if (!Number.isFinite(n)) return t(asse === "lat" ? "site.notANumber" : "site.notANumber.lon")
-    if (Math.abs(n) <= tetto) return undefined
-    return t("site.range", { tetto: numero(tetto) })
+    if (Math.abs(n) <= TETTO[asse]) return undefined
+    return t("site.range", { tetto: numero(TETTO[asse]) })
   }
 
   return {
@@ -61,8 +64,8 @@ export function useCampiDelSito() {
       nome.trim() !== "" &&
       Number.isFinite(coordinataDa(lat, "lat")) &&
       Number.isFinite(coordinataDa(lon, "lon")) &&
-      fuoriScala(lat, "lat", 90) === undefined &&
-      fuoriScala(lon, "lon", 180) === undefined,
+      fuoriScala(lat, "lat") === undefined &&
+      fuoriScala(lon, "lon") === undefined,
     /** What goes to the API. The class is not stored: the backend derives the brightness. */
     corpo: () => ({
       name: nome.trim(),

@@ -75,6 +75,7 @@ _NAMED_ROWS = 5  # [D tavola v81, Dashboard:558]
 @dataclass(frozen=True, slots=True)
 class Year:
     year: int
+    previous_year: int
     until: str
     nights: int
     integration_s: int
@@ -190,7 +191,8 @@ def of(conn: sqlite3.Connection, today: dt.date) -> Year:
     frame is a night all the same."""
     shot = _per_date(conn, dt.date(today.year, 1, 1), today)
     total = round(sum(shot.values()))
-    before = _per_date(conn, dt.date(today.year - 1, 1, 1), dt.date(today.year - 1, 12, 31))
+    previous = today.year - 1
+    before = _per_date(conn, dt.date(previous, 1, 1), dt.date(previous, 12, 31))
     period_before = round(
         sum(s for d, s in before.items() if d <= _same_day_before(today).isoformat())
     )
@@ -199,6 +201,7 @@ def of(conn: sqlite3.Connection, today: dt.date) -> Year:
     shares = _filters(conn, today)
     return Year(
         year=today.year,
+        previous_year=previous,
         until=today.isoformat(),
         nights=len(shot),
         integration_s=total,

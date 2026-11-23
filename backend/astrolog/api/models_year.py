@@ -48,6 +48,7 @@ class YearOut(BaseModel):
     """The year so far: what the Dashboard's year section shows, already counted."""
 
     year: int
+    previous_year: int = Field(description="The year the dashed bars and the comparison name.")
     until: str = Field(description="Today's night date, the last day counted.")
     nights: int
     integration_s: int

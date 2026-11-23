@@ -82,6 +82,8 @@ def test_the_year_before_month_by_month_and_in_the_same_period(conn):
     assert anno.previous_same_period_s == 7200
     # «128 h 40 contro 131 h · −2 h 20»: la differenza col segno, gia' fatta
     assert (anno.previous_known, anno.vs_previous_s) == (True, 23400 - 7200)
+    # la legenda nomina l'anno prima: arriva fatto, lo schermo non sottrae
+    assert anno.previous_year == anno.year - 1
 
 
 def test_without_the_year_before_there_is_nothing_to_compare(conn):
@@ -219,6 +221,7 @@ def test_the_route_answers_the_year_of_the_home_site(db_path, conn):
     detto = r.json()
     assert set(detto) == {
         "year",
+        "previous_year",
         "until",
         "nights",
         "integration_s",

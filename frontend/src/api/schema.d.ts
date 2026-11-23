@@ -7097,6 +7097,11 @@ export interface components {
             /** Year */
             year: number;
             /**
+             * Previous Year
+             * @description The year the dashed bars and the comparison name.
+             */
+            previous_year: number;
+            /**
              * Until
              * @description Today's night date, the last day counted.
              */

@@ -14,6 +14,7 @@ import {
   ripresaDiStanotte,
   sottoDellaNotte,
 } from "./DashboardDati"
+import { quotaSulloZenit, ZENIT_DEG } from "./disegnoDellaLuna"
 import { giornoDelMese, numero, oraDelSito, oreEMinuti, t } from "./i18n"
 import { buioDellaNotte, trattiDelBuio, trattiSenzaLuna } from "./Stanotte"
 
@@ -192,13 +193,13 @@ export function DashboardNotte({
     return ms >= t0 && ms <= t1
   }
   const passi = (s.moon?.track ?? []).filter((p) => dentro(p.at))
-  const vmax = v === "notte" ? 100 : 90
+  const vmax = v === "notte" ? 100 : ZENIT_DEG
   const ore = (notte?.hours ?? []).filter((o) => o.transparency != null && dentro(o.at))
   const luna: Serie = {
     n: t("dashboard.chart.moon.name"),
     punti: passi.map((p) => ({
       x: x(p.at),
-      v: p.altitude_deg < 0 ? -1 : v === "notte" ? (p.altitude_deg / 90) * 100 : p.altitude_deg,
+      v: v === "notte" ? quotaSulloZenit(p.altitude_deg) : p.altitude_deg < 0 ? -1 : p.altitude_deg,
     })),
     c: LUNA,
     tratteggio: true,
@@ -450,7 +451,10 @@ export function DashboardNotte({
         ))}
       </div>
       <div style={{ position: "relative", height: CH }}>
-        {(v === "notte" ? ["100", "50", "0"] : ["90\u00b0", "45\u00b0", "0\u00b0"]).map((l, k) => (
+        {(v === "notte"
+          ? ["100", "50", "0"]
+          : [ZENIT_DEG, ZENIT_DEG / 2, 0].map((g) => `${g}\u00b0`)
+        ).map((l, k) => (
           <span
             key={l}
             style={{

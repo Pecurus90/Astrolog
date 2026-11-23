@@ -10,7 +10,7 @@ import type { components } from "./api/schema"
 import { useScriviSito, useSitoScelto } from "./ImpostazioniSiti"
 import { fuso, Riga } from "./ImpostazioniSitiSito"
 import { coordinataDa, coordinate, numero, t } from "./i18n"
-import { useCercaPosto } from "./sito"
+import { TETTO, useCercaPosto } from "./sito"
 
 type Posto = components["schemas"]["PlaceOut"]
 type Per = "nome" | "coord"
@@ -19,7 +19,10 @@ type Per = "nome" | "coord"
 function punto(lat: string, lon: string): { lat: number; lon: number } | null {
   const a = coordinataDa(lat, "lat")
   const o = coordinataDa(lon, "lon")
-  return Number.isFinite(a) && Number.isFinite(o) && Math.abs(a) <= 90 && Math.abs(o) <= 180
+  return Number.isFinite(a) &&
+    Number.isFinite(o) &&
+    Math.abs(a) <= TETTO.lat &&
+    Math.abs(o) <= TETTO.lon
     ? { lat: a, lon: o }
     : null
 }

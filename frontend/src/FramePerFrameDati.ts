@@ -3,6 +3,7 @@
  * barra per frame, la prima misura piena, la seconda tratteggiata con la sua scala. Solo
  * geometria: valori, estremi e mediane arrivano dall'API; qui si mettono sull'asse.
  */
+import { ZENIT_DEG } from "./disegnoDellaLuna"
 import { decimali, numero } from "./i18n"
 import {
   type FrameMisurato,
@@ -188,7 +189,7 @@ export function disegno(q: Richiesta): Disegno {
     const lu = f.values.moon_altitude_deg
     // sotto l'orizzonte sull'asse, come la tavola (157); senza altezza la linea si interrompe
     if (q.luna && lu !== undefined) {
-      const y = g.bot - (Math.max(0, lu) / 90) * (g.bot - g.top)
+      const y = g.bot - (Math.max(0, lu) / ZENIT_DEG) * (g.bot - g.top)
       out.dL += `${lunaPrima ? "L" : "M"}${n1(x)} ${n1(y)}`
     }
     lunaPrima = lu !== undefined
