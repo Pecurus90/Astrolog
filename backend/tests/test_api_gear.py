@@ -176,8 +176,6 @@ def test_a_piece_the_files_name_on_every_frame_has_its_hours(archivio, genere):
 
     assert pezzo["frames"] == 2
     assert pezzo["integration_s"] == 600.0
-    assert pezzo["nights"] == 1
-    assert [o["key"] for o in pezzo["objects"]] == ["m-31"]
 
 
 def test_a_kind_no_frame_of_yours_names_has_hours_the_app_cannot_know(db_path):
@@ -204,11 +202,9 @@ def test_a_kind_no_frame_of_yours_names_has_hours_the_app_cannot_know(db_path):
     assert ruota["no_hours"] == "files_silent"
 
 
-def test_a_frame_with_no_rig_still_says_what_you_shot_with_the_wheel(db_path):
-    """Una posa che nomina la ruota ma **non ha corredo** -- l'header non dice la camera -- deve
-    comunque raccontare cosa ci hai ripreso. La giunzione sui corredi va fatta in modo che quella
-    posa non sparisca: con una giunzione secca resterebbe fuori, e la riga della ruota direbbe
-    "1 posa" e **nessun oggetto**, cioe' un numero senza la sua storia.
+def test_a_frame_with_no_rig_still_gives_the_wheel_its_hours(db_path):
+    """Una posa che nomina la ruota ma **non ha corredo** -- l'header non dice la camera -- conta
+    comunque nelle ore della ruota: con una giunzione secca sui corredi resterebbe fuori.
 
     E' il caso di chi riprende con N.I.N.A. senza `INSTRUME`: il corredo non nasce, la ruota si'."""
     conn = connect(db_path)
@@ -229,34 +225,7 @@ def test_a_frame_with_no_rig_still_says_what_you_shot_with_the_wheel(db_path):
         scritta = pezzi(gear(client), "filter_wheel")[0]
 
     assert scritta["frames"] == 1
-    assert [o["key"] for o in scritta["objects"]] == ["m-31"]
-
-
-def test_the_objects_of_a_piece_do_not_search_the_rigs_row_by_row(db_path):
-    """Il piano di quella query non deve cercare i corredi **una volta per coppia** (posa, pezzo).
-
-    E' la ragione per cui esiste la forma giunta del legame, e il piano e' deterministico: si
-    chiede a SQLite invece di cronometrare, che su una macchina lenta direbbe un altro numero."""
-    conn = connect(db_path)
-    try:
-        prepara(conn)
-        # L'elenco vero, non un `(1)` finto: con una costante SQLite sceglie un altro ordine di
-        # giunzione, e il piano che si guarderebbe non sarebbe quello che gira.
-        with idlist.holding(conn, [1]) as elencati:
-            piano = [
-                r["detail"]
-                for r in conn.execute(
-                    "EXPLAIN QUERY PLAN " + gear_usage._PIECE_OBJECTS.replace("{listed}", elencati)
-                )
-            ]
-    finally:
-        conn.close()
-
-    # Il segno della ricerca riga per riga e' **`CORRELATED LIST SUBQUERY`**: nella forma in uso
-    # non c'e' (la sotto-select degli id e' una `LIST SUBQUERY` e basta, e le due `CORRELATED
-    # SCALAR` sono i nomi degli oggetti), nella forma sabotata compare. Si guarda quel segno e non
-    # il nome della tabella, che a seconda della versione SQLite stampa come alias o per esteso.
-    assert not any("CORRELATED LIST SUBQUERY" in r for r in piano), piano
+    assert scritta["integration_s"] == 300.0
 
 
 def test_the_shapes_of_the_link_pick_the_same_frames(archivio):
@@ -304,41 +273,23 @@ def test_the_page_lists_the_gear_you_own(archivio):
 
 
 def test_a_piece_says_how_much_you_shot_with_it(archivio):
-    """Ore, frame e notti di ogni pezzo: e' il consuntivo per cui la pagina esiste. Le ore
-    escono dalla stessa casa che le conta per oggetto e per notte, non da un conto suo."""
+    """Le ore di ogni pezzo: e' il consuntivo per cui la pagina esiste. Le ore escono dalla
+    stessa casa che le conta per oggetto e per notte, non da un conto suo."""
     corredo_letto = gear(archivio)["rigs"][0]
 
-    assert corredo_letto["frames"] == 2
     assert corredo_letto["integration_s"] == 600.0
-    assert corredo_letto["nights"] == 1
 
 
-def test_a_piece_says_what_you_shot_with_it(archivio):
-    """Cosa ci hai ripreso, **dal piu' ripreso**: e' il modo in cui si riconosce un pezzo
-    guardandolo, piu' di quanto non lo facciano marca e modello. Vale per il corredo, per
-    l'ottica e la camera che lo compongono, e per il filtro."""
+def test_a_rig_a_piece_and_a_filter_say_only_their_hours(archivio):
+    """Di setup, pezzi e filtri la pagina dice **solo le ore** (Marco, 11/10 e 24/10/2026): notti
+    e oggetti non escono, e il setup non dice i suoi frame. Pezzi e filtri tengono `frames` solo
+    per i gesti, Unisci ed Elimina, che dicono quanti frame si spostano o li usano."""
     pagina = gear(archivio)
+    righe = [*pagina["rigs"], *pagina["instruments"], *pagina["filters"]]
 
-    assert [o["key"] for o in pagina["rigs"][0]["objects"]] == ["m-31"]
-    assert [o["key"] for o in pezzi(pagina, "optics")[0]["objects"]] == ["m-31"]
-    assert [o["key"] for o in pagina["filters"][0]["objects"]] == ["m-31"]
-    assert pezzi(pagina, "mount")[0]["objects"] == [], "senza ore non c'e' nemmeno un oggetto"
-
-
-def test_what_a_piece_shot_comes_most_shot_first(archivio):
-    """Two objects, the most shot by time first even with fewer frames: one object alone could not
-    tell the order from none (`counts.ORDER_BY_TIME`)."""
-    with db(archivio) as conn:
-        rig, ha = conn.execute("SELECT rig_id, filter_id FROM frames LIMIT 1").fetchone()
-        posa(conn, quando="2024-05-19T22:00:00Z", oggetto=2, corredo=rig, filtro_id=ha,
-             esposizione=1200.0, hash_="m45")  # fmt: skip
-        gear_usage.write(conn)  # come a fine giro di uno stadio
-        conn.commit()
-    pagina = gear(archivio)
-
-    assert [o["key"] for o in pagina["rigs"][0]["objects"]] == ["m-45", "m-31"]
-    assert [o["key"] for o in pezzi(pagina, "optics")[0]["objects"]] == ["m-45", "m-31"]
-    assert [o["key"] for o in pagina["filters"][0]["objects"]] == ["m-45", "m-31"]
+    assert righe
+    assert all("nights" not in r and "objects" not in r for r in righe)
+    assert all("frames" not in r for r in pagina["rigs"])
 
 
 def test_the_hours_of_a_piece_come_from_its_rigs(archivio):
@@ -359,7 +310,7 @@ def test_the_hours_of_a_piece_come_from_its_rigs(archivio):
         conn.commit()
 
     ottica = next(p for p in pezzi(gear(archivio), "optics") if p["name"] == "TS 130 APO")
-    assert (ottica["frames"], ottica["integration_s"], ottica["nights"]) == (2, 600.0, 1)
+    assert (ottica["frames"], ottica["integration_s"]) == (2, 600.0)
 
 
 def test_a_piece_on_two_rigs_does_not_count_its_hours_twice(archivio):
@@ -449,7 +400,7 @@ def test_a_rig_that_never_shot_says_nothing_about_the_sky(archivio):
 
     nuovo = next(r for r in gear(archivio)["rigs"] if r["optics"] == "RC8")
     assert nuovo["scale_arcsec_px"] is None
-    assert nuovo["width_deg"] is None and nuovo["frames"] == 0
+    assert nuovo["width_deg"] is None and nuovo["integration_s"] == 0
 
 
 def test_a_mount_has_no_hours_and_the_page_says_why(archivio):
@@ -513,7 +464,7 @@ def test_a_rewritten_copy_is_not_another_hour_of_gear(archivio):
         conn.commit()
 
     dopo = gear(archivio)["rigs"][0]
-    assert (dopo["frames"], dopo["integration_s"]) == (prima["frames"], prima["integration_s"])
+    assert dopo["integration_s"] == prima["integration_s"]
 
 
 def test_a_frame_without_a_time_is_not_zero_hours_of_gear(archivio):
@@ -531,8 +482,8 @@ def test_a_frame_without_a_time_is_not_zero_hours_of_gear(archivio):
 
 def test_the_page_counts_nothing_and_the_writer_asks_per_page(archivio):
     """La pagina non conta niente: legge cio' che la spina ha scritto (Marco, 22/9/2026). E chi
-    scrive chiede gli oggetti di ogni pezzo **per elenco, non per pezzo**: tre elenchi e il cielo
-    dei corredi, quattro domande, che ci sia un corredo o venti.
+    scrive chiede il cielo dei corredi **per elenco, non per corredo**: una domanda, che ci sia un
+    corredo o venti.
 
     La guardia e' sul **numero di chiamate**, non sul tempo: un tempo dipende dalla macchina, il
     conto no -- e cambia subito se un domani la domanda finisse dentro il giro dei pezzi."""
@@ -557,7 +508,7 @@ def test_the_page_counts_nothing_and_the_writer_asks_per_page(archivio):
             gear_usage.write(conn)
 
     assert len(pagina["rigs"]) > 10, "servono abbastanza pezzi perche' la domanda abbia senso"
-    assert len(quante) == 4, f"pezzi, corredi (oggetti e cielo) e filtri: {quante}"
+    assert len(quante) == 1, f"il cielo dei corredi: {quante}"
 
 
 def test_an_empty_gear_page_is_an_answer_not_an_error(db_path):
@@ -571,7 +522,7 @@ def test_an_empty_gear_page_is_an_answer_not_an_error(db_path):
 
 def test_a_mount_carried_by_the_frames_has_their_hours(archivio):
     """Quando le pose portano la montatura -- perche' il file la nomina o perche' l'hai data al
-    corredo -- la montatura ha ore, notti e cosa ci hai ripreso, come gli altri pezzi."""
+    corredo -- la montatura ha ore, come gli altri pezzi."""
     with db(archivio) as conn:
         montatura = conn.execute("SELECT id FROM instruments WHERE kind = 'mount'").fetchone()[0]
         conn.execute("UPDATE frames SET mount_id = ?", (montatura,))
@@ -579,8 +530,7 @@ def test_a_mount_carried_by_the_frames_has_their_hours(archivio):
         conn.commit()
 
     montata = pezzi(gear(archivio), "mount")[0]
-    assert (montata["frames"], montata["integration_s"], montata["nights"]) == (2, 600.0, 1)
-    assert [o["key"] for o in montata["objects"]] == ["m-31"]
+    assert (montata["frames"], montata["integration_s"]) == (2, 600.0)
 
 
 def test_a_mount_no_frame_carries_says_so_even_where_others_have_hours(archivio):

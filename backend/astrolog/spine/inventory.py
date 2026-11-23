@@ -8,8 +8,10 @@ from typing import Any
 from . import filters_used, gear
 from . import rigs as gear_rigs
 
-_USAGE = """u.frames, u.integration_s, u.untimed, u.nights, u.scale_arcsec_px, u.width_deg,
-       u.height_deg, u.objects_json, u.bar_pct"""
+# the row is there once counted: a LEFT JOIN without it reads not yet
+COUNTED = "u.subject IS NOT NULL AS counted"
+_USAGE = f"""u.frames, u.integration_s, u.untimed, u.scale_arcsec_px, u.width_deg,
+       u.height_deg, u.bar_pct, {COUNTED}"""
 
 _INSTRUMENTS = f"""
 SELECT i.*, {_USAGE}
@@ -181,7 +183,7 @@ def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
 def no_hours(r: sqlite3.Row) -> str | None:
     """A mount, reducer or guide scope without frames is not "the files are silent": no rig
     carries it yet, even where others of its kind have hours."""
-    if r["objects_json"] is None:
+    if not r["counted"]:
         return None  # not counted yet: `counted` says so
     if r["kind"] in gear_rigs.NEEDS_A_RIG and not r["frames"]:
         return "no_rig"
@@ -246,7 +248,6 @@ def filters(conn: sqlite3.Connection) -> list[dict[str, Any]]:
 
 
 def _row(r: sqlite3.Row) -> dict[str, Any]:
-    row = {k: r[k] for k in r.keys() if k != "objects_json"}  # noqa: SIM118 - Row iterates values
-    row["counted"] = r["objects_json"] is not None
-    row["objects"] = json.loads(r["objects_json"] or "[]")
+    row = {k: r[k] for k in r.keys()}  # noqa: SIM118 - Row iterates values
+    row["counted"] = bool(r["counted"])
     return row

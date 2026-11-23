@@ -184,13 +184,13 @@ def _why(readings: list[tuple[int | None, int, int | None]], objects: Found) -> 
 
 
 # Pieces and filters you own, with what the counter wrote; "no filter" is not one.
-_GEAR = """
+_GEAR = f"""
 SELECT * FROM (
-  SELECT i.id, i.kind, i.name, u.frames, u.integration_s, u.untimed, u.objects_json
+  SELECT i.id, i.kind, i.name, u.frames, u.integration_s, u.untimed, {inventory.COUNTED}
   FROM instruments i
   LEFT JOIN gear_usage u ON u.subject = 'instrument' AND u.subject_id = i.id
   UNION ALL
-  SELECT x.id, 'filter', x.name, u.frames, u.integration_s, u.untimed, u.objects_json
+  SELECT x.id, 'filter', x.name, u.frames, u.integration_s, u.untimed, {inventory.COUNTED}
   FROM filters x
   LEFT JOIN gear_usage u ON u.subject = 'filter' AND u.subject_id = x.id
   WHERE x.is_none = 0
@@ -209,7 +209,7 @@ def _gear(conn: sqlite3.Connection, pattern: str, limit: int) -> tuple[list[dict
             "id": r["id"],
             "kind": r["kind"],
             "name": r["name"],
-            "counted": r["objects_json"] is not None,
+            "counted": bool(r["counted"]),
             "frames": r["frames"],
             "integration_s": r["integration_s"],
             "untimed": r["untimed"],

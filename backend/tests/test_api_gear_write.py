@@ -500,7 +500,7 @@ def test_you_can_write_a_rig_before_shooting_with_it(archivio):
     nuovo = next(
         r for r in archivio.get("/api/v1/gear").json()["rigs"] if r["camera"] == "ASI533MC"
     )
-    assert (nuovo["optics"], nuovo["focal_mm"], nuovo["frames"], nuovo["counted"]) == (
+    assert (nuovo["optics"], nuovo["focal_mm"], nuovo["integration_s"], nuovo["counted"]) == (
         "TS 130 APO",
         910.0,
         0,

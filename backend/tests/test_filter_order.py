@@ -99,8 +99,7 @@ def test_the_gear_page_lists_your_filters_in_the_one_order(conn):
     banco(conn)
     for n, (fid,) in enumerate(conn.execute("SELECT id FROM filters ORDER BY id").fetchall()):
         conn.execute(
-            "INSERT INTO gear_usage(subject, subject_id, frames, objects_json)"
-            " VALUES('filter', ?, ?, '[]')",
+            "INSERT INTO gear_usage(subject, subject_id, frames) VALUES('filter', ?, ?)",
             (fid, n + 1),
         )
 

@@ -811,19 +811,18 @@ CREATE TABLE scan_runs (
 -- ogni stadio che cambia i frame, `spine/gear_usage.py`, e la pagina Attrezzatura lo legge e
 -- basta). `subject_id` e' l'id della riga di `instruments`, `rigs` o `filters`: niente chiave
 -- esterna, perche' punta a tre tabelle, e chi legge parte da quelle -- una riga orfana non si
--- vede. NULL nei quattro conteggi vuol dire "l'app non puo' saperlo", non zero; una riga che
+-- vede. NULL nei tre conteggi vuol dire "l'app non puo' saperlo", non zero; una riga che
 -- manca vuol dire "non ancora contato" (un pezzo nato a meta' giro), che e' un'altra cosa.
+-- La pagina mostra solo le ore (Marco, 24/10/2026): i frame servono ai gesti, Unisci ed Elimina.
 CREATE TABLE gear_usage (
   subject         TEXT NOT NULL CHECK (subject IN ('instrument', 'rig', 'filter')),
   subject_id      INTEGER NOT NULL,
   frames          INTEGER,
   integration_s   REAL,
   untimed         INTEGER,
-  nights          INTEGER,
   scale_arcsec_px REAL,                            -- solo i corredi: la mediana del cielo misurato
   width_deg       REAL,
   height_deg      REAL,
-  objects_json    TEXT NOT NULL DEFAULT '[]',      -- cosa ci hai ripreso, dal piu' ripreso
   -- la barra delle ore sul piu' usato del gruppo (setup, filtri, pezzi per genere), 3-100;
   -- NULL senza ore note. La riscrive `gear_usage.write_bars` dopo ogni scrittura dell'uso
   bar_pct         REAL,

@@ -173,8 +173,8 @@ def test_a_piece_and_a_filter_are_found_by_name_with_what_is_known_of_them(banco
     camera = attrezzo(banco, "camera", "ZWO ASI2600MM Pro")
     ha = filtro(banco, "Ha 3nm")
     banco.execute(
-        "INSERT INTO gear_usage(subject, subject_id, frames, integration_s, untimed, nights,"
-        " objects_json) VALUES('filter', ?, 4, 1200.0, 0, 2, '[]')",
+        "INSERT INTO gear_usage(subject, subject_id, frames, integration_s, untimed)"
+        " VALUES('filter', ?, 4, 1200.0, 0)",
         (ha,),
     )
 
@@ -258,8 +258,8 @@ def test_the_examples_come_from_your_own_archive(banco):
     attrezzo(banco, "camera", "ZWO ASI2600MM Pro")
     ha = filtro(banco, "Ha 3nm")
     banco.execute(
-        "INSERT INTO gear_usage(subject, subject_id, frames, integration_s, untimed, nights,"
-        " objects_json) VALUES('filter', ?, 4, 1200.0, 0, 2, '[]')",
+        "INSERT INTO gear_usage(subject, subject_id, frames, integration_s, untimed)"
+        " VALUES('filter', ?, 4, 1200.0, 0)",
         (ha,),
     )
 

@@ -115,7 +115,7 @@ backfocus, setup, Deep sky.
 | un setup simulato nel Planner, mai salvato | `trial_rig` | setup di prova | -- (e' `weather.state` (`ok`, `waiting`, `unknown`)) |
 | la dimensione di un pixel del sensore, senza binning: e' quella della scheda della camera | `instruments.pixel_size_um` | dimensione del pixel | pitch |
 | la stessa grandezza come l'header la scrive (`XPIXSZ`), col binning gia' dentro: sta sul frame | `frames.pixel_size_um` | -- | pixel fisico |
-| quanto e' servito ogni pezzo, setup e filtro -- frame, ore, notti, oggetti, e per i setup il cielo misurato -- scritto a fine giro di ogni stadio e letto dall'Attrezzatura | `gear_usage` | quanto ti e' servito | statistiche (e' `/statistiche`), contatori |
+| quanto e' servito ogni pezzo, setup e filtro -- frame e ore, e per i setup il cielo misurato -- scritto a fine giro di ogni stadio e letto dall'Attrezzatura | `gear_usage` | quanto ti e' servito | statistiche (e' `/statistiche`), contatori |
 | i candidati del cielo di una scheda dell'oggetto in dubbio, o di frame detti "non e' un oggetto", dal piu' probabile: li scrive `spine/object_candidates.py` e li legge Da confermare | `object_candidates` | candidati | proposte, suggerimenti |
 | se chi conta ha gia' contato un pezzo: falso per uno nato a meta' giro, che la pagina dice "si sta contando" e non "non si sa" | `counted` | conteggio in corso | si sta contando, in attesa, pending |
 | il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del setup e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel (calcolato) | pixel ricavato dal cielo, pixel stimato |

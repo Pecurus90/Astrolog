@@ -51,8 +51,6 @@ export const OTTICA = {
   frames: 120,
   integration_s: 36000,
   untimed: 0,
-  nights: 7,
-  objects: [{ key: "m-31", name: "M 31", frames: 120, integration_s: 36000 }],
   counted: true,
 }
 
@@ -68,8 +66,6 @@ export const MONTATURA = {
   frames: null,
   integration_s: null,
   untimed: null,
-  nights: null,
-  objects: [],
 }
 
 const manca = (kind: string, field: string | null) => ({ missing: { kind, field } })
@@ -96,11 +92,8 @@ export const CORREDO = {
   optics: "TS 130 APO",
   camera: "ASI2600MM",
   focal_mm: 910,
-  frames: 120,
   integration_s: 36000,
   untimed: 0,
-  nights: 7,
-  objects: [{ key: "m-31", name: "M 31", frames: 120, integration_s: 36000 }],
   counted: true,
   scale_arcsec_px: 0.85,
   width_deg: 1.5,
@@ -141,8 +134,6 @@ export const FILTRO = {
   frames: 60,
   integration_s: 18000,
   untimed: 0,
-  nights: 4,
-  objects: [{ key: "m-42", name: "M 42", frames: 60, integration_s: 18000 }],
   counted: true,
   mergeable_into: [] as number[],
 }

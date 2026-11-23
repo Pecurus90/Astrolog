@@ -2568,17 +2568,13 @@ export interface components {
             fast_optics: boolean | null;
             /**
              * Frames
-             * @description Null until it is counted (`counted`). The same holds for `integration_s`, `untimed` and `nights`.
+             * @description Null until it is counted (`counted`). The same holds for `integration_s` and `untimed`. The row shows only the hours: the frames are for merge and delete.
              */
             frames: number | null;
             /** Integration S */
             integration_s: number | null;
             /** Untimed */
             untimed: number | null;
-            /** Nights */
-            nights: number | null;
-            /** Objects */
-            objects: components["schemas"]["GearObject"][];
             /** Counted */
             counted: boolean;
             /**
@@ -3014,20 +3010,6 @@ export interface components {
             };
         };
         /**
-         * GearObject
-         * @description An object taken with that piece, and how much it weighed in.
-         */
-        GearObject: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string | null;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-        };
-        /**
          * GearSignature
          * @description The frames whose files leave out camera, optics or filter, one card per **header
          *     signature**: the spelling of camera and telescope, the focal, the sensor -- never the night or
@@ -3387,17 +3369,13 @@ export interface components {
             mergeable_into: number[];
             /**
              * Frames
-             * @description Null where the link with the frames does not exist: a kind that no frame in **this archive** names does not have zero hours, it has hours the app does not know -- and whoever shows the row says so. The spine decides it, not this shape. The same holds for `integration_s`, `untimed` and `nights`.
+             * @description Null where the link with the frames does not exist: a kind that no frame in **this archive** names does not have zero hours, it has hours the app does not know -- and whoever shows the row says so. The spine decides it, not this shape. The same holds for `integration_s` and `untimed`. The row shows only the hours (Marco, 24/10/2026): the frames are for the gestures, merge and delete.
              */
             frames: number | null;
             /** Integration S */
             integration_s: number | null;
             /** Untimed */
             untimed: number | null;
-            /** Nights */
-            nights: number | null;
-            /** Objects */
-            objects: components["schemas"]["GearObject"][];
             /**
              * Counted
              * @description False for a piece born mid-run, which the counter has not counted yet: "not counted yet" is not "cannot be known", and the page tells them apart.
@@ -5204,18 +5182,12 @@ export interface components {
             /** Focal Mm */
             focal_mm: number | null;
             /**
-             * Frames
-             * @description Null until it is counted (`counted`): a rig born mid-run. The same holds for `integration_s`, `untimed` and `nights`.
+             * Integration S
+             * @description Null until it is counted (`counted`): a rig born mid-run; `untimed` too. Only the hours (Marco, 24/10/2026).
              */
-            frames: number | null;
-            /** Integration S */
             integration_s: number | null;
             /** Untimed */
             untimed: number | null;
-            /** Nights */
-            nights: number | null;
-            /** Objects */
-            objects: components["schemas"]["GearObject"][];
             /** Counted */
             counted: boolean;
             /**

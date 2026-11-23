@@ -116,7 +116,7 @@ def test_a_piece_not_yet_counted_says_so_and_not_that_the_files_are_silent(clien
     nata = by_name(pagina["instruments"], "Appena nata")
     assert (nata["counted"], nata["frames"]) == (False, None)
     corredo = next(r for r in pagina["rigs"] if r["focal_mm"] == 333.0)
-    assert (corredo["counted"], corredo["frames"]) == (False, None)
+    assert (corredo["counted"], corredo["integration_s"]) == (False, None)
     scritto = client.post("/api/v1/gear/instruments", json={"kind": "reducer", "name": "0.8x"})
     assert scritto.status_code == 201, scritto.text
     riduttore = by_name(gear(client)["instruments"], "0.8x")
@@ -215,23 +215,28 @@ def test_normalize_closes_each_round_once(client, monkeypatch):
 
 
 @pytest.mark.parametrize(("voci", "attese"), [(22080, [1]), (0, [])])
-def test_a_new_catalog_rewrites_the_names_it_gives(db_path, monkeypatch, voci, attese):
-    """I nomi degli oggetti scritti nell'uso vengono anche dal catalogo: se all'avvio ne entra uno
-    nuovo si riscrive, se era gia' quello non si riconta niente."""
+def test_a_new_catalog_rewrites_the_names_it_gives_and_not_the_gear(
+    db_path, monkeypatch, voci, attese
+):
+    """I candidati delle domande nominano oggetti del catalogo: se all'avvio ne entra uno nuovo si
+    riscrivono, se era gia' quello niente. L'uso dell'attrezzatura dice solo ore, nessun nome:
+    non si riconta."""
     from astrolog.api import app
     from astrolog.catalog import load as catalog_load
+    from astrolog.spine import object_candidates
 
-    chiamate = []
+    chiamate, contati = [], []
     monkeypatch.setattr(catalog_load, "load_catalog", lambda conn: voci)
-    monkeypatch.setattr(gear_usage, "write", lambda conn: chiamate.append(1))
+    monkeypatch.setattr(object_candidates, "write", lambda conn: chiamate.append(1))
+    monkeypatch.setattr(gear_usage, "write", lambda conn: contati.append(1))
     app._load_catalog(db_path)
-    assert chiamate == attese
+    assert (chiamate, contati) == (attese, [])
 
 
-def test_calibration_answered_takes_its_night_object_and_sky_off_the_gear(conn):
-    """ "Sono file di calibrazione" stacca notte, oggetto e cielo da quei frame, e nessuno stadio li
-    lavora dopo: l'uso si riscrive nella risposta stessa, o l'Attrezzatura resterebbe a dire la
-    notte, l'oggetto e la scala di un dark."""
+def test_calibration_answered_takes_its_sky_off_the_gear(conn):
+    """ "Sono file di calibrazione" stacca il cielo da quei frame, e nessuno stadio li lavora
+    dopo: l'uso si riscrive nella risposta stessa, o l'Attrezzatura resterebbe a dire la scala di
+    un dark."""
     radice = add_folder(conn, "D:/Astro")
     corredo = conn.execute("INSERT INTO rigs(focal_mm, created_at) VALUES(500.0, 'ora')").lastrowid
     oggetto = conn.execute(
@@ -253,14 +258,14 @@ def test_calibration_answered_takes_its_night_object_and_sky_off_the_gear(conn):
 
     def uso():
         return conn.execute(
-            "SELECT scale_arcsec_px, objects_json, nights FROM gear_usage WHERE subject = 'rig'"
-        ).fetchone()
+            "SELECT scale_arcsec_px FROM gear_usage WHERE subject = 'rig'"
+        ).fetchone()[0]
 
-    assert tuple(uso())[0] is not None and tuple(uso())[2] == 1
+    assert uso() is not None
     typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     typeless_folders.write(conn)  # come a fine stadio: risolta dal cielo, chiede solo se risposta
     typeless_answer.apply_answer(conn, typeless.row_of(conn, "D:/Astro/dark"))
-    assert tuple(uso()) == (None, "[]", 0)
+    assert uso() is None
 
 
 @pytest.mark.parametrize(
@@ -281,13 +286,14 @@ def test_a_derived_table_that_fails_does_not_say_the_catalog_failed(db_path, mon
     o chi cerca il guasto lo cerca nel catalogo, che e' a posto."""
     from astrolog.api import app
     from astrolog.catalog import load as catalog_load
+    from astrolog.spine import object_candidates
 
     def rotta(conn):
-        raise RuntimeError("uso")
+        raise RuntimeError("candidati")
 
     monkeypatch.setattr(catalog_load, "load_catalog", lambda conn: 22080)
-    monkeypatch.setattr(gear_usage, "write", rotta)
+    monkeypatch.setattr(object_candidates, "write", rotta)
     with caplog.at_level("ERROR"):
         app._load_catalog(db_path)
     assert "catalogo: non si e' potuto caricare" not in caplog.text
-    assert "catalogo caricato, ma l'uso e i candidati" in caplog.text
+    assert "catalogo caricato, ma i criteri e i candidati" in caplog.text

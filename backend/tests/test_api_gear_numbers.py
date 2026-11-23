@@ -114,7 +114,8 @@ def test_a_rig_has_all_its_spacers_with_the_rigs_hours(archivio):
     parti = [p for p in il_setup(archivio)["parts"] if p["kind"] == "spacer"]
     assert {p["id"] for p in parti} == {lungo, corto}
     assert all(p["chosen"] for p in parti)
-    assert pezzo(archivio, "spacer", "Distanziale 10 mm")["frames"] == il_setup(archivio)["frames"]
+    ore = pezzo(archivio, "spacer", "Distanziale 10 mm")["integration_s"]
+    assert ore == il_setup(archivio)["integration_s"]
 
 
 def test_spacers_follow_a_rename_and_an_empty_list_takes_them_off(archivio):

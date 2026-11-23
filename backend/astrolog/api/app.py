@@ -29,7 +29,6 @@ from ..db.transaction import transaction
 from ..site_of import Site, home_site
 from ..spine import (
     archive_criteria,
-    gear_usage,
     moon_calendar,
     night_moons,
     object_candidates,
@@ -208,14 +207,13 @@ def _load_catalog(db_path: str | Path) -> None:
                 stages.invalidate(
                     conn, stages.passed_by(conn, StageName.IDENTIFY), StageName.IDENTIFY
                 )
-            # object names in gear usage and the candidates of the questions come from the catalog
+            # the criteria and the candidates of the questions name objects from the catalog
             try:
-                gear_usage.write(conn)
                 with transaction(conn):
                     archive_criteria.write(conn)
                 object_candidates.write(conn)
             except Exception:
-                log.exception("catalogo caricato, ma l'uso e i candidati che ne vengono no")
+                log.exception("catalogo caricato, ma i criteri e i candidati che ne vengono no")
     finally:
         conn.close()
 

@@ -154,7 +154,6 @@ describe("l Attrezzatura", () => {
           frames: null,
           integration_s: null,
           untimed: null,
-          nights: null,
           counted: false,
         },
         {
@@ -286,10 +285,7 @@ describe("l Attrezzatura", () => {
       rigs: [
         {
           ...CORREDO,
-          frames: 0,
           integration_s: 0,
-          nights: 0,
-          objects: [],
           scale_arcsec_px: null,
           width_deg: null,
           height_deg: null,
@@ -581,7 +577,7 @@ describe("l Attrezzatura", () => {
     attrezzatura({
       instruments: [
         OTTICA,
-        { ...MONTATURA, frames: 120, integration_s: 36000, untimed: 0, nights: 7, no_hours: null },
+        { ...MONTATURA, frames: 120, integration_s: 36000, untimed: 0, no_hours: null },
       ],
     })
     await apriAttrezzatura()
@@ -592,7 +588,7 @@ describe("l Attrezzatura", () => {
 
   it("una montatura che nessuna posa porta, in un archivio dove altre ce l'hanno, non dice zero", async () => {
     attrezzatura({
-      instruments: [OTTICA, { ...MONTATURA, frames: 0, integration_s: 0, untimed: 0, nights: 0 }],
+      instruments: [OTTICA, { ...MONTATURA, frames: 0, integration_s: 0, untimed: 0 }],
     })
     await apriAttrezzatura()
     const montature = await vedi(/montature/i)

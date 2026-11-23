@@ -1261,15 +1261,6 @@
         'model': None,
         'mounted': None,
         'name': 'Lum',
-        'nights': 0,
-        'objects': list([
-          dict({
-            'frames': 4,
-            'integration_s': 480.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-        ]),
         'passband': 'L',
         'thickness_mm': None,
         'untimed': 0,
@@ -1314,21 +1305,6 @@
         'model': None,
         'mounted': None,
         'name': 'R',
-        'nights': 0,
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 240.0,
-            'key': 'M 51',
-            'name': 'M 51',
-          }),
-          dict({
-            'frames': 1,
-            'integration_s': 120.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-        ]),
         'passband': 'R',
         'thickness_mm': None,
         'untimed': 0,
@@ -1367,15 +1343,6 @@
         'model': None,
         'mounted': None,
         'name': 'Hα',
-        'nights': 0,
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 600.0,
-            'key': 'Sh2 155',
-            'name': 'Sh2 155',
-          }),
-        ]),
         'passband': 'HA',
         'thickness_mm': None,
         'untimed': 0,
@@ -1414,9 +1381,6 @@
         'model': None,
         'mounted': None,
         'name': 'OSC',
-        'nights': 0,
-        'objects': list([
-        ]),
         'passband': 'OSC',
         'thickness_mm': None,
         'untimed': 0,
@@ -1455,15 +1419,6 @@
         'model': None,
         'mounted': None,
         'name': 'L-eXtreme',
-        'nights': 0,
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 300.0,
-            'key': 'IC 1396',
-            'name': 'IC 1396',
-          }),
-        ]),
         'passband': 'DUO_HAOIII',
         'thickness_mm': None,
         'untimed': 0,
@@ -1503,15 +1458,6 @@
         'model': None,
         'mounted': None,
         'name': 'N',
-        'nights': 0,
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 300.0,
-            'key': 'NGC 6888',
-            'name': 'NGC 6888',
-          }),
-        ]),
         'passband': 'UNKNOWN',
         'thickness_mm': None,
         'untimed': 0,
@@ -1551,15 +1497,6 @@
         'model': None,
         'mounted': None,
         'name': 'X',
-        'nights': 0,
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 300.0,
-            'key': 'NGC 6888',
-            'name': 'NGC 6888',
-          }),
-        ]),
         'passband': 'UNKNOWN',
         'thickness_mm': None,
         'untimed': 0,
@@ -1611,7 +1548,6 @@
         ]),
         'model': None,
         'name': 'ASI2600MM Pro',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -1626,14 +1562,6 @@
             'width': None,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 600.0,
-            'key': 'Sh2 155',
-            'name': 'Sh2 155',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -1700,7 +1628,6 @@
         ]),
         'model': None,
         'name': 'ATR2600M',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -1712,14 +1639,6 @@
             'width': 0.01504,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 120.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -1786,7 +1705,6 @@
         ]),
         'model': None,
         'name': 'ATR2600M(USB2.0)',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -1798,26 +1716,6 @@
             'width': 0.01504,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 2,
-            'integration_s': 600.0,
-            'key': 'NGC 6888',
-            'name': 'NGC 6888',
-          }),
-          dict({
-            'frames': 4,
-            'integration_s': 480.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-          dict({
-            'frames': 1,
-            'integration_s': 60.0,
-            'key': 'M 42',
-            'name': 'M 42',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -1885,7 +1783,6 @@
         ]),
         'model': None,
         'name': 'Canon EOS 700D',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -1897,14 +1794,6 @@
             'width': 0.01716,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 300.0,
-            'key': 'IC 1396',
-            'name': 'IC 1396',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -1968,7 +1857,6 @@
         ]),
         'model': None,
         'name': 'QHY268M',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -1983,14 +1871,6 @@
             'width': None,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 240.0,
-            'key': 'M 51',
-            'name': 'M 51',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2056,7 +1936,6 @@
         ]),
         'model': None,
         'name': 'ASCOM ToupTek FilterWheel',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2064,26 +1943,6 @@
           'focal_ratio': None,
           'sensor_size': None,
         }),
-        'objects': list([
-          dict({
-            'frames': 5,
-            'integration_s': 600.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-          dict({
-            'frames': 2,
-            'integration_s': 600.0,
-            'key': 'NGC 6888',
-            'name': 'NGC 6888',
-          }),
-          dict({
-            'frames': 1,
-            'integration_s': 60.0,
-            'key': 'M 42',
-            'name': 'M 42',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2149,7 +2008,6 @@
         ]),
         'model': None,
         'name': 'ASCOM ToupTek AAF',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2157,26 +2015,6 @@
           'focal_ratio': None,
           'sensor_size': None,
         }),
-        'objects': list([
-          dict({
-            'frames': 5,
-            'integration_s': 600.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-          dict({
-            'frames': 2,
-            'integration_s': 600.0,
-            'key': 'NGC 6888',
-            'name': 'NGC 6888',
-          }),
-          dict({
-            'frames': 1,
-            'integration_s': 60.0,
-            'key': 'M 42',
-            'name': 'M 42',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2236,7 +2074,6 @@
         ]),
         'model': None,
         'name': 'ZWO ASI120MM-S',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2251,14 +2088,6 @@
             'width': None,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 300.0,
-            'key': 'IC 1396',
-            'name': 'IC 1396',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2319,7 +2148,6 @@
         ]),
         'model': None,
         'name': 'EQMod Mount',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2327,14 +2155,6 @@
           'focal_ratio': None,
           'sensor_size': None,
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 300.0,
-            'key': 'IC 1396',
-            'name': 'IC 1396',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2395,7 +2215,6 @@
         ]),
         'model': None,
         'name': 'ZWO AM3',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2403,8 +2222,6 @@
           'focal_ratio': None,
           'sensor_size': None,
         }),
-        'objects': list([
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2472,7 +2289,6 @@
         ]),
         'model': None,
         'name': 'Askar 103Apo',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2492,26 +2308,6 @@
           }),
           'sensor_size': None,
         }),
-        'objects': list([
-          dict({
-            'frames': 5,
-            'integration_s': 600.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-          dict({
-            'frames': 2,
-            'integration_s': 600.0,
-            'key': 'NGC 6888',
-            'name': 'NGC 6888',
-          }),
-          dict({
-            'frames': 1,
-            'integration_s': 60.0,
-            'key': 'M 42',
-            'name': 'M 42',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2573,7 +2369,6 @@
         ]),
         'model': None,
         'name': 'RC8',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2593,14 +2388,6 @@
           }),
           'sensor_size': None,
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 240.0,
-            'key': 'M 51',
-            'name': 'M 51',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2662,7 +2449,6 @@
         ]),
         'model': None,
         'name': 'TS 130 APO',
-        'nights': 0,
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2682,14 +2468,6 @@
           }),
           'sensor_size': None,
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 600.0,
-            'key': 'Sh2 155',
-            'name': 'Sh2 155',
-          }),
-        ]),
         'optical_design': None,
         'payload_kg': None,
         'payload_no_cw_kg': None,
@@ -2718,12 +2496,10 @@
         'camera_id': 6,
         'counted': True,
         'focal_mm': 560.0,
-        'frames': 7,
         'height_deg': None,
         'id': 2,
         'integration_s': 1140.0,
         'name': None,
-        'nights': 0,
         'numbers': dict({
           'backfocus': dict({
             'difference_mm': None,
@@ -2799,26 +2575,6 @@
             'width': 0.01504,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 2,
-            'integration_s': 600.0,
-            'key': 'NGC 6888',
-            'name': 'NGC 6888',
-          }),
-          dict({
-            'frames': 4,
-            'integration_s': 480.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-          dict({
-            'frames': 1,
-            'integration_s': 60.0,
-            'key': 'M 42',
-            'name': 'M 42',
-          }),
-        ]),
         'optics': 'Askar 103Apo',
         'optics_id': 5,
         'parts': list([
@@ -2959,12 +2715,10 @@
         'camera_id': 1,
         'counted': True,
         'focal_mm': 560.0,
-        'frames': 3,
         'height_deg': None,
         'id': 1,
         'integration_s': 660.0,
         'name': None,
-        'nights': 0,
         'numbers': dict({
           'backfocus': dict({
             'difference_mm': None,
@@ -3040,14 +2794,6 @@
             'width': 0.01716,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 300.0,
-            'key': 'IC 1396',
-            'name': 'IC 1396',
-          }),
-        ]),
         'optics': None,
         'optics_id': None,
         'parts': list([
@@ -3178,12 +2924,10 @@
         'camera_id': 13,
         'counted': True,
         'focal_mm': 910.0,
-        'frames': 1,
         'height_deg': None,
         'id': 5,
         'integration_s': 600.0,
         'name': None,
-        'nights': 0,
         'numbers': dict({
           'backfocus': dict({
             'difference_mm': None,
@@ -3268,14 +3012,6 @@
             'width': None,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 600.0,
-            'key': 'Sh2 155',
-            'name': 'Sh2 155',
-          }),
-        ]),
         'optics': 'TS 130 APO',
         'optics_id': 12,
         'parts': list([
@@ -3366,12 +3102,10 @@
         'camera_id': 11,
         'counted': True,
         'focal_mm': 1624.0,
-        'frames': 1,
         'height_deg': None,
         'id': 4,
         'integration_s': 240.0,
         'name': None,
-        'nights': 0,
         'numbers': dict({
           'backfocus': dict({
             'difference_mm': None,
@@ -3456,14 +3190,6 @@
             'width': None,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 240.0,
-            'key': 'M 51',
-            'name': 'M 51',
-          }),
-        ]),
         'optics': 'RC8',
         'optics_id': 10,
         'parts': list([
@@ -3554,12 +3280,10 @@
         'camera_id': 9,
         'counted': True,
         'focal_mm': 560.0,
-        'frames': 1,
         'height_deg': None,
         'id': 3,
         'integration_s': 120.0,
         'name': None,
-        'nights': 0,
         'numbers': dict({
           'backfocus': dict({
             'difference_mm': None,
@@ -3635,14 +3359,6 @@
             'width': 0.01504,
           }),
         }),
-        'objects': list([
-          dict({
-            'frames': 1,
-            'integration_s': 120.0,
-            'key': 'M 31',
-            'name': 'M 31',
-          }),
-        ]),
         'optics': 'Askar 103Apo',
         'optics_id': 5,
         'parts': list([

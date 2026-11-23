@@ -109,15 +109,6 @@ class RigSpacers(BaseModel):
     piece_ids: list[int]
 
 
-class GearObject(BaseModel):
-    """An object taken with that piece, and how much it weighed in."""
-
-    key: str
-    name: str | None
-    frames: int
-    integration_s: float
-
-
 BAR = Field(
     description="Its hours on the most used of its group, 3-100: rigs among rigs, filters among "
     "filters, a piece among its kind. Never under 3, so a short bar still shows; null without "
@@ -208,12 +199,11 @@ class InstrumentOnPage(BaseModel):
         description="Null where the link with the frames does not exist: a kind that no frame in "
         "**this archive** names does not have zero hours, it has hours the app does not know -- "
         "and whoever shows the row says so. The spine decides it, not this shape. The same holds "
-        "for `integration_s`, `untimed` and `nights`."
+        "for `integration_s` and `untimed`. The row shows only the hours (Marco, 24/10/2026): "
+        "the frames are for the gestures, merge and delete."
     )
     integration_s: float | None
     untimed: int | None
-    nights: int | None
-    objects: list[GearObject]
     counted: bool = Field(
         description='False for a piece born mid-run, which the counter has not counted yet: "not '
         'counted yet" is not "cannot be known", and the page tells them apart.'
@@ -298,14 +288,11 @@ class RigOnPage(BaseModel):
     optics: str | None
     camera: str | None
     focal_mm: float | None
-    frames: int | None = Field(
-        description="Null until it is counted (`counted`): a rig born mid-run. The same holds for "
-        "`integration_s`, `untimed` and `nights`."
+    integration_s: float | None = Field(
+        description="Null until it is counted (`counted`): a rig born mid-run; `untimed` too. "
+        "Only the hours (Marco, 24/10/2026)."
     )
-    integration_s: float | None
     untimed: int | None
-    nights: int | None
-    objects: list[GearObject]
     counted: bool
     bar_pct: float | None = BAR
     scale_arcsec_px: float | None = Field(
@@ -353,13 +340,11 @@ class FilterOnPage(BaseModel):
     mounted: bool | None
     fast_optics: bool | None
     frames: int | None = Field(
-        description="Null until it is counted (`counted`). The same holds for `integration_s`, "
-        "`untimed` and `nights`."
+        description="Null until it is counted (`counted`). The same holds for `integration_s` "
+        "and `untimed`. The row shows only the hours: the frames are for merge and delete."
     )
     integration_s: float | None
     untimed: int | None
-    nights: int | None
-    objects: list[GearObject]
     counted: bool
     mergeable_into: list[int] = Field(
         description="The filters it can be merged into: only those the spine accepts."

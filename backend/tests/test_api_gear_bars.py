@@ -50,7 +50,7 @@ def due_setup(db_path):
 def test_a_bar_is_the_hours_on_the_most_used_of_its_group(due_setup):
     pagina = due_setup.get("/api/v1/gear").json()
 
-    per_focale = {r["focal_mm"]: r["bar_pct"] for r in pagina["rigs"] if r["frames"]}
+    per_focale = {r["focal_mm"]: r["bar_pct"] for r in pagina["rigs"] if r["integration_s"]}
     assert per_focale == {910.0: 100.0, 250.0: 16.7}
     assert sorted(f["bar_pct"] for f in pagina["filters"]) == [16.7, 100.0]
     # le ottiche fra loro, la camera da sola: ogni genere ha il suo piu' usato

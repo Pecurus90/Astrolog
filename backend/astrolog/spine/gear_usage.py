@@ -1,7 +1,6 @@
 """How much each piece, rig and filter served, written at the end of every stage that moves frames.
 Hours the app cannot know are NULL, not zero; a rig's field is measured on solved frames."""
 
-import json
 import sqlite3
 from collections.abc import Mapping, Sequence
 from dataclasses import astuple, dataclass
@@ -13,7 +12,6 @@ from ..db.replace_table import replace_rows
 from ..units import MOON_DIAMETER_DEG, hundredths, median
 from ..vocab.instruments import InstrumentKind
 from . import counts, gear_numbers, rig_card, rigs
-from . import objects as obj
 
 
 class UsageSubject(StrEnum):
@@ -28,11 +26,10 @@ class UsageSubject(StrEnum):
 # from every frame. For the others it depends on the archive (`_with_hours`).
 _ALWAYS = (InstrumentKind.OPTICS, InstrumentKind.CAMERA, InstrumentKind.SPACER)
 
-# Frames grouped once per list, not a correlated subselect per row, with `counts`'s link: the
-# nights too, or one row would tell two numbers.
-_COUNTS = f"{counts.AGGREGATE}, {counts.UNTIMED}, COUNT(DISTINCT f.night_id) AS nights"
+# Frames grouped once per list, not a correlated subselect per row, with `counts`'s link.
+_COUNTS = f"{counts.AGGREGATE}, {counts.UNTIMED}"
 _USED = """COALESCE(u.frames, 0) AS frames, COALESCE(u.integration_s, 0) AS integration_s,
-       COALESCE(u.untimed, 0) AS untimed, COALESCE(u.nights, 0) AS nights"""
+       COALESCE(u.untimed, 0) AS untimed"""
 
 _INSTRUMENTS = f"""
 SELECT i.id, i.kind, {_USED}
@@ -61,29 +58,6 @@ FROM filters x LEFT JOIN (
 WHERE x.is_none = 0
 {counts.ORDER_BY_TIME}, x.name
 """  # noqa: S608 - constant fragments of the spine, not user values
-
-# What each one shot, most shot first: one body, three keys.
-_OBJECTS = f"""
-SELECT {{owner}} AS owner, o.id AS object_id, o.catalog_slug,{obj.NAME_COLUMNS},
-       {counts.AGGREGATE}
-FROM frames f JOIN objects o ON o.id = f.object_id {{join}}
-WHERE {{column}} IN {{{{listed}}}} AND f.copy_of IS NULL
-GROUP BY owner, o.id
-{counts.ORDER_BY_TIME}, o.id
-"""  # noqa: S608 - constant fragments of the spine, not user values
-
-_RIG_OBJECTS = _OBJECTS.format(owner="f.rig_id", join="", column="f.rig_id")
-_FILTER_OBJECTS = _OBJECTS.format(owner="f.filter_id", join="", column="f.filter_id")
-# `counts`'s link with the rigs in the `FROM`, not a subselect searched per (frame, piece). The
-# `LEFT` matters: a frame naming a wheel may have no rig.
-_PIECE_OBJECTS = _OBJECTS.format(
-    owner="i.id",
-    join=(
-        "LEFT JOIN rigs g ON g.id = f.rig_id JOIN instruments i ON "
-        + counts.of(counts.Subject.INSTRUMENT, rigs_joined=True)
-    ),
-    column="i.id",
-)
 
 _SKY = """
 SELECT f.rig_id AS owner, w.scale_arcsec_px, w.width_deg, w.height_deg
@@ -126,7 +100,7 @@ _PART_COLUMNS = (
     "ring_from", "ring_to",
 )  # fmt: skip
 
-USAGE = ("frames", "integration_s", "untimed", "nights")
+USAGE = ("frames", "integration_s", "untimed")
 
 # A bar is never thinner than this, or a short one would vanish. [T] board Attrezzatura, v82
 BAR_FLOOR_PCT = 3.0
@@ -153,7 +127,7 @@ def write_bars(conn: sqlite3.Connection) -> None:
 
 
 _SKY_FIELDS = ("scale_arcsec_px", "width_deg", "height_deg")
-_COLUMNS = ("subject", "subject_id", *USAGE, *_SKY_FIELDS, "objects_json", "position")
+_COLUMNS = ("subject", "subject_id", *USAGE, *_SKY_FIELDS, "position")
 
 
 @dataclass(frozen=True, slots=True)
@@ -165,11 +139,9 @@ class UsageRow:
     frames: int | None
     integration_s: float | None
     untimed: int | None
-    nights: int | None
     scale_arcsec_px: float | None
     width_deg: float | None
     height_deg: float | None
-    objects_json: str
 
 
 def write(conn: sqlite3.Connection) -> None:
@@ -224,11 +196,10 @@ def write_spacer_usage(conn: sqlite3.Connection) -> None:
     the archive inside the request."""
     write_parts(conn)
     rows = conn.execute(_SPACER_USAGE).fetchall()
-    shot = idlist.grouped(conn, _PIECE_OBJECTS, [r["id"] for r in rows], "owner", obj.counted)
     conn.executemany(
         f"INSERT OR REPLACE INTO gear_usage({', '.join(_COLUMNS)})"
         f" VALUES({', '.join('?' * len(_COLUMNS))})",  # segnaposto-ok: the columns, not the rows
-        [(*astuple(_row(UsageSubject.INSTRUMENT, r, shot)), None) for r in rows],
+        [(*astuple(_row(UsageSubject.INSTRUMENT, r)), None) for r in rows],
     )
     write_bars(conn)
 
@@ -296,10 +267,10 @@ def _add_row(conn: sqlite3.Connection, subject: UsageSubject, row_id: int, *, kn
     hours, it would lie."""
     conn.execute(
         "INSERT OR REPLACE INTO gear_usage(subject, subject_id, frames, integration_s, untimed,"
-        " nights, objects_json, position) VALUES(?, ?, ?, ?, ?, ?, '[]',"
+        " position) VALUES(?, ?, ?, ?, ?,"
         " CASE WHEN ? = 'rig' THEN"
         " (SELECT COALESCE(MAX(position) + 1, 0) FROM gear_usage WHERE subject = 'rig') END)",
-        (subject, row_id, *((0, 0.0, 0, 0) if known else (None,) * 4), subject),
+        (subject, row_id, *((0, 0.0, 0) if known else (None,) * 3), subject),
     )
     write_bars(conn)
 
@@ -320,7 +291,6 @@ def _with_hours(conn: sqlite3.Connection) -> set[str]:
 def _row(
     subject: UsageSubject,
     r: sqlite3.Row,
-    shot: Mapping[Any, Sequence[Any]],
     *,
     known: bool = True,
     sky: Mapping[str, float | None] | None = None,
@@ -333,32 +303,25 @@ def _row(
         usage["frames"],
         usage["integration_s"],
         usage["untimed"],
-        usage["nights"],
         sky.get("scale_arcsec_px"),
         sky.get("width_deg"),
         sky.get("height_deg"),
-        json.dumps(shot.get(r["id"], []) if known else []),
     )
 
 
 def _instruments(conn: sqlite3.Connection) -> list[UsageRow]:
     rows = conn.execute(_INSTRUMENTS).fetchall()
     with_hours = _with_hours(conn)
-    ids = [r["id"] for r in rows if r["kind"] in with_hours]
-    shot = idlist.grouped(conn, _PIECE_OBJECTS, ids, "owner", obj.counted)
-    return [_row(UsageSubject.INSTRUMENT, r, shot, known=r["kind"] in with_hours) for r in rows]
+    return [_row(UsageSubject.INSTRUMENT, r, known=r["kind"] in with_hours) for r in rows]
 
 
 def _rigs(conn: sqlite3.Connection) -> list[UsageRow]:
     rows = conn.execute(_RIGS).fetchall()
-    ids = [r["id"] for r in rows]
-    shot = idlist.grouped(conn, _RIG_OBJECTS, ids, "owner", obj.counted)
-    seen = idlist.grouped(conn, _SKY, ids, "owner", dict)
+    seen = idlist.grouped(conn, _SKY, [r["id"] for r in rows], "owner", dict)
     return [
         _row(
             UsageSubject.RIG,
             r,
-            shot,
             sky={
                 field: hundredths(median([v[field] for v in seen.get(r["id"], [])]))
                 for field in _SKY_FIELDS
@@ -369,6 +332,4 @@ def _rigs(conn: sqlite3.Connection) -> list[UsageRow]:
 
 
 def _filters(conn: sqlite3.Connection) -> list[UsageRow]:
-    rows = conn.execute(_FILTERS).fetchall()
-    shot = idlist.grouped(conn, _FILTER_OBJECTS, [r["id"] for r in rows], "owner", obj.counted)
-    return [_row(UsageSubject.FILTER, r, shot) for r in rows]
+    return [_row(UsageSubject.FILTER, r) for r in conn.execute(_FILTERS).fetchall()]
