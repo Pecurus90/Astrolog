@@ -9,6 +9,20 @@ from ..levels import MOON_BRIGHT_PCT
 from ..weather.score import GOOD_FROM, UNCERTAIN_FROM
 
 Level = Literal["go", "marginal", "nogo"]
+SkyKind = Literal["day", "civil", "nautical", "astronomical", "dark"]
+
+
+class SkyBandOut(BaseModel):
+    """A stretch of night in which the sky is always the same thing: from when to when, and which.
+
+    Why they come out **already split** instead of as eight times is told in
+    `docs/domini/effemeridi.md`, entry *"Le fasce arrivano gia' divise"*."""
+
+    starts_at: str
+    ends_at: str
+    kind: SkyKind
+
+
 # Repeated rather than imported from `weather.judge`, so the route contract does not change shape
 # with an internal module; a test holds the two lists equal.
 MeasureCode = Literal[
@@ -233,6 +247,11 @@ class WeatherBriefOut(WeatherSkyOut):
         default_factory=list,
         description="The Moon's altitude every quarter hour over the shown hours, both ends "
         "included, for the dashed line; empty without them.",
+    )
+    sky_bands: list[SkyBandOut] = Field(
+        default_factory=list,
+        description="The Sun's bands to the minute over the shown hours, edge to edge, for the "
+        "chart's twilight; written with the forecast. Empty without them.",
     )
 
 

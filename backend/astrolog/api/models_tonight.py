@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 from ..levels import MOON_BRIGHT_PCT, MOON_GREY_PCT
-from .models_weather import WeatherBriefOut
+from .models_weather import SkyBandOut, WeatherBriefOut
 
 # Repeated rather than imported from `ephemeris`, so the route contract does not change shape with
 # an internal module.
@@ -20,7 +20,6 @@ PhaseKey = Literal[
     "last_quarter",
     "waning_crescent",
 ]
-SkyKind = Literal["day", "civil", "nautical", "astronomical", "dark"]
 Compass = Literal[
     "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
     "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
@@ -152,17 +151,6 @@ class SiteSkyOut(BaseModel):
     name: str
     sky_sqm: float | None
     bortle: int | None
-
-
-class SkyBandOut(BaseModel):
-    """A stretch of night in which the sky is always the same thing: from when to when, and which.
-
-    Why they come out **already split** instead of as eight times is told in
-    `docs/domini/effemeridi.md`, entry *"Le fasce arrivano gia' divise"*."""
-
-    starts_at: str
-    ends_at: str
-    kind: SkyKind
 
 
 PlanetKey = Literal["saturn", "jupiter", "mars", "venus"]

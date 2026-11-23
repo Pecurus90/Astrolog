@@ -10,7 +10,7 @@ from typing import Any
 
 from ..db import config
 from ..db.replace_table import replace_rows
-from ..ephemeris import RISESET_DEG, moon
+from ..ephemeris import RISESET_DEG, moon, sun
 from ..ephemeris.sun import Sky
 from ..levels import MoonRule
 from ..site_of import Site
@@ -97,6 +97,31 @@ def _moon_nights(site: Site, summaries: Sequence[verdict.Summary]) -> list[dict[
     ]
 
 
+def _sun_nights(site: Site, summaries: Sequence[verdict.Summary]) -> list[dict[str, Any]]:
+    """Each summary's sky bands to the minute over its drawn hours, for the chart's twilight;
+    each window sampled once, the models of a night share it."""
+    bands: dict[tuple[str, str], list[dict[str, str]]] = {}
+    out = []
+    for s in summaries:
+        if s.shown_from is None or s.shown_until is None:
+            out.append({"sky_bands": []})
+            continue
+        window = (s.shown_from, s.shown_until)
+        if window not in bands:
+            start, end = (datetime.fromisoformat(a) for a in window)
+            hours = (end - start).total_seconds() / 3600
+            bands[window] = [
+                {
+                    "starts_at": b.starts_at.isoformat(),
+                    "ends_at": b.ends_at.isoformat(),
+                    "kind": b.kind.value,
+                }
+                for b in sun.night_bands(start, site.latitude, site.longitude, hours)
+            ]
+        out.append({"sky_bands": bands[window]})
+    return out
+
+
 def _moon_night(night: moon.MoonNight) -> dict[str, Any]:
     """The Moon over the drawn hours, every quarter hour, and its first crossing: up at the start
     it sets or stays (`up`), down it rises or stays (`down`)."""
@@ -155,8 +180,10 @@ def _rows(
     site: Site, written: Sequence[_Night], usual: list[float] | None, rule: MoonRule
 ) -> list[tuple[Any, ...]]:
     rows = []
-    moons = _moon_nights(site, [w.summary for w in written])
-    for w, moon_night in zip(written, moons, strict=True):
+    summaries = [w.summary for w in written]
+    moons = _moon_nights(site, summaries)
+    suns = _sun_nights(site, summaries)
+    for w, moon_night, sun_night in zip(written, moons, suns, strict=True):
         said = [x.summary.verdict for x in written if x.night == w.night]
         wind = w.summary.wind_700hpa_kmh
         summary = {
@@ -172,6 +199,7 @@ def _rows(
             ),
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary, rule)],
             **moon_night,
+            **sun_night,
         }
         rows.append(
             (

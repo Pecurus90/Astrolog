@@ -6572,6 +6572,11 @@ export interface components {
              * @description The Moon's altitude every quarter hour over the shown hours, both ends included, for the dashed line; empty without them.
              */
             moon_track?: components["schemas"]["WeatherMoonPointOut"][];
+            /**
+             * Sky Bands
+             * @description The Sun's bands to the minute over the shown hours, edge to edge, for the chart's twilight; written with the forecast. Empty without them.
+             */
+            sky_bands?: components["schemas"]["SkyBandOut"][];
         };
         /**
          * WeatherHourOut
@@ -6829,6 +6834,11 @@ export interface components {
              * @description The Moon's altitude every quarter hour over the shown hours, both ends included, for the dashed line; empty without them.
              */
             moon_track?: components["schemas"]["WeatherMoonPointOut"][];
+            /**
+             * Sky Bands
+             * @description The Sun's bands to the minute over the shown hours, edge to edge, for the chart's twilight; written with the forecast. Empty without them.
+             */
+            sky_bands?: components["schemas"]["SkyBandOut"][];
             /** Night */
             night: string;
             /** Trend */

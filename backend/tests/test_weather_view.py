@@ -137,6 +137,22 @@ def test_each_night_says_when_the_moon_rises_inside_the_drawn_hours(db):  # noqa
     assert detto["moon_event_at"][11:13] in {"22", "23", "00", "01"}
 
 
+def test_each_night_carries_its_sky_bands_to_the_minute_over_the_drawn_hours(db):  # noqa: F811
+    """Le fasce del crepuscolo sul grafico del Meteo (tavola v82), al minuto e non all'ora: dal
+    primo all'ultimo istante disegnato, contigue, giorno ai due capi e buio in mezzo a ottobre."""
+    detto = riassunto(notte_di_ottobre(db))
+    fasce = detto["sky_bands"]
+    assert (fasce[0]["starts_at"][:16], fasce[-1]["ends_at"][:16]) == (
+        detto["shown_from"][:16],
+        detto["shown_until"][:16],
+    )
+    assert all(a["ends_at"] == b["starts_at"] for a, b in itertools.pairwise(fasce))
+    tipi = [f["kind"] for f in fasce]
+    assert (tipi[0], tipi[-1]) == ("day", "day")
+    assert "dark" in tipi
+    assert any(f["starts_at"][14:16] != "00" for f in fasce)
+
+
 def test_the_moon_event_follows_the_moon_at_the_first_drawn_hour(db):  # noqa: F811
     """Su all'inizio: tramonta o resta tutta la notte; giu': sorge o non sorge."""
     scritta(db, Finto(risposta()))

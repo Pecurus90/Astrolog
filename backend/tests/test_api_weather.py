@@ -219,6 +219,16 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
     assert {f["source"] for f in detto["sources"]} == {"cams"}
 
 
+def test_every_night_brings_its_sky_bands_as_written(letto):
+    """Le fasce del crepuscolo per il grafico: scritte con la previsione, anche nella tendenza."""
+    notti = letto.get("/api/v1/weather").json()["nights"]
+    for n in notti:
+        assert n["sky_bands"], n["night"]
+        assert {f["kind"] for f in n["sky_bands"]} <= {
+            "day", "civil", "nautical", "astronomical", "dark"
+        }  # fmt: skip
+
+
 def test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour(letto):
     notte = letto.get("/api/v1/weather").json()["nights"][1]
     assert {o["wind_250hpa_kmh"] for o in notte["hours"]} == {150.0}

@@ -23,12 +23,10 @@ from .models_tonight import (
     PlanetKey,
     PlanetOut,
     ShootingStretchOut,
-    SkyBandOut,
-    SkyKind,
     SkyPointOut,
     TonightOut,
 )
-from .models_weather import Level
+from .models_weather import Level, SkyBandOut, SkyKind
 
 log = logging.getLogger(__name__)
 

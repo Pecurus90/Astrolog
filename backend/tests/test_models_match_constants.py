@@ -378,7 +378,7 @@ def test_the_moon_phases_and_sky_bands_are_the_same_in_the_models_and_the_epheme
     """The routes repeat them as `Literal` on purpose (`models_tonight`): never drifted."""
     assert set(get_args(models_tonight.PhaseKey)) == set(moon.MoonPhase)
     for literal in (
-        models_tonight.SkyBandOut.model_fields["kind"].annotation,
+        models_weather.SkyBandOut.model_fields["kind"].annotation,
         models_weather.WeatherHourOut.model_fields["sky"].annotation,
     ):
         assert set(get_args(literal)) == set(sun.Sky)
