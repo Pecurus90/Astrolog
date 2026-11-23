@@ -88,8 +88,32 @@ jobs:
       - name: Surviving mutants (tests that do not notice a change)
         if: always()
         run: |
-          mutmut results --all true > results.txt
-          python ../tools/mutation_shards.py ${{ matrix.shard }} --filter < results.txt
+          mutmut results --all true > results-${{ matrix.shard }}.txt
+          python ../tools/mutation_shards.py ${{ matrix.shard }} --filter < results-${{ matrix.shard }}.txt
+      - uses: actions/upload-artifact@v7
+        if: always() && startsWith(matrix.shard, 'rest-')
+        with:
+          name: mutmut-${{ matrix.shard }}
+          path: backend/results-${{ matrix.shard }}.txt
+
+  # The rest parts together against one reference: they are cut by size, a file moving between
+  # them never moves it.
+  mutation-rest-score:
+    needs: mutation
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: mutmut-rest-*
+          path: reports
+          merge-multiple: true
+      - name: Rest score against the reference
+        run: python tools/mutation_shards.py rest --filter reports/results-rest-*.txt
 
   # The frontend with StrykerJS, in parts (tools/mutation_shards.py); incremental, so a night
   # retests only what changed. Stopped, Stryker saves a partial report, the next night resumes.
@@ -165,7 +189,7 @@ jobs:
 
   # GitHub tells only who wrote the cron: a red night becomes an Issue, a green one closes it.
   signal:
-    needs: [mutation, mutation-frontend, mutation-frontend-score, ci]
+    needs: [mutation, mutation-rest-score, mutation-frontend, mutation-frontend-score, ci]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -177,5 +201,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          python tools/nightly_issue.py "${{ needs.mutation.result == 'success' && needs.mutation-frontend.result == 'success' && needs.mutation-frontend-score.result == 'success' && needs.ci.result == 'success' && 'success' || 'failure' }}"
+          python tools/nightly_issue.py "${{ needs.mutation.result == 'success' && needs.mutation-rest-score.result == 'success' && needs.mutation-frontend.result == 'success' && needs.mutation-frontend-score.result == 'success' && needs.ci.result == 'success' && 'success' || 'failure' }}"
           "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

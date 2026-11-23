@@ -1,4 +1,8 @@
 {
-  "api": 0.8446,
-  "frontend": 0.7189
+  "api": 0.9418,
+  "frontend": 0.7189,
+  "rest": 0.9333,
+  "spine-a-f": 0.9795,
+  "spine-g-m": 0.9994,
+  "spine-n-z": 0.9751
 }

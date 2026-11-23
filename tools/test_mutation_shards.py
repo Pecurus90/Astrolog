@@ -17,6 +17,7 @@ from mutation_shards import (
     FRONTEND_DIR,
     FRONTEND_SHARDS,
     REFERENCE,
+    REST,
     REST_PARTS,
     REST_SHARDS,
     files,
@@ -546,8 +547,70 @@ def test_the_frontend_parts_run_as_long_as_a_github_job_allows():
 
 def test_the_saved_reference_names_only_real_shards():
     reference = json.loads(REFERENCE.read_text(encoding="utf-8"))
-    assert set(reference) <= {*FIXED, *REST_SHARDS, FRONTEND}
+    assert set(reference) <= {*FIXED, REST, FRONTEND}
     assert all(0 <= score <= 1 for score in reference.values())
+
+
+def test_every_shard_has_a_saved_reference_the_rest_parts_one_together():
+    """Without a reference a shard stays green however low it falls (#87). The rest parts are
+    cut by size: a file changing part would move a per-part score."""
+    reference = json.loads(REFERENCE.read_text(encoding="utf-8"))
+    assert set(reference) == {*FIXED, REST, FRONTEND}
+
+
+def write_rest_results(tmp_path, *lines, stale=""):
+    """One `mutmut results` per rest part, each holding the given mutants of its own part's first
+    module; part 0 also `stale` lines its cached mutants/ keeps of other parts."""
+    table = shards()
+    paths = []
+    for k in reversed(range(REST_PARTS)):
+        module = table[f"{REST}-{k}"][0].removesuffix(".x*")
+        own = "".join(f"    {module}.x_f__mutmut_{n}: {s}\n" for n, s in enumerate(lines[k], 1))
+        path = tmp_path / f"results-{REST}-{k}.txt"
+        path.write_text(own + (stale if k == 0 else ""), encoding="utf-8")
+        paths.append(str(path))
+    return paths
+
+
+def test_the_rest_score_adds_up_the_report_of_every_part(tmp_path, capsys):
+    parts = [["killed", "survived"], ["timeout", "no tests", "not checked"]]
+    parts += [["killed"]] * (REST_PARTS - 2)
+    detected = 2 + REST_PARTS - 2
+    checked = 4 + REST_PARTS - 2
+    paths = write_rest_results(tmp_path, *parts)
+    reference = write_reference(tmp_path, rest=round(detected / checked, 4))
+    assert main(["mutation_shards.py", REST, "--filter", *paths], reference=reference) == 0
+    expected = f"shard {REST}: score {detected / checked:.4f} ({detected} of {checked} detected"
+    assert expected in capsys.readouterr().err
+    reference = write_reference(tmp_path, rest=round(detected / checked, 4) + 0.01)
+    assert main(["mutation_shards.py", REST, "--filter", *paths], reference=reference) == 1
+
+
+def test_a_rest_report_counts_only_the_mutants_of_its_part(tmp_path, capsys):
+    """A part's cache keeps verdicts of files that moved to another part: counted, they are stale
+    and twice."""
+    stale = "    astrolog.api.app.x_health__mutmut_1: survived\n"
+    table = shards()
+    other = table[f"{REST}-1"][0].removesuffix(".x*")
+    stale += f"    {other}.x_g__mutmut_1: survived\n"
+    paths = write_rest_results(tmp_path, *[["killed"]] * REST_PARTS, stale=stale)
+    reference = write_reference(tmp_path, rest=1.0)
+    assert main(["mutation_shards.py", REST, "--filter", *paths], reference=reference) == 0
+    assert f"score 1.0000 ({REST_PARTS} of {REST_PARTS} detected" in capsys.readouterr().err
+
+
+def test_a_rest_part_without_its_report_fails_the_night(tmp_path, capsys):
+    paths = write_rest_results(tmp_path, *[["killed"]] * REST_PARTS)
+    assert main(["mutation_shards.py", REST, "--filter", *paths[1:]]) == 1
+    assert f"{REST_PARTS - 1} of {REST_PARTS} part reports" in capsys.readouterr().err
+
+
+def test_the_workflow_scores_the_rest_parts_together():
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    assert "mutmut results --all true > results-${{ matrix.shard }}.txt" in workflow
+    assert f"mutation_shards.py {REST} --filter reports/results-{REST}-*.txt" in workflow
+    assert "needs.mutation-rest-score.result == 'success'" in workflow
 
 
 def test_a_report_where_the_shard_owns_no_mutant_is_refused(capsys):

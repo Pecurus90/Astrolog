@@ -271,6 +271,24 @@ def drop_timeouts(report: Path) -> int:
     return 0
 
 
+def rest_score(paths: list[str], reference: Path) -> int:
+    """`rest --filter <results-rest-k.txt>...` scores every rest part together: parts are cut by
+    size, a file moving between them never moves the score. Only each part's own mutants count."""
+    if len(paths) != REST_PARTS:
+        sys.stderr.write(f"shard {REST}: {len(paths)} of {REST_PARTS} part reports\n")
+        return 1
+    table = shards()
+    statuses: Counter[str] = Counter()
+    for path in paths:
+        part = re.fullmatch(rf"results-({REST}-\d+)\.txt", Path(path).name)
+        if part is None or part[1] not in table:
+            sys.stderr.write(f"{path}: not a results-{REST}-<part>.txt report\n")
+            return 1
+        with Path(path).open(encoding="utf-8") as lines:
+            statuses += own_results(lines, part[1], table).statuses
+    return 1 if below_reference(REST, statuses, reference) else 0
+
+
 def below_reference(shard: str, statuses: Counter[str], reference: Path) -> bool:
     """Fails only a score under the saved one: a night cut short counts what it ran."""
     detected = sum(n for s, n in statuses.items() if s in DETECTED)
@@ -312,6 +330,8 @@ def main(
 ) -> int:
     if argv[1:2] == [FRONTEND]:
         return frontend(argv[2:], reference, parts)
+    if argv[1:3] == [REST, FILTER]:
+        return rest_score(argv[3:], reference)
     if argv[1:2] == [DROP_BROKEN] and len(argv) == 3:
         return drop_broken(Path(argv[2]))
     names = [*FIXED, *REST_SHARDS]
