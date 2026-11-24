@@ -151,8 +151,7 @@ def github_lines(run: Run, now: dt.datetime) -> list[str]:
 def _plan_line() -> str:
     with open(os.path.join(ROOT, piano.PATH), encoding="utf-8") as h:
         plan = json.load(h)
-    step = piano.next_step(plan)
-    return "Prossimo: " + (piano.line(step) if step else "nessuno, la lista e' finita.")
+    return "\n".join(piano.next_lines(plan))
 
 
 def _dirty_line() -> str:

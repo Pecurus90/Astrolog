@@ -1,8 +1,9 @@
 """La lista unica (ADR 0040): `docs/piano.json`, un passo dopo l'altro.
 
-`python tools/piano.py` stampa il primo passo aperto; `--tutto` la lista intera; `--controlla` il
-formato (pre-commit); `--messaggio FILE` (commit-msg) vuole `docs(piano):` per ogni cambio che non
-sia una spunta, perche' l'ordine lo decide Marco e un passo non sparisce in silenzio.
+`python tools/piano.py` stampa il primo passo aperto che non `attende`, poi quelli in attesa;
+`--tutto` la lista intera; `--controlla` il formato (pre-commit); `--messaggio FILE` (commit-msg)
+vuole `docs(piano):` per ogni cambio che non sia una spunta, perche' l'ordine lo decide Marco e
+un passo non sparisce in silenzio.
 """
 
 import json
@@ -34,6 +35,8 @@ def faults(text: str) -> list[str]:
             found.append(f"passo {n}: ricetta {step.get('ricetta')!r} sconosciuta")
         if step.get("fatto") and not SHA.match(step["fatto"]):
             found.append(f"passo {n}: fatto {step['fatto']!r} non e' uno sha")
+        if "attende" in step and not step["attende"]:
+            found.append(f"passo {n}: attende senza dire cosa")
         if n in seen:
             found.append(f"passo {n} due volte")
         seen.add(n)
@@ -41,7 +44,18 @@ def faults(text: str) -> list[str]:
 
 
 def next_step(plan: dict) -> dict | None:
-    return next((s for s in plan["passi"] if not s["fatto"]), None)
+    # a step that waits (Nightlies, Marco) is not workable: restarts go past it
+    return next((s for s in plan["passi"] if not s["fatto"] and not s.get("attende")), None)
+
+
+def waiting(plan: dict) -> list[dict]:
+    return [s for s in plan["passi"] if not s["fatto"] and s.get("attende")]
+
+
+def next_lines(plan: dict) -> list[str]:
+    step = next_step(plan)
+    first = "Prossimo: " + (line(step) if step else "nessuno, la lista e' finita.")
+    return [first, *(f"In attesa: {s['n']}, aspetta {s['attende']}" for s in waiting(plan))]
 
 
 def only_ticks(before: str, after: str) -> bool:
@@ -111,9 +125,8 @@ def main(argv: list[str]) -> int:
         for step in plan["passi"]:
             print(("[x] " if step["fatto"] else "[ ] ") + line(step))
         return 0
-    step = next_step(plan)
     print(f"Piano: {done} passi fatti su {len(plan['passi'])}.")
-    print("Prossimo: " + (line(step) if step else "nessuno, la lista e' finita."))
+    print("\n".join(next_lines(plan)))
     return 0
 
 

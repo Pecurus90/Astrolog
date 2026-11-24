@@ -38,6 +38,22 @@ def test_the_first_open_step_is_the_next_one():
     assert piano.next_step(lista)["n"] == "2"
 
 
+def test_a_step_waiting_for_something_is_skipped_and_said_apart():
+    """An open step that waits (three Nightlies) must not hold every restart on itself."""
+    lista = json.loads(_lista(_passo("1", attende="la Nightly"), _passo("2")))
+    assert piano.next_step(lista)["n"] == "2"
+    assert [s["n"] for s in piano.waiting(lista)] == ["1"]
+
+
+def test_waiting_says_what_for():
+    assert piano.faults(_lista(_passo("1", attende=""))) == ["passo 1: attende senza dire cosa"]
+
+
+def test_marking_a_step_as_waiting_is_not_a_tick():
+    prima = _lista(_passo("1"))
+    assert not piano.only_ticks(prima, _lista(_passo("1", attende="la Nightly")))
+
+
 def test_a_finished_list_has_no_next_step():
     assert piano.next_step(json.loads(_lista(_passo("1", fatto="ca6b2f61")))) is None
 

@@ -15,7 +15,7 @@ misure). CLAUDE.md e' contesto, un hook e' deterministico (guida di Claude Code,
 
 | # | Regola | Macchina |
 |---|---|---|
-| 1 | **Una lista sola**: si lavora sul primo passo aperto di `docs/piano.json`; l'agente lo spunta e basta | `tools/piano.py` lo stampa all'avvio; al commit rifiuta ogni modifica che non sia una spunta senza messaggio `docs(piano):` (`plan:` non e' un tipo Conventional Commits) |
+| 1 | **Una lista sola**: si lavora sul primo passo aperto di `docs/piano.json` che non `attende` (Nightly, Marco: scritto nel passo, Marco 24/11/2026); l'agente lo spunta e basta | `tools/piano.py` lo stampa all'avvio, coi passi in attesa a parte; al commit rifiuta ogni modifica che non sia una spunta senza messaggio `docs(piano):` (`plan:` non e' un tipo Conventional Commits) |
 | 2 | **Prima il rosso**: CI, Nightly, Issue `difetto`/`sicurezza`, avviso di sicurezza vengono prima di ogni passo | SessionStart `tools/stato.py`; Stop hook; controllo in sottofondo dopo il push; Issue `nightly-rosso` aperta dalla Nightly |
 | 3 | **Fatto = provato**: un passo e' fatto quando il commit che lo spunta e' verde su GitHub, non in locale | SessionStart guarda la CI del commit della spunta; rossa, il passo torna in testa |
 | 4 | **Uno scrive, gli altri leggono**: in parallelo solo `esploratore` (2-4, con obiettivo, formato e confini) e `revisore` (uno, due su diff grandi) | Strumenti dei sotto-agenti: `esploratore` e `revisore` non scrivono |
@@ -41,7 +41,7 @@ consigliata e' la piu' corretta": nessuna macchina li vede.
 - **Mutazione**: la Nightly fallisce solo se il punteggio peggiora rispetto a un riferimento
   salvato; notte rossa = Issue `nightly-rosso` (supera ADR 0001, "rapporto, non blocco").
 - **Rito**: all'avvio lavoro non committato = si chiede; rosso = il lavoro e' quello; altrimenti
-  primo passo aperto, ricetta invocata con `/nome`. Alla fine commit, push, spunta con lo sha,
+  primo passo aperto che non attende, ricetta invocata con `/nome`. Alla fine commit, push, spunta con lo sha,
   riassunto che apre con "cosa funziona ora e prima no". `/clear` fra un passo e l'altro.
 - **CLAUDE.md sotto 100 righe**: tre principi, comandi, trappole di Windows, rimando al piano, una
   riga "lo controlla X" per regola. Regole d'area in `.claude/rules/` con `paths`. La provenienza
