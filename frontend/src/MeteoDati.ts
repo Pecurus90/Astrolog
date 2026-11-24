@@ -115,9 +115,9 @@ export function sotto(m: Misura, n: Notte): string {
   }
   if (m.code === "temperature") {
     const rugiada = n.measures.find((x) => x.code === "dew_point")?.value
-    return t("weather.card.temperature", {
-      r: rugiada == null ? t("weather.card.unknown") : numero(rugiada),
-    })
+    return rugiada == null
+      ? t("weather.card.temperatureNoDew")
+      : t("weather.card.temperature", { r: numero(rugiada) })
   }
   if (m.code === "wind_700") {
     if (n.wind_700hpa_tenths === null) return t("weather.card.wind700.nobase")
@@ -276,14 +276,20 @@ export function protagonista(n: Notte, prima: boolean): Protagonista {
     }
   }
   if (n.trend) {
-    const cielo = n.sky_word ? t(`weather.sky.word.${n.sky_word}`) : t("weather.verdict.unknown")
-    const pct = n.cloud_total_pct == null ? "" : numero(Math.round(n.cloud_total_pct))
+    // sky_word and cloud_total_pct are null together (verdict.sky_word)
+    const nubi =
+      n.sky_word && n.cloud_total_pct != null
+        ? t("meteo.trend.sky", {
+            cielo: t(`weather.sky.word.${n.sky_word}`),
+            pct: numero(Math.round(n.cloud_total_pct)),
+          })
+        : t("meteo.trend.skyNone")
     return {
       top: conTop(t("meteo.night.label.trend")),
       valore: t("meteo.hours", { n: numero(Math.round(n.dark_hours)) }),
       pillola,
       ripresa: ripresaLuna(n),
-      sotto: `${t("meteo.trend.sky", { cielo, pct })} \u00b7 ${accordo(n)}. ${t("weather.trend.note")}`,
+      sotto: `${nubi} \u00b7 ${accordo(n)}. ${t("weather.trend.note")}`,
       grande: true,
       grafico: true,
     }

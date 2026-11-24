@@ -167,9 +167,12 @@ describe("sotto: la riga sotto il valore", () => {
       ),
     ).toBe("media nel buio · Meteoblue")
   })
-  // without dew point the line reads "Non disponibile °C": Issue #107, not frozen here
   it("la temperatura porta il punto di rugiada", () => {
     expect(sotto(m("temperature"), notte())).toBe("minima nel buio · punto di rugiada 4 °C")
+    const senza = notte({ measures: NOTTE.measures.filter((x) => x.code !== "dew_point") })
+    expect(sotto(m("temperature"), senza)).toBe(
+      "minima nel buio · punto di rugiada non disponibile",
+    )
   })
   it("il vento a 700 hPa si confronta con l'anno del sito", () => {
     const w = (d: number | null) => sotto(m("wind_700"), notte({ wind_700hpa_tenths: d }))
@@ -379,7 +382,8 @@ describe("protagonista: il numero grande della notte", () => {
       grande: true,
       grafico: true,
     })
-    // without clouds the line reads "Non disponibile nel buio, %": Issue #107, not frozen here
+    const nubi = { ...n, sky_word: null, cloud_total_pct: null } as unknown as Notte
+    expect(protagonista(nubi, false).sotto).toMatch(/^Nubi non disponibili nel buio · /)
     const senza = { ...n, verdict: null } as unknown as Notte
     expect(protagonista(senza, false).pillola).toBeNull()
     expect(protagonista(senza, false).sotto).toContain("0 modelli d'accordo su 4")

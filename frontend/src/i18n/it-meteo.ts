@@ -96,6 +96,7 @@ export const itMeteo = {
   "weather.card.jet": "media nel buio \u00b7 a 250 hPa",
   "weather.card.aerosol": "media nel buio \u00b7 spessore ottico",
   "weather.card.temperature": "minima nel buio \u00b7 punto di rugiada {r} \u00b0C",
+  "weather.card.temperatureNoDew": "minima nel buio \u00b7 punto di rugiada non disponibile",
   "weather.card.lowest": "minima nel buio",
   "weather.card.unknown": "Non disponibile",
   // accanto alle lampade, come "buona" e "incerta"
@@ -173,6 +174,7 @@ export const itMeteo = {
   "meteo.night.label.trend": "buio",
   "meteo.hours": "{n} ore",
   "meteo.trend.sky": "{cielo} nel buio, {pct}%",
+  "meteo.trend.skyNone": "Nubi non disponibili nel buio",
   "meteo.exposure.allBroad": "tutte in banda larga",
   "meteo.exposure.none": "nessuna ora di posa nel buio",
   "meteo.band.dark": "buio {buio}",
