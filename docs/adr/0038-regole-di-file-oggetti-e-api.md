@@ -2,7 +2,8 @@
 
 **Stato:** accettata, 24/10/2026 (Marco: l'oggetto annidato si chiede). Ultimi tre gruppi della
 fase 2 del registro (ADR 0033). Nessun valore cambia ora, salvo dove scritto "fase 4". In vigore;
-da costruire la voce "fase 4" dell'oggetto annidato; la ricerca del luogo a 10 s e' fatta (`net.WATCHED_TIMEOUT_S`).
+fatte le due voci "fase 4": l'oggetto annidato (`identify_score.NESTED_SCORE_RATIO`, passo 16) e la
+ricerca del luogo a 10 s (`net.WATCHED_TIMEOUT_S`).
 
 ## Contesto
 

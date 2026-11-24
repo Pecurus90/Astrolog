@@ -14,6 +14,7 @@ Cio' che vale per tutta la catena sta in [`spina.md`](spina.md).
 | Un nome che non e' un oggetto del cielo (una cometa, una cartella) non diventa un oggetto sbagliato | `test_what_is_not_moving_is_not_taken_for_moving`, `test_a_comet_never_takes_the_object_behind_it` |
 | Quando due bersagli contendono davvero, l'app non tira a indovinare: chiede | `test_two_separate_objects_with_close_scores_are_ambiguous`, `test_no_designation_and_two_contenders_in_the_sky` |
 | Non mi chiedera' di scegliere fra un oggetto e la nube che lo avvolge, ma me lo chiedera' fra due bersagli distinti che si sfiorano | `test_a_host_bigger_than_its_guest_is_not_a_rival_either`, `test_containment_far_from_the_frame_is_not_containment` |
+| Uno dentro l'altro e quasi pari (il secondo vale almeno 0,9 del primo, ADR 0038): me lo chiede una volta, e la risposta vale per l'oggetto | `test_a_nested_pair_with_near_equal_scores_is_asked_once`, `test_a_nested_pair_under_the_nested_ratio_stays_silent`, `test_a_doubt_on_a_locked_object_is_not_counted` |
 | L'app mi dice **cosa ho fotografato**, senza che io scriva niente | `test_a_solved_frame_gets_its_object_with_the_catalog_names` |
 | Se il nome che ho scritto e il cielo non concordano me lo chiede, e intanto il frame resta agganciato | `test_the_sky_disagreeing_with_the_name_hangs_the_name_and_asks` |
 | Un frame non risolto finisce nel gruppo del suo nome, non in un limbo | `test_an_unsolved_frame_hangs_on_the_name` |
@@ -207,7 +208,7 @@ leggendo la prosa di un motivo non e' un test.
 | una sigla | fra i candidati c'e' quella sigla, in cima o no | **aggancia a lei** | `coord_confirmed` / `certain` | `name_and_sky_agree` |
 | una sigla | solo altre cose: quella sigla nel campo non c'e' | **Da confermare**, col nome agganciato come ipotesi e cosa c'e' invece a quelle coordinate | `coord_review` / `low` | `sky_disagrees` |
 | niente, o un nome libero | una cosa sola e sicura | **aggancia** | `coord_confirmed` / `certain` | `sky_only` |
-| niente, o un nome libero | piu' candidati vicini di punteggio | **Da confermare**, agganciato al migliore | `coord_review` / `low` | `sky_ambiguous` |
+| niente, o un nome libero | piu' candidati vicini di punteggio: distinti, il secondo almeno 0,6 del primo; uno dentro l'altro, almeno 0,9 | **Da confermare**, agganciato al migliore | `coord_review` / `low` | `sky_ambiguous` |
 | una sigla | niente cielo (frame non risolto) | **aggancia dal nome** | `exact_name` / `high` | `name_only` |
 | un nome storico (`NGC 224` per M 31) | niente cielo | **aggancia dal nome** | `historic_name` / `high` | `name_only` |
 | un nome libero | niente cielo | **aggancia a un oggetto fuori catalogo che porta quel nome**, e va in Da confermare | `exact_name` / `low` | `free_name_only` |

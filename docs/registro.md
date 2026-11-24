@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 412; senza fonte: 0.
-Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 42; T tecnico: 99.
+Valori: 413; senza fonte: 0.
+Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T tecnico: 99.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -734,6 +734,7 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 42; T
 | CATALOG_PRIORITY | `"B": 0.3, "Abell": 0.3, "RCW": 0.3,` | M ADR 0038: archive, held out by object |
 | CATALOG_PRIORITY_DEFAULT | `0.2` | M ADR 0038: archive, held out by object |
 | AMBIGUOUS_SCORE_RATIO | `0.6` | M ADR 0038: archive, held out by object |
+| NESTED_SCORE_RATIO | `0.9` | M ADR 0038: archive, silent disagreements 37 to 15 |
 | AMBIGUOUS_SEPARATION_DEG | `0.4` | M ADR 0038: archive, held out by object |
 
 ### spine/mosaic_geometry.py

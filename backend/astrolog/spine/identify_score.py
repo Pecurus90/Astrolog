@@ -31,6 +31,8 @@ CATALOG_PRIORITY_DEFAULT = 0.2  # [M ADR 0038: archive, held out by object]
 
 # Ambiguity needs both: a competitive score AND an object distinct from the best.
 AMBIGUOUS_SCORE_RATIO = 0.6  # [M ADR 0038: archive, held out by object]
+# Nested pair (one inside the other): asked only this close, else the piece is no rival.
+NESTED_SCORE_RATIO = 0.9  # [M ADR 0038: archive, silent disagreements 37 to 15]
 # Fallback, only when neither candidate carries a size.
 AMBIGUOUS_SEPARATION_DEG = 0.4  # [M ADR 0038: archive, held out by object]
 
@@ -118,11 +120,11 @@ def is_ambiguous(
     separation_deg: float | None,
     fov_radius_deg: float | None = None,
 ) -> bool:
-    """Does the second really contend? Score alone would send a nebula and its own cluster to
-    confirmation."""
+    """Does the second really contend? One inside the other needs a near tie, or a nebula and its
+    own cluster would always go to confirmation."""
     if second is None or separation_deg is None:
         return False
-    if _is_inside(first, second, separation_deg, fov_radius_deg):
-        return False
+    nested = _is_inside(first, second, separation_deg, fov_radius_deg)
+    ratio = NESTED_SCORE_RATIO if nested else AMBIGUOUS_SCORE_RATIO
     best = score_candidate(first, fov_radius_deg)
-    return score_candidate(second, fov_radius_deg) >= AMBIGUOUS_SCORE_RATIO * best
+    return score_candidate(second, fov_radius_deg) >= ratio * best

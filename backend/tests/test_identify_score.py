@@ -299,6 +299,28 @@ def test_a_host_bigger_than_its_guest_is_not_a_rival_either():
     assert score.is_ambiguous(iris, nube, separation_deg=0.1001, fov_radius_deg=0.806) is False
 
 
+def test_a_nested_pair_with_near_equal_scores_is_asked_once():
+    """ADR 0038 (Marco): quando uno sta dentro l'altro e il secondo vale almeno 0,9 volte il primo,
+    chi abbia scattato quale soggetto non lo dice il cielo: 37 dei 41 disaccordi dell'archivio
+    erano annidati e scelti in silenzio. Voci costruite: conta il rapporto, non chi sono."""
+    ospite = nel_cono(name="NGC 1", sep_deg=0.02, size_major_arcmin=60.0, magnitude=7.0)
+    pari = nel_cono(name="NGC 2", sep_deg=0.05, size_major_arcmin=50.0, magnitude=7.0)
+    rapporto = score.score_candidate(pari, 0.8) / score.score_candidate(ospite, 0.8)
+    assert score.NESTED_SCORE_RATIO <= rapporto < 1.0
+    assert score.is_ambiguous(ospite, pari, separation_deg=0.06, fov_radius_deg=0.8) is True
+
+
+def test_a_nested_pair_under_the_nested_ratio_stays_silent():
+    """Sotto 0,9 il primo domina: il pezzo dentro il soggetto non e' un rivale, anche se fra due
+    oggetti distinti (soglia 0,6) lo sarebbe. Senza questa soglia ogni campo con un pezzo
+    chiederebbe."""
+    ospite = nel_cono(name="M 1", sep_deg=0.02, size_major_arcmin=60.0, magnitude=5.0)
+    pezzo = nel_cono(name="NGC 2", sep_deg=0.05, size_major_arcmin=20.0, magnitude=7.0)
+    rapporto = score.score_candidate(pezzo, 0.8) / score.score_candidate(ospite, 0.8)
+    assert score.AMBIGUOUS_SCORE_RATIO <= rapporto < score.NESTED_SCORE_RATIO
+    assert score.is_ambiguous(ospite, pezzo, separation_deg=0.06, fov_radius_deg=0.8) is False
+
+
 def test_containment_far_from_the_frame_is_not_containment():
     """Il contenimento geometrico da solo dichiarerebbe "lo stesso soggetto" cose che stanno a
     gradi di distanza: nel catalogo vero **44 coppie**, e fra queste NGC 1977 (il Running Man)
@@ -313,8 +335,9 @@ def test_containment_far_from_the_frame_is_not_containment():
     running = nel_cono(name="NGC 1977", sep_deg=0.0, size_major_arcmin=10.2, magnitude=None)
     m42 = nel_cono(name="M 42", sep_deg=0.5453, size_major_arcmin=90.0, magnitude=4.0)
     assert score.is_ambiguous(running, m42, separation_deg=0.5454, fov_radius_deg=0.2043) is True
-    # la stessa coppia in una foto larga abbastanza da contenerli tutti e due: uno dentro l'altro
-    assert score.is_ambiguous(running, m42, separation_deg=0.5454, fov_radius_deg=1.5) is False
+    # la stessa coppia in una foto larga abbastanza da contenerli tutti e due: uno dentro l'altro,
+    # M 42 in testa, e il Running Man vale 0,874 di lui, sotto la soglia degli annidati
+    assert score.is_ambiguous(m42, running, separation_deg=0.5454, fov_radius_deg=1.5) is False
 
 
 def test_without_a_size_the_old_fixed_threshold_still_answers():
@@ -323,7 +346,10 @@ def test_without_a_size_the_old_fixed_threshold_still_answers():
     # due voci senza dimensione, a pari scarto dal puntamento: quanto distino **fra loro**
     # dipende da che angolo stanno, e con questi scarti va da 0,01 a 0,91 gradi
     uno = nel_cono(name="Ced 76", sep_deg=0.45, size_major_arcmin=None, magnitude=None)
-    altro = nel_cono(name="Ced 77", sep_deg=0.46, size_major_arcmin=None, magnitude=None)
+    # un catalogo minore: a pari punteggio due annidati si chiedono comunque (ADR 0038)
+    altro = nel_cono(name="PK 77", sep_deg=0.46, size_major_arcmin=None, magnitude=None)
+    rapporto = score.score_candidate(altro) / score.score_candidate(uno)
+    assert score.AMBIGUOUS_SCORE_RATIO <= rapporto < score.NESTED_SCORE_RATIO
     assert score.is_ambiguous(uno, altro, separation_deg=0.9) is True  # due oggetti: si chiede
     assert score.is_ambiguous(uno, altro, separation_deg=0.2) is False  # a ridosso: uno solo
     # e la soglia fissa non e' una scorciatoia per saltare l'inquadratura: gli stessi due, in

@@ -885,7 +885,9 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   riconosce, ne' una sigla del catalogo scritta nel file (`M 31`) anche se il cielo non c'e': quelli
   li conta fra gli oggetti gia' riconosciuti, che correggi dal fondo della sezione. Ti chiede un nome
   che il catalogo non conosce, e quello su cui nome e cielo non vanno d'accordo, o il cielo esita
-  fra piu' oggetti vicini. A ogni scheda rispondi allo stesso modo: scegli una
+  fra piu' oggetti vicini. Quando un oggetto sta dentro un altro (una galassia nana dentro la sua
+  ospite, un ammasso dentro la sua nebulosa) l'app sceglie da sola il soggetto che spicca; se i due
+  si equivalgono quasi, te lo chiede una volta, e la risposta vale per l'oggetto. A ogni scheda rispondi allo stesso modo: scegli una
   voce fra quelle che il cielo ha trovato -- quando ne ha trovate --, scrivi il nome, oppure spunta
   *non e' un oggetto*, per un frame di prova o una messa a fuoco. *Non e' un oggetto* vale anche
   per un oggetto che l'app ha riconosciuto: quei frame escono dalle ore, e la scheda resta, con
