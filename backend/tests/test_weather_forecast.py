@@ -8,6 +8,7 @@ import json
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
@@ -79,6 +80,27 @@ def test_the_request_asks_every_model_the_hours_and_utc():
     assert "timezone=UTC" in url
     for loro in openmeteo.VARIABLES:
         assert loro in url
+
+
+def test_the_request_names_each_parameter_as_open_meteo_spells_it():
+    """Open-Meteo reads `longitude` and `hourly` by name, the hours comma-separated."""
+    query = parse_qs(urlsplit(openmeteo.url("https://x/v1", 45.55, 11.55, ["a", "b"])).query)
+    assert query == {
+        "latitude": ["45.55"],
+        "longitude": ["11.55"],
+        "hourly": ["a,b"],
+        "timezone": ["UTC"],
+    }
+
+
+@pytest.mark.parametrize(
+    ("storta", "perche"),
+    [({}, "manca la serie oraria"), ({"hourly": {"time": ["ieri"]}}, "orari illeggibili")],
+)
+def test_a_refused_answer_says_why(storta, perche):
+    with pytest.raises(openmeteo.BadAnswerError) as err:
+        openmeteo.parse(storta)
+    assert str(err.value) == perche
 
 
 def test_the_answer_is_read_per_model_in_utc():

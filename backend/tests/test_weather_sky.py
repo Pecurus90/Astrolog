@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from astrolog.weather import cams, forecast, openmeteo, rounds, sky
+from astrolog.weather import cams, forecast, nights, openmeteo, rounds, sky
 from astrolog.weather.fetches import Source
 from test_weather_forecast import (  # noqa: F401 - `db` e' una fixture
     ADESSO,
@@ -147,3 +147,12 @@ def test_a_round_without_a_timezone_writes_no_attempt(db):  # noqa: F811
 
     rounds.refresh(db, replace(SITO, timezone=None), fetch=tutti(), now=ADESSO)
     assert fetches.last(db, SITO.id, Source.FORECAST) is None
+
+
+def test_a_series_ending_on_a_night_s_first_hour_still_gives_that_night():
+    """Not whole, a night enters with the single hour the series reaches."""
+    t0 = datetime(2026, 9, 24, 12, tzinfo=UTC)
+    tempi = [t0 + timedelta(hours=i) for i in range(25)]
+    trovate = nights.covered("UTC", tempi, "2026-09-24", whole=False)
+    assert [(notte, len(ore)) for notte, ore in trovate] == [("2026-09-24", 24), ("2026-09-25", 1)]
+    assert trovate[1][1] == [(24, tempi[24])]
