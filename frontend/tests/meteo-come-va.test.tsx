@@ -108,7 +108,7 @@ function disegnaComeVa(
       detto={p.detto ?? detto()}
       notte={n}
       prima={p.prima ?? true}
-      formato={p.telefono ? "telefono" : "largo"}
+      formato={p.telefono ? "telefono" : "desktop"}
       sguardo={sguardo}
     />,
   )
