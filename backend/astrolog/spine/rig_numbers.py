@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from ..units import scale_arcsec_px
+from ..units import ARCSEC_PER_RAD_PER_1000, scale_arcsec_px
 
 Card = Mapping[str, Any]
 Number = dict[str, Any]
@@ -20,6 +20,12 @@ GUIDE_SCALE_RANGE = (0.5, 4.0)
 DAWES_ARCSEC_MM = 116.0
 # Only the percentage, a warning above the payload: no maker publishes a margin. [P ADR 0021]
 FULL_LOAD_PERCENT = 100.0
+# Airy FWHM in lambda/D. [C en.wikipedia.org/wiki/Airy_disk: "full width at half maximum ... 1.029"]
+DIFFRACTION_FWHM_PER_LAMBDA_D = 1.029
+# Johnson V, where seeing and stars meet. [C en.wikipedia.org/wiki/Photometric_system: V 551 nm]
+V_BAND_NM = 551.0
+# A square pixel blurs as variance p^2/12; as FWHM 2 sqrt(2 ln 2) / sqrt(12) = 0.68 p. [P ADR 0039]
+PIXEL_FWHM_PER_PIXEL = 2 * math.sqrt(2 * math.log(2)) / math.sqrt(12)
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +103,15 @@ def _sampling_number(rig: RigCard) -> Number:
     scale = _sampling(rig)
     low, high = SEEING_PER_SCALE
     return {"value": scale, "seeing_from": low * scale, "seeing_to": high * scale}
+
+
+def _seeing_floor(rig: RigCard) -> Number:
+    """The star the rig draws with no seeing, F: diffraction and pixel in quadrature (ADR 0039)."""
+    scale = _sampling(rig)
+    aperture_mm = _need(rig.optics, "optics", "aperture_mm")
+    # nm over mm is 1e-6 rad; ARCSEC_PER_RAD_PER_1000 carries the other 1e3
+    airy = DIFFRACTION_FWHM_PER_LAMBDA_D * V_BAND_NM / aperture_mm * ARCSEC_PER_RAD_PER_1000 / 1000
+    return {"value": math.hypot(airy, PIXEL_FWHM_PER_PIXEL * scale)}
 
 
 def _field(rig: RigCard) -> Number:
@@ -212,6 +227,7 @@ def _load(rig: RigCard) -> Number:
 _EMPTY = {
     "focal_ratio": ("value",),
     "sampling": ("value", "seeing_from", "seeing_to"),
+    "seeing_floor": ("value",),
     "field": ("width", "height"),
     "sensor_size": ("width", "height"),
     "coverage": ("diagonal_mm", "circle_mm", "covers"),
@@ -242,6 +258,7 @@ def numbers(rig: RigCard) -> dict[str, Number]:
     return {
         "focal_ratio": _one("focal_ratio", _focal_ratio, rig),
         "sampling": _one("sampling", _sampling_number, rig),
+        "seeing_floor": _one("seeing_floor", _seeing_floor, rig),
         "field": _one("field", _field, rig),
         "sensor_size": _one("sensor_size", _sensor_size, rig.camera),
         "coverage": _one("coverage", _coverage, rig),

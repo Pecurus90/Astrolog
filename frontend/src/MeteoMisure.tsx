@@ -14,6 +14,7 @@ import type { Formato } from "./componenti/Tema"
 import { ESITO } from "./DashboardDati"
 import { type Chiave, numero, oraDelSito, t } from "./i18n"
 import type { Sguardo } from "./Meteo"
+import { Campionamento, CampionamentoTel } from "./MeteoCampionamento"
 import { RaccontoDellaNotte } from "./MeteoEventi"
 import {
   ALTRE,
@@ -518,6 +519,8 @@ export function LeMisure({
         ]
       : []
   })
+  // the sampling's subtitle says the seeing card's number
+  const visto = n.measures.find((m) => m.code === "seeing")?.value
   const etichetta = (k: Carta9) =>
     k.code === "cloud" || k.code === "cloud_low"
       ? t("meteo.card.tag.pct")
@@ -593,6 +596,7 @@ export function LeMisure({
             </span>
           ))}
         </div>
+        {visto != null && <CampionamentoTel notte={n} seeing={visto} />}
       </Carta>
     )
   }
@@ -656,6 +660,7 @@ export function LeMisure({
           </span>
         ))}
       </Carta>
+      {visto != null && <Campionamento notte={n} seeing={visto} />}
     </>
   )
 }

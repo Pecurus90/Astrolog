@@ -584,6 +584,19 @@ l'ultima volta e la pagina te lo dice. Se il seeing copre solo una parte della n
 dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al giorno, perche' la
 chiave gratuita ha un tetto di chiamate l'anno.
 
+Quando c'e' il seeing in arcosecondi, in fondo alla pagina la carta **Campionamento** prende i tuoi
+setup uno per uno, i piu' usati prima. Per ognuno dice la scala in ″/px e se con il seeing previsto
+e' **ottimo**, **sottocampionato** (la scala supera meta' del seeing: le stelle stanno in troppo
+pochi pixel) o **sovracampionato** (la scala e' sotto un terzo: i pixel sono piu' fini di quanto il
+cielo permetta). Accanto dice se **quel seeing basta a quel setup**: ogni setup ha un **limite**, la
+stella piu' fine che disegnerebbe con l'aria ferma, fatta dalla diffrazione dell'apertura e dalla
+grandezza dei pixel. Quando il seeing arriva al limite il seeing e' **incerto**: per le stelle il
+tempo di posa raddoppia. Quando e' 1,73 volte il limite le stelle escono larghe il doppio, ed e'
+**non adatto**. Per questo lo stesso seeing di 2″ e' buono per un piccolo rifrattore e non adatto
+per un Schmidt-Cassegrain da 20 cm con pixel fini. Il giudizio guarda l'ora peggiore della notte,
+come la carta Seeing. Se all'ottica manca l'apertura, la carta lo dice e la scrivi in Attrezzatura.
+Senza il numero del seeing la carta non c'e'.
+
 D'estate al nord, dove il buio astronomico non arriva, le ore di posa si contano nel buio nautico
 (il Sole sotto i 12 gradi) e la notte lo dice: *ore di posa nel buio nautico*; ancora piu' a nord,
 dove manca anche quello, si contano col Sole sotto l'orizzonte, e la notte dice anche questo. Dove

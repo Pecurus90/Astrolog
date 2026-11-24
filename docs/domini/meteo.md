@@ -31,6 +31,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
 | Le prime tre notti hanno le ore; dalla quarta alla settima vedo solo la tendenza, detta meno affidabile | `test_three_nights_are_full_and_the_following_are_a_trend`, `test_a_trend_night_keeps_the_moon_as_written`, *dalla quarta notte mostra la tendenza, senza ore* |
 | Accanto al verdetto leggo quanti modelli sono d'accordo | `test_each_night_says_how_many_models_agree`, *in testa le Ore di posa col semaforo, le bande e l'accordo, e nella fila da che ora a che ora* |
 | Per la planetaria vedo il jet stream, l'aerosol e, con la chiave Meteoblue, il seeing; nessun dato a fasce o ogni tre ore | `test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour`, `test_without_a_key_the_sky_is_asked_only_to_cams`, *un seeing che copre solo parte della notte lo dice nella media e nel picco* |
+| Col seeing in secondi d'arco vedo, per ogni mio setup, se e' ben campionato e se quel seeing gli basta rispetto al suo limite (ADR 0021, 0039; Marco, 24/11/2026); un setup cambiato si vede al giro dopo | `test_the_sampling_is_ideal_from_a_third_to_a_half_of_the_seeing_edges_included`, `test_the_seeing_is_marginal_from_the_floor_and_nogo_from_root_three_floors`, `test_the_seeing_word_comes_from_the_worst_hour_and_the_sampling_from_the_mean`, `test_without_a_number_of_seeing_no_setup_is_judged`, `test_a_changed_setup_reaches_the_written_nights_at_the_next_step`, `test_the_seeing_floor_joins_diffraction_and_pixel_in_quadrature`, *dice il seeing previsto e per ogni setup scala, campionamento, seeing e limite*, *un setup senza nome si chiama ottica e camera, e senza apertura dice cosa manca*, *senza setup giudicati la carta non c'e'* |
 | Una fonte del cielo che tace tiene le sue righe e non ferma le altre, e la previsione non le tocca | `test_each_source_writes_only_its_rows_and_a_silent_one_keeps_them` |
 | Con la mia chiave Meteoblue, che metto nel primo avvio o nelle Impostazioni, ho il seeing Meteoblue ora per ora | `test_with_the_key_the_seeing_comes_from_meteoblue_hour_by_hour`, `test_the_seeing_is_read_hour_by_hour_in_utc_as_a_single_value`, *una chiave che vale si manda al backend, e dopo si vede solo come finisce* |
 | La chiave si prova sul conto prima di salvarla, e non esce mai intera: ne' dall'API, ne' nel log | `test_a_key_the_account_refuses_is_not_kept`, `test_the_key_cannot_be_written_without_being_tried`, `test_a_good_key_is_kept_and_shown_only_by_its_last_four_characters`, `test_the_other_service_key_does_not_come_out_whole_either`, `test_a_short_key_never_comes_out_whole`, `test_the_key_never_reaches_the_log` |
@@ -112,7 +113,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con ogni tratto
   continuo delle ore che la portano e il conto (tavola v82: due tratti non fanno un intervallo solo). Le soglie stanno in `backend/astrolog/weather/judge.py`, con
   la fonte accanto al numero (riverificate il 24/10/2026, ADR 0034), e la rotta le manda alla
-  pagina (`scales`). ADR 0039 sostituira' la condensa (Beysens), il seeing (rispetto al setup) e,
+  pagina (`scales`). ADR 0039 sostituira' la condensa (Beysens) e,
   quando i frame bastano, le raffiche (per setup: la regola e' scritta, `pipeline/setup_rules.py`
   e `domini/misure.md`, e si collega al passo 40); oggi valgono queste:
   - nuvole e nuvole basse: classi FEW e SCT (WMO/ICAO); pioggia: qualunque e' niente (ASCOM);
@@ -122,10 +123,21 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
     degli astrofili; la nebbia la dice la visibilita');
   - jet stream (250 hPa): niente da 126 km/h, i 35 m/s che meteoblue dice "seeing
     cattivo"; nessuna fonte per un gradino incerto, quindi non c'e';
-  - seeing: buona fino a 2", incerta fino a 4", niente oltre (Astronomy Tools: Good, OK, Poor);
-    accanto, per la notte e per ogni setup, il **campionamento** col seeing previsto:
-    sottocampionato se la scala supera 1/2 del seeing, sovracampionato sotto 1/3; senza seeing
-    tace (ADR 0021, Nyquist). Da costruire; incontra il pavimento F del setup di ADR 0039;
+  - seeing: buona fino a 2", incerta fino a 4", niente oltre (Astronomy Tools: Good, OK, Poor):
+    e' la carta Seeing, senza setup (ADR 0039: "senza setup 2"/4"").
+    Accanto, la carta **Campionamento** (tavola v82; costruita 24/11/2026, `weather/setups.py`):
+    per notte e per ogni setup con la scala, i piu' usati prima. Il **campionamento** col seeing
+    previsto della carta (la media nel buio): sottocampionato se la scala supera 1/2 del seeing,
+    sovracampionato sotto 1/3, bordi compresi ottimo (ADR 0021, Nyquist). Il **seeing rispetto al
+    setup** (Marco, 24/11/2026: per ogni setup, non un setup solo) con l'ora peggiore, come la carta
+    Seeing: incerto da F, niente da 1,73 F (ADR 0039), dove F, il **limite del setup**, e'
+    diffrazione e pixel in quadratura: Airy 1,029 lambda/D a 551 nm (banda V) e 0,68 volte la
+    scala (`rig_numbers.seeing_floor`). F, seeing e bordi del campionamento si confrontano come si
+    leggono, al decimo. Senza apertura
+    dell'ottica il campionamento resta e il seeing dice cosa manca. Senza numero di seeing (niente
+    chiave, chiave rifiutata, solo la stima dal jet) e nelle notti di tendenza la carta non c'e'.
+    Il Meteo non conosce la spina: legge scala, F e nome dai conti scritti (`gear_numbers`), e il
+    giro del meteo (ogni minuto) riscrive i setup delle notti quando cambiano;
   - aerosol: sotto 0,1 *limpido*, da 1 *molto fosco* (NASA Earth Observatory); in mezzo nessuna
     parola, che per la notte e' peggio di *limpido* (un'ora limpida non fa limpida la notte);
   - Luna, per la banda larga: buona sotto il 25% illuminata, *banda larga al limite* fino al 65%,

@@ -13,6 +13,14 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Meteo, carta Campionamento (passo 14, 24/11): ogni casella di setup ha ora, dopo la
+  pillola del campionamento, una **seconda pillola** «seeing buono / incerto / non adatto» (il
+  seeing rispetto al limite del setup, ADR 0039; Marco: per ogni setup) e, sotto la nota «ottimo
+  con seeing fra…», una seconda nota «limite del setup 0,7″»; senza apertura dell'ottica la nota
+  dice «seeing: manca l'apertura dell'ottica» e la seconda pillola non c'e'. Sul telefono le due
+  pillole stanno a destra una sopra l'altra (affiancate stringevano le righe del setup) e il
+  limite e' una riga sotto la scala. Da ridisegnare nella
+  tavola Meteo (righe 80-83 e 152), desktop e telefono, coi setup veri dei dati simulati.
 - [da dare] Riquadro della scansione nel menu dell'ingranaggio (Issue #20, 18/11): (a) la catena
   delle fasi -- oggi il riquadro dice solo la fase corrente («Lettura dei file»), il backend sa
   tutte le fasi della corsa (lettura, impronta, cielo, oggetti, notti) con fatto/in corso/da fare;

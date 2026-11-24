@@ -207,6 +207,8 @@ def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
         written = numbers.get(r["id"])
         # the pieces the numbers read are written with them; on the page they are not a number
         pieces = written.pop("pieces") if written else None
+        if written:
+            written.pop("label", None)  # the Weather's: here the name comes from the declarations
         rows.append(
             {
                 **_row(r),

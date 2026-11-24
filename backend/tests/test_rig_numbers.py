@@ -38,6 +38,31 @@ def test_the_example_of_the_board_comes_back():
     assert conti["guide_ratio"]["value"] == pytest.approx(3.32, abs=0.01)
 
 
+def test_the_seeing_floor_joins_diffraction_and_pixel_in_quadrature():
+    """ADR 0039: Airy 1,029 lambda/D a 551 nm (72 mm: 1,624") e pixel 0,68 p (1,94": 1,318")."""
+    pavimento = rn.numbers(setup())["seeing_floor"]
+    assert pavimento["value"] == pytest.approx(2.092, abs=0.001)
+    assert pavimento["missing"] is None
+
+
+def test_a_big_aperture_with_fine_pixels_has_a_low_floor():
+    c8 = {"kind": "optics", "aperture_mm": 203.2}
+    # 0,5"/px: pixel 3,76 um a 1551 mm di focale
+    pavimento = rn.numbers(setup(optics=c8, focal_mm=3.76 * 206.264806 / 0.5))["seeing_floor"]
+    assert pavimento["value"] == pytest.approx(0.668, abs=0.001)
+
+
+def test_the_seeing_floor_without_the_aperture_says_so():
+    pavimento = rn.numbers(setup(optics={"kind": "optics", "aperture_mm": None}))["seeing_floor"]
+    assert pavimento == {"value": None, "missing": {"kind": "optics", "field": "aperture_mm"}}
+
+
+def test_the_seeing_floor_without_the_pixel_names_the_pixel():
+    senza_pixel = {**CAMERA, "pixel_size_um": None}
+    pavimento = rn.numbers(setup(camera=senza_pixel))["seeing_floor"]
+    assert pavimento["missing"] == {"kind": "camera", "field": "pixel_size_um"}
+
+
 def test_the_resolving_power_of_an_optics_is_dawes():
     assert rn.piece_numbers(OTTICA)["dawes"]["value"] == pytest.approx(1.61, abs=0.01)
 

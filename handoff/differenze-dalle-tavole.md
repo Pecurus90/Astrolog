@@ -816,8 +816,12 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
   racconto va da un capo all'altro delle ore disegnate, e puo' dire un pianeta che sorge di
   giorno; (7) toccare un evento accende solo quella riga, come la tavola (`hover === e.at`);
   raffiche e condensa si scrivono intere, come le misure della tavola (`dec: 0`).
-- **Il campionamento dei setup** (righe 80-83, 440): fuori fino al passo 14 (seeing rispetto al
-  pavimento del setup, ADR 0039); la tavola usa scale inventate.
+- **Il campionamento dei setup** (righe 80-83, 152, 440; passo 14, 24/11): portato con le scale
+  vere dei setup, i piu' usati prima. In piu' della tavola, per decisione di Marco: la seconda
+  pillola «seeing buono / incerto / non adatto» (rispetto al limite del setup, ADR 0039) e la nota
+  «limite del setup {F}″», o «seeing: manca …» senza apertura; sul telefono il limite e' una riga
+  sotto «scala · ottimo con seeing fra…» e le due pillole stanno una sopra l'altra (richiesta a Design in
+  `per-design.md`). Il nome di un setup senza nome e' «ottica · camera», come la tavola.
 - **Il Sole** (riga 187): «Sole non disponibile» come la tavola; «Meteo apre su» non si salva
   (gia' scritto sotto Impostazioni). I sette giorni del Sole al passo 46.11.
 - **Il grafico a ore, non a quarti d'ora** (righe 337-338, 538): la tavola interpola le ore a 57

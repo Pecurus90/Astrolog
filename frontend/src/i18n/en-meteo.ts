@@ -238,6 +238,18 @@ export const enMeteo = {
   "meteo.moon.rest.around": "{libera} until {da} and from {a}",
   "meteo.other.title": "Other measures",
   "meteo.other.sub": "no rating, for context",
+  "meteo.sampling.title": "Sampling",
+  "meteo.sampling.sub": "of the setups, with the forecast seeing of {s}″", // glifo-ok: board glyph
+  "meteo.sampling.sub.tel": "with the forecast seeing of {s}″", // glifo-ok: board glyph
+  "meteo.sampling.ideal": "optimal",
+  "meteo.sampling.under": "undersampled",
+  "meteo.sampling.over": "oversampled",
+  "meteo.sampling.note": "optimal with seeing between {da} and {a}″", // glifo-ok: board glyph
+  "meteo.sampling.seeing.go": "good seeing",
+  "meteo.sampling.seeing.marginal": "uncertain seeing",
+  "meteo.sampling.seeing.nogo": "unsuitable seeing",
+  "meteo.sampling.floor": "setup limit {f}″", // glifo-ok: board glyph
+  "meteo.sampling.floor.missing": "seeing: {manca}",
   "meteo.sources.siteTime": "Times in site local time",
   "meteo.events.lab": "{n} events, in time order \u00b7 tap one to bring the chart there",
   "meteo.events.lab.one": "1 event \u00b7 tap it to bring the chart there",

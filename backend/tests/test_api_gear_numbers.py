@@ -11,6 +11,7 @@ from astrolog.api import work
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.spine import backup, rig_numbers
+from astrolog.weather import setups
 from group_bench import ROMA, attrezzo, corri, luogo, posa, prepara
 from test_api_gear_write import correggi, crea, pezzo
 
@@ -78,6 +79,24 @@ def test_the_rig_says_what_it_lacks_then_its_number_once_written(archivio):
     assert pezzo(archivio, "optics", "TS 130 APO")["numbers"]["dawes"]["value"] == pytest.approx(
         116 / 130
     )
+
+
+def test_the_weather_reads_the_rig_with_its_name_and_floor_from_the_written_numbers(
+    archivio, db_path
+):
+    """Il Meteo non conosce la spina: legge nome, scala e pavimento F dai conti scritti."""
+    ottica = pezzo(archivio, "optics", "TS 130 APO")
+    assert correggi(archivio, ottica["id"], aperture_mm=130.0).status_code == 200
+    assert archivio.patch(f"/api/v1/gear/rigs/{il_setup(archivio)['id']}", json={"name": "Casa"})
+    conn = connect(db_path)
+    try:
+        (rig,) = setups.rigs(conn)
+    finally:
+        conn.close()
+    assert (rig.name, rig.optics, rig.camera, rig.frames) == ("Casa", "TS 130 APO", "ASI2600MM", 2)
+    assert rig.scale_arcsec_px == pytest.approx(0.852, abs=0.001)
+    assert rig.floor_arcsec == pytest.approx(1.070, abs=0.001)
+    assert "label" not in il_setup(archivio)["numbers"]
 
 
 def test_the_page_reads_the_numbers_and_never_computes_them(archivio):

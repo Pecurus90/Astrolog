@@ -249,6 +249,20 @@ export const itMeteo = {
   "meteo.moon.rest.around": "{libera} fino alle {da} e dalle {a}",
   "meteo.other.title": "Altre misure",
   "meteo.other.sub": "senza giudizio, per contesto",
+  // Il campionamento dei setup col seeing previsto (tavola v82), e il seeing rispetto al limite
+  // del setup (Marco, 24/11/2026).
+  "meteo.sampling.title": "Campionamento",
+  "meteo.sampling.sub": "dei setup, col seeing previsto di {s}″", // glifo-ok: board glyph
+  "meteo.sampling.sub.tel": "col seeing previsto di {s}″", // glifo-ok: board glyph
+  "meteo.sampling.ideal": "ottimo",
+  "meteo.sampling.under": "sottocampionato",
+  "meteo.sampling.over": "sovracampionato",
+  "meteo.sampling.note": "ottimo con seeing fra {da} e {a}″", // glifo-ok: board glyph
+  "meteo.sampling.seeing.go": "seeing buono",
+  "meteo.sampling.seeing.marginal": "seeing incerto",
+  "meteo.sampling.seeing.nogo": "seeing non adatto",
+  "meteo.sampling.floor": "limite del setup {f}″", // glifo-ok: board glyph
+  "meteo.sampling.floor.missing": "seeing: {manca}",
   "meteo.sources.siteTime": "Orari in ora locale del sito",
   // Il racconto della notte (tavola v82, Meteo.dc.html:460-499)
   "meteo.events.lab": "{n} eventi, in ordine d'ora \u00b7 toccane uno per portarci il grafico",

@@ -6899,6 +6899,11 @@ export interface components {
              * @description The night's story from sunset to sunrise, in time order, the dark first at the same minute; written with the forecast. Empty for a trend night.
              */
             events: components["schemas"]["WeatherEventOut"][];
+            /**
+             * Setups
+             * @description Every setup with a scale, most used first; empty without a number of seeing (no Meteoblue key, or only the jet's estimate) and for a trend night.
+             */
+            setups: components["schemas"]["WeatherSetupOut"][];
         };
         /**
          * WeatherOut
@@ -6989,6 +6994,52 @@ export interface components {
             source: "meteoblue" | null;
             /** Meteoblue */
             meteoblue: ("ok" | "refused" | "limited" | "unreachable" | "bad_answer") | null;
+        };
+        /**
+         * WeatherSetupOut
+         * @description A setup against the night's seeing (ADR 0021, 0039): the sampling with the forecast seeing
+         *     (the measure's `value`), the seeing against the setup's floor with the worst hour (`peak`).
+         */
+        WeatherSetupOut: {
+            /** Rig Id */
+            rig_id: number;
+            /**
+             * Name
+             * @description The name the user gave; null: optics and camera.
+             */
+            name: string | null;
+            /** Optics */
+            optics: string | null;
+            /** Camera */
+            camera: string | null;
+            /** Scale Arcsec Px */
+            scale_arcsec_px: number;
+            /**
+             * Seeing From
+             * @description The sampling is ideal with seeing from here...
+             */
+            seeing_from: number;
+            /**
+             * Seeing To
+             * @description ...to here: 2 and 3 times the scale.
+             */
+            seeing_to: number;
+            /**
+             * Sampling
+             * @enum {string}
+             */
+            sampling: "under" | "ideal" | "over";
+            /**
+             * Floor Arcsec
+             * @description F, the star the setup draws without seeing: diffraction and pixel, to a tenth. Null when a datum lacks: `floor_missing` names it.
+             */
+            floor_arcsec: number | null;
+            floor_missing: components["schemas"]["Missing"] | null;
+            /**
+             * Seeing Level
+             * @description Marginal from seeing F, nogo from 1.73 F; null without a floor.
+             */
+            seeing_level: ("go" | "marginal" | "nogo") | null;
         };
         /**
          * WeatherSourceOut

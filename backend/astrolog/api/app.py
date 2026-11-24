@@ -36,7 +36,7 @@ from ..spine import (
 )
 from ..spine.stages import StageName
 from ..startup import LOCAL_HOSTS
-from ..weather import climate, forecast, history, rounds
+from ..weather import climate, forecast, history, rounds, setups
 from ..worker.worker import Worker
 from . import (
     archive,
@@ -176,6 +176,11 @@ def _weather_round(db_path: str, cadence: forecast.Cadence) -> None:
         except Exception:
             log.exception("luna: il giro del calendario e' caduto")
         _tonight_step(conn, site)
+        try:
+            if setups.step(conn):  # a setup changed reaches the written nights
+                conn.commit()
+        except Exception:
+            log.exception("meteo: i setup delle notti non riscritti")
         if cadence.due(site, time.monotonic()):
             outcome = rounds.refresh(conn, site)
             log.debug("meteo: previsione a %.2f, esito %s", time.monotonic(), outcome)

@@ -48,6 +48,7 @@ ENGLISH = frozenset(
         "ini",
         "into",
         "iso",
+        "lambda",
         "lo",
         "meta",
         "mono",

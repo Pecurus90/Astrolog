@@ -68,6 +68,15 @@ def _rig_card(
     )
 
 
+def _labels(conn: sqlite3.Connection) -> dict[int, dict[str, str | None]]:
+    """What names a rig away from Gear: the Weather reads it here, it does not know the spine."""
+    names = rigs.rig_names(conn)
+    return {
+        r["id"]: {"name": names.get(key), "optics": r["optics"], "camera": r["camera"]}
+        for key, r in rigs.rigs_with_keys(conn)
+    }
+
+
 def write(conn: sqlite3.Connection) -> None:
     cards = _cards(conn)
     used = _used(conn)
@@ -76,8 +85,13 @@ def write(conn: sqlite3.Connection) -> None:
         ("instrument", piece_id, json.dumps(rn.piece_numbers(card)))
         for piece_id, card in cards.items()
     ]
+    labels = _labels(conn)
     for rig in conn.execute("SELECT id, focal_mm, optics_id, camera_id FROM rigs"):
         rig_card = _rig_card(rig, cards, used.get(rig["id"], {}), spacers.get(rig["id"], []))
-        written = {**rn.numbers(rig_card), "pieces": rn.pieces(rig_card)}
+        written = {
+            **rn.numbers(rig_card),
+            "pieces": rn.pieces(rig_card),
+            "label": labels.get(rig["id"]),
+        }
         rows.append(("rig", rig["id"], json.dumps(written)))
     replace_rows(conn, "gear_numbers", ("subject", "subject_id", "numbers_json"), rows)

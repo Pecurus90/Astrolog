@@ -31,8 +31,7 @@ import { LaNotte, type Obiettivo } from "./MeteoNotte"
  * Nothing is computed here: verdict, judgements, Ore di posa, order and scales arrive written for
  * each model, and changing model reads another row.
  *
- * - **Out until their step**: the night's story (13.1), the sampling of the setups (14), the
- *   Sun's weather (46.11).
+ * - **Out until its step**: the Sun's weather (46.11).
  */
 
 // the skeleton's cards at the real ones' sizes (board v82, `SK`)

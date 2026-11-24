@@ -14,7 +14,7 @@ from ..ephemeris import RISESET_DEG, moon, planets, sun
 from ..ephemeris.sun import Sky
 from ..levels import MoonRule
 from ..site_of import Site
-from . import events, judge, openmeteo, position, score, verdict
+from . import events, judge, openmeteo, position, score, setups, verdict
 from .fetches import Source
 
 KIND = "forecast"
@@ -176,7 +176,11 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary, rule: M
 
 
 def _rows(
-    site: Site, written: Sequence[_Night], usual: list[float] | None, rule: MoonRule
+    site: Site,
+    written: Sequence[_Night],
+    usual: list[float] | None,
+    rule: MoonRule,
+    rigs: Sequence[setups.Rig],
 ) -> list[tuple[Any, ...]]:
     rows = []
     summaries = [w.summary for w in written]
@@ -199,6 +203,7 @@ def _rows(
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary, rule)],
             **_sky_fields(w, sky, rule),
         }
+        summary["setups"] = setups.judged(setups.seeing_of(summary["measures"]), rigs)
         rows.append(
             (
                 site.id,
@@ -249,7 +254,7 @@ def rebuild(conn: sqlite3.Connection, site: Site) -> None:
         conn,
         "weather_view",
         COLUMNS,
-        _rows(site, written, position.percentiles(conn, site), rule),
+        _rows(site, written, position.percentiles(conn, site), rule, setups.rigs(conn)),
         where="site_id = ?",
         args=(site.id,),
     )

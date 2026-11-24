@@ -27,6 +27,9 @@ di posa.
 | tempo di ASTAP | 60 s | limite di previsione 99,9% sui log dei tempi riusciti, per macchina e per modo, dopo 20 riusciti; tetto il cieco fallito misurato li'; minimo 30 s; prima 60 s | intervallo di previsione lognormale; RFC 6298 respinto (ritrasmissioni a costo zero) |
 | Bortle del sito | 6 mesi qualunque su 12 | almeno 4 mesi, nessun buco oltre 3, livello annuo da fit armonico (regola e parole in `domini/sito.md`) | Posch et al. 2018 (stagionalita' del cielo, senza fit); onda annua di Shah et al. 2025 (arXiv 2507.11343, App. F) senza tendenza; "6 mesi" distorce fino a 0,13 mag |
 
+- Il seeing rispetto al setup (costruito 24/11/2026, passo 14): un "setup di casa" non c'e';
+  Marco ha scelto **per ogni setup**, nella carta Campionamento del Meteo, e la carta Seeing resta
+  2"/4". F a 551 nm (banda V), confrontato al decimo come si legge; l'ora peggiore, come la carta.
 - La rugiada si giudica per vetro esposto (lente, lastra): e' il caso peggiore; uno specchio
   alluminato resta piu' caldo (Chadwick 2013).
 - Qn verificato su robustbase 0.99-7 (`R/qnsn.R`, `man/Qn.Rd`): costante 2,21914, il 2,2219 dei

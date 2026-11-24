@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 394; senza fonte: 0.
-Fonti: C norma: 198; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 40; T tecnico: 99.
+Valori: 398; senza fonte: 0.
+Fonti: C norma: 200; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 42; T tecnico: 99.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -800,6 +800,9 @@ Fonti: C norma: 198; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 40; T
 | GUIDE_SCALE_RANGE | `(0.5, 4.0)` | U Waddington, PHD2: "preferred range is roughly between 0.5 and 4 arc-sec/px", 2022 |
 | DAWES_ARCSEC_MM | `116.0` | C Dawes limit, astronomy.tools/calculators/telescope_capabilities: 116 / aperture mm |
 | FULL_LOAD_PERCENT | `100.0` | P ADR 0021 |
+| DIFFRACTION_FWHM_PER_LAMBDA_D | `1.029` | C en.wikipedia.org/wiki/Airy_disk: "full width at half maximum ... 1.029" |
+| V_BAND_NM | `551.0` | C en.wikipedia.org/wiki/Photometric_system: V 551 nm |
+| PIXEL_FWHM_PER_PIXEL | `2 * math.sqrt(2 * math.log(2)) / math.sqrt(12)` | P ADR 0039 |
 
 ### spine/scan.py
 
@@ -940,6 +943,12 @@ Fonti: C norma: 198; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 40; T
 | GOOD_FROM | `70.0` | P ADR 0034 |
 | UNCERTAIN_FROM | `40.0` | P ADR 0034 |
 | AOD_FACTOR | `2.0` | P ADR 0034 |
+
+### weather/setups.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| NOGO_PER_FLOOR | `math.sqrt(3)` | P ADR 0039 |
 
 ### weather/verdict.py
 

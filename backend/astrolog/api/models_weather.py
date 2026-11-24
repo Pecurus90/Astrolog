@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from ..levels import MOON_BRIGHT_PCT
 from ..weather.score import GOOD_FROM, UNCERTAIN_FROM
+from .models_gear_numbers import Missing
 
 Level = Literal["go", "marginal", "nogo"]
 SkyKind = Literal["day", "civil", "nautical", "astronomical", "dark"]
@@ -292,6 +293,28 @@ class WeatherEventOut(BaseModel):
     body: Literal["saturn", "jupiter", "mars", "venus"] | None
 
 
+class WeatherSetupOut(BaseModel):
+    """A setup against the night's seeing (ADR 0021, 0039): the sampling with the forecast seeing
+    (the measure's `value`), the seeing against the setup's floor with the worst hour (`peak`)."""
+
+    rig_id: int
+    name: str | None = Field(description="The name the user gave; null: optics and camera.")
+    optics: str | None
+    camera: str | None
+    scale_arcsec_px: float
+    seeing_from: float = Field(description="The sampling is ideal with seeing from here...")
+    seeing_to: float = Field(description="...to here: 2 and 3 times the scale.")
+    sampling: Literal["under", "ideal", "over"]
+    floor_arcsec: float | None = Field(
+        description="F, the star the setup draws without seeing: diffraction and pixel, to a "
+        "tenth. Null when a datum lacks: `floor_missing` names it."
+    )
+    floor_missing: Missing | None
+    seeing_level: Level | None = Field(
+        description="Marginal from seeing F, nogo from 1.73 F; null without a floor."
+    )
+
+
 class WeatherNightOut(WeatherBriefOut):
     """A forecast night: the summary, its measures in order of importance (the clouds, then the
     worst word earliest first, then the neutral ones), and its hours from noon to noon. `shown_*`
@@ -307,6 +330,10 @@ class WeatherNightOut(WeatherBriefOut):
     events: list[WeatherEventOut] = Field(
         description="The night's story from sunset to sunrise, in time order, the dark first at "
         "the same minute; written with the forecast. Empty for a trend night.",
+    )
+    setups: list[WeatherSetupOut] = Field(
+        description="Every setup with a scale, most used first; empty without a number of "
+        "seeing (no Meteoblue key, or only the jet's estimate) and for a trend night.",
     )
 
 
