@@ -8,7 +8,7 @@ import dataclasses
 from datetime import UTC, datetime
 
 from astrolog.ephemeris.sun import Sky
-from astrolog.weather import nights, score, verdict
+from astrolog.weather import dew, nights, score, verdict
 
 
 def ora(at, sky="dark", **campi):
@@ -25,6 +25,11 @@ def ora(at, sky="dark", **campi):
         "precip_mm": 0.0,
     }
     riga.update(campi)
+    # the threshold as the view writes it, at sea level, unless the test gives its own
+    riga.setdefault(
+        "dew_threshold_c",
+        dew.threshold_c(riga["dew_point_c"], riga["cloud_total_pct"], riga["wind_kmh"], 0.0),
+    )
     return verdict.Hour(at=at, sky=sky, values=riga)
 
 

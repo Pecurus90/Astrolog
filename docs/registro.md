@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 398; senza fonte: 0.
-Fonti: C norma: 200; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 42; T tecnico: 99.
+Valori: 412; senza fonte: 0.
+Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 42; T tecnico: 99.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -868,6 +868,25 @@ Fonti: C norma: 200; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 42; T
 | YEAR_DAYS | `365` | T |
 | MIN_NIGHTS | `250` | D docs/adr/0039: Conover distribution-free quantiles, nights autocorrelated |
 
+### weather/dew.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| RADIATIVE_MM_DAY | `0.37` | C Beysens 2016, Atmos. Res. 167:146, Eq. 25 |
+| REFERENCE_K | `285.0` | C Beysens 2016, Eq. 25: ((Td + 273.15) / 285)^4 |
+| ELEVATION_LINEAR | `0.204323` | C Beysens 2016, Eq. 25 |
+| ELEVATION_SQUARE | `0.0238893` | C Beysens 2016, Eq. 25 |
+| DEW_POINT_BASE | `18.0132` | C Beysens 2016, Eq. 25 |
+| DEW_POINT_LINEAR | `1.04963` | C Beysens 2016, Eq. 25, author copy p. 12: H, not H^2 |
+| DEW_POINT_SQUARE | `0.21891` | C Beysens 2016, Eq. 25 |
+| CONVECTIVE_MM_DAY_K | `0.06` | C Beysens 2016, Eq. 25: alpha' on (Td - Ta), mm/d/K |
+| CUTOFF_MS | `4.4` | C Beysens 2016, Eq. 23: V0, wind at 10 m |
+| CUTOFF_POWER | `20` | C Beysens 2016, Eq. 23 |
+| CUTOFF_GAIN | `100` | C Beysens 2016, Eq. 23: 101 beyond V0 |
+| KELVIN | `273.15` | C SI: 0 degC |
+| OKTAS | `8` | C WMO: sky in eighths |
+| KMH_PER_MS | `3.6` | C SI: 1 m/s = 3.6 km/h |
+
 ### weather/events.py
 
 | simbolo | valore | fonte |
@@ -900,7 +919,6 @@ Fonti: C norma: 200; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 42; T
 | SCALES | `axis_top=45.0,` | T |
 | SCALES | `[Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],` | C RMetS Beaufort: force 5 "29-38", force 4 "20-28" km/h, 10 min mean at 10 m |
 | SCALES | `axis_top=45.0,` | T |
-| SCALES | `[Step(MARGINAL, 3.0, strict=True)],` | U AstroBin above |
 | SCALES | `axis_top=10.0,` | T |
 | SCALES | `[Step(NOGO, 126.0, strict=False)],` | C meteoblue, 35 m/s |
 | SCALES | `axis_top=160.0,` | T |

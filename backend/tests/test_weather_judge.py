@@ -70,13 +70,28 @@ def test_each_measure_judges_an_hour_at_the_edges_of_its_source(misura, campo, v
         assert livello(misura, **{campo: valore}) == atteso, (misura, valore)
 
 
-def test_condensation_comes_under_three_degrees_between_air_and_dew_point():
-    """Prassi degli astrofili: sotto i 3 gradi fra aria e rugiada serve la fascia; incerta, mai
-    niente: la nebbia la dice la visibilita'."""
-    assert livello("condensation", temperature_c=10.0, dew_point_c=7.0) == "go"
-    assert livello("condensation", temperature_c=10.0, dew_point_c=7.1) == "marginal"
-    assert livello("condensation", temperature_c=10.0, dew_point_c=10.0) == "marginal"
-    assert livello("condensation", temperature_c=10.0, dew_point_c=None) is None
+def test_condensation_comes_when_the_spread_falls_under_the_hours_dew_threshold():
+    """Beysens 2016, Eq. 25: rugiada se la resa e' positiva, cioe' scarto sotto la soglia
+    dell'ora; sulla soglia la resa e' zero, niente rugiada. Incerta, mai niente: serve la fascia,
+    la nebbia la dice la visibilita'."""
+    soglia = {"dew_threshold_c": 4.0}
+    assert livello("condensation", temperature_c=10.0, dew_point_c=6.0, **soglia) == "go"
+    assert livello("condensation", temperature_c=10.0, dew_point_c=6.1, **soglia) == "marginal"
+    assert livello("condensation", temperature_c=10.0, dew_point_c=10.0, **soglia) == "marginal"
+    assert livello("condensation", temperature_c=10.0, dew_point_c=None, **soglia) is None
+    assert (
+        livello("condensation", temperature_c=10.0, dew_point_c=6.0, dew_threshold_c=None) is None
+    )
+
+
+def test_a_clear_calm_night_has_dew_at_a_spread_the_old_three_degrees_called_dry():
+    """Sereno e calmo, rugiada a 4 gradi: soglia di Beysens 5,1; i vecchi 3 gradi dicevano asciutto.
+    Coperto, la stessa aria resta asciutta."""
+    assert livello("condensation", temperature_c=8.0, dew_point_c=4.0) == "marginal"
+    assert livello("condensation", temperature_c=9.2, dew_point_c=4.0) == "go"
+    assert (
+        livello("condensation", temperature_c=5.0, dew_point_c=4.0, cloud_total_pct=100.0) == "go"
+    )
 
 
 def test_a_missing_value_has_no_judgement_and_a_neutral_measure_never_has_one():
@@ -124,14 +139,15 @@ def test_the_night_value_and_the_peak_are_whole_numbers_where_the_board_shows_th
     assert (fini["rain"].value, fini["seeing"].value, fini["aerosol"].value) == (0.3, 1.4, 0.14)
 
 
-def test_a_cold_at_its_lowest_is_cut_down_and_never_rounded_up_to_its_threshold():
-    """Uno scarto di 2,6 gradi e' condensa (sotto 3): scritto "3" direbbe il contrario."""
+def test_the_spread_is_written_to_the_tenth_the_service_gives():
+    """La soglia cambia ogni ora: lo scarto si scrive al decimale, come arriva, e la soglia
+    dell'ora si scrive dalla sua parte (`dew.shown_threshold`)."""
     fredda, tiepida = (
         {"temperature_c": 6.6, "dew_point_c": 4.0},
         {"temperature_c": 9.0, "dew_point_c": 4.0},
     )
     detto = misure(notte(fredda, tiepida))
-    assert detto["condensation"].value == 2.0
+    assert detto["condensation"].value == 2.6
     assert detto["condensation"].level == "marginal"
     # the temperature has no threshold: it rounds as a number does
     assert detto["temperature"].value == 7.0

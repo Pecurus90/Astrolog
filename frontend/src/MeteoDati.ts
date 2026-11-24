@@ -102,10 +102,15 @@ export function tondo(code: Codice, v: number): number {
 }
 
 /** A value with its unit, or the word that says the service did not give it. */
+/** A card's number as written: the condensation's spread and threshold always to the tenth. */
+export function cifre(code: Codice, v: number): string {
+  return code === "condensation" ? unDecimale(v) : numero(tondo(code, v))
+}
+
 export function conUnita(code: Codice, v: number | null): string {
   if (v === null) return t("weather.card.unknown")
   const u = FORME[code]?.unita
-  return u ? valoreEUnita(numero(tondo(code, v)), t(u)) : numero(tondo(code, v))
+  return u ? valoreEUnita(cifre(code, v), t(u)) : cifre(code, v)
 }
 
 /** The line under the value: what the number says, and over which hours. */
@@ -126,11 +131,15 @@ export function sotto(m: Misura, n: Notte): string {
     return t("weather.card.wind700", { n: numero(n.wind_700hpa_tenths) })
   }
   const forma = FORME[m.code]
-  return forma?.sotto ? t(forma.sotto) : ""
+  const riga = forma?.sotto ? t(forma.sotto) : ""
+  if (m.code === "condensation" && n.elevation_known === false) {
+    return [riga, t("weather.card.dewNoElevation")].join(" \u00b7 ")
+  }
+  return riga
 }
 
 /** The peak with its hours, or what the card says in its place. */
-export function picco(m: Misura, n: Notte, scala: Scala | undefined): string {
+export function picco(m: Misura, n: Notte): string {
   // no hour given: "never below" or "no rain" would be an invented fact
   if (m.known_hours === 0) return ""
   if (m.code === "wind") {
@@ -143,11 +152,18 @@ export function picco(m: Misura, n: Notte, scala: Scala | undefined): string {
     })
   }
   if (m.code === "condensation") {
-    const soglia = numero(scala?.steps[0]?.bound ?? 0)
+    // each hour has its own threshold (Beysens): the one of the first dew hour, or the highest
     const prima = m.spans[0]
+    const soglia = prima
+      ? n.hours.find((o) => o.at === prima.since)?.dew_threshold_c
+      : n.dew_threshold_top_c
+    if (soglia == null) return ""
     return prima
-      ? t("weather.card.dewSince", { s: soglia, da: oraDelSito(prima.since) })
-      : t("weather.card.dewNever", { s: soglia })
+      ? t("weather.card.dewSince", {
+          s: cifre("condensation", soglia),
+          da: oraDelSito(prima.since),
+        })
+      : t("weather.card.dewNever", { s: cifre("condensation", soglia) })
   }
   if (m.code === "rain" && !m.peak) return t("weather.card.noRain")
   if (m.code === "visibility") {

@@ -17,6 +17,7 @@ import {
   arrivo,
   avvisoDellaPagina,
   buioDellaNotte,
+  cifre,
   conUnita,
   giornoDellaNotte,
   giudizioDi,
@@ -100,6 +101,12 @@ describe("parola, tondo, conUnita", () => {
     expect(conUnita("dust", 3)).toBe("3 µg/m³")
     expect(conUnita("aerosol", 0.12)).toBe("0,12")
     expect(conUnita("wind", null)).toBe("Non disponibile")
+  })
+  it("lo scarto e la soglia della condensa tengono sempre il decimale, anche tondo", () => {
+    expect(cifre("condensation", 1)).toBe("1,0")
+    expect(cifre("condensation", 0)).toBe("0,0")
+    expect(conUnita("condensation", 2.6)).toBe("2,6 °C")
+    expect(cifre("wind", 12)).toBe("12")
   })
   it("le carte stanno sempre al loro posto", () => {
     expect(CARTE).toEqual([
@@ -187,59 +194,72 @@ describe("picco: il picco con le sue ore, o cio' che la carta dice al suo posto"
   const n = notte()
   const conPicco = { peak: 80, peak_at: T("22:00"), peak_until: T("23:00") }
   it("nessuna ora data: nessun fatto inventato", () => {
-    expect(picco(m("rain", { known_hours: 0 }), n, undefined)).toBe("")
-    expect(picco(m("cloud", { ...conPicco, known_hours: 0 }), n, undefined)).toBe("")
+    expect(picco(m("rain", { known_hours: 0 }), n)).toBe("")
+    expect(picco(m("cloud", { ...conPicco, known_hours: 0 }), n)).toBe("")
   })
   it("il vento dice le raffiche, se ci sono tutte", () => {
-    expect(picco(m("wind"), n, undefined)).toBe("raffiche fino a 35 km/h tra le 22:00 e le 23:00")
+    expect(picco(m("wind"), n)).toBe("raffiche fino a 35 km/h tra le 22:00 e le 23:00")
     const raffica = (campi: Record<string, unknown>) =>
-      picco(m("wind"), notte({ measures: [m("gust", { ...conPicco, ...campi })] }), undefined)
+      picco(m("wind"), notte({ measures: [m("gust", { ...conPicco, ...campi })] }))
     expect(raffica({})).toBe("raffiche fino a 80 km/h tra le 22:00 e le 23:00")
     expect(raffica({ peak: null })).toBe("")
     expect(raffica({ peak_at: null })).toBe("")
     expect(raffica({ peak_until: null })).toBe("")
-    expect(picco(m("wind", conPicco), notte({ measures: [] }), undefined)).toBe("")
+    expect(picco(m("wind", conPicco), notte({ measures: [] }))).toBe("")
   })
-  it("la condensa dice da quando si scende sotto la soglia, o che non succede", () => {
+  it("la condensa dice da quando lo scarto scende sotto la soglia di quell'ora, o che non succede", () => {
     const tratto = { level: "marginal", since: T("21:00"), until: T("23:00"), hours: 2 }
-    expect(picco(m("condensation", { spans: [tratto] }), n, scala(3))).toBe(
-      "sotto 3 °C dalle 21:00",
+    const ore = [
+      h(T("20:00"), "dark", { dew_threshold_c: 4.1 }),
+      h(T("21:00"), "dark", { dew_threshold_c: 4.9 }),
+    ]
+    const conOre = notte({ hours: ore, dew_threshold_top_c: 4.9 })
+    expect(picco(m("condensation", { spans: [tratto] }), conOre)).toBe(
+      "sotto la soglia di 4,9 °C dalle 21:00",
     )
-    expect(picco(m("condensation"), n, scala(3, 1))).toBe("mai sotto 3 °C")
-    expect(picco(m("condensation"), n, undefined)).toBe("mai sotto 0 °C")
+    expect(picco(m("condensation"), conOre)).toBe("mai sotto la soglia, al più 4,9 °C")
+    // senza soglia scritta non si inventa un numero
+    expect(picco(m("condensation"), notte({ dew_threshold_top_c: null }))).toBe("")
+    expect(picco(m("condensation", { spans: [tratto] }), notte({ hours: [] }))).toBe("")
+  })
+  it("senza la quota del sito la condensa dice che la soglia e' al livello del mare", () => {
+    expect(sotto(m("condensation"), notte({ elevation_known: false }))).toBe(
+      "minimo di temperatura meno punto di rugiada · quota del sito non nota: soglia calcolata al livello del mare",
+    )
+    expect(sotto(m("condensation"), notte({ elevation_known: true }))).toBe(
+      "minimo di temperatura meno punto di rugiada",
+    )
   })
   it("la pioggia senza picco: nessuna ora con pioggia; con picco, il picco", () => {
-    expect(picco(m("rain", { peak: 0 }), n, undefined)).toBe("nessuna ora con pioggia")
-    expect(picco(m("rain", { ...conPicco, peak: 0.4 }), n, undefined)).toBe(
+    expect(picco(m("rain", { peak: 0 }), n)).toBe("nessuna ora con pioggia")
+    expect(picco(m("rain", { ...conPicco, peak: 0.4 }), n)).toBe(
       "picco 0,4 mm tra le 22:00 e le 23:00",
     )
   })
   it("la visibilita' dice da quando c'e' nebbia, o che non ce n'e'", () => {
     const nebbia = { level: "nogo", since: T("22:00"), until: T("23:00"), hours: 1 }
     const foschia = { level: "marginal", since: T("21:00"), until: T("22:00"), hours: 1 }
-    expect(picco(m("visibility", { spans: [foschia, nebbia] }), n, undefined)).toBe(
-      "nebbia dalle 22:00",
-    )
-    expect(picco(m("visibility", { spans: [foschia] }), n, undefined)).toBe("nessuna ora di nebbia")
+    expect(picco(m("visibility", { spans: [foschia, nebbia] }), n)).toBe("nebbia dalle 22:00")
+    expect(picco(m("visibility", { spans: [foschia] }), n)).toBe("nessuna ora di nebbia")
   })
   it("le altre il picco, se ha valore e ore", () => {
-    expect(picco(m("cloud", conPicco), n, undefined)).toBe("picco 80% tra le 22:00 e le 23:00")
-    expect(picco(m("cloud", { ...conPicco, peak: null }), n, undefined)).toBe("")
-    expect(picco(m("cloud", { ...conPicco, peak_at: null }), n, undefined)).toBe("")
-    expect(picco(m("cloud", { ...conPicco, peak_until: null }), n, undefined)).toBe("")
+    expect(picco(m("cloud", conPicco), n)).toBe("picco 80% tra le 22:00 e le 23:00")
+    expect(picco(m("cloud", { ...conPicco, peak: null }), n)).toBe("")
+    expect(picco(m("cloud", { ...conPicco, peak_at: null }), n)).toBe("")
+    expect(picco(m("cloud", { ...conPicco, peak_until: null }), n)).toBe("")
   })
   it("il seeing dato solo in parte dice da quando manca", () => {
     const s = { ...conPicco, peak: 2, known_until: T("23:00") }
-    expect(
-      picco(m("seeing", { ...s, known_hours: 2 }), notte({ window_hours: 8 }), undefined),
-    ).toBe("picco 2 ″ tra le 22:00 e le 23:00 · dalle 23:00 non disponibile")
-    expect(
-      picco(m("seeing", { ...s, known_hours: 8 }), notte({ window_hours: 8 }), undefined),
-    ).toBe("picco 2 ″ tra le 22:00 e le 23:00")
-    expect(
-      picco(m("seeing", { ...s, known_hours: 2 }), notte({ window_hours: null }), undefined),
-    ).toBe("picco 2 ″ tra le 22:00 e le 23:00")
-    expect(picco(m("cloud", { ...s, known_hours: 2 }), notte({ window_hours: 8 }), undefined)).toBe(
+    expect(picco(m("seeing", { ...s, known_hours: 2 }), notte({ window_hours: 8 }))).toBe(
+      "picco 2 ″ tra le 22:00 e le 23:00 · dalle 23:00 non disponibile",
+    )
+    expect(picco(m("seeing", { ...s, known_hours: 8 }), notte({ window_hours: 8 }))).toBe(
+      "picco 2 ″ tra le 22:00 e le 23:00",
+    )
+    expect(picco(m("seeing", { ...s, known_hours: 2 }), notte({ window_hours: null }))).toBe(
+      "picco 2 ″ tra le 22:00 e le 23:00",
+    )
+    expect(picco(m("cloud", { ...s, known_hours: 2 }), notte({ window_hours: 8 }))).toBe(
       "picco 2% tra le 22:00 e le 23:00",
     )
   })

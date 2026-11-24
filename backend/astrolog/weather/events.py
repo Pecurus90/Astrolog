@@ -11,7 +11,7 @@ from ..ephemeris.moon import MoonNight
 from ..ephemeris.planets import Planet, PlanetNight, within
 from ..ephemeris.sun import Sky, SkyBand
 from ..levels import MoonRule, Verdict, moon_level
-from . import judge, score
+from . import dew, judge, score
 from .judge import Measure
 from .verdict import Hour, window
 
@@ -171,11 +171,11 @@ def _rain(hours: Sequence[Hour]) -> list[NightEvent]:
 
 def _condensation(hours: Sequence[Hour]) -> list[NightEvent]:
     scale = judge.SCALES[Measure.CONDENSATION]
-    first = next((h for h in hours if judge.level(scale, scale.read(h)) == Verdict.MARGINAL), None)
+    first = next((h for h in hours if judge.hour_level(scale, h) == Verdict.MARGINAL), None)
     if first is None:
         return []
-    bound = scale.steps[0].bound
     value = scale.read(first)
+    bound = dew.shown_threshold(value, first.values.get("dew_threshold_c"))
     return [_event(first.at, Kind.CONDENSATION, Group.MEASURE, value=value, bound=bound)]
 
 

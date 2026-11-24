@@ -113,14 +113,23 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con ogni tratto
   continuo delle ore che la portano e il conto (tavola v82: due tratti non fanno un intervallo solo). Le soglie stanno in `backend/astrolog/weather/judge.py`, con
   la fonte accanto al numero (riverificate il 24/10/2026, ADR 0034), e la rotta le manda alla
-  pagina (`scales`). ADR 0039 sostituira' la condensa (Beysens) e,
-  quando i frame bastano, le raffiche (per setup: la regola e' scritta, `pipeline/setup_rules.py`
-  e `domini/misure.md`, e si collega al passo 40); oggi valgono queste:
+  pagina (`scales`). ADR 0039 sostituira', quando i frame bastano, le raffiche (per setup: la
+  regola e' scritta, `pipeline/setup_rules.py` e `domini/misure.md`, e si collega al passo 40);
+  oggi valgono queste:
   - nuvole e nuvole basse: classi FEW e SCT (WMO/ICAO); pioggia: qualunque e' niente (ASCOM);
     vento medio: incerta da Beaufort 4 (20 km/h), niente da 5 (29 km/h, RMetS); raffiche: niente
     oltre 25 km/h (iTelescope: Beaufort e' una scala del vento medio);
-  - condensa: sotto i 3 gradi fra aria e rugiada *serve la fascia*, incerta e mai niente (prassi
-    degli astrofili; la nebbia la dice la visibilita');
+  - condensa (costruita 24/11/2026, passo 15; `weather/dew.py`): rugiada su un vetro esposto
+    quando lo scarto aria-rugiada scende sotto la **soglia dell'ora** del modello di Beysens
+    (Atmos. Res. 167:146, 2016, Eq. 25, p. 12 della copia d'autore hal-04005956): dipende da
+    nuvole totali, vento a 10 m (oltre 4,4 m/s quasi zero), punto di rugiada e quota del sito;
+    sereno e calmo al livello del mare circa 5 gradi. Sulla soglia la resa e' zero: niente
+    rugiada. *Serve la fascia*: incerta e mai niente (la nebbia la dice la visibilita'). Il
+    termine in H del secondo polinomio e' lineare, come stampato: NREL pvdeg scrive H^2, refuso.
+    Senza quota il sito sta al livello del mare (soglia piu' bassa di circa 1 grado ogni km) e
+    la notte lo dice (`elevation_known`); cambiare la quota del sito di casa riscrive la vista.
+    Ogni ora porta `dew_threshold_c`, scritta al decimale dalla parte dello scarto; la notte
+    porta `dew_threshold_top_c`, la piu' alta del buio, per "mai sotto la soglia, al piu'";
   - jet stream (250 hPa): niente da 126 km/h, i 35 m/s che meteoblue dice "seeing
     cattivo"; nessuna fonte per un gradino incerto, quindi non c'e';
   - seeing: buona fino a 2", incerta fino a 4", niente oltre (Astronomy Tools: Good, OK, Poor):
@@ -172,10 +181,11 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   nuvole basse, condensa, pioggia, visibilita', vento, seeing, jet stream, aerosol, e in piccolo
   temperatura e punto di rugiada, polvere, vento a 700 hPa (*stanno sempre allo stesso posto*,
   `frontend/tests/meteo.test.tsx`). **I valori della notte, i picchi e quelli di ogni ora sono
-  interi**, come nelle tavole v37; pioggia, seeing e visibilita' tengono un decimale, l'aerosol
-  due. Un numero scritto resta dal lato della soglia dove sta il valore vero: uno scarto di 2,6
-  gradi non si scrive "3" (negherebbe la condensa), un jet a 125,6 non si scrive "126" (la
-  dichiarerebbe). Li arrotonda chi scrive la vista; la parola dell'ora viene dal valore vero
+  interi**, come nelle tavole v37; pioggia, seeing, visibilita' e lo scarto della condensa
+  tengono un decimale (la soglia della condensa cambia ogni ora, l'intero la attraverserebbe),
+  l'aerosol due. Un numero scritto resta dal lato della soglia dove sta il valore vero: un jet a
+  125,6 non si scrive "126" (la dichiarerebbe); per la condensa e' la soglia a stare dalla parte
+  dello scarto. Li arrotonda chi scrive la vista; la parola dell'ora viene dal valore vero
   (`judge.shown_values`). Il valore della notte e' la media
   delle ore che hanno un numero (la pioggia, il totale); il picco e' l'ora peggiore; se una misura
   copre solo parte della notte lo dice, cosi' una media parziale non passa per intera.
@@ -205,7 +215,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
     comincia e smette di stare sopra la soglia della regola, se pesa (grigia o chiara) e non per
     tutto il buio, con la parola della sua luce piu' forte.
   - **Da tutte le ore disegnate**, poi tagliate dal tramonto all'alba: la pioggia che inizia e
-    finisce, la prima ora di condensa (sotto i 3 gradi di scarto).
+    finisce, la prima ora di condensa (scarto sotto la soglia di quell'ora, che l'evento dice).
   - **Dalle effemeridi** ([`effemeridi.md`](effemeridi.md)): sorgere e tramonto della Luna, con la
     sua luce al sorgere; sorgere, tramonto e culminazione di Saturno, Giove, Marte e Venere. Un
     pianeta culmina se il suo punto piu' alto e' dentro la notte e da **30 gradi**, l'altezza

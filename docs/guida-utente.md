@@ -541,8 +541,13 @@ soglie
 vengono da convenzioni pubbliche: la scala Beaufort per il vento medio, la regola di chiusura
 dell'osservatorio iTelescope per le raffiche (oltre 25 km/h), le classi di Astronomy Tools per il
 seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, il buio, il grigio e il
-chiaro dell'osservatorio ING (sotto il 25%, fino al 65%, oltre). La condensa, sotto i 3 gradi fra
-aria e rugiada, e' incerta e mai *non adatta*: la scaccia una fascia anticondensa.
+chiaro dell'osservatorio ING (sotto il 25%, fino al 65%, oltre). La condensa usa il modello di
+Beysens (2016): la rugiada si posa su un vetro esposto quando la differenza fra aria e punto di
+rugiada scende sotto una soglia che cambia ogni ora, con le nuvole, il vento e la quota del sito.
+Con cielo sereno e aria calma la soglia e' di circa 5 gradi; con mezzo cielo coperto la meta'; con
+vento oltre 16 km/h quasi zero, perche' il vento scalda il vetro. Se il sito non ha la quota, la
+soglia e' calcolata al livello del mare e la carta lo dice: scrivila nelle impostazioni del sito.
+La condensa e' incerta e mai *non adatta*: la scaccia una fascia anticondensa.
 
 Sotto il numero c'e' **il cielo della notte**, dal tramonto all'alba sullo sfondo del crepuscolo,
 con le sue ore al minuto: le nuvole basse, medie e alte, ognuna dal suo zero perche' si coprono e
@@ -550,7 +555,8 @@ non si sommano, e la linea della **Trasparenza** ora per ora. Un'ora che il serv
 tratteggio, mai uno zero. In **Sul grafico** accendi l'umidita', in percento sulla scala di
 sinistra, e **una misura alla volta** sulla scala di destra -- condensa, pioggia, vento, seeing,
 jet stream, aerosol, visibilita' --, col colore del giudizio ora per ora e la sua parola dove
-cambia. Il seeing senza chiave c'e' ma non si accende, e dice perche'. Passando sul cielo,
+cambia. Con la condensa accesa una linea tratteggiata, **Soglia di rugiada**, mostra la soglia di
+ogni ora: dove la linea della differenza fra aria e rugiada le scende sotto, arriva la condensa. Il seeing senza chiave c'e' ma non si accende, e dice perche'. Passando sul cielo,
 toccandolo o con le frecce, un filo indica l'ora e un riquadro dice i valori, fino alle ore di posa
 di quell'ora; **tutte le carte vanno a quell'ora**, ed Esc ti riporta alla notte.
 

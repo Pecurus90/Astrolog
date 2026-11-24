@@ -20,6 +20,7 @@ import {
   ALTRE,
   buioDellaNotte,
   CARTE,
+  cifre,
   type Codice,
   conUnita,
   disegnate,
@@ -36,7 +37,6 @@ import {
   quandoDellaMisura,
   quota,
   sotto,
-  tondo,
 } from "./MeteoDati"
 import { nomeDellaMisura } from "./MeteoNotte"
 
@@ -437,7 +437,7 @@ function cartaDi(code: Codice, n: Notte, detto: Meteo, g: Sguardo): Carta9 | nul
     code,
     nome: nomeDellaMisura(code),
     stato,
-    valore: aOra ? numero(tondo(code, v)) : m?.value == null ? "?" : numero(tondo(code, m.value)),
+    valore: aOra ? cifre(code, v) : m?.value == null ? "?" : cifre(code, m.value),
     unita: forma.unita ? t(forma.unita) : "",
     celle,
     nota: aOra
@@ -445,7 +445,7 @@ function cartaDi(code: Codice, n: Notte, detto: Meteo, g: Sguardo): Carta9 | nul
       : m
         ? sotto(m, n)
         : "",
-    picco: aOra || !m ? "" : picco(m, n, scala),
+    picco: aOra || !m ? "" : picco(m, n),
     esito: aOra ? (lv ? ESITO[lv] : "neutra") : notte.esito,
     breve: aOra && lv ? parola(code, lv) : notte.parola,
     giudizio: aOra

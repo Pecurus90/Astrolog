@@ -20,7 +20,7 @@ SAME_PLACE_KM = 1.0
 COORDINATES = "coordinates"
 COORDINATES_SITE = "site"
 
-_SITE = "SELECT id, name, latitude, longitude, timezone, sky_sqm FROM sites"
+_SITE = "SELECT id, name, latitude, longitude, timezone, sky_sqm, elevation_m FROM sites"
 
 
 class SiteMiss(StrEnum):
@@ -40,6 +40,7 @@ class Site:
     longitude: float
     timezone: str | None
     sky_sqm: float | None
+    elevation_m: float | None = None
 
     @classmethod
     def of(cls, row: sqlite3.Row) -> Self:
@@ -50,6 +51,7 @@ class Site:
             row["longitude"],
             row["timezone"],
             row["sky_sqm"],
+            row["elevation_m"],
         )
 
 

@@ -815,7 +815,7 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
   (6) dove il Sole non tramonta o non sorge (oltre il circolo polare) la tavola non dice nulla: il
   racconto va da un capo all'altro delle ore disegnate, e puo' dire un pianeta che sorge di
   giorno; (7) toccare un evento accende solo quella riga, come la tavola (`hover === e.at`);
-  raffiche e condensa si scrivono intere, come le misure della tavola (`dec: 0`).
+  raffiche intere, come le misure della tavola (`dec: 0`); la condensa col suo decimale (passo 15).
 - **Il campionamento dei setup** (righe 80-83, 152, 440; passo 14, 24/11): portato con le scale
   vere dei setup, i piu' usati prima. In piu' della tavola, per decisione di Marco: la seconda
   pillola «seeing buono / incerto / non adatto» (rispetto al limite del setup, ADR 0039) e la nota
@@ -850,5 +850,13 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
   valore piu' freddo della notte (contratto meteo, «il freddo al suo minimo»), perche' la condensa
   si decide sull'ora peggiore; la riga sotto lo dice («minimo di temperatura meno punto di
   rugiada», «minima nel buio»).
+- **Condensa di Beysens** (passo 15, Marco 24/11): la tavola v82 ha la soglia fissa di 3 gradi;
+  l'app ha una soglia per ora (nuvole, vento, quota). Lo scarto ha un decimale (la tavola
+  interi), anche nell'evento del racconto; sotto il valore «sotto la soglia di 4,9 °C dalle 22:00» o «mai sotto la soglia, al
+  più 4,9 °C»; senza quota del sito, accanto a «minimo di temperatura meno punto di rugiada»,
+  «quota del sito non nota: soglia calcolata al livello del mare», senza il link alle
+  Impostazioni del sito (chiesto a Design: la nota della carta e' solo testo). Con la condensa
+  accesa a destra, la soglia e' una linea tratteggiata `--prot-tenue` «Soglia di rugiada», con la
+  sua voce in legenda e la sua riga nel lettore dell'ora: la tavola non la disegna.
 - **La barretta delle ore fuori dal buio nella notte scelta** della striscia: grigia come le altre
   (`--carta-2`), non `rgba(inchiostro,.25)`; minuzia del componente Striscia, a Design se conta.

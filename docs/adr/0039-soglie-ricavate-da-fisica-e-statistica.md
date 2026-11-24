@@ -34,8 +34,10 @@ di posa.
   alluminato resta piu' caldo (Chadwick 2013).
 - Qn verificato su robustbase 0.99-7 (`R/qnsn.R`, `man/Qn.Rd`): costante 2,21914, il 2,2219 dei
   primi lavori e' un refuso; i fattori di piccolo campione sono quelli di robustbase, non i 1992
-  che vanno col refuso (`domini/misure.md`). Resta da verificare Beysens
-  originale (un termine in H^2 di pvdeg). Hahn & Meeker verificato tramite NIST Dataplot
+  che vanno col refuso (`domini/misure.md`). Beysens verificato sull'originale (24/11/2026, passo
+  15): Eq. 25 a p. 12 della copia d'autore hal-04005956 stampa "18.0132 - 1.04963H + 0.21891H^2",
+  H lineare; il 1.04963*H**2 di NREL pvdeg e' un refuso (lo ristampano cosi' anche Minonzio,
+  Aguilera, Beysens 2024, Ingeniare 32:42, Eq. 1). Costruito in `weather/dew.py`. Hahn & Meeker verificato tramite NIST Dataplot
   (PREDICTION LIMITS, cita Hahn & Meeker 1991 pp. 61-62); t di Student da Abramowitz & Stegun
   26.7.3-4, provata sulla loro tavola. Il modo e' quello dell'ultimo lancio (indizio o cieco).
 

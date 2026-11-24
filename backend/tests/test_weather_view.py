@@ -195,9 +195,10 @@ def test_every_hour_carries_the_judgement_of_each_judged_measure(db):  # noqa: F
     scritta(db, Finto(risposta(wind_kmh=22.0, temperature_c=9.0, dew_point_c=7.5)))
     ore = json.loads(notte_di(db, "2026-09-25")["hours_json"])
     assert {o["levels"]["wind"] for o in ore} == {"marginal"}
-    # la condensa si giudica sulla distanza fra aria e rugiada: l'ora la porta scritta
-    assert {o["dew_spread_c"] for o in ore} == {2.0}
-    assert {o["levels"]["condensation"] for o in ore} == {"marginal"}
+    # scarto 1,5 col vento a 6,1 m/s, oltre i 4,4 di Beysens: soglia quasi zero, niente rugiada
+    assert {o["dew_spread_c"] for o in ore} == {1.5}
+    assert {o["dew_threshold_c"] for o in ore} == {0.0}
+    assert {o["levels"]["condensation"] for o in ore} == {"go"}
     assert {o["levels"]["cloud"] for o in ore} == {"go"}
 
 
@@ -223,8 +224,10 @@ def test_every_hour_writes_its_values_as_the_night_does_on_the_side_of_their_wor
     )}  # fmt: skip
     assert detto == {
         "wind_kmh": 19.0, "wind_250hpa_kmh": 125.0, "precip_mm": 0.1, "temperature_c": 9.0,
-        "dew_point_c": 6.0, "humidity_pct": 87.0, "cloud_total_pct": 13.0, "dew_spread_c": 3.0,
+        "dew_point_c": 6.0, "humidity_pct": 87.0, "cloud_total_pct": 13.0, "dew_spread_c": 3.1,
     }  # fmt: skip
+    # lo scarto al decimale, come arriva; la soglia per difetto, perche' lo scarto le sta sopra
+    assert ora["dew_threshold_c"] == 0.0
     assert (ora["levels"]["wind"], ora["levels"]["jet"], ora["levels"]["rain"]) == (
         "go", "go", "nogo"
     )  # fmt: skip

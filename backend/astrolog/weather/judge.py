@@ -82,6 +82,8 @@ class Scale:
     axis_fixed: bool = False
     curve: Curve = Curve.LINEAR
     second: Read | None = None  # a second series on the same chart
+    # what the steps judge when not the shown value: the spread against its hour's threshold
+    judged: Read | None = None
 
 
 def _field(name: str) -> Read:
@@ -91,6 +93,12 @@ def _field(name: str) -> Read:
 def spread(h: Hour) -> float | None:
     temp, dew = h.values.get("temperature_c"), h.values.get("dew_point_c")
     return None if temp is None or dew is None else round(temp - dew, 1)
+
+
+def dew_margin(h: Hour) -> float | None:
+    """The spread over its hour's dew threshold (`dew.threshold_c`): under 0, dew."""
+    gap, threshold = spread(h), h.values.get("dew_threshold_c")
+    return None if gap is None or threshold is None else gap - threshold
 
 
 NOGO, MARGINAL, GO = Verdict.NOGO, Verdict.MARGINAL, Verdict.GO
@@ -138,16 +146,18 @@ SCALES: dict[Measure, Scale] = {
             axis_top=45.0,  # [T] chart axis
             second=_field("wind_gust_kmh"),
         ),
-        # [U imagers' usage: "worry about dew when the temperature-dewpoint spread is less than
-        # about 3C"] https://app.astrobin.com/forum/topic/18055/dew-heater/dew-dos-snicker-and-donts
+        # [C Beysens 2016, Atmos. Res. 167:146, Eq. 25: dew while the yield is positive, i.e. the
+        # spread under its hour's threshold; at it the yield is 0] heater answers it, never nogo
         Scale(
             Measure.CONDENSATION,
             spread,
-            # heater answers it, never nogo; fog is visibility's word. [U AstroBin above]
-            [Step(MARGINAL, 3.0, strict=True)],
+            [Step(MARGINAL, 0.0, strict=True)],
             lower_is_worse=True,
             night=NightValue.MIN,
+            digits=1,  # [C Open-Meteo: temperature and dew point to the tenth]
             axis_top=10.0,  # [T] chart axis
+            second=_field("dew_threshold_c"),
+            judged=dew_margin,
         ),
         # [C meteoblue: "(>35m/s) usually correspond to bad seeing"] 126 km/h; no marginal.
         # https://content.meteoblue.com/en/private-customers/website-help/outdoor-and-sports/astronomy-seeing
@@ -281,6 +291,11 @@ def level(scale: Scale, v: float | None) -> Verdict | None:
     return next((s.level for s in scale.steps if _crosses(scale, s, v)), GO)
 
 
+def hour_level(scale: Scale, h: Hour) -> Verdict | None:
+    """The hour's word, from what the steps judge: the shown value unless the scale says other."""
+    return level(scale, (scale.judged or scale.read)(h))
+
+
 def table(rule: levels.MoonRule) -> dict[Measure, Scale]:
     """The scales with the user's Moon rule: the one rule of the calendar and the Nights."""
     return {**SCALES, Measure.MOON: replace(SCALES[Measure.MOON], steps=_moon_steps(rule))}
@@ -288,11 +303,12 @@ def table(rule: levels.MoonRule) -> dict[Measure, Scale]:
 
 def hour_levels(hour: Hour, rule: levels.MoonRule) -> dict[str, Verdict | None]:
     """Every judged measure's word for the hour; `None` where the value is missing."""
-    return {code: level(s, s.read(hour)) for code, s in table(rule).items()}
+    return {code: hour_level(s, hour) for code, s in table(rule).items()}
 
 
-def _as_bad(scale: Scale, v: float | None, worst: Verdict | None) -> bool:
-    return v is not None and _RANK[level(scale, v)] <= _RANK[worst]
+def _as_bad(scale: Scale, h: Hour, worst: Verdict | None) -> bool:
+    word = hour_level(scale, h)
+    return word is not None and _RANK[word] <= _RANK[worst]
 
 
 def _value(scale: Scale, values: Sequence[float]) -> float | None:
@@ -307,9 +323,11 @@ def _value(scale: Scale, values: Sequence[float]) -> float | None:
 
 
 def _shown(scale: Scale, v: float) -> float:
-    """To the measure's digits, on the side of the threshold where the true value sits: a spread
-    of 2.6 written "3" would deny the fog its threshold calls, a jet at 125.6 as "126" claim it."""
+    """To the digits, on the threshold's side of the true value: a jet at 125.6 as "126" would
+    claim it. A scale judged on another quantity just rounds; its threshold is written beside."""
     near = round(v, scale.digits)
+    if scale.judged is not None:
+        return near
     word = level(scale, v)
     if level(scale, near) == word:
         return near
@@ -361,7 +379,7 @@ def _spans(scale: Scale, night: Sequence[Hour], after: dict[str, str]) -> list[S
     run: list[Hour] = []
     word: str | None = None
     for h in [*night, None]:
-        now = None if h is None else level(scale, scale.read(h))
+        now = None if h is None else hour_level(scale, h)
         bad = now if now in (MARGINAL, NOGO) else None
         if run and word and bad != word:
             since, until, count = when(run, lambda _: True, after)
@@ -387,7 +405,7 @@ def _night(
     worst = (
         cloud
         if scale.code == Measure.CLOUD
-        else min((level(scale, v) for v in values), key=_RANK.__getitem__, default=None)
+        else min((hour_level(scale, h) for h, _ in known), key=_RANK.__getitem__, default=None)
         if scale.steps
         else None
     )
@@ -395,7 +413,7 @@ def _night(
         (min if scale.lower_is_worse else max)(known, key=lambda p: p[1]) if known else (None, None)
     )
     # as bad as the night's word or worse: for the clouds (word from the mean), the hours it saw
-    at_level = when(night, lambda h: _as_bad(scale, scale.read(h), worst), after)
+    at_level = when(night, lambda h: _as_bad(scale, h, worst), after)
     known_span = when(night, lambda h: scale.read(h) is not None, after)
     peak_span = when(night, lambda h: peak_h is not None and h.at == peak_h.at, after)
     axis_min, axis_max = _axis(scale, shown)

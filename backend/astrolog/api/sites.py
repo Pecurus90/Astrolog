@@ -14,8 +14,10 @@ from ..clock import now_iso
 from ..db import config
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
+from ..site_of import home_site
 from ..spine import declarations, home_nights, site_requeue
 from ..units import SQM_MAX, SQM_MIN, bortle_of
+from ..weather import view
 from . import tonight_sky
 from .deps import get_db
 from .models_site import (
@@ -296,8 +298,16 @@ def edit_site(
     except sqlite3.IntegrityError as err:
         _name_taken_or_raise(err)
     tonight_sky.follows(conn)
+    _dew_follows(conn, site_id, moved=elevation_m != old["elevation_m"])
     sky_follows(request)
     return _out(_row(conn, site_id))
+
+
+def _dew_follows(conn: sqlite3.Connection, site_id: int, *, moved: bool) -> None:
+    """The dew threshold reads the home site's elevation: a new one rewrites its forecast."""
+    home = home_site(conn)
+    if moved and home is not None and home.id == site_id:
+        view.rebuild(conn, home)
 
 
 @router.post("/sites/{site_id}/default", response_model=SiteOut)

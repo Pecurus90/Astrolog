@@ -315,17 +315,38 @@ describe("il Meteo, le carte", () => {
     expect(righe().find((r) => nomeRiga(r) === "Visibilità")?.textContent).toContain("dalle 22:00 alle 23:00, 1 ora")
   })
 
-  it("la condensa incerta dice da che ora l'aria tocca la rugiada: la parola la decide il backend", async () => {
+  it("la condensa incerta dice da che ora l'aria scende sotto la soglia di quell'ora: la parola la decide il backend", async () => {
     const umida = misura("condensation", {
       level: "marginal", weighs: true, value: 2, peak: 2, hours: 1,
       since: "2026-09-26T22:00:00+02:00", until: "2026-09-26T23:00:00+02:00",
       spans: [{ level: "marginal", since: "2026-09-26T22:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 1 }],
     })
-    conNotti({ ...NOTTE, measures: [...NOTTE.measures.filter((m) => m.code !== "condensation"), umida] })
+    conNotti({
+      ...NOTTE,
+      hours: NOTTE.hours.map((o) => ({ ...o, dew_threshold_c: o.at === "2026-09-26T22:00:00+02:00" ? 4.9 : 3.2 })),
+      measures: [...NOTTE.measures.filter((m) => m.code !== "condensation"), umida],
+    })
     await apriMeteo()
     await scheda()
 
-    expect(carta(/^Condensa/).textContent).toContain("sotto 3 \u00b0C dalle 22:00")
+    expect(carta(/^Condensa/).textContent).toContain("sotto la soglia di 4,9 \u00b0C dalle 22:00")
+  })
+
+  it("scelta la condensa a destra, la soglia di ogni ora e' una linea tratteggiata con la sua voce in legenda", async () => {
+    const secca = misura("condensation", { level: "go", value: 6, peak: 6, known_hours: 3 })
+    conNotti({
+      ...NOTTE,
+      hours: NOTTE.hours.map((o) => ({ ...o, dew_spread_c: 6, dew_threshold_c: 4.9 })),
+      measures: [...NOTTE.measures.filter((m) => m.code !== "condensation"), secca],
+    })
+    await apriMeteo()
+    await scheda()
+    const soglia = () => grafico().querySelectorAll("path[stroke-dasharray='5 4']")
+    expect(soglia()).toHaveLength(0)
+    fireEvent.click(sulGrafico(/^condensa/i))
+
+    await waitFor(() => expect(soglia()).toHaveLength(1))
+    expect(screen.getAllByText("Soglia di rugiada").length).toBeGreaterThan(0)
   })
 
   it("la carta della visibilit\u00e0 cresce con la radice: 41 km non escono dalla carta e 5 km stanno a meta' dell'altezza utile", async () => {
@@ -749,7 +770,7 @@ describe("il Meteo, il cielo", () => {
 
     fireEvent.click(sulGrafico("condensa"))
     const capi = [...grafico().querySelectorAll<HTMLElement>("span")].filter((s) => s.style.right === "0px")
-    expect(capi.map((s) => s.textContent?.replace(/\s/g, " "))).toEqual([expect.stringMatching(/^15 ?°C$/), expect.stringMatching(/^[-−]5 ?°C$/)])
+    expect(capi.map((s) => s.textContent?.replace(/\s/g, " "))).toEqual([expect.stringMatching(/^15,0 ?°C$/), expect.stringMatching(/^[-−]5,0 ?°C$/)])
   })
 
   it("cambiando notte le carte tornano alla notte, e le misure sul grafico restano accese", async () => {

@@ -163,6 +163,13 @@ export function MeteoCielo({
             ? t("weather.card.unknown")
             : `${conUnita(destra, v)}${lv ? ` \u00b7 ${parola(destra, lv)}` : ""}`,
       })
+      if (destra === "condensation") {
+        righe.push({
+          n: t("meteo.chart.dewThreshold"),
+          c: "var(--prot-tenue)",
+          v: conUnita(destra, qui.dew_threshold_c ?? null),
+        })
+      }
     }
     righe.push({
       n: t("meteo.chart.sky"),
@@ -345,6 +352,20 @@ export function MeteoCielo({
                 fill="none"
                 stroke={UMIDITA}
                 strokeWidth={1.75}
+                vectorEffect="non-scaling-stroke"
+                strokeLinecap="round"
+              />
+            )}
+            {destra === "condensation" && (
+              <path
+                d={linea(
+                  punti((o) => o.dew_threshold_c ?? null),
+                  yd,
+                )}
+                fill="none"
+                stroke="var(--prot-tenue)"
+                strokeWidth={1.5}
+                strokeDasharray="5 4"
                 vectorEffect="non-scaling-stroke"
                 strokeLinecap="round"
               />

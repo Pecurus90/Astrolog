@@ -260,6 +260,10 @@ function Scala({
             note: t("meteo.legend.right"),
           },
     ),
+    // the condensation's dashed line: the hour's threshold (Beysens)
+    ...(accese.includes("condensation")
+      ? [{ n: t("meteo.chart.dewThreshold"), c: "transparent", b: "var(--prot-tenue)", note: "" }]
+      : []),
   ]
   // a measure the service never sent this night is not offered (board `X.na`)
   const opzioni = SCALA.filter((s) => spenta(s.a, n, detto) !== t("meteo.scale.missing")).map(

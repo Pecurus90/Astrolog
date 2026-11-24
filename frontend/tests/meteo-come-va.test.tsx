@@ -169,7 +169,7 @@ describe("Come va: gli altri fattori", () => {
     expect(righe(carta)).toEqual([
       ["Pioggia", "✓ buona", "tutta la notte · 0,4 mm totale nel buio"],
       ["Visibilità", "✓ buona", "tutta la notte · 12 km minima nel buio"],
-      ["Condensa", "✓ buona", "tutta la notte · 5 °C minima nel buio"],
+      ["Condensa", "✓ buona", "tutta la notte · 5,0 °C minima nel buio"],
       ["Vento", "! incerta", "tutta la notte · 20 km/h media nel buio"],
       ["Raffiche", "✓ buona", "tutta la notte"],
       ["Jet stream", "✓ buona", "tutta la notte"],

@@ -275,6 +275,25 @@ def test_the_page_gets_the_thresholds_the_judgement_used(letto):
     assert verso["jet"] is False
 
 
+def test_each_hour_carries_its_dew_threshold_and_the_site_elevation_moves_it_at_once(letto):
+    """Beysens 2016, Eq. 25: la soglia cresce con la quota. Senza quota il sito e' al livello del
+    mare e la notte lo dice; scritta la quota, la previsione si riscrive senza un nuovo giro."""
+
+    def notte():
+        return letto.get("/api/v1/weather").json()["nights"][1]
+
+    prima = notte()
+    assert prima["elevation_known"] is False
+    soglie = [o["dew_threshold_c"] for o in prima["hours"] if o["dew_threshold_c"] is not None]
+    assert soglie
+    assert prima["dew_threshold_top_c"] is not None
+    assert letto.patch("/api/v1/sites/1", json={"elevation_m": 2000.0}).status_code == 200
+    dopo = notte()
+    assert dopo["elevation_known"] is True
+    alte = [o["dew_threshold_c"] for o in dopo["hours"] if o["dew_threshold_c"] is not None]
+    assert sum(alte) > sum(soglie)
+
+
 def test_the_wind_aloft_is_the_one_of_the_chosen_model(letto):
     letto.patch("/api/v1/settings", json={"values": {"weather_model": "icon_seamless"}})
     notte = letto.get("/api/v1/weather").json()["nights"][1]

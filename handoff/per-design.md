@@ -13,6 +13,14 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Meteo, carta Condensa e cielo della notte (passo 15, 24/11): la soglia non e' piu' 3
+  gradi fissi ma una **per ora** (modello di Beysens: nuvole, vento, quota del sito). L'app oggi:
+  scarto con un decimale; sotto il valore «sotto la soglia di 4,9 °C dalle 22:00» o «mai sotto
+  la soglia, al più 4,9 °C»; con la condensa accesa a destra una **linea tratteggiata «Soglia di
+  rugiada»** nel grafico, in legenda e nel lettore dell'ora. Senza quota del sito la nota della
+  carta aggiunge «quota del sito non nota: soglia calcolata al livello del mare»: Marco vuole li'
+  un **link alle Impostazioni del sito**, che la nota di CardMeteo (solo testo) non permette. Da
+  disegnare: la linea della soglia (desktop e telefono) e il link nella carta.
 - [da dare] Meteo, carta Campionamento (passo 14, 24/11): ogni casella di setup ha ora, dopo la
   pillola del campionamento, una **seconda pillola** «seeing buono / incerto / non adatto» (il
   seeing rispetto al limite del setup, ADR 0039; Marco: per ogni setup) e, sotto la nota «ottimo

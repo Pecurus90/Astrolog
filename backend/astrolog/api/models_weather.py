@@ -79,7 +79,13 @@ class WeatherHourOut(BaseModel):
     dust_ugm3: float | None
     moon_pct: float | None
     dew_spread_c: float | None = Field(
-        description="Air minus dew point, the quantity condensation is judged on."
+        description="Air minus dew point, to the tenth: condensation when under `dew_threshold_c`."
+    )
+    dew_threshold_c: float | None = Field(
+        default=None,
+        description="The spread under which dew forms on exposed glass this hour (Beysens 2016, "
+        "Eq. 25: clouds, wind, dew point, site elevation), to the tenth on the side the spread "
+        "sits; `None` without dew point, clouds or wind.",
     )
     levels: WeatherLevelsOut
     transparency: float | None = Field(
@@ -334,6 +340,15 @@ class WeatherNightOut(WeatherBriefOut):
     setups: list[WeatherSetupOut] = Field(
         description="Every setup with a scale, most used first; empty without a number of "
         "seeing (no Meteoblue key, or only the jet's estimate) and for a trend night.",
+    )
+    dew_threshold_top_c: float | None = Field(
+        default=None,
+        description="The window's highest hourly dew threshold, on the side of its hour's "
+        'spread: the card\'s "never under, at most". `None` without any.',
+    )
+    elevation_known: bool = Field(
+        default=True,
+        description="False when the site has no elevation: the dew threshold is at sea level.",
     )
 
 

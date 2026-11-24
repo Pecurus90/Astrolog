@@ -24,7 +24,7 @@ export type RigaDellEvento = {
   aria: string
 }
 
-// the board writes gusts and condensation whole (MS dec: 0), as the Wind card says its gusts
+// the board writes gusts whole (MS dec: 0), as the Wind card says its gusts; condensation keeps its tenth
 const intero = (v: number | null): number | null => (v === null ? null : Math.round(v))
 
 const pianeta = (e: Evento): string =>
@@ -72,7 +72,7 @@ function sotto(e: Evento): string {
     case "rain_start":
       return t("meteo.event.rain_start.sub", { v: conUnita("rain", e.value) })
     case "condensation":
-      return t("meteo.event.condensation.sub", { v: conUnita("condensation", intero(e.value)) })
+      return t("meteo.event.condensation.sub", { v: conUnita("condensation", e.value) })
     case "gust_peak":
       return t("meteo.event.gust_peak.sub")
     case "seeing_best":

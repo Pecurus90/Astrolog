@@ -8,7 +8,7 @@ import { gesto } from "./componenti/gesto"
 import { Pillola } from "./componenti/Pillola"
 import { Ripresa } from "./componenti/Ripresa"
 import type { Formato } from "./componenti/Tema"
-import { FORME, giudizioDi as giudizioDellaMisura, picco, quota, sotto, tondo } from "./MeteoDati"
+import { cifre, FORME, giudizioDi as giudizioDellaMisura, picco, quota, sotto } from "./MeteoDati"
 import {
   ESITO,
   type Meteo,
@@ -157,10 +157,10 @@ function cartaDi(codice: Codice, n: NotteMeteo, meteo: Meteo): Carta6 {
   return {
     codice,
     stato: "normale",
-    valore: m.value === null ? "?" : numero(tondo(codice, m.value)),
+    valore: m.value === null ? "?" : cifre(codice, m.value),
     unita: forma.unita ? t(forma.unita) : "",
     celle,
-    nota: [sotto(m, n), picco(m, n, scala)].filter(Boolean).join(" \u00b7 "),
+    nota: [sotto(m, n), picco(m, n)].filter(Boolean).join(" \u00b7 "),
     ...giudizioDi(m, scala),
   }
 }

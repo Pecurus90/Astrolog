@@ -14,7 +14,7 @@ from ..ephemeris import RISESET_DEG, moon, planets, sun
 from ..ephemeris.sun import Sky
 from ..levels import MoonRule
 from ..site_of import Site
-from . import events, judge, openmeteo, position, score, setups, verdict
+from . import dew, events, judge, openmeteo, position, score, setups, verdict
 from .fetches import Source
 
 KIND = "forecast"
@@ -162,6 +162,9 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary, rule: M
             {
                 **h.row(),
                 **judge.shown_values({**h.values, "dew_spread_c": judge.spread(h)}),
+                "dew_threshold_c": dew.shown_threshold(
+                    judge.spread(h), h.values.get("dew_threshold_c")
+                ),
                 "levels": judge.hour_levels(h, rule),
                 "transparency": _tenths(score.transparency(h)),
                 "exposure_hours": exposure.get(h.at),
@@ -173,6 +176,16 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary, rule: M
             for h in hours
         ]
     )
+
+
+def _dew_top(hours: Sequence[verdict.Hour]) -> float | None:
+    """The night window's highest dew threshold, written on the side of its hour's spread."""
+    night, _ = verdict.window(hours)
+    known = [h for h in night if h.values.get("dew_threshold_c") is not None]
+    if not known:
+        return None
+    top = max(known, key=lambda h: h.values["dew_threshold_c"])
+    return dew.shown_threshold(judge.spread(top), top.values["dew_threshold_c"])
 
 
 def _rows(
@@ -201,6 +214,9 @@ def _rows(
                 1 for h in w.hours if h.sky == Sky.DARK and h.values.get("moon_pct") is None
             ),
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary, rule)],
+            "dew_threshold_top_c": _dew_top(w.hours),
+            # no elevation: the dew threshold is at sea level, and the card says so
+            "elevation_known": site.elevation_m is not None,
             **_sky_fields(w, sky, rule),
         }
         summary["setups"] = setups.judged(setups.seeing_of(summary["measures"]), rigs)
@@ -243,6 +259,12 @@ def rebuild(conn: sqlite3.Connection, site: Site) -> None:
                     **dict.fromkeys(SKY_FIELDS),
                     **sky.get(o["at"], {}),
                     "moon_pct": lit[o["at"]],
+                    "dew_threshold_c": dew.threshold_c(
+                        o.get("dew_point_c"),
+                        o.get("cloud_total_pct"),
+                        o.get("wind_kmh"),
+                        site.elevation_m,
+                    ),
                 },
             )
             for o in series[r["night_date"], r["source"]]

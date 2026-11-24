@@ -6666,9 +6666,14 @@ export interface components {
             moon_pct: number | null;
             /**
              * Dew Spread C
-             * @description Air minus dew point, the quantity condensation is judged on.
+             * @description Air minus dew point, to the tenth: condensation when under `dew_threshold_c`.
              */
             dew_spread_c: number | null;
+            /**
+             * Dew Threshold C
+             * @description The spread under which dew forms on exposed glass this hour (Beysens 2016, Eq. 25: clouds, wind, dew point, site elevation), to the tenth on the side the spread sits; `None` without dew point, clouds or wind.
+             */
+            dew_threshold_c?: number | null;
             levels: components["schemas"]["WeatherLevelsOut"];
             /**
              * Transparency
@@ -6904,6 +6909,17 @@ export interface components {
              * @description Every setup with a scale, most used first; empty without a number of seeing (no Meteoblue key, or only the jet's estimate) and for a trend night.
              */
             setups: components["schemas"]["WeatherSetupOut"][];
+            /**
+             * Dew Threshold Top C
+             * @description The window's highest hourly dew threshold, on the side of its hour's spread: the card's "never under, at most". `None` without any.
+             */
+            dew_threshold_top_c?: number | null;
+            /**
+             * Elevation Known
+             * @description False when the site has no elevation: the dew threshold is at sea level.
+             * @default true
+             */
+            elevation_known: boolean;
         };
         /**
          * WeatherOut

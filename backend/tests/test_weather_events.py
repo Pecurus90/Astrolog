@@ -141,11 +141,17 @@ def test_the_rain_starts_and_ends_with_its_amount():
     ]
 
 
-def test_the_condensation_is_the_first_hour_under_three_degrees_of_spread():
+def test_the_condensation_is_the_first_hour_under_its_hours_dew_threshold():
+    """Alle 9 lo scarto 2,0 sta sotto la soglia 2,43: l'evento dice la soglia di quell'ora,
+    scritta per eccesso (2,5) perche' lo scarto resti sotto anche scritto."""
     caldo = {n: 10.0 for n in range(15)}
     rugiada = {n: 5.0 for n in range(15)} | {9: 8.0, 10: 8.5}
-    lista = di(Kind.CONDENSATION, eventi(ore(temperature_c=caldo, dew_point_c=rugiada)))
-    assert [(e.at, e.value, e.bound) for e in lista] == [(iso(9), 2.0, 3.0)]
+    soglia = {n: 4.0 for n in range(15)} | {8: 2.43, 9: 2.43}
+    lista = di(
+        Kind.CONDENSATION,
+        eventi(ore(temperature_c=caldo, dew_point_c=rugiada, dew_threshold_c=soglia)),
+    )
+    assert [(e.at, e.value, e.bound) for e in lista] == [(iso(9), 2.0, 2.5)]
 
 
 def test_the_gusts_peak_inside_the_dark():
