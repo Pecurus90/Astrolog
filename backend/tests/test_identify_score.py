@@ -332,6 +332,16 @@ def test_without_a_size_the_old_fixed_threshold_still_answers():
     assert score.is_ambiguous(uno, altro, separation_deg=0.2, fov_radius_deg=0.05) is True
 
 
+def test_the_winner_is_weighed_with_the_frame_it_is_centred_in():
+    """Il rapporto confronta due punteggi presi **con la stessa inquadratura**. Il primo, ben
+    centrato in un campo noto, guadagna il termine di centratura: pesarlo senza campo lo
+    abbasserebbe da 4,28 a 2,54, e un secondo da 1,85 diventerebbe un rivale da chiedere.
+    Voci costruite: conta solo la geometria, non chi sono."""
+    centrato = nel_cono(name="NGC 1", sep_deg=0.01, size_major_arcmin=24.0, magnitude=4.8)
+    discosto = nel_cono(name="NGC 2", sep_deg=0.4, size_major_arcmin=10.0, magnitude=9.0)
+    assert score.is_ambiguous(centrato, discosto, separation_deg=0.4, fov_radius_deg=0.8) is False
+
+
 def test_one_candidate_alone_is_never_ambiguous():
     assert score.is_ambiguous(M31, None, separation_deg=None) is False
 
