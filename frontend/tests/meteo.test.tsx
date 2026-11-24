@@ -880,5 +880,8 @@ describe("il Meteo, la striscia e la Luna", () => {
     expect(tende.textContent).toContain("Luna al 40%")
     fireEvent.click(tende)
     await waitFor(() => expect(comeVa().textContent).toContain("banda larga al limite"))
+    // board :511: the trend keeps the dark fact; its transparency is not a forecast hour
+    const fatti = comeVa().querySelectorAll(".al-meteo__colonna-10")
+    expect([...fatti].map((f) => f.firstElementChild?.textContent)).toEqual(["Buio"])
   })
 })

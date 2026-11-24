@@ -80,6 +80,7 @@ def _night(row: sqlite3.Row, rank: int) -> WeatherNightOut:
             usable_until=None,
             wind_700hpa_kmh=None,
             wind_700hpa_tenths=None,
+            events=[],
         )
         return WeatherNightOut(night=row["night_date"], trend=True, hours=[], **summary)
     return WeatherNightOut(

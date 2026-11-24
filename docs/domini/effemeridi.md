@@ -226,9 +226,13 @@ stretta); due tratti vicini della stessa banda sono uno. Insieme fanno `dark_s`
 
 ## Cosa NON promettiamo
 
-- **I pianeti ci sono solo per la volta** della Dashboard: Saturno, Giove, Marte e Venere, la loro
-  altezza ogni `TRACK_STEP_MIN` sulla notte intera (`ephemeris/planets.py`, `/tonight.planets`),
-  senza sorgere e tramontare: nessuno li chiede. Costano circa 110 ms, quanto la Luna.
+- **I pianeti ci sono per la volta** della Dashboard e per il racconto della notte del Meteo:
+  Saturno, Giove, Marte e Venere, la loro altezza ogni `TRACK_STEP_MIN` sulla notte intera
+  (`ephemeris/planets.py`, `/tonight.planets`). Il sorgere, il tramonto (a -0,5667 gradi, USNO)
+  e il punto piu' alto si leggono **sulla traccia, interpolati** (`planets.within`): non si
+  cercano al minuto, quindi l'errore e' quello dell'interpolazione su 15 minuti, non della
+  posizione. Il Meteo li scrive come eventi ([`meteo.md`](meteo.md), passo 13.1). Costano circa
+  110 ms a notte, quanto la Luna.
   `test_jupiter_near_opposition_culminates_high_in_the_night`,
   `test_venus_in_december_2024_is_an_evening_planet`. La finestra della volta (`/tonight.chart`)
   va da mezz'ora prima dell'ora del tramonto a mezz'ora dopo l'ora piu' vicina all'alba, cosi'
@@ -238,8 +242,9 @@ stretta); due tratti vicini della stessa banda sono uno. Insieme fanno `dark_s`
 - **La visibilita' di un oggetto** non c'e'. Il codice esiste in `old/`, e si
   porta quando nasce la schermata che lo chiede -- non prima: cio' che si porta senza una
   superficie che lo mostri e' codice che nessuno guida. **Del Sole c'e' quello che serve a dire
-  dov'e' il buio** -- le cinque fasce del cielo, le ore di buio e di buio senza Luna -- ma niente
-  sorgere e tramontare del Sole come orari a se'.
+  dov'e' il buio** -- le cinque fasce del cielo, le ore di buio e di buio senza Luna --; il
+  tramonto e l'alba come orari sono i bordi del giorno nelle fasce, e li dice il racconto della
+  notte del Meteo (passo 13.1, tavola v82), senza un calcolo a se'.
 - **Il meteo non e' un'effemeride**: dipende da un servizio, e sta in [`meteo.md`](meteo.md), col
   verdetto della notte.
 

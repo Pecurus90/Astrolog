@@ -10,11 +10,11 @@ from typing import Any
 
 from ..db import config
 from ..db.replace_table import replace_rows
-from ..ephemeris import RISESET_DEG, moon, sun
+from ..ephemeris import RISESET_DEG, moon, planets, sun
 from ..ephemeris.sun import Sky
 from ..levels import MoonRule
 from ..site_of import Site
-from . import judge, openmeteo, position, score, verdict
+from . import events, judge, openmeteo, position, score, verdict
 from .fetches import Source
 
 KIND = "forecast"
@@ -68,9 +68,10 @@ def _moon_by_hour(site: Site, instants: Sequence[str], floor_deg: float) -> dict
     }
 
 
-def _moon_nights(site: Site, summaries: Sequence[verdict.Summary]) -> list[dict[str, Any]]:
-    """Each summary's Moon; the models of a night share its drawn hours, so each window is
-    sampled once, all in one ephemeris call."""
+def _skies(
+    site: Site, summaries: Sequence[verdict.Summary]
+) -> dict[tuple[str, str], events.NightSky]:
+    """Each drawn window sampled once; the Moon of all windows in one ephemeris call."""
     windows = sorted(
         {
             (s.shown_from, s.shown_until)
@@ -83,43 +84,39 @@ def _moon_nights(site: Site, summaries: Sequence[verdict.Summary]) -> list[dict[
         (datetime.fromisoformat(b) - start).total_seconds() / 3600
         for start, (_, b) in zip(starts, windows, strict=True)
     ]
-    tracks = (
-        moon.night_tracks(list(zip(starts, hours, strict=True)), site.latitude, site.longitude)
-        if windows
-        else []
-    )
-    by_window = dict(zip(windows, tracks, strict=True))
-    return [
-        _moon_night(by_window[s.shown_from, s.shown_until])
-        if s.shown_from is not None and s.shown_until is not None
-        else {"moon_event": None, "moon_event_at": None, "moon_track": []}
-        for s in summaries
-    ]
+    lat, lon = site.latitude, site.longitude
+    moons = moon.night_tracks(list(zip(starts, hours, strict=True)), lat, lon) if windows else []
+    return {
+        w: events.NightSky(
+            bands=sun.night_bands(start, lat, lon, h),
+            moon_night=m,
+            planet_nights=planets.night_tracks(start, lat, lon, h),
+            lit_at_rise=None if m.rise is None else moon.phase(m.rise).illumination_pct,
+        )
+        for w, start, h, m in zip(windows, starts, hours, moons, strict=True)
+    }
 
 
-def _sun_nights(site: Site, summaries: Sequence[verdict.Summary]) -> list[dict[str, Any]]:
-    """Each summary's sky bands to the minute over its drawn hours, for the chart's twilight;
-    each window sampled once, the models of a night share it."""
-    bands: dict[tuple[str, str], list[dict[str, str]]] = {}
-    out = []
-    for s in summaries:
-        if s.shown_from is None or s.shown_until is None:
-            out.append({"sky_bands": []})
-            continue
-        window = (s.shown_from, s.shown_until)
-        if window not in bands:
-            start, end = (datetime.fromisoformat(a) for a in window)
-            hours = (end - start).total_seconds() / 3600
-            bands[window] = [
-                {
-                    "starts_at": b.starts_at.isoformat(),
-                    "ends_at": b.ends_at.isoformat(),
-                    "kind": b.kind.value,
-                }
-                for b in sun.night_bands(start, site.latitude, site.longitude, hours)
-            ]
-        out.append({"sky_bands": bands[window]})
-    return out
+_NO_SKY = {"moon_event": None, "moon_event_at": None, "moon_track": [], "sky_bands": []}
+
+
+def _sky_fields(w: _Night, sky: events.NightSky | None, rule: MoonRule) -> dict[str, Any]:
+    """The Moon, the twilight bands and the night's events (step 13.1) as the summary has them."""
+    if sky is None or sky.moon_night is None:
+        return {**_NO_SKY, "events": []}
+    found = events.night_events(w.hours, sky, rule)
+    return {
+        **_moon_night(sky.moon_night),
+        "sky_bands": [
+            {
+                "starts_at": b.starts_at.isoformat(),
+                "ends_at": b.ends_at.isoformat(),
+                "kind": b.kind.value,
+            }
+            for b in sky.bands
+        ],
+        "events": [asdict(e) for e in found],
+    }
 
 
 def _moon_night(night: moon.MoonNight) -> dict[str, Any]:
@@ -183,9 +180,9 @@ def _rows(
 ) -> list[tuple[Any, ...]]:
     rows = []
     summaries = [w.summary for w in written]
-    moons = _moon_nights(site, summaries)
-    suns = _sun_nights(site, summaries)
-    for w, moon_night, sun_night in zip(written, moons, suns, strict=True):
+    skies = _skies(site, summaries)
+    for w in written:
+        sky = skies.get((w.summary.shown_from or "", w.summary.shown_until or ""))
         said = [x.summary.verdict for x in written if x.night == w.night]
         wind = w.summary.wind_700hpa_kmh
         summary = {
@@ -200,8 +197,7 @@ def _rows(
                 1 for h in w.hours if h.sky == Sky.DARK and h.values.get("moon_pct") is None
             ),
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary, rule)],
-            **moon_night,
-            **sun_night,
+            **_sky_fields(w, sky, rule),
         }
         rows.append(
             (

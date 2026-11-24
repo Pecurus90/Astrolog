@@ -124,6 +124,11 @@ export function numero(n: number): string {
   return formatta(n)
 }
 
+/** Un angolo intero coi gradi attaccati: "47 gradi". */
+export function gradi(v: number): string {
+  return `${formatta(Math.round(v))}\u00b0`
+}
+
 /** Un valore gia' scritto con la sua unita': il percento attaccato ("40%", glossario), le altre
  *  staccate ("12 km/h"). */
 export function valoreEUnita(valore: string, unita: string): string {

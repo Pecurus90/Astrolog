@@ -27,7 +27,7 @@ from astrolog.api import (
 from astrolog.api import weather as api_weather
 from astrolog.db import config
 from astrolog.db.connect import SCHEMA_PATH
-from astrolog.ephemeris import moon, sun
+from astrolog.ephemeris import moon, planets, sun
 from astrolog.fits.frame_type import FrameType
 from astrolog.spine import (
     archive,
@@ -50,7 +50,7 @@ from astrolog.spine.scan_store import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
 from astrolog.vocab.instruments import FilterSize, InstrumentKind, OpticalDesign
-from astrolog.weather import fetches, forecast, judge, score, verdict
+from astrolog.weather import events, fetches, forecast, judge, score, verdict
 from astrolog.worker.worker import STRUCTURAL_KEYS, State
 from conftest import add_folder
 
@@ -418,6 +418,11 @@ def test_the_weather_words_are_the_same_in_the_models_and_the_weather_package():
     assert set(get_args(models_weather.RefreshStatus)) == set(forecast.Outcome) | {
         net.Failure.UNREACHABLE
     }
+    evento = models_weather.WeatherEventOut.model_fields
+    assert set(get_args(models_weather.EventKind)) == set(events.Kind)
+    assert set(get_args(models_weather.EventGroup)) == set(events.Group)
+    assert _words(evento["body"].annotation) == set(planets.Planet)
+    assert _words(evento["level"].annotation) == set(verdict.Verdict)
 
 
 def test_the_night_score_and_moon_numbers_live_in_one_home():

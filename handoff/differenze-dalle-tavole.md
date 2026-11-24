@@ -804,9 +804,18 @@ Il foglio e' gia' identico alla consegna, il telaio gia' portato, i mattoni stan
 
 ## Meteo -- La pagina (passo 13, tavola v82, 23/11)
 
-- **Il racconto della notte** (Meteo.dc.html 61-66, 462-499): fuori fino al passo 13.1 (eventi
-  della notte dal backend, testi di Marco). Al suo posto i due fatti che la tavola mostra senza
-  racconto (riga 511): il buio con le sue ore e la Trasparenza della notte.
+- **Il racconto della notte** (Meteo.dc.html 61-66, 462-499): portato al passo 13.1, testi della
+  tavola. Differenze: (1) i pianeti sono quelli veri dell'effemeride, non i quattro simulati;
+  (2) la culminazione da 30 gradi e' una costante (`events.PLANET_TOP_MIN_DEG`), non
+  l'Impostazione `planner.altS`, che non c'e' ancora; (3) la soglia della Luna dice i gradi
+  dell'Impostazione «Luna sopra», 0 per l'orizzonte; (4) la pioggia e la condensa si cercano su
+  tutte le ore disegnate, poi si tagliano dal tramonto all'alba, come la tavola; (5) senza
+  racconto restano i fatti della riga 511: nella notte di tendenza solo «Buio», come la tavola
+  (la Trasparenza della notte non c'e', la tendenza non legge le ore). Prima: niente fatti;
+  (6) dove il Sole non tramonta o non sorge (oltre il circolo polare) la tavola non dice nulla: il
+  racconto va da un capo all'altro delle ore disegnate, e puo' dire un pianeta che sorge di
+  giorno; (7) toccare un evento accende solo quella riga, come la tavola (`hover === e.at`);
+  raffiche e condensa si scrivono intere, come le misure della tavola (`dec: 0`).
 - **Il campionamento dei setup** (righe 80-83, 440): fuori fino al passo 14 (seeing rispetto al
   pavimento del setup, ADR 0039); la tavola usa scale inventate.
 - **Il Sole** (riga 187): «Sole non disponibile» come la tavola; «Meteo apre su» non si salva

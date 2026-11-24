@@ -261,6 +261,37 @@ class WeatherBriefOut(WeatherSkyOut):
     )
 
 
+# Repeated from `weather.events`, held equal by a test, as `MeasureCode`.
+EventKind = Literal[
+    "sunset", "dark_start", "dark_end", "sunrise", "verdict", "sky_unknown", "clouds_over",
+    "clouds_under", "rain_start", "rain_end", "condensation", "gust_peak", "seeing_best",
+    "moon_rise", "moon_set", "moon_above", "moon_below", "planet_rise", "planet_set", "planet_top",
+]  # fmt: skip
+EventGroup = Literal["sun", "sky", "verdict", "measure", "moon", "shooting", "planet"]
+
+
+class WeatherEventOut(BaseModel):
+    """One event of the night's story (step 13.1), to the minute. `value` is the event's number in
+    its measure's unit (Transparency 0-100 for `verdict`, percent for the clouds and the lit Moon,
+    mm, km/h, arcsec, degrees for the Moon's threshold and a planet's top); `bound` the scale's
+    edge the event names (the clouds' 25 or 50 percent, the condensation's degrees of spread);
+    `until` the end of the dark or of the hours without clouds;
+    `level` the stretch's word, or the Moon's for `moon_above`/`moon_below`; `body` the planet."""
+
+    at: str
+    kind: EventKind
+    group: EventGroup
+    key_moment: bool = Field(
+        description="Among the moments that matter, the phone's short list: the dark, the "
+        "verdict, the Moon and where it starts or stops weighing."
+    )
+    level: Level | None
+    value: float | None
+    bound: float | None
+    until: str | None
+    body: Literal["saturn", "jupiter", "mars", "venus"] | None
+
+
 class WeatherNightOut(WeatherBriefOut):
     """A forecast night: the summary, its measures in order of importance (the clouds, then the
     worst word earliest first, then the neutral ones), and its hours from noon to noon. `shown_*`
@@ -273,6 +304,10 @@ class WeatherNightOut(WeatherBriefOut):
     shown_until: str | None
     measures: list[WeatherMeasureOut]
     hours: list[WeatherHourOut]
+    events: list[WeatherEventOut] = Field(
+        description="The night's story from sunset to sunrise, in time order, the dark first at "
+        "the same minute; written with the forecast. Empty for a trend night.",
+    )
 
 
 class WeatherSourceOut(BaseModel):

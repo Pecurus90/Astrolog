@@ -87,6 +87,7 @@ export const NOTTE = {
   shown_from: "2026-09-26T19:00:00+02:00",
   shown_until: "2026-09-26T23:00:00+02:00",
   sky_bands: FASCE,
+  events: [] as unknown[],
   measures: [
     misura("cloud", { level: "marginal", value: 40, peak: 80, peak_at: "2026-09-26T22:00:00+02:00", peak_until: "2026-09-26T23:00:00+02:00" }),
     misura("cloud_low", { level: "go", value: 5 }),

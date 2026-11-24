@@ -524,8 +524,20 @@ seeing, l'aerosol (*molto fosco*) e la Luna (*banda larga al limite* o *consigli
 e solo se e' sopra l'orizzonte col buio) --, le piu' gravi prima. Ognuna dice la sua parola e
 quando; toccane una e va sul grafico. La Luna dice anche quanto e' illuminata, in che ore e' su e
 cosa resta nelle altre: "al 55% dalle 23:00 · banda larga fino alle 23:00". In vista ci sono le
-prime due; se ce ne sono altre, **Altri N fattori** le apre sotto. In fondo leggi le ore del buio
-e la Trasparenza della notte. Le soglie
+prime due; se ce ne sono altre, **Altri N fattori** le apre sotto.
+
+Sotto c'e' **il racconto della notte**: dal tramonto all'alba, un evento per riga con la sua ora.
+Ci sono il tramonto e l'alba, quando inizia e finisce il buio, quando la notte diventa buona,
+incerta o non adatta (con la Trasparenza di quel tratto), le nuvole che passano il 25% o il 50%,
+la pioggia che inizia e finisce, la prima ora di condensa, il massimo delle raffiche, l'ora del
+seeing migliore (solo con la chiave di Meteoblue), il sorgere e il tramonto della Luna, l'ora in
+cui la Luna comincia o smette di pesare sulla banda larga, e il sorgere, il tramonto e la
+culminazione di Saturno, Giove, Marte e Venere (la culminazione solo se il pianeta passa i 30
+gradi, dove l'aria che attraversa e' il doppio di quella allo zenit). Tocchi un evento e il grafico
+va a quell'ora. Sul telefono vedi prima **i momenti che contano** -- il buio, il verdetto e la
+Luna --, e **Tutta la notte, ora per ora** apre gli altri. Quando la notte non ha eventi, in fondo
+leggi le ore del buio e la Trasparenza della notte; in una notte di tendenza solo le ore del buio. Le
+soglie
 vengono da convenzioni pubbliche: la scala Beaufort per il vento medio, la regola di chiusura
 dell'osservatorio iTelescope per le raffiche (oltre 25 km/h), le classi di Astronomy Tools per il
 seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, il buio, il grigio e il

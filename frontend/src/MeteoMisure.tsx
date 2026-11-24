@@ -14,6 +14,7 @@ import type { Formato } from "./componenti/Tema"
 import { ESITO } from "./DashboardDati"
 import { type Chiave, numero, oraDelSito, t } from "./i18n"
 import type { Sguardo } from "./Meteo"
+import { RaccontoDellaNotte } from "./MeteoEventi"
 import {
   ALTRE,
   buioDellaNotte,
@@ -207,7 +208,9 @@ export function ComeVa({
   const vista = righe.slice(0, 2)
   const resto = righe.slice(2)
   const buio = buioDellaNotte(n)
-  const fatti = n.trend
+  // with the story the facts step aside (board :510); the trend keeps the dark only (board :511)
+  const racconto = !n.trend && n.events.length > 0
+  const fatti = racconto
     ? []
     : [
         ...(buio && n.window
@@ -222,7 +225,7 @@ export function ComeVa({
               },
             ]
           : []),
-        ...(n.transparency != null
+        ...(!n.trend && n.transparency != null
           ? [
               {
                 k: t("meteo.facts.transparency"),
@@ -352,6 +355,7 @@ export function ComeVa({
         {elenco}
         {altri && resto.map((f) => riga(f, false))}
         {bottone}
+        {racconto && <RaccontoDellaNotte notte={n} formato={formato} sguardo={g} />}
         {fattiEl}
       </Carta>
     )
@@ -373,6 +377,7 @@ export function ComeVa({
         <div className="al-meteo__colonna-5">{resto.map((f) => riga(f, false))}</div>
       )}
       {bottone}
+      {racconto && <RaccontoDellaNotte notte={n} formato={formato} sguardo={g} />}
       {fattiEl}
     </Carta>
   )

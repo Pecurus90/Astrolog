@@ -177,6 +177,31 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   del Meteo, con le sue ore di posa; nelle notti di tendenza senza ore, che la tendenza non legge.
   Nessuna notte buona fra le sette: la riga non la dice. `next_good` di `GET /tonight`, scelta
   fra verdetti scritti (`weather.next_good_of`), niente calcolo.
+- **Il racconto della notte** (passo 13.1, 24/11/2026; tavola v82, Meteo.dc.html:460-499; Marco
+  27/10 l'ha voluto, la tavola e' la specifica, testi compresi). Lo scrive `weather/events.py`
+  con la previsione (`summary_json.events`, `GET /weather` `nights[].events`): un evento per riga,
+  dal tramonto all'alba, in ordine d'istante vero (la notte del cambio d'ora compresa), a parita'
+  di minuto prima il cielo, poi il verdetto, poi il resto. Le soglie sono quelle di sopra, nessuna
+  nuova; il numero nuovo e' uno solo, i 30 gradi della culminazione.
+  - **Dalle fasce del Sole al minuto**: tramonto e alba (i bordi interni del giorno), inizio e
+    fine del buio astronomico con l'ora in cui finisce; senza buio, niente buio.
+  - **Dalle ore del buio** (`verdict.window`, ADR 0035: buio, o nautico, o Sole sotto
+    l'orizzonte): un evento per tratto di una parola della Trasparenza (70/40), col minimo del
+    tratto; le ore senza nuvole un tratto «Nuvole non disponibili» fino alla prima nota; le
+    nuvole che cambiano classe (25%, 50%: oltre la nuova, sotto la vecchia); il massimo delle
+    raffiche; il seeing minore (solo il numero di Meteoblue: senza, niente evento); dove la Luna
+    comincia e smette di stare sopra la soglia della regola, se pesa (grigia o chiara) e non per
+    tutto il buio, con la parola della sua luce piu' forte.
+  - **Da tutte le ore disegnate**, poi tagliate dal tramonto all'alba: la pioggia che inizia e
+    finisce, la prima ora di condensa (sotto i 3 gradi di scarto).
+  - **Dalle effemeridi** ([`effemeridi.md`](effemeridi.md)): sorgere e tramonto della Luna, con la
+    sua luce al sorgere; sorgere, tramonto e culminazione di Saturno, Giove, Marte e Venere. Un
+    pianeta culmina se il suo punto piu' alto e' dentro la notte e da **30 gradi**, l'altezza
+    minima di [`planner.md`](planner.md) (ADR 0022, massa d'aria 2). La tavola la legge
+    dall'Impostazione `planner.altS`, che non c'e' ancora: finche' non c'e', e' una costante.
+  - **Notti di tendenza**: nessun evento, come nessuna ora. Il telefono mostra prima «i momenti
+    che contano» (buio, verdetto, Luna, Luna sulla banda larga): `key_moment`, scritto qui.
+  `test_weather_events.py`, `test_each_night_carries_its_events_from_sunset_to_sunrise_with_the_moon_and_the_planets`.
 - **Tre notti piene, poi tendenza fino alla settima** (Marco, 26/9/2026): le ore e le misure delle
   prime tre notti, dalla quarta il verdetto, le nuvole, le ore di buio, l'accordo e la Luna (effemeride, non previsione; tavola v82), detti meno
   affidabili. Nessuna fonte trovata

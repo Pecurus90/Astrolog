@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 392; senza fonte: 0.
-Fonti: C norma: 198; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 39; T tecnico: 98.
+Valori: 394; senza fonte: 0.
+Fonti: C norma: 198; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 40; T tecnico: 99.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -864,6 +864,13 @@ Fonti: C norma: 198; U usanza: 3; D metodo: 34; M misura: 22; P decisione: 39; T
 |---|---|---|
 | YEAR_DAYS | `365` | T |
 | MIN_NIGHTS | `250` | D docs/adr/0039: Conover distribution-free quantiles, nights autocorrelated |
+
+### weather/events.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| PLANET_TOP_MIN_DEG | `30.0` | P ADR 0022 |
+| _RANK | `{Verdict.GO: 0, Verdict.MARGINAL: 1, Verdict.NOGO: 2}` | T |
 
 ### weather/forecast.py
 

@@ -212,6 +212,8 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
     assert all(n["hours"] and n["measures"] for n in notti[:3])
     # the trend keeps only the Moon: an ephemeris, not a forecast (tavola v82, Luna in tendenza)
     assert all(n["trend"] and not n["hours"] for n in notti[3:])
+    # il racconto della notte si legge dalle ore: solo nelle notti piene
+    assert all(n["events"] for n in notti[:3]) and not any(n["events"] for n in notti[3:])
     assert all({m["code"] for m in n["measures"]} <= {"moon"} for n in notti[3:])
     assert all(n["verdict"] and n["agreement"] for n in notti[3:])
     # la tendenza non porta cio' che si legge dalle ore, e le notti si fermano alla settima

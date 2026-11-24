@@ -137,6 +137,21 @@ def test_each_night_says_when_the_moon_rises_inside_the_drawn_hours(db):  # noqa
     assert detto["moon_event_at"][11:13] in {"22", "23", "00", "01"}
 
 
+def test_each_night_carries_its_events_from_sunset_to_sunrise_with_the_moon_and_the_planets(db):  # noqa: F811
+    """Il racconto della notte (passo 13.1) scritto con la previsione: la notte del 3/10/2026 ha
+    tramonto, buio, alba, il sorgere della Luna e almeno un pianeta, in ordine d'istante."""
+    detto = riassunto(notte_di_ottobre(db))
+    lista = detto["events"]
+    tipi = [e["kind"] for e in lista]
+    assert (tipi[0], tipi[-1]) == ("sunset", "sunrise")
+    assert {"dark_start", "dark_end", "moon_rise"} <= set(tipi)
+    assert any(e["group"] == "planet" for e in lista)
+    istanti = [datetime.fromisoformat(e["at"]) for e in lista]
+    assert istanti == sorted(istanti)
+    (sorge,) = [e for e in lista if e["kind"] == "moon_rise"]
+    assert sorge["at"] == detto["moon_event_at"] and sorge["value"] > 0
+
+
 def test_each_night_carries_its_sky_bands_to_the_minute_over_the_drawn_hours(db):  # noqa: F811
     """Le fasce del crepuscolo sul grafico del Meteo (tavola v82), al minuto e non all'ora: dal
     primo all'ultimo istante disegnato, contigue, giorno ai due capi e buio in mezzo a ottobre."""

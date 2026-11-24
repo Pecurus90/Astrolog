@@ -6,7 +6,7 @@
 import type { components } from "./api/schema"
 import type { Esito } from "./componenti/Pillola"
 import { varianteDi } from "./FiltriUsati"
-import { type Chiave, decimali, giornoEMese, maiuscola, numero, t } from "./i18n"
+import { type Chiave, decimali, giornoEMese, gradi, maiuscola, numero, t } from "./i18n"
 
 export type Misure =
   components["schemas"]["NightMeasures"] | components["schemas"]["ObjectMeasures"]
@@ -24,7 +24,6 @@ export interface EsitoDelGruppo {
 export type Tipo = "notte" | "oggetto"
 
 const intero = (v: number) => numero(Math.round(v))
-const gradi = (v: number) => `${intero(v)}\u00B0`
 const conSegno = (v: number, d: number) => `${v >= 0.005 ? "+" : ""}${decimali(v, d)}`
 
 /** Come si scrive il valore di ogni misura, dalla tavola (`MET[k].fmt`, `AMG`). */

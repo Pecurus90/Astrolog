@@ -6579,6 +6579,44 @@ export interface components {
             sky_bands?: components["schemas"]["SkyBandOut"][];
         };
         /**
+         * WeatherEventOut
+         * @description One event of the night's story (step 13.1), to the minute. `value` is the event's number in
+         *     its measure's unit (Transparency 0-100 for `verdict`, percent for the clouds and the lit Moon,
+         *     mm, km/h, arcsec, degrees for the Moon's threshold and a planet's top); `bound` the scale's
+         *     edge the event names (the clouds' 25 or 50 percent, the condensation's degrees of spread);
+         *     `until` the end of the dark or of the hours without clouds;
+         *     `level` the stretch's word, or the Moon's for `moon_above`/`moon_below`; `body` the planet.
+         */
+        WeatherEventOut: {
+            /** At */
+            at: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "sunset" | "dark_start" | "dark_end" | "sunrise" | "verdict" | "sky_unknown" | "clouds_over" | "clouds_under" | "rain_start" | "rain_end" | "condensation" | "gust_peak" | "seeing_best" | "moon_rise" | "moon_set" | "moon_above" | "moon_below" | "planet_rise" | "planet_set" | "planet_top";
+            /**
+             * Group
+             * @enum {string}
+             */
+            group: "sun" | "sky" | "verdict" | "measure" | "moon" | "shooting" | "planet";
+            /**
+             * Key Moment
+             * @description Among the moments that matter, the phone's short list: the dark, the verdict, the Moon and where it starts or stops weighing.
+             */
+            key_moment: boolean;
+            /** Level */
+            level: ("go" | "marginal" | "nogo") | null;
+            /** Value */
+            value: number | null;
+            /** Bound */
+            bound: number | null;
+            /** Until */
+            until: string | null;
+            /** Body */
+            body: ("saturn" | "jupiter" | "mars" | "venus") | null;
+        };
+        /**
          * WeatherHourOut
          * @description An hour of the night, in the site's time zone, with the sky band it has, every source's
          *     value joined (the model's; Meteoblue's seeing in arcseconds, only with the key; CAMS aerosol
@@ -6856,6 +6894,11 @@ export interface components {
             measures: components["schemas"]["WeatherMeasureOut"][];
             /** Hours */
             hours: components["schemas"]["WeatherHourOut"][];
+            /**
+             * Events
+             * @description The night's story from sunset to sunrise, in time order, the dark first at the same minute; written with the forecast. Empty for a trend night.
+             */
+            events: components["schemas"]["WeatherEventOut"][];
         };
         /**
          * WeatherOut

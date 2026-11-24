@@ -51,7 +51,7 @@ def _split(kept: float, narrow: float, known: bool) -> dict[str, float | None]:
     }
 
 
-def _verdict(value: float | None) -> Verdict | None:
+def verdict_of(value: float | None) -> Verdict | None:
     if value is None:
         return None
     if value >= GOOD_FROM:
@@ -85,7 +85,7 @@ def assess(hours: Sequence[Hour], rule: MoonRule = _FACTORY) -> Summary:
     since, until, clear = when(night, is_clear, after)
     shown_from, shown_until = shown(hours)
     return Summary(
-        verdict=_verdict(clarity),
+        verdict=verdict_of(clarity),
         cloud_total_pct=mean_of(night, "cloud_total_pct") if clouds_known else None,
         usable_hours=clear if clouds_known else None,
         usable_since=since if clouds_known else None,

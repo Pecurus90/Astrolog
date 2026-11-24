@@ -516,6 +516,13 @@ describe("l accessibilita della prima pagina", () => {
               shown_from: "2026-09-26T22:00:00+02:00",
               shown_until: "2026-09-26T23:00:00+02:00",
               sky_bands: [{ kind: "dark", starts_at: "2026-09-26T22:00:00+02:00", ends_at: "2026-09-26T23:00:00+02:00" }],
+              // il racconto pieno: axe guarda la lista, i tondi e il bottone del telefono
+              events: [
+                { at: "2026-09-26T22:00+02:00", kind: "dark_start", group: "sky", key_moment: true, level: null, value: null, bound: null, until: "2026-09-26T23:00+02:00", body: null },
+                { at: "2026-09-26T22:00+02:00", kind: "verdict", group: "verdict", key_moment: true, level: "go", value: 90, bound: null, until: null, body: null },
+                { at: "2026-09-26T22:00+02:00", kind: "gust_peak", group: "measure", key_moment: false, level: null, value: 31, bound: null, until: null, body: null },
+                { at: "2026-09-26T22:30+02:00", kind: "planet_top", group: "planet", key_moment: false, level: null, value: 44, bound: null, until: null, body: "jupiter" },
+              ],
               dark_hours: 2,
               without_aerosol: false,
               exposure_hours: 2,
