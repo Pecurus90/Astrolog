@@ -22,7 +22,6 @@ src/ImpostazioniCartelle.tsx
 src/ImpostazioniLuna.tsx
 src/Notti.tsx
 src/Ricerca.tsx
-src/Semaforo.tsx
 src/Tendina.tsx
 src/Vuoto.tsx
 src/Wizard.tsx
@@ -57,7 +56,6 @@ src/i18n/it-wizard.ts
 src/i18n/it.ts
 src/pagine.tsx
 src/preferenze.ts
-src/riquadro.ts
 tests/accessibilita-risposte.test.tsx
 tests/accessibilita.test.tsx
 tests/anno.test.tsx

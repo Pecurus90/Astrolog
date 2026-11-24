@@ -1,8 +1,5 @@
 import { useCallback, useState } from "react"
 
-// The sheet's own threshold: `@container colonna (max-width: 899px)`, "soglia = telefono".
-const SOGLIA_TELEFONO = 900
-
 type Misura = (el: HTMLDivElement | null) => (() => void) | undefined
 
 /** La larghezza misurata di un contenitore, e il `ref` da dargli. Sotto `tolleranza` px di
@@ -23,11 +20,4 @@ export function useLarghezza(tolleranza = 0): [number | undefined, Misura] {
     [tolleranza],
   )
   return [larga, misura]
-}
-
-/** La colonna della pagina si misura: sotto la soglia del foglio la pagina ha un'altra forma, non
- *  un'altra veste. Torna se e' stretta e il `ref` da dare al contenitore che si misura. */
-export function useColonnaStretta(): [boolean, Misura] {
-  const [larga, misura] = useLarghezza()
-  return [larga !== undefined && larga < SOGLIA_TELEFONO, misura]
 }

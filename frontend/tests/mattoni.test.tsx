@@ -169,6 +169,45 @@ describe("Bottone", () => {
     expect(collegamento.className).toContain("as-bottone")
     expect(collegamento.className).toContain("as-bottone--piccolo")
   })
+
+  it("di base e' tenue, a misura piena, premibile, e non governa niente", () => {
+    render(<Bottone onClick={() => {}}>Apri</Bottone>)
+    const b = screen.getByRole("button", { name: "Apri" })
+    expect(b.className).toBe("as-bottone as-bottone--tenue")
+    expect(b.hasAttribute("disabled")).toBe(false)
+    expect(b.hasAttribute("aria-expanded")).toBe(false)
+    expect(b.hasAttribute("aria-busy")).toBe(false)
+    expect(b.querySelector(".as-attesa")).toBeNull()
+  })
+
+  it("chi governa un pannello dice se e' aperto; un'aggiunta si somma alla veste", () => {
+    render(
+      <>
+        <Bottone governa="pannello" aperto onClick={() => {}} aggiunta="as-pesano__altri">
+          Aperto
+        </Bottone>
+        <Bottone governa="pannello" onClick={() => {}}>
+          Chiuso
+        </Bottone>
+      </>,
+    )
+    const aperto = screen.getByRole("button", { name: "Aperto" })
+    expect(aperto.getAttribute("aria-expanded")).toBe("true")
+    expect(aperto.getAttribute("aria-controls")).toBe("pannello")
+    expect(aperto.className).toBe("as-bottone as-bottone--tenue as-pesano__altri")
+    expect(screen.getByRole("button", { name: "Chiuso" }).getAttribute("aria-expanded")).toBe("false")
+  })
+
+  it("al lavoro porta il segno dell'attesa e chi ascolta lo sente occupato", () => {
+    render(
+      <Bottone occupato onClick={() => {}}>
+        Salvo
+      </Bottone>,
+    )
+    const b = screen.getByRole("button", { name: "Salvo" })
+    expect(b.getAttribute("aria-busy")).toBe("true")
+    expect(b.querySelector(".as-attesa")?.getAttribute("aria-hidden")).toBe("true")
+  })
 })
 
 describe("Campo", () => {

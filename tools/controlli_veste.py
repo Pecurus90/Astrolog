@@ -84,7 +84,6 @@ MATTONI = {
     ),
     "frontend/src/Bottone.tsx": ("as-bottone",),
     "frontend/src/Avviso.tsx": ("as-avviso",),
-    "frontend/src/Semaforo.tsx": ("as-semaforo", "as-semaforo__lampade"),
     # La fila dei filtri con cui hai ripreso: la stessa nell'Archivio e nelle Notti, col colore che
     # viene dalla banda canonica e mai dal nome. Le varianti (`as-filtro--l`, `--ha`...) sono la
     # mappa che ci vive dentro: stanno qui con lei, o la mappa si ricopierebbe alla seconda pagina

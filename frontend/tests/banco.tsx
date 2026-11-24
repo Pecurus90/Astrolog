@@ -144,20 +144,6 @@ export const SCANSIONE: components["schemas"]["ScanOut"] = {
 /** Le rotte che il banco conosce. Una rotta non prevista **fallisce** come una rete caduta (il client
  *  la fa diventare un 503 `unreachable`): un banco che risponde a tutto direbbe di si' a tutto. */
 let mappaCorrente: Record<string, Voce> = {}
-/** La colonna misurata (`useColonnaStretta`): jsdom non impagina, quindi la misura la da' la prova. */
-export function colonna(larga: number) {
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      constructor(private dice: (v: { contentRect: { width: number } }[]) => void) {}
-      observe() {
-        this.dice([{ contentRect: { width: larga } }])
-      }
-      disconnect() {}
-    },
-  )
-}
-
 /** Una risposta del banco. `attesa` la trattiene finche' la promessa non si risolve: il server
  *  vero ci mette qualche millisecondo, e cio' che la pagina fa **nel frattempo** si vede solo cosi'. */
 export type Voce = { stato: number; corpo: unknown; attesa?: Promise<unknown> }
