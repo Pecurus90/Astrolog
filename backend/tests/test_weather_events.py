@@ -231,6 +231,107 @@ def test_the_events_run_from_sunset_to_sunrise_in_order_sun_first_then_the_verdi
     assert istanti == sorted(istanti)
 
 
+def test_an_unknown_stretch_ends_at_the_next_hour_the_night_has_else_one_hour_later():
+    """Le ore saltano nella notte del cambio d'ora: si dice l'ora dopo della notte, non +1."""
+    senza_le_23 = [h for h in ore(cloud_total_pct={n: 0.0 for n in range(15)} | {5: None})]
+    del senza_le_23[6]
+    (ignoto,) = di(Kind.SKY_UNKNOWN, events.night_events(senza_le_23, cielo_di(), MoonRule()))
+    assert ignoto.until == iso(7)
+    in_coda = ore(cloud_total_pct={n: 0.0 for n in range(15)} | {11: None})[:12]
+    (ignoto,) = di(Kind.SKY_UNKNOWN, events.night_events(in_coda, cielo_di(), MoonRule()))
+    assert (ignoto.at, ignoto.until, ignoto.group) == (iso(11), iso(12), Group.VERDICT)
+
+
+def cielo_di(fasce=FASCE, planets=()):
+    return events.NightSky(fasce, None, list(planets), None)
+
+
+def test_the_lowest_transparency_is_said_to_a_tenth():
+    nuvole = {n: 33.33 for n in range(15)}
+    (verdetto,) = di(Kind.VERDICT, eventi(ore(cloud_total_pct=nuvole)))
+    assert verdetto.value == 66.7
+
+
+def test_an_hour_without_clouds_does_not_stop_the_cloud_events_after_it():
+    nuvole = {n: 0.0 for n in range(15)} | {6: None, 7: 60.0}
+    lista = eventi(ore(cloud_total_pct=nuvole))
+    assert [(e.at, e.group) for e in di(Kind.CLOUDS_OVER, lista)] == [(iso(7), Group.MEASURE)]
+
+
+def test_a_dry_night_has_no_rain_end():
+    lista = events.night_events(ore()[1:], cielo_di(), MoonRule())
+    assert not [e for e in lista if e.kind in (Kind.RAIN_START, Kind.RAIN_END)]
+
+
+def test_the_condensation_is_a_measure():
+    caldo = {n: 10.0 for n in range(15)}
+    rugiada = {n: 5.0 for n in range(15)} | {9: 8.0}
+    soglia = {n: 4.0 for n in range(15)}
+    ore_umide = ore(temperature_c=caldo, dew_point_c=rugiada, dew_threshold_c=soglia)
+    lista = di(Kind.CONDENSATION, eventi(ore_umide))
+    assert [e.group for e in lista] == [Group.MEASURE]
+
+
+def test_the_moon_weighs_from_the_dark_second_hour_and_its_last_hour_wraps_nothing():
+    lista = eventi(ore(moon_pct={5: 70, 11: 70}))
+    assert [(e.kind, e.at) for e in lista if e.group == Group.SHOOTING] == [
+        (Kind.MOON_ABOVE, iso(5)),
+        (Kind.MOON_BELOW, iso(6)),
+        (Kind.MOON_ABOVE, iso(11)),
+    ]
+
+
+def test_the_moon_rises_without_a_lit_part_when_none_is_known_and_sets_as_the_moon():
+    lista = eventi(moon=luna(rise=ora(6), set_=ora(9)), lit=None)
+    assert [(e.kind, e.group, e.value) for e in lista if e.group == Group.MOON] == [
+        (Kind.MOON_RISE, Group.MOON, None),
+        (Kind.MOON_SET, Group.MOON, None),
+    ]
+
+
+def pianeta_dal_buio(altezze: list[float], chi: Planet = Planet.JUPITER) -> PlanetNight:
+    return PlanetNight(
+        key=chi,
+        track=[TrackPoint(ora(4) + timedelta(minutes=15 * i), a) for i, a in enumerate(altezze)],
+    )
+
+
+def test_a_planet_rising_or_setting_at_its_track_ends_says_it_and_culminates_next_to_them():
+    sale = pianeta_dal_buio([-1.0, 50.0, 40.0, 30.0, 20.0, 10.0])
+    scende = pianeta_dal_buio([10.0, 20.0, 30.0, 40.0, 50.0, -1.0], Planet.SATURN)
+    lista = [e for e in eventi(planets=[sale, scende]) if e.group == Group.PLANET]
+    assert {(e.body, e.kind) for e in lista} == {
+        (Planet.JUPITER, Kind.PLANET_RISE),
+        (Planet.JUPITER, Kind.PLANET_TOP),
+        (Planet.SATURN, Kind.PLANET_TOP),
+        (Planet.SATURN, Kind.PLANET_SET),
+    }
+    assert {(e.at, e.value) for e in di(Kind.PLANET_TOP, lista)} == {
+        (iso(4.25), 50.0),
+        (iso(5), 50.0),
+    }
+
+
+def test_a_planet_culminates_from_thirty_degrees_included():
+    lista = eventi(planets=[pianeta_dal_buio([10.0, 30.0, 20.0])])
+    assert [e.value for e in di(Kind.PLANET_TOP, lista)] == [30.0]
+
+
+def test_where_the_sun_does_not_set_or_rise_the_bands_own_ends_bound_the_night():
+    """Fasce senza giorno: dalla prima all'ultima; la pioggia alle 18 e alle 06 resta."""
+    lista = events.night_events(
+        ore(precip_mm={1: 1.0, 2: 0.0, 13: 1.0}), cielo_di(FASCE[1:4]), MoonRule()
+    )
+    assert [e.at for e in di(Kind.RAIN_START, lista)] == [iso(1), iso(13)]
+
+
+def test_a_sunrise_right_after_the_first_band_ends_the_night():
+    fasce = [SkyBand(ora(0), ora(1), Sky.DARK), SkyBand(ora(1), ora(3), Sky.DAY)]
+    lista = events.night_events(ore(precip_mm={2: 1.0}), cielo_di(fasce), MoonRule())
+    assert [e.at for e in di(Kind.SUNRISE, lista)] == [iso(1)]
+    assert not di(Kind.RAIN_START, lista)  # alle 19, dopo l'alba delle 18
+
+
 def test_the_moments_that_matter_are_the_sky_the_verdict_the_moon_and_the_shooting():
     lista = eventi(ore(moon_pct={6: 70}, wind_gust_kmh={6: 20.0}), moon=luna(rise=ora(6)), lit=50)
     contano = {e.group for e in lista if e.key_moment}

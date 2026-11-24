@@ -95,6 +95,38 @@ def test_without_a_number_of_seeing_no_setup_is_judged(notte):
     assert setups.judged(notte, [setup()]) == []
 
 
+def test_a_seeing_estimated_from_the_jet_judges_no_setup_even_with_a_number():
+    assert setups.judged(seeing(2.0, stima="jet"), [setup()]) == []
+
+
+def test_the_seeing_is_nogo_from_root_three_floors_included():
+    (riga,) = setups.judged(seeing(0.5, picco=setups.NOGO_PER_FLOOR), [setup(pavimento=1.0)])
+    assert riga["seeing_level"] == "nogo"
+
+
+def test_a_judged_setup_carries_its_card_whole():
+    """Con il pavimento, cio' che manca non si dice anche se la carta lo porta."""
+    manca = {"kind": "optics", "field": "aperture_mm"}
+    (riga,) = setups.judged(seeing(2.0), [setup(scala=1.0, pavimento=0.9, manca=manca)])
+    assert riga == {
+        "rig_id": 1,
+        "name": "Setup 1",
+        "optics": "Ottica",
+        "camera": "Camera",
+        "scale_arcsec_px": 1.0,
+        "seeing_from": 2.0,
+        "seeing_to": 3.0,
+        "sampling": "ideal",
+        "floor_arcsec": 0.9,
+        "floor_missing": None,
+        "seeing_level": "nogo",
+    }
+
+
+def test_the_seeing_of_a_night_without_it_is_none():
+    assert setups.seeing_of([{"code": "moon"}]) is None
+
+
 def test_the_setups_come_most_used_first():
     righe = setups.judged(seeing(), [setup(rig_id=1, frames=5), setup(rig_id=2, frames=90)])
     assert [r["rig_id"] for r in righe] == [2, 1]
@@ -137,6 +169,48 @@ def test_a_changed_setup_reaches_the_written_nights_at_the_next_step(db):  # noq
     assert riga["optics"] == "FRA400"
     assert riga["seeing_level"] == "marginal"
     assert setups.step(db) is False  # gia' scritto: niente da fare
+
+
+def test_a_rig_is_read_whole_without_frames_and_with_what_its_floor_lacks(db):  # noqa: F811
+    manca = {"kind": "optics", "field": "aperture_mm"}
+    numeri = {
+        "sampling": {"value": 1.2, "seeing_from": 2.4, "seeing_to": 3.6},
+        "seeing_floor": {"value": None, "missing": manca},
+    }
+    db.execute("INSERT INTO gear_numbers VALUES('rig', 9, ?)", (json.dumps(numeri),))
+    assert setups.rigs(db) == [
+        setups.Rig(
+            rig_id=9,
+            name=None,
+            optics=None,
+            camera=None,
+            frames=0,
+            scale_arcsec_px=1.2,
+            seeing_from=2.4,
+            seeing_to=3.6,
+            floor_arcsec=None,
+            floor_missing=manca,
+        )
+    ]
+
+
+def test_a_rig_without_its_numbers_written_stays_out_and_one_without_a_floor_has_none(db):  # noqa: F811
+    db.execute("INSERT INTO gear_numbers VALUES('rig', 10, ?)", (json.dumps({}),))
+    numeri = {"sampling": {"value": 1.0, "seeing_from": 2.0, "seeing_to": 3.0}}
+    db.execute("INSERT INTO gear_numbers VALUES('rig', 11, ?)", (json.dumps(numeri),))
+    (rig,) = setups.rigs(db)
+    assert (rig.rig_id, rig.floor_arcsec, rig.floor_missing) == (11, None, None)
+
+
+def test_a_night_without_measures_gets_no_setup(db):  # noqa: F811
+    db.execute(
+        "INSERT INTO weather_view VALUES(1, '2026-11-24', 'best_match', '2026-11-24T10:00:00Z',"
+        " '[]', ?)",
+        (json.dumps({"setups": [{"rig_id": 1}]}),),
+    )
+    _scrivi_setup(db)
+    assert setups.step(db) is True
+    assert _setups_scritti(db) == []
 
 
 def test_a_setup_without_a_scale_stays_out(db):  # noqa: F811

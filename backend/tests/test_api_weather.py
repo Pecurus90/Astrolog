@@ -438,6 +438,25 @@ def test_a_trend_night_does_not_carry_the_wind_aloft(letto):
     assert tendenza["wind_700hpa_tenths"] is None
 
 
+def test_a_trend_night_carries_no_setup_and_no_usable_end_even_when_written(letto, db_path):
+    """I setup si giudicano col seeing delle ore: la tendenza non ne ha."""
+    date = [n["night"] for n in letto.get("/api/v1/weather").json()["nights"] if n["trend"]]
+    with sqlite3.connect(db_path) as conn:
+        righe = conn.execute("SELECT rowid, night_date, summary_json FROM weather_view").fetchall()
+        for rowid, notte, testo in righe:
+            if notte not in date:
+                continue
+            scritto = json.loads(testo) | {"usable_until": "2026-11-25T05:00+01:00"}
+            scritto["setups"] = [{"rig_id": 1}]
+            conn.execute(
+                "UPDATE weather_view SET summary_json = ? WHERE rowid = ?",
+                (json.dumps(scritto), rowid),
+            )
+    tendenza = [n for n in letto.get("/api/v1/weather").json()["nights"] if n["trend"]]
+    assert tendenza and all(n["setups"] == [] for n in tendenza)
+    assert all(n["usable_until"] is None for n in tendenza)
+
+
 def test_a_locked_database_skips_one_weather_round_not_all(db_path, monkeypatch):
     """Il database tenuto da un'altra scrittura al primo giro: il giro salta, il meteo resta vivo
     e il giro dopo lavora."""
@@ -498,3 +517,33 @@ def test_the_forecast_waits_its_cadence_from_one_round_to_the_next(db_path, monk
     giro(str(db_path), cadenza)
     assert chieste == [1]
     assert [r.getMessage() for r in caplog.records if r.levelname == "ERROR"] == []
+
+
+def test_a_round_writes_the_setups_into_the_nights_for_good(db_path, monkeypatch):
+    """Un setup cambiato arriva alle notti scritte al giro dopo: si legge da un'altra
+    connessione."""
+    from test_weather_setups import _scrivi_notte, _scrivi_setup, seeing
+
+    with sqlite3.connect(db_path) as conn:
+        _scrivi_notte(conn, seeing(2.0, picco=1.2))
+        _scrivi_setup(conn)
+    giro, _ = giro_senza_servizi(monkeypatch)
+    giro(str(db_path), forecast.Cadence(3600))
+    with sqlite3.connect(db_path) as conn:
+        (riga,) = conn.execute("SELECT summary_json FROM weather_view").fetchall()
+    assert [s["name"] for s in json.loads(riga[0])["setups"]] == ["Notte in quota"]
+
+
+def test_a_fallen_setups_step_is_said_and_the_forecast_still_goes(db_path, monkeypatch, caplog):
+    import astrolog.api.app as app_mod
+
+    def cade(conn):
+        raise RuntimeError("setup illeggibile")
+
+    metti_casa(db_path)
+    giro, chieste = giro_senza_servizi(monkeypatch)
+    monkeypatch.setattr(app_mod.setups, "step", cade)
+    giro(str(db_path), forecast.Cadence(3600))
+    assert chieste == [1]
+    errori = [r.getMessage() for r in caplog.records if r.levelname == "ERROR"]
+    assert errori == ["meteo: i setup delle notti non riscritti"]
