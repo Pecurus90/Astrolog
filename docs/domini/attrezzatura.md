@@ -205,7 +205,21 @@ le domande aperte della pagina delle domande.
 dichiarazioni, non nella colonna che la spina ricalcola a ogni corsa: la pagina legge le une sopra
 l'altra, o dopo una correzione continuerebbe a mostrare cio' che dicono i file.
 
+**La larghezza di banda vale per ogni banda di ogni filtro, e si scrive in nm** (passo 39, Marco
+25/11/2026; prima era chiesta solo per l'Ha, ADR 0031). `width_nm` per banda in `filter_bands`:
+un duo-band ha due righe (Ha 7, OIII 7), un Ha 3 nm e un Ha 7 nm sono due filtri. Il campo e'
+numerico e libero, perche' i filtri veri hanno anche 2,5, 3,5, 4,5 o 6,5 nm, e vuoto e' "non
+detta"; sotto il campo i suggerimenti 3, 4, 5, 6, 7, 8, 9, 10 e 12 nm si cliccano. La riga
+d'emissione di ogni banda (Hα, OIII, SII, Hβ) non si scrive: e' fisica, la stessa per tutti, e
+quando un calcolo la leggera' verra' da una fonte pubblica citata accanto al numero (NIST), non
+dalla scheda di un produttore, il cui centro varia di qualche decimo da modello a modello.
+
 ## Cosa non fa ancora, e con cosa arrivera'
+
+**I suggerimenti sotto la larghezza** (passo 39): oggi c'e' il campo «Larghezza (nm)» e basta; i
+nove valori cliccabili vanno disegnati (`handoff/per-design.md`) e portati. **Nessun calcolo legge
+ancora la larghezza**: si salva e si mostra; usarla, per esempio per tollerare piu' Luna con un
+filtro da 3 nm che con uno da 12, e' una decisione a parte.
 
 **La pagina della tavola v82** (congelata 11/11/2026; supera la v15 del 17/10, indice a sinistra
 e "niente campo disegnato ne' tessere"): in testa l'indice a carte, *Setup* (ore, focale, barra,

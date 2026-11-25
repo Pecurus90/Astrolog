@@ -13,6 +13,11 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Attrezzatura, modulo del filtro, passo 39, 25/11: sotto ogni campo «Larghezza (nm)»
+  (una per banda; un duo-band ne ha due) i suggerimenti **3 4 5 6 7 8 9 10 12 nm**, cliccabili:
+  il clic scrive il numero nel campo, che resta libero (2,5, 3,5, 6,5 sono filtri veri) e vuoto
+  vuol dire "non detta". Marco ha scelto campo + suggerimenti. Da disegnare: i suggerimenti, il
+  valore scelto, desktop e telefono.
 - [da dare] Cartelle che si sovrappongono, Primo avvio (passo Cartelle) e Impostazioni (Cartelle
   e scansione), passo 38, 25/11: dopo *Verifica*, una cartella che ne contiene altre gia' in
   elenco mostra l'esito «Contiene una cartella gia' in elenco» / «Contiene cartelle gia' in
