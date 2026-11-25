@@ -27,6 +27,7 @@ Cio' che vale per tutta la catena sta in [`spina.md`](spina.md).
 | Una cartella raggiunta da un collegamento non fa girare la scansione a vuoto, e la ricevuta la nomina | `test_a_junction_is_not_followed_and_is_named`, `test_a_link_to_a_file_is_not_named_as_a_folder`, `test_the_linked_folders_are_named_in_order`, `test_scan_names_the_linked_folders_it_does_not_follow` |
 | La stessa cartella aggiunta da un collegamento, o scritta in un altro modo, e' la stessa cartella: i suoi file non contano due volte; un collegamento scritto dentro una cartella gia' mia e' dentro (pipeline nuova) | `test_the_same_folder_through_a_link_is_the_same_root`, `test_the_same_folder_written_another_way_is_the_same_root`, `test_a_linked_folder_written_inside_a_root_is_inside` |
 | Una cartella il cui nome non e' testo (NAS Linux con nomi latin-1, PEP 383) si rifiuta come cartella che non c'e', invece di rompere l'app; un file o una sottocartella cosi' resta fuori e la ricevuta lo nomina (pipeline nuova) | `test_a_root_whose_name_is_not_text_is_refused_as_a_folder_not_found`, `test_a_name_that_is_not_text_is_left_out_and_the_scan_goes_on` |
+| Le chiavi che nessuno stadio legge ancora (`READOUTM`, `EGAIN`, `ROTATOR`, `ROTATANG`) restano nell'header come le ha scritte il programma; il pilastro si legge; nessuna abbina calibrazioni, che l'app conta e non cataloga (pipeline nuova) | `test_nina_file_gives_every_nina_key_it_carries`, `test_asiair_file_gives_every_asiair_key_it_carries`, `test_the_pier_side_is_east_or_west_as_written_else_unknown`, `test_the_receipt_counts_the_skipped_by_reason` |
 | Un file che non si riesce a leggere, per qualunque motivo, non ferma la scansione: la ricevuta lo nomina col suo motivo, e resta scritta | `test_scan_bad_header_counted`, `test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on`, `test_a_name_the_archive_cannot_write_is_named_and_the_scan_goes_on`, `test_a_pose_that_can_no_longer_be_read_is_not_missing`, `test_scan_stop_leaves_a_coherent_prefix` |
 | Se il database non risponde (disco pieno, occupato) la scansione si ferma col suo motivo, invece di contare file sani come non letti | `test_a_database_fault_stops_the_scan_and_the_receipt_says_so` |
 | Un guasto uguale su mille file non riempie il log: una traccia per tipo | `test_the_same_unexpected_fault_leaves_one_trace_in_the_log` |
@@ -214,6 +215,21 @@ loro header; un altro programma entra solo con un suo file vero e una decisione 
 quel programma scrive la **montatura**, e il nome cambia da utente a utente (`EQMod Mount`
 contro `ZWO AM3`), quindi un header solo farebbe sembrare una lista di nomi la risposta
 giusta. Un header di un programma non verificato non entra nel corpus.
+
+**`READOUTM`, `EGAIN`, `ROTATOR` e `ROTATANG` si tengono e non si leggono; `PIERSIDE` si legge**
+(pipeline nuova). Le quattro stanno in `pipeline_headers` come il programma le ha scritte;
+`PIERSIDE` lo legge la scheda come ASCOM ([`misure.md`](misure.md)). Nessuna e' chiave delle
+calibrazioni, perche' l'app non abbina dark e flat ai light: li conta e non li cataloga. Le
+convenzioni, per il giorno in cui servisse: Siril vuole per i dark esposizione, gain e <!-- software-ok -->
+temperatura dei light, e lo stesso offset fra dark e light e fra bias e flat
+([calibrazione](https://siril.readthedocs.io/en/stable/preprocessing/calibration.html)); <!-- software-ok -->
+WBPP 2.4.3 aggiunge le dimensioni dell'immagine
+([annuncio](https://pixinsight.com/forum/index.php?threads/wbpp-2-4-3-released.18530/); la <!-- software-ok -->
+documentazione di WBPP non si raggiunge). Nessuna delle due, ne' il Flat Wizard di N.I.N.A.
+([pagina](https://nighttime-imaging.eu/docs/master/site/tabs/flatwizard.html)), nomina
+`READOUTM`, il pilastro o la rotazione; Siril tratta `EGAIN` come altro nome di `CVF` <!-- software-ok -->
+([path parsing](https://siril.readthedocs.io/en/stable/Pathparsing.html)). L'angolo del cielo <!-- software-ok -->
+viene dalla `CD` ([`spina-solve.md`](spina-solve.md)), mai dal rotatore.
 
 **La notte della posa si scrive quando la posa entra** (`scan`, `frames.local_night` e
 `local_tz`, con l'istante da cui viene in `night_instant`): da mezzogiorno a mezzogiorno nel fuso
