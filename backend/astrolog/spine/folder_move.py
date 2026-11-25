@@ -114,11 +114,13 @@ def holder(conn: sqlite3.Connection, root_path: str) -> Registered | None:
 
 
 def absorb(conn: sqlite3.Connection, outer_id: int) -> None:
-    """In the caller's transaction. Each folder inside, retired too, gives its positions prefixed
-    (same rows, frames) and retires; answers keyed on the whole path hold as they are."""
+    """In caller's transaction. Folders inside, retired too, give positions prefixed and retire;
+    a retired one around gives back those under it. Whole-path answers hold as they are."""
     outer = conn.execute("SELECT root_path FROM folders WHERE id = ?", (outer_id,)).fetchone()[0]
     after = len(folder_key(outer)) + 1
     for inner in _registered(conn, active=False):
+        if inner.id != outer_id and _inside(outer, inner.root_path):
+            _give_back(conn, inner.root_path, inner.id, outer, outer_id)
         if inner.id == outer_id or not _inside(inner.root_path, outer):
             continue
         prefix = folder_key(inner.root_path)[after:] + "/"
@@ -134,6 +136,21 @@ def absorb(conn: sqlite3.Connection, outer_id: int) -> None:
             (now_iso(), inner.id),
         )
     typeless_folders.write(conn)
+
+
+def _give_back(
+    conn: sqlite3.Connection, around: str, around_id: int, root: str, root_id: int
+) -> None:
+    """Positions of the retired `around` under `root` pass to it, prefix cut: same rows, frames."""
+    prefix = folder_key(root)[len(folder_key(around)) + 1 :] + "/"
+    args = (around_id, len(prefix), prefix)
+    # IGNORE: a file the folder holds already stays its; the outer copy goes
+    conn.execute(
+        "UPDATE OR IGNORE positions SET folder_id = ?, rel_path = substr(rel_path, ?)"
+        " WHERE folder_id = ? AND substr(rel_path, 1, ?) = ?",
+        (root_id, len(prefix) + 1, *args),
+    )
+    conn.execute("DELETE FROM positions WHERE folder_id = ? AND substr(rel_path, 1, ?) = ?", args)
 
 
 def move(conn: sqlite3.Connection, folder_id: int, new_root: str) -> None:

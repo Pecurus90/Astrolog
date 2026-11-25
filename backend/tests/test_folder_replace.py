@@ -2,6 +2,11 @@
 22/10 e 25/11/2026): i frame, le loro posizioni e le risposte restano, si leggono solo i file
 nuovi. Una cartella dentro una gia' in elenco si rifiuta col perche'."""
 
+import os
+
+import pytest
+
+from astrolog.api import paths
 from astrolog.db.transaction import transaction
 from astrolog.spine import folder_move, typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
@@ -209,6 +214,51 @@ def test_a_retired_folder_inside_a_registered_one_does_not_come_back(client_vuot
 
     assert r.status_code == 409, r.text
     assert r.json()["detail"]["code"] == "folder_inside"
+
+
+def test_an_inner_folder_added_again_takes_back_its_frames_from_the_retired_outer_one(
+    client_vuoto, tmp_path
+):
+    """Issue #109: Sostituisci M31 con Astro, togli Astro, aggiungi M31: M31 riprende i suoi frame
+    dalla esterna ritirata, e la scansione li trova invariati, non doppioni."""
+    m31 = tmp_path / "M31"
+    m31.mkdir()
+    write_light(m31 / "a.fits")
+    write_light(m31 / "b.fits", date="2024-05-18T21:00:00")
+    inner = _client_add(client_vuoto, m31).json()
+    _scanned(client_vuoto, inner["id"])
+    outer = _client_add(client_vuoto, tmp_path, replaces=[inner["id"]]).json()
+    client_vuoto.delete(f"/api/v1/folders/{outer['id']}")
+
+    r = _client_add(client_vuoto, m31)
+
+    assert r.status_code == 201, r.text
+    assert r.json()["frames"] == 2
+    receipt = _scanned(client_vuoto, inner["id"])
+    assert (receipt["new"], receipt["unchanged"], receipt["duplicates"]) == (0, 2, 0)
+
+
+def test_a_folder_written_in_another_case_is_found_inside_the_registered_one(
+    client_vuoto, tmp_path, monkeypatch
+):
+    """Issue #109: sul Mac `realpath` tiene le maiuscole scritte e APFS le ignora: la cartella
+    scritta `astro/m31` sta dentro `Astro` lo stesso, e si salva con le maiuscole del disco."""
+    drive, rest = os.path.splitdrive(str(tmp_path))  # a letter is no name a folder lists
+    swapped = drive + rest.swapcase()
+    if not os.path.isdir(swapped) or not os.path.samefile(swapped, tmp_path):
+        pytest.skip("disco che distingue le maiuscole")
+    monkeypatch.setattr(paths, "_REALPATH_KEEPS_CASE", True, raising=False)
+    monkeypatch.setattr(paths.os.path, "realpath", os.path.abspath)
+    sub = tmp_path / "M31"
+    sub.mkdir()
+    outer = _client_add(client_vuoto, tmp_path).json()
+
+    r = _client_add(client_vuoto, os.path.join(swapped, "m31"))
+
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["folder_id"] == outer["id"]
+    probe = client_vuoto.post("/api/v1/folders/probe", json={"root_path": swapped}).json()
+    assert probe["root_path"] == outer["root_path"]
 
 
 def _scanned(client, folder_id):

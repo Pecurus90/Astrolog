@@ -9,6 +9,7 @@ from typing import NoReturn
 from fastapi import HTTPException
 
 from ..fits.walk import absolute, long_path, trailing_dot_or_space
+from ..pipeline.walk import ignores_case
 
 BLOCKLIST_POSIX = ("/", "/etc", "/sys", "/proc", "/dev", "/var", "/boot", "/root")
 
@@ -74,6 +75,25 @@ def stored_form(written: str, resolved: str, rules: ModuleType = os.path) -> str
     return rules.join(drive[:1].upper() + drive[1:] + rules.sep, *names)
 
 
+# Windows realpath gives disk's case (GetFinalPathNameByHandle); Mac realpath keeps typed one.
+_REALPATH_KEEPS_CASE = os.name != "nt"
+
+
+def _disk_case(path: str) -> str:
+    """Each name as the disk lists it: `/volumes/astro` is `/Volumes/Astro`, one row."""
+    head, name = os.path.split(path)
+    if not name or head == path:
+        return path
+    head = _disk_case(head)
+    try:
+        names = os.listdir(head)
+    except OSError:
+        return os.path.join(head, name)
+    if name not in names:
+        name = next((n for n in names if n.casefold() == name.casefold()), name)
+    return os.path.join(head, name)
+
+
 def _refuse(code: str, path: str, **more: str) -> NoReturn:
     raise HTTPException(status_code=422, detail={"code": code, "path": path, **more})
 
@@ -106,6 +126,8 @@ def validate_root(raw: str, data_root: str | None) -> str:  # noqa: C901
     except OSError:
         # An unreachable share is checked as written and accepted like an unplugged disk.
         canonical = written
+    if _REALPATH_KEEPS_CASE and ignores_case(canonical):
+        canonical = _disk_case(canonical)
     if not os.path.isabs(canonical):
         _refuse("path_not_absolute", canonical)
     if ADMIN_SHARE_RE.match(canonical):
