@@ -288,6 +288,16 @@ def test_a_rig_without_a_camera_does_not_answer_this_question(pagina):
     assert r.status_code == 422 and r.json()["detail"]["code"] == "unknown_target"
 
 
+def test_a_rig_not_offered_names_itself_in_the_refusal():
+    """Il rifiuto dice quale setup: nel log si ritrova la risposta che l'ha mandato."""
+    from astrolog.api.models_review_apply import GearEdit
+    from astrolog.api.review_write_folders import rig_parts
+    from astrolog.spine import declarations
+
+    with pytest.raises(declarations.UnknownTargetError, match="setup 7"):
+        rig_parts(GearEdit(key="firma", rig_id=7), {})
+
+
 def test_the_declared_focal_does_not_leave_two_twin_rigs(pagina, tmp_path):
     """Un setup e' ottica + camera **a una focale**, e una focale ignota non e' la stessa cosa di
     una focale nota: senza chiedere la focale, il setup nato dalla risposta e quello che i frame

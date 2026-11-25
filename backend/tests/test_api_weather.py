@@ -21,7 +21,7 @@ from astrolog.api.app import create_app
 from astrolog.db.connect import connect, create_database
 from astrolog.site_of import home_site
 from astrolog.spine import moon_calendar
-from astrolog.weather import forecast, openmeteo, rounds, sky
+from astrolog.weather import forecast, openmeteo, rounds, sky, view
 from conftest import wait_until
 from test_weather_forecast import Finto, risposta
 
@@ -292,6 +292,26 @@ def test_each_hour_carries_its_dew_threshold_and_the_site_elevation_moves_it_at_
     assert dopo["elevation_known"] is True
     alte = [o["dew_threshold_c"] for o in dopo["hours"] if o["dew_threshold_c"] is not None]
     assert sum(alte) > sum(soglie)
+
+
+def test_only_a_new_elevation_of_the_home_site_rewrites_the_forecast(
+    con_casa, db_path, monkeypatch
+):
+    """La soglia legge la quota del sito predefinito: un nome nuovo o la quota di un altro sito
+    non riscrivono la previsione."""
+    c = connect(db_path)
+    c.execute(
+        "INSERT INTO sites(id, name, latitude, longitude, timezone, is_default, created_at)"
+        " VALUES(2, 'Collina', 45.70, 11.40, 'Europe/Rome', 0, '2026-09-01T00:00:00Z')"
+    )
+    c.close()
+    riscritte = []
+    monkeypatch.setattr(view, "rebuild", lambda conn, site: riscritte.append(site.id))
+    assert con_casa.patch("/api/v1/sites/1", json={"name": "Casa nuova"}).status_code == 200
+    assert con_casa.patch("/api/v1/sites/2", json={"elevation_m": 800.0}).status_code == 200
+    assert riscritte == []
+    assert con_casa.patch("/api/v1/sites/1", json={"elevation_m": 2000.0}).status_code == 200
+    assert riscritte == [1]
 
 
 def test_the_wind_aloft_is_the_one_of_the_chosen_model(letto):

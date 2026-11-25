@@ -118,7 +118,7 @@ def test_the_subject_stays_a_key_on_both_shapes():
 
     with pytest.raises(KeyError):
         counts.of("un soggetto che non esiste")
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="non per rig"):  # l'errore dice chi l'ha chiesta
         counts.of("rig", rigs_joined=True)  # la forma giunta esiste solo per lo strumento
 
 
