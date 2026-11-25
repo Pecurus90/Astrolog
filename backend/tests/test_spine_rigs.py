@@ -95,6 +95,14 @@ def test_a_key_that_is_not_three_pieces_is_left_alone(conn):
     assert nomi(conn) == prima
 
 
+@pytest.mark.parametrize(
+    "parti", [("Askar 103Apo", "ASI2600MC", 533.0), ("Askar 103Apo", "ASI2600MC", None)]
+)
+def test_a_rig_key_reads_back_the_pieces_it_was_made_of(parti):
+    """Una focale ignota resta ignota anche riletta: niente zero, niente schianto."""
+    assert declarations.rig_key_parts(declarations.rig_key(*parti)) == parti
+
+
 def test_a_rename_keeps_the_moment_it_was_told(conn):
     """L'istante che si scrive e' quello che il chiamante passa, non quello di adesso: tutta
     l'Applica e' un colpo solo, e datare una riga di mezzo con un altro orologio la farebbe
