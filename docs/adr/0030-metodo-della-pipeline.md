@@ -35,8 +35,11 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 ## Conseguenze
 
 - Un errore si vede nel passo che lo crea, non a pipeline finita.
-- La pipeline vecchia si cancella solo quando il confronto dell'ultimo strato non ha differenze
-  senza perche'.
+- La pipeline vecchia si cancella a pezzi (Marco, 25/11/2026, passo 40): ogni fetta del 40 toglie
+  lo stadio vecchio che sostituisce, dopo il confronto delle risposte API delle pagine contro il tag
+  `prima-del-40` su una copia dell'archivio, alla chiusura di ogni fetta; ogni differenza ha un
+  perche' scritto. La vecchia intera resta solo nel tag. Il thread resta quello di `Behind`: e' la
+  vecchia che cede gli stadi, mai la nuova che entra nel worker dell'utente.
 - Costo: tre revisioni per passo del cuore (ordine di ore, non giorni). (superata: vedi 0040)
 - **Identita' della posa** (Marco, 22/10/2026, secondo audit): camera, inizio UTC normalizzato,
   dimensioni e durata dall'header (`pipeline/fingerprint.py`); i pixel solo se ne manca uno, o se
