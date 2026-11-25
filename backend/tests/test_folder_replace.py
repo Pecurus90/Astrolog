@@ -263,6 +263,7 @@ def test_a_folder_written_in_another_case_is_found_inside_the_registered_one(
 
 def _scanned(client, folder_id):
     """Scansiona e torna la ricevuta di quella cartella."""
+    client.app.state.worker.join(30.0)  # ritiro e riaggiunta mettono in coda identify: worker_busy
     assert client.post(f"/api/v1/folders/{folder_id}/scan").status_code == 202
     client.app.state.worker.join(30.0)
 
