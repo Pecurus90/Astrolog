@@ -321,6 +321,23 @@ def test_a_nested_pair_under_the_nested_ratio_stays_silent():
     assert score.is_ambiguous(ospite, pezzo, separation_deg=0.06, fov_radius_deg=0.8) is False
 
 
+def test_a_nested_second_worth_exactly_the_ratio_contends(monkeypatch):
+    """Almeno 0,9 comprende 0,9: un secondo che vale esattamente quella frazione del primo
+    chiede. I punteggi si fissano a 1,0 e 0,9, perche' due voci vere non ci cadono sopra al bit."""
+    ospite = nel_cono(name="NGC 1", sep_deg=0.02, size_major_arcmin=60.0, magnitude=7.0)
+    pari = nel_cono(name="NGC 2", sep_deg=0.05, size_major_arcmin=50.0, magnitude=7.0)
+    fissi = {"NGC 1": 1.0, "NGC 2": score.NESTED_SCORE_RATIO}
+    monkeypatch.setattr(score, "score_candidate", lambda entry, _fov=None: fissi[entry.name])
+    assert score.is_ambiguous(ospite, pari, separation_deg=0.06, fov_radius_deg=0.8) is True
+
+
+def test_without_a_second_or_its_distance_there_is_nothing_to_ask():
+    """Un candidato solo non contende con nessuno, e senza la distanza fra i due non si sa se uno
+    stia dentro l'altro: in tutti e due i casi non si chiede."""
+    assert score.is_ambiguous(M31, None, separation_deg=0.4039) is False
+    assert score.is_ambiguous(M31, M32, separation_deg=None) is False
+
+
 def test_containment_far_from_the_frame_is_not_containment():
     """Il contenimento geometrico da solo dichiarerebbe "lo stesso soggetto" cose che stanno a
     gradi di distanza: nel catalogo vero **44 coppie**, e fra queste NGC 1977 (il Running Man)
