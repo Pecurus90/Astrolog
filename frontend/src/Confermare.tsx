@@ -564,7 +564,7 @@ function LaPagina({ formato }: { formato: Formato }) {
   return (
     <Guscio m={m} sinistra={sinistra}>
       {avvisi}
-      {/* L'ordine delle sezioni e' fisso: prima i pezzi, poi come si montano insieme, poi il
+      {/* L'ordine delle sezioni e' fisso: prima gli strumenti, poi come si montano insieme, poi il
           dove e il quando, poi il cielo. Una sezione che si sposta non si ritrova. */}
       <div
         className="al-conf__colonna-11"

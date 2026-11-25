@@ -352,8 +352,8 @@ def test_a_detached_frame_left_without_a_live_folder_keeps_waiting(pagina, tmp_p
 
 
 def test_a_copy_in_a_folder_called_calibration_keeps_the_hours_of_the_original(pagina, tmp_path):
-    """Una COPIA di un frame gia' in archivio entra anche li', come copia, ma la cartella di una
-    posa e' quella della sua prima posizione presente in una cartella non tolta
+    """Una COPIA di un frame gia' in archivio entra anche li', come copia, ma la cartella di un
+    frame e' quella della sua prima posizione presente in una cartella non tolta
     (`spine/frame_folder.py`): finche' l'originale resta dov'era, le ore restano."""
     _foto_con_le_ore(pagina)
     apply(pagina, typeless=[{"key": _chiave(pagina, DARK), "kind": "calibration"}])

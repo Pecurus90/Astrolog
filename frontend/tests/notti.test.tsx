@@ -316,7 +316,7 @@ describe("le Notti", () => {
     expect(await screen.findByRole("tab", { name: "Sabato 18 maggio 2024, 3 h, Cima Ekar" })).toBeTruthy()
   })
 
-  it("dice che la lettura non e' finita", async () => {
+  it("dice che la scansione non e' finita", async () => {
     notti(pagina([DICIOTTO], { still_reading: 40, reading_done_pct: 19 }))
     await apriNotti()
     expect(await screen.findByText("Scansione in corso, 19%: le notti si aggiungono da sole")).toBeTruthy()

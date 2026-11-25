@@ -71,7 +71,7 @@ def test_the_nas_scan_cadence_reaches_the_app(monkeypatch, minuti, secondi):
 
 
 def test_a_second_copy_of_the_app_on_the_same_data_does_not_start(tmp_path):
-    """Due copie sugli stessi dati: le scansioni si accavallano e le pose risultano sparite.
+    """Due copie sugli stessi dati: le scansioni si accavallano e i frame risultano spariti.
     Il lucchetto e' del sistema: un processo morto lo lascia libero."""
     first = single_instance(tmp_path)
     with pytest.raises(AlreadyRunningError):

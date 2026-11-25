@@ -20,9 +20,9 @@ from identify_bench import M31, M45, M83, NOTTE, corri, nomi_di, oggetto_di, pos
 
 def test_the_user_correction_moves_the_frames(archivio):
     """La casella che regge la sezione Oggetti: l'utente dice che cio' che il cielo chiama
-    `m-31` per lui e' M 45, e le pose ci devono andare.
+    `m-31` per lui e' M 45, e i frame ci devono andare.
 
-    Il lucchetto `user` non basta: protegge l'OGGETTO, non la posa. Senza questa correzione
+    Il lucchetto `user` non basta: protegge l'OGGETTO, non il frame. Senza questa correzione
     `identify` rifarebbe la sua strada dal cielo e riaggancerebbe tutto a M 31, e la risposta
     dell'utente sarebbe muta al primo ricalcolo."""
     a = posa(archivio, obj="M 31", cielo=M31, hash_="a")
@@ -61,7 +61,7 @@ def test_a_correction_survives_a_second_run(archivio):
 
 
 def test_a_correction_on_a_free_name_moves_those_frames_too(archivio):
-    """Non solo gli oggetti di catalogo: le sette pose che dicono `Snapshot` e che il solver non
+    """Non solo gli oggetti di catalogo: i sette frame che dicono `Snapshot` e che il solver non
     ha risolto sono il caso per cui la sezione Oggetti esiste."""
     frame = posa(archivio, obj="Snapshot", solve="failed")
     risposta.correct_object(archivio, "Snapshot", slug="m-101")
@@ -72,7 +72,7 @@ def test_a_correction_on_a_free_name_moves_those_frames_too(archivio):
 def test_a_second_thought_undoes_the_correction_it_reverses(archivio):
     """`m-31` -> `m-45`, poi `m-45` -> `m-31`: l'utente ci ha ripensato, e vince l'ultima parola.
     La correzione vecchia che riporterebbe indietro si toglie quando arriva la nuova: tenerle
-    tutte e due farebbe un anello, e la posa resterebbe dove l'utente ha appena detto di no."""
+    tutte e due farebbe un anello, e il frame resterebbe dove l'utente ha appena detto di no."""
     frame = posa(archivio, obj="M 31", cielo=M31)
     risposta.correct_object(archivio, "m-31", slug="m-45")
     risposta.correct_object(archivio, "m-45", slug="m-31")
@@ -83,7 +83,7 @@ def test_a_second_thought_undoes_the_correction_it_reverses(archivio):
 
 def test_a_renamed_object_comes_back_from_its_own_card(archivio):
     """Il caso di chi preme "Correggi": M 31 rinominato in un nome libero, e poi quel nome
-    riportato a M 31. La posa torna su M 31, e non resta sul nome che l'utente ha disfatto."""
+    riportato a M 31. Il frame torna su M 31, e non resta sul nome che l'utente ha disfatto."""
     frame = posa(archivio, obj="M 31", cielo=M31)
     corri(archivio)
     risposta.declare_object(archivio, "m-31", name="Cometa di prova")
@@ -104,7 +104,7 @@ def test_a_correction_without_its_prefix_is_ignored_not_trimmed(archivio):
     """Il prefisso del bersaglio si **verifica**, non si presume.
 
     Una riga senza prefisso l'ha scritta qualcuno che non e' passato da `correct_object`;
-    tagliarla alla cieca darebbe un nome storpiato, e l'app sposterebbe delle pose su un oggetto
+    tagliarla alla cieca darebbe un nome storpiato, e l'app sposterebbe dei frame su un oggetto
     inventato invece di lasciarle dove il cielo le ha messe. Si ignora, e si scrive nel log."""
     archivio.execute(
         "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
@@ -117,8 +117,8 @@ def test_a_correction_without_its_prefix_is_ignored_not_trimmed(archivio):
 
 
 def test_a_correction_to_a_slug_the_catalog_does_not_know_is_ignored(archivio):
-    """Una dichiarazione non puo' far sparire delle pose: se il bersaglio non esiste, si resta
-    su cio' che il cielo dice, e la posa e' agganciata comunque."""
+    """Una dichiarazione non puo' far sparire dei frame: se il bersaglio non esiste, si resta
+    su cio' che il cielo dice, e il frame e' agganciato comunque."""
     frame = posa(archivio, obj="M 31", cielo=M31)
     risposta.correct_object(archivio, "m-31", slug="non-esiste")
     ricevuta = corri(archivio)
@@ -127,12 +127,12 @@ def test_a_correction_to_a_slug_the_catalog_does_not_know_is_ignored(archivio):
 
 
 def test_an_object_left_without_frames_disappears(archivio):
-    """Rispondere sposta le pose, e cio' che resta indietro non e' piu' un oggetto.
+    """Rispondere sposta i frame, e cio' che resta indietro non e' piu' un oggetto.
 
     Non e' un dettaglio di pulizia: senza, dopo aver risposto l'utente rilegge la pagina e trova
-    ancora "NGC 7023 -- 0 pose" (misurato sulle 41 pose vere dell'Iris), e quella riga **tiene in
+    ancora "NGC 7023 -- 0 frame" (misurato sui 41 frame veri dell'Iris), e quella riga **tiene in
     ostaggio i suoi nomi** -- e' lei che si prende `NGC 7023` e costringe l'oggetto vero a
-    nascere senza nomi propri. Un oggetto e' cio' che e' stato fotografato: senza pose non e'
+    nascere senza nomi propri. Un oggetto e' cio' che e' stato fotografato: senza frame non e'
     stato fotografato."""
     frame = posa(archivio, obj="M 31", cielo=M31)
     corri(archivio)
@@ -160,8 +160,8 @@ def test_an_object_with_a_session_disappears_too_and_frees_its_names(archivio):
     dalla pagina ha gia' le sue notti in casa.
 
     Misurato: risparmiare l'oggetto finche' una sessione lo punta -- la strada che evita lo
-    schianto senza toccare lo schema -- lo lascia in piedi a zero pose con `M 31` in ostaggio, e
-    nessuno lo ripassa piu' (dopo l'Applica le pose sono `done`). Cioe' rimette esattamente il
+    schianto senza toccare lo schema -- lo lascia in piedi a zero frame con `M 31` in ostaggio, e
+    nessuno lo ripassa piu' (dopo l'Applica i frame sono `done`). Cioe' rimette esattamente il
     difetto che questa spazzata esisteva per togliere. La sessione se ne va con l'oggetto, e
     `group` la rifa' subito dopo."""
     frame = posa(archivio, obj="M 31", cielo=M31, quando=NOTTE)
@@ -183,7 +183,7 @@ def test_an_object_with_a_session_disappears_too_and_frees_its_names(archivio):
     nuovo = oggetto_di(archivio, frame)
     assert nuovo["catalog_slug"] == "m-45"
     assert "M 31" in nomi_di(archivio, nuovo["id"])
-    # e la posa ha di nuovo la sua sessione: quella vecchia e' andata via, non la posa
+    # e il frame ha di nuovo la sua sessione: quella vecchia e' andata via, non il frame
     assert archivio.execute("SELECT session_id FROM frames WHERE id = ?", (frame,)).fetchone()[0]
     assert archivio.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 1
 
@@ -195,7 +195,7 @@ def test_the_header_name_survives_the_sweep_in_one_single_run(archivio):
     mentre si assegnavano i nomi, poi il vecchio spariva **portandosela via col CASCADE**, e
     `NGC 7023` -- cio' che l'utente aveva scritto -- non c'era piu' in archivio. Dichiaravo che
     "la corsa dopo" l'avrebbe ripresa: in produzione quella corsa **non esiste**, perche' dopo
-    l'Applica la posa e' `done` e nessuno la rimette in coda. Il test che lo copriva rimetteva
+    l'Applica il frame e' `done` e nessuno lo rimette in coda. Il test che lo copriva rimetteva
     `pending` a mano, cioe' faceva una cosa che l'app non fa mai."""
     frame = posa(archivio, obj="M 31", cielo=M31)
     corri(archivio)
@@ -212,11 +212,11 @@ def test_the_header_name_survives_the_sweep_in_one_single_run(archivio):
 def test_even_an_object_the_user_answered_goes_when_it_has_no_frames(archivio):
     """Anche gli oggetti `user`, e l'eccezione contraria era un errore mio.
 
-    L'avevo scritta pensando "l'utente lo ha creato, le sue pose arrivano dopo". Ma con questo
+    L'avevo scritta pensando "l'utente lo ha creato, i suoi frame arrivano dopo". Ma con questo
     disegno **l'utente non crea oggetti**: crea correzioni, e gli oggetti li fa `identify` quando
-    una posa ci va. Un oggetto `user` a zero pose e' quindi sempre un residuo -- e si vede
+    un frame ci va. Un oggetto `user` a zero frame e' quindi sempre un residuo -- e si vede
     correggendo due volte: rispondi LDN 1174, poi ti ricorreggi, e LDN 1174 restava li' a zero
-    pose **tenendosi la sigla `NGC 7023`**, cosi' che l'oggetto vero ripiegava su "Iris Nebula".
+    frame **tenendosi la sigla `NGC 7023`**, cosi' che l'oggetto vero ripiegava su "Iris Nebula".
 
     Non si perde niente: l'oggetto e' un derivato, la parola dell'utente vive in `declarations` e
     quella non si tocca."""
@@ -277,15 +277,15 @@ def test_the_user_lock_lands_on_an_object_that_already_existed(archivio):
 
 
 def test_a_learned_rule_names_a_future_frame_without_asking_again(archivio):
-    """La promessa della pagina: la risposta vale anche per le pose future con quello stesso
-    nome, e su una posa senza cielo il nome e' l'unica fonte che c'e'."""
+    """La promessa della pagina: la risposta vale anche per i frame futuri con quello stesso
+    nome, e su un frame senza cielo il nome e' l'unica fonte che c'e'."""
     decl.learn(archivio, "object", "Snapshot", "m-101")
     frame = posa(archivio, obj="Snapshot", solve="failed")
     ricevuta = corri(archivio)
     obj = oggetto_di(archivio, frame)
     assert obj["catalog_slug"] == "m-101"
     # `user` perche' una regola nasce da una risposta: il cielo non la contraddice (non c'e'),
-    # quindi vale come parola dell'utente e nessuna posa successiva puo' abbassarla
+    # quindi vale come parola dell'utente e nessun frame successivo puo' abbassarla
     assert (obj["identity_method"], obj["identity_confidence"]) == ("user", "user")
     assert ricevuta["review"] == 0  # non si richiede: l'utente ha gia' risposto per la grafia
 
@@ -294,14 +294,14 @@ def test_a_learned_rule_does_not_touch_a_frame_that_has_a_sky(archivio):
     """**Il difetto peggiore di questa fetta, e va tenuto rosso.**
 
     Una regola e' una stringa di testo; il cielo e' una misura, ed e' migliore. Dove il cielo
-    c'e', la regola non si guarda proprio: questa posa ha fotografato M 83 e su M 83 resta, con
+    c'e', la regola non si guarda proprio: questo frame ha fotografato M 83 e su M 83 resta, con
     la fiducia piena, anche se una regola dice che `Snapshot` sarebbe M 31.
 
     Le due versioni sbagliate che ci sono volute per arrivarci: applicata alla decisione, la
-    regola batteva il cielo e **lucchettava** -- la posa finiva su M 31 con `user`/`user` e
+    regola batteva il cielo e **lucchettava** -- il frame finiva su M 31 con `user`/`user` e
     nessuna domanda, cioe' il danno che "la regola solo se la grafia non e' ambigua" doveva
     impedire, aggirato dal lato lettura. Spostata sul nome, metteva il nome corretto in
-    conflitto col cielo originale e l'app **richiedeva su tutte le pose a cui l'utente aveva
+    conflitto col cielo originale e l'app **richiedeva su tutti i frame a cui l'utente aveva
     appena risposto** (41, misurate sull'Iris)."""
     decl.learn(archivio, "object", "Snapshot", "m-31")
     frame = posa(archivio, obj="Snapshot", cielo=M83)  # il cielo dice M 83, la regola dice M 31
@@ -316,7 +316,7 @@ def test_a_learned_rule_does_not_touch_a_frame_that_has_a_sky(archivio):
 def test_a_correction_moves_the_frames_the_sky_named(archivio):
     """Dove il cielo c'e', a portare la parola dell'utente e' la **correzione**, non la regola:
     e' agganciata a cio' che l'app ha dedotto guardando il cielo, quindi non entra mai in
-    conflitto con lui. E' il caso vero dell'Iris: rispondi, e le pose ci vanno senza che l'app
+    conflitto con lui. E' il caso vero dell'Iris: rispondi, e i frame ci vanno senza che l'app
     richieda niente."""
     a = posa(archivio, obj="M 83", cielo=M83, hash_="a")
     b = posa(archivio, obj="M 83", cielo=M83, hash_="b")
@@ -329,14 +329,14 @@ def test_a_correction_moves_the_frames_the_sky_named(archivio):
         obj = oggetto_di(archivio, frame)
         assert obj["catalog_slug"] == "m-101"
         assert (obj["identity_method"], obj["identity_confidence"]) == ("user", "user")
-    assert ricevuta["review"] == 0, "l'app richiede su pose a cui l'utente ha gia' risposto"
+    assert ricevuta["review"] == 0, "l'app richiede su frame a cui l'utente ha gia' risposto"
 
 
 def test_a_correction_closes_the_question_on_a_doubtful_object(archivio):
     """**Il caso per cui la sezione Oggetti esiste**: l'header dice `M 45`, il cielo dice un'altra
     cosa, e l'app chiede. L'utente clicca il candidato, e la domanda si chiude.
 
-    Prima la correzione spostava le pose ma lasciava l'oggetto `low`: la pagina lo rimetteva in
+    Prima la correzione spostava i frame ma lasciava l'oggetto `low`: la pagina lo rimetteva in
     cima coi suoi candidati e l'app poteva richiedere all'infinito -- ogni clic scriveva una
     risposta e nessuno chiudeva la domanda, proprio sui due rami in cui chiede davvero. La
     correzione e' agganciata alla chiave che la pagina mostrava, quindi e' la risposta a
@@ -359,10 +359,10 @@ def test_a_correction_closes_the_question_on_a_doubtful_object(archivio):
 def test_a_doubt_on_a_locked_object_is_not_counted(archivio):
     """La ricevuta conta le richieste che la pagina fara' davvero.
 
-    Su un oggetto lucchettato dall'utente il dubbio di una posa non arriva a schermo -- la
+    Su un oggetto lucchettato dall'utente il dubbio di un frame non arriva a schermo -- la
     pagina guarda `objects.identity_confidence`, e li' c'e' `user` -- quindi contarlo darebbe
     "1 da rivedere" con lo schermo che ne mostra zero, e nella spina i conti della ricevuta
-    sono l'unica diagnostica che c'e'. Che quella posa non abbia oggi un modo di farsi notare
+    sono l'unica diagnostica che c'e'. Che quel frame non abbia oggi un modo di farsi notare
     e' un'altra cosa, ed e' fra le idee (`docs/idee.md`)."""
     posa(archivio, obj="M 31", cielo=M31, hash_="a")
     corri(archivio)
@@ -379,10 +379,10 @@ def test_a_doubt_on_a_locked_object_is_not_counted(archivio):
 def test_a_rule_keeps_the_header_spelling_among_the_names(archivio):
     """La regola cambia il nome che DECIDE, non cio' che l'utente ha scritto.
 
-    Vale su ogni posa (`identify_link.hang`): la grafia dell'header entra in `object_names`,
+    Vale su ogni frame (`identify_link.hang`): la grafia dell'header entra in `object_names`,
     e cade solo se e' gia' di un altro oggetto -- e allora si scrive nel log. Sul ramo della
     regola cadeva in silenzio, e l'Archivio mostrava un oggetto che non ricordava piu'
-    l'etichetta con cui l'utente chiamava quelle pose."""
+    l'etichetta con cui l'utente chiamava quei frame."""
     decl.learn(archivio, "object", "Iris finale", "m-31")
     frame = posa(archivio, obj="Iris finale", solve="failed")
     corri(archivio)

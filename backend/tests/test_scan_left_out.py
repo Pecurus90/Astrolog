@@ -80,7 +80,7 @@ def test_a_name_the_archive_cannot_write_is_named_and_the_scan_goes_on(conn, tmp
 
 
 def test_a_pose_that_can_no_longer_be_read_is_not_missing(conn, tmp_path):
-    """Una posa gia' in archivio il cui file non si legge piu' (rovinato, o bloccato da un altro
+    """Un frame gia' in archivio il cui file non si legge piu' (rovinato, o bloccato da un altro
     programma) e' li': la ricevuta la nomina fra i non letti, ma non diventa "non trovata"."""
     write_light(tmp_path / "a.fits")
     fid = add_folder(conn, tmp_path)
@@ -196,7 +196,7 @@ def test_only_the_last_scans_of_a_folder_keep_the_names(conn, tmp_path, monkeypa
 
 def test_the_receipt_counts_the_skipped_by_reason(conn, tmp_path):
     """La ricevuta dice quanti file ha saltato e perche', calibrazioni comprese (Marco,
-    2026-09-11): un NAS con l'orologio avanti, che fa saltare le stesse pose a ogni scansione
+    2026-09-11): un NAS con l'orologio avanti, che fa saltare gli stessi frame a ogni scansione
     come "ancora in scrittura", si vede invece di sparire dentro un numero."""
     write_light(tmp_path / "light.fits")
     write_fits(tmp_path / "dark.fits", {"IMAGETYP": "Dark", "EXPTIME": 1.0})

@@ -190,7 +190,7 @@ describe("il passo del riconoscitore, quando manca", () => {
 
   it("scritto un percorso giusto ma senza catalogo, la conferma non promette troppo", async () => {
     // "L'app riconoscera' cosa hai ripreso" a chi il catalogo non ce l'ha promette il contrario
-    // di quello che succedera': la scansione si ferma alla prima posa.
+    // di quello che succedera': la scansione si ferma al primo frame.
     primoAvvio(["no_solver"], {
       "PATCH /api/v1/settings": { stato: 200, corpo: conManca(["no_star_database"]) },
     })

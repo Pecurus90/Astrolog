@@ -78,7 +78,7 @@ def test_normalize_keeps_the_filter_screwed_on_a_colour_camera(conn, archive):
 
 
 def test_normalize_alias_learned(conn, tmp_path):
-    """Una regola imparata in Da confermare ("questa grafia e' questo pezzo") vale sopra il
+    """Una regola imparata in Da confermare ("questa grafia e' questo strumento") vale sopra il
     vocabolario, e vale anche per i frame gia' normalizzati quando si rifa' lo stadio."""
     build_archive(tmp_path / "lib")
     scan(conn, tmp_path / "lib")
@@ -86,7 +86,7 @@ def test_normalize_alias_learned(conn, tmp_path):
     spellings = one(
         conn, "SELECT COUNT(*) FROM instruments WHERE kind = 'camera' AND name LIKE 'ATR2600M%'"
     )
-    assert spellings == 2  # senza regola, due grafie sono due pezzi
+    assert spellings == 2  # senza regola, due grafie sono due strumenti
 
     conn.execute(
         "INSERT INTO header_aliases(kind, header_value, target_key, created_at)"
@@ -102,7 +102,7 @@ def test_normalize_alias_learned(conn, tmp_path):
 
 
 def test_normalize_applies_a_filter_rule(conn, tmp_path):
-    """La risposta "N e' il mio Ha 3nm" vale per tutte le pose di quel filtro."""
+    """La risposta "N e' il mio Ha 3nm" vale per tutti i frame di quel filtro."""
     write_light(tmp_path / "a.fits", filt="N")
     write_light(tmp_path / "b.fits", filt="N", date="2024-05-17T22:00:00")
     conn.execute(
@@ -139,7 +139,7 @@ def test_normalize_calibrated_copy(conn, archive):
     hours = one(
         conn, "SELECT SUM(exposure_s) FROM frames WHERE copy_of IS NULL AND filter_raw = 'L'"
     )
-    assert hours == 480.0  # quattro pose da 120 s, non cinque
+    assert hours == 480.0  # quattro frame da 120 s, non cinque
     assert archive["copies"] == 1
 
 
@@ -172,7 +172,7 @@ def test_normalize_finds_the_copy_of_an_unsupported_capture_program(conn, tmp_pa
 
 def test_normalize_does_not_guess_between_two_twins_that_say_nothing(conn, tmp_path):
     """Lo stesso scatto due volte e nessun indizio su chi sia l'originale: si contano tutti e
-    due (Marco, 10/9/2026). Indovinare fonderebbe due pose vere riprese nello stesso istante,
+    due (Marco, 10/9/2026). Indovinare fonderebbe due frame veri ripresi nello stesso istante,
     e far sparire cielo vero e' peggio di contarlo due volte."""
     same = {"INSTRUME": "ASI2600MM", "date": "2024-05-17T21:00:00"}
     write_light(tmp_path / "a.fits", SWCREATE="N.I.N.A. 3.1", **same)
@@ -200,7 +200,7 @@ def test_normalize_a_touched_raw_still_beats_its_calibrated_copy(conn, tmp_path)
 
 
 def test_normalize_a_marked_frame_without_a_twin_still_counts(conn, tmp_path):
-    """Il marchio decide chi vince fra due gemelli, mai se una posa conta: chi ha tenuto solo
+    """Il marchio decide chi vince fra due gemelli, mai se un frame conta: chi ha tenuto solo
     il file calibrato le vede tutte."""
     write_light(tmp_path / "cal.fits", INSTRUME="ASI2600MM", CALSTAT="BDF")
     scan(conn, tmp_path)
@@ -249,7 +249,7 @@ def test_normalize_a_copy_points_at_the_original_not_at_another_copy(conn, tmp_p
 
 
 def test_normalize_does_not_call_a_second_pose_a_copy(conn, tmp_path):
-    """Due pose vere della stessa notte con la stessa camera non sono una copia: la data
+    """Due frame veri della stessa notte con la stessa camera non sono una copia: la data
     e' diversa."""
     write_light(tmp_path / "a.fits", date="2024-05-17T21:00:00")
     write_light(tmp_path / "b.fits", date="2024-05-17T21:05:00")
@@ -352,7 +352,7 @@ def test_normalize_rig_focal_is_the_median_and_ignores_the_file_order(conn, arch
 
 
 def test_normalize_a_zero_focal_length_does_not_explode(conn, tmp_path):
-    """Una reflex che scrive FOCALLEN = 0 non e' "focale ignota": due pose cosi' devono finire
+    """Una reflex che scrive FOCALLEN = 0 non e' "focale ignota": due frame cosi' devono finire
     nello stesso setup, non far cadere la corsa su un vincolo del database."""
     for i in range(2):
         write_light(
@@ -418,8 +418,8 @@ def test_normalize_counts_what_is_left_to_confirm(conn, archive):
     """Il numero da confermare dice il vero: un filtro con banda sconosciuta (`N`) e un frame
     senza filtro contano, un filtro riconosciuto no."""
     assert archive["to_review"] == 3  # le due lettere N e X, piu' il mono che dice "none"
-    # tredici pezzi: tre ottiche, cinque camere, DUE montature -- l'ASIAIR del banco ne scrive due
-    # nomi diversi in TELESCOP -- piu' i TRE che gli altri programmi nominano sulla singola posa:
+    # tredici strumenti: tre ottiche, cinque camere, DUE montature -- l'ASIAIR del banco ne scrive
+    # due nomi diversi in TELESCOP -- piu' i TRE che gli altri programmi nominano sul singolo frame:
     # la ruota e il focheggiatore di N.I.N.A., la camera di guida dell'ASIAIR
     assert archive["instruments"] == 13 and archive["rigs"] == 5
 
@@ -452,8 +452,8 @@ CARD = {"IMAGETYP": "Light Frame", "OBJECT": "M 31", "EXPTIME": 300.0}
 
 
 def test_normalize_reads_the_colour_of_the_camera_not_of_the_single_pose(conn, tmp_path):
-    """A essere a colori e' la CAMERA, non la posa: il programma che non scrive `BAYERPAT` non fa
-    una posa mono in mezzo alle altre, nemmeno nel giro che scopre la camera: i file votano prima
+    """A essere a colori e' la CAMERA, non il frame: il programma che non scrive `BAYERPAT` non fa
+    un frame mono in mezzo agli altri, nemmeno nel giro che scopre la camera: i file votano prima
     del giro. E una camera a colori non si chiede (Marco, 23/9/2026)."""
     for i, bayer in enumerate(({}, *[{"BAYERPAT": "RGGB"}] * 3)):
         write_fits(tmp_path / f"{i}.fits", {**CARD, "INSTRUME": "Cam", **bayer,
@@ -473,8 +473,8 @@ def test_normalize_reads_the_colour_of_the_camera_not_of_the_single_pose(conn, t
 
 
 def test_normalize_a_copy_does_not_vote_the_colour_before_the_round(conn, tmp_path):
-    """La copia calibrata non e' un'altra posa, e non vota nemmeno prima del giro: un grezzo con la
-    matrice e uno senza sono pari, la camera non e' a colori, e la posa senza matrice tiene il suo
+    """La copia calibrata non e' un altro frame, e non vota nemmeno prima del giro: un grezzo con la
+    matrice e uno senza sono pari, la camera non e' a colori, e il frame senza matrice tiene il suo
     filtro -- e nessuna torna in coda a fine corsa per un voto che non era quello usato."""
     same = {**CARD, "INSTRUME": "Cam", "FILTER": "L"}
     write_fits(tmp_path / "a.fits", {**same, "DATE-OBS": "2024-05-17T21:00:00"})
@@ -494,7 +494,7 @@ def test_normalize_a_copy_does_not_vote_the_colour_before_the_round(conn, tmp_pa
 
 
 def test_normalize_passes_each_pose_once(conn, tmp_path, monkeypatch):
-    """Il colore della camera si vota prima del giro, sulle pose che avra' alla fine: la posa
+    """Il colore della camera si vota prima del giro, sui frame che avra' alla fine: il frame
     senza matrice sceglie il filtro sapendolo, e nessuna si rifa', ne' ora ne' alla corsa dopo."""
     for i, bayer in enumerate(({}, *[{"BAYERPAT": "RGGB"}] * 3)):
         write_fits(tmp_path / f"{i}.fits", {**CARD, "INSTRUME": "Cam", **bayer,
@@ -516,8 +516,8 @@ def test_normalize_passes_each_pose_once(conn, tmp_path, monkeypatch):
 
 
 def test_normalize_a_camera_answered_no_filter_gives_unfiltered_poses_one_row(conn, tmp_path):
-    """ "Nessun filtro" sulla firma: le pose vanno sulla riga "nessun filtro", una sola, ritrovata
-    anche rinominata. Se manca e il suo nome e' gia' di un altro filtro, la posa resta da
+    """ "Nessun filtro" sulla firma: i frame vanno sulla riga "nessun filtro", una sola, ritrovata
+    anche rinominata. Se manca e il suo nome e' gia' di un altro filtro, il frame resta da
     rivedere."""
     for i in range(2):
         write_fits(tmp_path / f"{i}.fits", {**CARD, "INSTRUME": "Mono",

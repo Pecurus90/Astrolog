@@ -1,8 +1,8 @@
 """Il pixel di una camera ricavato dal cielo, quando i file non lo dicono (Marco, 23/9/2026).
 
 Si ricava da cio' che il solver ha misurato: il pixel fisico e' la scala per la focale del setup,
-diviso il binning (`units.pixel_um_from_scale`), e la camera prende la **mediana** delle sue pose
-risolte. Lo scrive chi lavora le pose, a fine giro (`camera_sky.write`): la pagina lo legge e
+diviso il binning (`units.pixel_um_from_scale`), e la camera prende la **mediana** dei suoi frame
+risolti. Lo scrive chi lavora i frame, a fine giro (`camera_sky.write`): la pagina lo legge e
 basta. Rischio dichiarato: un riduttore che la focale dell'header non conta sposta il pixel.
 """
 
@@ -14,7 +14,7 @@ from conftest import add_folder, by_name, correct, db, gear, run_normalize
 from test_solve import solver
 from test_typeless import _frame
 
-CAMERA = "ATR2600M(USB2.0)"  # nell'archivio sintetico: 7 pose, setup a 560 mm
+CAMERA = "ATR2600M(USB2.0)"  # nell'archivio sintetico: 7 frame, setup a 560 mm
 
 
 def _scala(pixel_um, focal_mm, binning=1):
@@ -45,12 +45,12 @@ def _ricavato(conn, camera=CAMERA):
 
 
 def test_the_pixel_is_the_median_of_what_the_sky_measured(client):
-    """Ogni posa risolta dice un pixel; la camera prende quello di mezzo, cosi' una posa risolta
+    """Ogni frame risolto dice un pixel; la camera prende quello di mezzo, cosi' un frame risolto
     storta -- succede su un campo povero di stelle -- non lo sposta. A bin 2 la scala raddoppia, e
     il pixel fisico no."""
     with db(client) as conn:
         pose = _pose(conn)
-        assert len(pose) >= 3, "il banco deve avere almeno tre pose di quella camera"
+        assert len(pose) >= 3, "il banco deve avere almeno tre frame di quella camera"
         for p in pose:
             _risolvi(conn, p["id"], _scala(3.76, p["focal_mm"]))
         conn.execute("UPDATE frames SET binning = 2 WHERE id = ?", (pose[0]["id"],))
@@ -68,7 +68,7 @@ def test_without_a_solved_pose_there_is_no_pixel_from_the_sky(client):
 
 
 def test_a_pose_that_does_not_say_its_binning_does_not_vote(client):
-    """Un binning che l'header non dice vale "non si sa", non 1: quella posa non vota."""
+    """Un binning che l'header non dice vale "non si sa", non 1: quel frame non vota."""
     with db(client) as conn:
         pose = _pose(conn)
         for p in pose:
@@ -91,7 +91,7 @@ def test_the_gear_page_reads_the_pixel_from_the_sky(client):
 
 
 def test_normalize_writes_it_at_the_end_of_its_round(client):
-    """Una posa che cambia camera -- un'unione, una risposta -- ripassa da `normalize`: e' li' che
+    """Un frame che cambia camera -- un'unione, una risposta -- ripassa da `normalize`: e' li' che
     il pixel ricavato si rifa', senza aspettare un giro del solver."""
     with db(client) as conn:
         for p in _pose(conn):
@@ -115,7 +115,7 @@ def test_the_solver_writes_it_at_the_end_of_its_round(client, tmp_path):
 
 
 def test_a_camera_that_loses_every_solved_pose_forgets_its_pixel(client):
-    """Una camera rimasta senza pose risolte -- un'unione che le porta via, un cielo staccato --
+    """Una camera rimasta senza frame risolti -- un'unione che le porta via, un cielo staccato --
     dimentica il pixel che ne aveva ricavato, invece di tenerne uno che niente sostiene piu'."""
     with db(client) as conn:
         pose = _pose(conn)
@@ -130,7 +130,7 @@ def test_a_camera_that_loses_every_solved_pose_forgets_its_pixel(client):
 
 
 def test_a_rewritten_copy_does_not_vote(client):
-    """Una copia riscritta non e' un'altra posa: il suo cielo non entra nella mediana."""
+    """Una copia riscritta non e' un altro frame: il suo cielo non entra nella mediana."""
     with db(client) as conn:
         prima, copia = _pose(conn)[:2]
         conn.execute("UPDATE frames SET copy_of = ? WHERE id = ?", (prima["id"], copia["id"]))

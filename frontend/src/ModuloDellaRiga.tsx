@@ -28,7 +28,7 @@ export interface Conto {
 
 /**
  * Il **guscio del modulo di una riga** dell'Attrezzatura (tavola v82 `modulo`, k `mod`), comune a
- * un pezzo e a un filtro: nome e marca in testa a "nome e modello", i due blocchi (sul telefono
+ * uno strumento e a un filtro: nome e marca in testa a "nome e modello", i due blocchi (sul telefono
  * uno aperto alla volta, `passo`), "Unisci a" con le sue righe, i rifiuti prima di Salva, ed
  * Elimina in fondo. I campi propri del tipo li porta chi lo usa.
  */

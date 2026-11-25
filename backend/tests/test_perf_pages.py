@@ -1,5 +1,5 @@
 """Il budget delle pagine (passo 6.15): ogni GET che una pagina fa quando si apre, su un archivio
-da 10.000 pose (`perf_archive.py`), contro la soglia scritta in `perf_budget.json` accanto alla
+da 10.000 frame (`perf_archive.py`), contro la soglia scritta in `perf_budget.json` accanto alla
 misura che l'ha data. Marcato `lento`: gira nel job lento della CI e nella Nightly.
 
 La soglia e' quattro volte la misura, perche' il runner condiviso della CI e' arrivato a 3,2 volte
@@ -10,8 +10,8 @@ second is about the limit for the user's flow of thought to stay uninterrupted"]
 nessuno vede la differenza, sopra 1 s una pagina interrompe chi la usa, qualunque fosse la misura.
 
 Rimisurare dopo un passo che cambia una rotta: `ASTROLOG_RIMISURA=1 python -m pytest -m lento
-tests/test_perf_pages.py`, poi si committa il json. Le misure delle pose non ci sono (la pipeline
-nuova non gira qui): le rotte delle misure si leggono con le pose in attesa.
+tests/test_perf_pages.py`, poi si committa il json. Le misure dei frame non ci sono (la pipeline
+nuova non gira qui): le rotte delle misure si leggono con i frame in attesa.
 """
 
 import json

@@ -26,7 +26,7 @@ SITI = [
 @pytest.mark.parametrize("header, atteso", [c[1:] for c in SITI], ids=[c[0] for c in SITI])
 def test_the_site_is_read_in_every_written_form(header, atteso):
     """Il sito si scrive in gradi decimali o in gradi-minuti-secondi, e si leggono tutte e due:
-    senza, si perde la domanda su dove sono state riprese quelle pose."""
+    senza, si perde la domanda su dove sono stati ripresi quei frame."""
     m = extract_fields(header, "x")
     lat, lon = atteso
     assert m.site_lat == pytest.approx(lat)

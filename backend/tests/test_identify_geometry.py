@@ -144,7 +144,7 @@ def test_the_rectangle_turns_the_right_way_round():
     lati e basta -- quindi un test a 90 gradi non tiene ferma la convenzione. A 30 gradi si
     separano, ed e' li' che si vede: girando lo scarto **in avanti** invece che all'indietro,
     questo punto uscirebbe dall'inquadratura. La stessa mutazione equivale a ribaltare il segno
-    dell'est: se il campo fosse specchiato, meta' delle pose ruotate direbbe il falso."""
+    dell'est: se il campo fosse specchiato, meta' dei frame ruotati direbbe il falso."""
     girato = {**CAMPO, "rotation_deg": 30.0}
     est, nord = geo.tangent_offset_deg(100.0, 0.0, 100.45, 0.30)
     assert (est, nord) == (pytest.approx(0.45, abs=1e-3), pytest.approx(0.30, abs=1e-3))
@@ -156,7 +156,7 @@ def test_the_rectangle_turns_the_right_way_round():
 
 def test_a_big_object_counts_as_inside_even_with_its_centre_out():
     """Il pannello di un mosaico: l'oggetto e' piu' grande del campo, quindi il suo **centro**
-    cade fuori mentre l'oggetto riempie la foto. Contare solo il centro direbbe che nella posa
+    cade fuori mentre l'oggetto riempie la foto. Contare solo il centro direbbe che nel frame
     non c'e' niente, che e' il modo in cui si perde il soggetto di un mosaico."""
     assert geo.in_frame(CAMPO, 100.9, 0.0) is False  # un puntino li' non c'e'
     assert geo.in_frame(CAMPO, 100.9, 0.0, size_major_arcmin=120.0) is True  # 2 gradi: c'e' eccome
@@ -189,14 +189,14 @@ def test_without_any_side_nothing_gets_discarded():
 
 def test_on_the_circle_too_a_big_object_counts_as_inside():
     """La regola dell'oggetto piu' grande del campo vale in tutti e due i rami. Sul cerchio era
-    scoperta: senza il raggio, il pannello di un mosaico su una posa senza rotazione perdeva il
+    scoperta: senza il raggio, il pannello di un mosaico su un frame senza rotazione perdeva il
     proprio soggetto -- e proprio li', dove del campo si sa meno, sbagliare costa di piu'."""
     assert geo.in_frame(STORTO, 100.9, 0.0) is False  # un puntino a 0,9: il cerchio arriva a 0,69
     assert geo.in_frame(STORTO, 100.9, 0.0, size_major_arcmin=120.0) is True  # due gradi: c'e'
 
 
 def test_without_any_sky_nothing_can_be_said():
-    """Una posa non risolta non ha campo: `in_frame` non deve inventare un `False`, che
+    """Un frame non risolto non ha campo: `in_frame` non deve inventare un `False`, che
     sarebbe uno scarto. Torna `None`, e chi chiama va per nome."""
     assert geo.in_frame({"ra_deg": None, "dec_deg": None}, 100.0, 0.0) is None
     assert geo.frame_shape({"ra_deg": None, "dec_deg": None}) is None

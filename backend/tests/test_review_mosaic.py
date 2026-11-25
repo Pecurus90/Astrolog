@@ -37,8 +37,8 @@ def _piano(conn, query, parametri=()):
     ids=["LIVE", "_MOSAICS", "_SUBJECTS", "mosaic_weight._WORK"],
 )
 def test_mosaic_proposals_read_the_poses_of_the_panels_from_the_index_alone(conn, query, parametri):
-    """I mosaici proposti e chi pesa i pannelli contano le pose dei pannelli e ne cercano gli
-    oggetti dall'indice, senza la tabella: leggerle dalla tabella costerebbe una riga per posa."""
+    """I mosaici proposti e chi pesa i pannelli contano i frame dei pannelli e ne cercano gli
+    oggetti dall'indice, senza la tabella: leggerle dalla tabella costerebbe una riga per frame."""
     piano = _piano(conn, query, parametri)
     pose = [p for p in piano if re.match(r"(SCAN|SEARCH) f\b", p)]
     assert pose and all(re.search(r"COVERING INDEX frames_panel\b", p) for p in pose), piano
@@ -46,7 +46,7 @@ def test_mosaic_proposals_read_the_poses_of_the_panels_from_the_index_alone(conn
 
 def test_mosaic_subjects_are_named_once_per_object_not_once_per_pose(conn):
     """Gli oggetti dei pannelli si tolgono dai doppi prima di cercarne il nome: cercarlo prima
-    vorrebbe dire due ricerche per ogni posa di ogni pannello, per poi buttarne quasi tutte."""
+    vorrebbe dire due ricerche per ogni frame di ogni pannello, per poi buttarne quasi tutte."""
     piano = _piano(conn, mosaic_proposals._SUBJECTS)
     doppi = next(i for i, p in enumerate(piano) if "FOR DISTINCT" in p)
     nomi = next(i for i, p in enumerate(piano) if "CORRELATED" in p)
@@ -67,8 +67,8 @@ ALTROVE = (200.0, 20.0)  # una regione ripresa in un'inquadratura sola: non c'e'
 
 
 def _posa(path, minuto, oggetto, *, setup=True):
-    """Una posa di quel setup: ottica, camera e focale, cosi' il setup e' uno solo. Senza
-    setup, una posa che non dice con che cosa e' stata ripresa."""
+    """Un frame di quel setup: ottica, camera e focale, cosi' il setup e' uno solo. Senza
+    setup, un frame che non dice con che cosa e' stato ripreso."""
     card = {
         "IMAGETYP": "Light Frame",
         "EXPTIME": 300.0,
@@ -81,7 +81,7 @@ def _posa(path, minuto, oggetto, *, setup=True):
 
 
 def _cielo(conn, nome, ra, dec):
-    """Il cielo che il solver avrebbe misurato su quella posa. Si scrive la riga e si rifa'
+    """Il cielo che il solver avrebbe misurato su quel frame. Si scrive la riga e si rifa'
     l'identificazione, come fa il giro vero quando il solve va a buon fine."""
     frame_id = conn.execute(
         "SELECT f.id FROM frames f JOIN positions p ON p.frame_id = f.id WHERE p.rel_path LIKE ?",
@@ -97,7 +97,7 @@ def _cielo(conn, nome, ra, dec):
 
 
 def _archivio(root, db_path, *, setup=True):
-    """Quattro pannelli affiancati da due pose ciascuno, piu' un'inquadratura sola altrove."""
+    """Quattro pannelli affiancati da due frame ciascuno, piu' un'inquadratura sola altrove."""
     minuto = 0
     for i, nome in enumerate(NOMI):
         for j in range(2):
@@ -110,7 +110,7 @@ def _archivio(root, db_path, *, setup=True):
     try:
         for i in range(len(NOMI)):
             for j in range(2):
-                # la seconda posa di ogni pannello e' dithered: e' lo stesso puntamento
+                # il secondo frame di ogni pannello e' dithered: e' lo stesso puntamento
                 _cielo(conn, f"p{i}_{j}.fits", RA0 + i * PASSO + j * DITHER, DEC)
         for j in range(2):
             _cielo(conn, f"sola_{j}.fits", ALTROVE[0] + j * DITHER, ALTROVE[1])
@@ -142,7 +142,7 @@ def _risposta(client, riga, answer, name="IC 405"):
 
 
 def _chiavi(client):
-    """`{nome del file: mosaico}` come lo dice la colonna della posa."""
+    """`{nome del file: mosaico}` come lo dice la colonna del frame."""
     with db(client) as conn:
         return {
             r["rel_path"].rsplit("/", 1)[-1]: r["mosaic_key"]
@@ -169,7 +169,7 @@ def test_the_question_carries_the_nights_of_the_panels(pagina):
 
 
 def test_the_answer_is_written_on_the_poses_of_the_mosaic_only(pagina):
-    """Dopo il si' le otto pose dei pannelli portano il mosaico, le due riprese altrove no."""
+    """Dopo il si' gli otto frame dei pannelli portano il mosaico, le due riprese altrove no."""
     _risposta(pagina, _mosaici(pagina)[0], "yes")
     chiavi = _chiavi(pagina)
     pannelli = {v for k, v in chiavi.items() if k.startswith("p")}
@@ -237,7 +237,7 @@ def test_renaming_the_camera_keeps_the_mosaic(pagina):
 
 
 def test_merging_the_camera_into_another_keeps_the_mosaic(pagina):
-    """Unita la camera a un'altra, le pose tornano in coda e ripassano dalla spina: restano nel
+    """Unita la camera a un'altra, i frame tornano in coda e ripassano dalla spina: restano nel
     loro mosaico, anche a spina ferma, perche' la sua chiave non porta la camera."""
     _risposta(pagina, _mosaici(pagina)[0], "yes")
     prima = _pannelli(pagina)
@@ -247,7 +247,7 @@ def test_merging_the_camera_into_another_keeps_the_mosaic(pagina):
             "INSERT INTO instruments(kind, name, created_at) VALUES('camera', 'La mia camera', 'x')"
         ).lastrowid
         # dalla spina e non dall'Applica, che fa ripartire il lavoro da solo: qui si guarda il
-        # momento in mezzo, con le pose in coda e la spina ferma
+        # momento in mezzo, con i frame in coda e la spina ferma
         gear.merge_instrument(conn, cam, tenuta)
         conn.commit()
     assert _pannelli(pagina) == prima
@@ -261,8 +261,8 @@ def test_merging_the_camera_into_another_keeps_the_mosaic(pagina):
 
 
 def test_a_group_run_stopped_halfway_still_writes_the_mosaic(pagina, tmp_path):
-    """Ogni posa di `group` si salva da sola, e una corsa si puo' fermare: il mosaico si scrive
-    all'inizio, o le pose gia' raggruppate -- non piu' pronte -- resterebbero fuori per sempre."""
+    """Ogni frame di `group` si salva da solo, e una corsa si puo' fermare: il mosaico si scrive
+    all'inizio, o i frame gia' raggruppati -- non piu' pronti -- resterebbero fuori per sempre."""
     _risposta(pagina, _mosaici(pagina)[0], "yes")
     _posa(tmp_path / "lib" / "p4_0.fits", 30, "IC 410")
     _posa(tmp_path / "lib" / "p4_1.fits", 31, "IC 410")
@@ -273,7 +273,7 @@ def test_a_group_run_stopped_halfway_still_writes_the_mosaic(pagina, tmp_path):
         _cielo(conn, "p4_1.fits", RA0 - PASSO + DITHER, DEC)
         list(identify_frames(conn))
         corsa = group_frames(conn)
-        next(corsa)  # la prima posa, e poi ci si ferma
+        next(corsa)  # il primo frame, e poi ci si ferma
         corsa.close()
         conn.commit()
     chiavi = _chiavi(pagina)
@@ -313,7 +313,7 @@ def test_a_yes_says_what_and_a_no_does_not(pagina, corpo, perche_):
 
 
 def test_the_app_proposes_a_mosaic_and_never_merges_by_itself(pagina):
-    """Una proposta per regione ripresa a pannelli, con quanti pannelli e quante pose: e' cio' che
+    """Una proposta per regione ripresa a pannelli, con quanti pannelli e quanti frame: e' cio' che
     l'utente legge per decidere. L'inquadratura sola non compare -- non c'e' niente da proporre --
     e la risposta nasce **vuota**: l'app propone e non decide mai da sola."""
     righe = _mosaici(pagina)
@@ -349,9 +349,9 @@ def test_the_panels_are_gathered_even_though_they_are_three_different_objects(pa
 
 
 def test_the_proposal_carries_the_hours_of_its_panels(pagina):
-    """La proposta dice le ore, non solo quante pose: otto pose da 300 secondi fanno 2400, e sono
+    """La proposta dice le ore, non solo quanti frame: otto frame da 300 secondi fanno 2400, e sono
     la somma dei quattro pannelli. E' cio' che rende la domanda leggibile -- "quattro pannelli,
-    337 pose" non dice quanto cielo c'e' dentro."""
+    337 frame" non dice quanto cielo c'e' dentro."""
     riga = _mosaici(pagina)[0]
     assert (riga["frames"], riga["integration_s"], riga["untimed"]) == (8, 2400.0, 0)
 
@@ -434,8 +434,8 @@ def test_an_unanswered_mosaic_counts_among_the_things_to_confirm(pagina):
 
 
 def test_the_answer_does_not_put_any_pose_back_in_the_queue(pagina):
-    """Rispondere non rimette in coda nessuna posa: il mosaico sulle pose lo scrive la risposta
-    stessa, e rilavorare le pose di una regione sarebbe lavoro buttato, con l'utente ad aspettarlo.
+    """Rispondere non rimette in coda nessun frame: il mosaico sui frame lo scrive la risposta
+    stessa, e rilavorare i frame di una regione sarebbe lavoro buttato, con l'utente ad aspettarlo.
     Ma la risposta **conta** come una modifica, altrimenti
     l'Applica direbbe di non aver fatto niente proprio mentre scriveva."""
     esito = _risposta(pagina, _mosaici(pagina)[0], "yes")
@@ -469,8 +469,8 @@ def test_an_answer_that_is_not_yes_or_no_is_refused(pagina, cambio, perche_):
 
 @pytest.mark.parametrize("answer", ["yes", "no"])
 def test_saying_the_camera_of_the_poses_keeps_the_mosaic(db_path, tmp_path, answer):
-    """Pose che non dicono la camera: si risponde sul mosaico, poi sulla scheda della loro firma, e
-    le pose passano al setup vero. Il mosaico resta com'era -- col si' nell'Archivio col suo nome,
+    """Frame che non dicono la camera: si risponde sul mosaico, poi sulla scheda della loro firma, e
+    i frame passano al setup vero. Il mosaico resta com'era -- col si' nell'Archivio col suo nome,
     col no senza tornare fra le domande -- invece di sparire in silenzio alla corsa dopo."""
     _archivio(tmp_path / "lib", db_path, setup=False)
     with TestClient(create_app(db_path), base_url="http://localhost") as pagina:

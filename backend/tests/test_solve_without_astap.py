@@ -1,6 +1,6 @@
 """Lo stadio `solve` senza ASTAP: il primo avvio di chiunque.
 
-Le pose restano da fare, la cache risponde lo stesso, e niente si prepara per un lancio che non ci
+I frame restano da fare, la cache risponde lo stesso, e niente si prepara per un lancio che non ci
 sara'. Il resto dello stadio, e il finto ASTAP che i test lanciano, stanno in `test_solve.py`.
 """
 
@@ -14,7 +14,7 @@ archivio_letto = test_solve.archivio_letto  # la stessa fixture, non una copia
 
 
 def test_without_astap_the_frames_wait_instead_of_burning(db_path, archivio_letto, tmp_path):
-    """Al primo avvio il solver puo' non esserci ancora: le pose restano DA FARE, non fallite.
+    """Al primo avvio il solver puo' non esserci ancora: i frame restano DA FARE, non falliti.
 
     Segnarle fallite sarebbe un vicolo cieco -- nessuno le rimetterebbe in coda, e chi installa
     ASTAP il giorno dopo troverebbe un archivio senza cielo e un pulsante che dice "niente da
@@ -33,12 +33,12 @@ def test_without_astap_the_frames_wait_instead_of_burning(db_path, archivio_lett
 def test_without_astap_nothing_is_prepared_for_a_launch_that_will_not_happen(
     db_path, archivio_letto, tmp_path, monkeypatch
 ):
-    """Senza il solver ogni corsa ripassa le pose in attesa per chiedere alla cache, e basta: il
+    """Senza il solver ogni corsa ripassa i frame in attesa per chiedere alla cache, e basta: il
     cielo di una sorella da suggerire e la pulizia dei file di esito servono a un lancio che non
     ci sara', e costavano piu' della cache stessa a ogni Avvia e a ogni giro del NAS."""
     conn = connect(db_path)
     chiesti = []
-    # il suggerimento si chiede a `_hint_for`: le pose di prova hanno le coordinate nell'header,
+    # il suggerimento si chiede a `_hint_for`: i frame di prova hanno le coordinate nell'header,
     # quindi la sorella non si cercherebbe comunque
     monkeypatch.setattr(solve, "_hint_for", lambda *a: chiesti.append("suggerimento"))
     monkeypatch.setattr(solve, "_forget", lambda *a: chiesti.append("pulizia"))
@@ -48,8 +48,8 @@ def test_without_astap_nothing_is_prepared_for_a_launch_that_will_not_happen(
 
 
 def test_without_astap_the_cache_still_answers(db_path, archivio_letto, tmp_path):
-    """Il ripasso senza solver c'e' per la cache: dopo un azzeramento del database le pose gia'
-    risolte ritrovano il loro cielo da li', anche se ASTAP non c'e'."""
+    """Il ripasso senza solver c'e' per la cache: dopo un azzeramento del database i frame gia'
+    risolti ritrovano il loro cielo da li', anche se ASTAP non c'e'."""
     conn = connect(db_path)
     cache = tmp_path / "cache"
     corri(conn, solver(), cache=cache)

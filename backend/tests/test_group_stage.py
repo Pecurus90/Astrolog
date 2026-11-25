@@ -1,8 +1,8 @@
-"""Lo stadio `group`: da una posa alla sua notte e alla sua sessione.
+"""Lo stadio `group`: da un frame alla sua notte e alla sua sessione.
 
 Le notti vanno da mezzogiorno a mezzogiorno **nel fuso del sito**, e una sessione e' oggetto x
 notte x setup. Qui si prova cosa finisce nel database e cosa resta fuori col suo perche':
-un archivio in cui una posa sparisce senza motivo e' peggio di uno in cui manca una notte.
+un archivio in cui un frame sparisce senza motivo e' peggio di uno in cui manca una notte.
 """
 
 import sqlite3
@@ -77,7 +77,7 @@ def test_group_night_in_site_tz(conn):
 
 
 def test_two_places_the_same_date_are_two_nights(archivio):
-    """Deciso nel contratto del sito: una notte e' data + luogo."""
+    """Deciso nel contratto del sito: una notte e' data + sito."""
     casa = luogo(archivio, ROMA)
     altro = luogo(archivio, ("Cima", 46.05, 11.316, "Europe/Rome"), casa=False)
     a = posa(archivio, quando="2024-05-17T22:00:00Z", hash_="a")
@@ -115,7 +115,7 @@ def test_group_session_key(archivio):
 
 def test_a_frame_whose_rig_is_unknown_does_not_open_two_sessions(archivio):
     """In SQLite due vuoti non contendono un indice unico: senza la chiave scritta come
-    espressione, due pose senza setup aprivano due sessioni identiche."""
+    espressione, due frame senza setup aprivano due sessioni identiche."""
     luogo(archivio, ROMA)
     a = posa(archivio, quando="2024-05-17T22:00:00Z", setup=None, hash_="a")
     b = posa(archivio, quando="2024-05-17T23:00:00Z", setup=None, hash_="b")
@@ -130,7 +130,7 @@ def test_a_frame_whose_rig_is_unknown_does_not_open_two_sessions(archivio):
 def test_the_date_of_the_pose_is_utc_even_when_the_local_one_disagrees(archivio):
     """Lo standard FITS dice che `DATE-OBS` e' UTC (accordo IAU-FWG sulle date,
     <https://fits.gsfc.nasa.gov/year2000.html>, 4.4): un `DATE-LOC` che non torna col fuso non
-    ferma la posa e non la sposta. 18:00 UTC in Arizona sono le 11:00 del 15, la notte del 14."""
+    ferma il frame e non lo sposta. 18:00 UTC in Arizona sono le 11:00 del 15, la notte del 14."""
     luogo(archivio, ARIZONA)
     f = posa(archivio, quando="2024-01-15T18:00:00.000", ora_locale="2024-01-15T18:00:00.000")
     corri(archivio)
@@ -143,8 +143,8 @@ def test_the_date_of_the_pose_is_utc_even_when_the_local_one_disagrees(archivio)
 
 def test_group_asks_when_the_coordinates_say_elsewhere(archivio):
     """Le coordinate dell'header dicono un altro posto: l'app non attribuisce, si ferma col
-    suo codice. Sull'archivio di collaudo sono 432 pose, cinque notti -- e due di quelle
-    hanno pose di due luoghi diversi nella stessa data, che e' proprio il caso in cui
+    suo codice. Sull'archivio di collaudo sono 432 frame, cinque notti -- e due di quelle
+    hanno frame di due siti diversi nella stessa data, che e' proprio il caso in cui
     indovinare sarebbe sbagliato."""
     luogo(archivio, ROMA)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", coord=(45.6, 11.667))  # 12 km
@@ -157,9 +157,9 @@ def test_a_pose_just_past_the_threshold_is_still_a_question(archivio):
     """La soglia dello stesso posto si gioca sui **decimali**, e per questo la distanza non si
     arrotonda dove si calcola.
 
-    Queste coordinate distano 1,04 km da casa: oltre `SAME_PLACE_KM`, quindi la posa si ferma e
+    Queste coordinate distano 1,04 km da casa: oltre `SAME_PLACE_KM`, quindi il frame si ferma e
     si chiede. Arrotondando la distanza a un decimale -- come fa l'API per mostrarla a schermo --
-    diventerebbe 1,0, non supererebbe piu' la soglia, e questa posa verrebbe attribuita a casa
+    diventerebbe 1,0, non supererebbe piu' la soglia, e questo frame verrebbe attribuito a casa
     **in silenzio**. E' il motivo per cui si arrotonda al bordo e mai in `place.distance_km`."""
     luogo(archivio, ROMA)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", coord=(45.554853, 11.5354))
@@ -256,7 +256,7 @@ def test_a_frame_without_coordinates_does_not_ask(archivio):
 
 def test_no_home_place_no_nights_and_it_says_so(archivio):
     """A mani vuote l'app cataloga e cerca, ma le notti non nascono: una notte e' data +
-    luogo, e il fuso e' del luogo. Non se ne elegge uno da sola."""
+    sito, e il fuso e' del sito. Non se ne elegge uno da sola."""
     f = posa(archivio, quando="2024-05-17T22:00:00Z")
     ricevuta = corri(archivio)
     assert stato(archivio, f) == ("skipped", group.GroupReason.NO_ACTIVE_SITE)
@@ -288,7 +288,7 @@ def test_a_site_without_a_timezone_does_not_guess_one(archivio):
 
 
 def test_a_frame_identify_left_without_an_object_stops_here(archivio):
-    """Una posa senza nome e senza cielo arriva fin qui apposta: se lo stadio non la vedesse,
+    """Un frame senza nome e senza cielo arriva fin qui apposta: se lo stadio non lo vedesse,
     il suo residuo non arriverebbe mai a zero e il pulsante Avvia partirebbe a vuoto per
     sempre. Si ferma col suo perche', e il residuo scende.
 
@@ -313,7 +313,7 @@ def test_a_frame_identify_left_without_an_object_stops_here(archivio):
 
 def test_a_frame_without_a_date_stops_here(archivio):
     """Senza `DATE-OBS` non c'e' notte. Sull'archivio di collaudo non capita mai -- nessuna
-    delle 11.033 pose entrate -- ma un software che non la scrive esiste."""
+    degli 11.033 frame entrati -- ma un software che non la scrive esiste."""
     luogo(archivio, ROMA)
     f = posa(archivio, quando=None)
     corri(archivio)
@@ -337,8 +337,8 @@ def test_running_the_stage_twice_changes_nothing(archivio):
 
 
 def test_a_session_left_without_frames_disappears(archivio):
-    """Quando una posa cambia oggetto, la sessione vecchia resta senza nessuno: e' un residuo,
-    e sulla pagina Notti sarebbe una riga che dice "0 pose". Sparisce, e con lei la notte che
+    """Quando un frame cambia oggetto, la sessione vecchia resta senza nessuno: e' un residuo,
+    e sulla pagina Notti sarebbe una riga che dice "0 frame". Sparisce, e con lei la notte che
     non ha piu' sessioni. E' la stessa lezione degli oggetti rimasti vuoti."""
     luogo(archivio, ROMA)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", oggetto=1)
@@ -352,8 +352,8 @@ def test_a_session_left_without_frames_disappears(archivio):
 
 
 def test_when_a_rig_disappears_its_sessions_go_and_the_frames_stay(archivio):
-    """Unire due grafie di un pezzo, in Da confermare, **cancella un setup**. Le sessioni che
-    lo usavano sono un derivato e se ne vanno con lui; le pose restano, senza sessione, e il
+    """Unire due grafie di uno strumento, in Da confermare, **cancella un setup**. Le sessioni che
+    lo usavano sono un derivato e se ne vanno con lui; i frame restano, senza sessione, e il
     giro dopo le rimette dove vanno -- l'unione rimette in coda anche `group`.
 
     Senza questa regola l'unione falliva col database in faccia: misurato,
@@ -366,7 +366,7 @@ def test_when_a_rig_disappears_its_sessions_go_and_the_frames_stay(archivio):
     archivio.execute("DELETE FROM rigs WHERE id = 1")  # e' cio' che fa l'unione
     assert archivio.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 0
     resta = archivio.execute("SELECT session_id FROM frames WHERE id = ?", (f,)).fetchone()
-    assert resta["session_id"] is None, "la posa deve restare, senza la sua sessione"
+    assert resta["session_id"] is None, "il frame deve restare, senza la sua sessione"
 
     invalidate(archivio, [f], "group")
     corri(archivio)
@@ -392,7 +392,7 @@ def test_the_database_refuses_two_sessions_with_the_same_key(archivio):
 
 
 def test_a_night_the_user_declared_survives_an_empty_pass(archivio):
-    """Una notte **dichiarata** puo' restare vuota per un giro -- le sue pose stanno aspettando
+    """Una notte **dichiarata** puo' restare vuota per un giro -- i suoi frame stanno aspettando
     un altro stadio -- e non e' un residuo: e' una risposta dell'utente. La spazzata non la
     tocca, o cancellerebbe una risposta in silenzio."""
     casa = luogo(archivio, ROMA)

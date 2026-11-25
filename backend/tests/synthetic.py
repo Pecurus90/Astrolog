@@ -34,7 +34,7 @@ ASIAIR = {
     "XBINNING": 1,  # l'header vero dell'ASIAIR porta tutti e due (tests/header/asiair.txt)
     "CCDXBIN": 1,
     "BAYERPAT": "RGGB",
-    "GUIDECAM": "ZWO ASI120MM-S",  # l'ASIAIR la scrive su ogni posa (3 header veri su 3)
+    "GUIDECAM": "ZWO ASI120MM-S",  # l'ASIAIR la scrive su ogni frame (3 header veri su 3)
 }
 VOYAGER = {
     "SWCREATE": "Voyager",
@@ -66,7 +66,7 @@ FRAMES = [
     ("nina/R_001.fits", NINA, "R", "M 31", 120.0, "2024-10-31T21:02:00.100", {}),
     ("nina/N_001.fits", NINA, "N", "NGC 6888", 300.0, "2024-07-14T22:10:00.000", {}),
     ("nina/X_001.fits", NINA, "X", "NGC 6888", 300.0, "2024-07-14T22:15:00.000", {}),
-    # la stessa camera scritta senza il suffisso della porta: un pezzo solo, due grafie
+    # la stessa camera scritta senza il suffisso della porta: uno strumento solo, due grafie
     (
         "nina/L_002.fits",
         NINA,

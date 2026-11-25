@@ -1,5 +1,5 @@
-"""Da confermare, **cosa hai ripreso**: ogni gruppo di pose su cui l'app chiede dice cosa ha trovato
-il cielo in quelle pose (Marco, 15/9/2026: "andare a memoria e' difficile").
+"""Da confermare, **cosa hai ripreso**: ogni gruppo di frame su cui l'app chiede dice cosa ha
+trovato il cielo in quei frame (Marco, 15/9/2026: "andare a memoria e' difficile").
 
 Chi riprende con una reflex quasi mai scrive `OBJECT`: senza questa riga la notte di M 81 si
 leggeva "senza oggetto" mentre l'app l'oggetto l'aveva trovato. Il gruppo non cambia -- la domanda
@@ -7,11 +7,11 @@ e la chiave restano quelle -- si aggiunge solo cosa si vede.
 
 Regole:
 
-* **Gli oggetti con quante pose ciascuno, il piu' ripreso in cima** e a pari pose per nome, col
+* **Gli oggetti con quanti frame ciascuno, il piu' ripreso in cima** e a pari frame per nome, col
   nome che la pagina degli oggetti mostra.
-* **"Non trovato" e "non ancora guardato" sono due cose**: una posa che `identify` non ha ancora
-  lavorato, o su cui si e' guastato, non e' una posa in cui il cielo non ha trovato niente.
-* **Conta lo stato, non l'oggetto rimasto attaccato**: una posa fallita o saltata tiene il vecchio
+* **"Non trovato" e "non ancora guardato" sono due cose**: un frame che `identify` non ha ancora
+  lavorato, o su cui si e' guastato, non e' un frame in cui il cielo non ha trovato niente.
+* **Conta lo stato, non l'oggetto rimasto attaccato**: un frame fallito o saltato tiene il vecchio
   `object_id`, e mostrarlo direbbe un oggetto che il cielo non ha detto.
 * **Le copie calibrate non si contano**, come in tutta la pagina.
 """
@@ -33,7 +33,7 @@ def _posa(path, quando, **header):
 
 @pytest.fixture
 def pagina(db_path, tmp_path):
-    """Una notte con otto pose che non dicono il filtro, tutte con M 31 nell'header -- come succede
+    """Una notte con otto frame che non dicono il filtro, tutti con M 31 nell'header -- come succede
     quando ci si dimentica di cambiarlo -- piu' la copia calibrata di una. E un'altra notte su M 45,
     perche' la domanda per camera le somma."""
     root = tmp_path / "lib"
@@ -52,7 +52,7 @@ _STATO = "UPDATE frame_stages SET status = ? WHERE stage = 'identify' AND frame_
 
 
 def _metti_in_scena(client):
-    """Delle otto pose della prima notte: a_0 e a_1 restano su M 31; a_4 e a_5 il cielo le dice
+    """Degli otto frame della prima notte: a_0 e a_1 restano su M 31; a_4 e a_5 il cielo li dice
     M 45; a_3 l'ha guardata senza trovare niente; a_2 non l'ha ancora guardata; su a_6 si e'
     guastato; a_7 l'ha saltata. a_6 e a_7 tengono M 31 attaccato, com'e' nel database vero."""
     with db(client) as conn:
@@ -86,7 +86,7 @@ def test_the_camera_question_sums_the_subjects_of_all_its_nights(pagina):
 def test_at_the_same_frames_the_name_decides_not_the_order_they_came_in(pagina):
     # l'archivio restituisce gli oggetti nell'ordine che vuole: qui arriva prima M 45
     with db(pagina) as conn:
-        # dai nomi, non dalle pose: la scena ha messo su M 45 due pose che nell'header dicono M 31
+        # dai nomi, non dai frame: la scena ha messo su M 45 due frame che nell'header dicono M 31
         ids = dict(conn.execute("SELECT name, object_id FROM object_names WHERE is_primary = 1"))
         (gruppo,) = obj.subjects(conn, [{"subjects": {ids["M 45"]: 3, ids["M 31"]: 3}}])
     assert [s["name"] for s in gruppo["subjects"]["found"]] == ["M 31", "M 45"]

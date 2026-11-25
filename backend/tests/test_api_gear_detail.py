@@ -1,5 +1,5 @@
 """Il dettaglio di un setup nella pagina Attrezzatura (tavola v82): il confronto dei campi con la
-Luna, l'anello dei filtri e i pezzi di ottica e camera, gia' pronti dall'API -- la pagina li
+Luna, l'anello dei filtri e gli strumenti di ottica e camera, gia' pronti dall'API -- la pagina li
 disegna e basta.
 """
 
@@ -160,7 +160,7 @@ def test_the_filter_ring_is_in_proportion_to_the_frames(tre_setup):
 
 
 def test_a_rig_says_which_pieces_are_its_optics_and_camera(tre_setup):
-    """Per aprire il pezzo fra i componenti e leggerne la scheda."""
+    """Per aprire lo strumento fra i componenti e leggerne la scheda."""
     pagina = tre_setup.get("/api/v1/gear").json()
     per_nome = {p["name"]: p["id"] for p in pagina["instruments"]}
     rig = _per_focale(pagina)[905.0]

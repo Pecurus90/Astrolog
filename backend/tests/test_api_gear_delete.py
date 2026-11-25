@@ -1,6 +1,7 @@
-"""Eliminare un pezzo dalla pagina Attrezzatura (Marco, 21/10/2026; tavola v82): **solo un pezzo
-senza frame**. Uno che ne tiene si rifiuta e la pagina dice chi lo usa: nessuna ora si perde. Un
-pezzo scelto in un setup ne esce; l'ottica o la camera di un setup non escono, il setup e' loro.
+"""Eliminare uno strumento dalla pagina Attrezzatura (Marco, 21/10/2026; tavola v82): **solo uno
+strumento senza frame**. Uno che ne tiene si rifiuta e la pagina dice chi lo usa: nessuna ora si
+perde. Uno strumento scelto in un setup ne esce; l'ottica o la camera di un setup non escono, il
+setup e' loro.
 """
 
 from unittest import mock
@@ -32,7 +33,7 @@ def test_a_piece_without_frames_goes_away(archivio):  # noqa: F811
 
 
 def test_a_piece_with_frames_is_refused_and_says_who_uses_it(archivio):  # noqa: F811
-    """La regola e' la stessa per i pezzi che le pose portano da se' (l'ottica, via il setup):
+    """La regola e' la stessa per gli strumenti che i frame portano da se' (l'ottica, via il setup):
     il rifiuto dice quanti frame e di quali setup, perche' la pagina lo scriva."""
     ottica = pezzo(archivio, "optics", "TS 130 APO")
     rig = archivio.get("/api/v1/gear").json()["rigs"][0]["id"]
@@ -59,7 +60,7 @@ def test_a_spacer_on_a_rig_with_frames_is_refused(archivio):  # noqa: F811
 
 def test_the_page_knows_before_asking_which_rigs_hold_a_piece(archivio):  # noqa: F811
     """«Esce anche da {setup}» e «Lo usano N frame di {setup}» si scrivono prima del gesto:
-    la pagina legge da ogni pezzo i setup che lo tengono, coi frame e se l'hai scelto tu."""
+    la pagina legge da ogni strumento i setup che lo tengono, coi frame e se l'hai scelto tu."""
     rig = archivio.get("/api/v1/gear").json()["rigs"][0]["id"]
     montatura = crea(archivio, kind="mount", name="EQ6-R").json()["id"]
     with mock.patch.object(work, "after", return_value=True):
@@ -83,7 +84,7 @@ def test_a_chosen_piece_without_frames_leaves_the_rig(archivio):  # noqa: F811
 
     parti = archivio.get("/api/v1/gear").json()["rigs"][0]["parts"]
     assert not any(p["kind"] == "mount" for p in parti)
-    # rinato con lo stesso nome, non torna scelto: la scelta era del pezzo eliminato
+    # rinato con lo stesso nome, non torna scelto: la scelta era dello strumento eliminato
     di_nuovo = crea(archivio, kind="mount", name="EQ6-R").json()["id"]
     assert pezzo(archivio, "mount", "EQ6-R")["id"] == di_nuovo
     assert pezzo(archivio, "mount", "EQ6-R")["in_rigs"] == []
@@ -105,7 +106,7 @@ def test_the_optics_of_a_rig_without_frames_is_refused(archivio):  # noqa: F811
 
 
 def test_a_declared_card_goes_with_the_piece(archivio):  # noqa: F811
-    """Rinato con lo stesso nome, un pezzo non eredita la scheda di quello eliminato."""
+    """Rinato con lo stesso nome, uno strumento non eredita la scheda di quello eliminato."""
     nato = crea(archivio, kind="focuser", name="EAF", step_um=1.5).json()["id"]
     elimina(archivio, nato)
 

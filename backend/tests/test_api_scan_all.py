@@ -72,7 +72,7 @@ def test_one_gesture_reads_every_folder(app):
 
 def test_the_frames_of_every_folder_are_in_the_archive(app):
     """La prova che conta per chi usa l'app: dopo un gesto solo, i frame di **tutte** le
-    cartelle sono dentro l'archivio. Guardare le ricevute non basta -- direbbero che la lettura
+    cartelle sono dentro l'archivio. Guardare le ricevute non basta -- direbbero che la scansione
     e' partita, non che l'archivio e' cresciuto.
 
     Si contano i **frame** e non gli oggetti: un oggetto nasce due stadi piu' a valle, e nella
@@ -231,7 +231,7 @@ def _cade(tmp_path, cartella, quale):
     ],
 )
 def test_the_first_folder_is_not_covered_by_the_last(app, tmp_path, prima_fa_altro, guasto, esito):
-    """Com'e' andata una lettura di piu' cartelle lo dicono le ricevute di TUTTE, dalla peggiore:
+    """Com'e' andata una scansione di piu' cartelle lo dicono le ricevute di TUTTE, dalla peggiore:
     un guasto nella prima non lo copre l'ultima letta bene, e resta detto quando il worker passa
     a un altro lavoro -- e' da questo stato che la pagina accende l'avviso della cartella persa."""
     client, uno, _ = app
@@ -444,7 +444,7 @@ def _frames_per_folder(client):
 
 
 def test_resume_reads_even_when_the_stop_came_before_the_first_folder(app):
-    """Fermata prima di cominciare la prima cartella, la lettura non lascia nessuna ricevuta
+    """Fermata prima di cominciare la prima cartella, la scansione non lascia nessuna ricevuta
     `stopped` -- quelle mai iniziate si buttano -- ma e' ferma lo stesso: Riprendi rilegge,
     invece di restare su Riprendi senza fare niente."""
     client, uno, due = app
@@ -484,7 +484,7 @@ def test_every_folder_stays_locked_until_the_whole_run_ends(app):
 
 
 def test_resume_does_not_re_read_when_the_reading_had_finished(app):
-    """Riprendi rilegge le cartelle **solo** se l'ultima lettura non era arrivata in fondo. Finita
+    """Riprendi rilegge le cartelle **solo** se l'ultima scansione non era arrivata in fondo. Finita
     quella, e fermato il lavoro a valle -- la normalizzazione chiesta da Da confermare, il cielo --
     rileggere i file sarebbe una passata su tutto l'archivio che nessuno ha chiesto, e sul NAS si
     sente."""
@@ -505,7 +505,7 @@ def test_resume_does_not_re_read_when_the_reading_had_finished(app):
     client.post("/api/v1/pipeline/run")
     client.app.state.worker.join(30.0)
     assert len(client.get("/api/v1/scan-runs").json()["items"]) == prima, (
-        "Riprendi ha riletto le cartelle per un lavoro che non era una lettura"
+        "Riprendi ha riletto le cartelle per un lavoro che non era una scansione"
     )
 
 
@@ -527,8 +527,8 @@ def test_resume_after_a_stop_in_the_same_run_after_the_reading_does_not_re_read(
 
 
 def test_resume_reads_a_stopped_reading_even_after_another_stopped_job(app):
-    """Una lettura fermata a meta', poi un altro lavoro fermato anche lui (quello che rimette in
-    coda Da confermare): Riprendi torna sulle cartelle che la lettura non aveva finito."""
+    """Una scansione fermata a meta', poi un altro lavoro fermato anche lui (quello che rimette in
+    coda Da confermare): Riprendi torna sulle cartelle che la scansione non aveva finito."""
     client, uno, due = app
     with _stops_while_reading(client, uno):
         scan_all(client)
@@ -673,7 +673,7 @@ def test_a_busy_worker_leaves_no_folder_locked(app):
 
 
 def _stopped_while_reading(client, folder_id):
-    """Una lettura fermata a meta': e' il solo caso in cui Riprendi rilegge le cartelle."""
+    """Una scansione fermata a meta': e' il solo caso in cui Riprendi rilegge le cartelle."""
     with _stops_while_reading(client, folder_id):
         scan_all(client)
         client.app.state.worker.join(30.0)
@@ -681,7 +681,7 @@ def _stopped_while_reading(client, folder_id):
 
 
 def test_resume_with_no_active_folder_left_says_no_folders(app):
-    """Fermata la lettura e ritirate tutte le cartelle, Riprendi non ha niente da rileggere."""
+    """Fermata la scansione e ritirate tutte le cartelle, Riprendi non ha niente da rileggere."""
     client, uno, _ = app
     _stopped_while_reading(client, uno)
     # a mano: il DELETE puo' avviare il lavoro a valle e togliere lo stato fermo
@@ -693,7 +693,7 @@ def test_resume_with_no_active_folder_left_says_no_folders(app):
 
 
 def test_resume_with_no_readable_folder_says_which_ones(app, tmp_path):
-    """Fermata la lettura e staccati i dischi, Riprendi dice quali cartelle non ha letto."""
+    """Fermata la scansione e staccati i dischi, Riprendi dice quali cartelle non ha letto."""
     client, uno, due = app
     _stopped_while_reading(client, uno)
     for nome in ("prima", "seconda"):

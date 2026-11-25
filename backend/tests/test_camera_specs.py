@@ -53,7 +53,7 @@ def test_the_most_frequent_value_wins_and_a_tie_on_top_writes_nothing(voti, vinc
 
 
 def scansiona(conn, cartella, *headers):
-    """Una cartella nuova con una posa per header, scansionata. Ogni posa ha la sua data: con la
+    """Una cartella nuova con un frame per header, scansionata. Ogni frame ha la sua data: con la
     stessa data, camera ed esposizione sarebbero copie l'una dell'altra."""
     for n, header in enumerate(headers):
         campi = {"INSTRUME": CAMERA, **header}
@@ -84,7 +84,7 @@ def _in_coda(conn):
 
 
 def test_a_vote_that_does_not_change_the_colour_requeues_nothing(conn, tmp_path):
-    """Il voto rimette in coda le pose senza matrice solo se il colore della camera cambia: rifarlo
+    """Il voto rimette in coda i frame senza matrice solo se il colore della camera cambia: rifarlo
     uguale a ogni giro rilavorerebbe per niente, e riaprirebbe anche gli stadi dopo."""
     pose(conn, tmp_path / "lib", {"BAYERPAT": "RGGB"}, {"BAYERPAT": "RGGB"}, {})
     assert colonna(conn, "camera_type") == "color"
@@ -96,7 +96,7 @@ RGGB = {"BAYERPAT": "RGGB"}
 
 
 def test_the_poses_already_done_follow_a_camera_that_turns_colour(conn, tmp_path):
-    """La posa senza matrice entrata quando la camera non era ancora a colori rientra nel giro che
+    """Il frame senza matrice entrato quando la camera non era ancora a colori rientra nel giro che
     la scopre a colori, e ne esce OSC con le altre: non resta un filtro da chiedere per sempre."""
     # (cartella, minuto, matrice): minuti diversi, o sarebbero copie l'una dell'altra
     for folder, poses in [("prima", [(0, {})]), ("poi", [(1, RGGB), (2, RGGB)])]:
@@ -115,8 +115,8 @@ def test_the_poses_already_done_follow_a_camera_that_turns_colour(conn, tmp_path
 
 
 def test_a_final_vote_other_than_the_one_used_requeues(conn, tmp_path):
-    """Se il voto di fine corsa non e' quello con cui le pose hanno scelto il filtro -- una corsa
-    fermata prima delle pose che lo spostavano -- quelle senza matrice tornano in coda."""
+    """Se il voto di fine corsa non e' quello con cui i frame hanno scelto il filtro -- una corsa
+    fermata prima dei frame che lo spostavano -- quelli senza matrice tornano in coda."""
     pose(conn, tmp_path / "lib", {"BAYERPAT": "RGGB"}, {"BAYERPAT": "RGGB"}, {})
     camera_specs.from_files(conn, {CAMERA: None})
     assert _in_coda(conn) == 1
@@ -162,20 +162,20 @@ def test_a_tie_writes_nothing(conn, tmp_path):
 
 
 def test_a_calibrated_copy_does_not_vote(conn, tmp_path):
-    """Una copia riscritta non e' un'altra posa, e non vota: tolta lei, vince il valore che le
-    pose vere dicono piu' spesso, invece di un pari costruito da una copia."""
+    """Una copia riscritta non e' un altro frame, e non vota: tolta lei, vince il valore che i
+    frame veri dicono piu' spesso, invece di un pari costruito da una copia."""
     quattro = {"XPIXSZ": 4.0, "XBINNING": 1}
     pose(conn, tmp_path / "uno", BIN1, quattro, quattro)
     assert colonna(conn, "pixel_size_um") == 4.0
     ids = [r[0] for r in conn.execute("SELECT id FROM frames WHERE pixel_size_um = 4.0")]
     conn.execute("UPDATE frames SET copy_of = ? WHERE id = ?", (ids[0], ids[1]))
-    pose(conn, tmp_path / "due", BIN1)  # una posa nuova: il suo giro ricalcola la camera
+    pose(conn, tmp_path / "due", BIN1)  # un frame nuovo: il suo giro ricalcola la camera
     assert colonna(conn, "pixel_size_um") == 3.76
 
 
 def test_a_stopped_run_still_writes_the_camera(conn, tmp_path):
     """Fermare la corsa a meta' non lascia la camera senza pixel fino alla prossima
-    scansione: le pose gia' collegate votano anche cosi'."""
+    scansione: i frame gia' collegati votano anche cosi'."""
     scansiona(conn, tmp_path / "lib", BIN1, BIN1, BIN1)
     corsa = normalize_frames(conn)
     next(corsa)
@@ -184,15 +184,15 @@ def test_a_stopped_run_still_writes_the_camera(conn, tmp_path):
 
 
 def test_a_run_that_breaks_still_writes_the_camera(conn, tmp_path, monkeypatch):
-    """Una corsa che si schianta dopo aver lavorato delle pose le ha gia' scritte, e quelle non
-    tornano in coda: la camera si ricalcola anche li', o resterebbe vuota fino alla prossima
-    posa che arriva."""
+    """Una corsa che si schianta dopo aver lavorato dei frame li ha gia' scritti, e quelli non
+    tornano in coda: la camera si ricalcola anche li', o resterebbe vuota fino al prossimo
+    frame che arriva."""
     scansiona(conn, tmp_path / "lib", BIN1, BIN1)
     real, calls = normalize.frame_safely, []
 
     def breaks_after_one(*args):
         calls.append(1)
-        if len(calls) > 1:  # la prima posa si lavora, poi la corsa si schianta
+        if len(calls) > 1:  # il primo frame si lavora, poi la corsa si schianta
             raise sqlite3.OperationalError("database is locked")
         return real(*args)
 
@@ -203,7 +203,7 @@ def test_a_run_that_breaks_still_writes_the_camera(conn, tmp_path, monkeypatch):
 
 
 def test_a_camera_left_without_files_forgets_what_they_said(conn, tmp_path):
-    """Una camera che non ha piu' pose che votano non tiene il pixel di quando le aveva."""
+    """Una camera che non ha piu' frame che votano non tiene il pixel di quando li aveva."""
     pose(conn, tmp_path / "uno", BIN1)
     conn.execute("UPDATE frames SET rig_id = NULL")
     pose(conn, tmp_path / "due", {**BIN1, "INSTRUME": "Un'altra camera"})
@@ -220,7 +220,7 @@ def test_the_colour_follows_the_files_too(conn, tmp_path):
 
 
 def test_the_card_says_the_sensor_and_the_answer_stays_and_the_pixel_does_nothing(conn, tmp_path):
-    """La risposta sulle pose che non dicono il filtro parla del FILTRO, la scheda del SENSORE
+    """La risposta sui frame che non dicono il filtro parla del FILTRO, la scheda del SENSORE
     (`spine/signature.py`): scrivere "a colori" non la ritira -- la camera non si chiede piu',
     perche' un sensore nudo a colori E' OSC -- e tornando a mono la risposta e' ancora quella. Il
     pixel non c'entra con nessuna delle due."""
@@ -245,14 +245,14 @@ def risposte(conn):
 
 
 def nessun_filtro(conn, camera_raw):
-    """ "Nessun filtro" sulla firma della prima posa che scrive quella camera."""
+    """ "Nessun filtro" sulla firma del primo frame che scrive quella camera."""
     posa = conn.execute("SELECT * FROM frames WHERE instrument_raw = ?", (camera_raw,)).fetchone()
     chiave = signature.key_of(signature.parts_of(posa))
     signature.declare(conn, chiave, signature.Answer(filter=signature.FilterAnswer.NO_FILTER))
 
 
 def test_the_unfiltered_answer_follows_the_camera_when_renamed(conn, tmp_path):
-    """La risposta sulle pose che non dicono il filtro e' agganciata alla firma, cioe' alla grafia
+    """La risposta sui frame che non dicono il filtro e' agganciata alla firma, cioe' alla grafia
     del file: rinominare la camera non la sposta, e la scheda resta con la sua risposta."""
     pose(conn, tmp_path / "lib", {"FILTER": ""})
     nessun_filtro(conn, CAMERA)
@@ -289,8 +289,8 @@ RC8 = {"TELESCOP": "RC8"}
 
 
 def test_the_unfiltered_poses_are_asked_per_camera(conn, tmp_path):
-    """Le pose che non dicono il filtro si raggruppano per firma -- qui una per camera --, la piu'
-    numerosa in cima (`spine/signature_page.py`): `open` e' come un filtro che manca, una posa col
+    """I frame che non dicono il filtro si raggruppano per firma -- qui una per camera --, la piu'
+    numerosa in cima (`spine/signature_page.py`): `open` e' come un filtro che manca, un frame col
     suo filtro non si conta, e un file con la matrice contro uno senza non fa la camera a colori."""
     pose(
         conn,
@@ -406,8 +406,8 @@ def test_merging_two_cameras_keeps_the_card_of_the_one_that_stays(conn, tmp_path
 
 
 def test_renaming_carries_what_i_wrote_and_beats_leftovers(conn, tmp_path):
-    """Rinominando, cio' che ho scritto va col pezzo, e sotto il nome nuovo vince cio' che si
-    sposta: li' non puo' esserci un pezzo vivo, solo resti."""
+    """Rinominando, cio' che ho scritto va con lo strumento, e sotto il nome nuovo vince cio' che si
+    sposta: li' non puo' esserci uno strumento vivo, solo resti."""
     pose(conn, tmp_path / "lib", BIN1)
     cam = camera_id(conn)
     gear.declare_instrument(conn, cam, {"pixel_size_um": 3.8})
@@ -417,8 +417,8 @@ def test_renaming_carries_what_i_wrote_and_beats_leftovers(conn, tmp_path):
 
 
 def test_renaming_the_camera_keeps_what_i_wrote(conn, tmp_path):
-    """La parola dell'utente e' agganciata al nome del pezzo: rinominarlo la porta con se'. E le
-    pose che arrivano dopo, con la grafia vecchia nell'header, trovano la camera rinominata
+    """La parola dell'utente e' agganciata al nome dello strumento: rinominarlo la porta con se'. E
+    i frame che arrivano dopo, con la grafia vecchia nell'header, trovano la camera rinominata
     invece di ricrearne una senza la sua scheda."""
     pose(conn, tmp_path / "uno", BIN1)
     cam = camera_id(conn)

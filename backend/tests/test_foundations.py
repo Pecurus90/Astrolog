@@ -178,16 +178,16 @@ def test_the_queue_is_in_the_order_of_the_chain_whoever_asks(tmp_path):
 
 
 def test_identify_drags_group_along(tmp_path):
-    """Una posa che cambia oggetto cambia anche sessione: chiedere `identify` senza `group`
+    """Un frame che cambia oggetto cambia anche sessione: chiedere `identify` senza `group`
     la lascerebbe nella sessione di ieri, e nessuno la rimetterebbe a posto. `group` da solo
-    invece resta solo: e' cio' che serve dopo una risposta sul luogo di una notte."""
+    invece resta solo: e' cio' che serve dopo una risposta sul sito di una notte."""
     db = str(tmp_path / "x.db")
     assert [s for s, _ in queue(db, [StageName.IDENTIFY])] == ["identify", "group"]
     assert [s for s, _ in queue(db, [StageName.GROUP])] == ["group"]
 
 
 def test_a_stage_with_no_work_is_an_error_not_a_shorter_queue(tmp_path):
-    """`measure` esiste come stadio della posa ma non ha ancora un lavoro: chiederlo deve
+    """`measure` esiste come stadio del frame ma non ha ancora un lavoro: chiederlo deve
     esplodere, non tornare una fila piu' corta in silenzio."""
     with pytest.raises(ValueError, match="measure"):
         queue(str(tmp_path / "x.db"), ["measure"])
@@ -256,7 +256,7 @@ def test_invalidate_reopens_the_stage_and_everything_downstream(conn, tmp_path):
 
 
 def test_ready_waits_for_the_stages_upstream(conn, tmp_path):
-    """Uno stadio vede una posa solo quando quelli da cui dipende hanno finito. L'ordine e'
+    """Uno stadio vede un frame solo quando quelli da cui dipende hanno finito. L'ordine e'
     quello di arrivo: chi vuole un ordine suo se lo calcola (lo fa `solve`, ed e' l'unico)."""
     write_light(tmp_path / "b.fits", obj="NGC 7000", date="2024-05-17T22:00:00")
     write_light(tmp_path / "a.fits", obj="M 31", date="2024-05-17T21:00:00")
@@ -313,7 +313,7 @@ def test_declarations_and_aliases_key_on_stable_values(conn):
 
 
 def test_a_single_frame_declares_only_its_object(conn):
-    """L'utente risponde per gruppi; la sola risposta che scende sulla posa e' l'oggetto dei
+    """L'utente risponde per gruppi; la sola risposta che scende sul frame e' l'oggetto dei
     frame senza nome (ADR 0014, S2). Ogni altro campo per frame lo schema lo rifiuta."""
     conn.execute(
         "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
@@ -353,10 +353,10 @@ def test_scan_writes_canonical_dates(conn, tmp_path):
 
 
 def test_the_solver_groups_by_night_not_by_calendar_day(conn, tmp_path):
-    """Il solver risolve prima una posa per sessione, e la sessione tiene insieme la sera e il
+    """Il solver risolve prima un frame per sessione, e la sessione tiene insieme la sera e il
     mattino dopo: le 22:00 del 17 e le 02:00 del 18 sono la stessa notte.
 
-    La regola stava scritta in una colonna su ogni posa; adesso e' nella query di chi la usa,
+    La regola stava scritta in una colonna su ogni frame; adesso e' nella query di chi la usa,
     che e' l'unico. Il taglio e' a mezzogiorno UTC: qui si mette in fila, non si contano ore --
     la notte vera, col fuso del sito, la fa `group`."""
     write_light(tmp_path / "sera.fits", obj="M 31", date="2024-05-17T22:00:00")

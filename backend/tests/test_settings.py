@@ -101,7 +101,7 @@ def test_a_refused_write_leaves_the_good_keys_alone(client_vuoto):
 
 def test_no_site_no_nights_and_it_says_so(client_vuoto):
     """A mani vuote l'app funziona -- cataloga e cerca -- ma le notti non nascono, e lo DICE
-    con un motivo invece di inventarsi un luogo."""
+    con un motivo invece di inventarsi un sito."""
     # si guarda il sito e non l'elenco intero: li' dentro finisce tutto cio' che manca, e
     # nella suite manca sempre anche il solver (`conftest.dentro_il_recinto`)
     assert "no_active_site" in settings(client_vuoto)["missing"]
@@ -111,8 +111,8 @@ def test_no_site_no_nights_and_it_says_so(client_vuoto):
 
 
 def test_sites_without_a_home_one_are_not_enough(client_vuoto):
-    """Le notti nascono nel fuso del luogo di casa. Se si cancella proprio quello, restano dei
-    luoghi ma nessuno e' di casa: l'app lo chiede invece di eleggerne uno da sola."""
+    """Le notti nascono nel fuso del sito predefinito. Se si cancella proprio quello, restano dei
+    siti ma nessuno e' predefinito: l'app lo chiede invece di eleggerne uno da sola."""
     casa = client_vuoto.post("/api/v1/sites", json=ASIAGO).json()
     monte = client_vuoto.post(
         "/api/v1/sites", json={**ASIAGO, "name": "Monte Grappa", "longitude": 11.80}
@@ -155,7 +155,7 @@ def test_wizard_steps_and_the_stamp(client_vuoto, tmp_path):
 
 def test_skipping_the_wizard_stamps_it_just_the_same(client_vuoto):
     """Chi lo salta non se lo ritrova domani: saltare e completare scrivono lo stesso timbro.
-    E l'app resta usabile: dice solo che senza un luogo le notti non nascono."""
+    E l'app resta usabile: dice solo che senza un sito le notti non nascono."""
     assert client_vuoto.post("/api/v1/settings/wizard-done").status_code == 200
     stato = settings(client_vuoto)
     assert stato["wizard_done"] is True

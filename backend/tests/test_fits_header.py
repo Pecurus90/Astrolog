@@ -201,7 +201,7 @@ def test_galactic_wcs_becomes_equatorial_but_objctra_does_not(make_fits):
 def test_image_type_variants(make_fits, raw, expected):
     """La stessa parola si scrive in molti modi. Dei quattro software supportati abbiamo
     l'header vero solo di N.I.N.A. e ASIAIR (scrivono `DARK`): di Voyager e SGP no. Se una
-    grafia non si riconosce, quel file di calibrazione entra in archivio come una posa del
+    grafia non si riconosce, quel file di calibrazione entra in archivio come un frame del
     cielo -- ed e' successo, con `darkflat`."""
     assert read(make_fits("t.fits", {"IMAGETYP": raw})).image_type == expected
 
@@ -236,7 +236,7 @@ def test_stacks_are_unknown(make_fits, header):
 )
 def test_a_count_of_one_is_a_single_frame(make_fits, header):
     """Una chiave che conta i frame sommati dice "stack" solo quando ne conta piu' di uno: un
-    file che dichiara di essere la somma di se stesso e' una posa, e non deve sparire."""
+    file che dichiara di essere la somma di se stesso e' un frame, e non deve sparire."""
     assert read(make_fits("uno.fits", header)).image_type == "light"
 
 
@@ -244,7 +244,7 @@ def test_a_combined_file_is_not_a_frame(make_fits):
     """Chi non conta i frame sommati li **elenca**: la storia dell'header nomina i sorgenti.
 
     Misurato sull'archivio di collaudo: cinque integrazioni (la serie M83) si dichiaravano
-    `LIGHT` proprio cosi', e senza questa riga diventavano cinque pose e una sessione mai
+    `LIGHT` proprio cosi', e senza questa riga diventavano cinque frame e una sessione mai
     esistita -- una notte in cui l'utente non era sotto il cielo."""
     m = read(
         make_fits(
@@ -289,7 +289,7 @@ def test_an_object_that_merely_contains_a_calibration_word_is_a_frame(make_fits)
 
 def test_a_calibrated_frame_is_still_a_frame(make_fits):
     """`CALSTAT` dice **calibrato**, non **sommato**: se fosse una spia di stack, a chi tiene
-    le pose calibrate accanto alle originali sparirebbe meta' archivio. Fa un altro mestiere:
+    i frame calibrati accanto agli originali sparirebbe meta' archivio. Fa un altro mestiere:
     e' il marchio di riscrittura, che vale solo fra due gemelli e non fa sparire niente."""
     m = read(make_fits("cal.fits", {"IMAGETYP": "LIGHT", "OBJECT": "M83", "CALSTAT": "BDF"}))
     assert m.image_type == "light"
@@ -303,7 +303,7 @@ def test_a_long_real_light_is_not_a_stack(make_fits):
 
 def test_solved_means_a_real_wcs(make_fits):
     """Un `CRVAL1` nudo non e' un cielo misurato: senza questa distinzione una coordinata di
-    puntamento passerebbe per una soluzione. Lo chiede la scansione su ogni posa -- e' cosi'
+    puntamento passerebbe per una soluzione. Lo chiede la scansione su ogni frame -- e' cosi'
     che il placeholder 0/0 diventa None -- e il solver sull'esito di ASTAP."""
     for hdr in ({"WCSAXES": 2}, {"CD1_1": 0.0002}, {"PLTSOLVD": True}):
         assert solved(read_header(make_fits("s.fits", hdr))) is True
@@ -362,7 +362,7 @@ def test_float32_noise_stops_at_the_reader_but_coordinates_keep_precision(make_f
 
 
 def test_site_and_bayer(make_fits):
-    """Il luogo e la matrice di Bayer, con la guardia di intervallo: una latitudine di 95 gradi
+    """Il sito e la matrice di Bayer, con la guardia di intervallo: una latitudine di 95 gradi
     non esiste, e una matrice che non e' una delle sei non si inventa."""
     m = read(
         make_fits(
@@ -524,9 +524,9 @@ def test_a_not_a_number_never_reaches_the_archive():
 
 
 def test_the_saved_header_is_always_valid_json():
-    """L'intestazione intera si salva su ogni posa, e la pagina la deve poter leggere: un
+    """L'intestazione intera si salva su ogni frame, e la pagina la deve poter leggere: un
     valore non serializzabile diventa testo. `json.dumps(nan)` scriverebbe `NaN`, che il
-    lettore JSON di un browser rifiuta -- e a quel punto la scheda della posa non si apre."""
+    lettore JSON di un browser rifiuta -- e a quel punto la scheda del frame non si apre."""
     # astropy rifiuta di SCRIVERE un NaN in un header, ma un file che ce l'ha si legge: e'
     # da li' che arriva. La card anomala si costruisce come la costruirebbe la lettura.
     header = {"OBJECT": "M 31", "CCD-TEMP": float("nan"), "FOCUSPOS": float("inf")}
@@ -541,7 +541,7 @@ def test_the_saved_header_can_be_read_back(make_fits):
     header = read_header(make_fits("r.fits", {"OBJECT": "M 31", "EXPTIME": 300.0}))
     assert header_from_json(header_to_json(header))["OBJECT"] == "M 31"
     assert header_from_json('[["HISTORY", "prima"], ["HISTORY", "poi"]]') == {"HISTORY": "poi"}
-    assert header_from_json(None) == {}  # una posa senza header salvato non fa esplodere nessuno
+    assert header_from_json(None) == {}  # un frame senza header salvato non fa esplodere nessuno
 
 
 def test_the_container_keys_stay_out_of_the_combined_header(tmp_path):

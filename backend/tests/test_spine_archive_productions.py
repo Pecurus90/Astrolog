@@ -22,7 +22,7 @@ def setups(lista):
 
 
 def test_an_object_shot_with_two_rigs_has_two_productions_most_time_first(archivio):
-    """M 31 col rifrattore (sei pose, 3000 s) e col Newton (una, 600 s): due produzioni, e davanti
+    """M 31 col rifrattore (sei frame, 3000 s) e col Newton (uno, 600 s): due produzioni, e davanti
     quella a cui e' andato piu' tempo."""
     b = banco(archivio)
 
@@ -119,8 +119,8 @@ def test_a_rewritten_copy_is_not_a_frame_of_a_production(archivio):
 
 
 def test_a_narrowed_row_tells_the_productions_of_what_was_asked(archivio):
-    """Stringendo al 2025 le produzioni sono quelle del 2025: il rifrattore porta le sole quattro
-    pose di agosto, non le sei di sempre."""
+    """Stringendo al 2025 le produzioni sono quelle del 2025: il rifrattore porta i soli quattro
+    frame di agosto, non i sei di sempre."""
     b = banco(archivio)
 
     sue = productions.of(
@@ -132,8 +132,8 @@ def test_a_narrowed_row_tells_the_productions_of_what_was_asked(archivio):
 
 
 def test_a_mosaic_has_its_productions_too_and_the_object_alone_keeps_its_own(archivio):
-    """Un mosaico e' una riga come le altre: le sue produzioni sono i setup delle sue pose.
-    L'oggetto ripreso anche da solo porta le sole pose fuori dal mosaico."""
+    """Un mosaico e' una riga come le altre: le sue produzioni sono i setup dei suoi frame.
+    L'oggetto ripreso anche da solo porta i soli frame fuori dal mosaico."""
     ottica, camera = attrezzo(archivio, "optics", "Newton"), attrezzo(archivio, "camera", "ASI2600")
     a = setup(archivio, ottica, camera)
     ha = nasce_filtro(archivio, "Ha", "ha")
@@ -167,7 +167,7 @@ def test_the_route_hands_the_row_scope_and_the_object_alone_to_the_productions(
     db_path_col_catalogo,
 ):
     """Dalla rotta, non solo dalla spina: stringendo al 2025 le produzioni di M 31 sono quelle
-    del 2025 (`scope`), e un oggetto ripreso anche in un mosaico porta le pose fuori (`alone`)."""
+    del 2025 (`scope`), e un oggetto ripreso anche in un mosaico porta i frame fuori (`alone`)."""
     conn = connect(db_path_col_catalogo)
     try:
         b = banco(conn)

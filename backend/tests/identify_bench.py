@@ -1,4 +1,4 @@
-"""Il banco dello stadio `identify`: un DB col catalogo vero, e come si mette una posa.
+"""Il banco dello stadio `identify`: un DB col catalogo vero, e come si mette un frame.
 
 Lo usano i due file di test dello stadio -- quello che guarda cosa finisce nel database e
 quello che guarda la parola dell'utente. Sta qui e non in `conftest.py` perche' e' roba di un
@@ -16,15 +16,15 @@ M83 = (204.253958, -29.865417)
 # (`campo`), e serve ai test che si giocano sul tetto di `identify.CANDIDATES_LIMIT`.
 ORIONE = (83.818667, -5.389667)
 
-# Un istante di sera, per i test che fanno arrivare le pose fino a `group`: a Roma sono le
-# 00:00 del 18, cioe' la notte del 17. Una sola, cosi' le pose che lo chiedono finiscono
+# Un istante di sera, per i test che fanno arrivare i frame fino a `group`: a Roma sono le
+# 00:00 del 18, cioe' la notte del 17. Una sola, cosi' i frame che lo chiedono finiscono
 # nella stessa notte e la spazzata si gioca dove deve.
 NOTTE = "2024-05-17T22:00:00Z"
 
 
 def posa(conn, *, obj=None, cielo=None, solve="done", hash_="h", quando=None, campo=(1.5, 1.0)):
-    """Una posa pronta per lo stadio: il nome che l'header portava, e il cielo se il solver
-    l'ha risolta. Con `quando` (`DATE-OBS` in UTC) la posa arriva anche a `group`, che senza
+    """Un frame pronto per lo stadio: il nome che l'header portava, e il cielo se il solver
+    l'ha risolto. Con `quando` (`DATE-OBS` in UTC) il frame arriva anche a `group`, che senza
     data la lascia fuori: serve ai test della spazzata, che si gioca fra i due stadi.
 
     `campo` e' quanto e' larga la foto in gradi: piu' e' larga, piu' candidati porta: serve ai
@@ -47,7 +47,7 @@ def posa(conn, *, obj=None, cielo=None, solve="done", hash_="h", quando=None, ca
 
 
 def occupante(conn, object_id, nomi):
-    """Un oggetto che tiene gia' quei nomi, **con una posa attaccata**: senza, la spazzata di
+    """Un oggetto che tiene gia' quei nomi, **con un frame attaccato**: senza, la spazzata di
     inizio corsa se lo porterebbe via -- ed e' proprio cio' che deve fare."""
     conn.execute(
         "INSERT INTO objects(id, identity_method, identity_confidence, created_at)"

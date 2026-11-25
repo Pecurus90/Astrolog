@@ -1,4 +1,4 @@
-"""Mattone solve, ASTAP 7: a una posa che non sa dove guarda o quanto e' largo il campo li presta
+"""Mattone solve, ASTAP 7: a un frame che non sa dove guarda o quanto e' largo il campo li presta
 una sorella gia' risolta, dello stesso oggetto per l'indizio e dello stesso setup per il campo."""
 
 import pytest
@@ -37,7 +37,7 @@ def test_a_shot_without_a_pointing_starts_from_its_solved_sister(conn, tmp_path)
     ids=["no object", "other object"],
 )
 def test_a_pointing_is_inherited_only_from_the_same_object(conn, tmp_path, second):
-    """Due pose senza OBJECT non sono sorelle: un indizio sbagliato costa piu' della cieca."""
+    """Due frame senza OBJECT non sono sorelle: un indizio sbagliato costa piu' della cieca."""
     run = FakeAstap("solved.ini")
     rows = _sisters(conn, tmp_path, second, run)
     assert "-ra" not in run.commands[1]

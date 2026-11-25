@@ -71,7 +71,7 @@ def test_header_corpus_reads_every_file(path):
 
 
 # Le chiavi che geolocalizzano, scritte a mano e NON prese da `KEYS`. E' il punto: la guardia
-# deve guardare cio' che tradisce il luogo, non cio' che il lettore sa leggere -- costruita
+# deve guardare cio' che tradisce il sito, non cio' che il lettore sa leggere -- costruita
 # dagli alias, era cieca proprio sulla grafia nuova, e nel corpus sono finite le coordinate di
 # casa a dieci metri. Qui dentro va ogni nome geografico che si incontra, letto o no.
 GEO_KEYS = (
@@ -88,7 +88,7 @@ def test_no_real_site_coordinates_in_the_corpus(path):
     header = load(path)
     lette = ("site_lat", "site_lon", "site_elev")
     assert set(sum((KEYS[k] for k in lette), ())) <= set(GEO_KEYS), (
-        "una grafia del luogo che il lettore conosce e la guardia no"
+        "una grafia del sito che il lettore conosce e la guardia no"
     )
     for key in GEO_KEYS:
         if key in header and header[key] is not None:
@@ -101,7 +101,7 @@ def test_no_real_site_coordinates_in_the_corpus(path):
         assert header.get(key) in (None, "", "Osservatore", "ZWO"), key
 
 
-# Un luogo si riconosce dal nome della chiave, non da un elenco: GEOLAT, SITE, OBSERVAT, una
+# Un sito si riconosce dal nome della chiave, non da un elenco: GEOLAT, SITE, OBSERVAT, una
 # grafia che nessun programma ha ancora scritto. ALT/AZ: altezza e azimut del puntamento; LAT non
 # dopo F o P, che e' la correzione del flat (FLATCOR) o la scala di lastra (PLATESCL).
 PLACE_KEY = re.compile(
@@ -113,7 +113,7 @@ PLACEHOLDERS = (None, "", "Osservatore", "ZWO")
 
 @pytest.mark.parametrize("path", FILES, ids=[p.stem for p in FILES])
 def test_no_place_or_person_in_the_corpus_whatever_the_key_is_called(path):
-    """Ogni chiave che per nome dice un luogo porta al massimo il grado, o un testo di comodo; ogni
+    """Ogni chiave che per nome dice un sito porta al massimo il grado, o un testo di comodo; ogni
     chiave che dice una persona, un nome di comodo. `DATE-LOC` resta: dice il fuso, non il posto."""
     for key, value in load(path).items():
         if PLACE_KEY.search(key) and isinstance(value, int | float) and not isinstance(value, bool):
@@ -132,12 +132,12 @@ def test_specific_lessons_from_the_corpus():
     asiair = extract_fields(crudo, "x")
     assert asiair.bayer_pattern == "RGGB" and asiair.instrument_raw == "Canon EOS 700D"
     assert asiair.pixel_size_um == 4.29  # float32 ripulita al confine del lettore
-    # il cielo scritto nell'header non e' un campo della posa (lo misura il solver), ma le
+    # il cielo scritto nell'header non e' un campo del frame (lo misura il solver), ma le
     # funzioni che lo leggono sono le stesse, e qui si provano su un header VERO
     assert solved(crudo) is True and wcs_rotation_deg(crudo) is not None
     assert wcs_scale(crudo) == pytest.approx(1.58, abs=0.01)  # dalla matrice CD
     assert asiair.telescope_raw == "EQMod Mount"  # ASIAIR mette la montatura in TELESCOP
-    # I tre pezzi che il programma nomina **sulla singola posa**, letti da header veri e non dal
+    # I tre strumenti che il programma nomina **sul singolo frame**, letti da header veri e non dal
     # banco sintetico -- che quelle sigle le scriviamo noi, e direbbe di si' anche se fossero
     # sbagliate. N.I.N.A. scrive ruota e focheggiatore, l'ASIAIR la camera di guida, e nessuno dei
     # due nomina la guida.

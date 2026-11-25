@@ -46,7 +46,7 @@ export const parolaOrdine = (o: Ordine): string => t(ORDINE[o])
 /** Il nome di un criterio, come titolo del suo gruppo. */
 export const nomeCriterio = (k: ChiaveCriterio): string => t(`archive.criteria.${k}` as Chiave)
 
-/** La parola di una voce: famiglia e forma si traducono, i nomi dei pezzi arrivano col dato. */
+/** La parola di una voce: famiglia e forma si traducono, i nomi degli strumenti arrivano col dato. */
 export function nomeVoce(k: ChiaveCriterio, v: Voce): string {
   if (k === "constellation") return costellazione(v.value)
   if (k === "type") return t(`archive.family.${v.value}` as Chiave)

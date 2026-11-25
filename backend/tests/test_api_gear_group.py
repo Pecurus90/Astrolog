@@ -1,5 +1,5 @@
-"""Il gruppo di un tipo e il modulo di un pezzo nella pagina Attrezzatura (tavola v82, passo 33 D):
-cio' che la pagina mostra prima di un gesto arriva dall'API, la pagina non lo ricava."""
+"""Il gruppo di un tipo e il modulo di uno strumento nella pagina Attrezzatura (tavola v82, passo 33
+D): cio' che la pagina mostra prima di un gesto arriva dall'API, la pagina non lo ricava."""
 
 from unittest import mock
 
@@ -196,8 +196,8 @@ def test_two_spellings_of_one_camera_add_up_per_offset_and_the_unknown_offset_go
 
 
 def test_the_offsets_are_read_as_the_bridge_rebuild_wrote_them(conn, tmp_path):
-    """Una lettura non conta le pose (ADR 0048): un numero scritto a mano si vede, e la
-    ricostruzione del ponte lo rifa' dalle pose."""
+    """Una lettura non conta i frame (ADR 0048): un numero scritto a mano si vede, e la
+    ricostruzione del ponte lo rifa' dai frame."""
     camera = _camera_che_scrive(conn, tmp_path, [(50, "ZWO ASI2600MM"), (50, "ZWO ASI2600MM")])
     from astrolog.spine import inventory
 

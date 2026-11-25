@@ -1,6 +1,6 @@
-"""Il banco dello stadio `group`: un luogo di casa, e come si mette una posa gia' identificata.
+"""Il banco dello stadio `group`: un sito predefinito, e come si mette un frame gia' identificato.
 
-Lo usano i test dello stadio e quelli della sezione dei luoghi di Da confermare, che guardano lo
+Lo usano i test dello stadio e quelli della sezione dei siti di Da confermare, che guardano lo
 stesso archivio da due parti: uno cosa finisce nel database, l'altro la domanda che l'app fa
 quando non sa da dove hai ripreso.
 """
@@ -45,7 +45,7 @@ def prepara(conn):
 
 
 def luogo(conn, sito=ROMA, *, casa=True):
-    """Un luogo dichiarato; torna il suo id."""
+    """Un sito dichiarato; torna il suo id."""
     nome, lat, lon, tz = sito
     return conn.execute(
         "INSERT INTO sites(name, latitude, longitude, timezone, is_default, created_at)"
@@ -88,15 +88,15 @@ def posa(
     esposizione=None,
     copia_di=None,
 ):
-    """Una posa gia' passata dagli stadi a monte, pronta per `group`.
+    """Un frame gia' passato dagli stadi a monte, pronto per `group`.
 
     `ora_locale` scrive `DATE-LOC` nell'header salvato, accanto al `DATE-OBS`: serve a provare
     che l'app non lo usa per correggere l'ora. `esposizione`, `filtro_id` e `copia_di` servono a
     chi conta ore e filtri."""
     header = json.dumps([["DATE-OBS", quando], ["DATE-LOC", ora_locale]]) if ora_locale else "[]"
     lat, lon = coord or (None, None)
-    # la notte della posa come la scrive `scan` quando la posa entra, con la sua stessa regola; una
-    # posa senza data qui non ha un file da cui prenderla, e resta senza notte invece di inventarla
+    # la notte della posa come la scrive `scan` quando il frame entra, con la sua stessa regola; un
+    # frame senza data qui non ha un file da cui prenderla, e resta senza notte invece di inventarla
     campi = {"date_obs": quando, "site_lat": lat, "site_lon": lon}
     notte, fuso, istante = night_of(conn, campi, 0) if quando else (None, None, None)
     frame_id = conn.execute(

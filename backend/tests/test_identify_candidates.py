@@ -1,4 +1,4 @@
-"""Dato il cielo misurato di una posa, cosa c'e' nel campo e quale e' il soggetto.
+"""Dato il cielo misurato di un frame, cosa c'e' nel campo e quale e' il soggetto.
 
 E' la prova che geometria, punteggio e catalogo dicono insieme la cosa giusta. Gira sul
 **catalogo vero**, ai puntamenti **veri** dei tre casi che hanno imposto la formula: se un peso
@@ -98,14 +98,14 @@ def test_what_does_not_even_touch_the_frame_is_left_out(catalogo):
 
 def test_a_narrow_field_still_finds_the_big_object_around_it(catalogo):
     """Su una focale lunga puntata dentro M 31, la galassia e' **piu' grande del campo** e il
-    suo centro sta a un grado: cercando solo quanto e' larga la foto non tornerebbe mai, e la
-    posa resterebbe senza soggetto."""
+    suo centro sta a un grado: cercando solo quanto e' larga la foto non tornerebbe mai, e il
+    frame resterebbe senza soggetto."""
     lungo = campo(10.6743, 40.8653, 0.30, 0.20)  # mezza diagonale 0,18 gradi
     per_nome = {c.name: c for c in identify.candidates(catalogo, lungo)}
     assert "M 31" in per_nome
     # e ci deve arrivare **con la sua dimensione**: il centro di M 31 e' a 0,4 gradi, fuori dal
     # rettangolo, ma la galassia e' larga tre gradi e la foto e' tutta dentro di lei. Senza
-    # passare la dimensione, la posa direbbe che nell'inquadratura non c'era niente.
+    # passare la dimensione, il frame direbbe che nell'inquadratura non c'era niente.
     assert per_nome["M 31"].in_frame is True
     assert per_nome["M 31"].sep_deg > 0.3
 
@@ -133,7 +133,7 @@ def test_two_real_rivals_are_asked_about_and_a_companion_is_not(catalogo):
     """La prova end-to-end dell'ambiguita', partendo dal catalogo e non da numeri a mano.
     M 81 e M 82 sono due bersagli distinti che stanno nello stesso campo largo: quale sia il
     soggetto lo sa solo chi ha scattato, e l'app chiede. M 32 invece sta **dentro** M 31, c'e'
-    in ogni sua posa, e chiedere sarebbe rumore."""
+    in ogni suo frame, e chiedere sarebbe rumore."""
     from astrolog.spine import identify_geometry as geometry
     from astrolog.spine import identify_score as score
 
@@ -190,7 +190,7 @@ def test_pointing_at_a_real_target_proposes_that_target_back(catalogo):
 
 
 def test_without_a_measured_sky_there_are_no_candidates(catalogo):
-    """Una posa non risolta non ha campo: qui non si inventa niente, e chi chiama va per nome."""
+    """Un frame non risolto non ha campo: qui non si inventa niente, e chi chiama va per nome."""
     assert identify.candidates(catalogo, {"ra_deg": None, "dec_deg": None}) == []
 
 

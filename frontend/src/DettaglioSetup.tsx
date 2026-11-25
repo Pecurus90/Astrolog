@@ -23,7 +23,7 @@ type Aperto = "nome" | Parte | null
 
 /**
  * Il **dettaglio di un setup** (tavola v82, 51-100): a sinistra la carta col nome, le ore e i due
- * pezzi, poi le Parti; a destra il Campo col confronto, i Dati del setup e i Filtri. Sul telefono
+ * strumenti, poi le Parti; a destra il Campo col confronto, i Dati del setup e i Filtri. Sul telefono
  * una colonna sola. Un solo modulo aperto alla volta: il nome o una parte.
  */
 export function DettaglioSetup({

@@ -63,7 +63,7 @@ def test_an_archive_with_frames_is_not_empty(client):
 
 
 def test_the_filter_question_does_not_scan_the_whole_archive_per_filter(client):
-    """La domanda sui filtri conta le pose dei soli filtri sconosciuti, e le trova con l'indice:
+    """La domanda sui filtri conta i frame dei soli filtri sconosciuti, e li trova con l'indice:
     senza, e' una scansione dell'archivio intero per ogni filtro, anche quando non c'e' niente da
     chiedere."""
     with db(client) as conn:
@@ -75,7 +75,7 @@ def test_the_filter_question_does_not_scan_the_whole_archive_per_filter(client):
 
 
 def test_a_group_counts_until_someone_answers():
-    """Ogni sezione a gruppi -- camere, pose senza camera, senza ottica, senza nome, mosaici,
+    """Ogni sezione a gruppi -- camere, frame senza camera, senza ottica, senza nome, mosaici,
     cartelle senza tipo -- conta con la stessa regola: una risposta, anche un no, chiude."""
     assert unanswered([{"answer": None}]) == 1
     assert unanswered([{"answer": {"camera": "Cam"}}]) == 0
@@ -106,7 +106,7 @@ def test_the_most_used_filters_come_first(client):
     regola no."""
     ultimo = review(client)["filters"][-1]
     with db(client) as conn:
-        # l'ultimo prende tutte le pose: i conti del banco da soli sono pari, e non si ordinerebbe
+        # l'ultimo prende tutti i frame: i conti del banco da soli sono pari, e non si ordinerebbe
         conn.execute(
             "UPDATE frames SET filter_id = ? WHERE filter_id <> ? OR filter_id IS NULL",
             (ultimo["id"], ultimo["id"]),
@@ -120,8 +120,8 @@ def test_the_most_used_filters_come_first(client):
 
 def test_review_lists_what_was_found(client):
     """La pagina porta in una risposta le domande aperte -- i filtri da dire, le grafie che
-    sembrano un pezzo solo -- e gli oggetti coi conteggi. L'attrezzatura non c'e': un pezzo nuovo
-    non e' una domanda, si vede nell'Attrezzatura (Marco, 25/9/2026)."""
+    sembrano uno strumento solo -- e gli oggetti coi conteggi. L'attrezzatura non c'e': uno
+    strumento nuovo non e' una domanda, si vede nell'Attrezzatura (Marco, 25/9/2026)."""
     page = review(client)
     assert "instruments" not in page and "rigs" not in page
     assert [(q["name"], q["into_name"]) for q in page["lookalikes"]] == [
@@ -134,16 +134,16 @@ def test_review_lists_what_was_found(client):
 
     oggetti = {o["name"]: o["frames"] for o in page["objects"]}
     assert oggetti["M 31"] == 5 and oggetti["NGC 6888"] == 2
-    # le due pose ASIAIR senza OBJECT: senza nome e senza cielo, elencate per cartella
+    # i due frame ASIAIR senza OBJECT: senza nome e senza cielo, elencati per cartella
     assert sum(g["frames"] for g in unnamed_cards(page)) == 2
 
     # le domande aperte e gli oggetti non ancora visti: prima si poteva leggere "0 da confermare"
     # con tutto l'archivio senza un nome. E le schede sull'attrezzatura, finche' non si risponde
     # (`test_review_gear.py`).
-    # gli oggetti contano anche le schede delle pose senza nome
+    # gli oggetti contano anche le schede dei frame senza nome
     atteso = len(page["lookalikes"]) + len(page["filters"]) + len(page["objects"])
     atteso += len(page["gear"])
-    # le pose ASIAIR, che la camera la dicono e l'ottica no: una scheda che chiede l'ottica
+    # i frame ASIAIR, che la camera la dicono e l'ottica no: una scheda che chiede l'ottica
     ottica = [(g["camera"], g["frames"]) for g in page["gear"] if g["asks_optics"]]
     assert ottica == [("Canon EOS 700D", 3)]
     assert page["to_confirm"] == atteso
@@ -176,7 +176,7 @@ def test_review_is_empty_on_an_empty_archive(db_path):
 
 def test_review_only_new_things(client):
     """La pagina chiede solo cio' che non ha una risposta, e un Applica senza risposte non spegne
-    niente (ADR 0014, S4). E un pezzo nuovo non e' una domanda (Marco, 25/9/2026)."""
+    niente (ADR 0014, S4). E uno strumento nuovo non e' una domanda (Marco, 25/9/2026)."""
     domande = review(client)["to_confirm"]
     assert domande > 0
     out = apply(client)
@@ -316,7 +316,7 @@ def test_review_apply_refuses_while_the_worker_is_busy(client, tmp_path):
 
 
 def test_review_merges_two_filters(client):
-    """Anche due grafie di filtro si uniscono: la regola resta, le pose passano all'altro."""
+    """Anche due grafie di filtro si uniscono: la regola resta, i frame passano all'altro."""
     page = review(client)
     tenuto = _filtro(page, "Lum")
     assorbito = _filtro(page, "N")
@@ -334,7 +334,7 @@ def test_review_merges_two_filters(client):
 def test_renaming_a_filter_carries_the_spelling_it_absorbed(client):
     """La catena vale anche per i filtri, perche' la regola la scrive la **stessa** casa: unisci
     `N` in `Lum`, poi rinomini `Lum`, e la regola su `n` deve seguire. Ferma da sola, portava a un
-    filtro che non esiste piu', e la prossima posa con `N` ne faceva rinascere uno."""
+    filtro che non esiste piu', e il prossimo frame con `N` ne faceva rinascere uno."""
     page = review(client)
     tenuto, assorbito = _filtro(page, "Lum"), _filtro(page, "N")
     apply(client, filters=[{"id": assorbito["id"], "merge_into": tenuto["id"]}])
@@ -393,7 +393,7 @@ def test_apply_writes_every_answer_or_none(client):
 
 
 def test_review_a_card_alone_does_not_redo_the_work(client):
-    """Scrivere marca e peso non cambia cosa vuol dire una posa: non si rilavora niente.
+    """Scrivere marca e peso non cambia cosa vuol dire un frame: non si rilavora niente.
 
     Questo test e' caduto **una volta** in parallelo (10/9/2026), e di quel giro e' rimasta una
     riga `FAILED` e nient'altro: mai riprodotto in 140 giri, e la causa scritta allora era
@@ -408,7 +408,7 @@ def test_review_a_card_alone_does_not_redo_the_work(client):
 
 def _scheda_del_filtro(client, prima):
     """Cosa dice il database di quel filtro, per il messaggio di un rosso: com'era la scheda
-    quando la pagina l'ha mostrata, com'e' adesso, le sue bande e quante pose lo usano."""
+    quando la pagina l'ha mostrata, com'e' adesso, le sue bande e quanti frame lo usano."""
     with db(client) as conn:
         riga = conn.execute("SELECT * FROM filters WHERE id = ?", (prima["id"],)).fetchone()
         bande = [
@@ -422,7 +422,7 @@ def _scheda_del_filtro(client, prima):
         f"la scheda in pagina: {prima}\n"
         f"la riga adesso: {dict(riga) if riga else None}\n"
         f"le bande: {bande}\n"
-        f"pose con questo filtro: {pose}"
+        f"frame con questo filtro: {pose}"
     )
 
 
@@ -461,7 +461,7 @@ def test_pipeline_run_picks_up_the_work_left_behind(client):
 
 
 def test_the_button_picks_up_group_when_it_is_the_only_one_left(client):
-    """Fermare a meta' di `group` lascia delle pose in coda **solo** per lui: gli stadi a monte
+    """Fermare a meta' di `group` lascia dei frame in coda **solo** per lui: gli stadi a monte
     sono gia' a posto. Se il pulsante non lo conoscesse, la pagina mostrerebbe un residuo che
     "Riprendi" dichiara inesistente, e a sbloccarlo sarebbe solo la scansione dopo -- con in
     mezzo le sessioni gia' staccate, che e' proprio lo stato che la spazzata esiste per
@@ -496,7 +496,7 @@ def test_the_scan_receipt_survives_a_normalize_run(client, tmp_path):
 
 
 def test_the_rig_choices_count_the_poses_from_the_index(client):
-    """La tendina dei setup conta le pose di ogni setup dall'indice, senza leggere la tabella:
+    """La tendina dei setup conta i frame di ogni setup dall'indice, senza leggere la tabella:
     la chiedono la pagina e ogni Applica con una risposta sulla camera."""
     with db(client) as conn:
         plan = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + review_page.USED_RIGS))

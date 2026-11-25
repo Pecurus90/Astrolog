@@ -140,7 +140,7 @@ def test_a_night_is_found_by_the_object_shot_in_it(banco):
     assert date_trovate(trovato) == ["2024-06-05", "2024-05-18"]
     notte = trovato["nights"]["items"][1]
     assert notte["site"] == "Casa"
-    # la notte intera, come la riga delle Notti: non solo le pose di M 45
+    # la notte intera, come la riga delle Notti: non solo i frame di M 45
     assert (notte["frames"], notte["integration_s"]) == (2, 900.0)
 
 
@@ -169,7 +169,7 @@ def test_each_group_says_how_many_beyond_the_few_it_shows(banco):
 
 
 def test_a_piece_and_a_filter_are_found_by_name_with_what_is_known_of_them(banco):
-    """Un pezzo ancora da contare non dice zero ore: dice che non e' contato."""
+    """Uno strumento ancora da contare non dice zero ore: dice che non e' contato."""
     camera = attrezzo(banco, "camera", "ZWO ASI2600MM Pro")
     ha = filtro(banco, "Ha 3nm")
     banco.execute(
@@ -254,7 +254,7 @@ def test_an_empty_archive_finds_nothing_of_the_archive(archivio):
 
 def test_the_examples_come_from_your_own_archive(banco):
     """L'aiuto del campo vuoto non mostra l'attrezzatura e il sito di chi ha disegnato la tavola:
-    il pezzo piu' usato e il sito predefinito di chi cerca; senza, niente esempio."""
+    lo strumento piu' usato e il sito predefinito di chi cerca; senza, niente esempio."""
     attrezzo(banco, "camera", "ZWO ASI2600MM Pro")
     ha = filtro(banco, "Ha 3nm")
     banco.execute(

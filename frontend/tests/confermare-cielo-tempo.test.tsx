@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 /**
- * Due domande sul **dove** delle pose: da quale luogo sono state riprese certe coordinate, e se
+ * Due domande sul **dove** dei frame: da quale sito sono state riprese certe coordinate, e se
  * dei pannelli affiancati sono un mosaico.
  *
- * - **Si chiede per gruppo** (le coordinate, il mosaico), mai per posa.
- * - **Niente e' preselezionato**: il luogo piu' vicino sta in cima ma non e' scelto, e il mosaico
+ * - **Si chiede per gruppo** (le coordinate, il mosaico), mai per frame.
+ * - **Niente e' preselezionato**: il sito piu' vicino sta in cima ma non e' scelto, e il mosaico
  *   si propone ma non si fonde.
  * - **Un gruppo risposto resta in pagina con la risposta**, e ridare la stessa non manda niente:
- *   rimetterebbe in coda pose che non cambiano.
+ *   rimetterebbe in coda frame che non cambiano.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -73,7 +73,7 @@ const PAGINA = daConfermare({
       longitude: -111.0,
       distance_km: 8000,
       frames: 1,
-      // nessuna notte: del luogo non si riconosce un fuso, e l'app non indovina in che notte cadano
+      // nessuna notte: del sito non si riconosce un fuso, e l'app non indovina in che notte cadano
       nights: [],
       candidates: CANDIDATI,
     }),
@@ -133,8 +133,8 @@ async function mandato() {
 const applicaSpento = () =>
   expect(screen.getByRole("button", { name: /applica/i }).getAttribute("aria-disabled")).toBe("true")
 
-describe("Da confermare -- da quale luogo", () => {
-  it("un posto con quante pose, le sue notti e i luoghi dal piu' vicino, senza sceglierne uno", async () => {
+describe("Da confermare -- da quale sito", () => {
+  it("un posto con quanti frame, le sue notti e i siti dal piu' vicino, senza sceglierne uno", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
     const posto = riga(sezione, "45,8500 N - 11,5800 E")
@@ -145,7 +145,7 @@ describe("Da confermare -- da quale luogo", () => {
   })
 
   it("un posto di cui non si sa ancora la notte lo dice, invece di scrivere notti e basta", async () => {
-    // L'app non indovina la notte di pose il cui istante non e' ancora certo: la lista esce
+    // L'app non indovina la notte di frame il cui istante non e' ancora certo: la lista esce
     // vuota, e senza una frase a schermo resterebbe **"notti:"** e poi il nulla.
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
@@ -153,7 +153,7 @@ describe("Da confermare -- da quale luogo", () => {
     expect(prove(posto)).toContain("Notti=Notti non calcolabili senza sito")
   })
 
-  it("la risposta porta le coordinate e il luogo scelto", async () => {
+  it("la risposta porta le coordinate e il sito scelto", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
     fireEvent.click(scelta(riga(sezione, "45,8500 N - 11,5800 E"), /cima ekar/i))
@@ -172,7 +172,7 @@ describe("Da confermare -- da quale luogo", () => {
     applicaSpento()
   })
 
-  it("senza un luogo di casa non si dice una distanza da casa", async () => {
+  it("senza un sito predefinito non si dice una distanza da casa", async () => {
     // `distance_km` nullo e' "non c'e' una casa", non "sei a casa": uno zero sarebbe falso.
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
@@ -190,7 +190,7 @@ describe("Da confermare -- da quale luogo", () => {
 })
 
 describe("Da confermare -- i mosaici proposti", () => {
-  it("i soggetti, i pannelli, le pose e le ore, e il si' e il no senza sceglierne uno", async () => {
+  it("i soggetti, i pannelli, i frame e le ore, e il si' e il no senza sceglierne uno", async () => {
     aperta()
     const sezione = await vaiASezione(/mosaici/i)
     const mosaico = riga(sezione, "M 42, NGC 1977")

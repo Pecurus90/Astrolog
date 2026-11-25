@@ -1,7 +1,7 @@
 """Quanto costa una pagina dell'Archivio, contato in **passi** del motore di SQLite.
 
 I passi non dipendono dalla macchina, e dicono la forma del costo: la pagina deve crescere con le
-righe che mostra, non con le pose che le righe contengono, e un filtro non deve scorrere il
+righe che mostra, non con i frame che le righe contengono, e un filtro non deve scorrere il
 catalogo intero per ogni riga.
 """
 
@@ -13,7 +13,7 @@ ORA = "2026-09-23T12:00:00Z"
 
 
 def _banco(conn, oggetti, pose_a_testa):
-    """Oggetti senza catalogo, ognuno con le sue pose, nessun mosaico: il caso di quasi tutti."""
+    """Oggetti senza catalogo, ognuno con i suoi frame, nessun mosaico: il caso di quasi tutti."""
     conn.executemany(
         "INSERT INTO objects(id, identity_confidence, created_at) VALUES(?, 'high', ?)",
         [(i, ORA) for i in range(1, oggetti + 1)],
@@ -79,9 +79,9 @@ def _passi(conn, **chiesta):
 
 
 def test_the_page_does_not_grow_with_the_poses_inside_its_rows(tmp_path):
-    """Quattro volte le pose negli stessi oggetti: la pagina da una riga non deve costare quattro
+    """Quattro volte i frame negli stessi oggetti: la pagina da una riga non deve costare quattro
     volte tanto. Se le ore si contassero per ogni riga -- anche per la sola conta -- si'. I due
-    banchi nascono uguali, e differiscono solo nelle pose."""
+    banchi nascono uguali, e differiscono solo nei frame."""
     passi = {}
     for pose in (5, 20):
         create_database(tmp_path / f"{pose}.db")
@@ -109,8 +109,8 @@ def test_a_catalogue_filter_does_not_walk_the_catalogue_for_every_row(archivio):
 
 
 def test_a_catalogue_filter_does_not_walk_the_catalogue_for_every_mosaic(archivio):
-    """Lo stesso, con dei mosaici confermati: i pannelli di un mosaico si guardano partendo dalle
-    sue pose, non dalle migliaia di voci del catalogo scelto. Il catalogo e' uno che i mosaici non
+    """Lo stesso, con dei mosaici confermati: i pannelli di un mosaico si guardano partendo dai
+    suoi frame, non dalle migliaia di voci del catalogo scelto. Il catalogo e' uno che i mosaici non
     hanno, e grande: con quello del mosaico la riga passa gia' dal suo bersaglio."""
     _banco(archivio, 200, 5)
     _mosaici(archivio, 30)
@@ -136,7 +136,7 @@ def _passi_dei_criteri(conn, criteria):
 
 
 def _sparse(conn, voci):
-    """Le stesse pose sparse su `voci` anni e `voci` filtri: cambiano le voci, non le pose."""
+    """Gli stessi frame sparsi su `voci` anni e `voci` filtri: cambiano le voci, non i frame."""
     conn.execute(
         "INSERT INTO sites(id, name, latitude, longitude, created_at) VALUES(1, 'Casa', 45, 9, ?)",
         (ORA,),
@@ -155,7 +155,7 @@ def _sparse(conn, voci):
 
 def test_the_criteria_read_the_frames_once_not_once_per_option(archivio):
     """Dodici anni e dodici filtri, una forma accesa: le conte di tutti i criteri costano poche
-    pagine con quella forma, che legge le pose di ogni riga una volta. Con una domanda per voce
+    pagine con quella forma, che legge i frame di ogni riga una volta. Con una domanda per voce
     costavano una trentina di pagine (misurato: 230 mila passi contro 7.600)."""
     _banco(archivio, 200, 48)
     _sparse(archivio, 12)
@@ -168,7 +168,7 @@ def test_the_criteria_read_the_frames_once_not_once_per_option(archivio):
 
 def test_the_mosaic_rows_grow_with_the_mosaics_not_with_their_square(archivio):
     """Quattro volte i mosaici: la pagina cresce con loro, non col loro quadrato -- che e' cio'
-    che costa agganciare le risposte a ogni posa invece che a ogni mosaico."""
+    che costa agganciare le risposte a ogni frame invece che a ogni mosaico."""
     _mosaici(archivio, 20)
     pochi = _passi(archivio)
     archivio.execute("DELETE FROM frames")

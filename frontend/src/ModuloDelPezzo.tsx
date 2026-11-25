@@ -142,7 +142,7 @@ function scritta(campi: CampoScheda[], prima: Bozza, b: Bozza): Scritta {
 }
 
 /**
- * Il **modulo di un pezzo** (tavola v82 `modulo`, k `mod`): nome e modello, dati tecnici coi campi
+ * Il **modulo di uno strumento** (tavola v82 `modulo`, k `mod`): nome e modello, dati tecnici coi campi
  * che l'API chiede per il suo tipo, "dai file" o "inserito" accanto, i valori calcolati dal backend
  * (si aggiornano dopo Salva), il bias per offset, "Unisci a" ed Elimina.
  */
@@ -340,7 +340,7 @@ export function ModuloDelPezzo({
 }
 
 /**
- * Un **pezzo nuovo** (tavola v82 `modulo`, k `nuovo` col tipo scelto): "Tipo: ... Cambia", nome e
+ * Uno **strumento nuovo** (tavola v82 `modulo`, k `nuovo` col tipo scelto): "Tipo: ... Cambia", nome e
  * modello, i dati tecnici che l'API chiede per il tipo. Niente calcolati: li da' l'API dopo Salva.
  * La bozza la tiene chi lo apre, perche' sopravviva a "Cambia".
  */

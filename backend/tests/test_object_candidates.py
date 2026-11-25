@@ -25,7 +25,7 @@ from test_typeless import _frame
 
 def _dubbio(pagina):
     """L'oggetto in dubbio col cielo (M 45, che il cielo dice M 31): l'occupante del banco e' in
-    dubbio anche lui, ma la sua posa non ha cielo e non ha niente da cliccare."""
+    dubbio anche lui, ma il suo frame non ha cielo e non ha niente da cliccare."""
     return next(o for o in pagina["objects"] if o["confidence"] == "low" and o["candidates"])
 
 
@@ -54,7 +54,7 @@ def test_identify_writes_the_candidates_of_the_doubtful_objects_only(client_banc
 
 
 def test_an_answered_object_takes_its_candidates_away(client_banco):
-    """Risposto, l'oggetto non e' piu' in dubbio: la risposta rifa' identify sulle sue pose, e a
+    """Risposto, l'oggetto non e' piu' in dubbio: la risposta rifa' identify sui suoi frame, e a
     fine giro i suoi candidati se ne vanno."""
     dubbio = _dubbio(review(client_banco))
     apply(client_banco, objects=[{"key": dubbio["key"], "slug": dubbio["candidates"][0]["slug"]}])
@@ -63,7 +63,7 @@ def test_an_answered_object_takes_its_candidates_away(client_banco):
 
 
 def test_identify_writes_them_only_when_it_worked_some_pose(client_banco, monkeypatch):
-    """Il cono costa: un giro senza pose da lavorare non riscrive."""
+    """Il cono costa: un giro senza frame da lavorare non riscrive."""
     chiamate = []
     monkeypatch.setattr(object_candidates, "write", lambda conn: chiamate.append(1))
     with db(client_banco) as conn:
@@ -119,7 +119,7 @@ def test_a_stopped_identify_writes_the_candidates_of_what_it_did(client_banco, m
 
 
 def test_an_identify_that_breaks_before_its_first_pose_still_rewrites(client_banco, monkeypatch):
-    """Prima della prima posa identify ha gia' staccato e spazzato: un oggetto che ha perso la posa
+    """Prima del primo frame identify ha gia' staccato e spazzato: un oggetto che ha perso il frame
     da cui venivano i suoi candidati non deve tenerli fino alla corsa dopo."""
     chiamate = []
     monkeypatch.setattr(object_candidates, "write", lambda conn: chiamate.append(1))

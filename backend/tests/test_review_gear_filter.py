@@ -1,4 +1,4 @@
-"""Da confermare, la parte "filtro" della scheda per firma (ADR 0014, S1): le pose che non dicono il
+"""Da confermare, la parte "filtro" della scheda per firma (ADR 0014, S1): i frame che non dicono il
 filtro.
 
 Senza `BAYERPAT` l'app non distingue una mono da una camera a colori, quindi "FILTER assente" e
@@ -95,7 +95,7 @@ def _risposta(client, camera):
 
 
 def _filtri_senza_nome(client, camera):
-    """I nomi dei filtri delle pose di quella camera che non dicono il filtro (e nemmeno la
+    """I nomi dei filtri dei frame di quella camera che non dicono il filtro (e nemmeno la
     matrice di Bayer)."""
     with db(client) as conn:
         righe = conn.execute(
@@ -128,8 +128,8 @@ def _scansiona_ancora(client):
 
 
 def test_a_question_per_camera_with_the_largest_first(pagina):
-    """Una scheda per firma -- qui una per camera --, la piu' numerosa in cima, con quante pose:
-    `open` e' come `none`, la copia calibrata non e' un'altra posa. Un solo file con la matrice su
+    """Una scheda per firma -- qui una per camera --, la piu' numerosa in cima, con quanti frame:
+    `open` e' come `none`, la copia calibrata non e' un altro frame. Un solo file con la matrice su
     tre non fa la camera a colori: decide la maggioranza dei file, e le due senza restano da
     chiedere. Quella con la matrice non si conta: e' OSC, e nessuna risposta la sposta."""
     schede = [senza_soggetti(g) for g in review(pagina)["gear"]]
@@ -143,8 +143,8 @@ def test_a_question_per_camera_with_the_largest_first(pagina):
 
 def test_a_camera_its_files_say_colour_is_not_asked_and_its_poses_are_osc(pagina):
     """Se i file dicono il sensore a colori la camera e' a colori, e non si chiede (Marco,
-    23/9/2026): le sue pose che non dicono il filtro sono OSC, anche quella di un programma che la
-    matrice non la scrive: i file votano prima del giro. La posa che il filtro lo scrive resta col
+    23/9/2026): i suoi frame che non dicono il filtro sono OSC, anche quelli di un programma che la
+    matrice non la scrive: i file votano prima del giro. Il frame che il filtro lo scrive resta col
     suo filtro."""
     assert OSC not in _schede(pagina)
     assert _filtro_del_file(pagina, "osc_0.fits") == "OSC"
@@ -168,11 +168,11 @@ def test_answering_no_filter_on_a_colour_camera_does_not_call_it_mono(pagina):
 
 
 def test_answering_colour_makes_those_poses_osc_and_the_next_ones_too(pagina, tmp_path):
-    """ "A colori" vale per le pose che ci sono e per quelle che verranno, e come per chi scrive
+    """ "A colori" vale per i frame che ci sono e per quelli che verranno, e come per chi scrive
     `BAYERPAT` un filtro a banda larga su una camera a colori e' OSC. Da li' la camera e' a colori
     e non si chiede piu': la risposta si cambia sulla sua scheda."""
     out = _rispondi(pagina, MONO, "color")
-    assert out["requeued"] == 8  # le pose di quella camera senza matrice, copia compresa
+    assert out["requeued"] == 8  # i frame di quella camera senza matrice, copia compresa
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
     assert _filtro_del_file(pagina, "mono_l.fits") == "OSC"
     assert not _chiede(pagina, MONO)
@@ -183,7 +183,7 @@ def test_answering_colour_makes_those_poses_osc_and_the_next_ones_too(pagina, tm
 
 
 def test_answering_mono_with_no_filter_puts_them_on_no_filter(pagina):
-    """ "Mono, nessun filtro": le pose vanno sulla riga esplicita "nessun filtro", che nel database
+    """ "Mono, nessun filtro": i frame vanno sulla riga esplicita "nessun filtro", che nel database
     non e' una frase italiana (a tradurla e' la pagina). E si puo' cambiare idea, in tutti e due i
     versi."""
     _rispondi(pagina, MONO, "no_filter")
@@ -213,7 +213,7 @@ def _id_del_filtro(client, nome):
 
 
 def test_answering_one_of_my_filters_puts_them_on_it(pagina):
-    """ "Uno dei tuoi filtri" (Marco, 25/9/2026): le pose vanno su quel filtro, che si sceglie fra
+    """ "Uno dei tuoi filtri" (Marco, 25/9/2026): i frame vanno su quel filtro, che si sceglie fra
     quelli con la banda nota -- mai la riga "nessun filtro", che e' un'altra risposta. La scheda ha
     risposto e non conta piu'."""
     scelte = {f["name"] for f in review(pagina)["filter_choices"]}
@@ -228,7 +228,7 @@ def test_answering_one_of_my_filters_puts_them_on_it(pagina):
 
 def test_the_answer_follows_its_filter_when_it_is_renamed_or_merged(pagina):
     """La risposta tiene il NOME del filtro: rinominarlo o unirlo a un altro la porta con se', o
-    quelle pose lo perderebbero con un avviso in un log."""
+    quei frame lo perderebbero con un avviso in un log."""
     _rispondi(pagina, MONO, "filter", _id_del_filtro(pagina, "Lum"))
     apply(pagina, filters=[{"id": _id_del_filtro(pagina, "Lum"), "name": "Astronomik L"}])
     assert _filtri_senza_nome(pagina, MONO) == {"Astronomik L"}
@@ -291,7 +291,7 @@ def test_a_filter_that_is_not_there_is_refused(pagina):
 
 
 def test_writing_colour_on_the_card_answers_too(pagina):
-    """Il colore scritto sulla scheda della camera e' la stessa risposta: sposta le pose anche
+    """Il colore scritto sulla scheda della camera e' la stessa risposta: sposta i frame anche
     lui, invece di restare una scritta che nessuno legge, e la camera non si chiede piu'."""
     camera = _scheda(pagina, MONO)
     out = correct(pagina, camera["id"], camera_type="color").json()
@@ -302,8 +302,8 @@ def test_writing_colour_on_the_card_answers_too(pagina):
 
 def test_the_answer_about_the_filter_survives_a_change_of_sensor(pagina):
     """La risposta dice cosa c'era davanti, la scheda dice che sensore e': scrivere "a colori" non
-    ritira "nessun filtro", la rilegge -- a colori e a nudo vuol dire OSC -- e tornando a mono le
-    pose tornano sulla riga "nessun filtro", invece di lasciare una domanda riaperta a vuoto."""
+    ritira "nessun filtro", la rilegge -- a colori e a nudo vuol dire OSC -- e tornando a mono i
+    frame tornano sulla riga "nessun filtro", invece di lasciare una domanda riaperta a vuoto."""
     camera = _scheda(pagina, MONO)
     _rispondi(pagina, MONO, "no_filter")
     correct(pagina, camera["id"], camera_type="mono")
@@ -343,7 +343,7 @@ def test_renaming_no_filter_does_not_answer_for_the_other_cameras(pagina, tmp_pa
 
 def test_a_no_filter_name_already_taken_is_said_not_crashed(pagina, caplog):
     """Se la riga "nessun filtro" non c'e' e il suo nome e' gia' di un altro filtro, non si
-    indovina quale sia: le pose restano da rivedere, invece di fallire tutte."""
+    indovina quale sia: i frame restano da rivedere, invece di fallire tutti."""
     with db(pagina) as conn:
         ha = conn.execute("SELECT id FROM filters WHERE passband = 'HA'").fetchone()["id"]
     apply(pagina, filters=[{"id": ha, "name": "None"}])
@@ -357,7 +357,7 @@ def test_a_no_filter_name_already_taken_is_said_not_crashed(pagina, caplog):
 
 def test_merging_two_cameras_leaves_each_signature_its_answer(pagina, tmp_path):
     """La risposta sta sulla firma, cioe' sulla grafia del file (ADR 0014, S1): unire due camere
-    non la sposta. Le pose di ciascuna grafia tengono la sua, e la grafia che non ha risposto
+    non la sposta. I frame di ciascuna grafia tengono la sua, e la grafia che non ha risposto
     resta da chiedere."""
     _posa(tmp_path / "lib" / "asi6200_0.fits", 50, INSTRUME="ASI6200")
     _scansiona_ancora(pagina)
@@ -372,7 +372,7 @@ def test_merging_two_cameras_leaves_each_signature_its_answer(pagina, tmp_path):
 
 def test_renaming_a_camera_carries_its_answer(pagina):
     """La firma e' la grafia del file: rinominare la camera dall'Attrezzatura lascia la scheda e
-    la sua risposta dove sono, e le pose sulla riga "nessun filtro"."""
+    la sua risposta dove sono, e i frame sulla riga "nessun filtro"."""
     _rispondi(pagina, MONO, "no_filter")
     correct(pagina, _scheda(pagina, MONO)["id"], name="Mia mono")
     assert _risposta(pagina, MONO) == "no_filter"
@@ -391,7 +391,7 @@ def test_no_filter_is_not_merged_into_another_filter(pagina):
 
 def test_merging_into_a_colour_camera_keeps_the_answer_that_arrives(pagina, tmp_path):
     """Unita a una camera a colori, la grafia che aveva risposto "nessun filtro" non si chiede
-    piu' -- le sue pose sono OSC -- ma la risposta resta sulla sua firma: se la scheda torna mono,
+    piu' -- i suoi frame sono OSC -- ma la risposta resta sulla sua firma: se la scheda torna mono,
     e' ancora li', invece di essere sparita nell'unione."""
     _posa(tmp_path / "lib" / "asi6200_0.fits", 50, INSTRUME="ASI6200")
     _scansiona_ancora(pagina)
@@ -417,7 +417,7 @@ def test_an_answer_about_a_camera_that_is_not_there_is_refused(pagina):
 def test_the_camera_of_the_night_takes_the_answer_about_the_sensor(
     db_path, tmp_path, filtro, sensore
 ):
-    """La posa muta prende la camera dalla notte, e la sua scheda chiede solo il filtro: la
+    """Il frame muto prende la camera dalla notte, e la sua scheda chiede solo il filtro: la
     risposta sul sensore va sulla scheda di quella camera, come se il file la dicesse."""
     root = tmp_path / "lib"
     _posa(root / "detta.fits", 1, INSTRUME=COLORI, FILTER="L")

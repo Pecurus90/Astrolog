@@ -410,7 +410,7 @@ describe("la finestra dell'oggetto, quando i dati sono pochi", () => {
     expect(testa.querySelector(".al-c-riepilogo__testo-4")?.textContent).toBe("")
   })
 
-  it("pose senza durata: le ore e quanti frame non le dicono; senza ore, solo i frame", async () => {
+  it("frame senza durata: le ore e quanti frame non le dicono; senza ore, solo i frame", async () => {
     const parte = { ...M31, untimed: 12 }
     const f = await apriM31(scheda(parte))
     expect(

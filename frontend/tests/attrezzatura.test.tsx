@@ -4,7 +4,7 @@
  *
  * La regola che la pagina non deve tradire e' una sola, e viene dal contratto: **si mostra solo
  * cio' che l'app possiede davvero**. Dove un numero non c'e' -- le ore di una montatura, la scala
- * di un setup di cui non si sono ancora riconosciute le pose -- si scrive **perche'**, mai uno zero
+ * di un setup di cui non si sono ancora riconosciuti i frame -- si scrive **perche'**, mai uno zero
  * (`docs/domini/attrezzatura.md`).
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
@@ -38,7 +38,7 @@ import {
 afterEach(pulisci)
 
 describe("l Attrezzatura", () => {
-  it("elenca i pezzi che possiedi, raccolti per genere", async () => {
+  it("elenca gli strumenti che possiedi, raccolti per genere", async () => {
     attrezzatura()
     await apriAttrezzatura()
 
@@ -93,7 +93,7 @@ describe("l Attrezzatura", () => {
     expect(screen.queryByText(/frame da rielaborare/)).toBeNull()
   })
 
-  it("un genere senza pezzi non compare affatto", async () => {
+  it("un genere senza strumenti non compare affatto", async () => {
     // Otto titoli vuoti sarebbero l'elenco di cio' che **non** hai. Visto verde togliendo la
     // riga che nasconde i gruppi vuoti: senza questa prova, quella riga era un commento.
     attrezzatura({ instruments: [OTTICA] })
@@ -105,7 +105,7 @@ describe("l Attrezzatura", () => {
     expect(within(indice).queryByRole("link", { name: /focheggiatori/i })).toBeNull()
   })
 
-  it("un pezzo e un filtro dicono le loro ore, con la barra", async () => {
+  it("uno strumento e un filtro dicono le loro ore, con la barra", async () => {
     // tavola v82 `usoT` e contratto: nella riga solo le ore, la barra dall'API (`bar_pct`)
     attrezzatura()
     await apriAttrezzatura()
@@ -143,7 +143,7 @@ describe("l Attrezzatura", () => {
     ).not.toBe("2")
   })
 
-  it("un pezzo non ancora contato dice che si sta contando, non che i file tacciono", async () => {
+  it("uno strumento non ancora contato dice che si sta contando, non che i file tacciono", async () => {
     // Alla prima scansione una camera nasce a meta' giro e i suoi numeri arrivano a fine giro:
     // "i tuoi file non dicono quale hai usato" sarebbe falso, e lo dice gia' una ruota che nessun
     // file nomina.
@@ -279,7 +279,7 @@ describe("l Attrezzatura", () => {
   it("un setup di cui non si sa quanto inquadra non scrive una scala", async () => {
     // La riga tace e dice perche': un numero preso dalla scheda sarebbe giusto sulla carta e
     // sbagliato nel cielo, e nessuno potrebbe accorgersene. Il caso non e' solo "non ha mai
-    // ripreso": visto dal vivo, un setup con otto pose **non ancora riconosciute** non ha una
+    // ripreso": visto dal vivo, un setup con otto frame **non ancora riconosciuti** non ha una
     // scala, e dirgli "dopo la prima ripresa" sarebbe falso.
     attrezzatura({
       rigs: [
@@ -351,7 +351,7 @@ describe("l Attrezzatura", () => {
       "ruota portafiltriZWO EFW ↗100 frameRuota vecchia ↗20 frameSeleziona",
     )
     expect((await parte("focuser")).textContent).toContain("EAF ↗120 frame")
-    // il programma non e' un pezzo: non si apre, e lo dicono solo i file
+    // il programma non e' uno strumento: non si apre, e lo dicono solo i file
     const programma = await parte("software")
     expect(programma.textContent).toBe("programma di ripresaN.I.N.A.119 frameASIAIR1 frame")
     expect(within(programma).queryByRole("link")).toBeNull()
@@ -366,7 +366,7 @@ describe("l Attrezzatura", () => {
     expect((await parte("mount")).textContent).toContain("○da indicare")
   })
 
-  it("un pezzo di una parte si apre fra i componenti, la sua riga segnata", async () => {
+  it("uno strumento di una parte si apre fra i componenti, la sua riga segnata", async () => {
     attrezzatura()
     await apriAttrezzatura()
     fireEvent.click(
@@ -481,7 +481,7 @@ describe("l Attrezzatura", () => {
     expect(scritture()[0]?.corpo).toEqual({ piece_ids: [40, 41] })
   })
 
-  it("la guida si sceglie fra ottiche di guida e guide fuori asse, col tipo del pezzo", async () => {
+  it("la guida si sceglie fra ottiche di guida e guide fuori asse, col tipo dello strumento", async () => {
     const cercatore = { ...MONTATURA, id: 50, kind: "guide_scope", name: "30 mm f/4" }
     const oag = { ...MONTATURA, id: 51, kind: "oag", name: "OAG-L" }
     const scritto = { stato: 200, corpo: { id: 10, requeued: 0, run_started: false } }
@@ -573,7 +573,7 @@ describe("l Attrezzatura", () => {
     expect(modulo.textContent).toContain("Per salvare serve il nome.")
   })
 
-  it("una montatura portata dalle pose ha le sue ore", async () => {
+  it("una montatura portata dai frame ha le sue ore", async () => {
     attrezzatura({
       instruments: [
         OTTICA,
@@ -586,7 +586,7 @@ describe("l Attrezzatura", () => {
     expect(montature.textContent).toMatch(/10 h/)
   })
 
-  it("una montatura che nessuna posa porta, in un archivio dove altre ce l'hanno, non dice zero", async () => {
+  it("una montatura che nessun frame porta, in un archivio dove altre ce l'hanno, non dice zero", async () => {
     attrezzatura({
       instruments: [OTTICA, { ...MONTATURA, frames: 0, integration_s: 0, untimed: 0 }],
     })
@@ -669,8 +669,8 @@ describe("l Attrezzatura sul telefono", () => {
   })
 })
 
-describe("l Attrezzatura, un pezzo dall'indirizzo", () => {
-  it("con ?pezzo= la riga di quel pezzo e' segnata, e nessun'altra", async () => {
+describe("l Attrezzatura, uno strumento dall'indirizzo", () => {
+  it("con ?pezzo= la riga di quello strumento e' segnata, e nessun'altra", async () => {
     attrezzatura()
     window.history.pushState({}, "", `/attrezzatura?pezzo=strumento-${OTTICA.id}`)
     await disegna()

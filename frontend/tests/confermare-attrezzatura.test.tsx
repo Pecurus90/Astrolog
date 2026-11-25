@@ -207,7 +207,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     expect(await mandate()).toEqual([{ key: "firma-1", optics: "RedCat 51" }])
   })
 
-  it("un setup dell'elenco e un'ottica nello stesso Applica partono per pezzi scritti", async () => {
+  it("un setup dell'elenco e un'ottica nello stesso Applica partono per strumenti scritti", async () => {
     // Un setup dell'elenco insieme a un'ottica il backend lo rifiuta (Issue #20): parte la camera
     // del setup con la sua focale, e l'ottica scelta.
     aperta({ ...PAGINA, gear: [{ ...SCHEDA, asks_optics: true, asks_filter: false, optics: null }] })
@@ -250,7 +250,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     expect(await mandate()).toEqual([{ key: "firma-1", optics: "RedCat 51" }])
   })
 
-  it("due setup con gli stessi pezzi e focale diversa non si confondono", async () => {
+  it("due setup con gli stessi strumenti e focale diversa non si confondono", async () => {
     aperta({
       ...PAGINA,
       rig_choices: [...PAGINA.rig_choices, { id: 8, name: "Col riduttore", optics: "Askar FRA400", camera: "ZWO ASI2600MM Pro", focal_mm: 280 }],

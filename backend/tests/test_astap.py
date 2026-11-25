@@ -113,7 +113,7 @@ def test_the_pointing_hint_is_given_in_the_units_astap_wants(tmp_path):
 
 def test_without_a_pointing_hint_the_search_is_blind(tmp_path):
     """Senza indizio non si inventa un puntamento: si cerca in tutto il cielo. Costa cento
-    volte di piu', ed e' il motivo per cui una posa eredita l'indizio dalla sorella."""
+    volte di piu', ed e' il motivo per cui un frame eredita l'indizio dalla sorella."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
     astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run))
     cmd = comando(run)
@@ -177,7 +177,7 @@ def test_a_solver_that_never_comes_back_is_a_reason(tmp_path):
 
 
 def test_without_astap_there_is_no_crash_only_a_reason(tmp_path):
-    """Al primo avvio ASTAP puo' non esserci ancora: l'archivio funziona lo stesso e le pose
+    """Al primo avvio ASTAP puo' non esserci ancora: l'archivio funziona lo stesso e i frame
     restano da risolvere, con scritto perche'."""
     esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver(None, fake_run()))
     assert esito.ok is False and esito.reason == "astap_missing"
@@ -322,7 +322,7 @@ def test_the_search_says_which_of_its_four_channels_answered(tmp_path):
 
 def test_the_star_databases_are_the_ones_next_to_the_program(tmp_path):
     r"""ASTAP senza il suo catalogo stellare **non riconosce niente**: il programma parte, e ogni
-    posa fallisce con `no_star_database`. E' l'errore di installazione piu' comune, perche' il
+    frame fallisce con `no_star_database`. E' l'errore di installazione piu' comune, perche' il
     catalogo e' un download separato, che va scelto e preso a mano.
 
     Dove sta lo dice l'autore: *"they can be placed anywhere as long as all files are in the same

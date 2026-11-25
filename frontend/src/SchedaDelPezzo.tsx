@@ -3,13 +3,13 @@ import type { Chiave } from "./i18n"
 
 /**
  * La **scheda di uno strumento**: i suoi campi e il nome di ogni genere. **Quali campi** chiedere
- * non si decide qui: li manda l'API per genere (`cards`), perche' si scrive anche il primo pezzo di
+ * non si decide qui: li manda l'API per genere (`cards`), perche' si scrive anche il primo strumento di
  * un genere che non possiedi. I moduli che li disegnano sono `ModuloDelPezzo` e `NuovoPezzo`.
  */
 
 export type CampoScheda = components["schemas"]["GearList"]["cards"][string][number]
 
-/** Come si chiama **un** pezzo di ogni genere -- al singolare: e' il nome di una cosa sola, non
+/** Come si chiama **uno** strumento di ogni genere -- al singolare: e' il nome di una cosa sola, non
  *  del gruppo che la pagina Attrezzatura intitola. Un `Record` sul tipo generato: un genere nuovo
  *  nello schema fa fallire la compilazione invece di sparire in silenzio. */
 export const GENERE: Record<components["schemas"]["InstrumentOnPage"]["kind"], Chiave> = {

@@ -1,4 +1,4 @@
-"""I mosaici scritti, dopo: cosa succede quando le pose cambiano camera, perdono il cielo, o un
+"""I mosaici scritti, dopo: cosa succede quando i frame cambiano camera, perdono il cielo, o un
 pannello nuovo lega due mosaici. Il banco e' quello di `test_mosaic.py`; le regole stanno in
 `spine/mosaic.py` e nel contratto `docs/domini/mosaico.md`.
 """
@@ -25,7 +25,7 @@ from test_mosaic import (
 
 
 def test_a_pose_changing_camera_stays_in_its_mosaic(archivio):
-    """Si dice di che camera sono le pose (*Frame senza camera*), le pose ripassano da `group`, e
+    """Si dice di che camera sono i frame (*Frame senza camera*), i frame ripassano da `group`, e
     il mosaico resta com'era: la sua chiave non porta la camera."""
     prepara(archivio)
     pose = [posa(archivio, A, setup=None), posa(archivio, B, setup=None)]
@@ -41,7 +41,7 @@ def test_a_pose_changing_camera_stays_in_its_mosaic(archivio):
 
 def test_merging_two_spellings_of_a_camera_joins_the_confirmed_mosaic(archivio):
     """Due grafie della stessa camera hanno ripreso la stessa regione, e solo una ha la risposta:
-    unite, le pose dell'altra entrano nel mosaico confermato invece di restare una domanda
+    unite, i frame dell'altra entrano nel mosaico confermato invece di restare una domanda
     sovrapposta."""
     prepara(archivio)
     posa(archivio, A, setup=1)
@@ -94,7 +94,7 @@ def test_a_pose_that_loses_its_sky_leaves_the_mosaic(archivio):
 
 
 def test_an_emptied_panel_does_not_link_its_neighbours(archivio):
-    """Il pannello di B resta vuoto quando la sua posa perde il cielo: un frame nuovo su C, che
+    """Il pannello di B resta vuoto quando il suo frame perde il cielo: un frame nuovo su C, che
     toccherebbe solo B, non finisce nel mosaico di A."""
     prepara(archivio)
     posa(archivio, A)
@@ -108,7 +108,7 @@ def test_an_emptied_panel_does_not_link_its_neighbours(archivio):
 
 
 def test_a_mosaic_never_mixes_two_rigs(archivio):
-    """La posa piu' vecchia di un mosaico senza risposta cambia setup e ne apre uno nuovo: la
+    """Il frame piu' vecchio di un mosaico senza risposta cambia setup e ne apre uno nuovo: la
     chiave nata da lei non puo' riportarla nel mosaico vecchio, che vive ancora nell'altro."""
     prepara(archivio)
     vecchia = posa(archivio, A, setup=None, quando=NOTTE)
@@ -126,8 +126,8 @@ def test_a_mosaic_never_mixes_two_rigs(archivio):
 
 
 def test_a_confirmed_mosaic_left_with_one_panel_is_not_a_mosaic(archivio):
-    """Il pannello di A perde la sua posa: quello che resta e' un soggetto ripreso normalmente, e
-    le sue pose tornano al loro oggetto invece di fare un mosaico di un pannello."""
+    """Il pannello di A perde il suo frame: quello che resta e' un soggetto ripreso normalmente, e
+    i suoi frame tornano al loro oggetto invece di fare un mosaico di un pannello."""
     prepara(archivio)
     a = posa(archivio, A)
     b = posa(archivio, B)
@@ -154,8 +154,8 @@ def test_an_answer_from_an_old_page_on_a_single_panel_is_refused(archivio):
 
 
 def test_a_panel_keeps_its_rig_while_some_of_its_poses_are_still_there(archivio):
-    """Una sola delle due pose di un pannello cambia camera: il pannello resta del setup delle
-    altre, o una posa nuova di quel setup nello stesso punto ne aprirebbe un terzo."""
+    """Uno solo dei due frame di un pannello cambia camera: il pannello resta del setup degli
+    altri, o un frame nuovo di quel setup nello stesso punto ne aprirebbe un terzo."""
     prepara(archivio)
     prima = posa(archivio, A)
     posa(archivio, A)
@@ -167,7 +167,7 @@ def test_a_panel_keeps_its_rig_while_some_of_its_poses_are_still_there(archivio)
     posa(archivio, A)
 
     (riga,) = proposti(archivio)
-    assert (riga["panels"], riga["frames"]) == (2, 4), "la posa spostata resta nel suo pannello"
+    assert (riga["panels"], riga["frames"]) == (2, 4), "il frame spostato resta nel suo pannello"
     assert chiave_di(archivio, prima) == riga["key"]
 
 

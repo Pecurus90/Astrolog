@@ -794,3 +794,53 @@ il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no
 il sito di casa e' quello predefinito, non il primo dell'elenco; la veste e la chiave dal timbro - passo 17, glossario: sito predefinito; rinominato "il sito predefinito e' quello segnato, ..."
 senza sito di casa manda a dichiararlo - passo 17, glossario: sito predefinito; rinominato in place
 un sito di casa senza fuso orario lo dice, e porta a sistemarlo - passo 17, glossario: sito predefinito; rinominato in place
+e nemmeno l Attrezzatura, coi pezzi che non hanno numeri - passo 17, glossario: strumento; rinominato in place
+pose senza durata: le ore e quanti frame non le dicono; senza ore, solo i frame - passo 17, glossario: frame; rinominato in place
+aggiungo un pezzo che nessun file nomina, scegliendone il tipo - passo 17, glossario: strumento; rinominato in place
+scrivo a mano un setup, con ottica e camera fra i miei pezzi e la focale - passo 17, glossario: strumento; rinominato in place
+ottica e camera col loro tipo, e le prime voci della scheda del pezzo trovato - passo 17, glossario: strumento; rinominato in place
+la scheda di un pezzo - passo 17, glossario: strumento; rinominato in place
+un pezzo senza campi non scrive niente - passo 17, glossario: strumento; rinominato in place
+il pezzo intero, il campo detto, o un dato - passo 17, glossario: strumento; rinominato in place
+correggo la scheda di un pezzo dalla pagina in cui lo guardo - passo 17, glossario: strumento; rinominato in place
+unisco due grafie dello stesso pezzo, solo fra quelle che l'API offre - passo 17, glossario: strumento; rinominato in place
+un pezzo senza unioni possibili non offre la tendina - passo 17, glossario: strumento; rinominato in place
+un pezzo senza frame non dice un'ora che non c'e' - passo 17, glossario: strumento; rinominato in place
+un pezzo usato non si elimina: Elimina spento, chi lo usa e Unisci a - passo 17, glossario: strumento; rinominato in place
+un pezzo senza frame si elimina dopo la conferma, che dice da quali setup esce - passo 17, glossario: strumento; rinominato in place
+pezzo e pillola si accendono insieme, gli altri si spengono - passo 17, glossario: strumento; rinominato in place
+toccare un pezzo lo apre fra i componenti - passo 17, glossario: strumento; rinominato in place
+dai pezzi del setup: la guida fuori asse o il cercatore al suo posto, la camera a colori - passo 17, glossario: strumento; rinominato in place
+elenca i pezzi che possiedi, raccolti per genere - passo 17, glossario: strumento; rinominato in place
+un pezzo e un filtro dicono le loro ore, con la barra - passo 17, glossario: strumento; rinominato in place
+un pezzo non ancora contato dice che si sta contando, non che i file tacciono - passo 17, glossario: strumento; rinominato in place
+un pezzo di una parte si apre fra i componenti, la sua riga segnata - passo 17, glossario: strumento; rinominato in place
+la guida si sceglie fra ottiche di guida e guide fuori asse, col tipo del pezzo - passo 17, glossario: strumento; rinominato in place
+una montatura portata dalle pose ha le sue ore - passo 17, glossario: frame; rinominato in place
+una montatura che nessuna posa porta, in un archivio dove altre ce l'hanno, non dice zero - passo 17, glossario: frame; rinominato in place
+un file senza cartelle entra senza chiedere una lettura (collaudo 18/11) - passo 17, glossario: scansione; rinominato in place
+un backup senza cartelle si rimette senza chiedere una lettura (collaudo 18/11) - passo 17, glossario: scansione; rinominato in place
+un setup dell'elenco e un'ottica nello stesso Applica partono per pezzi scritti - passo 17, glossario: strumento; rinominato in place
+due setup con gli stessi pezzi e focale diversa non si confondono - passo 17, glossario: strumento; rinominato in place
+Da confermare -- da quale luogo - passo 17, glossario: sito; rinominato in place
+un posto con quante pose, le sue notti e i luoghi dal piu' vicino, senza sceglierne uno - passo 17, glossario: frame, sito; rinominato in place
+la risposta porta le coordinate e il luogo scelto - passo 17, glossario: sito; rinominato in place
+senza un luogo di casa non si dice una distanza da casa - passo 17, glossario: sito predefinito; rinominato in place
+i soggetti, i pannelli, le pose e le ore, e il si' e il no senza sceglierne uno - passo 17, glossario: frame; rinominato in place
+i primi tre oggetti con le loro pose, quanti altri, e i due vuoti detti diversi - passo 17, glossario: frame; rinominato in place
+una sezione senza pezzi non si vede, e nemmeno strumenti e setup - passo 17, glossario: strumento; rinominato in place
+quanto e' durata una lettura - passo 17, glossario: scansione; rinominato in place
+il setup col suo nome e i pezzi, chiusi ai quattro della tavola - passo 17, glossario: strumento; rinominato in place
+mentre la lettura va, elenco e striscia si rileggono ogni 15 secondi - passo 17, glossario: scansione; rinominato in place
+a lettura finita non si rilegge - passo 17, glossario: scansione; rinominato in place
+sul desktop una riga per motivo: sito, risposte, data, lettura, coi loro segni - passo 17, glossario: scansione; rinominato in place
+dice che la lettura non e' finita - passo 17, glossario: scansione; rinominato in place
+alla fine la lettura parte da sola - passo 17, glossario: scansione; rinominato in place
+se la lettura non parte, il primo avvio finisce lo stesso - passo 17, glossario: scansione; rinominato in place
+il secondo passo cerca il posto per nome e ne fa il luogo di casa - passo 17, glossario: sito predefinito; rinominato in place
+un luogo che non si salva non fa finta di essersi salvato - passo 17, glossario: sito; rinominato in place
+chi non ha rete deve poter dare un nome al suo luogo - passo 17, glossario: sito; rinominato in place
+senza coordinate non nasce nessun luogo - passo 17, glossario: sito; rinominato in place
+un genere senza pezzi non compare affatto - passo 17, glossario: strumento; rinominato in place
+l Attrezzatura, un pezzo dall'indirizzo - passo 17, glossario: strumento; rinominato in place
+con ?pezzo= la riga di quel pezzo e' segnata, e nessun'altra - passo 17, glossario: strumento; rinominato in place

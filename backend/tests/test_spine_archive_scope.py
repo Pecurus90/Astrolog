@@ -1,7 +1,7 @@
 """La barra dell'Archivio stringe anche per **periodo, ottica, camera e sito**, e allora la riga
 dice cio' che hai chiesto: stringendo al 2025, M 31 porta le ore del 2025, non quelle di sempre
 (Marco, 7/10/2026). Il periodo si legge sulla **notte**, che va da mezzogiorno a mezzogiorno nel
-fuso del sito: una posa delle due di notte del primo gennaio sta nella notte del 31 dicembre.
+fuso del sito: un frame delle due di notte del primo gennaio sta nella notte del 31 dicembre.
 """
 
 from astrolog.clock import now_iso
@@ -51,7 +51,7 @@ def banco(conn):
     riprese(conn, m31, 1, notte_id=gennaio, setup_id=b, filtro=ha, secondi=600.0)
     riprese(conn, m31, 4, notte_id=agosto, setup_id=a, filtro=ha, secondi=600.0)
     riprese(conn, ngc, 3, notte_id=novembre, setup_id=a, filtro=ha, secondi=600.0)
-    # mai ripreso: senza filtri c'e', con un filtro sulle pose non ha niente da far passare
+    # mai ripreso: senza filtri c'e', con un filtro sui frame non ha niente da far passare
     oggetto(conn, "Il campo dietro casa")
     return {
         "casa": casa, "deserto": deserto, "rifrattore": rifrattore, "newton": newton,
@@ -70,7 +70,7 @@ def stretto(conn, **scope):
 
 
 def test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it(archivio):
-    """La domanda e' "quanto ho fatto nel 2025": M 31 dice le sue cinque pose del 2025, non le
+    """La domanda e' "quanto ho fatto nel 2025": M 31 dice i suoi cinque frame del 2025, non i
     sette di sempre, e NGC 7000, ripresa solo nel 2024, non c'e'."""
     banco(archivio)
 
@@ -114,7 +114,8 @@ def test_you_can_narrow_down_to_one_site(archivio):
 
 
 def test_the_narrowings_hold_on_the_same_pose(archivio):
-    """Casa **e** ASI533 e' la posa di gennaio, non "M 31 ha pose a casa e pose con la ASI533"."""
+    """Casa **e** ASI533 e' il frame di gennaio, non "M 31 ha frame a casa e frame con la
+    ASI533"."""
     pezzi = banco(archivio)
 
     assert stretto(archivio, sites=(pezzi["casa"],), cameras=(pezzi["asi533"],)) == (

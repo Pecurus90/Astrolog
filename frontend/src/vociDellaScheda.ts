@@ -10,7 +10,7 @@ export interface Voce {
 }
 
 /**
- * La **scheda di un pezzo in una riga** (tavola v82 `specs`): una voce solo se c'e' il valore, con
+ * La **scheda di uno strumento in una riga** (tavola v82 `specs`): una voce solo se c'e' il valore, con
  * le parole dell'app. Le voci ricavate (potere risolutore, sensore in mm, pixel dal cielo) le
  * manda gia' fatte l'API in `numbers` e `pixel_from_sky_um`: qui si scrivono e basta.
  */

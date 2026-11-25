@@ -1,4 +1,4 @@
-"""Stadio sqm: la luminosita' del cielo di una posa risolta, col catalogo accanto ad ASTAP e il
+"""Stadio sqm: la luminosita' del cielo di un frame risolto, col catalogo accanto ad ASTAP e il
 bias della camera a quell'offset (ADR 0022 punto 8, ADR 0021)."""
 
 import pytest

@@ -163,7 +163,7 @@ describe("la finestra della notte", () => {
     expect(within(testa).getByText("36")).toBeTruthy()
   })
 
-  it("il setup col suo nome e i pezzi, chiusi ai quattro della tavola", async () => {
+  it("il setup col suo nome e gli strumenti, chiusi ai quattro della tavola", async () => {
     const d = await finestra()
     const setup = await within(d).findByRole("region", { name: "Setup" })
     expect(within(setup).getByText("Notte in quota")).toBeTruthy()

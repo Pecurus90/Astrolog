@@ -1,5 +1,5 @@
-"""La guardia della posa e la ricevuta, scritte una volta per i quattro stadi che lavorano posa per
-posa (`spine/stage_run.py`)."""
+"""La guardia del frame e la ricevuta, scritte una volta per i quattro stadi che lavorano frame per
+frame (`spine/stage_run.py`)."""
 
 import pytest
 

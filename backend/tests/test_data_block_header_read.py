@@ -177,7 +177,7 @@ def test_the_header_reader_finds_the_block_astropy_finds_where_it_opens_the_file
 
 def test_a_header_without_end_is_still_read(tmp_path):
     """Un header a cui manca l'END si legge lo stesso, come lo legge astropy quando glielo si
-    concede: e' un file scritto male, non un file illeggibile, e buttarlo toglierebbe una posa."""
+    concede: e' un file scritto male, non un file illeggibile, e buttarlo toglierebbe un frame."""
     bench, _, _ = _bench(tmp_path)
     read = _outcome(header_read.read_frame, str(bench["no_end"]))
     assert isinstance(read, tuple), read
@@ -249,7 +249,7 @@ def test_a_header_read_file_with_pages_is_opened_once(tmp_path, monkeypatch):
 
 def test_the_fingerprint_is_the_same_with_the_block_read_with_the_header(tmp_path):
     """L'impronta calcolata con cio' che dice la lettura dell'header e' quella di prima, su ogni
-    forma di file: se cambiasse, una posa gia' in archivio diventerebbe un'altra. Comprese le
+    forma di file: se cambiasse, un frame gia' in archivio diventerebbe un altro. Comprese le
     primarie su cui astropy e la strada veloce non concordano -- l'END perso, `NAXIS` ripetuto --
     dove decide la strada veloce, come ha sempre deciso."""
     bench, _, _ = _bench(tmp_path)

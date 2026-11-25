@@ -1,4 +1,4 @@
-"""L'archivio grande del budget di prestazioni (passo 6.15): 10.000 pose finte ma con gli header
+"""L'archivio grande del budget di prestazioni (passo 6.15): 10.000 frame finti ma con gli header
 di N.I.N.A. e ASIAIR, tre siti, trenta oggetti, ~500 notti in tre anni. Si costruisce con gli
 stadi veri dell'app, fuori dall'app; solo il cielo si scrive dall'header invece di chiederlo ad
 ASTAP (10.000 lanci sarebbero dieci minuti, e la suite non lancia ASTAP).
@@ -68,7 +68,7 @@ SHAPE = (16, 24)
 
 
 def write_archive(root, frames=FRAMES):
-    """Le pose sul disco; torna quante."""
+    """I frame sul disco; torna quanti."""
     rnd = random.Random(42)
     nights = frames // PER_NIGHT
     start = dt.datetime(2023, 1, 1, 20, 0, tzinfo=dt.UTC)

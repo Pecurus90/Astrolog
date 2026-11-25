@@ -79,7 +79,7 @@ def test_a_declared_folder_is_not_a_solver(tmp_path):
 
     Trovato dal vivo: indicando `C:\Program Files\astap` -- la cartella, non il programma
     dentro -- l'app rispondeva "Trovato" e poi avrebbe provato a lanciare una directory a ogni
-    posa. E' l'errore piu' facile da fare, perche' quella cartella esiste davvero."""
+    frame. E' l'errore piu' facile da fare, perche' quella cartella esiste davvero."""
     cartella = tmp_path / "astap"
     cartella.mkdir()
 
@@ -156,7 +156,7 @@ def test_at_empty_hands_the_route_says_nothing_found(client):
 
 
 def test_astap_without_its_catalogue_is_a_thing_that_is_missing(client, tmp_path, monkeypatch):
-    """**ASTAP senza catalogo stellare parte e non riconosce niente**: ogni posa fallisce con
+    """**ASTAP senza catalogo stellare parte e non riconosce niente**: ogni frame fallisce con
     `no_star_database` e la corsa si ferma alla prima. E' l'errore di installazione piu' comune --
     il catalogo e' un download separato, che va scelto e preso a mano -- e finora si scopriva da
     una scansione tornata a mani vuote.
@@ -189,7 +189,7 @@ def test_without_astap_nobody_complains_about_its_catalogue(client, monkeypatch)
 
 def test_the_route_says_which_catalogues_are_installed(client, tmp_path, monkeypatch):
     """Quali cataloghi ci sono si legge: sapere **che** c'e' non basta a chi ne ha scaricato uno
-    piccolo e si chiede perche' certe pose non si risolvono."""
+    piccolo e si chiede perche' certi frame non si risolvono."""
     cartella = tmp_path / "astap"
     cartella.mkdir()
     exe = cartella / "astap_cli.exe"

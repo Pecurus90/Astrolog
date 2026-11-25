@@ -1,4 +1,4 @@
-"""Il luogo da cui si osserva: si dice per nome o a mano, l'app ne ricava fuso e altitudine,
+"""Il sito da cui si osserva: si dice per nome o a mano, l'app ne ricava fuso e altitudine,
 del cielo si dice quello che si sa, e uno solo e' quello di casa.
 
 Vincolo di questi test: **non toccano internet**. Il recinto della suite (`conftest.py`) ferma
@@ -49,7 +49,7 @@ def sites(client_vuoto):
 
 def test_site_search_by_name(client_vuoto, monkeypatch):
     """Si scrive il nome del posto e si scelgono le coordinate da un elenco. Il servizio non
-    scrive niente: la ricerca e' un gesto, e il luogo nasce solo quando lo si crea."""
+    scrive niente: la ricerca e' un gesto, e il sito nasce solo quando lo si crea."""
     answers(
         monkeypatch,
         {
@@ -78,7 +78,7 @@ def test_searching_without_network_gives_an_empty_list_not_an_error(client_vuoto
 
 
 def test_site_manual_coordinates(client_vuoto, offline):
-    """Senza rete si scrivono le coordinate a mano e il luogo nasce lo stesso: il fuso arriva
+    """Senza rete si scrivono le coordinate a mano e il sito nasce lo stesso: il fuso arriva
     comunque (si ricava offline), l'altitudine resta VUOTA -- mai zero di ripiego."""
     site = create(client_vuoto)
     assert site["latitude"] == pytest.approx(45.8667)
@@ -175,11 +175,11 @@ def test_a_sky_brightness_outside_the_scale_is_refused(client_vuoto, offline):
         assert r.status_code == 422, (bad, r.text)
 
 
-# --- piu' luoghi, uno di casa --------------------------------------------------------------
+# --- piu' siti, uno predefinito ------------------------------------------------------------
 
 
 def test_sites_many_and_one_default(client_vuoto, offline):
-    """Si aggiungono tutti i luoghi che si vogliono; uno solo e' quello di casa, e dirlo di
+    """Si aggiungono tutti i siti che si vogliono; uno solo e' quello predefinito, e dirlo di
     un altro lo toglie al primo -- non ne restano due, mai."""
     casa = create(client_vuoto, name="Giardino di casa", is_default=True)
     monte = create(client_vuoto, name="Monte Grappa", latitude=45.87, longitude=11.80)
@@ -238,7 +238,7 @@ def test_a_site_that_is_nowhere_is_not_found(client_vuoto, offline):
 
 
 def test_site_with_nights_is_not_deleted(client_vuoto, offline):
-    """Un luogo che ha gia' delle notti non si perde per sbaglio: l'app si rifiuta e dice
+    """Un sito che ha gia' delle notti non si perde per sbaglio: l'app si rifiuta e dice
     quante notti lo tengono."""
     site = create(client_vuoto)
     with connect(client_vuoto.app.state.db_path) as conn:
@@ -271,7 +271,7 @@ def test_the_list_says_how_many_nights_hold_each_site(client_vuoto, offline):
     assert sites(client_vuoto)["items"][0]["nights"] == 1
 
 
-# --- cambiare un luogo ---------------------------------------------------------------------
+# --- cambiare un sito ----------------------------------------------------------------------
 
 
 def test_an_elevation_written_by_hand_in_a_change_wins_too(client_vuoto, offline):
@@ -281,7 +281,7 @@ def test_an_elevation_written_by_hand_in_a_change_wins_too(client_vuoto, offline
 
 
 def test_moving_a_site_redoes_only_what_came_from_the_service(client_vuoto, monkeypatch):
-    """La luminosita' chiesta al servizio e' una funzione delle coordinate: se il luogo si
+    """La luminosita' chiesta al servizio e' una funzione delle coordinate: se il sito si
     sposta, si richiede. Quella MISURATA e' la parola dell'utente, e nessuno la tocca."""
     answers(monkeypatch, {"lightpollutionmap": "0.5", "elevation": {"elevation": [1000.0]}})
     client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
@@ -329,7 +329,7 @@ def test_a_full_site_has_nothing_unknown(client_vuoto, monkeypatch):
 
 def test_an_impossible_sky_from_the_service_is_not_a_sky(client_vuoto, monkeypatch):
     """Un servizio che risponde una luminosita' assurda ha risposto un guasto: non si salva,
-    e non diventa un errore in faccia a chi sta creando il luogo."""
+    e non diventa un errore in faccia a chi sta creando il sito."""
     answers(monkeypatch, {"lightpollutionmap": "1000000", "elevation": {"elevation": [120.0]}})
     client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
     site = create(client_vuoto)
@@ -355,7 +355,7 @@ def test_a_field_sent_empty_is_cleared(client_vuoto, monkeypatch):
 
 
 def test_a_required_field_sent_empty_is_refused_and_says_which(client_vuoto, offline):
-    """Nome e coordinate non si cancellano: senza, il luogo non e' un luogo."""
+    """Nome e coordinate non si cancellano: senza, il sito non e' un sito."""
     site = create(client_vuoto)
     for bad in ({"name": None}, {"latitude": None}, {"longitude": None}):
         r = client_vuoto.patch(f"/api/v1/sites/{site['id']}", json=bad)
@@ -367,7 +367,7 @@ def test_a_required_field_sent_empty_is_refused_and_says_which(client_vuoto, off
 def test_moving_a_site_keeps_what_the_user_wrote_and_redoes_what_came_from_the_service(
     client_vuoto, monkeypatch
 ):
-    """Spostare il luogo rifa' cio' che dalle coordinate veniva, e lascia stare cio' che
+    """Spostare il sito rifa' cio' che dalle coordinate veniva, e lascia stare cio' che
     l'utente ha scritto. Per questo dell'altitudine si registra la provenienza, come del
     cielo: un numero rimasto attaccato a coordinate nuove sarebbe indistinguibile da una
     misura."""
@@ -394,7 +394,7 @@ def test_moving_a_site_keeps_what_the_user_wrote_and_redoes_what_came_from_the_s
 
 def test_moving_a_site_empties_a_sky_that_came_from_the_service(client_vuoto, monkeypatch):
     """La stessa regola per il cielo: quello chiesto al servizio si richiede, e se il servizio
-    tace resta vuoto col suo motivo invece di seguire il luogo altrove."""
+    tace resta vuoto col suo motivo invece di seguire il sito altrove."""
     answers(monkeypatch, {"lightpollutionmap": "0.5", "elevation": {"elevation": [1000.0]}})
     client_vuoto.put("/api/v1/services/sky-key", json={"key": "k"})
     site = create(client_vuoto)
@@ -416,7 +416,7 @@ def _notte(conn, site_id, data, source="detected"):
 
 
 def test_moving_home_takes_along_the_nights_the_app_assigned(client_vuoto, offline):
-    """Chi cambia il luogo di casa sta dicendo "da adesso osservo di qui": le notti che
+    """Chi cambia il sito predefinito sta dicendo "da adesso osservo di qui": le notti che
     **l'app** aveva attribuito lo seguono, perche' erano un'ipotesi e non una scelta.
 
     Quelle che l'utente ha dichiarato no: sono una sua risposta, e nessuno stadio ha il potere
@@ -436,9 +436,9 @@ def test_moving_home_takes_along_the_nights_the_app_assigned(client_vuoto, offli
 
 
 def test_a_night_that_would_collide_stays_where_it_is(client_vuoto, offline):
-    """Due notti della stessa data non possono stare sullo stesso luogo. Se il trasloco ne
+    """Due notti della stessa data non possono stare sullo stesso sito. Se il trasloco ne
     creasse una gia' presente, quella resta dov'e' invece di far fallire il cambio: si perde
-    un'attribuzione dubbia, mai una posa -- e l'utente puo' sempre spostarla a mano."""
+    un'attribuzione dubbia, mai un frame -- e l'utente puo' sempre spostarla a mano."""
     casa = create(client_vuoto)
     nuova = create(client_vuoto, name="Passo Rolle", latitude=46.30, longitude=11.79)
     with connect(client_vuoto.app.state.db_path) as conn:
@@ -457,7 +457,7 @@ def test_a_night_that_would_collide_stays_where_it_is(client_vuoto, offline):
 def test_moving_home_to_another_timezone_puts_the_nights_back_in_the_queue(client_vuoto, offline):
     """Il fuso decide **dove si taglia** una notte: traslocando da Roma all'Arizona le date
     tagliate nel fuso vecchio non sono piu' vere. Le notti adottate non si limitano a cambiare
-    luogo -- le loro pose tornano in coda per `group`, che le ritaglia col fuso nuovo.
+    sito -- i loro frame tornano in coda per `group`, che li ritaglia col fuso nuovo.
 
     Senza, la colonna direbbe "YYYY-MM-DD nel fuso del sito" e sarebbe falsa proprio per le
     righe appena spostate."""
@@ -483,8 +483,8 @@ def test_moving_home_to_another_timezone_puts_the_nights_back_in_the_queue(clien
 
 
 def test_two_nights_of_the_same_date_do_not_collide_while_moving(client_vuoto, offline):
-    """Due notti della stessa data su due luoghi diversi, che traslocano **insieme**, si
-    scontrerebbero fra loro: il database non ne ammette due uguali sullo stesso luogo. Si
+    """Due notti della stessa data su due siti diversi, che traslocano **insieme**, si
+    scontrerebbero fra loro: il database non ne ammette due uguali sullo stesso sito. Si
     sposta la prima e l'altra resta dov'e', invece di far fallire il trasloco."""
     casa = create(client_vuoto)
     cima = create(client_vuoto, name="Cima", latitude=46.05, longitude=11.316)

@@ -1,5 +1,5 @@
-"""**La Luna e il Sole su una posa** (Image Analysis par. 2.1.1): altezze topocentriche senza
-rifrazione, distanza della Luna dal centro, frazione illuminata; tutte le pose in una chiamata
+"""**La Luna e il Sole su un frame** (Image Analysis par. 2.1.1): altezze topocentriche senza
+rifrazione, distanza della Luna dal centro, frazione illuminata; tutti i frame in una chiamata
 per sito. Le date sono nel futuro, come negli altri file delle effemeridi."""
 
 import dataclasses

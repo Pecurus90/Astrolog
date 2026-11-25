@@ -36,7 +36,7 @@ afterEach(() => {
 })
 
 describe("la rilettura mentre la scansione va", () => {
-  it("mentre la lettura va, elenco e striscia si rileggono ogni 15 secondi", async () => {
+  it("mentre la scansione va, elenco e striscia si rileggono ogni 15 secondi", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     await apri(rotte(pagina([DICIOTTO], { still_reading: 4, reading_done_pct: 10 })))
     await notte()
@@ -47,7 +47,7 @@ describe("la rilettura mentre la scansione va", () => {
     expect(chieste("limit=7").length).toBeGreaterThan(striscia)
   })
 
-  it("a lettura finita non si rilegge", async () => {
+  it("a scansione finita non si rilegge", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     await apri(rotte(pagina([DICIOTTO])))
     await notte()
@@ -426,7 +426,7 @@ describe("le righe di stato", () => {
     reading_done_pct: null,
   }
 
-  it("sul desktop una riga per motivo: sito, risposte, data, lettura, coi loro segni", async () => {
+  it("sul desktop una riga per motivo: sito, risposte, data, scansione, coi loro segni", async () => {
     await apri(rotte(pagina([DICIOTTO], ATTESE)))
     await notte()
     const righe = [...document.querySelectorAll(".al-notti__griglia-1 .al-c-avviso__riga-3")]

@@ -178,7 +178,7 @@ export async function vedi(gruppo: RegExp, lista: RegExp = gruppo) {
 export const parti = () => screen.findByRole("region", { name: /^parti$/i })
 export const campo = () => screen.findByRole("region", { name: /^campo$/i })
 export const carta = (nome: RegExp = /il grande/i) => screen.findByRole("region", { name: nome })
-/** Una parte, per genere: la riga con i suoi pezzi e il suo «Seleziona». */
+/** Una parte, per genere: la riga con i suoi strumenti e il suo «Seleziona». */
 export async function parte(genere: string): Promise<HTMLElement> {
   const riga = (await parti()).querySelector(`[data-parte="${genere}"]`)
   if (!(riga instanceof HTMLElement)) throw new Error(`nessuna parte ${genere}`)

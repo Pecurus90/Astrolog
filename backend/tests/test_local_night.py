@@ -1,9 +1,9 @@
-"""La **notte della posa**: da mezzogiorno a mezzogiorno nel fuso del posto, scritta quando la
-posa entra (`scan`), e letta da chi la chiedeva in UTC. Quando casa cambia fuso:
+"""La **notte della posa**: da mezzogiorno a mezzogiorno nel fuso del posto, scritta quando il
+frame entra (`scan`), e letta da chi la chiedeva in UTC. Quando casa cambia fuso:
 `test_home_nights.py`.
 
 La regola sta in CLAUDE.md ("Le date portano il fuso"); il fuso viene dalle coordinate dell'header,
-se ci sono, o dal sito predefinito, altrimenti e' UTC. Una posa che non dice quando e' stata ripresa
+se ci sono, o dal sito predefinito, altrimenti e' UTC. Un frame che non dice quando e' stato ripreso
 prende la data del file (Marco, 27/9/2026).
 """
 
@@ -26,7 +26,7 @@ def _posa(path, **header):
 
 
 def _notti(client):
-    """`{file: (notte, fuso)}` delle pose, come le ha scritte la scansione."""
+    """`{file: (notte, fuso)}` dei frame, come le ha scritte la scansione."""
     with db(client) as conn:
         righe = conn.execute(
             "SELECT p.rel_path, f.local_night, f.local_tz FROM frames f"
@@ -49,7 +49,7 @@ def _sul_disco(path, quando):
 def test_in_the_east_the_night_is_cut_at_local_noon(db_path, tmp_path):
     """**La regola.** A Tokyo le 11:30 e le 13:30 UTC sono le 20:30 e le 22:30 di una stessa sera,
     anche se in UTC stanno ai due lati di mezzogiorno. La stessa notte la legge il solver, che
-    risolve una posa per oggetto e notte (`solve_store.SOLVE_ORDER_KEY`)."""
+    risolve un frame per oggetto e notte (`solve_store.SOLVE_ORDER_KEY`)."""
     root = tmp_path / "lib"
     _posa(root / "a.fits", **{"DATE-OBS": "2026-03-14T11:30:00", **TOKYO})
     _posa(root / "b.fits", **{"DATE-OBS": "2026-03-14T13:30:00", **TOKYO})
@@ -67,7 +67,7 @@ def test_in_the_east_the_night_is_cut_at_local_noon(db_path, tmp_path):
 
 
 def test_without_coordinates_the_home_site_gives_the_zone(db_path, tmp_path):
-    """Una posa che non dice dove e' stata ripresa prende il fuso del sito predefinito."""
+    """Un frame che non dice dove e' stato ripreso prende il fuso del sito predefinito."""
     from astrolog.db.connect import connect
 
     with connect(db_path) as conn:
@@ -104,7 +104,7 @@ def test_a_pose_without_a_date_takes_the_date_of_its_file(db_path, tmp_path):
 
 def test_the_question_on_poses_without_a_name_says_their_hours(db_path, tmp_path):
     """Due oggetti senza nome e senza coordinate nella stessa notte sono una domanda sola (Marco,
-    27/9/2026): la domanda dice dalla prima all'ultima posa, nel fuso della notte, cosi' chi
+    27/9/2026): la domanda dice dalla prima all'ultimo frame, nel fuso della notte, cosi' chi
     risponde vede se e' una serie o due."""
     root = tmp_path / "lib"
     _posa(root / "a.fits", **{"DATE-OBS": "2026-03-14T11:30:00", **TOKYO})
@@ -122,7 +122,7 @@ def test_the_question_on_poses_without_a_name_says_their_hours(db_path, tmp_path
 
 def test_the_hours_are_those_of_the_poses_that_say_when(db_path, tmp_path):
     """La data del file da' la notte a chi non dice quando, ma non e' un'ora di ripresa: le ore
-    della domanda sono quelle delle pose con `DATE-OBS`."""
+    della domanda sono quelle dei frame con `DATE-OBS`."""
     root = tmp_path / "lib"
     _posa(root / "a.fits", **{"DATE-OBS": "2026-03-14T11:30:00", **TOKYO})
     _sul_disco(_posa(root / "b.fits", **TOKYO), "2026-03-14T13:40:00")

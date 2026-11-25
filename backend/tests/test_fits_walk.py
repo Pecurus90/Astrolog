@@ -86,7 +86,7 @@ def test_a_folder_symlink_is_not_followed_so_the_walk_cannot_loop(tmp_path, monk
 def test_the_mac_twin_files_are_not_collected(tmp_path):
     """macOS scrive un gemello `._nome.fits` accanto a ogni file su una chiavetta o un NAS:
     sono i metadati del Finder, pochi KB che non sono un FITS. Senza questa riga, un archivio
-    passato da un Mac dice all'utente "1.200 file non letti" su 1.200 pose sane."""
+    passato da un Mac dice all'utente "1.200 file non letti" su 1.200 frame sani."""
     root = str(tmp_path)
     _touch(root, "M42.fits")
     _touch(root, "._M42.fits")
@@ -96,7 +96,7 @@ def test_the_mac_twin_files_are_not_collected(tmp_path):
 
 
 def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatch):
-    """Nel cestino ci sono le pose che l'utente ha **cancellato**: percorrerlo le farebbe
+    """Nel cestino ci sono i frame che l'utente ha **cancellato**: percorrerlo li farebbe
     rientrare in archivio. Il cestino e le cartelle di servizio sono nascoste su tutti e tre i
     sistemi -- `.Trashes` su Mac, `$RECYCLE.BIN` e `System Volume Information` su Windows con
     l'attributo nascosto, il cestino di un NAS via SMB -- e si guarda la **proprieta'**, non
@@ -214,7 +214,7 @@ def test_an_old_icloud_placeholder_counts_as_online_only(tmp_path):
     `.Nome.fits.icloud`: vale come solo online, col nome del file vero. Non contano: un
     segnaposto che non e' di un FITS, il gemello `._` che il Mac gli scrive accanto su una
     chiavetta o un NAS, e un segnaposto rimasto accanto al suo file vero -- quello e' sul disco,
-    e contarlo due volte direbbe "solo online" di una posa che c'e'."""
+    e contarlo due volte direbbe "solo online" di un frame che c'e'."""
     root = str(tmp_path)
     _touch(root, ".M42.FITS.icloud")
     _touch(root, ".nota.txt.icloud")
@@ -228,8 +228,8 @@ def test_an_old_icloud_placeholder_counts_as_online_only(tmp_path):
 
 def test_a_junction_is_not_followed_and_is_named(tmp_path, monkeypatch):
     """Una giunzione di Windows non si percorre -- verso un antenato farebbe girare il walk a
-    vuoto, e per Python e' una cartella come le altre (`fits/walk._kind`) -- ma si nomina: le
-    pose che stanno oltre non spariscono in silenzio."""
+    vuoto, e per Python e' una cartella come le altre (`fits/walk._kind`) -- ma si nomina: i
+    frame che stanno oltre non spariscono in silenzio."""
     root = str(tmp_path)
     _touch(root, "a.fits")
     _touch(root, "giunzione", "oltre.fits")

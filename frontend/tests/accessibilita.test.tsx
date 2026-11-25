@@ -563,7 +563,7 @@ describe("l accessibilita della prima pagina", () => {
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno l Attrezzatura, coi pezzi che non hanno numeri", async () => {
+  it("e nemmeno l Attrezzatura, con gli strumenti che non hanno numeri", async () => {
     // La pagina si monta **piena** e con dentro i casi che parlano: la montatura senza ore e il
     // setup senza scala sono testo dentro una riga di dettagli, cioe' proprio il markup che
     // axe guarda -- e con l'elenco vuoto non ci sarebbero.

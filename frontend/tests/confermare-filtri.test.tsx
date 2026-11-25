@@ -426,7 +426,7 @@ describe("Da confermare -- i filtri", () => {
   })
 
   it("dopo Applica la pagina si rilegge e l accumulatore si svuota", async () => {
-    // L'elenco di prima direbbe cose non piu' vere: la risposta rifa' il lavoro sulle pose
+    // L'elenco di prima direbbe cose non piu' vere: la risposta rifa' il lavoro sui frame
     // toccate. E le risposte gia' mandate non restano in mano.
     aperta()
     const h = await suH()

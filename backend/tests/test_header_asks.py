@@ -1,7 +1,7 @@
 """Tre giudizi che dipendono solo da cio' che il file dice -- la camera, il filtro, l'ottica -- si
-scrivono sulla posa quando la scansione la legge, e le pagine di Da confermare li filtrano in SQL
+scrivono sul frame quando la scansione lo legge, e le pagine di Da confermare li filtrano in SQL
 invece di rileggere l'archivio (`spine/header_asks.py`). Il grezzo non cambia, quindi nessuno deve
-riscriverli: la prova e' che su ogni posa dicono cio' che direbbero le regole sul suo grezzo."""
+riscriverli: la prova e' che su ogni frame dicono cio' che direbbero le regole sul suo grezzo."""
 
 import re
 
@@ -22,7 +22,7 @@ def test_every_frame_carries_what_its_raw_header_asks(conn, tmp_path):
     write_light(tmp_path / "lib" / "muta" / "senza_camera.fits")  # nessun INSTRUME
     scan(conn, tmp_path / "lib")
     pose = rows(conn, "SELECT * FROM frames")
-    assert pose, "il banco non ha pose: la prova non guarda niente"
+    assert pose, "il banco non ha frame: la prova non guarda niente"
     for p in pose:
         atteso = (
             int(asks_camera(p["instrument_raw"])),
@@ -36,7 +36,7 @@ def test_every_frame_carries_what_its_raw_header_asks(conn, tmp_path):
 
 
 def test_the_fallback_is_what_an_empty_header_asks(conn):
-    """Chi scrive una posa senza passare dai giudizi -- una prova, un'inserzione a mano -- prende
+    """Chi scrive un frame senza passare dai giudizi -- una prova, un'inserzione a mano -- prende
     il ripiego dello schema: deve essere cio' che le regole dicono di un header vuoto."""
     ripiego = {
         r["name"]: int(r["dflt_value"])

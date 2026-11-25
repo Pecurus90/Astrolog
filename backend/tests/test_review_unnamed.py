@@ -1,4 +1,4 @@
-"""Da confermare, **le pose senza nome e senza cielo**: l'header non dice l'oggetto e il cielo non
+"""Da confermare, **i frame senza nome e senza cielo**: l'header non dice l'oggetto e il cielo non
 dice niente, quindi l'app non ha niente da cui dedurlo. Si chiede per gruppo: notte, camera,
 telescopio e dove puntava la montatura (Marco, 24/9/2026), non per cartella.
 
@@ -6,14 +6,14 @@ Regole, e il test che le rompe:
 
 * **Il gruppo non e' la cartella**: due oggetti della stessa notte si separano col puntamento, e le
   regole della chiave le prova `test_unnamed.py`.
-* **Il gruppo si riconosce dalla posa** -- il gruppo scritto, niente cielo -- a solver concluso:
-  una posa il cui cielo potrebbe ancora arrivare non si chiede.
-* **Il cielo che non dice niente vale come nessun cielo**: una posa risolta a cono vuoto si chiede.
+* **Il gruppo si riconosce dal frame** -- il gruppo scritto, niente cielo -- a solver concluso:
+  un frame il cui cielo potrebbe ancora arrivare non si chiede.
+* **Il cielo che non dice niente vale come nessun cielo**: un frame risolto a cono vuoto si chiede.
 * **Un file che non si trova piu' e una cartella ritirata non chiedono niente**: non c'e' niente su
   cui agire.
 * **Si risponde dalla pagina** con un oggetto -- di catalogo o scritto -- oppure "non e' un
   oggetto", una risposta sola; risposto, il gruppo resta in pagina con la risposta e si cambia
-  idea. Cosa la risposta fa alle pose lo provano i test della regola
+  idea. Cosa la risposta fa ai frame lo provano i test della regola
   (`test_identify_answer_for_unnamed.py`).
 """
 
@@ -56,7 +56,7 @@ def pagina(db_path, tmp_path):
 
 
 def _chiave(client, sotto):
-    """La chiave della scheda del gruppo delle pose senza nome di quella cartella: nell'archivio di
+    """La chiave della scheda del gruppo dei frame senza nome di quella cartella: nell'archivio di
     prova ogni cartella ne fa uno solo."""
     with db(client) as conn:
         (frame_id,) = conn.execute(
@@ -72,8 +72,8 @@ def _gruppi(client):
 
 
 def _col_cielo(client, sotto, nome, ra, dec):
-    """Da' a quella posa un cielo misurato a (ra, dec) e la rimette in coda da `identify`: e' lo
-    stato di una posa che il solver ha risolto. Torna il suo id."""
+    """Da' a quel frame un cielo misurato a (ra, dec) e lo rimette in coda da `identify`: e' lo
+    stato di un frame che il solver ha risolto. Torna il suo id."""
     with db(client) as conn:
         (frame_id,) = conn.execute(
             "SELECT p.frame_id FROM positions p WHERE p.rel_path = ?", (f"{sotto}/{nome}",)
@@ -122,9 +122,9 @@ def _scheda(key, ra_deg, dec_deg, frames, answer):
 
 def test_a_question_per_group_with_what_makes_it(pagina):
     """Una domanda per gruppo, il piu' numeroso in cima, con la notte, la camera, il telescopio e il
-    puntamento che lo fanno; la posa col nome non c'e', e la copia calibrata -- in un'altra
-    cartella, con lo stesso header -- non e' un'altra posa. Le ore le prova `test_local_night.py`;
-    qui, senza sito, sono quelle UTC delle pose."""
+    puntamento che lo fanno; il frame col nome non c'e', e la copia calibrata -- in un'altra
+    cartella, con lo stesso header -- non e' un altro frame. Le ore le prova `test_local_night.py`;
+    qui, senza sito, sono quelle UTC dei frame."""
     gruppi = unnamed_cards(review(pagina))
     assert (gruppi[0]["group"]["first_frame"], gruppi[0]["group"]["last_frame"]) == (
         "2024-03-12T21:00:00+00:00",
@@ -137,7 +137,7 @@ def test_a_question_per_group_with_what_makes_it(pagina):
 
 
 def test_a_pose_the_solver_has_not_looked_at_yet_is_not_asked(pagina):
-    """Il cielo di quella posa potrebbe ancora arrivare: chiederne l'oggetto adesso sarebbe chiedere
+    """Il cielo di quel frame potrebbe ancora arrivare: chiederne l'oggetto adesso sarebbe chiedere
     cio' che l'app sta per sapere da sola."""
     with db(pagina) as conn:
         (in_attesa,) = conn.execute(
@@ -148,7 +148,7 @@ def test_a_pose_the_solver_has_not_looked_at_yet_is_not_asked(pagina):
 
 
 def test_a_pose_without_sky_is_asked_whatever_identify_has_done_with_it(pagina):
-    """Il gruppo si riconosce dalla posa: una posa senza nome e senza cielo si chiede anche se
+    """Il gruppo si riconosce dal frame: un frame senza nome e senza cielo si chiede anche se
     `identify` e' stato rimesso in coda."""
     with db(pagina) as conn:
         (frame_id,) = conn.execute(
@@ -185,13 +185,13 @@ def test_a_file_that_is_gone_and_a_retired_folder_do_not_ask_anything(pagina):
 
 def test_a_solved_pose_whose_sky_finds_nothing_is_asked_like_the_others(pagina):
     """Risolta, ma nel cono non c'e' niente (qui il catalogo non e' caricato): il cielo non dice
-    niente, come per la regola sui nomi, quindi quella posa si chiede."""
+    niente, come per la regola sui nomi, quindi quel frame si chiede."""
     _col_cielo(pagina, ROSETTA, "r_2.fits", 98.0, 4.9)
     assert _gruppi(pagina)[_chiave(pagina, ROSETTA)]["frames"] == 3
 
 
 def test_a_pose_whose_sky_has_candidates_is_not_asked(db_path_col_catalogo, tmp_path):
-    """Dove il cielo ha candidati decide lui: quella posa non si chiede."""
+    """Dove il cielo ha candidati decide lui: quel frame non si chiede."""
     root = tmp_path / "lib"
     for i in range(2):
         _posa(root / M81 / f"m_{i}.fits", i)
@@ -202,7 +202,7 @@ def test_a_pose_whose_sky_has_candidates_is_not_asked(db_path_col_catalogo, tmp_
 
 
 def test_answering_with_a_name_moves_the_poses_and_the_group_keeps_its_answer(pagina):
-    """La risposta arriva allo stadio -- l'Applica lo avvia, e le pose vanno su quell'oggetto -- e
+    """La risposta arriva allo stadio -- l'Applica lo avvia, e i frame vanno su quell'oggetto -- e
     il gruppo resta in pagina con la risposta, perche' si deve poter cambiare idea."""
     out = apply(pagina, objects=[{"key": _chiave(pagina, ROSETTA), "name": "Nebulosa Rosetta"}])
     assert out["requeued"] == 4  # anche la copia in `calibrate/`: stesso header, stesso gruppo
@@ -234,7 +234,7 @@ def test_the_object_named_by_the_answer_is_not_another_question(pagina):
 def test_not_an_object_is_an_answer_too_and_i_can_change_my_mind(pagina):
     chiave = _chiave(pagina, M81)
     out = apply(pagina, objects=[{"key": chiave, "not_an_object": True}])
-    assert out["requeued"] == 2  # le due senza nome: la posa col nome non c'entra
+    assert out["requeued"] == 2  # i due senza nome: il frame col nome non c'entra
     assert _gruppi(pagina)[chiave]["answer"] == {"kind": "none", "value": None, "name": None}
     apply(pagina, objects=[{"key": chiave, "name": "Galassia di Bode"}])
     assert _gruppi(pagina)[chiave]["answer"] == {
@@ -245,7 +245,7 @@ def test_not_an_object_is_an_answer_too_and_i_can_change_my_mind(pagina):
 
 
 def test_answering_with_a_catalog_entry(db_path_col_catalogo, tmp_path):
-    """Lo slug arriva dalla rotta alla risposta; cosa fa alle pose lo prova la regola."""
+    """Lo slug arriva dalla rotta alla risposta; cosa fa ai frame lo prova la regola."""
     root = tmp_path / "lib"
     for i in range(2):
         _posa(root / M81 / f"m_{i}.fits", i)

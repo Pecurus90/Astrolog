@@ -1,6 +1,6 @@
 """I tre dati che la pagina Notti del disegno (forma A, il registro) chiede e prima non arrivavano:
 le ore di ogni oggetto senza contare zero i frame senza durata, il giorno in cui arriva il meteo di
-una notte giovane, e quanto ha fatto la lettura in corso.
+una notte giovane, e quanto ha fatto la scansione in corso.
 """
 
 from datetime import UTC, date, datetime, timedelta
@@ -27,7 +27,7 @@ def per_data(pagina):
 @pytest.fixture
 def banco(db_path):
     """Una notte vecchia con M 45 senza durata accanto a M 31, una notte di ieri, e un frame che
-    la lettura non ha ancora messo in una notte."""
+    la scansione non ha ancora messo in una notte."""
     conn = connect(db_path)
     try:
         prepara(conn)
@@ -37,7 +37,7 @@ def banco(db_path):
         ieri = (datetime.now(UTC) - timedelta(days=1)).replace(hour=21, minute=0, second=0)
         posa(conn, quando=ieri.strftime("%Y-%m-%dT%H:%M:%SZ"), esposizione=60.0, hash_="b1")
         corri(conn)
-        # arrivato dopo il giro di `group`: la lettura lo deve ancora mettere in una notte
+        # arrivato dopo il giro di `group`: la scansione lo deve ancora mettere in una notte
         posa(conn, quando="2024-05-18T22:00:00Z", esposizione=60.0, hash_="c1")
         conn.commit()
     finally:
@@ -81,7 +81,7 @@ def test_the_day_the_weather_arrives_is_counted_in_the_site_time_zone(adesso, at
 
 
 def test_the_reading_says_how_far_it_has_gone(banco):
-    """Tre frame messi nelle notti, uno da mettere: la riga di lettura dice 75%, gia' fatto."""
+    """Tre frame messi nelle notti, uno da mettere: la riga della scansione dice 75%, gia' fatto."""
     pagina = notti(banco)
 
     assert pagina["still_reading"] == 1

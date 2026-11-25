@@ -1,5 +1,5 @@
 """I campi della pagina Attrezzatura (tavola v82) che la pagina non calcola: la barra delle ore
-di un setup, di un pezzo e di un filtro sul piu' usato del suo gruppo, la Luna piena del
+di un setup, di uno strumento e di un filtro sul piu' usato del suo gruppo, la Luna piena del
 confronto dei campi, e quali campi di una scheda vengono dai file.
 """
 
@@ -59,8 +59,8 @@ def test_a_bar_is_the_hours_on_the_most_used_of_its_group(due_setup):
 
 
 def test_a_bar_never_vanishes_and_unknown_hours_have_none(due_setup):
-    """Un pezzo con zero ore ha la barra al minimo della tavola, non nessuna; uno di un genere che
-    nessun file nomina non ha ore da mettere in barra."""
+    """Uno strumento con zero ore ha la barra al minimo della tavola, non nessuna; uno di un genere
+    che nessun file nomina non ha ore da mettere in barra."""
     due_setup.post("/api/v1/gear/instruments", json={"kind": "optics", "name": "Nuova"})
     due_setup.post("/api/v1/gear/instruments", json={"kind": "focuser", "name": "EAF"})
 

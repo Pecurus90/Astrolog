@@ -1,6 +1,6 @@
 /**
  * Le parole del **dettaglio del setup** (`src/vociDellaScheda.ts`, `src/contiDelSetup.ts`): ogni
- * campo del pezzo e ogni conto del setup diventa la frase esatta della tavola v82, e un campo
+ * campo dello strumento e ogni conto del setup diventa la frase esatta della tavola v82, e un campo
  * assente non scrive niente.
  */
 import { describe, expect, it } from "vitest"
@@ -19,8 +19,8 @@ const pezzo = (campi: Record<string, unknown> = {}) =>
 const voci = (campi: Record<string, unknown> = {}) => vociDellaScheda(pezzo(campi))
 const testi = (campi: Record<string, unknown> = {}) => voci(campi).map((x) => x.v)
 
-describe("la scheda di un pezzo", () => {
-  it("un pezzo senza campi non scrive niente", () => {
+describe("la scheda di uno strumento", () => {
+  it("uno strumento senza campi non scrive niente", () => {
     expect(voci()).toEqual([])
   })
 
@@ -332,7 +332,7 @@ describe("i dati del setup", () => {
 })
 
 describe("cio' che manca", () => {
-  it("il pezzo intero, il campo detto, o un dato", () => {
+  it("lo strumento intero, il campo detto, o un dato", () => {
     expect(mancanza({ kind: "mount", field: null })).toBe("manca la montatura")
     expect(mancanza({ kind: "mount", field: "payload_kg" })).toBe("manca il carico della montatura")
     expect(mancanza({ kind: "optics", field: "focal_mm" })).toBe("manca la focale dell'ottica")

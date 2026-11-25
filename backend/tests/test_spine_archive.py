@@ -255,7 +255,7 @@ def test_you_can_narrow_down_to_one_constellation(archivio):
 
 def test_you_can_narrow_down_to_one_filter(archivio):
     """ "Cosa ho ripreso in Ha" e' la domanda per cui questa tendina esiste. Si guarda **se almeno
-    una posa** di quell'oggetto ha quel filtro, non quale sia il filtro dominante."""
+    un frame** di quell'oggetto ha quel filtro, non quale sia il filtro dominante."""
     banco(archivio)
 
     righe, _ = archive.page(archivio, limit=50, offset=0, filters=("Ha 3nm",))

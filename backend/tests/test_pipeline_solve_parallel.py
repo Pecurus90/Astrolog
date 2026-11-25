@@ -94,7 +94,7 @@ def _counted(conn, root: int, tmp_path, workers: int):
 
 
 def test_launches_run_side_by_side_and_one_writes(conn, tmp_path):
-    """Otto pose, quattro alla volta; la connessione rifiuta un altro thread: scrive chi chiama."""
+    """Otto frame, quattro alla volta; la connessione rifiuta un altro thread: scrive chi chiama."""
     peak, result = _counted(conn, _many(conn, tmp_path, 8), tmp_path, 4)
     assert peak == 4 and result.solved == 8
     assert [r["outcome"] for r in _solutions(conn)] == ["solved"] * 8
@@ -137,7 +137,7 @@ def test_a_launch_that_breaks_kills_the_others_before_it_is_raised(conn, tmp_pat
 
 def test_a_stop_writes_nothing_more_and_launches_nothing_more(conn, tmp_path):
     """Fermata a meta': il primo lancio, da solo, e' scritto; i due in corso no (un processo
-    ucciso non e' un esito); le pose restanti non partono e restano per la passata dopo."""
+    ucciso non e' un esito); i frame restanti non partono e restano per la passata dopo."""
     root = _many(conn, tmp_path, 6)
     fake, stop, release = FakeAstap("solved.ini"), threading.Event(), threading.Event()
     started = threading.Semaphore(0)

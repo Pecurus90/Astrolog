@@ -55,7 +55,7 @@ def test_each_file_read_points_to_its_frame(conn, tmp_path):
 
 
 def test_a_copy_in_another_folder_is_one_frame(conn, tmp_path):
-    """Stessa posa in due cartelle: un frame, due file, e la ricevuta lo dice."""
+    """Stesso frame in due cartelle: un frame, due file, e la ricevuta lo dice."""
     nina_light(tmp_path / "2024-11-03" / "m33.fits", 7)
     shutil.copy(tmp_path / "2024-11-03" / "m33.fits", tmp_path / "2024-11-04_m33.fits")
     result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
@@ -154,7 +154,7 @@ def test_a_file_not_read_has_no_frame(conn, tmp_path):
 
 
 def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypatch):
-    """Scansione fermata a meta': la prossima legge cio' che manca, nessuna posa persa."""
+    """Scansione fermata a meta': la prossima legge cio' che manca, nessun frame perso."""
     nina_light(tmp_path / "a.fits", 1)
     nina_light(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
@@ -424,7 +424,7 @@ def test_the_header_is_stored_as_written_with_its_types(conn, tmp_path):
 
 
 def test_two_copies_of_a_frame_keep_each_its_own_header(conn, tmp_path):
-    """Stessa posa, header riscritto in una copia: un frame, due header, nessuno perso."""
+    """Stesso frame, header riscritto in una copia: un frame, due header, nessuno perso."""
     nina_light(tmp_path / "a.fits", 5)
     nina_light(tmp_path / "b.fits", 5, ("OBJECT  = 'M 33'",))
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
@@ -481,8 +481,8 @@ def test_a_file_back_is_no_longer_gone(conn, tmp_path):
 
 
 def test_a_new_shot_on_a_gone_file_s_path_leaves_the_old_shot_gone(conn, tmp_path):
-    """N.I.N.A. riscrive M31/Light_000 dopo che la sessione e' stata portata via: due pose, la
-    vecchia sparita con la sua storia. Prima: la riga si riusava e la posa vecchia spariva."""
+    """N.I.N.A. riscrive M31/Light_000 dopo che la sessione e' stata portata via: due frame, il
+    vecchio sparito con la sua storia. Prima: la riga si riusava e il frame vecchio spariva."""
     nas = tmp_path / "nas"
     path = nina_light(nas / "M31" / "Light_000.fits", 1)
     root = add_root(conn, nas, NOW)
@@ -516,7 +516,7 @@ def _back_while_copying(
 
 def test_a_shot_back_while_still_copying_takes_its_gone_row_again(conn, tmp_path, monkeypatch):
     """Sessione ricopiata: alla prima scansione la copia e' in corso, alla seconda e' letta.
-    La posa riprende la sua riga sparita: una riga sola, non una sparita e una presente."""
+    Il frame riprende la sua riga sparita: una riga sola, non una sparita e una presente."""
     nas = tmp_path / "nas"
     path = nina_light(nas / "M31" / "L.fits", 1)
     root = add_root(conn, nas, NOW)
@@ -545,7 +545,7 @@ def test_a_shot_back_while_copying_keeps_when_it_arrived(conn, tmp_path, monkeyp
 
 
 def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_path):
-    """Riscritto da un editor sopra l'originale: oggi non e' posa, header vecchio non resta."""
+    """Riscritto da un editor sopra l'originale: oggi non e' frame, header vecchio non resta."""
     nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
@@ -560,7 +560,7 @@ def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_pa
     ("pixels", "extra"), [(2, ()), (1, ("PROGRAM = 'Editor 1.9.3'",))], ids=["pixels", "rewritten"]
 )
 def test_a_frame_no_file_points_to_any_more_is_gone(conn, tmp_path, pixels, extra):
-    """Posa lasciata da ogni file, presente o sparito: non resta come fantasma. Copia e
+    """Frame lasciato da ogni file, presente o sparito: non resta come fantasma. Copia e
     sparito tengono la loro."""
     nina_light(tmp_path / "a.fits", 1)
     nina_light(tmp_path / "copy" / "a.fits", 3)
@@ -648,8 +648,8 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
 
 @pytest.mark.parametrize("reason", [Skip.UNREADABLE, Skip.INCOMPLETE])
 def test_a_locked_file_keeps_its_shot_until_read_again(conn, tmp_path, monkeypatch, reason):
-    """Bloccato (N.I.N.A., antivirus, sync): posa, scheda e header restano, da rileggere.
-    Prima: la posa spariva e tornava con un altro numero."""
+    """Bloccato (N.I.N.A., antivirus, sync): frame, scheda e header restano, da rileggere.
+    Prima: il frame spariva e tornava con un altro numero."""
     path = nina_light(tmp_path / "nas" / "a.fits", 1)
     root = add_root(conn, tmp_path / "nas", NOW)
     scan_root(conn, root, NOW)

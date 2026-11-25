@@ -19,7 +19,7 @@ TOLERANCE = 0.5  # si accetta fino a meta' della velocita' committata: la CI e' 
 
 @pytest.mark.lento
 def test_scan_frames_per_second_does_not_regress(tmp_path):
-    """La migliore di tre letture, ognuna in un database nuovo: la seconda sullo stesso sarebbe
+    """La migliore di tre scansioni, ognuna in un database nuovo: la seconda sullo stesso sarebbe
     incrementale."""
     for i in range(N_FILES):
         write_light(

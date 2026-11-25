@@ -101,7 +101,7 @@ def test_a_designation_that_does_not_exist_is_not_an_error(catalogo):
 
 def test_the_search_by_designation_uses_the_index(catalogo):
     """La chiave normalizzata sta in colonna proprio per questo: `identify` fara' questa
-    ricerca una volta per posa, e su ventiquattromila sigle una scansione intera e' il
+    ricerca una volta per frame, e su ventiquattromila sigle una scansione intera e' il
     doppio del lavoro di tutto il resto messo insieme."""
     piano = "\n".join(
         r[3]
@@ -118,7 +118,7 @@ def test_the_search_by_designation_uses_the_index(catalogo):
 
 
 def test_the_cone_finds_what_is_inside_and_leaves_out_the_rest(catalogo):
-    """E' la domanda su cui `identify` e' costruito: dato il cielo misurato di una posa, cosa
+    """E' la domanda su cui `identify` e' costruito: dato il cielo misurato di un frame, cosa
     c'e' li'. M 110 sta a 39 primi da M 31: dentro un grado, fuori da mezzo."""
     dentro = {v.slug for v in lookup.in_cone(catalogo, 10.6847, 41.269, 1.0)}
     assert dentro == {"m-31", "m-110"}
@@ -164,7 +164,7 @@ def test_a_wide_cone_still_catches_what_sits_on_its_edge(catalogo):
 def test_a_radius_bigger_than_the_sky_is_the_whole_sky(catalogo):
     """Oltre i 180 gradi il coseno ricomincia a salire, e un cono di 500 gradi tornerebbe
     **vuoto** invece che tutto: il limite si mette una volta in cima, prima che il raggio
-    entri sia nella corda sia nel coseno. Chi chiama arriva da una posa e puo' avere un
+    entri sia nella corda sia nel coseno. Chi chiama arriva da un frame e puo' avere un
     numero qualunque."""
     for esagerato in (181.0, 500.0, 3600.0):
         assert len(lookup.in_cone(catalogo, 10.6847, 41.269, esagerato)) == len(VOCI), esagerato
@@ -177,7 +177,7 @@ def test_a_radius_bigger_than_the_sky_is_the_whole_sky(catalogo):
 
 def test_the_cone_uses_the_index_on_the_unit_vector(catalogo):
     """Il versore esiste **per questo**: senza l'indice sui tre assi la ricerca legge tutte e
-    22.080 le voci, e `identify` la fara' una volta per posa. La misura non basta a
+    22.080 le voci, e `identify` la fara' una volta per frame. La misura non basta a
     accorgersene -- sul catalogo vero una scansione intera e' 1,8 ms, ben sotto il tetto del
     test `lento` -- quindi la guardia va messa sul piano della query, non sul cronometro."""
     piano = "\n".join(

@@ -195,7 +195,7 @@ def test_one_file_in_common_is_not_a_move(client_vuoto, tmp_path):
 
 
 def test_a_small_folder_with_a_deleted_file_is_still_recognised(client_vuoto, tmp_path):
-    """Tolta una posa brutta, poi spostato tutto: il file che non c'e' piu' non si chiede."""
+    """Tolto un frame brutto, poi spostato tutto: il file che non c'e' piu' non si chiede."""
     old, new = tmp_path / "H", tmp_path / "I"
     for i in range(3):
         write_light(old / f"a{i}.fits", obj=f"M {i + 1}")

@@ -17,7 +17,7 @@ from group_bench import ROMA, attrezzo, corri, luogo, posa, prepara
 
 @pytest.fixture
 def un_setup(db_path):
-    """Un setup con marca e modello sui pezzi, e uno coi nomi soli."""
+    """Un setup con marca e modello sugli strumenti, e uno coi nomi soli."""
     conn = connect(db_path)
     try:
         prepara(conn)

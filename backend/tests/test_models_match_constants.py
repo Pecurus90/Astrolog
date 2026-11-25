@@ -114,7 +114,7 @@ def test_the_stage_words_and_the_rewrite_marks_are_the_ones_the_schema_allows():
 
 
 def test_the_answers_about_a_camera_are_the_words_the_spine_reads():
-    """Le risposte sulle pose che non dicono il filtro: l'API accetta le stesse parole che
+    """Le risposte sui frame che non dicono il filtro: l'API accetta le stesse parole che
     `normalize` legge -- piu' "a colori", che va sulla scheda della camera --, o una risposta
     arriverebbe e non sposterebbe niente."""
     parole = set(get_args(models_review_groups.GearFilterAnswer))
@@ -285,7 +285,7 @@ def test_the_word_for_the_missing_solver_is_one_word():
     tipo dichiarato, e il primo avvio smetterebbe di aggiungere il suo passo in silenzio."""
     assert solve.NO_SOLVER in get_args(models_site.Missing)
     # E la parola per "ASTAP c'e' ma il suo catalogo no", che vive in tre punti: il motivo di una
-    # posa fallita, cio' che ferma la corsa, e la riga di `missing`. Una sola casa per tutte e tre.
+    # frame fallito, cio' che ferma la corsa, e la riga di `missing`. Una sola casa per tutte e tre.
     assert solve.NO_STAR_DATABASE in get_args(models_site.Missing)
     assert solve.NO_STAR_DATABASE in set(astap.Reason)
     assert solve.ABORTS_THE_RUN == (solve.NO_STAR_DATABASE,)
@@ -293,7 +293,7 @@ def test_the_word_for_the_missing_solver_is_one_word():
 
 def test_the_words_group_uses_are_the_words_the_api_shows():
     """Perche' una notte non nasce l'app lo dice in due punti: nelle impostazioni ("cosa
-    manca") e nel motivo scritto sulla posa che e' rimasta fuori. Devono essere **la stessa
+    manca") e nel motivo scritto sul frame che e' rimasto fuori. Devono essere **la stessa
     parola**: erano due stringhe a mano in due file, e chi ne cambiava una avrebbe lasciato
     l'altra a dire il falso senza che niente diventasse rosso."""
     assert group.GroupReason.NO_ACTIVE_SITE in get_args(models_site.Missing)
@@ -352,7 +352,7 @@ def test_the_sky_bounds_are_the_same_in_the_model_the_units_and_the_schema():
 def test_the_identity_vocabularies_say_what_the_schema_allows():
     """I due vocabolari chiusi di `objects` hanno una casa sola. Sono nati nel CHECK dello
     schema e per una fetta intera nessuno in Python li nominava: chi scriveva avrebbe messo
-    stringhe a mano, e uno scarto si sarebbe visto solo su una posa vera, a valle."""
+    stringhe a mano, e uno scarto si sarebbe visto solo su un frame vero, a valle."""
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
     for colonna, costanti in (
         ("identity_method", identify_decide.IdentityMethod),

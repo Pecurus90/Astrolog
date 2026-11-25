@@ -1,7 +1,7 @@
 /**
  * Il treno ottico: l'esploso in vista isometrica (tavola v82, `treno` 447-548).
  *
- * I numeri attesi sono quelli che la funzione della consegna disegna sugli stessi pezzi (eseguita
+ * I numeri attesi sono quelli che la funzione della consegna disegna sugli stessi strumenti (eseguita
  * fuori dal browser, 14/11/2026): se i nostri divergono, a schermo c'e' un treno diverso.
  */
 import { describe, expect, it } from "vitest"

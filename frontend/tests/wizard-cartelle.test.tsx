@@ -5,7 +5,7 @@
  * Il resto del primo avvio (le altre domande, il timbro, il salta) sta in `wizard.test.tsx`. Qui
  * c'e' quello che riguarda le cartelle: che se ne possano indicare **piu' d'una**, che dove l'app
  * ha una radice dei dati si **scelgano da un elenco** invece di scriverle, e che alla fine la
- * lettura **parta da sola** -- senza che chi ha appena installato sappia che esiste un pulsante.
+ * scansione **parta da sola** -- senza che chi ha appena installato sappia che esiste un pulsante.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -328,7 +328,7 @@ describe("le cartelle del primo avvio", () => {
     expect(screen.getByText("Percorso interno al container, non quello del computer.")).toBeDefined()
   })
 
-  it("alla fine la lettura parte da sola", async () => {
+  it("alla fine la scansione parte da sola", async () => {
     // E' la promessa di questa fetta: chi installa non deve sapere che esiste un pulsante.
     primoAvvio()
     await alTerzoPasso()
@@ -342,7 +342,7 @@ describe("le cartelle del primo avvio", () => {
     )
   })
 
-  it("se la lettura non parte, il primo avvio finisce lo stesso", async () => {
+  it("se la scansione non parte, il primo avvio finisce lo stesso", async () => {
     // Il timbro e' gia' scritto: tenere l'utente dentro il primo avvio perche' una chiamata in
     // piu' e' andata storta vorrebbe dire chiuderlo in una stanza di cui ha gia' la chiave. La
     // scansione, semmai, si chiede col pulsante in barra.

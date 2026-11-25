@@ -3,7 +3,7 @@ archivio fatto a mano: notti e ottica e camera dei frame di un gruppo, in una qu
 
 * Un gruppo coi soli setup e senza notte, o con la notte e senza setup, ha la sua riga lo
   stesso: le due liste sono indipendenti.
-* A pari frame i setup vanno per nome dell'ottica, poi della camera; il pezzo che manca va
+* A pari frame i setup vanno per nome dell'ottica, poi della camera; lo strumento che manca va
   prima di ogni nome, e l'ordine non dipende da quello delle notti.
 """
 

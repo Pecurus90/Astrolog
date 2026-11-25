@@ -1,6 +1,6 @@
 """Le voci dell'Archivio scritte da chi scrive (ADR 0048, passo 6.19): con nient'altro scelto la
 pagina legge `archive_options`, purche' fresca; una scrittura su un suo ingresso la fa contare di
-nuovo dalle pose, finche' il giro dopo non la riscrive. Le conte sono le stesse nei due casi."""
+nuovo dai frame, finche' il giro dopo non la riscrive. Le conte sono le stesse nei due casi."""
 
 from dataclasses import replace
 
@@ -84,9 +84,9 @@ def _nuova_notte(conn, pezzi):
 
 
 SCRITTURE = {
-    "una posa nuova": _nuova_notte,
-    "una posa tolta": lambda c, p: c.execute("DELETE FROM frames WHERE object_id = ?", (p["ngc"],)),
-    "una posa su un altro oggetto": lambda c, p: c.execute(
+    "un frame nuovo": _nuova_notte,
+    "un frame tolto": lambda c, p: c.execute("DELETE FROM frames WHERE object_id = ?", (p["ngc"],)),
+    "un frame su un altro oggetto": lambda c, p: c.execute(
         "UPDATE frames SET object_id = ? WHERE object_id = ?", (p["m31"], p["ngc"])
     ),
     "un mosaico": con_mosaico,

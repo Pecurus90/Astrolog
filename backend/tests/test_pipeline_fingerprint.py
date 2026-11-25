@@ -1,4 +1,4 @@
-"""Impronta della posa: dall'header (camera, inizio, dimensioni, posa), pixel solo come ripiego.
+"""Impronta del frame: dall'header (camera, inizio, dimensioni, posa), pixel solo come ripiego.
 Una sola apertura per file, niente astropy; ripiego uguale alla vecchia."""
 
 import builtins
@@ -113,7 +113,7 @@ def test_no_file_needs_astropy_and_each_is_opened_once(tmp_path, monkeypatch):
 
 
 def test_a_plain_file_and_its_fpack_copy_are_one_frame(tmp_path):
-    """Stessa posa, compressa con fpack: le risposte legate alla posa restano."""
+    """Stesso frame, compresso con fpack: le risposte legate al frame restano."""
     data = (np.arange(64 * 48) % 4093).astype(np.uint16).reshape(48, 64)
     plain = _image(tmp_path / "a.fits", (48, 64), np.uint16, keys=_SHOT, data=data)
     packed = _compressed(tmp_path / "a.fits.fz", keys=_SHOT, data=data)
@@ -144,14 +144,14 @@ def test_the_same_shot_written_two_ways_is_one_frame(tmp_path, first, second):
     ],
 )
 def test_another_shot_is_another_frame_even_with_the_same_pixels(tmp_path, other):
-    """Cappuccio chiuso o centro saturo: pixel uguali, posa diversa."""
+    """Cappuccio chiuso o centro saturo: pixel uguali, frame diverso."""
     a = _image(tmp_path / "a.fits", (3, 4), np.int16, keys=_SHOT)
     b = _image(tmp_path / "b.fits", (3, 4), np.int16, keys={**_SHOT, **other})
     assert _fingerprint(a) != _fingerprint(b)
 
 
 def test_shots_in_the_same_whole_second_are_told_apart_by_their_pixels(tmp_path):
-    """Inizio senza frazione: bias e flat brevi cadono nello stesso secondo. Prima: una posa."""
+    """Inizio senza frazione: bias e flat brevi cadono nello stesso secondo. Prima: un frame."""
     keys = {**_SHOT, "DATE-OBS": "2025-06-29T21:11:33", "EXPTIME": 0.001}
     a = _image(tmp_path / "a.fits", (3, 4), np.int16, keys=keys)
     b = _image(tmp_path / "b.fits", (3, 4), np.int16, keys=keys, data=np.zeros((3, 4), np.int16))
@@ -204,7 +204,7 @@ def test_each_bitpix_has_its_bytes_per_pixel(bitpix, width):
 @pytest.mark.parametrize("missing", ["INSTRUME", "EXPTIME", "NAXIS1"])
 def test_a_shot_missing_one_part_falls_back_to_its_pixels(missing):
     """Senza camera, durata o larghezza l'inizio non basta: stesso inizio, pixel diversi, due
-    pose."""
+    frame."""
     shot = {**_SHOT, "BITPIX": 16, "NAXIS": 2, "NAXIS1": BLOCK // 2, "NAXIS2": 1}
     header = Header({k: v for k, v in shot.items() if k != missing}, 0, BLOCK)
     one = frame_identity(header, BLOCK, io.BytesIO(b"\1" * BLOCK))

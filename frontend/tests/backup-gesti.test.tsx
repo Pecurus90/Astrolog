@@ -190,7 +190,7 @@ describe("il backup nelle Impostazioni", () => {
     expect(screen.queryByText("Ripristino non riuscito")).toBeNull()
   })
 
-  it("un file senza cartelle entra senza chiedere una lettura (collaudo 18/11)", async () => {
+  it("un file senza cartelle entra senza chiedere una scansione (collaudo 18/11)", async () => {
     const { container } = await impostazioniBackup({
       "POST /api/v1/backup/import": { stato: 200, corpo: {} },
       "POST /api/v1/scan": { stato: 409, corpo: { detail: { code: "no_folders" } } },

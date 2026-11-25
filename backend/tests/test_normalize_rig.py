@@ -1,4 +1,4 @@
-"""L'attrezzatura che `normalize` ricava dall'header: i pezzi, e il setup che ne esce.
+"""L'attrezzatura che `normalize` ricava dall'header: gli strumenti, e il setup che ne esce.
 
 E' la meta' dell'attrezzatura delle prove di `normalize` -- i filtri, le regole imparate, la
 copia calibrata e lo stadio come stadio stanno in `test_normalize.py`. Una regola, un test che
@@ -54,7 +54,7 @@ def test_the_pieces_a_frame_names_come_from_the_header_too(conn, archive):
     """**Non solo ottica e camera.** N.I.N.A. scrive la ruota portafiltri (`FWHEEL`) e il
     focheggiatore (`FOCNAME`), l'ASIAIR la camera di guida (`GUIDECAM`) -- e' negli header veri che
     teniamo in `tests/header/`. Prima l'app li ignorava, e chi li possedeva doveva scriverli a
-    mano. Nascono **rilevati**, come ogni pezzo che viene dai file."""
+    mano. Nascono **rilevati**, come ogni strumento che viene dai file."""
     trovati = {
         r["kind"]: r["name"]
         for r in rows(
@@ -73,8 +73,8 @@ def test_the_pieces_a_frame_names_come_from_the_header_too(conn, archive):
 
 
 def test_every_frame_says_which_of_them_it_used(conn, archive):
-    """E' la differenza con la montatura: questi i file li legano alla **singola posa**, quindi le
-    loro ore si sanno. Una posa di N.I.N.A. porta ruota e focheggiatore, una dell'ASIAIR la camera
+    """E' la differenza con la montatura: questi i file li legano al **singolo frame**, quindi le
+    loro ore si sanno. Un frame di N.I.N.A. porta ruota e focheggiatore, uno dell'ASIAIR la camera
     di guida -- e nessuna delle due porta quello che il suo programma non scrive."""
     nina = frame_by_file(conn, "L_001.fits")
     asiair = frame_by_file(conn, "Light_001.fits")
@@ -87,7 +87,7 @@ def test_every_frame_says_which_of_them_it_used(conn, archive):
 
 
 def test_changing_one_of_them_does_not_make_a_second_rig(conn, archive):
-    """**Non entrano nell'impronta del setup.** Due pose con la stessa ottica, la stessa camera e
+    """**Non entrano nell'impronta del setup.** Due frame con la stessa ottica, la stessa camera e
     la stessa focale ma due ruote diverse sono **un** setup, non due: infilare la ruota
     nell'impronta spezzerebbe in due l'archivio di chi ne cambia una, senza che abbia cambiato
     telescopio. E' la decisione centrale della fetta, e prima viveva solo in un commento."""
@@ -103,13 +103,13 @@ def test_changing_one_of_them_does_not_make_a_second_rig(conn, archive):
     from astrolog.spine import normalize
     from astrolog.spine.stages import invalidate
 
-    invalidate(conn, [altro["id"]], "normalize")  # la posa torna in coda, come dopo una risposta
+    invalidate(conn, [altro["id"]], "normalize")  # il frame torna in coda, come dopo una risposta
     conn.commit()
     esito = list(normalize.normalize_frames(conn))[-1]  # e' un generatore: va consumato
     assert esito["errors"] == 0, esito
 
     dopo = frame_by_file(conn, "R_001.fits")
-    # la ruota nuova e' nata -- cioe' quella posa e' stata davvero rinormalizzata...
+    # la ruota nuova e' nata -- cioe' quel frame e' stato davvero rinormalizzato...
     assert one(conn, "SELECT COUNT(*) FROM instruments WHERE name = 'Un altra ruota'") == 1
     assert dopo["filter_wheel_id"] != uno["filter_wheel_id"]
     # ...e il setup e' rimasto lo stesso, che e' la regola
@@ -153,8 +153,8 @@ def test_normalize_links_every_frame_to_its_rig(conn, archive):
 
 
 def test_the_mount_asiair_writes_in_telescop_is_not_an_optics(conn, archive):
-    """**La regola.** Quando il file lo ha scritto l'ASIAIR, `TELESCOP` porta la MONTATURA: il
-    pezzo nasce montatura e non ottica, e il setup di quelle pose resta **senza ottica**
+    """**La regola.** Quando il file lo ha scritto l'ASIAIR, `TELESCOP` porta la MONTATURA: lo
+    strumento nasce montatura e non ottica, e il setup di quei frame resta **senza ottica**
     finche' l'utente non dice quale fosse.
 
     Il criterio e' il **software**, non il nome. Il banco porta due montature diverse dallo
@@ -168,7 +168,7 @@ def test_the_mount_asiair_writes_in_telescop_is_not_an_optics(conn, archive):
     ottiche = {r["name"] for r in rows(conn, "SELECT name FROM instruments WHERE kind='optics'")}
     assert ottiche == {"Askar 103Apo", "RC8", "TS 130 APO"}
 
-    # Le pose ASIAIR stanno in UN setup solo: due nomi di montatura non fanno due setup, ed
+    # I frame ASIAIR stanno in UN setup solo: due nomi di montatura non fanno due setup, ed
     # e' il danno che questa regola toglie.
     setups = rows(
         conn,
@@ -204,8 +204,8 @@ def _portati(conn, colonna, rig):
 
 @pytest.mark.parametrize("genere", ["reducer", "guide_scope"])
 def test_a_part_the_files_never_name_is_carried_once_you_choose_it(conn, archive, genere):
-    """Riduttore e ottica di guida nessun programma li scrive: scelti sul setup, stanno su tutte
-    le sue pose, e tolta la scelta le pose tornano senza."""
+    """Riduttore e ottica di guida nessun programma li scrive: scelti sul setup, stanno su tutti
+    i suoi frame, e tolta la scelta i frame tornano senza."""
     rig = _setup_di(conn, "L_001.fits")
     pezzo = _nuovo(conn, genere, "Scelto da me")
     assert setups.declare_part(conn, rig, genere, pezzo)
@@ -219,7 +219,7 @@ def test_a_part_the_files_never_name_is_carried_once_you_choose_it(conn, archive
 
 def test_a_wheel_you_choose_fills_only_the_frames_whose_file_is_silent(conn, archive):
     """Cio' che il file nomina resta (si rinomina, non si sostituisce): la ruota scelta sul setup
-    vale solo sulle pose che non ne nominano una. La montatura ha la regola opposta, qui sopra."""
+    vale solo sui frame che non ne nominano una. La montatura ha la regola opposta, qui sopra."""
     nominate = {
         r["id"]: (r["rig_id"], r["filter_wheel_id"])
         for r in rows(
@@ -228,7 +228,7 @@ def test_a_wheel_you_choose_fills_only_the_frames_whose_file_is_silent(conn, arc
             " WHERE filter_wheel_id IS NOT NULL AND rig_id IS NOT NULL",
         )
     }
-    assert nominate, "l'archivio di prova deve avere pose che nominano la ruota"
+    assert nominate, "l'archivio di prova deve avere frame che nominano la ruota"
     muto = _setup_di(conn, "Light_001.fits")
     assert _portati(conn, "filter_wheel_id", muto) == {None}
     mia = _nuovo(conn, "filter_wheel", "Ruota manuale")
@@ -263,8 +263,8 @@ def test_a_part_must_be_a_piece_of_its_kind(conn, archive):
 
 
 def test_the_mount_the_files_name_is_carried_by_every_frame(conn, archive):
-    """Dove il programma la scrive, la montatura sta **sulla posa**, come la ruota: le due pose
-    ASIAIR dello stesso setup ne nominano due diverse, e ognuna tiene la sua. Una posa di un
+    """Dove il programma la scrive, la montatura sta **sul frame**, come la ruota: i due frame
+    ASIAIR dello stesso setup ne nominano due diverse, e ognuna tiene la sua. Un frame di un
     programma che non la scrive non ne ha nessuna, invece di una indovinata."""
     assert frame_by_file(conn, "Light_001.fits")["mount_id"] == _montatura(conn, "EQMod Mount")
     assert frame_by_file(conn, "Light_002.fits")["mount_id"] == _montatura(conn, "ZWO AM3")
@@ -272,7 +272,7 @@ def test_the_mount_the_files_name_is_carried_by_every_frame(conn, archive):
 
 
 def test_a_mount_declared_on_a_rig_is_carried_by_all_its_frames(conn, archive):
-    """Dove i file tacciono la dici tu, sul setup: vale per tutte le sue pose, dopo che la spina
+    """Dove i file tacciono la dici tu, sul setup: vale per tutti i suoi frame, dopo che la spina
     le ha rilavorate."""
     rig = _setup_di(conn, "L_001.fits")
     am3 = _montatura(conn, "ZWO AM3")
@@ -307,7 +307,7 @@ def test_only_a_mount_can_be_the_mount_of_a_rig(conn, archive):
 
 
 def test_a_mount_renamed_or_merged_stays_the_mount_of_its_rigs(conn, archive):
-    """La tua parola porta il **nome** della montatura, che sopravvive a una nuova lettura: se la
+    """La tua parola porta il **nome** della montatura, che sopravvive a una nuova scansione: se la
     rinomini o la unisci a un'altra, il setup la segue invece di restare senza."""
     rig = _setup_di(conn, "L_001.fits")
     _monta(conn, rig, _montatura(conn, "ZWO AM3"))
@@ -322,8 +322,8 @@ def test_a_mount_renamed_or_merged_stays_the_mount_of_its_rigs(conn, archive):
 
 
 def test_a_new_mount_the_files_name_is_born_even_on_a_rig_you_gave_one(conn, archive):
-    """La tua parola sceglie cosa va sulla posa, non cancella un pezzo: una montatura nuova scritta
-    dall'ASIAIR nasce in Attrezzatura anche se a quel setup ne hai data un'altra."""
+    """La tua parola sceglie cosa va sul frame, non cancella uno strumento: una montatura nuova
+    scritta dall'ASIAIR nasce in Attrezzatura anche se a quel setup ne hai data un'altra."""
     rig = _setup_di(conn, "Light_001.fits")
     _monta(conn, rig, _montatura(conn, "ZWO AM3"))
     conn.execute("UPDATE frames SET telescope_raw = 'ZWO AM5' WHERE rig_id = ?", (rig,))
@@ -415,7 +415,7 @@ def _spacer(conn, nome):
 
 def test_the_same_mount_again_sends_nothing_back_to_be_read(conn, archive):
     """Ridare la montatura che il setup ha gia', o toglierne una che non c'e', non cambia niente:
-    nessuna posa torna in coda, e il giro non riparte per niente."""
+    nessun frame torna in coda, e il giro non riparte per niente."""
     rig = _setup_di(conn, "L_001.fits")
     am3 = _montatura(conn, "ZWO AM3")
     assert _monta(conn, rig, am3)
@@ -426,8 +426,8 @@ def test_the_same_mount_again_sends_nothing_back_to_be_read(conn, archive):
 
 
 def test_a_frame_that_reaches_the_mount_two_ways_counts_once(conn, archive):
-    """Data sul setup la stessa montatura che il file nomina, la posa ci arriva per due strade:
-    le ore della montatura restano quelle delle sue pose, una volta ciascuna."""
+    """Data sul setup la stessa montatura che il file nomina, il frame ci arriva per due strade:
+    le ore della montatura restano quelle dei suoi frame, una volta ciascuna."""
     from astrolog.spine import gear_usage
 
     rig = _setup_di(conn, "Light_001.fits")

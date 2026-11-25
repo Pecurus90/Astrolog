@@ -35,7 +35,7 @@ function vaiAlPasso(n: number) {
 }
 
 describe("il posto da cui osservi", () => {
-  it("il secondo passo cerca il posto per nome e ne fa il luogo di casa", async () => {
+  it("il secondo passo cerca il posto per nome e ne fa il sito predefinito", async () => {
     senzaTimbro({
       "/api/v1/places": {
         stato: 200,
@@ -60,8 +60,8 @@ describe("il posto da cui osservi", () => {
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
     await waitFor(() => {
       const scritta = scritture().find((s) => s.url.includes("/api/v1/sites"))
-      // `is_default` vero: e' il luogo di casa che decide il fuso delle notti, e al primo avvio
-      // un luogo che non e' di nessuno non farebbe nascere niente.
+      // `is_default` vero: e' il sito predefinito che decide il fuso delle notti, e al primo avvio
+      // un sito che non e' di nessuno non farebbe nascere niente.
       expect(scritta?.corpo).toMatchObject({
         name: "Verona",
         latitude: 45.44,
@@ -75,7 +75,7 @@ describe("il posto da cui osservi", () => {
     // **Decisione del backend, gia' presa e gia' provata**
     // (`backend/tests/test_sites.py`, `test_searching_without_network_gives_an_empty_list_not_an_error`):
     // senza rete `GET /places` risponde **200 con elenco vuoto**, mai un errore, perche' un
-    // servizio muto non deve diventare un guasto in faccia a chi sta creando un luogo.
+    // servizio muto non deve diventare un guasto in faccia a chi sta creando un sito.
     //
     // Quindi "non ho trovato" e "non ho potuto cercare" arrivano qui **identici**, e una frase
     // "senza rete" sarebbe irraggiungibile: un testo che nessun utente vedra' mai, che pero'
@@ -97,9 +97,9 @@ describe("il posto da cui osservi", () => {
     expect(screen.getByLabelText(/latitudine/i)).toBeDefined()
     expect(screen.getByLabelText(/longitudine/i)).toBeDefined()
   })
-  it("un luogo che non si salva non fa finta di essersi salvato", async () => {
+  it("un sito che non si salva non fa finta di essersi salvato", async () => {
     // Il difetto peggiore trovato su questa fetta: la scrittura falliva e il passo avanzava lo
-    // stesso. Chi osserva si ritrova senza luogo di casa -- e senza luogo le notti non nascono,
+    // stesso. Chi osserva si ritrova senza sito predefinito -- e senza sito le notti non nascono,
     // che era l'unica cosa che questa fetta doveva ottenere.
     senzaTimbro({
       "/api/v1/places": {
@@ -163,12 +163,12 @@ describe("il posto da cui osservi", () => {
     await screen.findByLabelText(/nome del sito/i)
     expect(screen.queryByText("Sito non salvato")).toBeNull()
   })
-  it("chi non ha rete deve poter dare un nome al suo luogo", async () => {
+  it("chi non ha rete deve poter dare un nome al suo sito", async () => {
     // Il difetto piu' grave della fetta: il nome veniva preso dalla casella di RICERCA, quindi
     // chi prende la strada manuale -- coordinate a mano, senza cercare, che e' esattamente il
     // caso per cui quella strada esiste -- mandava nome vuoto. Il modello pretende almeno un
-    // carattere (`backend/astrolog/api/models_site.py`), quindi 422, e a schermo solo "il luogo
-    // non si e' salvato". Chi osserva da un posto senza rete non poteva creare il suo luogo.
+    // carattere (`backend/astrolog/api/models_site.py`), quindi 422, e a schermo solo "il sito
+    // non si e' salvato". Chi osserva da un posto senza rete non poteva creare il suo sito.
     senzaTimbro({ "/api/v1/sites": { stato: 201, corpo: { id: 1, name: "Casa" } } })
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
@@ -314,8 +314,8 @@ describe("il posto da cui osservi", () => {
     expect(await screen.findByText("Ricerca non riuscita")).toBeDefined()
     expect(screen.queryByText(/nessun risultato/i)).toBeNull()
   })
-  it("senza coordinate non nasce nessun luogo", async () => {
-    // `Number("")` fa **zero**, e zero-zero e' un punto nel Golfo di Guinea: un luogo di casa
+  it("senza coordinate non nasce nessun sito", async () => {
+    // `Number("")` fa **zero**, e zero-zero e' un punto nel Golfo di Guinea: un sito predefinito
     // li' deciderebbe il fuso di tutte le notti. Un campo vuoto non e' una coordinata.
     senzaTimbro({ "/api/v1/sites": { stato: 201, corpo: { id: 1, name: "x" } } })
     await disegna()

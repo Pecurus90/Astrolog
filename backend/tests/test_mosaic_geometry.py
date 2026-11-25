@@ -183,7 +183,7 @@ def test_without_the_rotation_it_answers_on_the_circle_instead_of_giving_up():
     """Lo schema dichiara che la rotazione puo' mancare a soluzione buona. Li' si sa quanto e'
     grande il campo ma non come era orientato: si usa il cerchio circoscritto, come fa gia'
     `identify_geometry`, invece di perdere il pannello. Sbagliare per eccesso costa una proposta
-    rifiutata con un clic; escludere la posa costa un pannello perso in silenzio."""
+    rifiutata con un clic; escludere il frame costa un pannello perso in silenzio."""
     senza = dict(ACCANTO, rotation_deg=None)
     assert geom.overlap(PRIMO, senza) == "partial"
 
@@ -203,7 +203,7 @@ def test_a_field_without_sides_is_never_declared_far_away():
 
 
 def test_without_the_sky_there_is_no_answer():
-    """Una posa che il solver non ha risolto non si confronta con niente: `None`, che non e' ne'
+    """Un frame che il solver non ha risolto non si confronta con niente: `None`, che non e' ne'
     "si sovrappongono" ne' "sono lontani". Chi chiama deve poterlo distinguere."""
     assert geom.overlap(PRIMO, campo(None, None)) is None
     assert geom.overlap(campo(None, None), PRIMO) is None
@@ -212,7 +212,7 @@ def test_without_the_sky_there_is_no_answer():
 # --- lo stesso puntamento, o due -----------------------------------------------------------
 #
 # Il confronto fra rettangoli da solo NON basta a dire "e' la stessa inquadratura rifatta": due
-# pose dithered sono due rettangoli uguali appena sfalsati, cioe' `partial`, esattamente come due
+# frame dithered sono due rettangoli uguali appena sfalsati, cioe' `partial`, esattamente come due
 # pannelli. Serve la vicinanza dei centri, e la misura e' **relativa al campo**.
 
 DITHERATA = campo(79.127880, 34.356167)  # 0,0042 gradi dal primo: l'1,16% della mezza diagonale
@@ -220,7 +220,7 @@ ACCANTO_UN_PANNELLO = campo(79.728493, 34.356167)  # 0,5000 gradi: il 138,7%
 
 
 def test_dithering_does_not_open_a_second_pointing():
-    """Il dithering sposta la posa di pochi secondi d'arco per battere i difetti del sensore: e'
+    """Il dithering sposta il frame di pochi secondi d'arco per battere i difetti del sensore: e'
     la stessa inquadratura, e spezzarla in due pannelli inventerebbe un mosaico dal nulla.
 
     La documentazione di N.I.N.A. consiglia di spostarsi *"di circa 10 pixel della camera di
@@ -271,7 +271,7 @@ def test_without_the_field_size_two_poses_are_not_declared_the_same_pointing():
 
 
 def test_the_other_side_of_the_sky_is_never_the_same_pointing():
-    """Due pose negli emisferi opposti non hanno nemmeno un piano tangente in comune: la
+    """Due frame negli emisferi opposti non hanno nemmeno un piano tangente in comune: la
     proiezione non ci arriva e non torna nessuno scarto da misurare. Li' la risposta e' **no**, e
     non "non lo so": lasciare la coppia in sospeso la manderebbe a chiedere all'utente se mezzo
     cielo di distanza sia la stessa inquadratura.
@@ -284,6 +284,6 @@ def test_the_other_side_of_the_sky_is_never_the_same_pointing():
 
 def test_the_answer_does_not_depend_on_the_order():
     """La relazione fra due campi e' simmetrica: chiedere "A con B" o "B con A" da' la stessa
-    risposta. Senza, il risultato dipenderebbe da come la corsa scorre le pose."""
+    risposta. Senza, il risultato dipenderebbe da come la corsa scorre i frame."""
     for altro in (ACCANTO, APPENA_FUORI, LONTANO, campo(*IC405, width=0.3, height=0.2)):
         assert geom.overlap(PRIMO, altro) == geom.overlap(altro, PRIMO), altro

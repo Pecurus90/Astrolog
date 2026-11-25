@@ -31,9 +31,9 @@ export function percheNo(rifiuto: Rifiuto, pagina: Pagina): string {
 }
 
 /**
- * **Elimina** in fondo al modulo di un pezzo (tavola v82, `elimina`; contratto: solo un pezzo senza
+ * **Elimina** in fondo al modulo di uno strumento (tavola v82, `elimina`; contratto: solo uno strumento senza
  * frame). Spento col perche' quando l'API dice che resta; la conferma nella stessa carta, con i
- * setup da cui esce. Un rifiuto arrivato al gesto (un pezzo non ancora contato) si scrive uguale.
+ * setup da cui esce. Un rifiuto arrivato al gesto (uno strumento non ancora contato) si scrive uguale.
  */
 export function EliminaDelModulo({
   nome,

@@ -128,7 +128,7 @@ def test_an_unplugged_linked_disk_makes_nothing_gone(conn, tmp_path):
 
 @pytest.mark.skipif(sys.platform != "win32", reason="hidden attribute: Windows")
 def test_a_folder_made_hidden_after_a_scan_is_not_judged(conn, tmp_path):
-    """Nascosta dall'utente (attributo): non letta, le sue pose restano com'erano."""
+    """Nascosta dall'utente (attributo): non letta, i suoi frame restano com'erano."""
     import ctypes
 
     assert sys.platform == "win32"  # pyright on Linux and Mac: windll exists only here
@@ -145,7 +145,7 @@ def test_a_folder_made_hidden_after_a_scan_is_not_judged(conn, tmp_path):
 
 
 def test_a_file_moved_to_the_bin_is_gone(conn, tmp_path):
-    """Cestino: la posa cancellata dall'utente sparisce, anche se il cestino sta nella radice."""
+    """Cestino: il frame cancellato dall'utente sparisce, anche se il cestino sta nella radice."""
     nas = tmp_path / "nas"
     a = _file(nas / "notte" / "a.fits")
     root = add_root(conn, nas, NOW)
@@ -262,7 +262,7 @@ def _other_volume(conn, root):
 
 
 def test_another_disk_under_the_same_letter_is_judged_and_said(conn, tmp_path):
-    """Si giudica sempre (pose sparite, tornano col disco giusto) e la ricevuta lo dice.
+    """Si giudica sempre (frame spariti, tornano col disco giusto) e la ricevuta lo dice.
     Prima: radice muta, che restava muta per sempre se l'archivio era davvero cambiato."""
     nas = tmp_path / "nas"
     a = _file(nas / "night" / "a.fits")
@@ -345,7 +345,8 @@ def test_folders_without_a_folder_id_are_never_one_root(conn, tmp_path, monkeypa
 
 
 def test_the_right_disk_back_brings_its_frames_back(conn, tmp_path):
-    """Altro disco: pose sparite; disco giusto di nuovo: stesse pose, stesso frame (le risposte)."""
+    """Altro disco: frame spariti; disco giusto di nuovo: stessi file, stesso frame (le
+    risposte)."""
     nas = tmp_path / "nas"
     shot = nina_light(nas / "night" / "a.fits", 1).read_bytes()
     root = add_root(conn, nas, NOW)
@@ -362,7 +363,7 @@ def test_the_right_disk_back_brings_its_frames_back(conn, tmp_path):
 
 
 def test_the_archive_copied_to_a_new_disk_is_judged(conn, tmp_path):
-    """Stesso archivio su un disco nuovo: le pose ci sono, si giudica come sempre."""
+    """Stesso archivio su un disco nuovo: i frame ci sono, si giudica come sempre."""
     nas = tmp_path / "nas"
     _file(nas / "a.fits")
     b = _file(nas / "b.fits")
@@ -375,7 +376,7 @@ def test_the_archive_copied_to_a_new_disk_is_judged(conn, tmp_path):
 
 
 def test_a_root_with_no_frames_on_a_new_volume_takes_its_new_frames(conn, tmp_path):
-    """Aggiunta vuota, poi il volume cambia: nessuna posa da proteggere, si legge."""
+    """Aggiunta vuota, poi il volume cambia: nessun frame da proteggere, si legge."""
     nas = tmp_path / "nas"
     nas.mkdir()
     root = add_root(conn, nas, NOW)

@@ -23,7 +23,7 @@ def test_without_a_zone_there_is_no_relative_day():
 
 
 def test_how_long_a_run_took_is_a_number_the_screen_can_show():
-    """Quanto e' durata una lettura: i due istanti li ha il database, la **differenza** no -- e
+    """Quanto e' durata una scansione: i due istanti li ha il database, la **differenza** no -- e
     calcolarla a schermo andrebbe contro la regola che il backend manda cio' che lo schermo
     mostra. Sta qui perche' e' aritmetica sul tempo, nella grafia del DB.
 
@@ -35,7 +35,7 @@ def test_how_long_a_run_took_is_a_number_the_screen_can_show():
 
 def test_a_run_still_going_has_no_duration_yet():
     """Una corsa aperta non ha un `ended_at`, e la sua durata non e' **zero**: e' "non ancora".
-    Uno zero a schermo direbbe che la lettura e' finita in un istante."""
+    Uno zero a schermo direbbe che la scansione e' finita in un istante."""
     assert elapsed_s("2026-09-20T21:00:00.000Z", None) is None
 
 
@@ -105,7 +105,7 @@ def test_a_night_without_a_usable_timezone_has_no_midnight():
 
 
 def test_a_date_at_the_edge_of_the_calendar_is_no_night_not_a_crash():
-    """Un header scritto male (`DATE-OBS = 9999-12-31`) non ferma la lettura dell'archivio: il
+    """Un header scritto male (`DATE-OBS = 9999-12-31`) non ferma la scansione dell'archivio: il
     fuso lo porterebbe oltre l'anno 9999, e la notte prima dell'anno 1 non esiste."""
     assert night_date("9999-12-31T23:30:00", "Pacific/Kiritimati") is None
     assert night_date("0001-01-01T05:00:00", "Europe/Rome") is None

@@ -2,7 +2,7 @@
  * Il treno ottico di un setup (tavola v82, `treno` 447-548): esploso in vista isometrica, a linee,
  * in millimetri, le linee nascoste coperte dal fondo. Schema non in scala.
  *
- * Non e' derivazione di dati: quali pezzi porta il setup lo dice il backend (`pieces`);
+ * Non e' derivazione di dati: quali strumenti porta il setup lo dice il backend (`pieces`);
  * qui i loro numeri diventano tracciati SVG, come in `disegnoDellaLuna.ts`.
  */
 
@@ -17,7 +17,7 @@ export type Ruolo =
   | "guide_scope"
   | "guide_camera"
 
-/** Un pezzo del treno con i campi della scheda che il disegno legge; `null` se non scritti. */
+/** Uno strumento del treno con i campi della scheda che il disegno legge; `null` se non scritti. */
 export interface Pezzo {
   id: number
   nome: string
@@ -59,7 +59,7 @@ export interface Etichetta {
   pezzo: Pezzo
   numero: number
   su: boolean
-  /** Centro del pezzo, dove parte il filo; `x` dove sta la pillola, spinta di lato. */
+  /** Centro dello strumento, dove parte il filo; `x` dove sta la pillola, spinta di lato. */
   cx: number
   x: number
   larghezza: number
@@ -198,7 +198,7 @@ class Quaderno {
   }
 }
 
-/** I pezzi nell'ordine dei numeri (tavola `pezziTreno`, 446). */
+/** Gli strumenti nell'ordine dei numeri (tavola `pezziTreno`, 446). */
 export function pezziDelTreno(T: Treno): Pezzo[] {
   return [T.ott, T.foc, T.rid, T.oag, ...T.dist, T.ruota, T.cam, T.gs, T.camG].filter(
     (p): p is Pezzo => p !== undefined,

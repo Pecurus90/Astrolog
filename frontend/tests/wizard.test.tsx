@@ -440,7 +440,7 @@ describe("il primo avvio", () => {
   })
 
   it("la riga sulle notti sta dove e vera, non su ogni passo", async () => {
-    // Visto a schermo collaudando il 14/9/2026: al terzo passo il luogo e' appena stato
+    // Visto a schermo collaudando il 14/9/2026: al terzo passo il sito e' appena stato
     // dichiarato, e ripetere li' "senza un luogo le notti non nascono" dice il falso proprio a
     // chi ha appena fatto la cosa giusta. Una frase vale dove e' vera.
     conTimbro(false)

@@ -51,7 +51,7 @@ def test_a_commit_that_is_refused_leaves_nothing(conn):
 
 
 def test_a_scan_receipt_that_breaks_leaves_nothing_open(conn):
-    """La ricevuta di una lettura che si rompe a meta' scrittura non resta aperta: la scrittura
+    """La ricevuta di una scansione che si rompe a meta' scrittura non resta aperta: la scrittura
     successiva della spina finirebbe nella stessa transazione."""
     with pytest.raises(TypeError):
         scan_store.finish_run(conn, 999, "ok", None, dict.fromkeys(COUNTS, 0), {}, [], "now")

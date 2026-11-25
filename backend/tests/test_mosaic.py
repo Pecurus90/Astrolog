@@ -1,6 +1,6 @@
-"""I mosaici scritti: le pose nei loro pannelli, i pannelli nei loro mosaici, una volta sola.
+"""I mosaici scritti: i frame nei loro pannelli, i pannelli nei loro mosaici, una volta sola.
 
-`group` piazza le pose (`spine/mosaic.py`, `place`), Da confermare legge cio' che e' scritto
+`group` piazza i frame (`spine/mosaic.py`, `place`), Da confermare legge cio' che e' scritto
 (`spine/mosaic_proposals.py`), la risposta si scrive e non si ricalcola (Marco, 23/9/2026).
 
 Le coordinate sono vere (IC 405) e gli scarti misurati: 0,0042 gradi e' il dithering dell'esempio
@@ -19,7 +19,7 @@ from astrolog.spine import mosaic
 from astrolog.spine import mosaic_proposals as proposte
 from astrolog.spine import objects as obj
 
-# L'impronta di una posa e' il suo CONTENUTO, e due righe non possono condividerla.
+# L'impronta di un frame e' il suo CONTENUTO, e due righe non possono condividerla.
 _progressivo = itertools.count(1)
 
 A = (79.122833, 34.356167)  # IC 405
@@ -31,7 +31,7 @@ E = (81.545453, 34.356167)  # il quinto: tocca D
 LONTANO = (82.756794, 34.356167)  # 3,0021 gradi: un'altra regione
 ACCANTO_A_LONTANO = (83.362794, 34.356167)  # 0,5003 gradi da LONTANO: un secondo mosaico
 NOTTE, ALTRA_NOTTE = "2024-05-17T22:00:00Z", "2024-05-18T22:00:00Z"
-TEMPO = 120.0  # il tempo di una posa del banco, in secondi; `tempo=None` e' la posa che non lo dice
+TEMPO = 120.0  # il tempo di un frame del banco, in s; `tempo=None` e' il frame che non lo dice
 SI = "catalog:ic-405"  # il si' si scrive col suo oggetto: "si', ed e' IC 405"
 
 
@@ -54,7 +54,7 @@ def prepara(conn):
 def posa(
     conn, cielo, *, oggetto=1, setup=1, quando=NOTTE, campo=(0.6, 0.4), copia=None, tempo=TEMPO
 ):
-    """Una posa risolta, gia' identificata e col suo setup, piazzata come la piazza `group`."""
+    """Un frame risolto, gia' identificato e col suo setup, piazzato come la piazza `group`."""
     frame_id = conn.execute(
         "INSERT INTO frames(frame_hash, image_type, date_obs, object_id, rig_id, copy_of,"
         " exposure_s, header_json, created_at) VALUES(?, 'light', ?, ?, ?, ?, ?, '[]', ?)",
@@ -93,13 +93,13 @@ def chiave_di(conn, frame_id):
 
 def test_two_panels_side_by_side_are_a_mosaic(archivio):
     """Il caso per cui tutto questo esiste: due inquadrature affiancate riprese con lo stesso
-    setup sono un mosaico da proporre, con quanti pannelli e quante pose."""
+    setup sono un mosaico da proporre, con quanti pannelli e quanti frame."""
     prepara(archivio)
     prima = posa(archivio, A)
     posa(archivio, B)
     assert chiavi(proposti(archivio)) == [("IC 401", 2, 2)]
     impronta = archivio.execute("SELECT frame_hash FROM frames WHERE id = ?", (prima,)).fetchone()
-    assert proposti(archivio)[0]["key"] == impronta[0], "la chiave e' la posa piu' vecchia"
+    assert proposti(archivio)[0]["key"] == impronta[0], "la chiave e' il frame piu' vecchio"
 
 
 def test_panels_without_the_rotation_still_make_a_mosaic(archivio):
@@ -130,7 +130,7 @@ def test_a_vertical_strip_is_a_mosaic_whatever_field_comes_first(archivio):
 
 def test_a_mosaic_sums_the_hours_of_its_panels(archivio):
     """**La promessa del contratto**: le ore sono la **somma** dei pannelli. I due pannelli hanno
-    un numero di pose diverso apposta: con due pannelli uguali la somma e il doppio del primo si
+    un numero di frame diverso apposta: con due pannelli uguali la somma e il doppio del primo si
     assomiglierebbero troppo per distinguere le due regole."""
     prepara(archivio)
     posa(archivio, A)
@@ -143,7 +143,7 @@ def test_a_mosaic_sums_the_hours_of_its_panels(archivio):
 
 def test_the_two_readers_count_the_same_hours_on_the_same_archive(archivio):
     """Le ore di un mosaico e quelle dei suoi oggetti sono due somme scritte in due posti: questa
-    prova le fa girare sullo stesso archivio. Le pose mute sono **due** e quella da zero secondi
+    prova le fa girare sullo stesso archivio. I frame muti sono **due** e quello da zero secondi
     **una**: con una e una, chi scambiasse le due regole otterrebbe 1 da tutte e due le parti."""
     prepara(archivio)
     posa(archivio, A)
@@ -157,7 +157,7 @@ def test_the_two_readers_count_the_same_hours_on_the_same_archive(archivio):
 
 
 def test_a_panel_pose_that_does_not_say_its_time_is_not_zero_hours(archivio):
-    """Una posa che non dice il tempo non vale zero: si conta a parte."""
+    """Un frame che non dice il tempo non vale zero: si conta a parte."""
     prepara(archivio)
     posa(archivio, A)
     posa(archivio, B, tempo=None)
@@ -190,7 +190,7 @@ def test_a_subject_without_a_name_is_said_with_its_key(archivio):
 
 
 def test_one_framing_shot_many_times_is_not_a_mosaic(archivio):
-    """Il dithering sposta la posa di pochi secondi d'arco: e' la stessa foto rifatta."""
+    """Il dithering sposta il frame di pochi secondi d'arco: e' la stessa foto rifatta."""
     prepara(archivio)
     for cielo in (A, DITHERATA, A, DITHERATA):
         posa(archivio, cielo)
@@ -247,7 +247,7 @@ def test_a_single_panel_is_not_a_mosaic(archivio):
 
 
 def test_a_chain_of_small_steps_does_not_walk_across_the_sky(archivio):
-    """Un pannello si misura sulla posa che l'ha aperto: cinque pose a 0,08 gradi l'una dall'altra
+    """Un pannello si misura sul frame che l'ha aperto: cinque frame a 0,08 gradi l'uno dall'altro
     non camminano fino a inghiottire il pannello accanto."""
     prepara(archivio)
     for passo in range(5):
@@ -269,7 +269,7 @@ def test_a_pose_without_sky_does_not_break_the_others(archivio):
 
 
 def test_a_calibrated_copy_is_not_another_pose(archivio):
-    """La copia calibrata non e' un'altra posa, come in tutto il resto dell'archivio."""
+    """La copia calibrata non e' un altro frame, come in tutto il resto dell'archivio."""
     prepara(archivio)
     grezzo = posa(archivio, A)
     posa(archivio, A, copia=grezzo)
@@ -278,7 +278,7 @@ def test_a_calibrated_copy_is_not_another_pose(archivio):
 
 
 def test_a_mosaic_whose_rig_is_unknown_is_proposed_all_the_same(archivio):
-    """Le pose che non dicono la camera fanno i loro mosaici come le altre."""
+    """I frame che non dicono la camera fanno i loro mosaici come gli altri."""
     prepara(archivio)
     posa(archivio, A, setup=None)
     posa(archivio, B, setup=None)
@@ -289,13 +289,13 @@ def test_a_mosaic_whose_rig_is_unknown_is_proposed_all_the_same(archivio):
 
 
 def test_placing_again_does_not_redo_the_geometry(archivio, monkeypatch):
-    """**La regola di Marco** (23/9/2026): scritto, non si ricalcola. Una posa che ripassa da
+    """**La regola di Marco** (23/9/2026): scritto, non si ricalcola. Un frame che ripassa da
     `group` resta nel suo pannello senza nessun confronto fra campi."""
     prepara(archivio)
     pose = [posa(archivio, A), posa(archivio, B)]
 
     def esplode(*_args):
-        raise AssertionError("la geometria e' ripartita su una posa gia' piazzata")
+        raise AssertionError("la geometria e' ripartita su un frame gia' piazzato")
 
     monkeypatch.setattr(mosaic, "overlap", esplode)
     monkeypatch.setattr(mosaic, "same_pointing", esplode)
@@ -305,7 +305,7 @@ def test_placing_again_does_not_redo_the_geometry(archivio, monkeypatch):
 
 
 def test_a_new_pose_is_compared_only_with_nearby_panels(archivio, monkeypatch):
-    """Una posa nuova non si confronta con l'archivio intero: solo coi pannelli del suo setup
+    """Un frame nuovo non si confronta con l'archivio intero: solo coi pannelli del suo setup
     che potrebbero toccarla. Un pannello a 20 gradi di declinazione non entra nel conto."""
     prepara(archivio)
     posa(archivio, (A[0], A[1] + 20))
@@ -324,7 +324,7 @@ def test_a_new_pose_is_compared_only_with_nearby_panels(archivio, monkeypatch):
 
 def test_the_proposal_is_the_catalog_object_at_the_centre(archivio):
     """Il campo arriva compilato con la voce del catalogo in cui cade il centro del mosaico: qui
-    IC 405, anche se le pose sono identificate come IC 401 -- e' il catalogo a dirlo, non loro."""
+    IC 405, anche se i frame sono identificati come IC 401 -- e' il catalogo a dirlo, non loro."""
     prepara(archivio)
     posa(archivio, A)
     posa(archivio, B)
@@ -422,7 +422,7 @@ def test_an_answer_does_not_silence_another_rig(archivio):
 
 
 def test_a_confirmed_mosaic_is_written_on_its_poses(archivio):
-    """Il si' si scrive sulle pose del mosaico, e su quelle soltanto."""
+    """Il si' si scrive sui frame del mosaico, e su quelli soltanto."""
     prepara(archivio)
     dentro = [posa(archivio, A), posa(archivio, B)]
     fuori = posa(archivio, LONTANO)
@@ -432,8 +432,8 @@ def test_a_confirmed_mosaic_is_written_on_its_poses(archivio):
 
 
 def test_an_object_inside_and_outside_a_mosaic_keeps_its_own_poses(archivio):
-    """Lo stesso oggetto ripreso dentro un mosaico e poi da solo, con un altro setup: solo le
-    pose del mosaico stanno nel mosaico."""
+    """Lo stesso oggetto ripreso dentro un mosaico e poi da solo, con un altro setup: solo i
+    frame del mosaico stanno nel mosaico."""
     prepara(archivio)
     dentro = [posa(archivio, A, oggetto=1), posa(archivio, B, oggetto=2)]
     da_solo = posa(archivio, A, oggetto=1, setup=2)
@@ -443,7 +443,7 @@ def test_an_object_inside_and_outside_a_mosaic_keeps_its_own_poses(archivio):
 
 
 def test_dissolving_a_confirmed_mosaic_frees_its_panels(archivio):
-    """Dal si' al no: le pose tornano ai loro oggetti."""
+    """Dal si' al no: i frame tornano ai loro oggetti."""
     prepara(archivio)
     pose = [posa(archivio, A), posa(archivio, B)]
     rispondi(archivio, SI)

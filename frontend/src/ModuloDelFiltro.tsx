@@ -251,7 +251,7 @@ function gusciDelFiltro(
 /**
  * Il **modulo di un filtro** (tavola v82 `modulo`, k `mod` su un filtro): il disco del suo colore,
  * nome e modello, le bande con la larghezza, misura, montato, per ottiche veloci, spessore;
- * "Unisci a" ed Elimina come per un pezzo.
+ * "Unisci a" ed Elimina come per uno strumento.
  */
 export function ModuloDelFiltro({
   filtro: f,

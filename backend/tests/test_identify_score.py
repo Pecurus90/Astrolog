@@ -129,7 +129,7 @@ def test_brightness_outweighs_containment():
 
 
 def test_the_floor_is_the_solver_error_not_the_goto_one():
-    """`old/` aveva due pavimenti perche' il 94,5% delle sue pose non era risolto e le
+    """`old/` aveva due pavimenti perche' il 94,5% dei suoi frame non era risolto e le
     coordinate venivano dal GoTo. Qui `identify` gira **dopo** il solver: il pavimento e'
     l'errore del solver, e il gradino GoTo non si porta."""
     assert score.SEP_FLOOR_DEG == 0.05
@@ -141,7 +141,7 @@ def test_the_floor_is_the_solver_error_not_the_goto_one():
 def test_a_mosaic_panel_does_not_lose_its_own_subject():
     """Un oggetto piu' grande del pannello ha il centro **fuori** dal pannello. Normalizzando
     sul solo campo prendeva centratura zero, e con essa perdeva tutto il premio di luminosita':
-    il soggetto del mosaico veniva svuotato proprio nelle sue pose."""
+    il soggetto del mosaico veniva svuotato proprio nei suoi frame."""
     magro = score.centering_term(0.55, 0.40, None)
     pieno = score.centering_term(0.55, 0.40, 150.0)
     assert magro == 0.0 and pieno == pytest.approx(0.67, abs=0.02)
@@ -280,7 +280,7 @@ def test_the_same_subject_written_twice_is_not_ambiguous():
 
 
 def test_a_companion_inside_its_host_is_not_a_rival():
-    """M 32 e' una nana **dentro** M 31: nelle pose di M 31 c'e' sempre, e chiedere ogni volta
+    """M 32 e' una nana **dentro** M 31: nei frame di M 31 c'e' sempre, e chiedere ogni volta
     quale delle due sia il soggetto sarebbe rumore. Dista 0,4039 gradi, cioe' quattro millesimi
     oltre la soglia fissa che aveva `old/`: e' il caso che ha fatto sostituire quella soglia col
     raggio, che risponde alla stessa domanda e viene dal catalogo."""
@@ -289,7 +289,7 @@ def test_a_companion_inside_its_host_is_not_a_rival():
 
 
 def test_a_host_bigger_than_its_guest_is_not_a_rival_either():
-    """Il caso di sopra al contrario, e viene da pose vere: 40 pose di NGC 7023 (l'Iris) hanno
+    """Il caso di sopra al contrario, e viene da frame veri: 40 frame di NGC 7023 (l'Iris) hanno
     nel campo LDN 1174, la nube oscura che l'avvolge. E' **il primo a stare dentro il secondo**
     -- 0,1001 gradi fra i centri contro un raggio di 0,3059 -- e guardare solo il raggio del
     primo (0,0833) mandava a conferma tutte e quaranta. La domanda giusta e' "uno contiene

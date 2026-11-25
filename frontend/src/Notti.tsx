@@ -140,7 +140,7 @@ export function Notti() {
     queryKey: ["nights", "latest"],
     enabled: una === null && !storta,
     queryFn: () => chiedi({ limit: IN_STRISCIA }),
-    // come la lista: una notte nata durante la lettura entra anche qui
+    // come la lista: una notte nata durante la scansione entra anche qui
     refetchInterval: (qq) => (qq.state.data?.still_reading ? MENTRE_LEGGE_MS : false),
   })
   const pagine = lista.data?.pages ?? []
@@ -512,7 +512,7 @@ interface RigaDiStato {
   a?: { testo: string; dove: string }
 }
 
-/** Le righe in cima, una per motivo: il sito, le risposte, la data, la lettura. */
+/** Le righe in cima, una per motivo: il sito, le risposte, la data, la scansione. */
 function righeDiStato(p: Elenco): RigaDiStato[] {
   const quanti = (dove: string) => p.waiting.find((w) => w.answer_at === dove)?.frames ?? 0
   const righe: RigaDiStato[] = []

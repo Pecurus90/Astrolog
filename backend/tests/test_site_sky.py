@@ -93,7 +93,7 @@ def _site(conn, name="Casa", lat=45.494, lon=11.5218, home=True) -> int:
 
 
 def _clone(conn, frame_id: int, number: int, **sky) -> int:
-    """La stessa posa misurata, un'altra notte: righe di frame, misure, cielo e SQM copiate."""
+    """Lo stesso frame misurato, un'altra notte: righe di frame, misure, cielo e SQM copiate."""
     new = conn.execute(
         "INSERT INTO pipeline_frames (fingerprint, created_at) VALUES (?, ?)", (f"x{number}", LATER)
     ).lastrowid
@@ -199,7 +199,7 @@ def test_a_bias_declared_later_rewrites_the_site_sky(conn, tmp_path):
 
 
 def test_a_filter_answered_later_rewrites_the_site_sky(conn, tmp_path):
-    """Un nome di filtro che l'app non conosce non conta; detto L, le sue pose contano."""
+    """Un nome di filtro che l'app non conosce non conta; detto L, i suoi frame contano."""
     _site(conn)
     _nights_in_four_seasons(conn, _measured(conn, tmp_path))
     conn.execute("UPDATE pipeline_cards SET filter = 'Lumen'")

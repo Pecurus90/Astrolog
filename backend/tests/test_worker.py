@@ -31,7 +31,7 @@ def test_a_stage_that_aborted_is_not_reported_as_completed():
 
     Senza questo, il solver che si ferma perche' ASTAP non ha il suo catalogo stellare diceva
     `current 1 / total 1`, stato "completato", zero risolte e **nessun motivo** -- su un
-    archivio da cinquemila pose. Cioe' la corsa dichiarava di aver fatto tutto."""
+    archivio da cinquemila frame. Cioe' la corsa dichiarava di aver fatto tutto."""
 
     def factory():
         def gen():

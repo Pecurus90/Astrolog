@@ -9,7 +9,7 @@
 --
 -- Le quattro tabelle i cui NUMERI DI RIGA viaggiano nelle risposte di Da confermare --
 -- instruments, filters, rigs, objects -- hanno l'id AUTOINCREMENT, e sono le sole (lo prova
--- `backend/tests/test_db.py`): una risposta porta l'id del pezzo, e tre di loro l'Applica le
+-- `backend/tests/test_db.py`): una risposta porta l'id dello strumento, e tre di loro l'Applica le
 -- conferma dicendo "ho visto fin qui" col numero (`backend/astrolog/api/review_write.py`). Tutte e
 -- quattro perdono righe (le unioni, la spazzata di identify, i setup rimasti senza frame).
 -- Senza, SQLite ridarebbe il numero piu' alto appena liberato alla riga nuova: una risposta da
@@ -181,7 +181,7 @@ CREATE TABLE filter_bands (
 CREATE TABLE header_aliases (
   id           INTEGER PRIMARY KEY,
   -- I generi che hanno grafie da imparare sono quelli che **crea la spina** leggendo un
-  -- header: oltre ai primi, i tre che la posa nomina addosso a se' (ruota, focheggiatore,
+  -- header: oltre ai primi, i tre che il frame nomina addosso a se' (ruota, focheggiatore,
   -- camera di guida). Senza, rinominare la propria ruota la fa rinascere alla notte dopo.
   kind         TEXT NOT NULL CHECK (kind IN ('filter', 'optics', 'camera', 'mount',
                                             'object', 'filter_wheel', 'focuser',
@@ -258,12 +258,12 @@ CREATE TABLE frames (
   image_type     TEXT NOT NULL CHECK (image_type IN ('light', 'unknown')),
   date_obs       TEXT,                             -- UTC ISO, dall'header: cio' che il file dice
   -- La notte della posa, da mezzogiorno a mezzogiorno nel fuso del posto (`local_tz`, NULL e'
-  -- UTC): la scrive `scan` quando la posa entra, e si rifa' solo se il fuso non viene dalle
+  -- UTC): la scrive `scan` quando il frame entra, e si rifa' solo se il fuso non viene dalle
   -- coordinate dell'header e casa cambia fuso (`spine/home_nights.py`). Senza `DATE-OBS` e' la
   -- notte in cui il file e' stato scritto (Marco, 27/9/2026). Chi raggruppa per notte legge questa.
   local_night    TEXT,                             -- scan
   local_tz       TEXT,                             -- scan
-  -- L'istante da cui viene la notte: `DATE-OBS`, o senza l'ora del file quando la posa e' entrata.
+  -- L'istante da cui viene la notte: `DATE-OBS`, o senza l'ora del file quando il frame e' entrato.
   -- Chi riscrive la notte quando casa cambia fuso parte da qui, perche' l'ora del file cambia
   -- ogni volta che lo si tocca (`positions.mtime`).
   night_instant  TEXT,                             -- scan
@@ -281,8 +281,8 @@ CREATE TABLE frames (
   object_raw     TEXT,
   telescope_raw  TEXT,
   instrument_raw TEXT,
-  -- Gli altri pezzi che l'header nomina, com'erano scritti. A differenza della montatura,
-  -- questi i file li legano alla SINGOLA posa: N.I.N.A. scrive FWHEEL e FOCNAME, l'ASIAIR
+  -- Gli altri strumenti che l'header nomina, com'erano scritti. A differenza della montatura,
+  -- questi i file li legano al SINGOLO frame: N.I.N.A. scrive FWHEEL e FOCNAME, l'ASIAIR
   -- GUIDECAM. Il grezzo resta perche' `normalize` lo ririsolva dopo una rinomina, come fa
   -- con `telescope_raw`. Nessuno di questi entra nell'impronta del setup: cambiare ruota
   -- non fa un secondo setup.
@@ -300,7 +300,7 @@ CREATE TABLE frames (
   asks_camera    INTEGER NOT NULL DEFAULT 1 CHECK (asks_camera IN (0, 1)),
   asks_filter    INTEGER NOT NULL DEFAULT 1 CHECK (asks_filter IN (0, 1)),
   names_optics   INTEGER NOT NULL DEFAULT 0 CHECK (names_optics IN (0, 1)),
-  -- La posa aspetta una risposta sul tipo di file (DERIVATO dalla vista `frame_waits`): i
+  -- Il frame aspetta una risposta sul tipo di file (DERIVATO dalla vista `frame_waits`): i
   -- trigger accanto alla vista lo riscrivono a ogni scrittura di un ingresso -- il cielo, la
   -- posizione, la risposta della cartella -- e chi legge legge questo.
   asks_type      INTEGER NOT NULL DEFAULT 0 CHECK (asks_type IN (0, 1)),
@@ -318,17 +318,17 @@ CREATE TABLE frames (
   header_json    TEXT NOT NULL,                    -- l'header intero, lista di coppie
   filter_id      INTEGER REFERENCES filters (id),  -- normalize
   object_id      INTEGER REFERENCES objects (id),  -- identify
-  -- Il cielo misurato di questa posa non ha nessun candidato nel campo (1), ne ha (0), o non si sa
+  -- Il cielo misurato di questo frame non ha nessun candidato nel campo (1), ne ha (0), o non si sa
   -- (NULL: nessun cielo, o `identify` non e' ancora passato). Lo scrive `identify` e resta anche quando il frame torna in coda: la domanda
   -- sui frame senza nome lo legge, e con lo stato dello stadio -- che una rimessa in coda azzera
   -- -- una cartella di frame cosi' sparirebbe dalla pagina a ogni Applica.
   empty_cone     INTEGER CHECK (empty_cone IN (0, 1)),                        -- identify
-  -- Il gruppo della posa senza nome e senza cielo (`spine/unnamed.py`): scelto quando la posa
+  -- Il gruppo del frame senza nome e senza cielo (`spine/unnamed.py`): scelto quando il frame
   -- arriva, e riscelto solo se casa cambia fuso e con lei la notte (`spine/home_nights.py`). La
   -- chiave porta la notte, la camera, il telescopio e il puntamento di chi ha aperto il gruppo, con
   -- cui si confronta chi arriva dopo.
   unnamed_key    TEXT,                                                        -- identify
-  -- Cosa `identify` aveva trovato (slug o nome) per una posa che l'utente ha detto "non e' un
+  -- Cosa `identify` aveva trovato (slug o nome) per un frame che l'utente ha detto "non e' un
   -- oggetto": la chiave della sua scheda in Da confermare, che cosi' resta e si cambia. NULL
   -- altrimenti; una rimessa in coda non lo azzera. La risposta lo scrive subito: distingue il "non
   -- e' un oggetto" di una scheda da quello di un gruppo, che il cielo coi candidati scavalca.
@@ -349,12 +349,12 @@ CREATE TABLE frames (
   -- acquisizione): resta in archivio con le sue posizioni, ma non e' un'altra ora di cielo.
   -- Chi conta le ore filtra `copy_of IS NULL`. Lo decide `normalize`; il grezzo vince.
   copy_of        INTEGER REFERENCES frames (id),   -- normalize
-  -- La posa sopravvive alla sua notte e alla sua sessione: quelle sono derivate e si
+  -- Il frame sopravvive alla sua notte e alla sua sessione: quelle sono derivate e si
   -- rifanno, lei no. `SET NULL` e non `CASCADE`, o cancellare una sessione porterebbe via
   -- dei frame.
   night_id       INTEGER REFERENCES nights (id) ON DELETE SET NULL,      -- group
   session_id     INTEGER REFERENCES sessions (id) ON DELETE SET NULL,    -- group
-  -- L'inquadratura della posa (`panels`): la scrive `group` una volta, e non si rifa'.
+  -- L'inquadratura del frame (`panels`): la scrive `group` una volta, e non si rifa'.
   panel_id       INTEGER REFERENCES panels (id) ON DELETE SET NULL,      -- group
   -- Il mosaico CONFERMATO di cui il frame fa parte, o NULL: la chiave del mosaico, scritta da chi
   -- risponde e da `group` per i frame che arrivano dopo. Sta sul frame e non sull'oggetto: lo
@@ -365,11 +365,11 @@ CREATE TABLE frames (
 CREATE INDEX frames_mosaic ON frames (mosaic_key) WHERE mosaic_key IS NOT NULL;
 -- I frame di un pannello, con cio' che serve a contarli e a dirne l'oggetto: i mosaici di Da
 -- confermare e chi pesa i pannelli li leggono dall'indice, senza la tabella. Il prezzo lo paga chi
--- riscrive una di queste colonne su una posa gia' in un pannello, che aggiorna anche l'indice.
+-- riscrive una di queste colonne su un frame gia' in un pannello, che aggiorna anche l'indice.
 CREATE INDEX frames_panel ON frames (panel_id, copy_of, object_id, exposure_s)
   WHERE panel_id IS NOT NULL;
 CREATE INDEX frames_unnamed ON frames (unnamed_key) WHERE unnamed_key IS NOT NULL;
--- Chi arriva cerca i gruppi della sua notte: senza, ogni posa rileggerebbe tutte le altre.
+-- Chi arriva cerca i gruppi della sua notte: senza, ogni frame rileggerebbe tutti gli altri.
 CREATE INDEX frames_unnamed_night ON frames (json_extract(unnamed_key, '$[0]'))
   WHERE unnamed_key IS NOT NULL;
 CREATE INDEX frames_found ON frames (found_key) WHERE found_key IS NOT NULL;
@@ -378,7 +378,7 @@ CREATE INDEX frames_found ON frames (found_key) WHERE found_key IS NOT NULL;
 CREATE INDEX frames_object ON frames (object_id, copy_of, exposure_s);
 -- I frame di un setup, con cio' che serve a contarli: li conta la tendina dei setup a ogni
 -- apertura e a ogni Applica con una risposta sulla camera, e l'uso dell'Attrezzatura a fine giro.
--- Sulla sola colonna, chi conta le ore leggerebbe comunque la riga di ogni posa.
+-- Sulla sola colonna, chi conta le ore leggerebbe comunque la riga di ogni frame.
 CREATE INDEX frames_rig ON frames (rig_id, copy_of, exposure_s, night_id);
 CREATE INDEX frames_session ON frames (session_id);
 CREATE INDEX frames_night ON frames (night_id);
@@ -438,7 +438,7 @@ CREATE TABLE frame_stages (
 CREATE INDEX frame_stages_pending ON frame_stages (stage, status);
 
 -- I mosaici: pannelli dello stesso setup che si toccano senza contenersi (`docs/domini/
--- mosaico.md`). Li scrive `group` quando una posa apre un pannello, e nessuno li ricalcola.
+-- mosaico.md`). Li scrive `group` quando un frame apre un pannello, e nessuno li ricalcola.
 -- `key` e' l'impronta di uno dei suoi frame, scelta quando nasce e poi ferma: la chiave della
 -- risposta, che non cambia quando cambia la camera. Il centro e il nome proposto -- la voce del catalogo al
 -- centro -- si riscrivono quando il mosaico cresce.
@@ -450,9 +450,9 @@ CREATE TABLE mosaics (
   proposed TEXT NOT NULL
 ) STRICT;
 
--- Le inquadrature: il cielo della posa che le ha aperte, e il mosaico di cui fanno parte.
+-- Le inquadrature: il cielo del frame che le ha aperte, e il mosaico di cui fanno parte.
 -- `radius_deg` e' la mezza diagonale del campo, e con la declinazione restringe a una fascia i
--- pannelli con cui una posa nuova si confronta. `rig_id` NULL e' il setup che non si sa.
+-- pannelli con cui un frame nuovo si confronta. `rig_id` NULL e' il setup che non si sa.
 CREATE TABLE panels (
   id           INTEGER PRIMARY KEY,
   rig_id       INTEGER,
@@ -490,7 +490,7 @@ CREATE TABLE frame_wcs (
   solved_at       TEXT NOT NULL
 ) STRICT;
 
--- La regola di `frames.asks_type`: una posa senza tipo aspetta, se la cartella della sua prima
+-- La regola di `frames.asks_type`: un frame senza tipo aspetta, se la cartella della sua prima
 -- posizione viva non ha risposto "light", finche' il cielo non la risolve; "calibration" la ferma
 -- comunque. La chiave della cartella e' `spine/frame_folder.py` (`KEY_OF_FRAME`), le parole sono
 -- `spine/declarations.py`: `tests/test_asks_type.py` confronta il segno con la regola composta da
@@ -776,7 +776,7 @@ CREATE TABLE sessions (
 ) STRICT;
 
 -- La chiave della sessione. E' un indice su un'espressione e non un `UNIQUE` di colonne perche'
--- in SQLite due NULL non contendono: con `rig_id` vuoto -- una posa il cui setup non si sa --
+-- in SQLite due NULL non contendono: con `rig_id` vuoto -- un frame il cui setup non si sa --
 -- la stessa notte e lo stesso oggetto avrebbero potuto aprire due sessioni identiche.
 CREATE UNIQUE INDEX sessions_key ON sessions (night_id, object_id, COALESCE(rig_id, -1));
 
@@ -807,12 +807,12 @@ CREATE TABLE scan_runs (
   skipped_by_reason_json TEXT                      -- quanti file saltati, per motivo
 ) STRICT;
 
--- Quanto e' servito ogni pezzo, setup e filtro (DERIVATO: si riscrive intero a fine giro di
+-- Quanto e' servito ogni strumento, setup e filtro (DERIVATO: si riscrive intero a fine giro di
 -- ogni stadio che cambia i frame, `spine/gear_usage.py`, e la pagina Attrezzatura lo legge e
 -- basta). `subject_id` e' l'id della riga di `instruments`, `rigs` o `filters`: niente chiave
 -- esterna, perche' punta a tre tabelle, e chi legge parte da quelle -- una riga orfana non si
 -- vede. NULL nei tre conteggi vuol dire "l'app non puo' saperlo", non zero; una riga che
--- manca vuol dire "non ancora contato" (un pezzo nato a meta' giro), che e' un'altra cosa.
+-- manca vuol dire "non ancora contato" (uno strumento nato a meta' giro), che e' un'altra cosa.
 -- La pagina mostra solo le ore (Marco, 24/10/2026): i frame servono ai gesti, Unisci ed Elimina.
 CREATE TABLE gear_usage (
   subject         TEXT NOT NULL CHECK (subject IN ('instrument', 'rig', 'filter')),
@@ -823,7 +823,7 @@ CREATE TABLE gear_usage (
   scale_arcsec_px REAL,                            -- solo i setup: la mediana del cielo misurato
   width_deg       REAL,
   height_deg      REAL,
-  -- la barra delle ore sul piu' usato del gruppo (setup, filtri, pezzi per genere), 3-100;
+  -- la barra delle ore sul piu' usato del gruppo (setup, filtri, strumenti per genere), 3-100;
   -- NULL senza ore note. La riscrive `gear_usage.write_bars` dopo ogni scrittura dell'uso
   bar_pct         REAL,
   -- solo i setup col cielo misurato: il loro campo e la Luna piena sulla cornice del confronto,
@@ -840,8 +840,8 @@ CREATE TABLE gear_usage (
 -- Le parti di un setup: cio' che i suoi frame dicono di aver usato oltre a ottica e camera
 -- (DERIVATO: lo riscrive `spine/gear_usage.py` insieme a `gear_usage`, la pagina lo legge e
 -- basta). `piece_id` e' la riga di `instruments`, o di `filters` per `filter`; il programma di
--- ripresa non e' un pezzo e sta in `software`. Il nome non si copia: lo da' il pezzo, cosi' una
--- rinomina si legge subito. Piu' pezzi dello stesso genere stanno tutti, dal piu' usato.
+-- ripresa non e' uno strumento e sta in `software`. Il nome non si copia: lo da' lo strumento, cosi' una
+-- rinomina si legge subito. Piu' strumenti dello stesso genere stanno tutti, dal piu' usato.
 CREATE TABLE rig_parts (
   rig_id   INTEGER NOT NULL REFERENCES rigs (id) ON DELETE CASCADE,
   kind     TEXT NOT NULL CHECK (kind IN
@@ -850,7 +850,7 @@ CREATE TABLE rig_parts (
   piece_id INTEGER,
   software TEXT,
   frames   INTEGER NOT NULL,
-  -- La parte l'hai scelta tu sul setup; una scelta che nessuna posa porta ancora ha zero frame.
+  -- La parte l'hai scelta tu sul setup; una scelta che nessun frame porta ancora ha zero frame.
   chosen   INTEGER NOT NULL DEFAULT 0 CHECK (chosen IN (0, 1)),
   position INTEGER NOT NULL,                       -- l'ordine della scheda: genere, poi uso
   -- solo i filtri: la loro fetta dell'anello, in percento dei frame coi filtri del setup
@@ -861,7 +861,7 @@ CREATE TABLE rig_parts (
 ) STRICT;
 
 -- I distanziali di un setup (DERIVATO dalle dichiarazioni `spacer:<nome>` del setup, che
--- seguono rinomina e unione): nessuna posa li porta, le loro ore sono quelle dei setup. Lo
+-- seguono rinomina e unione): nessun frame li porta, le loro ore sono quelle dei setup. Lo
 -- riscrive `spine/rigs.write_spacers` prima di contare.
 CREATE TABLE rig_spacers (
   rig_id   INTEGER NOT NULL REFERENCES rigs (id) ON DELETE CASCADE,
@@ -870,7 +870,7 @@ CREATE TABLE rig_spacers (
 ) STRICT;
 
 -- I conti dalle schede (ADR 0021): del setup (rapporto focale, campionamento, campo, copertura,
--- guida, backfocus, carico) e del pezzo (Dawes, sensore). DERIVATO: lo riscrive intero
+-- guida, backfocus, carico) e dello strumento (Dawes, sensore). DERIVATO: lo riscrive intero
 -- `spine/gear_numbers.write` dopo ogni scrittura di schede o parti; la pagina lo legge e basta.
 CREATE TABLE gear_numbers (
   subject      TEXT NOT NULL CHECK (subject IN ('instrument', 'rig')),
@@ -966,7 +966,7 @@ CREATE TABLE catalog_names (
   designation TEXT NOT NULL,                    -- `31`, `224`, `1136`...
   -- La chiave con cui si cerca: `NGC|224`, scritta al caricamento. Normalizzare le colonne
   -- dentro la query (UPPER, REPLACE) costringerebbe a leggere tutte le 24.266 righe a ogni
-  -- ricerca, e `identify` ne fara' una per posa.
+  -- ricerca, e `identify` ne fara' una per frame.
   key         TEXT NOT NULL,
   slug        TEXT NOT NULL REFERENCES catalog_entries (slug) ON DELETE CASCADE,
   is_primary  INTEGER NOT NULL DEFAULT 0 CHECK (is_primary IN (0, 1)),
@@ -1041,7 +1041,7 @@ CREATE TABLE pipeline_scans (
   CHECK ((left_out IS NULL) = (not_fits IS NULL))
 ) STRICT;
 
--- RILEVATO. Posa (camera, inizio con frazione di secondo, dimensioni, durata: ADR 0030); senza
+-- RILEVATO. Frame (camera, inizio con frazione di secondo, dimensioni, durata: ADR 0030); senza
 -- file si toglie, sparito tiene la sua. Risposte alla chiave (nome, impronta...), mai a un id.
 CREATE TABLE pipeline_frames (
   id          INTEGER PRIMARY KEY,
@@ -1059,7 +1059,7 @@ CREATE TABLE pipeline_files (
   mtime_ns     INTEGER NOT NULL,  -- esatta: data diversa, rilettura
   state        TEXT NOT NULL CHECK (state IN ('present', 'gone')),
   seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha visto presente
-  -- NULL: non letto come posa. Sparito lo tiene: cosi' si riconosce lo spostato.
+  -- NULL: non letto come frame. Sparito lo tiene: cosi' si riconosce lo spostato.
   frame_id     INTEGER REFERENCES pipeline_frames (id),
   -- letto e saltato, col motivo; unreadable e incomplete passeggeri: si rilegge; broken no
   skip_reason  TEXT
@@ -1067,7 +1067,7 @@ CREATE TABLE pipeline_files (
   -- arrivato dopo l'ultima volta che lo sparito era presente: spostato, anche dopo fermate
   arrived_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),
   gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire
-  -- unreadable e incomplete passeggeri tengono la posa letta prima, finche' si rilegge
+  -- unreadable e incomplete passeggeri tengono il frame letto prima, finche' si rilegge
   CHECK (frame_id IS NULL OR skip_reason IS NULL OR skip_reason IN ('unreadable', 'incomplete')),
   CHECK ((state = 'gone') = (gone_scan_id IS NOT NULL))
 ) STRICT;
@@ -1171,7 +1171,7 @@ CREATE TABLE pipeline_conditions (
     star_fwhm_arcsec) IS NOT NULL)
 ) STRICT;
 
--- RILEVATO. Cielo della posa da ASTAP (pipeline/solve.py), riga per posa provata; nessuna: da
+-- RILEVATO. Cielo del frame da ASTAP (pipeline/solve.py), riga per frame provato; nessuna: da
 -- provare. Definitivi solved, no_solution, no_stars; gli altri si riprovano (solve.PENDING).
 CREATE TABLE pipeline_solutions (
   frame_id        INTEGER PRIMARY KEY REFERENCES pipeline_frames (id) ON DELETE CASCADE,
@@ -1233,7 +1233,7 @@ CREATE TABLE pipeline_solutions (
   CHECK ((expected_scale_arcsec_px IS NULL) = (scale_disagrees IS NULL))
 ) STRICT;
 
--- RILEVATO. Misure di una posa light dai suoi pixel (pipeline/measure.py, docs/domini/misure.md),
+-- RILEVATO. Misure di un frame light dai suoi pixel (pipeline/measure.py, docs/domini/misure.md),
 -- scritte una volta; nessuna riga: da misurare. unreadable si riprova, gli altri restano.
 CREATE TABLE pipeline_measures (
   frame_id       INTEGER PRIMARY KEY REFERENCES pipeline_frames (id) ON DELETE CASCADE,
@@ -1356,7 +1356,7 @@ CREATE TABLE pipeline_measures (
     ladder_801_dex, ladder_1601_dex, ladder_3201_dex, ladder_6401_dex) IS NULL OR stars >= 50)
 ) STRICT;
 
--- RILEVATO. Misure col cielo (pipeline/sky_measure.py, docs/domini/misure.md): una riga per posa
+-- RILEVATO. Misure col cielo (pipeline/sky_measure.py, docs/domini/misure.md): una riga per frame
 -- leggibile, riscritta all'arrivo della soluzione; sito e ora dalla scheda del file misurato.
 CREATE TABLE pipeline_sky (
   frame_id      INTEGER PRIMARY KEY REFERENCES pipeline_measures (frame_id) ON DELETE CASCADE,
@@ -1413,7 +1413,7 @@ CREATE TABLE pipeline_sqm (
   outcome       TEXT NOT NULL CHECK (outcome IN ('measured', 'calibration_failed', 'no_altitude',
                   'unreadable')),
   catalogue     TEXT CHECK (catalogue IN ('d80', 'd50', 'd20', 'd05')),
-  zero_point_mag REAL,              -- MZERO di ASTAP: magnitudine BP di 1 ADU della posa
+  zero_point_mag REAL,              -- MZERO di ASTAP: magnitudine BP di 1 ADU del frame
   calibration_stars INTEGER CHECK (calibration_stars > 0),
   sky_adu       REAL,               -- moda dell'istogramma; a colori sui blocchi 2x2
   colour        INTEGER CHECK (colour IN (0, 1)),  -- misurata sui blocchi 2x2

@@ -1,4 +1,4 @@
-"""Mattone solve: una soluzione di ASTAP per posa, dal file e dalla scheda della posa. ASTAP finto
+"""Mattone solve: una soluzione di ASTAP per frame, dal file e dalla scheda del frame. ASTAP finto
 che risponde coi suoi .ini veri (`tests/astap/`): la suite non lancia mai il solver."""
 
 import json
@@ -115,7 +115,7 @@ _CD = (-2.6277393210341225e-004, 2.7944155214576776e-004,
 
 
 def test_a_light_gets_the_sky_astap_found(conn, tmp_path):
-    """Il .ini vero di un light: centro, scala e rotazione salvati per la posa."""
+    """Il .ini vero di un light: centro, scala e rotazione salvati per il frame."""
     nas = tmp_path / "nas"
     nina_light(nas / "m13.fits", 1, _SKY)
     root = _scanned(conn, nas)
@@ -212,8 +212,8 @@ def test_calibrations_are_never_launched_typeless_get_their_try(conn, tmp_path):
 
 @pytest.mark.parametrize("fz_hinted", [False, True], ids=["same header", "hint on the fz only"])
 def test_one_launch_per_shot_and_the_plain_copy_is_the_one(conn, tmp_path, fz_hinted):
-    """Copia fpack e .fits sono una posa: un lancio, sul non compresso (ASTAP 2025 non legge i
-    .fz), anche se l'indizio sta solo sul .fz: "prima chi ha indizio e campo" vale per posa."""
+    """Copia fpack e .fits sono un frame: un lancio, sul non compresso (ASTAP 2025 non legge i
+    .fz), anche se l'indizio sta solo sul .fz: "prima chi ha indizio e campo" vale per frame."""
     nas = tmp_path / "nas"
     nas.mkdir()
     data, header = _nina_pixels(0)
@@ -332,8 +332,8 @@ def test_the_row_says_which_astap_and_catalogue_and_how_long(conn, tmp_path):
 
 @pytest.mark.parametrize("plain_root", ["same", "other"])
 def test_a_compressed_file_waiting_never_holds_back_its_plain_copy(conn, tmp_path, plain_root):
-    """.fz illeggibile da questo ASTAP: fatto del file, non della posa. Il .fits della stessa
-    posa, arrivato dopo o in un'altra radice, si lancia."""
+    """.fz illeggibile da questo ASTAP: fatto del file, non del frame. Il .fits dello stesso
+    frame, arrivato dopo o in un'altra radice, si lancia."""
     _nina_fz(tmp_path / "nas" / "a.fits.fz", 0)
     root = _scanned(conn, tmp_path / "nas")
     _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
@@ -362,7 +362,7 @@ def test_a_file_waiting_never_holds_back_a_good_copy_elsewhere(conn, tmp_path):
 
 
 def test_an_unread_version_counts_as_unchanged(conn, tmp_path):
-    """-h che fallisce non e' un ASTAP nuovo: la posa in attesa resta ferma."""
+    """-h che fallisce non e' un ASTAP nuovo: il frame in attesa resta fermo."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     _nina_fz(nas / "b.fits.fz", 2)
@@ -464,7 +464,7 @@ def test_a_gone_file_is_not_launched(conn, tmp_path):
 
 
 def test_the_solution_goes_with_the_shot(conn, tmp_path):
-    """Legata alla posa: il file spostato la tiene, nessun nuovo lancio."""
+    """Legata al frame: il file spostato la tiene, nessun nuovo lancio."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
@@ -488,7 +488,7 @@ def test_a_shot_solved_from_another_root_is_not_launched_again(conn, tmp_path):
 
 
 def test_a_file_held_while_locked_is_not_launched(conn, tmp_path, monkeypatch):
-    """Bloccato da un altro programma: tiene posa e scheda, ma ad ASTAP non va (puo' essere a meta'
+    """Bloccato da un altro programma: tiene frame e scheda, ma ad ASTAP non va (puo' essere a meta'
     scrittura)."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
@@ -502,7 +502,7 @@ def test_a_file_held_while_locked_is_not_launched(conn, tmp_path, monkeypatch):
 
 
 def test_a_shot_that_leaves_takes_its_solution_with_it(conn, tmp_path):
-    """Posa senza piu' file (riscritto): via il frame, via la soluzione (chiavi esterne accese)."""
+    """Frame senza piu' file (riscritto): via il frame, via la soluzione (chiavi esterne accese)."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
@@ -528,7 +528,7 @@ def test_without_a_catalogue_folder_astap_looks_in_its_own(conn, tmp_path):
     "crval", [("360.0", "17.7"), ("-0.001", "17.7"), ("400", "17.7"), ("241.2", "90.5")]
 )
 def test_a_sky_out_of_range_never_stops_the_pass(conn, tmp_path, crval):
-    """Un .ini che dice risolto con un cielo impossibile: il passo va avanti sulla posa dopo."""
+    """Un .ini che dice risolto con un cielo impossibile: il passo va avanti sul frame dopo."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     nina_light(nas / "b.fits", 2, _SKY)

@@ -73,8 +73,8 @@ describe("Il backup", () => {
     })
   })
 
-  it("un backup senza cartelle si rimette senza chiedere una lettura (collaudo 18/11)", async () => {
-    // la lettura di nessuna cartella e' un 409 `no_folders` nella console, a ogni ripristino
+  it("un backup senza cartelle si rimette senza chiedere una scansione (collaudo 18/11)", async () => {
+    // la scansione di nessuna cartella e' un 409 `no_folders` nella console, a ogni ripristino
     rispondi({
       ...STANOTTE,
       ...SPINA,

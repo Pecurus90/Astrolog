@@ -56,7 +56,7 @@ def _frame(conn, folder_id, rel_path, *, image_type="unknown", copy_of=None,
 
 def _cartelle(conn):
     """Le cartelle della domanda come le scriverebbe la fine di uno stadio: qui si prova la
-    regola del conto, e le pose si fanno a mano."""
+    regola del conto, e i frame si fanno a mano."""
     typeless_folders.write(conn)
     return typeless.by_folder(conn)
 
@@ -83,7 +83,7 @@ def test_the_key_of_a_folder_says_the_same_thing_in_sql_and_in_python(conn, radi
 
 
 def test_the_frames_of_a_folder_are_those_whose_first_live_position_is_there(conn):
-    """Chi risponde prende le pose della cartella della riga: non quelle delle sue sottocartelle,
+    """Chi risponde prende i frame della cartella della riga: non quelli delle sue sottocartelle,
     non quelle di una cartella accanto che si chiama quasi uguale, non quelle la cui prima
     posizione viva sta in un'altra cartella. Anche quando la cartella e' la radice."""
     radice = add_folder(conn, "D:/Astro")
@@ -114,7 +114,7 @@ def test_the_frames_of_a_folder_are_those_whose_first_live_position_is_there(con
 
 
 def test_the_frames_of_a_folder_are_looked_up_from_the_folder(conn):
-    """Si parte dalla cartella e si scende per indice alle sue posizioni: partire dalle pose
+    """Si parte dalla cartella e si scende per indice alle sue posizioni: partire dai frame
     ricomporrebbe la cartella di ognuna dell'archivio, a ogni risposta."""
     piano = " ".join(
         r[3]
@@ -262,7 +262,7 @@ def test_a_frame_that_waits_is_not_work_left_to_do(conn):
 def test_another_answer_does_not_send_a_waiting_frame_on(conn):
     """Una risposta data in un'altra sezione -- la camera di quei frame, l'oggetto -- rimette
     in coda i frame, e quello che aspetta il suo tipo **non** deve partire per questo. E' la
-    ragione per cui il fermo e' scritto sulla posa e non fra gli stati degli stadi: uno stato lo
+    ragione per cui il fermo e' scritto sul frame e non fra gli stati degli stadi: uno stato lo
     cancellerebbe proprio questa `invalidate`."""
     radice = add_folder(conn, "D:/Astro")
     frame_id = _frame(conn, radice, "dark/a.fits")

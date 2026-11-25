@@ -115,7 +115,7 @@ def test_duplicate_is_409_and_retire_reactivate_keep_data(client_vuoto, tmp_path
     r = client_vuoto.delete(f"/api/v1/folders/{f['id']}")
     assert r.json() == {"folder_id": f["id"], "retired": True, "kept_frames": 1}
     assert folders(client_vuoto) == []
-    # **E le sue letture restano leggibili**, col percorso dentro: togliere una cartella e' un
+    # **E le sue scansioni restano leggibili**, col percorso dentro: togliere una cartella e' un
     # ritiro, la sua riga non sparisce, e la ricevuta esce da una giunzione **interna**
     # (`spine/scan_store.SELECT_RUN`). Che la riga non possa sparire lo tiene fermo lo schema --
     # `scan_runs.folder_id` la riferisce, e provato: sostituendo il ritiro con una cancellazione
@@ -155,7 +155,7 @@ def test_a_folder_already_registered_is_409_with_its_id(client_vuoto, tmp_path):
 
 
 def test_an_unknown_folder_is_404_with_its_code(client_vuoto, tmp_path):
-    """Ritiro, spostamento e lettura di una cartella che non c'e'."""
+    """Ritiro, spostamento e scansione di una cartella che non c'e'."""
     altrove = tmp_path / "altrove"
     altrove.mkdir()
     for r in (

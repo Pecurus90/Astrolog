@@ -168,7 +168,7 @@ def populate(db_path, root):
     try:
         list(scan_folder(conn, add_folder(conn, root)))
         list(normalize_frames(conn))
-        # Le pose dell'archivio sintetico non hanno cielo: il solver non gira nella suite. Si
+        # I frame dell'archivio sintetico non hanno cielo: il solver non gira nella suite. Si
         # toccano solo quelle che il solver avrebbe davvero preso (`stages.ready`), e "stelle ma
         # nessuna soluzione" e' il cielo che non sa dire: un frame senza tipo resta una domanda.
         for frame_id in stages.ready(conn, "solve"):
@@ -181,7 +181,7 @@ def populate(db_path, root):
 
 @pytest.fixture
 def client_vuoto(db_path):
-    """L'app a mani vuote: database nuovo, nessuna cartella, nessuna posa. E' il primo avvio
+    """L'app a mani vuote: database nuovo, nessuna cartella, nessun frame. E' il primo avvio
     vero di chiunque."""
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         yield c
@@ -334,7 +334,7 @@ def gear(client):
 
 
 def correct(client, instrument_id, **body):
-    """La scheda di un pezzo corretta dall'Attrezzatura: e' li' che si scrive, non piu' in Da
+    """La scheda di uno strumento corretta dall'Attrezzatura: e' li' che si scrive, non piu' in Da
     confermare."""
     r = client.patch(f"/api/v1/gear/instruments/{instrument_id}", json=body)
     client.app.state.worker.join(10.0)
@@ -348,8 +348,8 @@ def senza_soggetti(gruppo):
 
 
 def da_rivedere(client):
-    """Quante pose l'ultima normalizzazione ha lasciato da rivedere: e' il numero che dice se una
-    posa e' a posto o se le manca ancora qualcosa, e senza guardarlo un filtro dato male e un
+    """Quanti frame l'ultima normalizzazione ha lasciato da rivedere: e' il numero che dice se un
+    frame e' a posto o se gli manca ancora qualcosa, e senza guardarlo un filtro dato male e un
     filtro dato bene si assomigliano troppo."""
     stadi = client.app.state.worker.snapshot().stages
     return next(s for s in stadi if s.name == "normalize").tally["to_review"]
@@ -425,7 +425,7 @@ def add_folder(conn, root):
 
 
 def sky_solved(conn, frame_id, ra=202.47, dec=47.2):
-    """Cio' che il solver scrive di una posa risolta, senza lanciarlo: il cielo trovato, poi lo
+    """Cio' che il solver scrive di un frame risolto, senza lanciarlo: il cielo trovato, poi lo
     stadio fatto (`spine/solve.py`). Lo stadio fatto da solo e' il segno di uno stacco, che ha
     tolto il cielo, e la regola dell'attesa lo legge come non riconosciuto."""
     solve_store.save_wcs(

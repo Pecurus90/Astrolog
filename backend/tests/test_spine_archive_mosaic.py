@@ -1,9 +1,9 @@
 """L'Archivio raggruppa: un mosaico confermato e' **una riga**, e le ore restano quelle vere.
 
-Un mosaico e' un insieme di POSE (`frames.mosaic_key`, scritto da `spine/mosaic.py`): le
-sue pose stanno solo nella sua riga, quelle che un oggetto ha ripreso da solo restano sue. Il banco
-riproduce il caso vero di IC 405, i cui quattro pannelli sono identificati come oggetti diversi di
-quattro cataloghi diversi.
+Un mosaico e' un insieme di FRAME (`frames.mosaic_key`, scritto da `spine/mosaic.py`): i
+suoi frame stanno solo nella sua riga, quelli che un oggetto ha ripreso da solo restano sue. Il
+banco riproduce il caso vero di IC 405, i cui quattro pannelli sono identificati come oggetti
+diversi di quattro cataloghi diversi.
 """
 
 import re
@@ -19,8 +19,8 @@ from test_spine_archive import oggetto, posa
 
 
 def test_archive_panels_find_their_objects_through_the_mosaic_index(conn):
-    """Gli oggetti dei pannelli di una pagina dell'Archivio si cercano dalle pose dei suoi mosaici,
-    con l'indice sulla chiave del mosaico: senza, la pagina scorrerebbe tutte le pose
+    """Gli oggetti dei pannelli di una pagina dell'Archivio si cercano dai frame dei suoi mosaici,
+    con l'indice sulla chiave del mosaico: senza, la pagina scorrerebbe tutti i frame
     dell'archivio. L'elenco vero, non una costante: con una costante SQLite sceglie un altro
     piano, e quello che si guarderebbe non sarebbe quello che gira."""
     with idlist.holding(conn, ["mosaico"]) as elencate:
@@ -30,7 +30,7 @@ def test_archive_panels_find_their_objects_through_the_mosaic_index(conn):
     assert pose and all(re.search(r"INDEX frames_mosaic\b", p) for p in pose), piano
 
 
-CHIAVE = "impronta-della-prima-posa"  # la chiave di un mosaico: l'impronta di una sua posa
+CHIAVE = "impronta-della-prima-posa"  # la chiave di un mosaico: l'impronta di un suo frame
 
 
 def nomi(righe):
@@ -38,13 +38,13 @@ def nomi(righe):
 
 
 def mosaico(conn, pose, bersaglio="catalog:ic-405"):
-    """Il mosaico confermato su quelle pose, come lo lascia chi risponde: la dichiarazione e la
-    chiave scritta sulle pose. Chi la scrive ha le sue prove; qui si guarda chi la legge."""
+    """Il mosaico confermato su quei frame, come lo lascia chi risponde: la dichiarazione e la
+    chiave scritta sui frame. Chi la scrive ha le sue prove; qui si guarda chi la legge."""
     decl.write_declaration(conn, decl.EntityType.MOSAIC, CHIAVE, decl.MOSAIC_FIELD, bersaglio)
     mosaico_id = conn.execute(
         "INSERT INTO mosaics(key, ra_deg, dec_deg, proposed) VALUES(?, 80, 34, 'IC 405')", (CHIAVE,)
     ).lastrowid
-    # qui ogni posa e' un pannello suo, con un centro suo e diverso da quello del mosaico: chi
+    # qui ogni frame e' un pannello suo, con un centro suo e diverso da quello del mosaico: chi
     # legge il centro del mosaico, o scambia due pannelli, cade
     for i, p in enumerate(pose, start=1):
         pannello = conn.execute(
@@ -91,8 +91,8 @@ def test_a_confirmed_mosaic_is_one_row_with_the_hours_of_all_its_panels(archivio
 
 
 def test_an_object_shot_inside_and_outside_a_mosaic_keeps_its_own_poses(archivio):
-    """IC 405 ripreso da solo resta una riga sua, con le **sole** pose fuori dal mosaico. Nessuna
-    posa contata due volte, nessuna persa: la somma delle righe e' la somma dell'archivio."""
+    """IC 405 ripreso da solo resta una riga sua, con i **soli** frame fuori dal mosaico. Nessun
+    frame contato due volte, nessuno perso: la somma delle righe e' la somma dell'archivio."""
     banco(archivio)
 
     righe, _ = archive.page(archivio, limit=50, offset=0)
@@ -107,7 +107,7 @@ def test_an_object_shot_inside_and_outside_a_mosaic_keeps_its_own_poses(archivio
 
 def test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes(archivio):
     """I quattro pannelli portano quattro cataloghi: stringendo a `LBN` il mosaico deve restare, e
-    **intero** -- con un filtro sulle pose ne resterebbe un quarto, e la riga direbbe un quarto
+    **intero** -- con un filtro sui frame ne resterebbe un quarto, e la riga direbbe un quarto
     delle ore. Lo stesso per chi cerca `LDN 1516`: chi cerca un pannello lo trova."""
     banco(archivio)
 
@@ -120,7 +120,7 @@ def test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes(
 
 def test_the_filter_used_is_asked_of_the_poses_of_the_row(archivio):
     """ "Cosa ho ripreso in Ha": il mosaico si', perche' tre pannelli lo sono; IC 405 da solo no,
-    anche se l'oggetto IC 405 ha pose nel mosaico: quelle non stanno nella sua riga."""
+    anche se l'oggetto IC 405 ha frame nel mosaico: quelli non stanno nella sua riga."""
     banco(archivio)
 
     righe, _ = archive.page(archivio, limit=50, offset=0, filters=("Ha",))
@@ -162,7 +162,7 @@ def test_the_route_gives_every_row_the_pills_of_its_own_poses(archivio, db_path_
 
 
 def test_a_mosaic_pose_without_a_time_is_counted_apart(archivio, db_path_col_catalogo):
-    """Una posa del mosaico che non dice quanto e' durata non vale zero ore: si conta a parte,
+    """Un frame del mosaico che non dice quanto e' durato non vale zero ore: si conta a parte,
     come in ogni altra riga."""
     dentro = [posa(archivio, oggetto(archivio, "IC 405", "ic-405"), secondi=None)]
     dentro.append(posa(archivio, oggetto(archivio, "LBN 796", "lbn-796")))
@@ -174,7 +174,7 @@ def test_a_mosaic_pose_without_a_time_is_counted_apart(archivio, db_path_col_cat
 
 
 def test_a_mosaic_row_says_how_many_panels_it_has(archivio):
-    """La riga del mosaico porta quanti pannelli ha, contati da cio' che e' scritto sulle pose; la
+    """La riga del mosaico porta quanti pannelli ha, contati da cio' che e' scritto sui frame; la
     riga di un oggetto non ne ha."""
     banco(archivio)
 
@@ -184,7 +184,7 @@ def test_a_mosaic_row_says_how_many_panels_it_has(archivio):
 
 
 def _nel_pannello_di(conn, compagna, **kw):
-    """Una posa in piu' nello stesso pannello di `compagna`, con l'oggetto che le si da'."""
+    """Un frame in piu' nello stesso pannello di `compagna`, con l'oggetto che gli si da'."""
     nuova = posa(conn, kw.pop("oggetto_id", None), **kw)
     conn.execute(
         "UPDATE frames SET (mosaic_key, panel_id) = (SELECT mosaic_key, panel_id FROM frames"
@@ -196,8 +196,8 @@ def _nel_pannello_di(conn, compagna, **kw):
 
 def test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours(archivio):
     """**L'obiettivo della fetta 2.** La carta del mosaico elenca i suoi pannelli, ognuno col suo
-    oggetto, le sue pose e le sue ore, dal pannello a cui e' andato piu' tempo. IC 405 ripreso da
-    solo un'altra sera non entra nel suo pannello: quella posa non e' del mosaico."""
+    oggetto, i suoi frame e le sue ore, dal pannello a cui e' andato piu' tempo. IC 405 ripreso da
+    solo un'altra sera non entra nel suo pannello: quel frame non e' del mosaico."""
     dentro, _, _ = banco(archivio)
     sh2 = archivio.execute("SELECT object_id FROM frames WHERE id = ?", (dentro[3],)).fetchone()[0]
     _nel_pannello_di(archivio, dentro[3], oggetto_id=sh2, secondi=600.0)
@@ -214,8 +214,8 @@ def test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours(archiv
 
 
 def test_a_panel_counts_like_every_row_copies_out_and_untimed_apart(archivio):
-    """Il pannello conta come il resto dell'Archivio: la copia riscritta non raddoppia le ore, e una
-    posa che non dice quanto e' durata si conta a parte invece di valere zero. E la copia non
+    """Il pannello conta come il resto dell'Archivio: la copia riscritta non raddoppia le ore, e un
+    frame che non dice quanto e' durato si conta a parte invece di valere zero. E la copia non
     presta il suo oggetto al nome del pannello."""
     dentro, _, _ = banco(archivio)
     ic405 = archivio.execute("SELECT object_id FROM frames WHERE id = ?", (dentro[0],)).fetchone()
@@ -235,7 +235,7 @@ def test_a_panel_counts_like_every_row_copies_out_and_untimed_apart(archivio):
 
 
 def test_a_panel_whose_poses_found_no_object_says_so_with_nothing(archivio):
-    """Un pannello le cui pose non sono legate a un oggetto non ha un nome da dire: nullo, non una
+    """Un pannello i cui frame non sono legati a un oggetto non ha un nome da dire: nullo, non una
     stringa vuota che a schermo sarebbe una riga senza nome. Due oggetti nello stesso pannello si
     dicono tutti e due, e un oggetto fuori catalogo col suo nome."""
     dentro, _, _ = banco(archivio)

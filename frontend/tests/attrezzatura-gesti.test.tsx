@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * I **gesti** della pagina Attrezzatura (tavola v82, `modulo`): correggere la scheda di un pezzo o di
+ * I **gesti** della pagina Attrezzatura (tavola v82, `modulo`): correggere la scheda di uno strumento o di
  * un filtro, unirli, eliminarli. Un campo non toccato non parte; un rifiuto si legge.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
@@ -20,8 +20,8 @@ import { pulisci, scritture } from "./banco"
 afterEach(pulisci)
 
 describe("i gesti sull attrezzatura", () => {
-  /** Apre la scheda di un pezzo dalla sua riga: e' la strada dell'utente, che vede l'errore
-   *  mentre guarda il pezzo e lo corregge li'. */
+  /** Apre la scheda di uno strumento dalla sua riga: e' la strada dell'utente, che vede l'errore
+   *  mentre guarda lo strumento e lo corregge li'. */
   async function apriLaScheda(genere: RegExp, nomeDelPezzo: RegExp) {
     const elenco = await vedi(genere)
     const riga = within(elenco)
@@ -30,7 +30,7 @@ describe("i gesti sull attrezzatura", () => {
     fireEvent.click(within(riga as HTMLElement).getByRole("button", { name: /^modifica/i }))
   }
 
-  it("correggo la scheda di un pezzo dalla pagina in cui lo guardo", async () => {
+  it("correggo la scheda di uno strumento dalla pagina in cui lo guardo", async () => {
     attrezzatura(
       {},
       {
@@ -58,7 +58,7 @@ describe("i gesti sull attrezzatura", () => {
 
   it("la scheda chiede i campi del genere che sta guardando, e li decide il backend", async () => {
     // La portata e' della montatura, l'apertura del telescopio: la pagina non tiene un secondo
-    // elenco di quali campi valgono per quale genere, lo manda l'API con ogni pezzo.
+    // elenco di quali campi valgono per quale genere, lo manda l'API con ogni strumento.
     attrezzatura()
     await apriAttrezzatura()
     await apriLaScheda(/montature/i, /EQ6-R/)
@@ -191,7 +191,7 @@ describe("i gesti sull attrezzatura", () => {
     expect(screen.getByText("Per salvare serve il nome.")).toBeDefined()
   })
 
-  it("unisco due grafie dello stesso pezzo, solo fra quelle che l'API offre", async () => {
+  it("unisco due grafie dello stesso strumento, solo fra quelle che l'API offre", async () => {
     const altra = { ...OTTICA, id: 5, name: "TS130APO", mergeable_into: [1] }
     attrezzatura(
       { instruments: [{ ...OTTICA, mergeable_into: [5] }, altra, MONTATURA] },
@@ -213,7 +213,7 @@ describe("i gesti sull attrezzatura", () => {
   })
 
   it("scelgo un'unione e torno indietro: parte cio' che vedo, non cio' che avevo scritto prima", async () => {
-    // Il nome riappare col valore di prima: se la scritta tenesse "Pippo", il pezzo verrebbe
+    // Il nome riappare col valore di prima: se la scritta tenesse "Pippo", lo strumento verrebbe
     // rinominato senza che a video si veda.
     const altra = { ...OTTICA, id: 5, name: "TS130APO", mergeable_into: [1] }
     attrezzatura(
@@ -238,7 +238,7 @@ describe("i gesti sull attrezzatura", () => {
     expect(scritture()[0]?.corpo).toEqual({ aperture_mm: 132 })
   })
 
-  it("un pezzo senza unioni possibili non offre la tendina", async () => {
+  it("uno strumento senza unioni possibili non offre la tendina", async () => {
     attrezzatura()
     await apriAttrezzatura()
     await apriLaScheda(/montature/i, /EQ6-R/)
@@ -363,7 +363,7 @@ describe("i gesti sull attrezzatura", () => {
     )
   })
 
-  it("un pezzo senza frame non dice un'ora che non c'e'", async () => {
+  it("uno strumento senza frame non dice un'ora che non c'e'", async () => {
     attrezzatura({ instruments: [{ ...OTTICA, frames: 0, integration_s: 0, bar_pct: 3 }] })
     await apriAttrezzatura()
     const telescopi = await vedi(/telescopi/i)
@@ -390,7 +390,7 @@ describe("i gesti sull attrezzatura", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("Dati non aggiornati")
   })
 
-  it("un pezzo usato non si elimina: Elimina spento, chi lo usa e Unisci a", async () => {
+  it("uno strumento usato non si elimina: Elimina spento, chi lo usa e Unisci a", async () => {
     const altra = { ...OTTICA, id: 5, name: "TS130APO" }
     attrezzatura({
       instruments: [
@@ -431,7 +431,7 @@ describe("i gesti sull attrezzatura", () => {
     ).toBeDefined()
   })
 
-  it("un pezzo senza frame si elimina dopo la conferma, che dice da quali setup esce", async () => {
+  it("uno strumento senza frame si elimina dopo la conferma, che dice da quali setup esce", async () => {
     attrezzatura(
       {
         instruments: [OTTICA, { ...MONTATURA, in_rigs: [{ rig_id: 10, frames: 0, chosen: true }] }],

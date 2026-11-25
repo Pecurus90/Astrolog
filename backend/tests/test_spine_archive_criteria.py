@@ -146,7 +146,8 @@ def test_you_can_narrow_down_by_how_many_productions(archivio):
 
 
 def test_the_choices_offer_the_years_sites_and_pieces_you_shot_with(archivio):
-    """Gli anni dal piu' recente, siti e pezzi col nome; un pezzo mai usato non si offre."""
+    """Gli anni dal piu' recente, siti e strumenti col nome; uno strumento mai usato non si
+    offre."""
     pezzi = banco(archivio)
     from group_bench import attrezzo
 

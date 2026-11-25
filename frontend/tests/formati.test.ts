@@ -91,7 +91,7 @@ describe("le ore", () => {
   })
 })
 
-describe("quanto e' durata una lettura", () => {
+describe("quanto e' durata una scansione", () => {
   it("sotto il minuto si contano i secondi", () => {
     // Una cartella piccola si legge in un lampo: "0 min" direbbe che non e' successo niente.
     expect(durata(3.5)).toBe("4 s")
@@ -178,7 +178,7 @@ describe("una coordinata riscritta a mano", () => {
   })
 
   it("un campo vuoto non e' una coordinata", () => {
-    // `Number("")` fa zero, e zero-zero e' un punto nel Golfo di Guinea che come luogo di casa
+    // `Number("")` fa zero, e zero-zero e' un punto nel Golfo di Guinea che come sito predefinito
     // deciderebbe il fuso di tutte le notti.
     expect(coordinataDa("", "lat")).toBeNaN()
     expect(coordinataDa("   ", "lat")).toBeNaN()
@@ -252,7 +252,7 @@ describe("l'ora in cui e' successa una cosa", () => {
     { skip: !isMainThread },
     () => {
       // Kiritimati e' UTC+14: li' quelle 22:30 di Greenwich sono le 12:30 del giorno dopo. Le due
-      // cose si provano insieme perche' insieme si leggono: nella riga di una lettura, se una e'
+      // cose si provano insieme perche' insieme si leggono: nella riga di una scansione, se una e'
       // locale e l'altra in UTC, una scansione di mezzanotte porta il giorno prima accanto all'ora
       // dopo -- ed e' il difetto che c'era.
       process.env.TZ = "Pacific/Kiritimati"

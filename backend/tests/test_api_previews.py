@@ -169,7 +169,7 @@ def test_a_renamed_camera_takes_its_photos_and_wins(db_path):
 
 
 def test_a_merged_camera_leaves_the_kept_photo(db_path):
-    """Unione: vince il pezzo che resta; la foto dell'altro esce."""
+    """Unione: vince lo strumento che resta; la foto dell'altro esce."""
     conn = connect(db_path)
     _scrivi(conn, "RedCat", "ASI vecchia", "a")
     _scrivi(conn, "RedCat", "ASI nuova", "b")

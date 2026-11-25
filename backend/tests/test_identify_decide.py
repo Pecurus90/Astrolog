@@ -106,7 +106,7 @@ def test_the_designation_settles_the_tie_when_the_sky_has_two_contenders():
 
 def test_the_sky_says_another_thing():
     """Il confine della regola: nel campo quella sigla **non c'e'** proprio, e allora si chiede.
-    Il nome resta agganciato come ipotesi -- una posa non resta mai scollegata -- e chi mostra la
+    Il nome resta agganciato come ipotesi -- un frame non resta mai scollegato -- e chi mostra la
     domanda ha i candidati per dire cosa c'e' invece."""
     d = decide.decide(
         raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-45", "M 45")], fov_radius_deg=1.0
@@ -134,7 +134,7 @@ def test_the_designation_settles_it_from_anywhere_in_the_field():
     """Si cerca fra **tutti** i candidati, non fra i primi.
 
     Sono i primi sette come li consegna la spina sul catalogo vero, puntando il campo di
-    `identify_bench.ORIONE` a 3x2 gradi -- lo stesso della posa in `test_identify_stage`:
+    `identify_bench.ORIONE` a 3x2 gradi -- lo stesso del frame in `test_identify_stage`:
     `NGC 1977`, la Running Man che l'header nomina, e' il **settimo** per punteggio, cioe'
     oltre i sei che la pagina mostra. Fermarsi ai primi la rimetterebbe in Da confermare."""
     cands = [
@@ -157,7 +157,7 @@ def test_the_designation_wins_even_with_its_centre_outside_the_frame():
 
     I candidati sono gia' soltanto cio' che si sovrappone alla foto: un oggetto grande puo'
     avere il centro fuori dal rettangolo ed essere lo stesso il soggetto. Se l'header lo nomina,
-    vince anche li' -- filtrare sul rettangolo rimetterebbe a chiedere proprio le pose che la
+    vince anche li' -- filtrare sul rettangolo rimetterebbe a chiedere proprio i frame che la
     regola deve chiudere."""
     cands = [
         voce("m-42", "M 42", size=90.0, mag=4.0),
@@ -250,7 +250,7 @@ def test_the_sole_name_is_never_certain():
 
 
 def test_a_free_name_without_sky_becomes_an_object_of_its_own():
-    """Le sette pose di M 101 del collaudo dicevano soltanto `Snapshot`: restano insieme sotto
+    """I sette frame di M 101 del collaudo dicevano soltanto `Snapshot`: restano insieme sotto
     quel nome, e un gesto solo in Da confermare le sistema tutte (Marco, 2026-09-09)."""
     d = decide.decide(raw_name="Snapshot", hit=None, cands=[], fov_radius_deg=None)
     assert d.branch == "free_name_only"
@@ -279,7 +279,7 @@ def test_no_name_and_no_sky_leaves_no_object(vuoto):
 
 def test_every_branch_says_a_word_of_the_closed_vocabulary():
     """Nessun ramo puo' inventare un metodo o una fiducia: il database li rifiuterebbe, ma
-    a valle e su una posa sola, mentre qui si vede tutto insieme."""
+    a valle e su un frame solo, mentre qui si vede tutto insieme."""
     casi = [
         dict(raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-31")], fov_radius_deg=1.0),
         dict(raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-45")], fov_radius_deg=1.0),

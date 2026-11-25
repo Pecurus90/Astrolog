@@ -72,7 +72,7 @@ async function misure(key: string, query: Domanda) {
   return data
 }
 
-/** La produzione come la chiede la rotta: `ottica:camera`, `none` per un pezzo che non si sa. */
+/** La produzione come la chiede la rotta: `ottica:camera`, `none` per uno strumento che non si sa. */
 function chiaveDi(p: Produzione): string {
   return `${p.optics_id ?? "none"}:${p.camera_id ?? "none"}`
 }

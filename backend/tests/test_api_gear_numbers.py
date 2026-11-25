@@ -165,7 +165,8 @@ def test_the_backfocus_counts_the_spacers_against_the_optics(archivio):
 
 
 def test_the_train_draws_the_pieces_the_numbers_read(archivio):
-    """Il treno ottico disegna i pezzi che i conti leggono: la parte scelta, la guida una sola."""
+    """Il treno ottico disegna gli strumenti che i conti leggono: la parte scelta, la guida una
+    sola."""
     ottica = pezzo(archivio, "optics", "TS 130 APO")["id"]
     camera = pezzo(archivio, "camera", "ASI2600MM")["id"]
     scelti = {

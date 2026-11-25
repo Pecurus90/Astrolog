@@ -1,9 +1,9 @@
-"""Lo stadio `solve`: il cielo di ogni posa, misurato da ASTAP.
+"""Lo stadio `solve`: il cielo di ogni frame, misurato da ASTAP.
 
 Vincolo di questi test: **non lanciano ASTAP**. Il lancio si inietta e qui si passa un finto
 che scrive l'esito che gli si dice. Cosi' la suite veloce gira anche su una macchina senza
 solver, ed e' l'unico modo di provare i casi che sul vero non si producono a comando (il
-timeout, la posa senza stelle, la cache che risponde al posto del solver).
+timeout, il frame senza stelle, la cache che risponde al posto del solver).
 """
 
 import os
@@ -63,7 +63,7 @@ def solver(esiti=None):
 
 
 def archivio(tmp_path, sessioni=(("M 31", 3), ("M 42", 2))):
-    """Un archivio di prova: piu' sessioni, ognuna con le sue pose. Le pose della stessa
+    """Un archivio di prova: piu' sessioni, ognuna con i suoi frame. I frame della stessa
     sessione hanno stesso oggetto e stessa notte, che e' come il solver le raggruppa."""
     root = tmp_path / "lib"
     for obj, quante in sessioni:
@@ -124,7 +124,7 @@ def archivio_letto(db_path, tmp_path):
 
 
 def test_solve_order_one_per_group(db_path, archivio_letto, tmp_path):
-    """Prima UNA posa per sessione, poi tutte le altre. Su un archivio vero sono 300 solve per
+    """Prima UN frame per sessione, poi tutti gli altri. Su un archivio vero sono 300 solve per
     vedere tutto invece di 10.000: dopo un minuto ogni sessione ha il suo cielo."""
     conn = connect(db_path)
     run = solver()
@@ -148,7 +148,7 @@ def test_solve_order_one_per_group(db_path, archivio_letto, tmp_path):
 
 
 def test_the_second_pass_takes_the_most_recent_first(db_path, archivio_letto, tmp_path):
-    """Dopo il primo giro si continua dalle pose piu' recenti: e' l'archivio che si sta
+    """Dopo il primo giro si continua dai frame piu' recenti: e' l'archivio che si sta
     guardando adesso, non quello di tre anni fa."""
     conn = connect(db_path)
     run = solver()
@@ -278,7 +278,7 @@ def test_a_sky_without_a_rectangle_is_still_a_sky(db_path, tmp_path):
 
 
 def test_solve_failure_is_a_reason(db_path, archivio_letto, tmp_path):
-    """Una posa che non si risolve resta in archivio col suo perche', e la corsa continua:
+    """Un frame che non si risolve resta in archivio col suo perche', e la corsa continua:
     nessuna ora persa dai totali, solo un cielo che manca."""
     conn = connect(db_path)
     ricevuta = corri(conn, solver(esiti={1: None, 3: TimeoutError()}), cache=tmp_path / "cache")
@@ -298,7 +298,7 @@ def test_solve_failure_is_a_reason(db_path, archivio_letto, tmp_path):
 
 def test_a_failure_is_not_cached(db_path, archivio_letto, tmp_path):
     """Un fallimento non si mette in cache: domani ASTAP puo' avere un database piu' fitto, o
-    la posa puo' ereditare un indizio da una sorella. Solo le soluzioni sono immutabili."""
+    il frame puo' ereditare un indizio da una sorella. Solo le soluzioni sono immutabili."""
     cache = tmp_path / "cache"
     conn = connect(db_path)
     corri(conn, solver(esiti=dict.fromkeys(range(5))), cache=cache)
@@ -312,7 +312,7 @@ def test_a_failure_is_not_cached(db_path, archivio_letto, tmp_path):
 
 def test_the_lost_sky_is_looked_up_from_the_list(db_path):
     """Chi ha perso il cielo si cerca partendo dalla lista: partire dagli stadi scorrerebbe ogni
-    posa risolta dell'archivio a ogni fine scansione, anche con la lista vuota."""
+    frame risolto dell'archivio a ogni fine scansione, anche con la lista vuota."""
     conn = connect(db_path)
     with idlist.holding(conn, []):
         piano = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + store.LOST_SKY))
@@ -328,7 +328,7 @@ def test_the_lost_sky_is_looked_up_from_the_list(db_path):
 
 
 def test_a_frame_without_a_pointing_hint_inherits_it_from_its_sister(db_path, tmp_path):
-    """Una posa il cui header non dice dove puntava eredita l'indizio dalla sorella gia'
+    """Un frame il cui header non dice dove puntava eredita l'indizio dalla sorella gia'
     risolta della sua sessione: e' cio' che la salva dai 23 secondi della ricerca cieca."""
     root = tmp_path / "lib"
     write_light(root / "a.fits", obj="M 31", date="2024-05-11T21:00:00", RA=10.5, DEC=41.2)
@@ -340,7 +340,7 @@ def test_a_frame_without_a_pointing_hint_inherits_it_from_its_sister(db_path, tm
     corri(conn, run, cache=tmp_path / "cache")
 
     seconda = run.solves()[1]
-    assert "-ra" in seconda, "la seconda posa avrebbe dovuto ereditare l'indizio"
+    assert "-ra" in seconda, "il secondo frame avrebbe dovuto ereditare l'indizio"
     # e l'indizio ereditato e' quello MISURATO dalla sorella, non quello dell'header
     assert float(seconda[seconda.index("-ra") + 1]) == pytest.approx(210.8014 / 15, abs=0.001)
     conn.close()
@@ -363,8 +363,8 @@ def test_the_first_frame_of_a_session_without_a_hint_searches_blind(db_path, tmp
 
 
 def test_stopping_leaves_a_coherent_prefix(db_path, archivio_letto, tmp_path):
-    """Chi ferma la corsa a meta' trova le pose gia' risolte davvero risolte e le altre ancora
-    da fare: si chiude fra un frame e l'altro, a transazione chiusa, mai a meta' di una."""
+    """Chi ferma la corsa a meta' trova i frame gia' risolti davvero risolti e gli altri ancora
+    da fare: si chiude fra un frame e l'altro, a transazione chiusa, mai a meta' di uno."""
     conn = connect(db_path)
     corsa = solve_frames(conn, exe="astap", run=solver(), cache=tmp_path / "cache")
     next(corsa)
@@ -381,7 +381,7 @@ def test_stopping_leaves_a_coherent_prefix(db_path, archivio_letto, tmp_path):
 def test_a_frame_that_explodes_does_not_stop_the_others(
     db_path, archivio_letto, tmp_path, monkeypatch
 ):
-    """Un guasto nostro su una posa la segna `failed` col codice generico e la corsa continua:
+    """Un guasto nostro su un frame lo segna `failed` col codice generico e la corsa continua:
     e' lo stesso patto della scansione, che conta i file illeggibili e va avanti."""
     from astrolog.spine import solve as modulo
 
@@ -411,7 +411,7 @@ def test_a_frame_that_explodes_does_not_stop_the_others(
 
 
 def test_a_frame_whose_disc_is_unplugged_waits_for_it(db_path, archivio_letto, tmp_path):
-    """Il disco esterno staccato: la posa resta DA FARE e riprende quando torna. Nessuna
+    """Il disco esterno staccato: il frame resta DA FARE e riprende quando torna. Nessuna
     chiamata al solver per un file che non c'e'."""
     conn = connect(db_path)
     conn.execute("UPDATE positions SET status = 'missing'")
@@ -534,7 +534,7 @@ def test_the_cache_key_is_the_fingerprint_not_the_row_number(db_path, tmp_path):
     assert ids != {1, 2}, "gli id non sono cambiati: il test non proverebbe niente"
 
     def solo_la_nuova(cmd, timeout_s):
-        assert "x.fits" in " ".join(cmd), f"ha ri-risolto una posa che era gia' in cache: {cmd}"
+        assert "x.fits" in " ".join(cmd), f"ha ri-risolto un frame che era gia' in cache: {cmd}"
         base = cmd[cmd.index("-o") + 1]
         pathlib.Path(f"{base}.ini").write_text(INI, encoding="utf-8")
         return 0, ""
@@ -545,7 +545,7 @@ def test_the_cache_key_is_the_fingerprint_not_the_row_number(db_path, tmp_path):
 
 
 def test_the_sister_must_be_of_the_same_object(db_path, tmp_path):
-    """L'indizio si eredita solo da una posa dello STESSO oggetto. Due pose senza `OBJECT`
+    """L'indizio si eredita solo da un frame dello STESSO oggetto. Due frame senza `OBJECT`
     riprese la stessa notte con lo stesso setup finiscono nello stesso gruppo del solver pur
     guardando due punti di cielo diversi: ereditare li' manderebbe il solver nel posto
     sbagliato, e non risolverebbe -- mentre alla cieca ce l'avrebbe fatta."""
@@ -577,7 +577,7 @@ SENZA_CATALOGO = "\nPLTSOLVD=F\nERROR=No star database found.\n"
 # L'altro modo di essere installato a meta', e ASTAP lo dice con un'altra frase: il catalogo e'
 # un download da ~1 GB, e interrotto a meta' e' comune quanto non fatto.
 A_META = "\nPLTSOLVD=F\nERROR=Error reading star database.\n"
-# Il finto risponde cosi' a OGNI chiamata: senza il catalogo ogni posa fallisce identica, e un
+# Il finto risponde cosi' a OGNI chiamata: senza il catalogo ogni frame fallisce identico, e un
 # finto che sbaglia solo la prima proverebbe il contrario dello scenario.
 SEMPRE = {i: SENZA_CATALOGO for i in range(10)}
 
@@ -586,21 +586,21 @@ def test_astap_without_its_star_database_is_not_a_dead_end(db_path, archivio_let
     """L'errore di installazione piu' comune: ASTAP c'e' (il catalogo e' un download separato)
     ma non ha le sue stelle.
 
-    Prima finiva nel ripiego `no_solution`, che e' **terminale**: le pose diventavano `failed`,
+    Prima finiva nel ripiego `no_solution`, che e' **terminale**: i frame diventavano `failed`,
     Avvia non le riprovava mai piu', e l'unica uscita per l'utente era cancellare il database
     dell'app. Deve invece restare in coda, come quando ASTAP non c'e' affatto."""
     conn = connect(db_path)
     ricevuta = corri(conn, solver(esiti=SEMPRE), cache=tmp_path / "cache")
 
-    assert set(stato(conn).values()) == {"pending"}, "nessuna posa deve diventare `failed`"
+    assert set(stato(conn).values()) == {"pending"}, "nessun frame deve diventare `failed`"
     assert ricevuta["unsolved"] == 0
     conn.close()
 
 
 def test_a_missing_star_database_stops_the_run_and_says_so(db_path, archivio_letto, tmp_path):
-    """Non si prova posa per posa cio' che fallira' identico su tutte.
+    """Non si prova frame per frame cio' che fallira' identico su tutti.
 
-    Senza il catalogo **ogni** posa fallira' allo stesso modo: lanciare ASTAP cinquemila volte
+    Senza il catalogo **ogni** frame fallira' allo stesso modo: lanciare ASTAP cinquemila volte
     per scoprirlo e' un'ora buttata, e la ricevuta direbbe solo "in attesa" senza dire perche'.
     Si ferma alla prima e lo dichiara, come la scansione fa con la radice sparita."""
     conn = connect(db_path)

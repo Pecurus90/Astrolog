@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 /**
- * **Cosa hai ripreso**, accanto a ogni gruppo di pose su cui l'app chiede: per rispondere "quale
+ * **Cosa hai ripreso**, accanto a ogni gruppo di frame su cui l'app chiede: per rispondere "quale
  * filtro" o "da dove" senza andare a memoria (Marco, 15/9/2026).
  *
- * - **Gli oggetti che il cielo ha trovato, con quante pose**, nell'ordine che manda l'API; oltre il
+ * - **Gli oggetti che il cielo ha trovato, con quanti frame**, nell'ordine che manda l'API; oltre il
  *   terzo si dice quanti altri, perche' una camera copre anni di notti.
- * - **I due vuoti si dicono diversi**: una posa in cui il cielo non ha trovato niente non e' una posa
+ * - **I due vuoti si dicono diversi**: un frame in cui il cielo non ha trovato niente non e' un frame
  *   che non ha ancora guardato o non e' riuscito a guardare. Un vuoto a zero non si scrive.
- * - **Vale in tutte le sezioni che chiedono per gruppo**: i luoghi, i filtri, l'attrezzatura, i
+ * - **Vale in tutte le sezioni che chiedono per gruppo**: i siti, i filtri, l'attrezzatura, i
  *   frame senza data.
  */
 import { screen } from "@testing-library/react"
@@ -91,7 +91,7 @@ function aperta() {
 const SITI = /frame senza sito/i
 
 describe("Da confermare -- cosa hai ripreso", () => {
-  it("i primi tre oggetti con le loro pose, quanti altri, e i due vuoti detti diversi", async () => {
+  it("i primi tre oggetti con i loro frame, quanti altri, e i due vuoti detti diversi", async () => {
     aperta()
     const posto = riga(await vaiASezione(SITI), "45,8500 N - 11,5800 E")
     expect(prove(posto).slice(0, 2)).toEqual([

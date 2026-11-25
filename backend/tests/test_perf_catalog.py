@@ -59,7 +59,7 @@ def test_catalog_load_seconds_does_not_regress(tmp_path):
 
 @pytest.mark.lento
 def test_the_cone_stays_fast_on_the_real_catalogue(conn):
-    """La ricerca per cono la fara' `identify` una volta per posa: su diecimila pose, un
+    """La ricerca per cono la fara' `identify` una volta per frame: su diecimila frame, un
     decimo di secondo l'una sarebbe un'ora. Deve restare nell'ordine del millesimo, ed e'
     per questo che le voci portano il versore e l'indice."""
     load.load_catalog(conn, real_path())

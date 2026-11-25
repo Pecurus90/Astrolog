@@ -60,7 +60,7 @@ def test_slow_successes_raise_the_limit_and_a_failed_blind_caps_it():
 
 
 def test_a_launch_gets_the_time_learnt_on_this_machine_for_its_mode(conn, tmp_path):
-    """Venti pose con indizio risolte in un attimo: la posa della passata dopo ha il pavimento,
+    """Venti frame con indizio risolti in un attimo: il frame della passata dopo ha il pavimento,
     30 s; il tempo del lancio e la macchina restano scritti."""
     nas = tmp_path / "nas"
     for k in range(20):

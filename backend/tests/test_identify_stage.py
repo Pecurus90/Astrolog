@@ -1,4 +1,4 @@
-"""Lo stadio `identify` che scrive: da una posa a un oggetto dell'archivio.
+"""Lo stadio `identify` che scrive: da un frame a un oggetto dell'archivio.
 
 Gira sul **catalogo vero** e su un DB nato da `schema.sql`: e' cio' che l'utente incontrera'.
 Qui si prova cosa finisce nel database -- quante righe, con che nome, con che fiducia -- non che
@@ -45,7 +45,7 @@ def test_the_raw_header_name_is_always_kept(archivio):
 
 def test_two_frames_of_the_same_galaxy_make_one_object(archivio):
     """E' il difetto contro cui esiste tutta questa casella: due righe e le ore si sparpagliano.
-    Le due pose arrivano scritte in due modi diversi, come negli header veri."""
+    I due frame arrivano scritti in due modi diversi, come negli header veri."""
     a = posa(archivio, obj="M31", cielo=M31, hash_="a")
     b = posa(archivio, obj="Messier 31", cielo=M31, hash_="b")
     corri(archivio)
@@ -69,7 +69,7 @@ def test_an_unsolved_frame_with_a_historic_name_says_so(archivio):
 
 
 def test_an_unsolved_frame_with_a_free_name_becomes_an_object_of_its_own(archivio):
-    """Le sette pose di M 101 del collaudo dicevano soltanto `Snapshot`: restano insieme."""
+    """I sette frame di M 101 del collaudo dicevano soltanto `Snapshot`: restano insieme."""
     a = posa(archivio, obj="Snapshot", solve="failed", hash_="a")
     b = posa(archivio, obj="Snapshot", solve="failed", hash_="b")
     ricevuta = corri(archivio)
@@ -83,7 +83,7 @@ def test_an_unsolved_frame_with_a_free_name_becomes_an_object_of_its_own(archivi
 
 def test_a_frame_with_no_name_and_no_sky_is_skipped_not_left_pending(archivio):
     """`pending` per sempre vorrebbe dire un residuo che non cala mai e un pulsante Avvia che
-    parte a vuoto a ogni clic. Le pose si leggeranno da questo codice in Da confermare."""
+    parte a vuoto a ogni clic. I frame si leggeranno da questo codice in Da confermare."""
     frame = posa(archivio, solve="failed")
     ricevuta = corri(archivio)
     riga = archivio.execute(
@@ -111,7 +111,7 @@ def test_a_designation_past_the_shortlist_still_settles_it(archivio):
 
     Campo vero di Orione, 3x2 gradi: `NGC 1977` e' il **settimo** per punteggio, cioe' fuori dai
     sei che la pagina mostra. L'header lo nomina, quindi il cielo lo sta confermando e non si
-    chiede niente. Passando alla decisione la lista tagliata, questa posa finiva in Da
+    chiede niente. Passando alla decisione la lista tagliata, questo frame finiva in Da
     confermare -- ed e' il caso che la regola nuova doveva chiudere."""
     frame = posa(archivio, obj="NGC 1977", cielo=ORIONE, campo=(3.0, 2.0))
     ricevuta = corri(archivio)
@@ -125,7 +125,7 @@ def test_a_designation_past_the_shortlist_still_settles_it(archivio):
 
 
 def test_a_doubt_from_one_frame_is_not_erased_by_the_next(archivio):
-    """`low` e' assorbente: un oggetto su cui una posa ha lasciato un dubbio resta da confermare
+    """`low` e' assorbente: un oggetto su cui un frame ha lasciato un dubbio resta da confermare
     finche' l'utente non risponde."""
     posa(archivio, obj="M 31", cielo=M45, hash_="a")  # dubbia: il cielo dice un'altra cosa
     posa(archivio, obj="M 31", cielo=M31, hash_="b")  # sicura
@@ -135,7 +135,7 @@ def test_a_doubt_from_one_frame_is_not_erased_by_the_next(archivio):
 
 
 def test_one_unsolved_frame_does_not_downgrade_forty_confirmed_ones(archivio):
-    """Il caso vero dell'Iris: 40 pose col cielo e una che il solver non ha risolto. Tenere
+    """Il caso vero dell'Iris: 40 frame col cielo e uno che il solver non ha risolto. Tenere
     sempre la fiducia piu' dubbiosa faceva scrivere `exact_name` / `high` a un oggetto che il
     cielo aveva confermato quaranta volte -- non cambiava cosa l'app chiede, ma lo raccontava
     sbagliato. Solo `low` e' una domanda, e solo `low` resta."""
@@ -152,13 +152,13 @@ def test_the_user_answer_is_never_overwritten(archivio):
         "INSERT INTO objects(id, catalog_slug, identity_method, identity_confidence, created_at)"
         " VALUES(9, 'm-31', 'user', 'user', 'now')"
     )
-    # con una posa gia' attaccata: un oggetto a zero pose e' un residuo e la spazzata lo toglie
+    # con un frame gia' attaccato: un oggetto a zero frame e' un residuo e la spazzata lo toglie
     sua = archivio.execute(
         "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
         " VALUES('gia-sua', 'light', '[]', 'now')"
     ).lastrowid
     archivio.execute("UPDATE frames SET object_id = 9 WHERE id = ?", (sua,))
-    frame = posa(archivio, obj="M 31", cielo=M45)  # una posa dubbia, che vorrebbe abbassare
+    frame = posa(archivio, obj="M 31", cielo=M45)  # un frame dubbio, che vorrebbe abbassare
     corri(archivio)
     obj = oggetto_di(archivio, frame)
     assert (obj["id"], obj["identity_method"], obj["identity_confidence"]) == (9, "user", "user")
@@ -201,7 +201,7 @@ def test_an_object_whose_names_are_all_taken_still_knows_what_it_is(archivio):
     senza catalogo che si e' preso `NGC 7318`, e la voce `HCG 92` che porta lo stesso nome
     comune (nel catalogo 110 voci si spartiscono 42 nomi comuni). L'oggetto nasce senza nomi
     propri, e regge perche' ha `catalog_slug`: il catalogo sa come si chiama. Cio' che NON deve
-    succedere e' che si perda la posa, o che il conteggio dei nomi rifiutati menta."""
+    succedere e' che si perda il frame, o che il conteggio dei nomi rifiutati menta."""
     occupante(archivio, 9, ["NGC 7318", "Stephan's Quintet"])
     frame = posa(archivio, obj="NGC 7318", solve="failed")
     ricevuta = corri(archivio)
@@ -215,7 +215,7 @@ def test_an_object_whose_names_are_all_taken_still_knows_what_it_is(archivio):
 
 def test_two_objects_outside_the_catalog_can_coexist(archivio):
     """L'indice unico su `catalog_slug` non li fa litigare: in SQLite i NULL non contendono. Se
-    fosse falso, TUTTE le pose senza cielo dopo la prima finirebbero `failed`."""
+    fosse falso, TUTTI i frame senza cielo dopo il primo finirebbero `failed`."""
     posa(archivio, obj="Snapshot", solve="failed", hash_="a")
     posa(archivio, obj="Test", solve="failed", hash_="b")
     ricevuta = corri(archivio)
@@ -249,10 +249,10 @@ def test_running_the_stage_twice_changes_nothing(archivio):
 def test_the_sweep_runs_on_an_already_grouped_archive(archivio):
     """La sequenza dell'Applica su un archivio gia' raggruppato, che schiantava l'app.
 
-    Premere Applica rimette in coda `identify`, che stacca le pose e **poi** spazza gli oggetti
-    rimasti a zero pose: in quel momento l'oggetto e' vuoto ma la **sessione** del giro
+    Premere Applica rimette in coda `identify`, che stacca i frame e **poi** spazza gli oggetti
+    rimasti a zero frame: in quel momento l'oggetto e' vuoto ma la **sessione** del giro
     precedente lo punta ancora. Senza il `CASCADE` su `sessions.object_id` era `FOREIGN KEY
-    constraint failed` -- sull'archivio vero, 11.005 pose, 0,16 s dopo l'inizio di `identify` e
+    constraint failed` -- sull'archivio vero, 11.005 frame, 0,16 s dopo l'inizio di `identify` e
     3,4 s dopo l'Applica, e la corsa moriva li'.
 
     La sessione se ne va con l'oggetto e non porta via niente: `group`, che nella catena viene
@@ -269,7 +269,7 @@ def test_the_sweep_runs_on_an_already_grouped_archive(archivio):
     raggruppa(archivio)
 
     assert oggetto_di(archivio, frame)["catalog_slug"] == "m-31"
-    # la posa non ha perso la sua sessione: `group` gliel'ha rifatta nella stessa catena
+    # il frame non ha perso la sua sessione: `group` gliel'ha rifatta nella stessa catena
     assert archivio.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 1
     assert archivio.execute("SELECT session_id FROM frames WHERE id = ?", (frame,)).fetchone()[0]
 
@@ -278,9 +278,9 @@ def test_the_sweep_leaves_the_sessions_of_the_objects_it_keeps(archivio):
     """L'altra meta' del `CASCADE`: cio' che **non** deve prendere.
 
     La guardia qui sopra prova che la corsa non muore; questa prova che una cancellazione
-    allargata non porta via una posa a nessuno. Due oggetti nella stessa notte, e solo il primo
-    si svuota (l'utente ha risposto su quello): la sessione dell'altro, e la `session_id` delle
-    sue pose, devono restare quelle di prima. Con una posa sola in archivio -- lo scenario delle
+    allargata non porta via un frame a nessuno. Due oggetti nella stessa notte, e solo il primo
+    si svuota (l'utente ha risposto su quello): la sessione dell'altro, e la `session_id` dei
+    suoi frame, devono restare quelle di prima. Con un frame solo in archivio -- lo scenario delle
     altre due guardie -- un `DELETE` troppo largo non avrebbe niente da portare via, e passerebbe
     lo stesso."""
     mio = posa(archivio, obj="M 31", cielo=M31, quando=NOTTE, hash_="a")
@@ -297,7 +297,7 @@ def test_the_sweep_leaves_the_sessions_of_the_objects_it_keeps(archivio):
     invalidate(archivio, [mio], "identify")
     ricevuta = corri(archivio)
 
-    assert ricevuta["swept"] == 1  # se ne va m-31, che e' rimasto a zero pose
+    assert ricevuta["swept"] == 1  # se ne va m-31, che e' rimasto a zero frame
     assert (
         archivio.execute("SELECT session_id FROM frames WHERE id = ?", (altrui,)).fetchone()[0]
         == sessione_altrui
@@ -307,7 +307,7 @@ def test_the_sweep_leaves_the_sessions_of_the_objects_it_keeps(archivio):
 
 
 def test_a_frame_still_queued_at_the_solver_is_left_alone(archivio):
-    """ASTAP non c'e' ancora: le pose aspettano il loro cielo, non un nome dato in fretta."""
+    """ASTAP non c'e' ancora: i frame aspettano il loro cielo, non un nome dato in fretta."""
     posa(archivio, obj="M 31", solve="pending")
     ricevuta = corri(archivio)
     assert ricevuta["total"] == 0

@@ -1,4 +1,4 @@
-"""Da confermare, "sono lo stesso pezzo?": due grafie della stessa camera, e l'app lo fa notare.
+"""Da confermare, "sono lo stesso strumento?": due grafie della stessa camera, e l'app lo fa notare.
 
 Marco, 15/9/2026: `ATR2600M` e `ATR2600M(USB2.0)` sono la stessa camera vista da due driver, e la
 pagina deve chiederlo. Un'unione non si disfa, quindi la regola chiede una **prova positiva** e
@@ -6,9 +6,9 @@ non la sola assenza di differenze: la regola larga proponeva `Canon EF (50mm)` c
 `C8` con `C8 (Hyperstar)`, `Atik 460EX (Mono)` con `(Color)`. Il criterio sta in
 `api/lookalike.py`.
 
-Le prove guardano sempre il pezzo INSERITO: ha zero pose, quindi e' il piu' leggero e il solo che
-puo' essere chiesto. Guardare l'altro farebbe passare la prova per la sola regola della direzione,
-qualunque cosa dica la regola sotto esame. L'archivio sintetico ha `ATR2600M` (1 posa) e
+Le prove guardano sempre lo strumento INSERITO: ha zero frame, quindi e' il piu' leggero e il solo
+che puo' essere chiesto. Guardare l'altro farebbe passare la prova per la sola regola della
+direzione, qualunque cosa dica la regola sotto esame. L'archivio sintetico ha `ATR2600M` (1 frame) e
 `ATR2600M(USB2.0)` (7), mono e con pixel 3,76; `QHY268M` e `ASI2600MM Pro` a 3,76; la Canon a colori
 a 4,29.
 """
@@ -36,15 +36,15 @@ def _id(client, name):
 
 
 def _proposte(client, *nomi):
-    """Per ogni nome, il pezzo in cui la pagina propone di unirlo: `None` se non chiede."""
+    """Per ogni nome, lo strumento in cui la pagina propone di unirlo: `None` se non chiede."""
     domande = {q["name"]: q["into_id"] for q in review(client)["lookalikes"]}
     return [domande.get(n) for n in nomi]
 
 
 def test_two_spellings_of_the_same_camera_are_proposed_for_a_merge(client):
     """Fra parentesi il driver scrive un'annotazione, non il modello -- lo stesso principio per
-    cui l'indice ASCOM `(1)` si toglie gia'. Si chiede sulla grafia con meno pose, verso quella
-    con piu' pose, e una volta sola."""
+    cui l'indice ASCOM `(1)` si toglie gia'. Si chiede sulla grafia con meno frame, verso quella
+    con piu' frame, e una volta sola."""
     tenuta = _id(client, "ATR2600M(USB2.0)")
     assert _proposte(client, "ATR2600M", "ATR2600M(USB2.0)") == [tenuta, None]
 
@@ -120,8 +120,8 @@ def test_names_that_clean_down_to_nothing_are_not_the_same_name(client):
 
 
 def test_seeing_the_page_does_not_answer_the_question(client):
-    """L'app non puo' sapere se sono lo stesso pezzo (Marco, 25/9/2026): un Applica a vuoto non e'
-    una risposta, e la domanda resta nel conto."""
+    """L'app non puo' sapere se sono lo stesso strumento (Marco, 25/9/2026): un Applica a vuoto non
+    e' una risposta, e la domanda resta nel conto."""
     prima = review(client)
     apply(client)
     dopo = review(client)
@@ -130,7 +130,7 @@ def test_seeing_the_page_does_not_answer_the_question(client):
 
 
 def test_a_yes_merges_the_two_spellings(client):
-    """Si' e' l'unione: la grafia leggera sparisce, le sue pose passano all'altra, e la domanda con
+    """Si' e' l'unione: la grafia leggera sparisce, i suoi frame passano all'altra, e la domanda con
     lei."""
     leggera, tenuta = _id(client, "ATR2600M"), _id(client, "ATR2600M(USB2.0)")
     fatto = apply(client, lookalikes=[{"id": leggera, "into_id": tenuta, "same": True}])
@@ -168,7 +168,7 @@ def test_a_no_survives_a_rename_of_the_other_camera(client):
 
 def test_two_noes_from_the_same_camera_both_hold(client):
     """Una camera puo' dire no a piu' di una grafia: il secondo no non cancella il primo. Qui la
-    terza grafia prende le pose della tenuta, si risponde no anche a lei, e poi le pose tornano:
+    terza grafia prende i frame della tenuta, si risponde no anche a lei, e poi i frame tornano:
     la prima coppia non deve riaprirsi."""
     _pezzo(client, "camera", "ATR2600M (USB3)", pixel_size_um=PIXEL)
     leggera, tenuta = _id(client, "ATR2600M"), _id(client, "ATR2600M(USB2.0)")
@@ -200,8 +200,8 @@ def test_an_answer_on_a_pair_the_page_no_longer_asks_is_refused(client):
 
 
 def test_the_cameras_do_not_search_the_rigs_row_by_row(client):
-    """Il conto delle pose di ogni camera non deve cercare i setup **una volta per coppia**
-    (posa, camera): e' cio' che rendeva la pagina lenta su un archivio grande. Il piano e'
+    """Il conto dei frame di ogni camera non deve cercare i setup **una volta per coppia**
+    (frame, camera): e' cio' che rendeva la pagina lenta su un archivio grande. Il piano e'
     deterministico: si chiede a SQLite invece di cronometrare."""
     with connect(client.app.state.db_path) as conn:
         piano = [
@@ -212,7 +212,7 @@ def test_the_cameras_do_not_search_the_rigs_row_by_row(client):
 
 
 def test_lookalike_counts_only_the_cameras_of_a_pair(client, monkeypatch):
-    """Le pose si contano solo per le camere che stanno in un gruppo di almeno due: le altre non
+    """I frame si contano solo per le camere che stanno in un gruppo di almeno due: le altre non
     diventano mai una domanda, e contarle vorrebbe dire scorrere l'archivio per ogni camera."""
     contate = []
     vero = lookalike._frames_of
@@ -230,7 +230,7 @@ def test_lookalike_counts_only_the_cameras_of_a_pair(client, monkeypatch):
 
 def test_lookalike_does_not_count_a_pair_already_answered_no(client, monkeypatch):
     """Un gruppo in cui ogni coppia ha gia' avuto un no non chiede piu' niente, qualunque camera
-    sia la piu' usata: contarne le pose vorrebbe dire scorrere l'archivio a ogni apertura, per
+    sia la piu' usata: contarne i frame vorrebbe dire scorrere l'archivio a ogni apertura, per
     sempre, proprio per chi ha due camere dello stesso modello."""
     leggera, tenuta = _id(client, "ATR2600M"), _id(client, "ATR2600M(USB2.0)")
     apply(client, lookalikes=[{"id": leggera, "into_id": tenuta, "same": False}])
@@ -254,7 +254,7 @@ def test_the_same_pair_twice_in_one_apply_is_refused(client):
 
 
 def test_the_pairs_that_weigh_most_come_first(client):
-    """In cima la coppia con piu' pose, fra le due grafie: e' dove una risposta sposta di piu'."""
+    """In cima la coppia con piu' frame, fra le due grafie: e' dove una risposta sposta di piu'."""
     _pezzo(client, "camera", "QHY600M", pixel_size_um=4.63)
     _pezzo(client, "camera", "QHY600M (USB)", pixel_size_um=4.63)
     assert [q["name"] for q in review(client)["lookalikes"]] == ["ATR2600M", "QHY600M (USB)"]

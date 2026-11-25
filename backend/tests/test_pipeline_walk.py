@@ -47,7 +47,7 @@ def test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_r
 
 
 def test_a_linked_folder_is_walked(tmp_path):
-    """Archivio dietro collegamento (cartella verso altro disco): saltarlo perde tutte le pose."""
+    """Archivio dietro collegamento (cartella verso altro disco): saltarlo perde tutti i frame."""
     _touch(str(tmp_path), "altro_disco", "posa.fits")
     root = tmp_path / "archivio"
     root.mkdir()
@@ -146,7 +146,7 @@ def test_a_symlink_to_a_missing_folder_is_unreadable(tmp_path, monkeypatch):
 
 def test_the_mac_twin_files_are_not_collected(tmp_path):
     """Gemello Mac `._nome.fits` su chiavetta o NAS: metadati Finder, non FITS. Senza,
-    "1.200 file non letti" su 1.200 pose sane."""
+    "1.200 file non letti" su 1.200 frame sani."""
     root = str(tmp_path)
     _touch(root, "M42.fits")
     _touch(root, "._M42.fits")
@@ -161,7 +161,7 @@ def test_the_mac_twin_files_are_not_collected(tmp_path):
 )
 def test_nas_bins_and_snapshots_stay_out_on_every_system(tmp_path, monkeypatch, service):
     """Cestini e istantanee dei NAS, visti da Docker/Linux: niente punto ne' attributo.
-    Prima: pose cancellate vive, istantanee contate come copie (eccezione ADR 0031)."""
+    Prima: frame cancellati vivi, istantanee contate come copie (eccezione ADR 0031)."""
     monkeypatch.setattr(walk, "PLATFORM", "linux")
     root = str(tmp_path)
     _touch(root, "notte", "buona.fits")
@@ -172,7 +172,7 @@ def test_nas_bins_and_snapshots_stay_out_on_every_system(tmp_path, monkeypatch, 
 
 
 def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatch):
-    """Cestino = pose cancellate. Nascosto per proprieta' (punto, attributo Windows), non per nome;
+    """Cestino = frame cancellati. Nascosto per proprieta' (punto, attributo Windows), non per nome;
     attributo finto: su Mac e Linux non esiste. Cartelle saltate si nominano."""
     monkeypatch.setattr(walk, "PLATFORM", "win32")
     root = str(tmp_path)
@@ -291,7 +291,7 @@ def test_a_file_whose_sign_cannot_be_read_is_taken_as_on_the_disk(tmp_path, monk
 
 def test_an_old_icloud_placeholder_counts_as_online_only(tmp_path):
     """`.Nome.fits.icloud` (iCloud prima di Sonoma): solo online, col nome vero. No: non FITS,
-    gemello `._`, segnaposto accanto al file vero (posa c'e')."""
+    gemello `._`, segnaposto accanto al file vero (frame c'e')."""
     root = str(tmp_path)
     _touch(root, ".M42.FITS.icloud")
     _touch(root, ".M44.fits.fz.icloud")

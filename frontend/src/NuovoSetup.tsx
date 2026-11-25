@@ -12,7 +12,7 @@ import { misuraConVirgola } from "./scritto"
 type Pezzo = components["schemas"]["InstrumentOnPage"]
 
 /**
- * Un **setup** scritto a mano (tavola v82 `modulo`, tipo Setup): ottica e camera fra i tuoi pezzi,
+ * Un **setup** scritto a mano (tavola v82 `modulo`, tipo Setup): ottica e camera fra i tuoi strumenti,
  * a pillole, e la focale effettiva, che senza farebbe nascere un doppione il giorno che i file la
  * dicono. E' quello che la scansione trovera': il setup e' la sua impronta.
  */

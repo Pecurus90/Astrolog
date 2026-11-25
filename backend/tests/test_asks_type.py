@@ -1,12 +1,12 @@
-"""Chi aspetta una risposta sul tipo e' scritto sulla posa (`frames.asks_type`), e lo scritto e'
+"""Chi aspetta una risposta sul tipo e' scritto sul frame (`frames.asks_type`), e lo scritto e'
 cio' che la regola direbbe dopo ogni strada che cambia un suo ingresso: lo riscrivono i trigger di
 `schema.sql`, non chi scrive.
 
 La regola (la vista `frame_waits`) guarda il tipo del file, la risposta della cartella della sua
 prima posizione viva e lo stato del cielo. Chi legge -- il residuo, `ready`, Da confermare, lo
-stacco -- legge il segno. Un segno rimasto a 0 su una posa che la regola ferma e' il caso
+stacco -- legge il segno. Un segno rimasto a 0 su un frame che la regola ferma e' il caso
 pericoloso: `identify` la prenderebbe, e un dark diventerebbe ore. Per questo ogni prova di una
-strada che cambia un ingresso confronta TUTTE le pose con la regola. Poi le cartelle della domanda,
+strada che cambia un ingresso confronta TUTTI i frame con la regola. Poi le cartelle della domanda,
 scritte a fine stadio, e i piani di chi legge.
 """
 
@@ -32,7 +32,7 @@ from test_solve import solver
 
 
 def _posa(conn, folder_id, rel_path, image_type="unknown"):
-    """Una posa con la sua posizione e i suoi stadi da fare, come la fa la scansione: prima il
+    """Un frame con la sua posizione e i suoi stadi da fare, come lo fa la scansione: prima il
     frame, poi la posizione."""
     frame_id = conn.execute(
         "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
@@ -61,14 +61,14 @@ def _scritto(conn, frame_id):
 
 
 def _come_la_regola(conn):
-    """Nessuna posa ha un segno diverso da cio' che la regola dice adesso."""
+    """Nessun frame ha un segno diverso da cio' che la regola dice adesso."""
     sql = f"SELECT f.id, f.asks_type, ({REGOLA}) AS regola FROM frames f"  # noqa: S608 - costante
     storte = [(r["id"], r["asks_type"], r["regola"]) for r in conn.execute(sql)]
     assert [s for s in storte if s[1] != s[2]] == []
 
 
 def test_a_new_frame_without_type_waits_from_the_start(conn):
-    """Appena entrata, una posa senza tipo aspetta: il cielo non l'ha ancora guardata. Una che dice
+    """Appena entrato, un frame senza tipo aspetta: il cielo non l'ha ancora guardato. Uno che dice
     di essere un light no."""
     radice = add_folder(conn, "D:/Astro")
     muta = _posa(conn, radice, "M51/a.fits")
@@ -87,7 +87,8 @@ def test_a_frame_that_enters_a_folder_answered_light_does_not_wait(conn):
 
 
 def test_the_sky_moves_the_mark_both_ways(conn):
-    """Risolta, la posa e' una foto e non aspetta; rimessa in fila dal cielo, torna ad aspettare."""
+    """Risolto, il frame e' una foto e non aspetta; rimesso in fila dal cielo, torna ad
+    aspettare."""
     radice = add_folder(conn, "D:/Astro")
     posa = _posa(conn, radice, "M51/a.fits")
     sky_solved(conn, posa)
@@ -100,7 +101,7 @@ def test_the_sky_moves_the_mark_both_ways(conn):
 
 
 def test_an_answer_moves_the_mark_of_every_frame_of_its_folder(conn):
-    """Una risposta "calibrazione" ferma anche una posa risolta; "foto del cielo" lascia andare
+    """Una risposta "calibrazione" ferma anche un frame risolto; "foto del cielo" lascia andare
     anche una che il cielo non sa dire. Le altre cartelle non si muovono."""
     radice = add_folder(conn, "D:/Astro")
     risolta = _posa(conn, radice, "dark/a.fits")
@@ -114,8 +115,8 @@ def test_an_answer_moves_the_mark_of_every_frame_of_its_folder(conn):
 
 
 def test_an_answer_rewrites_only_the_frames_of_its_folder(conn):
-    """Cento risposte su 21.000 pose costavano 8,5 s perche' ognuna riscriveva tutte le pose senza
-    tipo. Le pose di un'altra cartella, o della radice, non si toccano; quelle della cartella si."""
+    """Cento risposte su 21.000 frame costavano 8,5 s perche' ognuna riscriveva tutti i frame senza
+    tipo. I frame di un'altra cartella, o della radice, non si toccano; quelli della cartella si."""
     radice = add_folder(conn, "D:/Astro")
     altre = [_posa(conn, radice, f"M51/{i}.fits") for i in range(5)]
     altre += [_posa(conn, radice, f"{i}.fits") for i in range(5)]
@@ -222,9 +223,9 @@ def _piano(conn, query, args=()):
 
 
 def test_the_readers_start_from_the_frames_that_wait(conn):
-    """Il residuo e lo stacco partono dalle pose segnate: un archivio che scrive il tipo non ne ha
+    """Il residuo e lo stacco partono dai frame segnati: un archivio che scrive il tipo non ne ha
     nessuna, e chi non lo scrive paga solo quelle che aspettano davvero -- non tutte quelle senza
-    tipo, e non lo stadio `measure`, che ha in fila ogni posa."""
+    tipo, e non lo stadio `measure`, che ha in fila ogni frame."""
     queries = [(waiting_sql(s), (s,)) for s in WAITING_STAGES]
     for query, args in [*queries, (typeless_answer._WAITING_AND_ATTACHED, ())]:
         piano = _piano(conn, query, args)
@@ -233,6 +234,6 @@ def test_the_readers_start_from_the_frames_that_wait(conn):
 
 
 def test_the_type_question_reads_the_written_folders(conn):
-    """La domanda sul tipo in Da confermare legge la tabella scritta, non le pose."""
+    """La domanda sul tipo in Da confermare legge la tabella scritta, non i frame."""
     piano = _piano(conn, typeless._WRITTEN)
     assert re.findall(r"(?:SCAN|SEARCH) (\w+)", piano) == ["t", "dc"], piano

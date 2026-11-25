@@ -1,10 +1,10 @@
 """Il **setup** dal lato di chi dichiara: la chiave che gli sopravvive, e cosa succede a quella
-chiave quando un pezzo cambia nome.
+chiave quando uno strumento cambia nome.
 
 Un setup e' rilevato -- la spina lo rifa' a ogni corsa -- quindi il nome che gli dai non sta
 nella sua riga ma fra le dichiarazioni, con una chiave fatta dei **nomi** di ottica e camera piu'
 la focale. Da li' viene tutto quello che si prova qui: una rinomina sposta la chiave, e deve
-spostarla **solo** quando quel pezzo nella chiave c'e' davvero.
+spostarla **solo** quando quello strumento nella chiave c'e' davvero.
 """
 
 import pytest
@@ -63,7 +63,7 @@ def test_naming_a_rig_says_it_was_written(conn):
 def test_a_rename_moves_only_the_keys_that_carry_that_name(conn):
     """La chiave di un setup porta i nomi di **ottica e camera**, non altro. Una rinomina deve
     spostare le chiavi che quel nome ce l'hanno e lasciare stare le altre: sono dichiarazioni di
-    setup che con quel pezzo non c'entrano, e riscriverle vuol dire perderne il nome."""
+    setup che con quello strumento non c'entrano, e riscriverle vuol dire perderne il nome."""
     rig = banco(conn)
     setups.declare_rig(conn, rig, "Il grande")
     altro = setup(
@@ -81,8 +81,8 @@ def test_a_rename_moves_only_the_keys_that_carry_that_name(conn):
 
 def test_a_key_that_is_not_three_pieces_is_left_alone(conn):
     """La chiave si separa sulla barra, e un **nome che contiene una barra** ne produce una di
-    quattro pezzi: li' non si sa piu' quale pezzo sia l'ottica e quale la camera, e riscriverla a
-    indovinare sposterebbe il nome del setup su una chiave che non esiste.
+    quattro strumenti: li' non si sa piu' quale strumento sia l'ottica e quale la camera, e
+    riscriverla a indovinare sposterebbe il nome del setup su una chiave che non esiste.
 
     Non e' un caso di scuola: il nome lo scrive chi ha fatto il file, e una barra ci sta."""
     ottica = attrezzo(conn, "optics", "Askar 103Apo")
@@ -113,13 +113,13 @@ def test_a_rename_keeps_the_moment_it_was_told(conn):
 def test_the_subject_stays_a_key_on_both_shapes():
     """Il soggetto e' una **chiave da un elenco chiuso**, e lo resta anche sulla forma che usa i
     setup gia' giunti. Senza, chi chiedesse le ore di un setup con quella forma si prenderebbe
-    in silenzio la condizione del **pezzo**: numeri sbagliati e nessun errore."""
+    in silenzio la condizione dello **strumento**: numeri sbagliati e nessun errore."""
     from astrolog.spine import counts
 
     with pytest.raises(KeyError):
         counts.of("un soggetto che non esiste")
     with pytest.raises(KeyError):
-        counts.of("rig", rigs_joined=True)  # la forma giunta esiste solo per il pezzo
+        counts.of("rig", rigs_joined=True)  # la forma giunta esiste solo per lo strumento
 
 
 @pytest.mark.parametrize("kind", declarations.ALIAS_KINDS)

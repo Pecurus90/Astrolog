@@ -1,11 +1,11 @@
-"""Il **setup della notte**, e le risposte sui gruppi che seguono i pezzi.
+"""Il **setup della notte**, e le risposte sui gruppi che seguono gli strumenti.
 
-Una posa che non dice la camera la prende dalla sua notte (`spine/night_rig.py`). Se non dice
+Un frame che non dice la camera la prende dalla sua notte (`spine/night_rig.py`). Se non dice
 l'ottica, prende quella della notte quando la notte ne dice una sola a una focale sola, con la
-focale se la posa non la dice: senza, nasceva un setup senza ottica accanto a quello delle
-pose complete, e le ore si spartivano.
-E una risposta sul gruppo porta i NOMI dei pezzi: rinominati o uniti, la risposta li segue, o
-al giro dopo il nome vecchio farebbe rinascere il pezzo.
+focale se il frame non la dice: senza, nasceva un setup senza ottica accanto a quello dei
+frame completi, e le ore si spartivano.
+E una risposta sul gruppo porta i NOMI degli strumenti: rinominati o uniti, la risposta li segue, o
+al giro dopo il nome vecchio farebbe rinascere lo strumento.
 """
 
 import re
@@ -32,7 +32,7 @@ def _posa(path, giorno, minuto, **header):
 @pytest.fixture
 def pagina(db_path, tmp_path):
     root = tmp_path / "lib"
-    # notte del 14: un setup solo, e una posa che non dice niente dell'attrezzatura
+    # notte del 14: un setup solo, e un frame che non dice niente dell'attrezzatura
     for i in range(2):
         _posa(root / "14" / f"n_{i}.fits", 14, i, TELESCOP=NEWTON, FOCALLEN=800, **NINA)
     _posa(root / "14" / "muta.fits", 14, 30)
@@ -40,11 +40,11 @@ def pagina(db_path, tmp_path):
     _posa(root / "14" / "zero.fits", 14, 32, FOCALLEN=0)
     # e una che la focale la dice, diversa: con un'altra focale l'ottica della notte non e' sua
     _posa(root / "14" / "altra_focale.fits", 14, 31, FOCALLEN=400)
-    # notte del 15: la stessa camera su due ottiche, e una posa muta
+    # notte del 15: la stessa camera su due ottiche, e un frame muto
     _posa(root / "15" / "n.fits", 15, 0, TELESCOP=NEWTON, FOCALLEN=800, **NINA)
     _posa(root / "15" / "a.fits", 15, 1, TELESCOP=ASKAR, FOCALLEN=749, **NINA)
     _posa(root / "15" / "muta.fits", 15, 30)
-    # notte del 16: solo pose ASIAIR, che l'ottica non la scrivono mai, e una muta
+    # notte del 16: solo frame ASIAIR, che l'ottica non la scrivono mai, e uno muto
     asiair = {"CREATOR": "ZWO ASIAIR Plus", "TELESCOP": "ZWO AM5", "INSTRUME": CAM}
     _posa(root / "16" / "s.fits", 16, 0, FOCALLEN=560, **asiair)
     _posa(root / "16" / "muta.fits", 16, 30)
@@ -52,7 +52,7 @@ def pagina(db_path, tmp_path):
     _posa(root / "17" / "n.fits", 17, 0, TELESCOP=NEWTON, FOCALLEN=800, **NINA)
     _posa(root / "17" / "r.fits", 17, 1, TELESCOP=NEWTON, FOCALLEN=600, **NINA)
     _posa(root / "17" / "muta.fits", 17, 30)
-    # notte del 18: pose ASIAIR, che l'ottica non la dicono, e pose N.I.N.A. che la dicono
+    # notte del 18: frame ASIAIR, che l'ottica non la dicono, e frame N.I.N.A. che la dicono
     _posa(root / "18" / "s.fits", 18, 0, FOCALLEN=800, **asiair)
     _posa(root / "18" / "n.fits", 18, 1, TELESCOP=NEWTON, FOCALLEN=800, **NINA)
     _posa(root / "18" / "muta.fits", 18, 30)
@@ -62,7 +62,7 @@ def pagina(db_path, tmp_path):
 
 
 def _setup(client, nome):
-    """(ottica, camera, focale, id) del setup di quella posa."""
+    """(ottica, camera, focale, id) del setup di quel frame."""
     with db(client) as conn:
         r = conn.execute(
             "SELECT o.name AS optics, c.name AS camera, g.focal_mm, g.id FROM frames f"
@@ -81,7 +81,7 @@ def _rilavora_tutto(client):
 
 
 def test_a_silent_pose_takes_the_rig_of_its_night(pagina):
-    """**La regola.** Nella notte c'e' un setup solo: la posa che non dice niente ci entra, e non
+    """**La regola.** Nella notte c'e' un setup solo: il frame che non dice niente ci entra, e non
     nasce un setup senza ottica accanto."""
     assert _setup(pagina, "14/muta.fits") == _setup(pagina, "14/n_0.fits")
     # anche quella che scrive una focale zero, che la focale non la dice
@@ -89,13 +89,13 @@ def test_a_silent_pose_takes_the_rig_of_its_night(pagina):
 
 
 def test_a_pose_with_its_own_focal_does_not_take_the_optics_of_another(pagina):
-    """La focale che la posa dice e' sua: a 400 mm l'ottica della notte, che lavora a 800, non e'
+    """La focale che il frame dice e' sua: a 400 mm l'ottica della notte, che lavora a 800, non e'
     la sua. Prende la camera, e l'ottica resta da chiedere."""
     assert _setup(pagina, "altra_focale.fits")[:3] == (None, CAM, 400.0)
 
 
 def test_a_night_with_two_optics_gives_only_the_camera(pagina):
-    """Due ottiche nella stessa notte: quale fosse non si indovina. La posa prende la camera, e il
+    """Due ottiche nella stessa notte: quale fosse non si indovina. Il frame prende la camera, e il
     resto lo chiede la domanda "quale ottica era"."""
     ottica, camera, focale, _ = _setup(pagina, "15/muta.fits")
     assert (ottica, camera, focale) == (None, CAM, None)
@@ -103,24 +103,24 @@ def test_a_night_with_two_optics_gives_only_the_camera(pagina):
 
 def test_one_optics_at_two_focals_gives_only_the_camera(pagina):
     """La stessa ottica a due focali -- un riduttore -- non e' un setup solo: quale focale avesse
-    la posa muta non si indovina."""
+    il frame muto non si indovina."""
     assert _setup(pagina, "17/muta.fits")[:3] == (None, CAM, None)
 
 
 def test_a_night_of_asiair_and_other_poses_gives_only_the_camera(pagina):
-    """ "Nessuna ottica" dell'ASIAIR e' un valore: accanto a pose che l'ottica la dicono, la notte
-    ne dice due, e l'ottica della posa muta non si indovina."""
+    """ "Nessuna ottica" dell'ASIAIR e' un valore: accanto a frame che l'ottica la dicono, la notte
+    ne dice due, e l'ottica del frame muto non si indovina."""
     assert _setup(pagina, "18/muta.fits")[:3] == (None, CAM, None)
 
 
 def test_an_asiair_night_gives_the_rig_without_optics_of_its_poses(pagina):
-    """Una notte di sole pose ASIAIR ha un setup senza ottica: la posa muta ci entra, e la
+    """Una notte di soli frame ASIAIR ha un setup senza ottica: il frame muto ci entra, e la
     domanda sull'ottica e' una sola per tutte e due."""
     assert _setup(pagina, "16/muta.fits") == _setup(pagina, "16/s.fits")
 
 
 def _gruppo_senza_camera(db_path, tmp_path):
-    """Una notte senza nessuna posa che dica la camera: il suo gruppo si chiede."""
+    """Una notte senza nessun frame che dica la camera: il suo gruppo si chiede."""
     root = tmp_path / "lib"
     _posa(root / "14" / "n.fits", 14, 0, TELESCOP=NEWTON, FOCALLEN=800, **NINA)
     _posa(root / "20" / "g.fits", 20, 0, TELESCOP="Newton 8")
@@ -149,7 +149,7 @@ def test_renaming_a_camera_carries_the_answer_on_the_group(db_path, tmp_path):
         camere = {p["name"] for p in gear(c)["instruments"] if p["kind"] == "camera"}
         assert "ASI2600" not in camere
         risposte = {g["telescope"]: g["answer"]["camera"] for g in review(c)["gear"] if g["answer"]}
-        # la risposta sull'altra camera non cambia: la rinomina segue solo il suo pezzo
+        # la risposta sull'altra camera non cambia: la rinomina segue solo il suo strumento
         assert risposte == {"Newton 8": "ASI2600 Pro", "Un altro": "QHY268M"}
         assert _setup(c, "20/g.fits")[:2] == (NEWTON, "ASI2600 Pro")
 
@@ -173,8 +173,8 @@ def test_merging_the_optics_carries_the_answer_on_the_group(db_path, tmp_path):
 
 
 def test_night_rig_asked_for_some_nights_reads_only_those(pagina):
-    """La pagina chiede il setup delle sole notti delle pose che chiedono, e lo trova con
-    l'indice: il setup di una notte dipende solo dalle pose di quella notte, e rileggere
+    """La pagina chiede il setup delle sole notti dei frame che chiedono, e lo trova con
+    l'indice: il setup di una notte dipende solo dai frame di quella notte, e rileggere
     l'archivio intero per saperlo sarebbe la parte cara della domanda sulla camera."""
     with db(pagina) as conn:
         tutte = night_rig.night_rigs(conn)

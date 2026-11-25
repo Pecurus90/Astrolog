@@ -2,7 +2,7 @@
 
 Le Notti la facevano gia' per se'; l'Archivio ne aveva bisogno uguale. Averla scritta due volte
 avrebbe voluto dire due modi di contare lo stesso tempo -- la notte che dice una cosa e l'oggetto
-un'altra sulle **stesse pose** -- quindi qui si prova che la casa e' una e che i due soggetti ne
+un'altra sui **stessi frame** -- quindi qui si prova che la casa e' una e che i due soggetti ne
 escono con gli stessi numeri.
 """
 
@@ -98,7 +98,7 @@ def test_the_column_is_read_from_the_link_not_written_beside_it(conn):
     `WHERE`: e' lo stesso fatto visto da due lati. Tenerne due elenchi voleva dire due case, e una
     prova che li confrontasse guarderebbe due stringhe -- infatti la prima che avevo scritto
     confrontava il **prefisso**, e allargare un `WHERE` (`... AND f.filter_id IS NOT NULL`) la
-    lasciava verde mentre le ore e i filtri della stessa riga cominciavano a contare pose diverse.
+    lasciava verde mentre le ore e i filtri della stessa riga cominciavano a contare frame diversi.
 
     Adesso la colonna si **ricava** dal legame, quindi non esiste un secondo posto dove scriverla
     diversa. Qui si prova che la lettura e' quella giusta e che non indovina dove non puo'.
@@ -117,7 +117,7 @@ def test_the_column_is_read_from_the_link_not_written_beside_it(conn):
     }
 
     # e dove il legame non e' una colonna sola non si indovina: raggruppare l'archivio intero o un
-    # pezzo (che arriva alle sue pose per due strade) su una colonna conterebbe altre pose
+    # strumento (che arriva ai suoi frame per due strade) su una colonna conterebbe altri frame
     for soggetto in ("archive", "instrument"):
         with pytest.raises(KeyError):
             counts.column_of(soggetto)

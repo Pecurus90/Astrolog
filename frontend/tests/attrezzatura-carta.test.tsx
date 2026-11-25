@@ -96,7 +96,7 @@ describe("la carta del setup", () => {
     expect(c.textContent).toContain("conteggio in corso")
   })
 
-  it("ottica e camera col loro tipo, e le prime voci della scheda del pezzo trovato", async () => {
+  it("ottica e camera col loro tipo, e le prime voci della scheda dello strumento trovato", async () => {
     attrezzatura({
       instruments: [
         OTTICA,
@@ -104,7 +104,7 @@ describe("la carta del setup", () => {
       ],
     })
     await apriAttrezzatura()
-    // la camera del setup e' camera_id null: nessun pezzo, nessuna voce
+    // la camera del setup e' camera_id null: nessuno strumento, nessuna voce
     expect(chi(await carta())).toEqual([
       "otticaTS 130 APOapertura 130 mm · focale 910 mm",
       "cameraASI2600MM",

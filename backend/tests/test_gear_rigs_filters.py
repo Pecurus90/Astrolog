@@ -1,14 +1,14 @@
-"""I gesti dell'Attrezzatura sui **setup**, sui **filtri** e sull'**unione di due pezzi**, dalla
+"""I gesti dell'Attrezzatura sui **setup**, sui **filtri** e sull'**unione di due strumenti**, dalla
 stessa mano di *Da confermare* (Marco, 25/9/2026).
 
 Regole, e il test che le rompe:
 
 * **Un setup prende un nome dall'Attrezzatura**, e il nome resta alla riga.
 * **Un filtro rinominato o unito non rinasce**: la regola imparata vale anche sul nome che il
-  vocabolario da' (`L` diventa `Lum`), dopo il colore -- quindi una posa con la matrice resta OSC.
+  vocabolario da' (`L` diventa `Lum`), dopo il colore -- quindi un frame con la matrice resta OSC.
 * **Un filtro si unisce solo in uno con la banda nota**, mai alla riga "nessun filtro" ne' da lei.
 * **Un modello del catalogo che non esiste si rifiuta**, prima di scrivere.
-* **Due pezzi si uniscono anche dall'Attrezzatura**, dalla stessa mano di *Da confermare*.
+* **Due strumenti si uniscono anche dall'Attrezzatura**, dalla stessa mano di *Da confermare*.
 """
 
 import pytest
@@ -48,7 +48,7 @@ def test_a_rig_gets_its_name_from_the_gear_page(client):
     rig = _gear(client)["rigs"][0]
     r = client.patch(f"/api/v1/gear/rigs/{rig['id']}", json={"name": "Il principale"})
     assert r.status_code == 200, r.text
-    # un nome non cambia il senso di nessuna posa: niente da rifare, e il lavoro non parte
+    # un nome non cambia il senso di nessun frame: niente da rifare, e il lavoro non parte
     assert (r.json()["requeued"], r.json()["run_started"]) == (0, False)
     assert next(g for g in _gear(client)["rigs"] if g["id"] == rig["id"])["name"] == "Il principale"
 
@@ -62,7 +62,7 @@ def test_a_renamed_recognised_filter_does_not_come_back(client, tmp_path):
 
 
 def test_a_colour_frame_stays_osc_after_a_rename(client, tmp_path):
-    """La regola imparata vale sul nome che il vocabolario da', dopo il colore: una posa con la
+    """La regola imparata vale sul nome che il vocabolario da', dopo il colore: un frame con la
     matrice che scrive `L` e' OSC, e rinominare `Lum` non la porta sul filtro mono."""
     lum = _filtro(client, "Lum")
     client.patch(f"/api/v1/gear/filters/{lum['id']}", json={"name": "Astronomik L"})
@@ -221,7 +221,7 @@ def test_a_filter_answer_counts_only_when_it_writes_something(client, risposta, 
 def test_a_filter_written_by_hand_takes_the_mono_frames_and_leaves_the_colour_ones_osc(
     client, tmp_path
 ):
-    """Scritto `Blue`, come lo scrive il tuo programma, prende le pose mono che il vocabolario
+    """Scritto `Blue`, come lo scrive il tuo programma, prende i frame mono che il vocabolario
     chiamerebbe `B`."""
     r = client.post("/api/v1/gear/filters", json={"name": "Blue", "bands": [{"band": "B"}]})
     assert r.status_code == 201, r.text
@@ -229,13 +229,13 @@ def test_a_filter_written_by_hand_takes_the_mono_frames_and_leaves_the_colour_on
 
 
 def test_a_colour_frame_stays_osc_after_a_filter_written_by_hand(client, tmp_path):
-    """Una posa con la matrice che scrive `Blue` resta OSC, come dopo una rinomina."""
+    """Un frame con la matrice che scrive `Blue` resta OSC, come dopo una rinomina."""
     client.post("/api/v1/gear/filters", json={"name": "Blue", "bands": [{"band": "B"}]})
     assert _scansiona_un_altro(client, tmp_path, "Blue", BAYERPAT="RGGB") == "OSC"
 
 
 def test_a_filter_you_already_have_under_the_app_name_is_not_written_twice(client):
-    """Scansionato l'archivio, le pose `L` stanno su `Lum`: scrivere a mano `L` farebbe due righe
+    """Scansionato l'archivio, i frame `L` stanno su `Lum`: scrivere a mano `L` farebbe due righe
     dello stesso filtro con le ore divise. Si rifiuta, e si rinomina quello che c'e'."""
     r = client.post("/api/v1/gear/filters", json={"name": "L", "bands": [{"band": "L"}]})
     assert (r.status_code, r.json()["detail"]["code"]) == (409, "spelling_taken")
@@ -250,7 +250,7 @@ def test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_filter_writte
     client, tmp_path
 ):
     """Il grezzo uguale al nome del vocabolario (`B`) aggancia la regola gia' prima del colore:
-    su una posa a colori una banda larga non c'e', la matrice e' il filtro, e resta OSC."""
+    su un frame a colori una banda larga non c'e', la matrice e' il filtro, e resta OSC."""
     client.post("/api/v1/gear/filters", json={"name": "Blue", "bands": [{"band": "B"}]})
     assert _scansiona_un_altro(client, tmp_path, "B", BAYERPAT="RGGB") == "OSC"
 

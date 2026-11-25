@@ -1,8 +1,8 @@
-"""Quanto e' servito ogni pezzo lo scrive chi lavora le pose, e l'Attrezzatura lo legge e basta.
+"""Quanto e' servito ogni strumento lo scrive chi lavora i frame, e l'Attrezzatura lo legge e basta.
 
 Marco, 22/9/2026: una lettura non calcola mai. I conti si fanno a fine giro di ogni stadio che
-cambia le pose (`spine/gear_usage.py`) e si scrivono in `gear_usage`; la pagina li legge
-(`spine/inventory.py`). I numeri stessi -- copie, pose senza tempo, montatura -- hanno le loro
+cambia i frame (`spine/gear_usage.py`) e si scrivono in `gear_usage`; la pagina li legge
+(`spine/inventory.py`). I numeri stessi -- copie, frame senza tempo, montatura -- hanno le loro
 prove in `test_api_gear.py`.
 """
 
@@ -39,7 +39,7 @@ def _pose(client):
 
 
 def test_the_page_reads_what_was_written_not_the_frames(client):
-    """Una posa che cambia senza che nessuno stadio giri non sposta la pagina: la pagina non conta.
+    """Un frame che cambia senza che nessuno stadio giri non sposta la pagina: la pagina non conta.
     Riscritto l'uso, come a fine giro, la pagina lo dice."""
     prima = _pose(client)
     with db(client) as conn:
@@ -104,9 +104,9 @@ def test_only_rigs_carry_the_counters_order(client):
 
 
 def test_a_piece_not_yet_counted_says_so_and_not_that_the_files_are_silent(client):
-    """Un pezzo nato a meta' di un giro -- alla prima scansione, per minuti -- non ha ancora la sua
-    riga: la pagina dice che non e' ancora contato. "L'app non puo' saperlo" e' un'altra cosa, ed
-    e' una riga scritta coi conteggi vuoti, come per un riduttore che nessuna posa porta."""
+    """Uno strumento nato a meta' di un giro -- alla prima scansione, per minuti -- non ha ancora la
+    sua riga: la pagina dice che non e' ancora contato. "L'app non puo' saperlo" e' un'altra cosa,
+    ed e' una riga scritta coi conteggi vuoti, come per un riduttore che nessun frame porta."""
     with db(client) as conn:
         conn.execute(
             "INSERT INTO instruments(kind, name, created_at) VALUES('camera', 'Appena nata', 'ora')"
@@ -148,7 +148,7 @@ _STADI = {
 
 @pytest.mark.parametrize("nome", list(_STADI))
 def test_a_stopped_round_writes_what_it_did(client, tmp_path, nome):
-    """Una corsa fermata a meta' ha gia' spostato delle pose: l'uso si riscrive anche li'."""
+    """Una corsa fermata a meta' ha gia' spostato dei frame: l'uso si riscrive anche li'."""
     with db(client) as conn:
         pose = [r[0] for r in conn.execute("SELECT id FROM frames")]
         stages.invalidate(conn, pose, nome)
@@ -161,7 +161,7 @@ def test_a_stopped_round_writes_what_it_did(client, tmp_path, nome):
 
 @pytest.mark.parametrize("nome", list(_STADI))
 def test_a_round_that_breaks_writes_what_it_did(client, tmp_path, monkeypatch, nome):
-    """E una corsa che si rompe dopo aver lavorato qualche posa, lo stesso."""
+    """E una corsa che si rompe dopo aver lavorato qualche frame, lo stesso."""
     modulo = {"normalize": normalize, "solve": solve, "identify": identify, "group": group}[nome]
     vero = modulo.frame_safely
     chiamate = []
@@ -184,7 +184,7 @@ def test_a_round_that_breaks_writes_what_it_did(client, tmp_path, monkeypatch, n
 
 @pytest.mark.parametrize("nome", list(_STADI))
 def test_a_stage_with_nothing_to_do_does_not_count_again(client, tmp_path, monkeypatch, nome):
-    """Contare tutto costa, su un archivio grande: uno stadio che non ha lavorato nessuna posa non
+    """Contare tutto costa, su un archivio grande: uno stadio che non ha lavorato nessun frame non
     ha spostato niente, e non riconta."""
     chiamate = []
     monkeypatch.setattr(gear_usage, "write", lambda conn: chiamate.append(1))
@@ -274,9 +274,9 @@ def test_calibration_answered_takes_its_sky_off_the_gear(conn):
     ids=["setup", "filtri"],
 )
 def test_gear_usage_counts_rigs_and_filters_from_the_index_alone(conn, query, indice):
-    """Chi scrive l'uso dell'Attrezzatura a fine giro conta le pose di ogni setup e di ogni filtro
+    """Chi scrive l'uso dell'Attrezzatura a fine giro conta i frame di ogni setup e di ogni filtro
     dall'indice, senza la tabella: un indice sulla sola colonna gli farebbe leggere comunque la riga
-    di ogni posa."""
+    di ogni frame."""
     piano = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + query))
     assert re.search(rf"COVERING INDEX {indice}\b", piano), piano
 

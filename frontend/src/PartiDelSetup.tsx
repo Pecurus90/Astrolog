@@ -67,8 +67,8 @@ function nomiDi(r: Setup, parte: Parte): Nome[] {
 }
 
 /**
- * Le **Parti** di un setup (tavola v82, 67-75): le dieci, ognuna coi pezzi che i file nominano o
- * che hai scelto, "da indicare" se vuota. Ogni pezzo si apre fra i componenti; "Seleziona" apre il
+ * Le **Parti** di un setup (tavola v82, 67-75): le dieci, ognuna con gli strumenti che i file nominano o
+ * che hai scelto, "da indicare" se vuota. Ogni strumento si apre fra i componenti; "Seleziona" apre il
  * modulo nella riga. Il programma di ripresa lo dicono solo i file: non si seleziona.
  */
 export function PartiDelSetup({

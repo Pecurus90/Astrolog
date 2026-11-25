@@ -1,6 +1,6 @@
-"""Cosa rimette in coda un cambio dei luoghi: le pose ferme che il cambio puo' sbloccare, e solo
-quelle; le notti di un luogo spostato; il trasloco di casa che non tocca le notti degli altri
-luoghi. Le regole stanno in `spine/site_requeue.py` e in `docs/domini/sito.md`.
+"""Cosa rimette in coda un cambio dei siti: i frame fermi che il cambio puo' sbloccare, e solo
+quelle; le notti di un sito spostato; il trasloco di casa che non tocca le notti degli altri
+siti. Le regole stanno in `spine/site_requeue.py` e in `docs/domini/sito.md`.
 """
 
 from astrolog import place, site_of
@@ -11,7 +11,7 @@ from test_sites import _notte, create
 
 
 def _in_attesa(conn, perche_, night=None, coord=(45.6, 11.667)):
-    """Una posa ferma da `group` col suo perche', ripresa a quelle coordinate, con la sua notte e
+    """Un frame fermo da `group` col suo perche', ripreso a quelle coordinate, con la sua notte e
     l'istante da cui viene."""
     frame = conn.execute(
         "INSERT INTO frames(frame_hash, image_type, date_obs, local_night, night_instant,"
@@ -33,7 +33,7 @@ def _stato_di(client_vuoto, frame):
 
 
 def test_declaring_a_site_puts_the_waiting_frames_back_in_the_queue(client_vuoto, offline):
-    """Le pose ferme perche' il posto non si sapeva ripartono quando si dichiara un sito: ora
+    """I frame fermi perche' il posto non si sapeva ripartono quando si dichiara un sito: ora
     l'app puo' saperlo da sola, e se non puo' la domanda torna."""
     create(client_vuoto)
     with connect(client_vuoto.app.state.db_path) as conn:
@@ -43,7 +43,7 @@ def test_declaring_a_site_puts_the_waiting_frames_back_in_the_queue(client_vuoto
 
 
 def test_a_change_that_cannot_help_puts_nothing_back_in_the_queue(client_vuoto, offline):
-    """Un sito nuovo lontano dalle pose ferme, o un sito che cambia solo il cielo, non puo' dire
+    """Un sito nuovo lontano dai frame fermi, o un sito che cambia solo il cielo, non puo' dire
     da solo dove fossero: rimetterle in coda farebbe rifare a `group` lo stesso lavoro."""
     create(client_vuoto)
     with connect(client_vuoto.app.state.db_path) as conn:
@@ -56,7 +56,7 @@ def test_a_change_that_cannot_help_puts_nothing_back_in_the_queue(client_vuoto, 
 
 def test_renaming_a_site_to_the_name_an_answer_says_puts_those_frames_back(client_vuoto, offline):
     """La risposta per quelle coordinate nomina un sito che non c'era piu'; rinominato un sito
-    con quel nome, la risposta aggancia di nuovo, e quelle pose ripartono. Le altre no."""
+    con quel nome, la risposta aggancia di nuovo, e quei frame ripartono. Gli altri no."""
     create(client_vuoto)
     cima = create(client_vuoto, name="Cima", latitude=46.05, longitude=11.316)
     with connect(client_vuoto.app.state.db_path) as conn:
@@ -122,7 +122,7 @@ def test_moving_home_leaves_the_nights_of_the_other_sites_alone(client_vuoto, of
 
 def test_moving_a_site_puts_its_nights_back_in_the_queue(client_vuoto, offline):
     """Spostato un sito, le notti che l'app gli aveva dato per le coordinate si rifanno: le
-    coordinate delle pose potrebbero non cadere piu' li'. Quelle nate da una risposta no."""
+    coordinate dei frame potrebbero non cadere piu' li'. Quelle nate da una risposta no."""
     create(client_vuoto)
     cima = create(client_vuoto, name="Cima", latitude=46.05, longitude=11.316)
     with connect(client_vuoto.app.state.db_path) as conn:
@@ -136,7 +136,7 @@ def test_moving_a_site_puts_its_nights_back_in_the_queue(client_vuoto, offline):
 
 
 def test_the_first_site_frees_the_frames_waiting_for_a_home(client_vuoto, offline):
-    """A mani vuote le pose si fermano perche' casa non c'e'; il primo sito diventa casa, e
+    """A mani vuote i frame si fermano perche' casa non c'e'; il primo sito diventa casa, e
     ripartono tutte, anche quelle senza coordinate."""
     with connect(client_vuoto.app.state.db_path) as conn:
         frame = _in_attesa(conn, "no_active_site", coord=(None, None))
@@ -145,7 +145,7 @@ def test_the_first_site_frees_the_frames_waiting_for_a_home(client_vuoto, offlin
 
 
 def test_a_second_site_does_not_free_the_frames_waiting_for_a_home(client_vuoto, offline):
-    """Un secondo sito, lontano, non e' casa: le pose ferme perche' casa non c'era restano dove
+    """Un secondo sito, lontano, non e' casa: i frame fermi perche' casa non c'era restano dove
     sono -- a liberarle e' la casa, non un sito qualunque."""
     create(client_vuoto)
     with connect(client_vuoto.app.state.db_path) as conn:

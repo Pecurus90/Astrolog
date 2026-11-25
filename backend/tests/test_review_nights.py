@@ -1,9 +1,9 @@
-"""La sezione dei luoghi di Da confermare: *"queste pose da quale luogo?"*.
+"""La sezione dei siti di Da confermare: *"questi frame da quale sito?"*.
 
-E' la domanda che sblocca le pose che `group` ha fermato perche' le coordinate dell'header
+E' la domanda che sblocca i frame che `group` ha fermato perche' le coordinate dell'header
 dicono un altro posto. L'app non indovina -- un GPS o una rete possono sbagliare, e una notte
 attribuita male e' un dato falso che nessuno rilegge -- quindi chiede, **per gruppo e mai per
-posa**, proponendo i luoghi che l'utente ha gia' dichiarato.
+frame**, proponendo i siti che l'utente ha gia' dichiarato.
 """
 
 import pytest
@@ -20,9 +20,9 @@ from group_bench import ARIZONA, ROMA, VICINO, corri, luogo, notte_di, posa, pre
 
 
 def test_unclear_coordinates_start_from_the_two_ways_a_pose_concerns_them(conn):
-    """Una posa riguarda i luoghi incerti per due strade -- ferma su un posto incerto, o in una
-    notte a cui hai detto il luogo -- e ognuna si cerca col suo indice: partire dagli stadi di tutto
-    l'archivio vorrebbe dire passare da ogni posa a ogni apertura di Da confermare."""
+    """Un frame riguarda i siti incerti per due strade -- fermo su un posto incerto, o in una
+    notte a cui hai detto il sito -- e ognuna si cerca col suo indice: partire dagli stadi di tutto
+    l'archivio vorrebbe dire passare da ogni frame a ogni apertura di Da confermare."""
     piano = [
         r[3]
         for r in conn.execute(
@@ -39,8 +39,8 @@ LONTANO = (46.05, 11.316)  # 59 km da casa
 
 @pytest.fixture
 def client(db_path):
-    """Un archivio con un luogo di casa e tre notti: una a casa, due riprese altrove -- che
-    sono le pose che l'app ha fermato e su cui chiedera'."""
+    """Un archivio con un sito predefinito e tre notti: una a casa, due riprese altrove -- che
+    sono i frame che l'app ha fermato e su cui chiedera'."""
     conn = connect(db_path)
     try:
         prepara(conn)
@@ -63,8 +63,8 @@ def notti(pagina):
 
 
 def test_the_nights_section_asks_about_the_places_that_do_not_add_up(client):
-    """Un gruppo per **posto**, non per posa e nemmeno per notte: la risposta e' un fatto sul
-    posto, e vale per tutte le notti riprese li'. Le due pose a 12 km sono una domanda sola."""
+    """Un gruppo per **posto**, non per frame e nemmeno per notte: la risposta e' un fatto sul
+    posto, e vale per tutte le notti riprese li'. I due frame a 12 km sono una domanda sola."""
     trovate = notti(review(client))
     assert len(trovate) == 2, "un gruppo per posto: 12 km e 59 km"
     vicina = next(n for n in trovate if n["frames"] == 2)
@@ -102,7 +102,7 @@ def test_a_place_says_what_the_sky_found_there(client):
 
 
 def test_the_places_are_proposed_with_my_sites_the_nearest_first(client):
-    """Si risponde cliccando, come per i filtri e per gli oggetti: l'app mette davanti i luoghi
+    """Si risponde cliccando, come per i filtri e per gli oggetti: l'app mette davanti i siti
     che ho gia' dichiarato, il piu' vicino in cima -- e' un ordine, non una scelta."""
     lontana = next(n for n in notti(review(client)) if n["frames"] == 1)
     nomi = [c["name"] for c in lontana["candidates"]]
@@ -113,12 +113,12 @@ def test_the_places_are_proposed_with_my_sites_the_nearest_first(client):
 def test_the_nearest_place_stays_first_even_when_two_look_the_same(client):
     """L'ordine e' sulla distanza **vera**, non su quella arrotondata per lo schermo.
 
-    Due luoghi a 5,31 e 5,34 km dallo stesso punto incerto: a schermo dicono tutti e due
+    Due siti a 5,31 e 5,34 km dallo stesso punto incerto: a schermo dicono tutti e due
     `5.3`, ma in cima deve restare il piu' vicino. Ordinando i candidati dopo averli arrotondati
     i due pareggiano, e siccome l'ordinamento e' stabile l'ordine cade su come il database
-    restituisce i luoghi: il primo che l'utente clicca sarebbe il piu' lontano.
+    restituisce i siti: il primo che l'utente clicca sarebbe il piu' lontano.
 
-    I due luoghi si inseriscono **al contrario** apposta -- prima il lontano -- o il pareggio
+    I due siti si inseriscono **al contrario** apposta -- prima il lontano -- o il pareggio
     lascerebbe l'ordine giusto per caso e questo banco direbbe di si' senza provare niente."""
     with db(client) as conn:
         luogo(conn, ("Piu' lontano", 45.551976, 11.667, "Europe/Rome"), casa=False)
@@ -133,7 +133,7 @@ def test_the_nearest_place_stays_first_even_when_two_look_the_same(client):
 def test_a_distance_leaves_the_api_as_the_screen_shows_it(client):
     """Quindici decimali non sono una misura: sono la rappresentazione di una float. Il backend
     manda cio' che lo schermo mostra, quindi si arrotonda **una volta**, dove la distanza esce, e
-    la pagina formatta e basta. Vale per la distanza da casa e per quella dei luoghi da cliccare.
+    la pagina formatta e basta. Vale per la distanza da casa e per quella dei siti da cliccare.
 
     Non si arrotonda dentro `place.distance_km`: quella serve anche a decidere se due coordinate
     sono lo stesso posto (`site_of.SAME_PLACE_KM`), e li' arrotondare sposterebbe la soglia."""
@@ -145,8 +145,8 @@ def test_a_distance_leaves_the_api_as_the_screen_shows_it(client):
 
 
 def test_answering_where_i_was_puts_those_poses_in_their_night(client):
-    """La risposta scrive la notte **dichiarata** e rimette in coda le pose: al giro dopo hanno
-    la loro notte, sul luogo che ho detto io."""
+    """La risposta scrive la notte **dichiarata** e rimette in coda i frame: al giro dopo hanno
+    la loro notte, sul sito che ho detto io."""
     pagina = review(client)
     gruppo = next(n for n in notti(pagina) if n["frames"] == 2)
     cima = next(c for c in gruppo["candidates"] if c["name"] == "Cima Ekar")
@@ -196,7 +196,7 @@ def test_an_answered_place_stays_on_the_page_but_no_longer_counts(client):
 
 
 def test_the_answer_holds_for_the_nights_that_will_come(client):
-    """La risposta e' un fatto sul **posto**: una posa nuova ripresa li' non fa richiedere
+    """La risposta e' un fatto sul **posto**: un frame nuovo ripreso li' non fa richiedere
     niente. E' la stessa promessa della regola sui nomi degli oggetti."""
     gruppo = next(n for n in notti(review(client)) if n["frames"] == 2)
     cima = next(c for c in gruppo["candidates"] if c["name"] == "Cima Ekar")
@@ -227,7 +227,7 @@ def test_answering_that_i_was_at_home_is_an_answer_too(client):
 
 
 def test_a_wrong_answer_can_be_changed(client):
-    """Un clic sbagliato attribuisce centinaia di pose: si deve poter tornare indietro. Il
+    """Un clic sbagliato attribuisce centinaia di frame: si deve poter tornare indietro. Il
     gruppo resta in pagina con la risposta accanto, e rispondere di nuovo sposta tutto."""
     gruppo = next(n for n in notti(review(client)) if n["frames"] == 2)
     cima = next(c for c in gruppo["candidates"] if c["name"] == "Cima Ekar")
@@ -235,7 +235,7 @@ def test_a_wrong_answer_can_be_changed(client):
     apply(client, unclear=[{"key": gruppo["key"], "site_id": cima["id"]}])
 
     esito = apply(client, unclear=[{"key": gruppo["key"], "site_id": casa["id"]}])
-    assert esito["requeued"] == 2, "cambiare idea deve rimettere in coda le pose gia' sistemate"
+    assert esito["requeued"] == 2, "cambiare idea deve rimettere in coda i frame gia' sistemati"
     with db(client) as conn:
         dove = conn.execute(
             "SELECT s.name, COUNT(f.id) AS pose FROM frames f JOIN nights n ON n.id = f.night_id"
@@ -247,7 +247,7 @@ def test_a_wrong_answer_can_be_changed(client):
 def test_a_site_deleted_after_the_answer_makes_the_app_ask_again(client):
     """La risposta viaggia sul NOME del sito. Se quel sito sparisce -- o cambia nome -- la
     risposta non aggancia piu': l'app torna a chiedere invece di ripiegare su casa, che
-    sarebbe attribuire delle pose a un posto che nessuno ha detto."""
+    sarebbe attribuire dei frame a un posto che nessuno ha detto."""
     gruppo = next(n for n in notti(review(client)) if n["frames"] == 2)
     cima = next(c for c in gruppo["candidates"] if c["name"] == "Cima Ekar")
     apply(client, unclear=[{"key": gruppo["key"], "site_id": cima["id"]}])
@@ -282,7 +282,7 @@ def test_a_site_deleted_after_the_answer_makes_the_app_ask_again(client):
 
 
 def test_a_calibrated_copy_is_not_another_pose(client):
-    """La regola di questa pagina: una copia riscritta non e' un'altra posa, e nei conteggi non
+    """La regola di questa pagina: una copia riscritta non e' un altro frame, e nei conteggi non
     entra. Vale anche qui, dove il numero e' cio' che fa capire quanto pesa la domanda."""
     prima = next(n for n in notti(review(client)) if n["frames"] == 2)
     with db(client) as conn:
@@ -321,8 +321,8 @@ def test_the_nights_shown_are_in_the_timezone_of_those_coordinates(db_path):
 
 def test_the_answer_does_not_follow_a_reused_row_number(client):
     """Gli id delle righe si riusano: un sito senza notti si puo' cancellare, e il prossimo che
-    nasce eredita il suo numero. Se la risposta viaggiasse sull'id, quelle pose finirebbero **in
-    silenzio** su un luogo che nessuno ha mai indicato -- e' la stessa lezione delle risposte
+    nasce eredita il suo numero. Se la risposta viaggiasse sull'id, quei frame finirebbero **in
+    silenzio** su un sito che nessuno ha mai indicato -- e' la stessa lezione delle risposte
     sugli oggetti, dove la chiave e' lo slug e mai la riga."""
     gruppo = next(n for n in notti(review(client)) if n["frames"] == 1)
     cima = next(c for c in gruppo["candidates"] if c["name"] == "Cima Ekar")
@@ -347,7 +347,7 @@ def test_the_answer_does_not_follow_a_reused_row_number(client):
             "SELECT s.name FROM frames f JOIN nights n ON n.id = f.night_id"
             " JOIN sites s ON s.id = n.site_id WHERE f.frame_hash = 'lontano'"
         ).fetchone()
-    assert dove is None, "la risposta ha seguito il numero di riga su un luogo mai indicato"
+    assert dove is None, "la risposta ha seguito il numero di riga su un sito mai indicato"
 
 
 def test_an_answer_to_a_place_that_is_not_there_is_a_404(client):
@@ -364,7 +364,7 @@ def test_an_answer_to_a_site_that_does_not_exist_is_refused(client):
 
 
 def test_an_archive_with_nothing_to_ask_asks_nothing(client_pulito):
-    """Se tutte le pose sono a casa, la sezione non esiste: l'app non inventa una domanda."""
+    """Se tutti i frame sono a casa, la sezione non esiste: l'app non inventa una domanda."""
     pagina = review(client_pulito)
     assert notti(pagina) == []
     # e il contatore non porta domande che non ci sono: conta solo le schede da confermare
@@ -373,7 +373,7 @@ def test_an_archive_with_nothing_to_ask_asks_nothing(client_pulito):
 
 def _domande(pagina):
     """Le altre domande della pagina: gli oggetti senza risposta, i filtri da dire, le grafie
-    che sembrano un pezzo solo."""
+    che sembrano uno strumento solo."""
     oggetti = [o for o in pagina["objects"] if o["answer"] is None]
     return oggetti + pagina["filters"] + pagina["lookalikes"]
 

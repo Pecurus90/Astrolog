@@ -26,7 +26,7 @@ def _pezzo(conn, kind, name):
 
 def test_a_filter_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path):
     """Scritto col nome che leggi nei tuoi file -- `L` -- e non con quello che il vocabolario ne
-    farebbe (`Lum`): le pose mono vengono a lui, e un secondo filtro non nasce."""
+    farebbe (`Lum`): i frame mono vengono a lui, e un secondo filtro non nasce."""
     scritto = gear_create.filter_declared(conn, "L", [{"band": "L"}], "ora")
     _dopo_la_scansione(conn, tmp_path)
 
@@ -36,7 +36,7 @@ def test_a_filter_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path):
 
 def test_a_name_that_is_already_the_spelling_of_another_filter_is_refused(conn):
     """Se `Halpha` l'hai gia' detto essere il tuo `Ha`, un filtro nuovo chiamato `Halpha` non
-    ricevera' mai una posa: si dice, invece di farlo nascere vuoto."""
+    ricevera' mai un frame: si dice, invece di farlo nascere vuoto."""
     from astrolog.spine import declarations
 
     gear_create.filter_declared(conn, "Ha", [{"band": "HA"}], "ora")
@@ -47,8 +47,8 @@ def test_a_name_that_is_already_the_spelling_of_another_filter_is_refused(conn):
 
 @pytest.mark.parametrize("kind", ["camera", "optics"])
 def test_a_piece_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path, kind):
-    """Una camera o un'ottica scritte a mano col nome dei file: le pose vanno a quel pezzo, e un
-    secondo non nasce -- o le ore si spartirebbero fra due righe della stessa cosa."""
+    """Una camera o un'ottica scritte a mano col nome dei file: i frame vanno a quello strumento, e
+    un secondo non nasce -- o le ore si spartirebbero fra due righe della stessa cosa."""
     nome = {"camera": "ATR2600M(USB2.0)", "optics": "Askar 103Apo"}[kind]
     scritto = _pezzo(conn, kind, nome)
     _dopo_la_scansione(conn, tmp_path)
@@ -100,8 +100,8 @@ def test_a_rig_is_made_of_an_optics_and_a_camera_you_own(conn):
 
 
 def test_a_rig_you_wrote_survives_the_merge_of_its_camera(conn):
-    """Un'unione cancella i setup del pezzo che sparisce, e `normalize` li rifa' dalle pose: il
-    tuo pose non ne ha, e si rifa' dalla tua parola, col pezzo tenuto."""
+    """Un'unione cancella i setup dello strumento che sparisce, e `normalize` li rifa' dai frame: il
+    tuo non ha frame, e si rifa' dalla tua parola, con lo strumento tenuto."""
     ottica = _pezzo(conn, "optics", "TS 130 APO")
     vecchia = _pezzo(conn, "camera", "ASI2600")
     tenuta = _pezzo(conn, "camera", "ASI2600MM Pro")
@@ -122,7 +122,7 @@ def test_a_rig_you_wrote_survives_the_merge_of_its_camera(conn):
 
 
 def test_a_merge_into_a_rig_you_already_have_keeps_one(conn):
-    """Se il pezzo tenuto ha gia' lo stesso setup, dopo l'unione ce n'e' uno solo."""
+    """Se lo strumento tenuto ha gia' lo stesso setup, dopo l'unione ce n'e' uno solo."""
     ottica = _pezzo(conn, "optics", "TS 130 APO")
     vecchia = _pezzo(conn, "camera", "ASI2600")
     tenuta = _pezzo(conn, "camera", "ASI2600MM Pro")
@@ -149,7 +149,7 @@ def test_a_rig_you_wrote_is_born_declared_and_when_you_wrote_it(conn):
 
 
 def test_a_declared_rig_whose_piece_is_gone_is_not_born_half(conn):
-    """Una dichiarazione che nomina un pezzo che non c'e' piu' non rifa' un setup con la sola
+    """Una dichiarazione che nomina uno strumento che non c'e' piu' non rifa' un setup con la sola
     ottica: il setup e' la sua impronta intera."""
     from astrolog.spine.declarations import write_declaration
 

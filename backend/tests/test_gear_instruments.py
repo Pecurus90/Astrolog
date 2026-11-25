@@ -1,4 +1,4 @@
-"""L'Attrezzatura, i pezzi: la scheda, le rinomine e le unioni.
+"""L'Attrezzatura, gli strumenti: la scheda, le rinomine e le unioni.
 
 Due regole, e ognuna ha qui la sua prova:
 
@@ -6,7 +6,7 @@ Due regole, e ognuna ha qui la sua prova:
   *Le schede*), e quali siano per ogni tipo lo decide il backend: la pagina li mostra e basta;
 - **si unisce solo dentro lo stesso tipo**, e solo dove un tipo ha grafie da unire.
 
-La domanda "sono lo stesso pezzo?" di Da confermare ha il suo file: `test_review_lookalike.py`.
+La domanda "sono lo stesso strumento?" di Da confermare ha il suo file: `test_review_lookalike.py`.
 
 L'archivio e' quello sintetico: le camere mono non portano `BAYERPAT`, quindi il loro colore i
 file non lo dicono, e la Canon a colori si'.
@@ -24,10 +24,10 @@ from conftest import apply, by_name, correct, gear, review
 
 
 def test_the_colour_on_the_card_redoes_the_poses_only_when_it_changes_something(client):
-    """ "Mono" su una camera che l'app tratta gia' da mono non sposta nessuna posa: rimetterle in
-    coda e' lavoro che nasce morto. Misurato dall'auditor sull'archivio vero (15/9/2026): 432 pose
+    """ "Mono" su una camera che l'app tratta gia' da mono non sposta nessun frame: rimetterli in
+    coda e' lavoro che nasce morto. Misurato dall'auditor sull'archivio vero (15/9/2026): 432 frame
     rimesse in coda e **0** cambiate, 6.558 e 0 ridicendo mono all'altra camera. "A colori" invece
-    cambia il filtro di quelle pose, e li' il giro serve."""
+    cambia il filtro di quei frame, e li' il giro serve."""
     mono = by_name(gear(client)["instruments"], "ATR2600M(USB2.0)")
     assert correct(client, mono["id"], camera_type="mono").json()["requeued"] == 0
     assert correct(client, mono["id"], camera_type="color").json()["requeued"] > 0
@@ -107,7 +107,7 @@ def test_a_piece_is_merged_only_into_one_of_its_kind(client):
 
 
 def test_a_merge_into_a_piece_that_is_gone_is_refused_by_name(client):
-    """La pagina vecchia: il pezzo in cui unire non c'e' piu' (un'altra scheda l'ha assorbito).
+    """La pagina vecchia: lo strumento in cui unire non c'e' piu' (un'altra scheda l'ha assorbito).
     Il rifiuto e' `not_found`, che la pagina dice per nome -- non un 500 che non dice niente.
     Senza questa prova la guardia di `gear.merge_instrument` si poteva rompere in silenzio: l'ha
     trovato la mutazione del cancello, girando un `or` in `and`."""
@@ -118,10 +118,10 @@ def test_a_merge_into_a_piece_that_is_gone_is_refused_by_name(client):
 
 def test_two_spellings_of_a_wheel_can_really_be_joined(client):
     """Offrire un'unione che poi **schianta** e' peggio che non offrirla. Ruota, focheggiatore e
-    camera di guida stanno **sulla posa**, non sul setup: staccando i soli setup la riga
+    camera di guida stanno **sul frame**, non sul setup: staccando i soli setup la riga
     assorbita non si cancella -- la chiave esterna la trattiene -- e la scrittura va a rotoli.
 
-    Qui si prova il gesto intero, dalla rotta: si uniscono, la riga sparisce, le pose restano e
+    Qui si prova il gesto intero, dalla rotta: si uniscono, la riga sparisce, i frame restano e
     tornano in coda perche' `normalize` le riagganci alla grafia tenuta."""
     with connect(client.app.state.db_path) as conn:
         altra = conn.execute(
@@ -129,7 +129,7 @@ def test_two_spellings_of_a_wheel_can_really_be_joined(client):
             " VALUES('filter_wheel', 'ToupTek EFW', 1, ?)",
             (now_iso(),),
         ).lastrowid
-        # una posa il cui header non nomina ruote: la corsa dopo l'unione non la riaggancia
+        # un frame il cui header non nomina ruote: la corsa dopo l'unione non la riaggancia
         posa = conn.execute(
             "SELECT id FROM frames WHERE filter_wheel_raw IS NULL ORDER BY id LIMIT 1"
         ).fetchone()["id"]
@@ -202,7 +202,7 @@ def test_merging_a_guide_camera_does_not_touch_a_rig_named_like_it(client):
 def test_a_second_rename_carries_the_spelling_learned_by_the_first(client):
     """Una rinomina impara la grafia di un attimo prima, e basta: rinominando **di nuovo**, la
     regola vecchia continuava a portare al nome di mezzo, che non e' piu' di nessuno. La prima
-    notte nuova con la grafia originale faceva rinascere quel pezzo -- senza scheda, senza
+    notte nuova con la grafia originale faceva rinascere quello strumento -- senza scheda, senza
     risposte, con le ore spartite fra due righe -- e nessun test si rompeva."""
     camera = by_name(gear(client)["instruments"], "ATR2600M(USB2.0)")
     correct(client, camera["id"], name="ATR 2600M USB")
@@ -210,14 +210,15 @@ def test_a_second_rename_carries_the_spelling_learned_by_the_first(client):
     correct(client, camera["id"], name="La principale")
 
     with connect(client.app.state.db_path) as conn:
-        # la grafia che sta negli header, quella che una posa nuova porterebbe
+        # la grafia che sta negli header, quella che un frame nuovo porterebbe
         assert decl.instrument_name(conn, "camera", "ATR2600M(USB2.0)") == "La principale"
 
 
 def test_renaming_a_piece_carries_the_spellings_it_absorbed(client):
-    """Stessa catena, con in mezzo un'**unione**: la grafia assorbita punta al pezzo tenuto, e
-    rinominare quel pezzo deve portarsela dietro. Altrimenti unire due grafie e poi dare un nome
-    al risultato -- due clic nella stessa pagina -- rimette in piedi la riga appena assorbita."""
+    """Stessa catena, con in mezzo un'**unione**: la grafia assorbita punta allo strumento tenuto, e
+    rinominare quello strumento deve portarsela dietro. Altrimenti unire due grafie e poi dare un
+    nome al risultato -- due clic nella stessa pagina -- rimette in piedi la riga appena
+    assorbita."""
     pezzi = gear(client)["instruments"]
     assorbita, tenuta = by_name(pezzi, "ATR2600M"), by_name(pezzi, "ATR2600M(USB2.0)")
     correct(client, assorbita["id"], merge_into=tenuta["id"])
@@ -242,9 +243,9 @@ def test_a_kind_without_spellings_offers_no_merge(client):
 
 def test_every_piece_the_files_name_is_listed_with_its_poses(client):
     """**Sei generi**, non tre: oltre a ottica e camera ci sono le montature (cio' che l'ASIAIR
-    scrive in TELESCOP) e i tre pezzi che i programmi nominano sulla singola posa -- ruota,
-    focheggiatore e camera di guida. Otto pose e non nove: la copia riscritta non e' un'altra
-    posa."""
+    scrive in TELESCOP) e i tre strumenti che i programmi nominano sul singolo frame -- ruota,
+    focheggiatore e camera di guida. Otto frame e non nove: la copia riscritta non e' un altro
+    frame."""
     pezzi = gear(client)["instruments"]
     kinds = {i["kind"] for i in pezzi}
     assert kinds == {"optics", "camera", "mount", "filter_wheel", "focuser", "guide_camera"}
@@ -256,7 +257,7 @@ def test_every_piece_the_files_name_is_listed_with_its_poses(client):
 
 
 def test_a_card_written_makes_the_piece_yours(client):
-    """Una scheda compilata si legge com'e' scritta, e da quel momento il pezzo l'ha detto
+    """Una scheda compilata si legge com'e' scritta, e da quel momento lo strumento l'ha detto
     l'utente, non la spina."""
     askar = by_name(gear(client)["instruments"], "Askar 103Apo")
     scheda = {"brand": "Askar", "aperture_mm": 103.0, "weight_kg": 4.6, "notes": "quello di casa"}
@@ -327,8 +328,8 @@ def test_a_merge_that_leaves_the_colour_as_it_was_redoes_only_the_moved_frames(c
 
 
 def test_merging_two_spellings_moves_the_poses_and_learns_the_rule(client):
-    """Due grafie della stessa camera diventano un pezzo solo: si scrive la regola, la riga
-    assorbita sparisce, e le pose che la usavano tornano al pezzo giusto da sole."""
+    """Due grafie della stessa camera diventano uno strumento solo: si scrive la regola, la riga
+    assorbita sparisce, e i frame che la usavano tornano allo strumento giusto da soli."""
     pezzi = gear(client)["instruments"]
     tenuta = by_name(pezzi, "ATR2600M(USB2.0)")
     assorbita = by_name(pezzi, "ATR2600M")
@@ -351,7 +352,8 @@ def test_merging_two_spellings_moves_the_poses_and_learns_the_rule(client):
 
 def test_renaming_a_mount_learns_its_spelling(client):
     """Rinominare una montatura scrive la regola sulla grafia vecchia, come per ottiche e camere.
-    Senza, alla scansione dopo la montatura rinasce col nome dell'header e i pezzi diventano tre."""
+    Senza, alla scansione dopo la montatura rinasce col nome dell'header e gli strumenti diventano
+    tre."""
     montatura = by_name(gear(client)["instruments"], "EQMod Mount")
     correct(client, montatura["id"], name="La mia montatura")
     with connect(client.app.state.db_path) as conn:
@@ -374,7 +376,7 @@ def test_two_mount_spellings_merge_like_a_camera(client):
 
 
 def test_a_piece_is_not_merged_with_itself(client):
-    """Unire un pezzo con se stesso lo cancellerebbe insieme ai suoi setup: si rifiuta, e
+    """Unire uno strumento con se stesso lo cancellerebbe insieme ai suoi setup: si rifiuta, e
     non si scrive niente."""
     askar = by_name(gear(client)["instruments"], "Askar 103Apo")
     r = correct(client, askar["id"], merge_into=askar["id"])
@@ -403,7 +405,7 @@ def test_the_name_of_a_rig_survives_a_merge(client):
 
 
 def test_two_rigs_cannot_share_a_name(client):
-    """Come due pezzi o due filtri: due setup con lo stesso nome non si distinguono piu' in
+    """Come due strumenti o due filtri: due setup con lo stesso nome non si distinguono piu' in
     nessun elenco. Rinominare un setup col suo stesso nome invece va."""
     primo, secondo = gear(client)["rigs"][:2]
     _nomina(client, primo["id"], "Il piccolo")

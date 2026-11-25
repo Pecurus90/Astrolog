@@ -1,4 +1,4 @@
-"""Stadio sky: le misure di una posa col cielo, dalla misura dei pixel, la soluzione, il sito e
+"""Stadio sky: le misure di un frame col cielo, dalla misura dei pixel, la soluzione, il sito e
 l'ora della scheda (ADR 0022 punti 5 e 7, docs/domini/misure.md)."""
 
 import datetime as dt
@@ -105,7 +105,7 @@ def test_without_a_centre_the_moon_and_sun_stay_but_not_the_distance(conn, tmp_p
 
 def test_a_clock_outside_the_ephemeris_leaves_moon_and_sun_unknown_not_the_root(conn, tmp_path):
     """Un header col 2099 (orologio sbagliato) e' fuori dalla DE421 (1899-2053): Luna e Sole di
-    quel frame sono "non so", il resto della posa si misura, e la radice non cade (ADR 0046)."""
+    quel frame sono "non so", il resto del frame si misura, e la radice non cade (ADR 0046)."""
     cards = ("DATE-OBS= '2099-06-29T21:30:00.000'", *_CARDS[1:])
     root = _measured(conn, tmp_path, *cards)
     _solve(conn)

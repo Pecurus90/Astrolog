@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
- * Il **treno ottico** nel dettaglio del setup (`src/TrenoOttico.tsx`, tavola v82 63-66): i pezzi
- * che i conti leggono (`pieces`), pezzo e pillola che si accendono insieme, il tocco che
- * apre il pezzo fra i componenti; sul telefono il numero e la legenda.
+ * Il **treno ottico** nel dettaglio del setup (`src/TrenoOttico.tsx`, tavola v82 63-66): gli strumenti
+ * che i conti leggono (`pieces`), strumento e pillola che si accendono insieme, il tocco che
+ * apre lo strumento fra i componenti; sul telefono il numero e la legenda.
  */
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -58,7 +58,7 @@ describe("il treno ottico", () => {
     expect(pillole.sort()).toEqual(["ASI2600MM", "D10", "TS 130 APO"])
   })
 
-  it("pezzo e pillola si accendono insieme, gli altri si spengono", async () => {
+  it("strumento e pillola si accendono insieme, gli altri si spengono", async () => {
     conTreno()
     await apriAttrezzatura()
     const sezione = await treno()
@@ -73,7 +73,7 @@ describe("il treno ottico", () => {
     expect(ottica.getAttribute("opacity")).toBe("1")
   })
 
-  it("toccare un pezzo lo apre fra i componenti", async () => {
+  it("toccare uno strumento lo apre fra i componenti", async () => {
     conTreno()
     await apriAttrezzatura()
     const sezione = await treno()
@@ -110,7 +110,7 @@ describe("il treno ottico", () => {
     expect(pillole.sort()).toEqual(["1", "2", "3"])
   })
 
-  it("dai pezzi del setup: la guida fuori asse o il cercatore al suo posto, la camera a colori", () => {
+  it("dagli strumenti del setup: la guida fuori asse o il cercatore al suo posto, la camera a colori", () => {
     const s = (id: number, kind: string, extra: Record<string, unknown> = {}) => ({
       ...OTTICA, id, kind, name: `p${id}`, aperture_mm: null, focal_mm: null, ...extra,
     }) // prettier-ignore
@@ -150,7 +150,7 @@ describe("il treno ottico", () => {
   })
 
   it("ogni tratto, filo e pillola resta quello visto a schermo, spento e acceso", () => {
-    // i pezzi singoli li dicono i test sopra, l'impronta del markup ferma il resto
+    // gli strumenti singoli li dicono i test sopra, l'impronta del markup ferma il resto
     const T = {
       ott: { id: 1, nome: "TS 130 APO", ruolo: "optics" as const, apertura: 130, focale: 910 },
       foc: { id: 2, nome: "EAF", ruolo: "focuser" as const },

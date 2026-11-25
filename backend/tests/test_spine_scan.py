@@ -186,7 +186,7 @@ def _muto(tmp_path, name="muto.fits"):
 
 
 def _aspetta(conn):
-    """Se qualcuno di questi frame aspetta di sapere che file e': il segno scritto sulla posa, lo
+    """Se qualcuno di questi frame aspetta di sapere che file e': il segno scritto sul frame, lo
     stesso che legge chi decide chi e' pronto (`spine/stages.py`)."""
     sql = f"SELECT COUNT(*) FROM frames f WHERE {WAITING_SQL}"  # noqa: S608 - una costante
     return conn.execute(sql).fetchone()[0] > 0
@@ -442,7 +442,7 @@ def test_scan_does_not_download_an_online_only_file(conn, tmp_path, monkeypatch)
 def test_scan_a_missing_pose_that_comes_back_online_only_is_present_again(
     conn, tmp_path, monkeypatch
 ):
-    """Una posa "non trovata" che ricompare solo online e' di nuovo li': torna presente, come se
+    """Un frame "non trovato" che ricompare solo online e' di nuovo li': torna presente, come se
     fosse tornata sul disco."""
     posa, altrove = tmp_path / "a.fits", tmp_path / "a.bak"
     write_light(posa)
@@ -471,8 +471,8 @@ def test_scan_names_the_linked_folders_it_does_not_follow(conn, tmp_path, monkey
 
 
 def test_scan_poses_under_a_folder_that_becomes_hidden_are_missing(conn, tmp_path):
-    """Una cartella che diventa nascosta -- e' il caso del cestino -- esce dall'archivio: le sue
-    pose diventano "non trovate", e la ricevuta dice quale cartella ha lasciato fuori."""
+    """Una cartella che diventa nascosta -- e' il caso del cestino -- esce dall'archivio: i suoi
+    frame diventano "non trovati", e la ricevuta dice quale cartella ha lasciato fuori."""
     write_light(tmp_path / "sub" / "a.fits")
     fid = add_folder(conn, tmp_path)
     assert run(conn, fid)["new"] == 1
@@ -483,7 +483,7 @@ def test_scan_poses_under_a_folder_that_becomes_hidden_are_missing(conn, tmp_pat
 
 
 def test_scan_a_pose_left_online_only_is_not_missing(conn, tmp_path, monkeypatch):
-    """Una posa gia' in archivio che l'utente lascia solo online non e' sparita: e' li', solo non
+    """Un frame gia' in archivio che l'utente lascia solo online non e' sparito: e' li', solo non
     sul disco. Non diventa "non trovata"."""
     write_light(tmp_path / "a.fits")
     fid = add_folder(conn, tmp_path)
@@ -495,8 +495,8 @@ def test_scan_a_pose_left_online_only_is_not_missing(conn, tmp_path, monkeypatch
 
 
 def test_scan_names_the_hidden_folders_it_leaves_out(conn, tmp_path):
-    """Una sottocartella nascosta resta fuori -- nel cestino ci sono le pose cancellate -- ma la
-    ricevuta la nomina, come le illeggibili: chi ci tiene delle pose sa dove guardare."""
+    """Una sottocartella nascosta resta fuori -- nel cestino ci sono i frame cancellati -- ma la
+    ricevuta la nomina, come le illeggibili: chi ci tiene dei frame sa dove guardare."""
     write_light(tmp_path / "a.fits")
     write_light(tmp_path / ".nascosta però" / "b.fits", obj="M 2")
     done = run(conn, add_folder(conn, tmp_path))

@@ -1,8 +1,8 @@
-"""Il test di prestazioni del solver: secondi per posa col campo dato, confrontati con
+"""Il test di prestazioni del solver: secondi per frame col campo dato, confrontati con
 l'ultima misura committata in `perf_baseline.json`.
 
 Vincolo non ovvio: questo e' l'unico test che lancia **ASTAP vero**, e serve un FITS **vero**
--- una posa di stelle, che l'archivio sintetico non sa fabbricare (i suoi pixel sono rumore, e
+-- un frame di stelle, che l'archivio sintetico non sa fabbricare (i suoi pixel sono rumore, e
 un solver non ci trova niente). Percio' si salta finche' non gli si dice dove sono: con
 `ASTROLOG_TEST_FITS` si indica un frame vero. Marcato `lento`: gira a richiesta, mai nel
 cancello.
@@ -26,7 +26,7 @@ run_vero = astap._run
 
 BASELINE = Path(__file__).with_name("perf_baseline.json")
 GIRI = 5
-# La misura fatta a mano su due setup diversi da' 0,2 s a posa col campo dato: si accetta
+# La misura fatta a mano su due setup diversi da' 0,2 s a frame col campo dato: si accetta
 # fino al doppio, perche' una CI e' piu' lenta di un portatile.
 TOLLERANZA = 2.0
 
@@ -34,7 +34,7 @@ TOLLERANZA = 2.0
 def _campione():
     percorso = os.environ.get("ASTROLOG_TEST_FITS")
     if not percorso or not Path(percorso).exists():
-        pytest.skip("serve un FITS vero: ASTROLOG_TEST_FITS=<percorso di una posa di stelle>")
+        pytest.skip("serve un FITS vero: ASTROLOG_TEST_FITS=<percorso di un frame di stelle>")
     exe = find_exe_vero()
     if not exe:
         pytest.skip("ASTAP non e' installato su questa macchina")
@@ -43,7 +43,7 @@ def _campione():
 
 @pytest.mark.lento
 def test_solve_seconds_per_frame_does_not_regress(tmp_path):
-    """Quanto costa una posa col campo e il puntamento dati. E' la misura che decide se un
+    """Quanto costa un frame col campo e il puntamento dati. E' la misura che decide se un
     archivio si risolve in mezz'ora o in una notte."""
     percorso, exe = _campione()
     header = fits.getheader(percorso)
@@ -69,9 +69,9 @@ def test_solve_seconds_per_frame_does_not_regress(tmp_path):
     misura = round(sorted(tempi)[len(tempi) // 2], 3)  # la mediana, non la media
     if "solve_seconds_per_frame" not in _baseline():
         _scrivi_baseline(misura)
-        pytest.skip(f"prima misura: {misura} s a posa scritti in perf_baseline.json")
+        pytest.skip(f"prima misura: {misura} s a frame scritti in perf_baseline.json")
     atteso = _baseline()["solve_seconds_per_frame"]
-    assert misura <= atteso * TOLLERANZA, f"{misura} s a posa contro {atteso} committati"
+    assert misura <= atteso * TOLLERANZA, f"{misura} s a frame contro {atteso} committati"
 
 
 @pytest.mark.lento

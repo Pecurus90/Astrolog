@@ -35,7 +35,7 @@ function quando(c: Conti): string {
 
 /**
  * Il database e' nuovo e accanto c'e' il file delle risposte: si chiede se rimetterle, prima del
- * primo avvio. Rimesse, si rileggono le cartelle: frame, setup e notti li rifa' la lettura.
+ * primo avvio. Rimesse, si rileggono le cartelle: frame, setup e notti li rifa' la scansione.
  */
 export function RipristinoProposto({ stato }: { stato: Stato }) {
   const cache = useQueryClient()

@@ -1,10 +1,10 @@
 """Da confermare, l'attrezzatura che i file non dicono: una scheda per firma dell'header (ADR 0014,
 S1) che chiede insieme camera, ottica e filtro, solo le parti che mancano.
 
-Ci cadono le pose che non dicono la camera -- anche quelle che portano il telescopio, perche'
+Ci cadono i frame che non dicono la camera -- anche quelli che portano il telescopio, perche'
 l'ASIAIR scrive la montatura in `TELESCOP` -- e quelle che la camera la dicono ma non l'ottica. Si
-risponde scegliendo un setup fra quelli che l'app conosce, oppure scrivendo i pezzi: nascono dai
-nomi, come da un header. La notte resta: se gli altri frame della stessa notte dicono una camera
+risponde scegliendo un setup fra quelli che l'app conosce, oppure scrivendo gli strumenti: nascono
+dai nomi, come da un header. La notte resta: se gli altri frame della stessa notte dicono una camera
 sola, quella non si chiede. Le regole stanno in `spine/signature.py` e nel contratto
 `docs/domini/spina-normalize.md`. Il filtro ha le sue prove in `test_review_gear_filter.py`.
 """
@@ -39,7 +39,7 @@ M51, NGC, MUTA = "2026-03-14/M51/LIGHT", "2026-03-21/NGC7000", "senza_niente"
 
 
 def _posa(path, minuto=None, **header):
-    """Una posa che NON dice il filtro: la scheda chiede anche quello."""
+    """Un frame che NON dice il filtro: la scheda chiede anche quello."""
     card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0}
     if minuto is not None:
         card["DATE-OBS"] = f"2026-03-14T21:{minuto:02d}:00"
@@ -65,7 +65,7 @@ def pagina(db_path, tmp_path):
 
 
 def _chiave(client, nome):
-    """La firma della posa di quel file, come la calcola chi normalizza."""
+    """La firma del frame di quel file, come la calcola chi normalizza."""
     with db(client) as conn:
         return signature.key_of(signature.parts_of(frame_by_file(conn, nome)))
 
@@ -75,7 +75,7 @@ def _schede(client):
 
 
 def _setup_del_frame(client, nome):
-    """(ottica, camera, focale) del setup attaccato a quella posa, o None."""
+    """(ottica, camera, focale) del setup attaccato a quel frame, o None."""
     with db(client) as conn:
         riga = conn.execute(
             "SELECT o.name AS optics, c.name AS camera, g.focal_mm, g.id FROM frames f"
@@ -92,7 +92,7 @@ def _camera_della_posa(client, nome):
 
 
 def _senza_filtro(client, sotto):
-    """Quante pose di quella cartella che non dicono la camera sono ancora senza filtro."""
+    """Quanti frame di quella cartella che non dicono la camera sono ancora senza filtro."""
     with db(client) as conn:
         return conn.execute(
             "SELECT COUNT(*) FROM frames f JOIN positions p ON p.frame_id = f.id"
@@ -108,7 +108,7 @@ def _scansiona_ancora(client):
 
 
 def _rilavora_tutto(client):
-    """Tutte le pose di nuovo in `normalize`: e' li' che un nome vecchio rinascerebbe."""
+    """Tutti i frame di nuovo in `normalize`: e' li' che un nome vecchio rinascerebbe."""
     with db(client) as conn:
         invalidate(conn, [r[0] for r in conn.execute("SELECT id FROM frames")], "normalize")
         list(normalize_frames(conn))
@@ -116,7 +116,8 @@ def _rilavora_tutto(client):
 
 def test_a_group_says_what_the_sky_found_in_it(pagina):
     """Cosa hai ripreso con quella firma, per ricordare con che camera (`test_review_subjects`):
-    la posa che dice la camera non e' nella scheda, e quella senza nome ne' cielo non ha oggetto."""
+    il frame che dice la camera non e' nella scheda, e quello senza nome ne' cielo non ha
+    oggetto."""
     schede = _schede(pagina)
     assert schede[_chiave(pagina, "a_0.fits")]["subjects"] == {
         "found": [{"name": "M 51", "frames": 3}],
@@ -131,8 +132,8 @@ def test_a_group_says_what_the_sky_found_in_it(pagina):
 
 
 def test_an_object_with_only_copies_in_a_group_is_not_something_imaged_there(pagina):
-    """Una copia calibrata non e' un'altra posa: se in quella scheda un oggetto ha solo copie,
-    non compare fra cio' che hai ripreso -- nemmeno con zero pose."""
+    """Una copia calibrata non e' un altro frame: se in quella scheda un oggetto ha solo copie,
+    non compare fra cio' che hai ripreso -- nemmeno con zero frame."""
     with db(pagina) as conn:
         conn.execute(
             "INSERT INTO objects(catalog_slug, identity_method, identity_confidence, created_at)"
@@ -154,9 +155,10 @@ def test_an_object_with_only_copies_in_a_group_is_not_something_imaged_there(pag
 
 def test_a_question_per_group_with_the_largest_first(pagina):
     """Una scheda per firma -- i valori dell'header, detti a video, mai la notte --, la piu'
-    numerosa in cima, con le parti che chiede e quello che le pose dicono gia': il telescopio come
-    indizio e la focale se la scrivono. La posa senza telescopio della notte del 14 e quella senza
-    data sono una scheda sola: stessa firma. La posa che la camera la dice chiede solo il filtro."""
+    numerosa in cima, con le parti che chiede e quello che i frame dicono gia': il telescopio come
+    indizio e la focale se la scrivono. Il frame senza telescopio della notte del 14 e quello senza
+    data sono una scheda sola: stessa firma. Il frame che la camera la dice chiede solo il
+    filtro."""
     vuota = {"camera": None, "telescope": None, "width_px": 4, "height_px": 3, "pixel_um": None}
     vuota |= {"focal_mm": None, "focal_suggested": None, "answer": None, "complete": False}
     assert [senza_soggetti(g) for g in review(pagina)["gear"]] == [
@@ -194,10 +196,10 @@ def test_a_question_per_group_with_the_largest_first(pagina):
 
 
 def test_answering_with_the_pieces_makes_the_rig_and_moves_the_poses(pagina):
-    """Si scrivono ottica, camera e focale: i pezzi nascono dai nomi -- come nascono da un header --
-    e le pose passano da quel setup. L'ottica dichiarata **vince** su `TELESCOP`, che qui portava
-    la montatura. La scheda resta in pagina con la sua risposta, perche' si deve poter cambiare
-    idea."""
+    """Si scrivono ottica, camera e focale: gli strumenti nascono dai nomi -- come nascono da un
+    header -- e i frame passano da quel setup. L'ottica dichiarata **vince** su `TELESCOP`, che qui
+    portava la montatura. La scheda resta in pagina con la sua risposta, perche' si deve poter
+    cambiare idea."""
     chiave = _chiave(pagina, "a_0.fits")
     out = apply(pagina, gear=[{"key": chiave, "optics": OTT, "camera": CAM, "focal_mm": 800.0}])
     assert out["requeued"] == 3
@@ -210,16 +212,16 @@ def test_answering_with_the_pieces_makes_the_rig_and_moves_the_poses(pagina):
         "filter": None,
         "filter_id": None,
     }
-    # fra cui scegliere: il setup mezzo vuoto nato dalla sola montatura, rimasto a zero pose,
+    # fra cui scegliere: il setup mezzo vuoto nato dalla sola montatura, rimasto a zero frame,
     # non si offre piu'
     setups = review(pagina)["rig_choices"]
     assert [(r["optics"], r["camera"]) for r in setups] == [(OTT, CAM), (MONTATURA, DETTA)]
 
 
 def test_the_camera_written_by_hand_becomes_a_piece_and_the_filter_question_follows(pagina):
-    """La camera scritta a mano diventa un pezzo dell'attrezzatura con la sua scheda da compilare.
-    La scheda della firma resta aperta finche' non dice anche il filtro, che le pose non scrivono:
-    rispondere a meta' non chiude la domanda."""
+    """La camera scritta a mano diventa uno strumento dell'attrezzatura con la sua scheda da
+    compilare. La scheda della firma resta aperta finche' non dice anche il filtro, che i frame non
+    scrivono: rispondere a meta' non chiude la domanda."""
     chiave = _chiave(pagina, "a_0.fits")
     apply(pagina, gear=[{"key": chiave, "camera": CAM, "focal_mm": 800.0}])
     scheda = by_name(gear(pagina)["instruments"], CAM)
@@ -247,7 +249,7 @@ def test_the_camera_answered_after_the_optics_keeps_the_optics(pagina):
 
 def test_a_name_with_spaces_around_is_written_without_them(pagina):
     """L'ottica scritta con la camera si ripulisce come quella scritta da sola: con uno spazio in
-    piu' nascerebbe un secondo pezzo accanto a quello che hai."""
+    piu' nascerebbe un secondo strumento accanto a quello che hai."""
     chiave = _chiave(pagina, "a_0.fits")
     risposta = {"key": chiave, "optics": f" {OTT} ", "camera": CAM, "focal_mm": 800.0}
     apply(pagina, gear=[risposta])
@@ -257,8 +259,8 @@ def test_a_name_with_spaces_around_is_written_without_them(pagina):
 def test_choosing_a_rig_from_the_list_writes_its_names(pagina):
     """Si puo' rispondere scegliendo un setup fra quelli che l'app conosce: si manda il suo
     numero di riga, che e' cio' che la pagina ha in mano dopo un clic, ma a essere scritti sono i
-    **nomi** dei suoi pezzi -- un'unione cancella la riga rilevata, e una risposta scritta sul suo
-    numero non sopravviverebbe a un azzeramento del rilevato."""
+    **nomi** dei suoi strumenti -- un'unione cancella la riga rilevata, e una risposta scritta sul
+    suo numero non sopravviverebbe a un azzeramento del rilevato."""
     apply(pagina, gear=[{"key": _chiave(pagina, "a_0.fits"), "camera": CAM, "focal_mm": 800.0}])
     setup = next(r for r in review(pagina)["rig_choices"] if r["camera"] == CAM)
     chiave = _chiave(pagina, "b_0.fits")
@@ -274,7 +276,7 @@ def test_choosing_a_rig_from_the_list_writes_its_names(pagina):
 
 
 def test_a_rig_without_a_camera_does_not_answer_this_question(pagina):
-    """Il setup mezzo vuoto nato dalla sola montatura non risponde: sceglierlo lascerebbe le pose
+    """Il setup mezzo vuoto nato dalla sola montatura non risponde: sceglierlo lascerebbe i frame
     esattamente dove sono. Non si offre, e mandarlo lo stesso si dice invece di scrivere una
     risposta che non sposta niente. Una casa sola per l'elenco e per chi lo rifiuta
     (`review_page.rig_choices`)."""
@@ -288,12 +290,12 @@ def test_a_rig_without_a_camera_does_not_answer_this_question(pagina):
 
 def test_the_declared_focal_does_not_leave_two_twin_rigs(pagina, tmp_path):
     """Un setup e' ottica + camera **a una focale**, e una focale ignota non e' la stessa cosa di
-    una focale nota: senza chiedere la focale, il setup nato dalla risposta e quello che le pose
+    una focale nota: senza chiedere la focale, il setup nato dalla risposta e quello che i frame
     diranno domani sarebbero due setup gemelli per sempre, con le ore spartite fra i due
     (misurato su `rigs.rig_for`). Con la focale dichiarata la riga e' una sola."""
     apply(pagina, gear=[{"key": _chiave(pagina, "a_0.fits"), "camera": CAM, "focal_mm": 800.0}])
-    # la posa che arriva dice tutto da se': la stessa montatura, la camera e la focale -- in
-    # un'altra notte, perche' nella stessa darebbe la camera anche alle pose di NGC7000
+    # il frame che arriva dice tutto da se': la stessa montatura, la camera e la focale -- in
+    # un'altra notte, perche' nella stessa darebbe la camera anche ai frame di NGC7000
     _posa(
         tmp_path / "lib" / M51 / "dopo.fits", 30, TELESCOP=MONTATURA, INSTRUME=CAM, FOCALLEN=800.0,
         **{"DATE-OBS": "2026-03-17T21:30:00"},
@@ -309,7 +311,7 @@ def test_the_declared_focal_does_not_leave_two_twin_rigs(pagina, tmp_path):
 
 
 def test_the_answer_holds_for_the_poses_that_arrive_later_in_that_group(pagina, tmp_path):
-    """La risposta e' un fatto sulla firma, non su quelle pose: una posa che arriva dopo con gli
+    """La risposta e' un fatto sulla firma, non su quei frame: un frame che arriva dopo con gli
     stessi valori la riceve, da un'altra cartella **e in un'altra notte** -- la notte non e' nella
     chiave (ADR 0014, S2). La dichiarazione si rilegge a ogni giro."""
     chiave = _chiave(pagina, "a_0.fits")
@@ -324,7 +326,7 @@ def test_the_answer_holds_for_the_poses_that_arrive_later_in_that_group(pagina, 
 
 
 def test_the_focal_of_the_optics_card_is_what_the_page_proposes(pagina):
-    """Se le pose non dicono la focale, la pagina propone quella nativa dell'ottica che l'utente ha
+    """Se i frame non dicono la focale, la pagina propone quella nativa dell'ottica che l'utente ha
     in scheda: la risposta ha un valore da offrire invece di un campo vuoto."""
     ottica = by_name(gear(pagina)["instruments"], MONTATURA)
     assert correct(pagina, ottica["id"], focal_mm=800.0).status_code == 200
@@ -332,7 +334,7 @@ def test_the_focal_of_the_optics_card_is_what_the_page_proposes(pagina):
 
 
 def test_answering_again_moves_the_poses_to_the_new_rig(pagina):
-    """Si cambia idea rispondendo di nuovo: le pose lasciano il setup di prima e passano a quello
+    """Si cambia idea rispondendo di nuovo: i frame lasciano il setup di prima e passano a quello
     nuovo, invece di restare su una risposta che l'utente ha ritirato."""
     chiave = _chiave(pagina, "c_0.fits")
     apply(pagina, gear=[{"key": chiave, "camera": CAM, "focal_mm": 800.0}])
@@ -343,7 +345,7 @@ def test_answering_again_moves_the_poses_to_the_new_rig(pagina):
 
 def test_an_unanswered_group_counts_among_the_things_to_confirm(pagina):
     """Una scheda conta finche' ogni parte che chiede non ha la sua risposta; quella completa resta
-    in pagina ma non si conta piu'. Un conto che tornasse a zero con delle pose ancora senza
+    in pagina ma non si conta piu'. Un conto che tornasse a zero con dei frame ancora senza
     setup sarebbe un conto che mente."""
     letta = review(pagina)
     assert letta["to_confirm"] == to_confirm_without(letta, "gear") + 3
@@ -356,7 +358,7 @@ def test_an_unanswered_group_counts_among_the_things_to_confirm(pagina):
 
 def test_after_the_answer_the_filter_question_reaches_those_poses(pagina):
     """La catena deve arrivare **in fondo**: risposti camera e filtro nella stessa scheda, la
-    risposta raggiunge davvero le pose -- prima del setup il filtro non aveva una camera a cui
+    risposta raggiunge davvero i frame -- prima del setup il filtro non aveva una camera a cui
     chiederlo, e restavano senza filtro mentre la pagina diceva "niente da confermare"."""
     chiave = _chiave(pagina, "a_0.fits")
     apply(pagina, gear=[{"key": chiave, "camera": CAM, "focal_mm": 800.0}])
@@ -366,8 +368,8 @@ def test_after_the_answer_the_filter_question_reaches_those_poses(pagina):
 
 
 def test_a_rig_whose_only_poses_are_copies_stays_in_the_page(pagina):
-    """Un setup le cui uniche pose sono copie riscritte **esiste**: nasconderlo lo renderebbe
-    impossibile da scegliere. Si nasconde solo il setup che non ha piu' nessuna posa, nemmeno una
+    """Un setup i cui unici frame sono copie riscritte **esiste**: nasconderlo lo renderebbe
+    impossibile da scegliere. Si nasconde solo il setup che non ha piu' nessun frame, nemmeno una
     copia."""
     with db(pagina) as conn:
         detta = conn.execute("SELECT id FROM frames WHERE instrument_raw IS NOT NULL").fetchone()[
@@ -380,7 +382,7 @@ def test_a_rig_whose_only_poses_are_copies_stays_in_the_page(pagina):
 
 
 def test_a_group_that_is_not_there_is_refused(pagina):
-    """Una firma su cui non c'e' nessuna posa da chiedere e' una pagina vecchia, e si dice:
+    """Una firma su cui non c'e' nessun frame da chiedere e' una pagina vecchia, e si dice:
     scrivere una risposta verso il nulla la lascerebbe li' per sempre senza che nessuno la veda."""
     corpo = {"gear": [{"key": "/mai/vista", "camera": CAM, "focal_mm": 800.0}]}
     r = pagina.post("/api/v1/review/apply", json=corpo)
@@ -412,7 +414,7 @@ def test_a_part_the_card_does_not_ask_is_refused(pagina):
     ],
 )
 def test_an_answer_that_says_two_things_or_none_is_refused(pagina, corpo, perche_):
-    """Un setup dall'elenco **oppure** i pezzi scritti: accettarli tutti e due vorrebbe dire
+    """Un setup dall'elenco **oppure** gli strumenti scritti: accettarli tutti e due vorrebbe dire
     scegliere noi quale vince, e nessuna delle due scelte e' quella dell'utente."""
     r = pagina.post("/api/v1/review/apply", json={"gear": [corpo]})
     assert r.status_code == 422, perche_
@@ -420,7 +422,7 @@ def test_an_answer_that_says_two_things_or_none_is_refused(pagina, corpo, perche
 
 def test_a_pose_without_camera_takes_the_one_of_its_night(pagina, tmp_path):
     """Se gli altri frame della stessa notte dicono una camera sola, e' quella (Marco, 23/9/2026):
-    non si chiede. Vale anche se arriva dopo, in un'altra cartella; la posa che non dice quando e'
+    non si chiede. Vale anche se arriva dopo, in un'altra cartella; il frame che non dice quando e'
     stata ripresa sta nella notte del suo file, dove nessuno dice la camera, e resta da chiedere."""
     _posa(tmp_path / "lib" / "altra" / "cam.fits", 30, INSTRUME=CAM)
     _scansiona_ancora(pagina)
@@ -433,7 +435,7 @@ def test_a_pose_without_camera_takes_the_one_of_its_night(pagina, tmp_path):
 
 
 def test_in_one_scan_the_order_of_the_files_does_not_matter(db_path, tmp_path):
-    """La posa senza camera prende quella della notte anche se il file che la dice arriva nella
+    """Il frame senza camera prende quella della notte anche se il file che la dice arriva nella
     stessa scansione, prima o dopo di lei."""
     root = tmp_path / "lib"
     _posa(root / "a" / "senza.fits", 1, FILTER="L")
@@ -457,7 +459,7 @@ def test_two_cameras_in_the_night_leave_the_question(pagina, tmp_path):
 
 def test_two_spellings_of_one_camera_are_one_camera_of_the_night(pagina, tmp_path):
     """Due grafie nella stessa notte sono due camere finche' nessuno le unisce: la camera si
-    chiede. Unite, la notte ha una camera sola, e le pose la prendono."""
+    chiede. Unite, la notte ha una camera sola, e i frame la prendono."""
     lib = tmp_path / "lib" / "altra"
     _posa(lib / "cam.fits", 30, INSTRUME=CAM)
     _posa(lib / "grafia.fits", 31, INSTRUME="ASI2600MM")
@@ -521,8 +523,8 @@ def _pezzo(client, nome):
 
 
 def test_poses_that_do_not_name_the_optics_are_asked_once_per_camera_and_focal(ottiche):
-    """Le tre pose ASIAIR sono una scheda sola, che chiede solo l'ottica; il file senza `TELESCOP`
-    un'altra. La posa di N.I.N.A. l'ottica la dice, e non si chiede."""
+    """I tre frame ASIAIR sono una scheda sola, che chiede solo l'ottica; il file senza `TELESCOP`
+    un'altra. Il frame di N.I.N.A. l'ottica la dice, e non si chiede."""
     schede = review(ottiche)["gear"]
     assert [
         (g["camera"], g["focal_mm"], g["frames"], g["asks_camera"], g["asks_optics"])
@@ -532,8 +534,8 @@ def test_poses_that_do_not_name_the_optics_are_asked_once_per_camera_and_focal(o
 
 
 def test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it(ottiche):
-    """Detta l'ottica, le pose ASIAIR stanno nel setup che quell'ottica ha gia' con quella camera:
-    lo stesso della posa di N.I.N.A., non un gemello. La scheda resta in pagina con la sua
+    """Detta l'ottica, i frame ASIAIR stanno nel setup che quell'ottica ha gia' con quella camera:
+    lo stesso del frame di N.I.N.A., non un gemello. La scheda resta in pagina con la sua
     risposta, per cambiare idea, e non conta piu' fra le cose da confermare."""
     apply(ottiche, gear=[{"key": _chiave(ottiche, "a_0.fits"), "optics": NEWTON}])
     assert _ottica_della_posa(ottiche, "a_0.fits") == NEWTON
@@ -560,7 +562,7 @@ def test_an_optics_written_by_name_is_born_like_from_a_header(ottiche):
 
 
 def test_a_pose_that_arrives_later_takes_the_answer_by_itself(ottiche, tmp_path):
-    """La risposta sta sulla firma: una posa ASIAIR della notte dopo, a una focale che balla di
+    """La risposta sta sulla firma: un frame ASIAIR della notte dopo, a una focale che balla di
     poco, prende l'ottica da sola."""
     apply(ottiche, gear=[{"key": _chiave(ottiche, "a_0.fits"), "optics": NEWTON}])
     _scatto(tmp_path / "lib" / "asiair" / "dopo.fits", 50, **{**ASIAIR, "FOCALLEN": 803})
@@ -579,8 +581,8 @@ def test_the_answer_is_for_that_camera_only(ottiche, tmp_path):
 
 
 def test_changing_the_answer_moves_the_poses(ottiche):
-    """Si cambia idea rispondendo di nuovo: le pose che l'ottica non la dicono vanno con quella
-    nuova, e la posa di N.I.N.A., che la sua la dice, resta dov'era."""
+    """Si cambia idea rispondendo di nuovo: i frame che l'ottica non la dicono vanno con quella
+    nuova, e il frame di N.I.N.A., che la sua la dice, resta dov'era."""
     chiave = _chiave(ottiche, "a_0.fits")
     apply(ottiche, gear=[{"key": chiave, "optics": NEWTON}])
     apply(ottiche, gear=[{"key": chiave, "optics": "Askar 107PHQ"}])
@@ -591,7 +593,7 @@ def test_changing_the_answer_moves_the_poses(ottiche):
 
 def test_renaming_the_optics_carries_the_answer(ottiche):
     """La risposta porta il **nome** dell'ottica: rinominata dall'Attrezzatura, la risposta la
-    segue, e al giro dopo il nome vecchio non fa rinascere un pezzo."""
+    segue, e al giro dopo il nome vecchio non fa rinascere uno strumento."""
     chiave = _chiave(ottiche, "a_0.fits")
     apply(ottiche, gear=[{"key": chiave, "optics": NEWTON}])
     assert correct(ottiche, _pezzo(ottiche, NEWTON), name="Newton 8").status_code == 200
@@ -604,7 +606,7 @@ def test_renaming_the_optics_carries_the_answer(ottiche):
 
 def test_renaming_the_camera_carries_the_answer(ottiche):
     """La firma e' la grafia del file, non il nome della camera: rinominata la camera, la scheda e
-    la sua risposta restano, e le pose tengono la loro ottica."""
+    la sua risposta restano, e i frame tengono la loro ottica."""
     chiave = _chiave(ottiche, "a_0.fits")
     apply(ottiche, gear=[{"key": chiave, "optics": NEWTON}])
     assert correct(ottiche, _pezzo(ottiche, CAMERA), name="ASI2600MC").status_code == 200
@@ -627,7 +629,7 @@ def test_merging_the_optics_into_another_carries_the_answer(ottiche):
 
 
 def test_a_rig_written_by_hand_stays_even_without_poses(ottiche):
-    """I setup rilevati rimasti senza pose spariscono a fine giro; uno scritto a mano no, anche
+    """I setup rilevati rimasti senza frame spariscono a fine giro; uno scritto a mano no, anche
     vuoto: e' tuo, e lo aspetta la scansione che verra'."""
     body = {"optics_id": _pezzo(ottiche, NEWTON), "camera_id": _pezzo(ottiche, ALTRA)}
     body["focal_mm"] = 1000
@@ -639,7 +641,7 @@ def test_a_rig_written_by_hand_stays_even_without_poses(ottiche):
 
 def test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses(ottiche):
     """Il nome e la montatura che avevi dato al setup senza ottica non si perdono con la risposta:
-    passano al setup dove vanno le sue pose, e le pose tengono la montatura. Il file senza
+    passano al setup dove vanno i suoi frame, e i frame tengono la montatura. Il file senza
     `TELESCOP` la montatura non la dice: senza, resterebbe senza."""
     senza = next(g for g in gear(ottiche)["rigs"] if g["camera"] == ALTRA)
     montatura = ottiche.post("/api/v1/gear/instruments", json={"kind": "mount", "name": "EQ6-R"})
@@ -669,7 +671,7 @@ def test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses(ottiche)
 
 
 def test_a_rig_that_was_already_there_keeps_its_own_word(ottiche):
-    """Se le pose vanno in un setup che c'era gia', quello tiene la sua parola, anche quando e'
+    """Se i frame vanno in un setup che c'era gia', quello tiene la sua parola, anche quando e'
     "nessun nome": il nome del setup senza ottica passa solo a un setup che nasce li'."""
     senza = next(g for g in gear(ottiche)["rigs"] if g["camera"] == CAMERA and g["optics"] is None)
     r = ottiche.patch(f"/api/v1/gear/rigs/{senza['id']}", json={"name": "Il gemello"})
@@ -685,8 +687,8 @@ def test_an_answer_to_a_question_that_is_not_there_is_refused(ottiche):
 
 
 def test_the_camera_question_does_not_offer_the_mount_as_optics(db_path, tmp_path):
-    """Se la posa non dice la camera, la scheda propone come ottica cio' che dice `TELESCOP` -- ma
-    con l'ASIAIR li' c'e' la montatura, e proporla sarebbe riempire il campo con un pezzo
+    """Se il frame non dice la camera, la scheda propone come ottica cio' che dice `TELESCOP` -- ma
+    con l'ASIAIR li' c'e' la montatura, e proporla sarebbe riempire il campo con uno strumento
     sbagliato."""
     root = tmp_path / "lib"
     senza_camera = {k: v for k, v in ASIAIR.items() if k != "INSTRUME"}

@@ -486,7 +486,7 @@ def test_a_rewrite_that_dropped_the_capture_program_is_rewritten(tmp_path):
 @pytest.mark.parametrize("bitpix", [-32, -64])
 def test_a_floating_point_file_is_rewritten_even_with_the_capture_header(tmp_path, bitpix):
     """N.I.N.A. salva interi (BaseImageData.SaveFits), ASIAIR 16 bit (archivio: tutti i grezzi):
-    a virgola mobile e' elaborato altrove. Prima: stessa posa del grezzo."""
+    a virgola mobile e' elaborato altrove. Prima: stesso frame del grezzo."""
     lines = [line.replace("16", str(bitpix)) if line.startswith("BITPIX") else line
              for line in _NINA_HEAD]  # fmt: skip
     path = _fits(tmp_path / "cal.fits", lines)

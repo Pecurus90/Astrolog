@@ -1,7 +1,7 @@
 """Un pannello conta nel suo mosaico solo se ne regge una parte: almeno il 25% del tempo del
 pannello piu' lungo (Marco, 27/9/2026; il perche' e le fonti in `spine/mosaic_weight.py`).
 
-Il caso vero e' la Rosetta: dopo un giro al meridiano non ricentrato, poche pose spostate aprivano
+Il caso vero e' la Rosetta: dopo un giro al meridiano non ricentrato, pochi frame spostati aprivano
 un secondo "pannello", e l'app proponeva un mosaico che nessuno aveva ripreso. Gli aiutanti del
 banco sono quelli di `test_mosaic.py`, con le sue coordinate di IC 405.
 """
@@ -15,7 +15,7 @@ def _pannello(conn, cielo, quante, **kw):
 
 
 def test_two_stray_poses_beside_a_panel_are_not_a_mosaic(archivio):
-    """**La regola.** Dieci pose e, accanto, due: il 20% del lavoro non e' un pannello, e non c'e'
+    """**La regola.** Dieci frame e, accanto, due: il 20% del lavoro non e' un pannello, e non c'e'
     nessun mosaico da proporre."""
     prepara(archivio)
     _pannello(archivio, A, 10)
@@ -35,7 +35,7 @@ def test_a_panel_shot_less_than_the_others_still_counts(archivio):
 
 
 def test_the_share_is_measured_on_the_time_of_the_poses(archivio):
-    """Si misura il tempo, non il numero di pose: quattro pose da 10 secondi accanto a quattro da
+    """Si misura il tempo, non il numero di frame: quattro frame da 10 secondi accanto a quattro da
     120 sono l'8% del lavoro, e non fanno un pannello."""
     prepara(archivio)
     _pannello(archivio, A, 4)
@@ -45,7 +45,7 @@ def test_the_share_is_measured_on_the_time_of_the_poses(archivio):
 
 
 def test_without_the_time_the_share_is_measured_on_the_poses(archivio):
-    """Se i file non dicono quanto sono durate le pose, si contano le pose: due accanto a quattro
+    """Se i file non dicono quanto sono durati i frame, si contano i frame: due accanto a quattro
     sono la meta', e il mosaico c'e'."""
     prepara(archivio)
     _pannello(archivio, A, 4, tempo=None)
@@ -55,7 +55,7 @@ def test_without_the_time_the_share_is_measured_on_the_poses(archivio):
 
 
 def test_without_the_time_few_poses_still_do_not_count(archivio):
-    """Anche contando le pose la regola e' la stessa: due mute accanto a dieci mute sono il 20%."""
+    """Anche contando i frame la regola e' la stessa: due muti accanto a dieci muti sono il 20%."""
     prepara(archivio)
     _pannello(archivio, A, 10, tempo=None)
     _pannello(archivio, B, 2, tempo=None)
@@ -64,7 +64,7 @@ def test_without_the_time_few_poses_still_do_not_count(archivio):
 
 
 def test_a_pose_that_leaves_for_another_rig_reweighs_the_mosaic(archivio):
-    """Il peso segue anche le pose che se ne vanno: una posa di B che risulta di un altro setup
+    """Il peso segue anche i frame che se ne vanno: un frame di B che risulta di un altro setup
     esce dal pannello, e B, sceso al 20%, non fa piu' un mosaico."""
     prepara(archivio)
     _pannello(archivio, A, 10)
@@ -89,8 +89,8 @@ def test_poses_that_turn_out_to_be_calibration_reweigh_the_mosaic(archivio):
 
 
 def test_a_confirmed_mosaic_does_not_take_poses_that_do_not_count(archivio):
-    """Un pannello di troppo poco accanto a un mosaico confermato non entra nel mosaico: le sue
-    pose restano senza la chiave, e cioe' col loro oggetto nell'Archivio."""
+    """Un pannello di troppo poco accanto a un mosaico confermato non entra nel mosaico: i suoi
+    frame restano senza la chiave, e cioe' col loro oggetto nell'Archivio."""
     prepara(archivio)
     dentro = _pannello(archivio, A, 8) + _pannello(archivio, B, 8)
     rispondi(archivio, SI)
@@ -103,7 +103,7 @@ def test_a_confirmed_mosaic_does_not_take_poses_that_do_not_count(archivio):
 
 
 def test_the_centre_of_the_mosaic_does_not_lean_towards_a_panel_that_does_not_count(archivio):
-    """Il centro, e il nome che ne viene, si prendono dai pannelli che contano: le pose spostate
+    """Il centro, e il nome che ne viene, si prendono dai pannelli che contano: i frame spostati
     accanto a B non tirano il centro verso di se'."""
     prepara(archivio)
     _pannello(archivio, A, 8)
@@ -115,8 +115,8 @@ def test_the_centre_of_the_mosaic_does_not_lean_towards_a_panel_that_does_not_co
 
 
 def test_without_the_catalog_the_name_comes_from_the_panels_that_count(archivio):
-    """Dove il catalogo non ha niente, il nome proposto e' il soggetto con piu' pose -- fra i
-    pannelli che contano: venti pose brevissime accanto, che non reggono niente del lavoro, non
+    """Dove il catalogo non ha niente, il nome proposto e' il soggetto con piu' frame -- fra i
+    pannelli che contano: venti frame brevissimi accanto, che non reggono niente del lavoro, non
     danno il nome al mosaico."""
     prepara(archivio)
     # vicino al polo sud, dove il catalogo non ha voci: mezzo grado l'uno dall'altro
@@ -130,7 +130,7 @@ def test_without_the_catalog_the_name_comes_from_the_panels_that_count(archivio)
 
 
 def test_a_confirmed_mosaic_whose_other_panel_stops_counting_is_not_one_anymore(archivio):
-    """Il peso cambia con le pose che arrivano: se uno dei due pannelli scende sotto il 25%, il
+    """Il peso cambia con i frame che arrivano: se uno dei due pannelli scende sotto il 25%, il
     mosaico resta con un pannello solo, e un pannello solo non e' un mosaico."""
     prepara(archivio)
     primo = _pannello(archivio, A, 3)
@@ -144,7 +144,7 @@ def test_a_confirmed_mosaic_whose_other_panel_stops_counting_is_not_one_anymore(
 
 
 def test_poses_without_the_size_of_their_field_make_no_mosaic(archivio):
-    """Senza le misure del campo non si sa cosa inquadra una posa: non apre un pannello, e due pose
+    """Senza le misure del campo non si sa cosa inquadra un frame: non apre un pannello, e due frame
     identiche non diventano un mosaico."""
     prepara(archivio)
     pose = _pannello(archivio, A, 2, campo=(None, None))

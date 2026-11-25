@@ -1,6 +1,6 @@
 """Le righe dell'Archivio scritte da chi scrive (ADR 0048, passo 6.19.1): con niente che restringe
-le pose la pagina legge `archive_rows` e le tabelle accanto, purche' fresche; la stessa pagina,
-contata dalle pose o letta, e' identica, e una scrittura su un ingresso la fa contare di nuovo."""
+i frame la pagina legge `archive_rows` e le tabelle accanto, purche' fresche; la stessa pagina,
+contata dai frame o letta, e' identica, e una scrittura su un ingresso la fa contare di nuovo."""
 
 import pytest
 
@@ -20,7 +20,7 @@ def pagina(conn, **chiesto):
 
 
 def completo(conn):
-    """Il banco dei periodi, un mosaico, due pose senza oggetto (una senza filtro)."""
+    """Il banco dei periodi, un mosaico, due frame senza oggetto (uno senza filtro)."""
     pezzi = banco(conn)
     con_mosaico(conn, pezzi)
     posa(conn, None, filtro=pezzi["ha"], secondi=120.0)
@@ -44,8 +44,8 @@ def completo(conn):
     ],
 )
 def test_the_written_page_is_the_counted_one(archivio, chiesto):
-    """Righe, ore, produzioni, filtri, totali e pose senza oggetto: gli stessi, nello stesso
-    ordine, contati dalle pose o letti da cio' che e' scritto."""
+    """Righe, ore, produzioni, filtri, totali e frame senza oggetto: gli stessi, nello stesso
+    ordine, contati dai frame o letti da cio' che e' scritto."""
     completo(archivio)
     contata = pagina(archivio, **chiesto)
 
@@ -81,14 +81,14 @@ def test_a_fresh_page_reads_what_is_written(archivio):
 
 
 SCRITTURE = {
-    "una posa nuova": lambda c, p: riprese(
+    "un frame nuovo": lambda c, p: riprese(
         c, p["ngc"], 1, notte_id=notte(c, p["casa"], "2023-03-01"), setup_id=p["a"],
         filtro=p["ha"], secondi=60.0,
     ),
-    "una posa che cambia durata": lambda c, p: c.execute(
+    "un frame che cambia durata": lambda c, p: c.execute(
         "UPDATE frames SET exposure_s = 30.0 WHERE object_id = ?", (p["ngc"],)
     ),
-    "una posa che non e' piu' una luce": lambda c, p: c.execute(
+    "un frame che non e' piu' una luce": lambda c, p: c.execute(
         "UPDATE frames SET image_type = 'unknown' WHERE object_id IS NULL"
     ),
     "un nome principale nuovo": lambda c, p: c.execute(

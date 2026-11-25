@@ -43,7 +43,7 @@ def test_the_order_is_the_one_you_search_in(client_vuoto):
 
 def test_it_does_not_need_the_archive(client_vuoto):
     """Un vocabolario non e' un dato dell'utente: si legge anche a mani vuote, appena installato,
-    senza una posa in archivio."""
+    senza un frame in archivio."""
     assert client_vuoto.get("/api/v1/vocab/filter-models").json()["items"]
 
 

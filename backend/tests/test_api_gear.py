@@ -1,8 +1,8 @@
 """La pagina **Attrezzatura**: *"con cosa ho ripreso, e quanto"*.
 
-I pezzi li scrive la spina leggendo gli header; qui si leggono, raccolti per genere. Ogni numero
-viene dai file o da una risposta dell'utente: dove non c'e', la pagina dice **perche'** invece di
-scrivere uno zero (`docs/domini/attrezzatura.md`).
+Gli strumenti li scrive la spina leggendo gli header; qui si leggono, raccolti per genere. Ogni
+numero viene dai file o da una risposta dell'utente: dove non c'e', la pagina dice **perche'**
+invece di scrivere uno zero (`docs/domini/attrezzatura.md`).
 """
 
 from unittest import mock
@@ -30,7 +30,7 @@ def setup(conn, optics_id, camera_id, focal_mm):
 
 
 def risolta(conn, frame_id, *, scala=SCALA, larghezza=1.5, altezza=1.0):
-    """Il cielo misurato su quella posa: e' da qui che esce quanto inquadra un setup."""
+    """Il cielo misurato su quel frame: e' da qui che esce quanto inquadra un setup."""
     conn.execute(
         "INSERT INTO frame_wcs(frame_id, ra_deg, dec_deg, scale_arcsec_px, width_deg,"
         " height_deg, solved_at) VALUES(?, 10.0, 41.0, ?, ?, ?, ?)",
@@ -50,7 +50,7 @@ def pezzi(pagina, kind):
 
 @pytest.fixture
 def archivio(db_path):
-    """Un setup che ha ripreso -- ottica, camera, due pose risolte in Ha -- piu' una montatura
+    """Un setup che ha ripreso -- ottica, camera, due frame risolti in Ha -- piu' una montatura
     che nessun file lega a niente, che e' il caso su cui la pagina deve dire la verita'."""
     conn = connect(db_path)
     try:
@@ -99,9 +99,9 @@ def test_a_rig_says_every_part_its_frames_used(archivio):
 
 
 def test_a_part_carried_only_by_choice_is_counted_like_the_others(archivio):
-    """Riduttore e ottica di guida stanno sulle pose solo perche' li hai scelti: una volta li',
-    il setup li elenca coi loro frame e il pezzo ha le sue ore, dopo i pezzi che i file nominano
-    e prima dei filtri."""
+    """Riduttore e ottica di guida stanno sui frame solo perche' li hai scelti: una volta li',
+    il setup li elenca coi loro frame e lo strumento ha le sue ore, dopo gli strumenti che i file
+    nominano e prima dei filtri."""
     with db(archivio) as conn:
         riduttore = attrezzo(conn, "reducer", "0,8x")
         guida = attrezzo(conn, "guide_scope", "30 mm f/4")
@@ -149,14 +149,14 @@ def test_a_rig_used_with_two_of_a_kind_lists_both_most_used_first(archivio):
         ("software", "N.I.N.A.", 3),
         ("software", "ASIAIR", 1),
     ]
-    # il programma non e' un pezzo: non ha un id
+    # il programma non e' uno strumento: non ha un id
     assert [p["id"] for p in setup_["parts"] if p["kind"] == "software"] == [None, None]
     # e niente qui e' una scelta tua: lo dicono i file
     assert not any(p["chosen"] for p in setup_["parts"])
 
 
 def test_a_part_renamed_reads_with_its_new_name(archivio):
-    """Il nome di una parte e' quello del pezzo adesso, non quello di quando si e' contato."""
+    """Il nome di una parte e' quello dello strumento adesso, non quello di quando si e' contato."""
     with db(archivio) as conn:
         conn.execute("UPDATE instruments SET name = 'EAF' WHERE kind = 'focuser'")
         conn.commit()
@@ -166,10 +166,10 @@ def test_a_part_renamed_reads_with_its_new_name(archivio):
 
 @pytest.mark.parametrize("genere", ["filter_wheel", "focuser", "guide_camera"])
 def test_a_piece_the_files_name_on_every_frame_has_its_hours(archivio, genere):
-    """La ruota portafiltri, il focheggiatore e la camera di guida stanno **sulla posa**, non sul
+    """La ruota portafiltri, il focheggiatore e la camera di guida stanno **sul frame**, non sul
     setup: i file dicono quale hai usato per ogni scatto, quindi le loro ore si sanno davvero.
 
-    E' la differenza con la **montatura**, che nessun header lega a una posa e che infatti dice
+    E' la differenza con la **montatura**, che nessun header lega a un frame e che infatti dice
     perche' non ne ha. Provati tutti e tre: con uno solo si potevano togliere le altre due strade
     senza che niente cadesse."""
     pezzo = pezzi(gear(archivio), genere)[0]
@@ -180,11 +180,11 @@ def test_a_piece_the_files_name_on_every_frame_has_its_hours(archivio, genere):
 
 def test_a_kind_no_frame_of_yours_names_has_hours_the_app_cannot_know(db_path):
     """Chi riprende con un programma che la ruota non la scrive se la puo' **scrivere a mano** --
-    ma allora le sue ore l'app non le sa, e un bel `0 pose` sarebbe un dato falso, non una misura.
+    ma allora le sue ore l'app non le sa, e un bel `0 frame` sarebbe un dato falso, non una misura.
 
     La regola e' **per archivio**, non per genere: la stessa ruota dice due cose diverse a due
     utenti, e a deciderlo e' cio' che i loro file dicono. Senza questa riga, chi usa Voyager o SGP
-    leggeva zero accanto a un pezzo di cui non si sa niente."""
+    leggeva zero accanto a uno strumento di cui non si sa niente."""
     conn = connect(db_path)
     try:
         prepara(conn)
@@ -203,7 +203,7 @@ def test_a_kind_no_frame_of_yours_names_has_hours_the_app_cannot_know(db_path):
 
 
 def test_a_frame_with_no_rig_still_gives_the_wheel_its_hours(db_path):
-    """Una posa che nomina la ruota ma **non ha setup** -- l'header non dice la camera -- conta
+    """Un frame che nomina la ruota ma **non ha setup** -- l'header non dice la camera -- conta
     comunque nelle ore della ruota: con una giunzione secca sui setup resterebbe fuori.
 
     E' il caso di chi riprende con N.I.N.A. senza `INSTRUME`: il setup non nasce, la ruota si'."""
@@ -229,12 +229,12 @@ def test_a_frame_with_no_rig_still_gives_the_wheel_its_hours(db_path):
 
 
 def test_the_shapes_of_the_link_pick_the_same_frames(archivio):
-    """Il legame fra una posa e un pezzo ha **tre forme**: una che cerca i setup da se', per chi
-    non ce li ha nel `FROM`, una che li usa dove sono gia' -- senza la ricerca correlata -- e le
-    coppie (pezzo, posa) per chi conta tutti i pezzi insieme.
+    """Il legame fra un frame e uno strumento ha **tre forme**: una che cerca i setup da se', per
+    chi non ce li ha nel `FROM`, una che li usa dove sono gia' -- senza la ricerca correlata -- e le
+    coppie (strumento, frame) per chi conta tutti gli strumenti insieme.
 
     Non sono due legami: li compone la stessa funzione, e questa prova e' la macchina che li tiene
-    uguali. Se divergessero, ore e oggetti della stessa riga verrebbero da pose diverse."""
+    uguali. Se divergessero, ore e oggetti della stessa riga verrebbero da frame diversi."""
     from astrolog.spine import counts
 
     with connect(archivio.app.state.db_path) as conn:
@@ -251,16 +251,16 @@ def test_the_shapes_of_the_link_pick_the_same_frames(archivio):
             )
         )
 
-        # e la terza, per chi conta tutti i pezzi insieme raggruppando (`gear_usage`)
+        # e la terza, per chi conta tutti gli strumenti insieme raggruppando (`gear_usage`)
         coppie = {tuple(r) for r in conn.execute(f"SELECT * FROM ({counts.PIECE_FRAMES})")}  # noqa: S608
 
     assert sola == giunta
     assert {tuple(r) for r in sola} == coppie
-    assert sola, "il banco non lega nessuna posa a nessun pezzo: la prova non direbbe niente"
+    assert sola, "il banco non lega nessun frame a nessuno strumento: la prova non direbbe niente"
 
 
 def test_the_page_lists_the_gear_you_own(archivio):
-    """I pezzi che possiedi, **raccolti per genere**: un telescopio e una camera non si
+    """Gli strumenti che possiedi, **raccolti per genere**: un telescopio e una camera non si
     confrontano, e mescolarli farebbe leggere l'elenco come un mucchio."""
     pagina = gear(archivio)
 
@@ -273,7 +273,7 @@ def test_the_page_lists_the_gear_you_own(archivio):
 
 
 def test_a_piece_says_how_much_you_shot_with_it(archivio):
-    """Le ore di ogni pezzo: e' il consuntivo per cui la pagina esiste. Le ore escono dalla
+    """Le ore di ogni strumento: e' il consuntivo per cui la pagina esiste. Le ore escono dalla
     stessa casa che le conta per oggetto e per notte, non da un conto suo."""
     setup_letto = gear(archivio)["rigs"][0]
 
@@ -281,9 +281,9 @@ def test_a_piece_says_how_much_you_shot_with_it(archivio):
 
 
 def test_a_rig_a_piece_and_a_filter_say_only_their_hours(archivio):
-    """Di setup, pezzi e filtri la pagina dice **solo le ore** (Marco, 11/10 e 24/10/2026): notti
-    e oggetti non escono, e il setup non dice i suoi frame. Pezzi e filtri tengono `frames` solo
-    per i gesti, Unisci ed Elimina, che dicono quanti frame si spostano o li usano."""
+    """Di setup, strumenti e filtri la pagina dice **solo le ore** (Marco, 11/10 e 24/10/2026):
+    notti e oggetti non escono, e il setup non dice i suoi frame. Strumenti e filtri tengono
+    `frames` solo per i gesti, Unisci ed Elimina, che dicono quanti frame si spostano o li usano."""
     pagina = gear(archivio)
     righe = [*pagina["rigs"], *pagina["instruments"], *pagina["filters"]]
 
@@ -293,12 +293,12 @@ def test_a_rig_a_piece_and_a_filter_say_only_their_hours(archivio):
 
 
 def test_the_hours_of_a_piece_come_from_its_rigs(archivio):
-    """Un'ottica e una camera non stanno su una posa: stanno su un **setup**, e le loro ore sono
+    """Un'ottica e una camera non stanno su un frame: stanno su un **setup**, e le loro ore sono
     quelle dei setup che le portano -- non quelle dell'archivio. (Gli altri tre generi ci
     arrivano per l'altra strada, ed e' la prova qui sopra.)
 
-    Nell'archivio c'e' apposta una posa ripresa con **un altro** setup: senza, un conto che
-    prendesse tutte le pose darebbe gli stessi numeri e questa prova direbbe di si' senza
+    Nell'archivio c'e' apposta un frame ripreso con **un altro** setup: senza, un conto che
+    prendesse tutti i frame darebbe gli stessi numeri e questa prova direbbe di si' senza
     guardare niente (visto verde sabotando, prima di aggiungerla)."""
     with db(archivio) as conn:
         altra = attrezzo(conn, "optics", "RC8", focal_mm=1624.0)
@@ -330,7 +330,7 @@ def test_a_piece_on_two_rigs_does_not_count_its_hours_twice(archivio):
 
 
 def test_the_sky_of_a_rig_is_the_middle_value_not_the_average(archivio):
-    """**Mediana, non media**: una posa risolta storta -- capita su un campo povero di stelle --
+    """**Mediana, non media**: un frame risolto storto -- capita su un campo povero di stelle --
     sposterebbe la media e lascia ferma la mediana, e qui si descrive com'e' fatto un setup,
     non un caso. Con 1,2 / 1,23 / 6,0 la mediana e' 1,23 e la media 2,81."""
     with db(archivio) as conn:
@@ -378,7 +378,7 @@ def test_a_frame_that_did_not_say_its_field_does_not_drag_the_others(archivio):
 
 
 def test_a_rig_says_the_sky_it_really_frames(archivio):
-    """La scala e il campo **misurati** sulle pose risolte, non calcolati da focale e pixel: su
+    """La scala e il campo **misurati** sui frame risolti, non calcolati da focale e pixel: su
     un setup con un riduttore il conto teorico direbbe un altro numero, giusto sulla carta e
     sbagliato nel cielo."""
     setup_letto = gear(archivio)["rigs"][0]
@@ -389,7 +389,7 @@ def test_a_rig_says_the_sky_it_really_frames(archivio):
 
 
 def test_a_rig_that_never_shot_says_nothing_about_the_sky(archivio):
-    """Un setup senza pose risolte non ha una scala: la riga tace, invece di riempirsi con il
+    """Un setup senza frame risolti non ha una scala: la riga tace, invece di riempirsi con il
     numero che la scheda direbbe."""
     with db(archivio) as conn:
         ottica = attrezzo(conn, "optics", "RC8", aperture_mm=203.0, focal_mm=1624.0)
@@ -404,7 +404,7 @@ def test_a_rig_that_never_shot_says_nothing_about_the_sky(archivio):
 
 
 def test_a_mount_has_no_hours_and_the_page_says_why(archivio):
-    """Nessuna posa porta questa montatura -- i file non la nominano e nessun setup ce l'ha: la
+    """Nessun frame porta questa montatura -- i file non la nominano e nessun setup ce l'ha: la
     riga non prende uno zero, che sarebbe un dato, ma dice che nessun setup la porta ancora."""
     montatura = pezzi(gear(archivio), "mount")[0]
     assert montatura["no_hours"] == "no_rig"
@@ -415,7 +415,7 @@ def test_a_mount_has_no_hours_and_the_page_says_why(archivio):
 
 
 def test_no_filter_at_all_is_not_a_filter_you_own(archivio):
-    """La riga con cui l'app segna una posa **senza vetro davanti** non e' un filtro che
+    """La riga con cui l'app segna un frame **senza vetro davanti** non e' un filtro che
     possiedi: in un elenco di cose tue sarebbe la prima voce di qualcosa che non hai -- e chi
     riprende a colori ce l'ha in cima."""
     with db(archivio) as conn:
@@ -468,7 +468,7 @@ def test_a_rewritten_copy_is_not_another_hour_of_gear(archivio):
 
 
 def test_a_frame_without_a_time_is_not_zero_hours_of_gear(archivio):
-    """ "Non lo so" e "zero ore" restano due risposte diverse anche qui: la posa muta esce dalla
+    """ "Non lo so" e "zero ore" restano due risposte diverse anche qui: il frame muto esce dalla
     somma e si conta a parte."""
     with db(archivio) as conn:
         conn.execute("UPDATE frames SET exposure_s = NULL WHERE frame_hash = 'p1'")
@@ -486,7 +486,7 @@ def test_the_page_counts_nothing_and_the_writer_asks_per_page(archivio):
     setup o venti.
 
     La guardia e' sul **numero di chiamate**, non sul tempo: un tempo dipende dalla macchina, il
-    conto no -- e cambia subito se un domani la domanda finisse dentro il giro dei pezzi."""
+    conto no -- e cambia subito se un domani la domanda finisse dentro il giro degli strumenti."""
     quante = []
     vero = idlist.grouped
 
@@ -507,7 +507,7 @@ def test_the_page_counts_nothing_and_the_writer_asks_per_page(archivio):
         with db(archivio) as conn:
             gear_usage.write(conn)
 
-    assert len(pagina["rigs"]) > 10, "servono abbastanza pezzi perche' la domanda abbia senso"
+    assert len(pagina["rigs"]) > 10, "servono abbastanza strumenti perche' la domanda abbia senso"
     assert len(quante) == 1, f"il cielo dei setup: {quante}"
 
 
@@ -521,8 +521,8 @@ def test_an_empty_gear_page_is_an_answer_not_an_error(db_path):
 
 
 def test_a_mount_carried_by_the_frames_has_their_hours(archivio):
-    """Quando le pose portano la montatura -- perche' il file la nomina o perche' l'hai data al
-    setup -- la montatura ha ore, come gli altri pezzi."""
+    """Quando i frame portano la montatura -- perche' il file la nomina o perche' l'hai data al
+    setup -- la montatura ha ore, come gli altri strumenti."""
     with db(archivio) as conn:
         montatura = conn.execute("SELECT id FROM instruments WHERE kind = 'mount'").fetchone()[0]
         conn.execute("UPDATE frames SET mount_id = ?", (montatura,))
@@ -534,7 +534,7 @@ def test_a_mount_carried_by_the_frames_has_their_hours(archivio):
 
 
 def test_a_mount_no_frame_carries_says_so_even_where_others_have_hours(archivio):
-    """Dove altre montature hanno pose, una che non ne ha non ha fatto "zero ore": nessun setup
+    """Dove altre montature hanno frame, una che non ne ha non ha fatto "zero ore": nessun setup
     la porta ancora, e la pagina lo dice. Le ore, dove ci sono, non portano un perche'."""
     with db(archivio) as conn:
         altra = conn.execute(
@@ -552,7 +552,7 @@ def test_a_mount_no_frame_carries_says_so_even_where_others_have_hours(archivio)
 @pytest.mark.parametrize("kind", ["reducer", "guide_scope"])
 def test_a_piece_only_a_rig_can_carry_says_no_rig_carries_it(archivio, kind):
     """Riduttore e ottica di guida i file non li scrivono mai: "non indicato nei file" non dice
-    cosa fare. Senza pose dicono che nessun setup li porta, anche dove un altro ne ha."""
+    cosa fare. Senza frame dicono che nessun setup li porta, anche dove un altro ne ha."""
     with db(archivio) as conn:
         attrezzo(conn, kind, "Fermo")
         gear_usage.write(conn)

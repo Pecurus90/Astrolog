@@ -27,7 +27,7 @@ def test_nothing_read_yet_or_all_read_says_nothing():
 
 def test_the_pace_starts_with_the_folder_being_read_not_with_the_gesture():
     """Le ricevute di un gesto si aprono tutte insieme: dalla seconda cartella in poi il tempo
-    contato dalla ricevuta comprenderebbe le cartelle lette prima. Si conta da quando la lettura
+    contato dalla ricevuta comprenderebbe le cartelle lette prima. Si conta da quando la scansione
     di questa cartella e' cominciata, e nel suo primo minuto si tace."""
     dieci_secondi_fa = iso_z(datetime.now(UTC) - timedelta(seconds=10))
     assert _remaining({"current": 100, "total": 1000, "since": dieci_secondi_fa}) is None
@@ -43,8 +43,8 @@ def _folder(conn, dove: str) -> int:
 
 
 def test_the_first_reading_is_the_one_with_no_reading_ended_before(conn):
-    """La prima scansione: nessuna cartella aveva mai finito una lettura prima di questo gesto. Le
-    letture del gesto in corso non contano, finite o no."""
+    """La prima scansione: nessuna cartella aveva mai finito una scansione prima di questo gesto. Le
+    scansioni del gesto in corso non contano, finite o no."""
     cartella = _folder(conn, "D:/Astro")
     adesso = start_run(conn, cartella, "ora")
     assert is_first_scan(conn, [adesso])
@@ -52,14 +52,14 @@ def test_the_first_reading_is_the_one_with_no_reading_ended_before(conn):
     conn.execute("UPDATE scan_runs SET ended_at = 'dopo', status = 'ok' WHERE id = ?", (adesso,))
     assert is_first_scan(conn, [adesso])
 
-    # la stessa cartella riletta, dopo una lettura finita: non e' piu' la prima
+    # la stessa cartella riletta, dopo una scansione finita: non e' piu' la prima
     poi = start_run(conn, cartella, "dopo ancora")
     assert not is_first_scan(conn, [poi])
 
 
 def test_resuming_after_one_of_two_folders_was_read_is_still_the_first(conn):
     """Due cartelle: A finita, B fermata. Riprendi apre ricevute nuove per tutte e due: B non e'
-    mai stata letta fino in fondo, quindi la lettura e' ancora la prima."""
+    mai stata letta fino in fondo, quindi la scansione e' ancora la prima."""
     a, b = _folder(conn, "D:/A"), _folder(conn, "E:/B")
     a1, b1 = start_run(conn, a, "ora"), start_run(conn, b, "ora")
     conn.execute("UPDATE scan_runs SET ended_at = 'dopo', status = 'ok' WHERE id = ?", (a1,))
@@ -69,7 +69,7 @@ def test_resuming_after_one_of_two_folders_was_read_is_still_the_first(conn):
 
 
 def test_a_stopped_first_reading_is_still_the_first_when_it_resumes(conn):
-    """Ferma e poi Riprendi: la prima lettura fermata non e' finita, e quella che riparte con una
+    """Ferma e poi Riprendi: la prima scansione fermata non e' finita, e quella che riparte con una
     ricevuta nuova e' ancora la prima."""
     fermata = start_run(conn, _folder(conn, "D:/Astro"), "ora")
     conn.execute(

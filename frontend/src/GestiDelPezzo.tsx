@@ -30,10 +30,10 @@ const icona = (kind: DaScrivere) =>
 
 /**
  * Il gesto *Aggiungi strumento* (tavola v82 `modulo`, k `nuovo`): prima il tipo a tasselli, poi
- * "Tipo: ... Cambia" col modulo del tipo -- un pezzo, un filtro (`NuovoFiltro`) o un setup
+ * "Tipo: ... Cambia" col modulo del tipo -- uno strumento, un filtro (`NuovoFiltro`) o un setup
  * (`NuovoSetup`).
  *
- * - **Il tipo si sceglie dentro il gesto**, non fuori: un tipo senza pezzi non compare
+ * - **Il tipo si sceglie dentro il gesto**, non fuori: un tipo senza strumenti non compare
  *   nell'elenco, quindi un *aggiungi* per gruppo non farebbe mai nascere la prima guida.
  * - **Quali campi chiedere non si decide qui**: li manda l'API per tipo (`cards`), ed e' la
  *   stessa tabella su cui *Da confermare* costruisce le sue domande.

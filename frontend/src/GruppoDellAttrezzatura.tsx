@@ -16,7 +16,7 @@ type Pagina = components["schemas"]["GearList"]
 type Pezzo = components["schemas"]["InstrumentOnPage"]
 type Filtro = components["schemas"]["FilterOnPage"]
 
-/** "Nessun setup lo porta", per genere: l'aggettivo segue il pezzo. */
+/** "Nessun setup lo porta", per genere: l'aggettivo segue lo strumento. */
 const SENZA_SETUP: Partial<Record<Pezzo["kind"], Chiave>> = {
   mount: "gear.noHours.mount",
   reducer: "gear.noHours.reducer",
@@ -208,7 +208,7 @@ const sottotitolo = (brand: string | null, model: string | null, nome: string) =
   [brand, model && model !== nome ? model : null].filter(Boolean).join(" · ") // glifo-ok: board separator
 
 /**
- * Il **gruppo di un tipo** nell'Attrezzatura (tavola v82 `grp`): ogni pezzo con la scheda intera,
+ * Il **gruppo di un tipo** nell'Attrezzatura (tavola v82 `grp`): ogni strumento con la scheda intera,
  * le ore con la barra o perche' mancano, "inserito manualmente", e il suo modulo che si apre nella
  * riga; un modulo aperto alla volta.
  */

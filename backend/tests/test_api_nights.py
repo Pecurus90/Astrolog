@@ -132,7 +132,7 @@ def test_an_object_counts_before_its_frames_have_a_night(archivio):
 
 def test_the_archive_totals_read_the_frames_once_whatever_the_nights(archivio):
     """`notti.md`: il totale in cima non costa una query in piu' per riga, e' una sola
-    sull'archivio. Con due notti, un conto per notte leggerebbe le pose due volte."""
+    sull'archivio. Con due notti, un conto per notte leggerebbe i frame due volte."""
     lette = []
     with db(archivio) as conn:
         conn.set_trace_callback(lette.append)
@@ -179,7 +179,7 @@ def test_a_rewritten_copy_is_not_another_hour_of_the_night(archivio):
 
 
 def test_a_pose_without_a_time_is_not_zero_hours_of_the_night(archivio):
-    """Una posa che non dice quanto e' durata **non vale zero**: resta fuori dalla somma e si
+    """Un frame che non dice quanto e' durato **non vale zero**: resta fuori dalla somma e si
     conta a parte, o "non lo sappiamo" e "zero ore" diventerebbero la stessa cosa."""
     prima = notti(archivio)["items"][0]
     with db(archivio) as conn:
@@ -189,12 +189,12 @@ def test_a_pose_without_a_time_is_not_zero_hours_of_the_night(archivio):
         conn.commit()
 
     dopo = next(n for n in notti(archivio)["items"] if n["id"] == prima["id"])
-    assert dopo["integration_s"] == 600.0, "la posa senza tempo non entra nella somma"
+    assert dopo["integration_s"] == 600.0, "il frame senza tempo non entra nella somma"
     assert dopo["untimed"] == 1
 
 
 def test_the_page_counts_the_poses_still_waiting_for_an_answer(archivio):
-    """Le pose che l'app ha fermato in attesa di una risposta non stanno in nessuna notte: se la
+    """I frame che l'app ha fermato in attesa di una risposta non stanno in nessuna notte: se la
     pagina tace, quelle ore sembrano non essere mai esistite. Si contano **per dove si risponde**,
     perche' mandare a *Da confermare* chi deve dichiarare il sito vuol dire mandarlo davanti a un
     elenco dove non trovera' niente."""
@@ -228,8 +228,8 @@ def test_the_page_says_when_the_reading_is_not_over(archivio):
 
 
 def test_a_frame_without_a_date_is_answered_in_review(archivio):
-    """Una posa che l'header non data aspetta la data che scrivi tu, in *Da confermare*, sezione
-    dei frame senza data (Marco, 6/11/2026; DECISIONI v65): non e' piu' una posa senza risposta."""
+    """Un frame che l'header non data aspetta la data che scrivi tu, in *Da confermare*, sezione
+    dei frame senza data (Marco, 6/11/2026; DECISIONI v65): non e' piu' un frame senza risposta."""
     with db(archivio) as conn:
         posa(conn, quando=None, hash_="senza data")
         corri(conn)
@@ -240,9 +240,9 @@ def test_a_frame_without_a_date_is_answered_in_review(archivio):
 
 def test_the_ways_of_having_no_nights_are_different_answers(db_path):
     """Non avere notti ha quattro motivi, e la pagina deve poterli distinguere: **non hai frame**
-    (totali a zero), **non hai detto dov'e' casa** (le pose sono ferme col loro motivo, e senza
+    (totali a zero), **non hai detto dov'e' casa** (i frame sono fermi col loro motivo, e senza
     un sito non nasceranno mai), **non ci siamo ancora arrivati** (la spina ha lavoro da fare), e
-    **le tue pose aspettano una risposta** (ci sono, ma sono tutte ferme su una domanda).
+    **i tuoi frame aspettano una risposta** (ci sono, ma sono tutti fermi su una domanda).
     Uno stato vuoto che li confonde manda l'utente a sistemare la cosa sbagliata."""
     conn = connect(db_path)
     try:
@@ -274,7 +274,7 @@ def test_the_ways_of_having_no_nights_are_different_answers(db_path):
         assert senza_casa["still_reading"] == 0
         assert senza_casa["empty"] == "no_site"
 
-        # E il quarto: c'e' un sito, ma quella posa e' stata ripresa altrove e l'app chiede dove.
+        # E il quarto: c'e' un sito, ma quel frame e' stato ripreso altrove e l'app chiede dove.
         luogo(conn, ROMA)
         posa(conn, quando="2024-05-18T22:00:00Z", coord=(34.0, -111.0), hash_="altrove")
         corri(conn)
@@ -282,7 +282,7 @@ def test_the_ways_of_having_no_nights_are_different_answers(db_path):
         with TestClient(create_app(db_path), base_url="http://localhost") as c:
             in_attesa = notti(c)
         assert in_attesa["totals"]["nights"] == 0, "nessuna notte, ma non perche' manca tutto"
-        # La posa di prima resta ferma sul sito -- nessuno l'ha rimessa in coda -- e quella nuova
+        # Il frame di prima resta fermo sul sito -- nessuno l'ha rimesso in coda -- e quello nuovo
         # aspetta una risposta in Da confermare: due gesti diversi, e la pagina li deve poter
         # nominare tutti e due.
         assert {v["answer_at"] for v in in_attesa["waiting"]} == {"review", "site"}

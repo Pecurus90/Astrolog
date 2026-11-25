@@ -117,6 +117,6 @@ def test_two_keys_of_who_took_the_shot_are_not_a_mark():
 
 
 def test_a_header_that_says_nothing_has_no_mark():
-    """Il caso normale: una posa appena scattata non porta nessuna delle due chiavi."""
+    """Il caso normale: un frame appena scattato non porta nessuna delle due chiavi."""
     assert rewrite_mark({"SWCREATE": "N.I.N.A. 3.1.2.9001 (x64)", "IMAGETYP": "LIGHT"}) is None
     assert rewrite_mark({}) is None

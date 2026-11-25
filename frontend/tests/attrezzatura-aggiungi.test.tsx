@@ -48,8 +48,8 @@ describe("aggiungo alla mia attrezzatura", () => {
     expect(within(modulo()).queryByLabelText(/^nome/i)).toBeNull()
   })
 
-  it("aggiungo un pezzo che nessun file nomina, scegliendone il tipo", async () => {
-    // Il tipo si sceglie **dentro** il gesto e non fuori: un tipo senza pezzi non compare
+  it("aggiungo uno strumento che nessun file nomina, scegliendone il tipo", async () => {
+    // Il tipo si sceglie **dentro** il gesto e non fuori: un tipo senza strumenti non compare
     // nell'elenco, quindi un "aggiungi" per gruppo non permetterebbe mai il primo focheggiatore.
     attrezzatura(
       {},
@@ -89,7 +89,7 @@ describe("aggiungo alla mia attrezzatura", () => {
 
     tipo(/^filtro$/i)
     scrivi(/^nome/i, "Antlia 3nm")
-    // senza banda non si salva: e' cio' che sblocca le pose
+    // senza banda non si salva: e' cio' che sblocca i frame
     expect(spento()).toBe(true)
     expect(screen.getByText("Per salvare serve almeno una banda.")).toBeDefined()
     scrivi(/^banda/i, "HA")
@@ -140,7 +140,7 @@ describe("aggiungo alla mia attrezzatura", () => {
     expect(spento()).toBe(true)
   })
 
-  it("scrivo a mano un setup, con ottica e camera fra i miei pezzi e la focale", async () => {
+  it("scrivo a mano un setup, con ottica e camera fra i miei strumenti e la focale", async () => {
     const camera = { ...OTTICA, id: 5, kind: "camera", name: "ASI533MC" }
     attrezzatura(
       { instruments: [OTTICA, camera, MONTATURA] },
@@ -253,7 +253,7 @@ describe("aggiungo alla mia attrezzatura", () => {
 
   it("a mani vuote posso scrivere cosa possiedo", async () => {
     // Chi non ha ancora scansionato e' proprio quello che ha piu' bisogno di dirlo: se il gesto
-    // vivesse solo accanto a un pezzo, a mani vuote non ci sarebbe nessun pezzo accanto a cui
+    // vivesse solo accanto a uno strumento, a mani vuote non ci sarebbe nessuno strumento accanto a cui
     // metterlo.
     attrezzatura({ instruments: [], rigs: [], filters: [] })
     await apriAttrezzatura()

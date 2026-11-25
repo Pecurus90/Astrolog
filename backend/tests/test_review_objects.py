@@ -105,7 +105,7 @@ def test_the_objects_section_shows_the_archive_objects_not_the_header_spellings(
 
 
 def test_an_object_carries_its_hours_and_the_copy_does_not_count(client):
-    """Le ore arrivano fino alla pagina, ed e' la stessa regola del conteggio: M 31 ha cinque pose
+    """Le ore arrivano fino alla pagina, ed e' la stessa regola del conteggio: M 31 ha cinque frame
     da 120 secondi **piu' una copia riscritta** con lo stesso tempo, quindi 600 secondi e non 720.
     Un numero esatto e non un "maggiore di zero": una guardia che si accontenta di un positivo
     resterebbe verde anche contando le copie."""
@@ -139,7 +139,7 @@ def test_the_objects_count_in_what_is_left_to_confirm(client):
 
 
 def test_the_frames_with_no_name_and_no_sky_are_asked_by_group(client):
-    """Si chiede per gruppo, mai per file: `le N pose di quella notte, puntate li', non hanno un
+    """Si chiede per gruppo, mai per file: `i N frame di quella notte, puntati li', non hanno un
     oggetto`."""
     page = review(client)
     gruppi = unnamed_cards(page)
@@ -153,7 +153,7 @@ def test_a_doubtful_object_carries_the_candidates_the_sky_found(client_col_catal
     quelle coordinate**. Li scrive chi identifica (`test_object_candidates.py`)."""
     conn = db(client_col_catalogo)
     try:
-        # una posa di M 31 col cielo di M 45: e' il ramo `sky_disagrees`, e va a conferma
+        # un frame di M 31 col cielo di M 45: e' il ramo `sky_disagrees`, e va a conferma
         frame_id = conn.execute("SELECT id FROM frames ORDER BY id LIMIT 1").fetchone()[0]
         conn.execute("UPDATE frames SET object_raw = 'M 31' WHERE id = ?", (frame_id,))
         conn.execute(
@@ -209,7 +209,7 @@ def test_an_object_of_the_catalog_with_no_names_of_its_own_is_named_by_the_catal
 
 
 def test_answering_on_an_object_moves_its_frames_and_locks_it(client_col_catalogo):
-    """Il giro intero: si risponde, e le pose ci vanno davvero. Non basta scrivere la
+    """Il giro intero: si risponde, e i frame ci vanno davvero. Non basta scrivere la
     dichiarazione -- `identify` deve rifare il lavoro e portarcele."""
     m31 = by_name(all_objects(client_col_catalogo), "M 31")
     esito = apply(client_col_catalogo, objects=[{"key": m31["key"], "slug": "m-45"}])
@@ -223,8 +223,8 @@ def test_answering_on_an_object_moves_its_frames_and_locks_it(client_col_catalog
             "SELECT o.catalog_slug, o.identity_method, COUNT(f.id) pose FROM objects o"
             " JOIN frames f ON f.object_id = o.id WHERE o.catalog_slug = 'm-45' GROUP BY o.id"
         ).fetchone()
-        assert riga is not None, "le pose non sono arrivate all'oggetto dichiarato"
-        # sei pose attaccate, cinque che contano: la copia riscritta ci va come le altre
+        assert riga is not None, "i frame non sono arrivati all'oggetto dichiarato"
+        # sei frame attaccati, cinque che contano: la copia riscritta ci va come gli altri
         assert (riga["identity_method"], riga["pose"]) == ("user", 6)
     finally:
         conn.close()
@@ -310,7 +310,7 @@ def test_an_answer_becomes_a_rule_when_the_header_spelling_is_not_ambiguous(clie
 
 def test_an_answer_does_not_become_a_rule_when_the_spelling_is_a_placeholder(client):
     """`Snapshot` su due cieli diversi non e' un nome, e' un segnaposto: una regola su quella
-    grafia tirerebbe su un oggetto pose che guardavano tutt'altro (scelta di Marco,
+    grafia tirerebbe su un oggetto frame che guardavano tutt'altro (scelta di Marco,
     2026-09-09)."""
     conn = db(client)
     try:
@@ -455,10 +455,10 @@ def test_a_mixed_answer_runs_both_stages(client):
     """Rispondere su un filtro e su un oggetto insieme fa ripartire tutti e due i lavori, e in
     quest'ordine: con la sola normalizzazione la risposta sugli oggetti restava ferma finche'
     l'utente non cliccava Avvia -- e lui aveva appena cliccato Applica. In coda c'e' `group`,
-    perche' una posa che cambia oggetto cambia anche sessione.
+    perche' un frame che cambia oggetto cambia anche sessione.
 
-    Il banco e' l'archivio sintetico e non il banco misto: li' non c'e' nessun pezzo da
-    dichiarare (le pose sono `INSERT` diretti, `rigs` e' vuota), quindi la risposta non era mai
+    Il banco e' l'archivio sintetico e non il banco misto: li' non c'e' nessuno strumento da
+    dichiarare (i frame sono `INSERT` diretti, `rigs` e' vuota), quindi la risposta non era mai
     davvero mista e questa guardia e' rimasta verde per un giro intero col ramo scoperto."""
     page = review(client)
     h = by_name(page["filters"], "N")
@@ -474,7 +474,7 @@ def test_a_mixed_answer_runs_both_stages(client):
 
 def test_an_answer_on_a_filter_alone_also_redoes_the_names_and_the_nights(client):
     """Il difetto trovato dall'audit: rispondere su un **filtro** rimetteva in coda anche il
-    nome e le notti (`invalidate` lo fa: cambiano i vocabolari, cambia cio' che quelle pose
+    nome e le notti (`invalidate` lo fa: cambiano i vocabolari, cambia cio' che quei frame
     vogliono dire), ma l'Applica accodava la sola normalizzazione -- e i due stadi restavano
     `pending` finche' l'utente non cliccava Avvia. Il grafo era scritto due volte: in
     `stages.DEPENDS` e, per una coppia sola, in `run`. Ora chi tira dietro chi lo dice il

@@ -14,8 +14,8 @@ from conftest import add_folder
 
 
 def test_the_unnamed_groups_start_from_the_poses_without_a_name(conn):
-    """I gruppi senza nome partono dalle pose che un gruppo ce l'hanno, con l'indice: partire dagli
-    stadi del cielo vuol dire passare da ogni posa dell'archivio a ogni apertura della pagina."""
+    """I gruppi senza nome partono dai frame che un gruppo ce l'hanno, con l'indice: partire dagli
+    stadi del cielo vuol dire passare da ogni frame dell'archivio a ogni apertura della pagina."""
     piano = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + unnamed._BY_GROUP))
     assert re.search(r"INDEX frames_unnamed\b", piano), piano
     assert "frame_stages_pending" not in piano, piano
@@ -28,7 +28,7 @@ ROSETTA, M81 = (98.0, 4.9), (149.0, 69.0)
 def _posa(conn, folder_id, rel_path, *, date: str | None = NOTTE, pointing=ROSETTA,
           focal: float | None = 400.0, pixel=4.3, height=4000, instrument="Canon EOS 700D",
           telescope=None):  # fmt: skip
-    """Una posa senza nome e senza cielo, a solver concluso, che arriva: prende il suo gruppo come
+    """Un frame senza nome e senza cielo, a solver concluso, che arriva: prende il suo gruppo come
     glielo da' `identify`."""
     ra, dec = pointing if pointing else (None, None)
     notte = night_date(date)  # come la scrive `scan` senza sito
@@ -154,8 +154,8 @@ def test_the_row_says_what_makes_the_group(conn):
 
 
 def test_the_group_is_measured_from_who_opened_it(conn):
-    """Chi arriva si confronta col puntamento di chi ha aperto il gruppo, non con l'ultima posa
-    entrata: una fila di pose a meno di un campo l'una dall'altra non allunga il gruppo a catena.
+    """Chi arriva si confronta col puntamento di chi ha aperto il gruppo, non con l'ultimo frame
+    entrato: una fila di frame a meno di un campo l'uno dall'altro non allunga il gruppo a catena.
     Il campo qui e' di circa 2,5 gradi."""
     radice = add_folder(conn, "D:/Astro")
     pose = [_posa(conn, radice, f"R/{i}.fits", pointing=(98.0 + 1.5 * i, 4.9)) for i in range(3)]
@@ -163,8 +163,8 @@ def test_the_group_is_measured_from_who_opened_it(conn):
 
 
 def test_the_group_is_written_once(conn):
-    """Il gruppo si sceglie quando la posa arriva, e non si rifa' quando ne arrivano altre: una
-    posa gia' in un gruppo ci resta anche se dopo ne arriva uno piu' vicino."""
+    """Il gruppo si sceglie quando il frame arriva, e non si rifa' quando ne arrivano altri: un
+    frame gia' in un gruppo ci resta anche se dopo ne arriva uno piu' vicino."""
     radice = add_folder(conn, "D:/Astro")
     a = _posa(conn, radice, "R/a.fits", pointing=(98.0, 4.9))
     b = _posa(conn, radice, "R/b.fits", pointing=(100.0, 4.9))
@@ -175,7 +175,7 @@ def test_the_group_is_written_once(conn):
 
 
 def test_the_answer_reaches_a_pose_of_the_same_group_in_another_folder(conn):
-    """La risposta si scrive sul gruppo e la ritrova chi lo compone dalla posa: `identify` la legge
+    """La risposta si scrive sul gruppo e la ritrova chi lo compone dal frame: `identify` la legge
     anche per un file in un'altra cartella, se notte, puntamento e il resto sono gli stessi."""
     radice = add_folder(conn, "D:/Astro")
     a = _posa(conn, radice, "R/a.fits")
@@ -185,7 +185,7 @@ def test_the_answer_reaches_a_pose_of_the_same_group_in_another_folder(conn):
 
 
 def test_the_answer_hangs_on_the_poses_not_on_a_key_with_the_night(conn):
-    """La risposta si scrive sull'impronta di ogni posa del gruppo, non su una chiave con la notte
+    """La risposta si scrive sull'impronta di ogni frame del gruppo, non su una chiave con la notte
     (ADR 0014, S2): cambiare il fuso di casa non la sposta, e un backup la ritrova."""
     radice = add_folder(conn, "D:/Astro")
     pose = [_posa(conn, radice, f"R/{i}.fits") for i in range(2)]
@@ -199,7 +199,7 @@ def test_the_answer_hangs_on_the_poses_not_on_a_key_with_the_night(conn):
 
 
 def test_the_answer_follows_its_poses_into_another_group(conn):
-    """Una posa che cambia gruppo -- la notte si sposta col fuso di casa -- porta con se' la sua
+    """Un frame che cambia gruppo -- la notte si sposta col fuso di casa -- porta con se' la sua
     risposta: nessuno la deve trasportare."""
     radice = add_folder(conn, "D:/Astro")
     a = _posa(conn, radice, "R/a.fits")
@@ -224,8 +224,8 @@ def test_changing_my_mind_reaches_a_missing_pose_too(conn):
 
 
 def test_two_answers_in_one_group_are_no_answer(conn):
-    """Due pose dello stesso gruppo con risposte diverse: il gruppo non ne sceglie una, la domanda
-    torna aperta; una posa senza risposta prende quella del gruppo."""
+    """Due frame dello stesso gruppo con risposte diverse: il gruppo non ne sceglie una, la domanda
+    torna aperta; un frame senza risposta prende quella del gruppo."""
     radice = add_folder(conn, "D:/Astro")
     chiave = _chiave(conn, _posa(conn, radice, "R/a.fits"))
     _posa(conn, radice, "R/b.fits")

@@ -1,10 +1,10 @@
-"""La notte delle pose che non dicono dove sono state fatte segue il fuso di casa, e con lei il
+"""La notte dei frame che non dicono dove sono stati fatti segue il fuso di casa, e con lei il
 gruppo dei frame senza nome. Nessuna risposta porta la notte: l'oggetto sta sull'impronta del
 frame (ADR 0014, S2), l'attrezzatura sulla firma dell'header (S1). Le regole stanno in
 `spine/home_nights.py`.
 
 A Tokyo il confine della notte (mezzogiorno locale) cade alle 03:00 UTC, e quello UTC alle 21:00
-locali, a meta' sessione: le pose di prova sono scelte perche' una notte UTC si divida in due notti
+locali, a meta' sessione: i frame di prova sono scelti perche' una notte UTC si divida in due notti
 di Tokyo e due notti UTC diventino una.
 """
 
@@ -27,7 +27,7 @@ POSE = {"a": "2026-03-14T02:00:00", "b": "2026-03-14T04:00:00", "c": "2026-03-14
 
 
 def _posa(path, date_obs=None, **header):
-    """Una posa che, se `header` non aggiunge niente, non dice camera, nome ne' coordinate: la notte
+    """Un frame che, se `header` non aggiunge niente, non dice camera, nome ne' coordinate: la notte
     la decide casa, e la domanda sull'oggetto, che porta la notte nella chiave, la chiede."""
     card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0, "TELESCOP": "Newton 200"}
     if date_obs:
@@ -75,13 +75,13 @@ def _notte(client, nome):
 
 
 def test_before_a_home_the_poses_that_do_not_say_where_are_in_utc(pagina):
-    """Il punto di partenza: senza casa, la notte di una posa senza coordinate e' in UTC."""
+    """Il punto di partenza: senza casa, la notte di un frame senza coordinate e' in UTC."""
     assert _notte(pagina, "b") == ("2026-03-13", None)
     assert _notte(pagina, "d") == ("2026-03-13", "Europe/Rome")
 
 
 def test_the_first_home_moves_the_nights_of_the_poses_that_do_not_say_where(pagina):
-    """Nata casa, le pose senza coordinate passano al suo fuso; quelle con le coordinate restano
+    """Nata casa, i frame senza coordinate passano al suo fuso; quelli con le coordinate restano
     nel fuso del posto dove sono state fatte."""
     _casa(pagina)
     assert _notte(pagina, "a") == ("2026-03-13", "Asia/Tokyo")
@@ -99,8 +99,8 @@ def test_a_pose_without_date_obs_takes_the_night_of_its_file_in_the_home_timezon
 
 
 def test_a_file_touched_after_it_entered_keeps_the_instant_of_its_night(pagina, tmp_path):
-    """L'ora del file cambia se lo si tocca -- un header riscritto lascia gli stessi pixel, e la
-    posa resta la stessa --, ma la notte viene dall'istante con cui la posa e' entrata: e' quello
+    """L'ora del file cambia se lo si tocca -- un header riscritto lascia gli stessi pixel, e il
+    frame resta lo stesso --, ma la notte viene dall'istante con cui il frame e' entrato: e' quello
     che si riscrive nel fuso nuovo, non l'ora di adesso."""
     dopo = datetime(2026, 6, 1, 4, tzinfo=UTC).timestamp()
     os.utime(tmp_path / "lib" / "e.fits", (dopo, dopo))
@@ -113,7 +113,7 @@ def test_a_file_touched_after_it_entered_keeps_the_instant_of_its_night(pagina, 
 
 
 def test_moving_home_to_another_timezone_moves_them_again(pagina):
-    """Casa spostata in un altro fuso: le pose senza coordinate la seguono ancora."""
+    """Casa spostata in un altro fuso: i frame senza coordinate la seguono ancora."""
     casa = _casa(pagina)
     r = pagina.patch(f"/api/v1/sites/{casa['id']}", json=ROMA)
     assert r.status_code == 200, r.text
@@ -121,7 +121,7 @@ def test_moving_home_to_another_timezone_moves_them_again(pagina):
 
 
 def test_choosing_another_home_moves_them_to_its_timezone(pagina):
-    """Un altro sito scelto come casa: le pose senza coordinate passano al suo fuso."""
+    """Un altro sito scelto come casa: i frame senza coordinate passano al suo fuso."""
     _casa(pagina)
     roma = _casa(pagina, name="Roma", **ROMA)
     assert _notte(pagina, "b") == ("2026-03-14", "Asia/Tokyo")
@@ -144,7 +144,7 @@ def _chiave_oggetto(client, nome):
 
 
 def test_an_object_answer_follows_its_poses_into_the_new_night(pagina):
-    """Anche i frame senza nome portano la notte nella chiave, scritta sulla posa: b lascia il
+    """Anche i frame senza nome portano la notte nella chiave, scritta sul frame: b lascia il
     gruppo del 13 per quello del 14, e la risposta del suo gruppo lo segue."""
     detta = _chiave_oggetto(pagina, "b")
     assert detta == _chiave_oggetto(pagina, "a")
@@ -160,7 +160,7 @@ def test_an_object_answer_follows_its_poses_into_the_new_night(pagina):
 
 
 def test_the_poses_of_the_nights_that_changed_are_worked_again(pagina):
-    """Il setup della notte e le risposte per gruppo si rileggono da `normalize` in poi: le pose
+    """Il setup della notte e le risposte per gruppo si rileggono da `normalize` in poi: i frame
     delle notti toccate tornano in coda da li', anche d, che sta nel suo fuso ma porta la stessa
     data -- il setup della notte si cerca per data. Le altre notti no."""
     _casa(pagina)

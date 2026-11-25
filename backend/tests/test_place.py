@@ -317,7 +317,7 @@ def test_coordinates_key_is_the_same_place_at_the_same_kilometre():
     tolleranza con cui `group` decide se due coordinate sono lo stesso posto.
 
     Due punti a poche centinaia di metri possono cadere ai due lati di un confine e diventare
-    due chiavi: e' dichiarato, e costa una risposta in piu', non una posa persa. Lo zero
+    due chiavi: e' dichiarato, e costa una risposta in piu', non un frame perso. Lo zero
     negativo si normalizza, o lo stesso punto avrebbe due chiavi."""
     assert place.coordinates_key(45.6, 11.667) == "45.60,11.67"
     assert place.coordinates_key(45.601, 11.6671) == place.coordinates_key(45.6, 11.667)

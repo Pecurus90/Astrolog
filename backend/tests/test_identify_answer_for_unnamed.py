@@ -1,18 +1,18 @@
-"""La regola delle pose **senza nome e senza cielo**: l'oggetto detto per il loro gruppo -- notte,
+"""La regola dei frame **senza nome e senza cielo**: l'oggetto detto per il loro gruppo -- notte,
 camera, telescopio e puntamento --, letto da `identify` a ogni giro (`spine/unnamed.py`). Qui la
 dichiarazione si scrive a mano, come la scriverebbe la risposta dalla pagina.
 
 Regole, e il test che le rompe:
 
-* **Un oggetto detto per il gruppo aggancia le sue pose senza nome**, di catalogo o scritto, come
+* **Un oggetto detto per il gruppo aggancia i suoi frame senza nome**, di catalogo o scritto, come
   parola dell'utente (`user`/`user`); **"non e' un oggetto"** le chiude senza oggetto e non le conta
   fra quelle che aspettano una risposta.
-* **Vale per le pose che arriveranno**, e **si cambia idea** riscrivendo la dichiarazione.
-* **Il cielo vince**: dove ha dei candidati la regola non tocca la posa; una posa che il nome lo
+* **Vale per i frame che arriveranno**, e **si cambia idea** riscrivendo la dichiarazione.
+* **Il cielo vince**: dove ha dei candidati la regola non tocca il frame; un frame che il nome lo
   scrive non la prende.
-* **Una posa risolta a cono vuoto resta nel gruppo** anche agganciata, o il gruppo risposto si
+* **Un frame risolto a cono vuoto resta nel gruppo** anche agganciato, o il gruppo risposto si
   svuoterebbe da solo; e anche mentre e' in coda per essere rifatta, o sparirebbe dopo ogni Applica.
-* **Una riga storta, o una voce di catalogo sparita, vale nessuna risposta**: le pose restano dove
+* **Una riga storta, o una voce di catalogo sparita, vale nessuna risposta**: i frame restano dove
   sono, mai fatte sparire.
 """
 
@@ -60,7 +60,7 @@ def archivio(db_path, tmp_path):
 
 
 def _chiave(client, sotto):
-    """La chiave del gruppo delle pose senza nome di quella cartella: qui ne fa uno solo."""
+    """La chiave del gruppo dei frame senza nome di quella cartella: qui ne fa uno solo."""
     with db(client) as conn:
         (frame_id,) = conn.execute(
             "SELECT f.id FROM frames f JOIN positions p ON p.frame_id = f.id"
@@ -77,7 +77,7 @@ def _frame(conn, sotto, nome):
 
 
 def _di(client, sotto, value):
-    """Scrive l'oggetto del gruppo di quella cartella e fa rigirare `identify` su tutte le pose:
+    """Scrive l'oggetto del gruppo di quella cartella e fa rigirare `identify` su tutti i frame:
     torna la ricevuta dello stadio."""
     chiave = _chiave(client, sotto)
     with db(client) as conn:
@@ -96,7 +96,7 @@ def _rigira(client):
 
 
 def _oggetti_dei_file(client, sotto):
-    """Il nome dell'oggetto di ogni posa senza nome in quella cartella (copie escluse), e lo stato
+    """Il nome dell'oggetto di ogni frame senza nome in quella cartella (copie escluse), e lo stato
     di identify."""
     with db(client) as conn:
         righe = conn.execute(
@@ -116,7 +116,7 @@ def _frames_nel_gruppo(client, sotto):
 
 
 def _col_cielo(client, sotto, nome, ra, dec):
-    """Da' a quella posa un cielo misurato a (ra, dec) e la rifa' da `identify`. Torna il suo id."""
+    """Da' a quel frame un cielo misurato a (ra, dec) e lo rifa' da `identify`. Torna il suo id."""
     with db(client) as conn:
         frame_id = _frame(conn, sotto, nome)
         conn.execute(
@@ -137,7 +137,7 @@ def test_a_name_said_for_the_group_puts_its_poses_on_that_object(archivio):
             "SELECT o.identity_method, o.identity_confidence FROM objects o"
             " JOIN object_names n ON n.object_id = o.id WHERE n.name = 'Nebulosa Rosetta'"
         ).fetchone()
-    # la parola dell'utente: nessuna posa successiva ne abbassa la fiducia
+    # la parola dell'utente: nessun frame successivo ne abbassa la fiducia
     assert tuple(riga) == ("user", "user")
     assert _frames_nel_gruppo(archivio, ROSETTA) == 3  # il gruppo risposto resta intero
     assert _oggetti_dei_file(archivio, M81) == {(None, "skipped", "no_name_no_sky")}
@@ -177,13 +177,13 @@ def test_the_rule_holds_for_the_poses_that_arrive_later(archivio, tmp_path):
         ).fetchone()
     assert _oggetti_dei_file(archivio, ROSETTA) == {("Nebulosa Rosetta", "done", None)}
     assert _frames_nel_gruppo(archivio, ROSETTA) == 4
-    # la posa che il nome lo scrive non prende l'oggetto del gruppo: non era una domanda
+    # il frame che il nome lo scrive non prende l'oggetto del gruppo: non era una domanda
     assert col_nome == "Caldwell 49"
 
 
 def test_a_solved_pose_whose_sky_finds_nothing_is_reached_and_stays_in_the_group(archivio):
     """Risolta, ma nel cono non c'e' niente (il catalogo qui non e' caricato): la regola la
-    raggiunge, e agganciata resta nel gruppo -- se ne uscisse, un gruppo di sole pose cosi'
+    raggiunge, e agganciata resta nel gruppo -- se ne uscisse, un gruppo di soli frame cosi'
     sparirebbe dalla pagina appena risposta. Anche dopo "non e' un oggetto"."""
     _col_cielo(archivio, ROSETTA, "r_2.fits", 98.0, 4.9)
     _di(archivio, ROSETTA, "name:Nebulosa Rosetta")
@@ -194,8 +194,8 @@ def test_a_solved_pose_whose_sky_finds_nothing_is_reached_and_stays_in_the_group
 
 
 def test_a_pose_whose_sky_finds_nothing_stays_asked_while_it_waits_to_be_redone(archivio):
-    """Fra una rimessa in coda e il giro di `identify` la posa non esce dalla sua domanda: dopo un
-    Applica la pagina si rilegge mentre il worker gira, e un gruppo fatto solo di pose cosi'
+    """Fra una rimessa in coda e il giro di `identify` il frame non esce dalla sua domanda: dopo un
+    Applica la pagina si rilegge mentre il worker gira, e un gruppo fatto solo di frame cosi'
     sparirebbe dalla pagina e dal conto -- con o senza risposta."""
     frame_id = _col_cielo(archivio, ROSETTA, "r_2.fits", 98.0, 4.9)
     for data in (None, "name:Nebulosa Rosetta"):
@@ -223,7 +223,7 @@ def test_the_sky_wins_over_the_group_where_it_has_candidates(db_path_col_catalog
                 " JOIN frame_stages s ON s.frame_id = f.id AND s.stage = 'identify' WHERE f.id = ?",
                 (su_m81,),
             ).fetchone()
-        # l'oggetto resta cio' che il cielo ha deciso, non "detto dall'utente", e la posa non entra
+        # l'oggetto resta cio' che il cielo ha deciso, non "detto dall'utente", e il frame non entra
         # nel gruppo
         assert (slug, metodo != "user", motivo) == ("m-81", True, None)
         assert _frames_nel_gruppo(c, M81) == 1
@@ -254,7 +254,7 @@ def test_a_catalog_entry_puts_the_poses_on_its_object(db_path_col_catalogo, tmp_
     ],
 )
 def test_a_crooked_row_or_a_gone_entry_is_no_answer(archivio, storta):
-    """La parola dell'utente sposta delle pose, mai le fa sparire: le pose restano una domanda."""
+    """La parola dell'utente sposta dei frame, mai li fa sparire: i frame restano una domanda."""
     _di(archivio, ROSETTA, storta)
     assert _oggetti_dei_file(archivio, ROSETTA) == {(None, "skipped", "no_name_no_sky")}
     with db(archivio) as conn:

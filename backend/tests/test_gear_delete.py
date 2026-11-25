@@ -1,6 +1,6 @@
-"""Eliminare un pezzo o un filtro, nella spina (`spine/gear_delete.py`): con lui se ne vanno la sua
-scheda, le sue scelte sui setup, i suoi distanziali e le sue righe derivate. Le prove della pagina
-stanno in `test_api_gear_delete.py`; qui si guarda ogni riga che deve sparire, e solo quella.
+"""Eliminare uno strumento o un filtro, nella spina (`spine/gear_delete.py`): con lui se ne vanno la
+sua scheda, le sue scelte sui setup, i suoi distanziali e le sue righe derivate. Le prove della
+pagina stanno in `test_api_gear_delete.py`; qui si guarda ogni riga che deve sparire, e solo quella.
 """
 
 import pytest
@@ -35,7 +35,7 @@ def _righe(conn, tabella, subject, subject_id):
 
 def test_a_piece_takes_its_card_its_choices_and_its_rows_with_it(conn):
     """La scheda, la scelta come montatura di un setup, il distanziale col suo nome: rinato con lo
-    stesso nome, nulla di cio' torna. Le righe dell'altro pezzo restano."""
+    stesso nome, nulla di cio' torna. Le righe dell'altro strumento restano."""
     montatura = gear_create.instrument(conn, MOUNT, "EQ6-R", ORA, detected=False)
     altra = gear_create.instrument(conn, MOUNT, "AM5", ORA, detected=False)
     write_declaration(conn, PEZZO, instrument_key(MOUNT, "EQ6-R"), "payload_kg", 20, ORA)

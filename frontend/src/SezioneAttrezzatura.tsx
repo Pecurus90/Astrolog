@@ -53,7 +53,7 @@ type Mano = {
  * - **Chiede solo le parti che mancano**, una alla volta: una parte non toccata non si manda, e la
  *   sua risposta di prima resta.
  * - **La camera e' un setup dell'elenco oppure scritta con la sua focale**. Con l'ottica data a
- *   parte nello stesso Applica, il setup parte **per pezzi scritti** (camera, focale, ottica): un
+ *   parte nello stesso Applica, il setup parte **per strumenti scritti** (camera, focale, ottica): un
  *   setup dell'elenco e un'ottica insieme il backend li rifiuta (Issue #20).
  * - **Il filtro si sceglie quando la camera si sa**: "a colori" si scrive sulla sua scheda.
  * - **Una scheda risposta resta in pagina**; conta fra le cose da confermare finche' non ha tutte
@@ -202,11 +202,11 @@ function RigaAttrezzatura({
       (m.nome.trim() === prima.nome &&
         m.focale === prima.focale &&
         m.conOttica.trim() === prima.conOttica))
-  /** Camera e ottica insieme: un setup dell'elenco parte per pezzi scritti, l'ottica dentro. */
+  /** Camera e ottica insieme: un setup dell'elenco parte per strumenti scritti, l'ottica dentro. */
   const insieme = (camera: Partial<Risposta>, ottica: string): Partial<Risposta> => {
     if (!camera.rig_id) return { ...camera, optics: ottica }
     const setup = setups.find((c) => c.id === camera.rig_id)
-    // senza focale il setup non si scrive per pezzi: parte da solo, con la sua ottica
+    // senza focale il setup non si scrive per strumenti: parte da solo, con la sua ottica
     return setup?.focal_mm != null
       ? { camera: setup.camera, focal_mm: setup.focal_mm, optics: ottica }
       : camera

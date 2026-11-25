@@ -2,7 +2,7 @@
 
 La firma e' cio' che l'header dice: grafia di camera e telescopio, focale, sensore -- mai la notte
 o la cartella. La scheda chiede solo le parti che i file non dicono (camera, ottica, filtro), la
-risposta si rilegge, e le pose che non ci stanno restano fuori: qui si guarda la REGOLA, senza API.
+risposta si rilegge, e i frame che non ci stanno restano fuori: qui si guarda la REGOLA, senza API.
 Che poi l'app la faccia davvero lo guarda `test_review_gear.py`.
 """
 
@@ -21,10 +21,10 @@ NOTTE = "2026-03-14T21:00:00"  # la notte del 14
 def _posa(conn, folder_id, rel_path, *, instrument=None, telescope=None, focal=None, copy_of=None,
           date: str | None = NOTTE, size=(6248, 4176), pixel=3.76,
           filtro: str | None = "L"):  # fmt: skip
-    """Una posa con la sua posizione, senza scrivere un FITS: qui si guardano le query. Dice il
+    """Un frame con la sua posizione, senza scrivere un FITS: qui si guardano le query. Dice il
     filtro, salvo chiederlo: la domanda sul filtro ha le sue prove."""
     notte = night_date(date)  # come la scrive `scan` senza sito
-    # i giudizi sul grezzo, come li scrive la scansione: senza, la posa prenderebbe il ripiego
+    # i giudizi sul grezzo, come li scrive la scansione: senza, il frame prenderebbe il ripiego
     giudizi = header_asks.of(
         {"instrument_raw": instrument, "telescope_raw": telescope, "filter_raw": filtro}
     )
@@ -62,7 +62,7 @@ def _frame(conn, frame_id):
 
 
 def _chiave(conn, frame_id):
-    """La firma di quella posa, come la calcola chi normalizza."""
+    """La firma di quel frame, come la calcola chi normalizza."""
     return signature.key_of(signature.parts_of(_frame(conn, frame_id)))
 
 
@@ -101,7 +101,7 @@ def test_each_value_of_the_key_makes_its_own_group_and_the_row_says_it(conn):
 
 def test_the_key_is_made_in_one_place_from_what_the_header_says(conn):
     """La firma si compone da una funzione sola, con le grafie normalizzate come si cerca una regola
-    imparata: chi normalizza la posa e la pagina che la chiede arrivano alla stessa chiave, e
+    imparata: chi normalizza il frame e la pagina che la chiede arrivano alla stessa chiave, e
     bianchi o maiuscole in piu' non fanno un'altra scheda."""
     radice = add_folder(conn, "D:/Astro")
     a = _posa(conn, radice, "M51/a.fits", telescope="ZWO AM5")
@@ -137,7 +137,7 @@ def test_only_the_poses_whose_header_does_not_say_the_camera_are_asked(conn):
     _posa(conn, radice, "notte/c.fits", instrument="   ", telescope="ZWO AM5")  # bianchi: niente
     schede = cards.by_signature(conn)
     assert [(g["frames"], g["asks_camera"]) for g in schede] == [(2, True)]
-    assert schede[0]["optics"] == "ZWO AM5"  # cio' che le pose dicono gia': un indizio
+    assert schede[0]["optics"] == "ZWO AM5"  # cio' che i frame dicono gia': un indizio
 
 
 def test_a_part_the_files_say_is_not_asked(conn):
@@ -166,7 +166,7 @@ def test_a_rewritten_copy_is_not_another_pose_but_comes_back_in_the_queue(conn):
 
 def test_the_focal_is_shown_only_when_the_poses_agree(conn):
     """La focale entra nella firma con la regola dei setup (+-5 %): 530 e 532 sono una scheda,
-    400 un'altra. Si mostra per riempire la risposta **solo se le pose dicono una cosa sola**: con
+    400 un'altra. Si mostra per riempire la risposta **solo se i frame dicono una cosa sola**: con
     due focali non si sceglie per l'utente, e il campo resta vuoto."""
     radice = add_folder(conn, "/vol/astro")
     _posa(conn, radice, "una/a.fits", telescope="AM5", focal=530.0)
@@ -179,7 +179,7 @@ def test_the_focal_is_shown_only_when_the_poses_agree(conn):
 
 
 def test_the_focal_of_the_optics_card_is_proposed_when_the_poses_do_not_say_it(conn):
-    """Un setup e' ottica + camera **a una focale**: se le pose non la dicono, si propone quella
+    """Un setup e' ottica + camera **a una focale**: se i frame non la dicono, si propone quella
     nativa dell'ottica che l'utente ha in scheda. Senza una focale il setup che nasce dalla
     risposta resterebbe un gemello separato per sempre da quello rilevato (`normalize_store`)."""
     radice = add_folder(conn, "/vol/astro")
@@ -194,7 +194,7 @@ def test_the_focal_of_the_optics_card_is_proposed_when_the_poses_do_not_say_it(c
 
 
 def test_a_pose_that_lives_in_two_folders_counts_once(conn):
-    """Lo stesso file in due cartelle e' una posa con due posizioni: si conta una volta."""
+    """Lo stesso file in due cartelle e' un frame con due posizioni: si conta una volta."""
     prima = add_folder(conn, "/vol/prima")
     dopo = add_folder(conn, "/vol/dopo")
     frame_id = _posa(conn, prima, "notte/a.fits")
@@ -208,7 +208,7 @@ def test_a_pose_that_lives_in_two_folders_counts_once(conn):
 
 def test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything(conn):
     """Una cartella che l'utente ha ritirato e un file che non si trova piu' non fanno domande: non
-    c'e' niente su cui agire. Se la posa vive anche in una cartella viva, si chiede."""
+    c'e' niente su cui agire. Se il frame vive anche in una cartella viva, si chiede."""
     ritirata = add_folder(conn, "/vol/ritirata")
     conn.execute("UPDATE folders SET retired_at = 'ieri' WHERE id = ?", (ritirata,))
     viva = add_folder(conn, "/vol/viva")
@@ -225,8 +225,8 @@ def test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything(conn):
 
 
 def test_the_answer_is_read_back_with_its_pieces(conn):
-    """La risposta porta i **nomi** dei pezzi, la focale e il filtro, e si rilegge tale e quale.
-    Rispondere di nuovo la riscrive: si cambia idea."""
+    """La risposta porta i **nomi** degli strumenti, la focale e il filtro, e si rilegge tale e
+    quale. Rispondere di nuovo la riscrive: si cambia idea."""
     data = signature.Answer(CAM, OTT, 530.0, signature.FilterAnswer.ONE_OF_YOURS, "Lum")
     signature.declare(conn, "k", data)
     assert signature.answer(conn, "k") == data
@@ -247,7 +247,7 @@ STORTE = ["non e' json", '"una stringa"', "[]", "3"]
 
 
 def test_an_answer_that_cannot_be_read_is_no_answer(conn):
-    """Una riga storta vale **nessuna risposta**: le pose restano dove sono e la domanda resta
+    """Una riga storta vale **nessuna risposta**: i frame restano dove sono e la domanda resta
     aperta, invece di finire su un'ipotesi."""
     for storta in STORTE:
         _scrivi(conn, storta)
@@ -261,7 +261,7 @@ def test_no_answer_yet_is_not_an_unreadable_answer(conn, caplog):
 
 
 def test_the_pose_reads_the_answer_of_its_own_group(conn):
-    """Chi normalizza parte dalla posa e arriva alla risposta della SUA firma, in qualunque
+    """Chi normalizza parte dal frame e arriva alla risposta della SUA firma, in qualunque
     cartella e in qualunque notte: quella di un altro sensore non la tocca."""
     radice = add_folder(conn, "/vol/astro")
     mia = _posa(conn, radice, "notte/a.fits")
@@ -275,7 +275,7 @@ def test_the_pose_reads_the_answer_of_its_own_group(conn):
 
 
 def test_a_focal_that_drifts_finds_the_same_answer(conn):
-    """La focale si confronta con la regola dei setup: una posa a 803 mm trova la risposta data
+    """La focale si confronta con la regola dei setup: un frame a 803 mm trova la risposta data
     a 800, una a 400 no."""
     radice = add_folder(conn, "/vol/astro")
     a = _posa(conn, radice, "a.fits", instrument=CAM, focal=800.0)
@@ -287,8 +287,8 @@ def test_a_focal_that_drifts_finds_the_same_answer(conn):
 
 
 def test_who_reads_an_answer_is_requeued_when_it_is_given(conn):
-    """Rispondere rimette in coda ogni posa che leggera' la risposta: la chiave a 1040 mm risponde
-    alla posa a 1000, e la posa e' fra quelle rimesse in coda (la regola vale nei due versi)."""
+    """Rispondere rimette in coda ogni frame che leggera' la risposta: la chiave a 1040 mm risponde
+    al frame a 1000, e il frame e' fra quelli rimessi in coda (la regola vale nei due versi)."""
     radice = add_folder(conn, "/vol/astro")
     chiave = _posa(conn, radice, "a.fits", instrument=CAM, focal=1040.0)
     posa = _posa(conn, radice, "b.fits", instrument=CAM, focal=1000.0)
@@ -319,14 +319,14 @@ def test_one_card_is_dressed_without_the_whole_page(conn, monkeypatch):
 
 
 def test_the_answer_of_a_group_that_is_not_there_is_not_found(conn):
-    """Una firma che non ha piu' pose da chiedere non c'e': la pagina era vecchia."""
+    """Una firma che non ha piu' frame da chiedere non c'e': la pagina era vecchia."""
     assert cards.row_of(conn, "mai") is None
 
 
 def test_the_optics_shown_is_the_name_the_user_gave_it(conn):
     """L'ottica che la pagina propone e' il nome **risolto**, non la grafia dell'header: se
     l'utente l'ha rinominata, proporgli la grafia vecchia e lasciargliela accettare farebbe
-    nascere un secondo pezzo accanto a quello rinominato."""
+    nascere un secondo strumento accanto a quello rinominato."""
     radice = add_folder(conn, "/vol/astro")
     conn.execute(
         "INSERT INTO instruments(kind, name, created_at) VALUES('optics', ?, 'ora')", (OTT,)
@@ -381,8 +381,8 @@ def test_the_key_is_never_split_to_find_the_pieces(conn):
 
 
 def test_the_cards_ask_the_rig_only_of_the_nights_of_their_poses(conn, monkeypatch):
-    """Il setup della notte si chiede per le sole notti delle pose che chiedono la camera: una
-    notte in cui ogni posa dice la camera non cambia nessuna parte, e su un archivio che la camera
+    """Il setup della notte si chiede per le sole notti dei frame che chiedono la camera: una
+    notte in cui ogni frame dice la camera non cambia nessuna parte, e su un archivio che la camera
     la dice quasi sempre leggerle tutte costerebbe quasi l'archivio intero."""
     radice = add_folder(conn, "/vol/astro")
     _posa(conn, radice, "notte/a.fits", telescope="ZWO AM5")
@@ -400,8 +400,8 @@ def test_the_cards_ask_the_rig_only_of_the_nights_of_their_poses(conn, monkeypat
 
 
 def test_renaming_a_piece_carries_the_answers_that_name_it(conn):
-    """La risposta porta il NOME dei pezzi e del filtro: rinominati, la risposta li segue, o al giro
-    dopo il nome vecchio farebbe rinascere un pezzo accanto a quello rinominato."""
+    """La risposta porta il NOME degli strumenti e del filtro: rinominati, la risposta li segue, o
+    al giro dopo il nome vecchio farebbe rinascere uno strumento accanto a quello rinominato."""
     signature.declare(
         conn, "k", signature.Answer(CAM, OTT, 530.0, signature.FilterAnswer.ONE_OF_YOURS, "Lum")
     )

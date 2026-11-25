@@ -1,5 +1,5 @@
 """Mattone solve, ASTAP 8: una scala risolta lontana da quella dell'header si segnala e la soluzione
-resta (D8, ADR 0036); una soluzione si dimentica a richiesta e la posa si rifa'."""
+resta (D8, ADR 0036); una soluzione si dimentica a richiesta e il frame si rifa'."""
 
 import pytest
 
@@ -39,7 +39,7 @@ def test_without_a_scale_in_the_header_there_is_nothing_to_compare(conn, tmp_pat
 
 
 def test_a_forgotten_solution_is_tried_again_at_the_next_pass(conn, tmp_path):
-    """Header corretto, catalogo nuovo: dimenticata, la posa torna da risolvere."""
+    """Header corretto, catalogo nuovo: dimenticata, il frame torna da risolvere."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)

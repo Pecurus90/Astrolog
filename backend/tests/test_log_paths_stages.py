@@ -94,7 +94,7 @@ def _una_posa(conn):
 def test_identify_runs_on_a_frame_the_solver_gave_up_on(conn):
     """Le due situazioni "niente cielo" del contratto esistono solo grazie a questa riga.
 
-    Una posa non risolta resta `failed` per sempre, e finche' `ready` pretendeva `done` da ogni
+    Un frame non risolto resta `failed` per sempre, e finche' `ready` pretendeva `done` da ogni
     dipendenza `identify` non la vedeva mai: due delle otto situazioni non potevano accadere."""
     frame = _una_posa(conn)
     set_status(conn, frame, "normalize", "done")
@@ -103,7 +103,7 @@ def test_identify_runs_on_a_frame_the_solver_gave_up_on(conn):
 
 
 def test_identify_waits_for_a_frame_still_queued_at_the_solver(conn):
-    """`failed` e' definitivo, `pending` no. Agganciare dal nome una posa che fra un minuto
+    """`failed` e' definitivo, `pending` no. Agganciare dal nome un frame che fra un minuto
     avra' il suo cielo sarebbe una risposta data in fretta -- ed e' esattamente cio' che
     succede quando ASTAP non e' ancora installato, che e' il primo avvio di chiunque."""
     frame = _una_posa(conn)
@@ -115,9 +115,9 @@ def test_the_exceptions_are_two_and_declared(conn):
     """Le eccezioni al "a monte dev'essere `done`" sono **due**, e nessuno stadio ne eredita
     una per sbaglio. Sono opposte, e vanno lette insieme:
 
-    * `identify` parte su una posa che il solver ha **rinunciato** a risolvere, perche' da li'
+    * `identify` parte su un frame che il solver ha **rinunciato** a risolvere, perche' da li'
       l'oggetto si aggancia dal nome -- senza, due delle otto situazioni non esisterebbero;
-    * `group` vede anche una posa che `identify` ha **saltato**, non per raggrupparla (un
+    * `group` vede anche un frame che `identify` ha **saltato**, non per raggrupparlo (un
       oggetto che non c'e' non fa una sessione) ma per **fermarla col suo perche'**: se non
       arrivasse mai, resterebbe `pending` per sempre, e il residuo dello stadio non
       scenderebbe a zero -- il difetto che rende il pulsante Avvia una promessa a vuoto.
@@ -130,7 +130,7 @@ def test_the_exceptions_are_two_and_declared(conn):
     assert ready(conn, "group") == []
 
     set_status(conn, frame, "identify", "skipped", reason="no_name_no_sky")
-    assert ready(conn, "group") == [frame], "la posa saltata non arriva mai a fermarsi"
+    assert ready(conn, "group") == [frame], "il frame saltato non arriva mai a fermarsi"
 
 
 # Gli stadi che non esistono ancora. Non e' un elenco di comodo: e' cio' che fa diventare rossa

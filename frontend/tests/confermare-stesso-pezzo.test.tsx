@@ -129,7 +129,7 @@ describe("Da confermare -- strumenti duplicati", () => {
     expect((await screen.findByRole("alert")).textContent).toMatch(/dati non aggiornati/i)
   })
 
-  it("una sezione senza pezzi non si vede, e nemmeno strumenti e setup", async () => {
+  it("una sezione senza strumenti non si vede, e nemmeno strumenti e setup", async () => {
     aperta({ ...PAGINA, lookalikes: [] })
     await disegna()
     vai("/da-confermare")

@@ -11,7 +11,7 @@ type Risposta = components["schemas"]["LookalikeEdit"]
 
 /**
  * Due grafie che hanno tutta l'aria di essere lo stesso strumento: "sono lo stesso?". L'app non
- * puo' saperlo -- due camere dello stesso modello sono due pezzi -- quindi chiede.
+ * puo' saperlo -- due camere dello stesso modello sono due strumenti -- quindi chiede.
  *
  * - **Si' unisce, no non la ripropone**; un'unione non si disfa, per questo niente e' preselezionato.
  * - **Quale grafia resta lo dice l'API** (`into_id`, quella con piu' frame): qui non si sceglie.

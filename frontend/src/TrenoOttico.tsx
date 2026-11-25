@@ -20,7 +20,7 @@ type Strumento = components["schemas"]["InstrumentOnPage"]
 
 const VE = "non-scaling-stroke"
 
-/** I pezzi che i conti leggono (`pieces`), con le voci della scheda che il disegno usa.
+/** Gli strumenti che i conti leggono (`pieces`), con le voci della scheda che il disegno usa.
  *  Senza ottica non c'e' treno (tavola `trenoDi`, 333). */
 export function trenoDelSetup(pagina: Pagina, setup: Setup): Treno | null {
   const p = setup.pieces
@@ -58,7 +58,7 @@ export function trenoDelSetup(pagina: Pagina, setup: Setup): Treno | null {
 
 /**
  * Il **treno ottico** del setup (tavola v82, 63-66): l'esploso a linee, le pillole coi nomi sopra
- * e sotto legate al pezzo da un filo; pezzo e pillola si accendono insieme e il tocco apre il pezzo
+ * e sotto legate allo strumento da un filo; strumento e pillola si accendono insieme e il tocco apre lo strumento
  * fra i componenti. Sul telefono, o quando i nomi di una riga non entrano, le pillole portano il
  * numero e sotto c'e' la legenda.
  */

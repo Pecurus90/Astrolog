@@ -195,7 +195,7 @@ function quanto(frame: number, secondi: number, senza: number | null): string {
   return senza ? t("search.untimed.some", { testo: ore, n: numero(senza) }) : ore
 }
 
-/** Le ore di un pezzo, o perche' non ci sono: il perche' lo decide il backend. */
+/** Le ore di uno strumento, o perche' non ci sono: il perche' lo decide il backend. */
 function usoDi(pezzo: Pezzo): { dice: string } {
   if (!pezzo.counted) return { dice: t("search.notCounted") }
   if (pezzo.no_hours !== null || pezzo.frames === null || pezzo.integration_s === null) {

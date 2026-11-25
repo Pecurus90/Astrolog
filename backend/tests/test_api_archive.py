@@ -56,7 +56,7 @@ def nome_di(conn, object_id):
 
 
 def un_oggetto_con_pose(conn):
-    """Un oggetto dell'archivio di prova che abbia almeno una posa vera attaccata."""
+    """Un oggetto dell'archivio di prova che abbia almeno un frame vero attaccato."""
     return conn.execute(
         "SELECT id, object_id, exposure_s FROM frames"
         " WHERE object_id IS NOT NULL AND copy_of IS NULL LIMIT 1"
@@ -65,7 +65,7 @@ def un_oggetto_con_pose(conn):
 
 def test_the_archive_lists_what_you_shot(client):
     """La domanda della pagina e' una: cosa ho ripreso, e quanto. Ogni riga porta il nome gia'
-    fatto dal backend, quante pose e quanto tempo -- il frontend formatta e basta."""
+    fatto dal backend, quanti frame e quanto tempo -- il frontend formatta e basta."""
     risposta = archivio(client)
 
     assert risposta["total"] == len(risposta["items"]) > 0
@@ -114,7 +114,7 @@ def test_a_rewritten_copy_is_not_another_hour_of_sky(client, db_path):
 
 
 def test_a_pose_without_a_time_is_not_zero_hours(client, db_path):
-    """Una posa che non dice quanto e' durata **non vale zero**: non entra nella somma e si
+    """Un frame che non dice quanto e' durato **non vale zero**: non entra nella somma e si
     conta a parte, cosi' "non lo sappiamo" e "nessuna ora" restano due cose diverse. E' la
     terza forma del dato, quella che l'app non ha il diritto di inventare."""
     conn = connect(db_path)
@@ -135,7 +135,7 @@ def test_a_pose_without_a_time_is_not_zero_hours(client, db_path):
     riga = per_nome(archivio(client))[nome]
     assert riga["untimed"] >= 1
     assert riga["integration_s"] == ore_prima  # non ha aggiunto zero ore: non ha aggiunto niente
-    assert riga["frames"] > riga["untimed"]  # le pose ci sono tutte, il tempo no
+    assert riga["frames"] > riga["untimed"]  # i frame ci sono tutti, il tempo no
 
 
 def test_the_bar_narrows_the_page_and_the_count_follows(client):
