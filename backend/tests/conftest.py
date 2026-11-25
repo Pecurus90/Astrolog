@@ -18,16 +18,14 @@ import pytest
 from astropy.io import fits
 from fastapi.testclient import TestClient
 
+import porta
 from astrolog import astap, place
 from astrolog.api import scan as api_scan
 from astrolog.api.app import create_app
 from astrolog.catalog import bundle, load
 from astrolog.db.connect import connect, create_database
 from astrolog.pipeline.scanner import Extracted, Skipped, scan_file
-from astrolog.spine import solve_store, stages, typeless_folders
-from astrolog.spine.identify import identify_frames
-from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
+from astrolog.spine import solve_store, stages
 from astrolog.weather import climate, forecast, history, meteoblue, sky
 from recinto import SuiteInRete
 
@@ -166,15 +164,7 @@ def populate(db_path, root):
     gia' fatto. Chi vuole anche il catalogo parte da `db_path_col_catalogo`."""
     conn = connect(db_path)
     try:
-        list(scan_folder(conn, add_folder(conn, root)))
-        list(normalize_frames(conn))
-        # I frame dell'archivio sintetico non hanno cielo: il solver non gira nella suite. Si
-        # toccano solo quelle che il solver avrebbe davvero preso (`stages.ready`), e "stelle ma
-        # nessuna soluzione" e' il cielo che non sa dire: un frame senza tipo resta una domanda.
-        for frame_id in stages.ready(conn, "solve"):
-            stages.set_status(conn, frame_id, "solve", "failed", reason="no_solution")
-        typeless_folders.write(conn)  # come a fine cielo
-        list(identify_frames(conn))
+        porta.fill(conn, add_folder(conn, root), porta.Upto.IDENTIFIED)
     finally:
         conn.close()
 
@@ -246,11 +236,11 @@ def best_of(times, run):
 
 
 def scan(conn, root):
-    return list(scan_folder(conn, add_folder(conn, root)))[-1]
+    return porta.fill(conn, add_folder(conn, root), porta.Upto.SCANNED)
 
 
 def run_normalize(conn):
-    return list(normalize_frames(conn))[-1]
+    return porta.fill(conn, None, porta.Upto.NORMALIZED)
 
 
 @pytest.fixture
@@ -262,8 +252,7 @@ def archive(conn, tmp_path):
     from synthetic import build_archive
 
     build_archive(tmp_path / "lib")
-    scan(conn, tmp_path / "lib")
-    return run_normalize(conn)
+    return porta.fill(conn, add_folder(conn, tmp_path / "lib"), porta.Upto.NORMALIZED)
 
 
 def review(client):
@@ -361,7 +350,6 @@ def client_banco(db_path_col_catalogo):
     (M 31), uno **dubbio** col cielo (l'header dice M 45, il cielo dice M 31), e -- perche' il
     secondo trovera' la sigla e il nome comune di M 45 gia' presi da un orfano -- un oggetto di
     catalogo **senza nomi propri**, che e' il caso in cui il nome si legge dal catalogo."""
-    from astrolog.spine.identify import identify_frames
     from identify_bench import M31, occupante, posa
 
     conn = connect(db_path_col_catalogo)
@@ -369,7 +357,7 @@ def client_banco(db_path_col_catalogo):
         occupante(conn, 9, ["M 45", "Pleiades"])
         posa(conn, obj="M 31", cielo=M31, hash_="sicuro")
         posa(conn, obj="M 45", cielo=M31, hash_="dubbio")
-        list(identify_frames(conn))
+        porta.identify(conn)
         conn.commit()
     finally:
         conn.close()

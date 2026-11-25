@@ -38,7 +38,9 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 - La pipeline vecchia si cancella a pezzi (Marco, 25/11/2026, passo 40): ogni fetta del 40 toglie
   lo stadio vecchio che sostituisce, dopo il confronto delle risposte API delle pagine contro il tag
   `prima-del-40` su una copia dell'archivio, alla chiusura di ogni fetta; ogni differenza ha un
-  perche' scritto. La vecchia intera resta solo nel tag. Il thread resta quello di `Behind`: e' la
+  perche' scritto. La vecchia intera resta solo nel tag. Il banco (passo 40.2):
+  `tools/confronto_pagine.py` costruisce la copia col codice del tag (worktree) e con HEAD,
+  esporta le pagine e le confronta; le prove riempiono l'archivio da `backend/tests/porta.py`. Il thread resta quello di `Behind`: e' la
   vecchia che cede gli stadi, mai la nuova che entra nel worker dell'utente.
 - Costo: tre revisioni per passo del cuore (ordine di ore, non giorni). (superata: vedi 0040)
 - **Identita' della posa** (Marco, 22/10/2026, secondo audit): camera, inizio UTC normalizzato,
