@@ -48,6 +48,9 @@ _PK = re.compile(r"^(?:Perek[\s-]*Kohoutek|PK)[\s-]*(\d+[+-]\d+(?:\.\d+)?)$", _F
 # The code the shipped file uses where the user knows the extended spelling.
 _AS_WRITTEN = {"Caldwell": "C", "Barnard": "B"}
 
+# Every catalogue code `parse` can return.
+CODES = {_AS_WRITTEN.get(code, code) for code, _ in _CATALOGS} | {"PK"}
+
 
 def parse(raw: str | None) -> tuple[str, str] | None:
     """`(catalogue, number)`: `M31`, `M 31`, `M 031` and `Messier 31` are the same object."""

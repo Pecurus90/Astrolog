@@ -23,6 +23,11 @@ PIXEL_FISICO = [
     ("bin 1", 3.76, 1, 3.76),
     ("bin 2: XPIXSZ scritto col binning", 7.52, 2, 3.76),
     ("bin 3, senza la coda della divisione", 11.28, 3, 3.76),
+    # un double vero non si taglia a 7 cifre: la coda float32 la toglie chi legge (pipeline/values)
+    ("double vero, intero", 2.3456789, 1, 2.3456789),
+    # in binario 11.4 / 3 fa 3.8000000000000003 e dividerebbe i voti con il 3.8 del bin 1
+    ("bin 3, quoziente in decimale", 11.4, 3, 3.8),
+    ("bin 3, sotto", 10.35, 3, 3.45),
     ("binning che non si sa", 3.76, None, None),
     ("pixel che non si sa", None, 2, None),
 ]  # fmt: skip

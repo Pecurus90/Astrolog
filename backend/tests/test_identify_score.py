@@ -170,19 +170,34 @@ def test_without_a_field_the_centring_is_neutral_and_does_not_add_up():
 # --- la priorita' di catalogo -------------------------------------------------------------------
 
 
-def test_a_faint_object_never_scores_worse_than_one_with_no_magnitude():
+def test_the_magnitude_term_stays_inside_its_floor_and_ceiling():
     """Il termine e' tagliato fra 3 e 12, e il taglio non e' cosmetico: **13.185 voci su
-    22.080** stanno oltre la magnitudine 12 (si arriva a 24,9). Senza, il termine va negativo e
-    un oggetto debole finisce sotto uno che la magnitudine non ce l'ha proprio -- l'opposto di
-    "assente vale zero". E sotto il pavimento ci sono 23 voci, fra cui M 45 a 1,2."""
+    22.080** stanno oltre la magnitudine 12 (si arriva a 24,9). Senza, il termine va negativo.
+    E sotto il pavimento ci sono 23 voci, fra cui M 45 a 1,2."""
     assert score._magnitude_term(24.9) == 0.0  # il piu' debole del catalogo, non negativo
-    assert score._magnitude_term(None) == 0.0
     assert score._magnitude_term(1.2) == score._magnitude_term(3.0)  # M 45: sotto il pavimento
     assert score._magnitude_term(3.0) == 1.0
 
+
+def test_a_missing_magnitude_is_zero_and_the_double_cluster_pays_for_it():
+    """**6.711 voci su 22.080** non hanno magnitudine, quasi tutte nebulose. Neutra (0,5) le
+    alzava: M 101 prendeva il nome di NGC 5447 in silenzio. Il costo, misurato (ADR 0038, Marco
+    25/11): C 14 senza magnitudine vince nel mezzo, ma a 0,15 gradi verso h Persei perde."""
+    assert score._magnitude_term(None) == 0.0
     debole = nel_cono(name="LDN 1", sep_deg=0.1, size_major_arcmin=10.0, magnitude=24.9)
-    muto = nel_cono(name="LDN 2", sep_deg=0.1, size_major_arcmin=10.0, magnitude=None)
-    assert score.score_candidate(debole, 1.0) == score.score_candidate(muto, 1.0)
+    assert score.score_candidate(debole, 1.0) == score.score_candidate(
+        replace(debole, magnitude=None), 1.0
+    )
+
+    def doppio_contro_pezzo(dal_centro):
+        doppio = nel_cono(name="C 14", sep_deg=dal_centro, size_major_arcmin=50.0)
+        pezzo = nel_cono(
+            name="NGC 869", sep_deg=0.2307 - dal_centro, size_major_arcmin=14.4, magnitude=3.7
+        )
+        return score.score_candidate(doppio, 1.0) - score.score_candidate(pezzo, 1.0)
+
+    assert doppio_contro_pezzo(0.0) > 0
+    assert doppio_contro_pezzo(0.15) < 0
 
 
 def test_a_tiny_object_never_scores_worse_than_one_with_no_size():
@@ -208,9 +223,18 @@ def test_every_tier_of_the_catalogue_table_is_worth_what_it_says():
     assert score.catalog_priority("NGC 224") == 0.7
     assert score.catalog_priority("IC 434") == 0.55
     assert score.catalog_priority("Sh2 155") == 0.4
-    for oscuro in ("LBN 452", "LDN 935", "vdB 141", "Ced 76", "B 33", "Abell 1", "RCW 49"):
+    oscuri = ("LBN 452", "LDN 935", "vdB 141", "Ced 76", "B 33", "Abell 1", "RCW 49")
+    sei = ("PK 205+14.1", "WR 136", "Arp 244", "Mel 111", "HCG 92", "Cl 399")
+    for oscuro in oscuri + sei:
         assert score.catalog_priority(oscuro) == 0.3, oscuro
-    assert score.catalog_priority("PK 205+14.1") == 0.2  # non in tabella: il default
+
+
+def test_every_catalogue_the_parser_reads_has_its_tier():
+    """Il default e' per i nomi che `parse` non legge: un catalogo che legge non ci finisce,
+    o ne aggiungerne uno lo manderebbe sotto Ced in silenzio (#15)."""
+    from astrolog.catalog import designation
+
+    assert set(score.CATALOG_PRIORITY) == designation.CODES
 
 
 def test_the_search_radius_covers_the_whole_ranking_metre():
@@ -251,8 +275,7 @@ def test_the_catalogue_a_designation_comes_from_counts():
     anche nebulosette che nessuno cerca. A parita' di geometria, il catalogo curato vince."""
     assert score.catalog_priority("M 31") > score.catalog_priority("NGC 224")
     assert score.catalog_priority("NGC 224") > score.catalog_priority("Ced 76")
-    # il valore, non la costante: con un default alto un catalogo sconosciuto pareggerebbe
-    # Messier, e sono 2.101 voci a prenderlo (PK, WR, Arp, Mel, HCG)
+    # il valore, non la costante: con un default alto un nome che non si legge pareggerebbe Messier
     assert score.catalog_priority("roba a caso") == 0.2
     assert score.catalog_priority("NGC 224") > score.CATALOG_PRIORITY_DEFAULT
 

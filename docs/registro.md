@@ -732,6 +732,7 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T
 | CATALOG_PRIORITY | `"M": 1.0, "C": 0.9, "NGC": 0.7, "IC": 0.55,` | M ADR 0038: archive, held out by object |
 | CATALOG_PRIORITY | `"Sh2": 0.4, "LBN": 0.3, "LDN": 0.3, "vdB": 0.3, "Ced": 0.3,` | M ADR 0038: archive, held out by object |
 | CATALOG_PRIORITY | `"B": 0.3, "Abell": 0.3, "RCW": 0.3,` | M ADR 0038: archive, held out by object |
+| CATALOG_PRIORITY | `"Arp": 0.3, "HCG": 0.3, "Mel": 0.3, "Cl": 0.3, "WR": 0.3, "PK": 0.3,` | M ADR 0038: archive, held out by object |
 | CATALOG_PRIORITY_DEFAULT | `0.2` | M ADR 0038: archive, held out by object |
 | AMBIGUOUS_SCORE_RATIO | `0.6` | M ADR 0038: archive, held out by object |
 | NESTED_SCORE_RATIO | `0.9` | M ADR 0038: archive, silent disagreements 37 to 15 |

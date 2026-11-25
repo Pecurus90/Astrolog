@@ -845,3 +845,4 @@ un genere senza pezzi non compare affatto - passo 17, glossario: strumento; rino
 l Attrezzatura, un pezzo dall'indirizzo - passo 17, glossario: strumento; rinominato in place
 con ?pezzo= la riga di quel pezzo e' segnata, e nessun'altra - passo 17, glossario: strumento; rinominato in place
 test_a_folder_inside_or_around_a_root_is_refused_saying_which - passo 38: intorno ora sostituisce (Marco 22/10); il dentro resta in test_a_folder_inside_a_root_is_refused_saying_which, l'intorno in test_a_folder_around_roots_takes_their_files_and_reads_only_the_new
+test_a_faint_object_never_scores_worse_than_one_with_no_magnitude - passo 40: diviso in test_the_magnitude_term_stays_inside_its_floor_and_ceiling e test_a_missing_magnitude_is_zero_and_the_double_cluster_pays_for_it, stessi casi

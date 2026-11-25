@@ -40,5 +40,10 @@ nessun ASTAP lanciato), riferimento il nome scritto dall'utente; validazione a o
 ## Conseguenze
 
 - Leggere il nome del file ASIAIR (ADR 0026) toglierebbe 12 notti dal "solo cielo".
-- Una magnitudine mancante vale 0 nel punteggio e penalizza gli oggetti senza (C 14 contro NGC
-  869): da rivedere con l'identificazione nella pipeline nuova.
+- Una magnitudine mancante vale 0 nel punteggio (Marco 25/11/2026, passo 40). Neutra (0,5)
+  l'abbiamo misurata e scartata: M 101 prendeva in silenzio il nome di NGC 5447 (3,60 contro 3,23),
+  e sull'archivio cambiavano 5 notti con 83 domande in piu'. Il costo resta: C 14 senza
+  magnitudine vince nel mezzo del Doppio Ammasso, ma a 0,15 gradi verso h Persei vince NGC 869.
+- Ogni sigla che `designation.parse` legge ha il suo gradino in `CATALOG_PRIORITY`: Arp, HCG, Mel,
+  Cl, WR e PK stanno a 0,3 come gli altri cataloghi specialistici con nome. Il default 0,2 vale
+  solo per i nomi che il parser non legge. Sull'archivio non cambia nessuna notte.

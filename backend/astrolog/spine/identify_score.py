@@ -20,14 +20,16 @@ W_CENTERING = 1.2  # [M ADR 0038: archive, held out by object]
 SEP_FLOOR_DEG = 0.05  # [M ADR 0038: archive, held out by object]
 SCALE_CAP_DEG = 3.0  # [M ADR 0038: archive, held out by object]
 
-# Curated, well-known catalogs beat obscure ones.
+# Curated, well-known catalogs beat obscure ones; every code `designation.parse` gives has a tier.
 # [M ADR 0038: archive, held out by object]
 CATALOG_PRIORITY = {
     "M": 1.0, "C": 0.9, "NGC": 0.7, "IC": 0.55,
     "Sh2": 0.4, "LBN": 0.3, "LDN": 0.3, "vdB": 0.3, "Ced": 0.3,
     "B": 0.3, "Abell": 0.3, "RCW": 0.3,
+    "Arp": 0.3, "HCG": 0.3, "Mel": 0.3, "Cl": 0.3, "WR": 0.3, "PK": 0.3,
 }  # fmt: skip
-CATALOG_PRIORITY_DEFAULT = 0.2  # [M ADR 0038: archive, held out by object]
+# Only for names the parser cannot read. [M ADR 0038: archive, held out by object]
+CATALOG_PRIORITY_DEFAULT = 0.2
 
 # Ambiguity needs both: a competitive score AND an object distinct from the best.
 AMBIGUOUS_SCORE_RATIO = 0.6  # [M ADR 0038: archive, held out by object]
@@ -46,7 +48,7 @@ class Candidate(NearEntry):
 
 
 def _magnitude_term(magnitude: float | None) -> float:
-    """0..1, brighter is higher; missing is 0: unmeasured clutter earns no bonus."""
+    """0..1, brighter is higher; missing is 0: neutral would name M 101 after its HII (ADR 0038)."""
     if magnitude is None:
         return 0.0
     return (12.0 - min(12.0, max(3.0, magnitude))) / 9.0

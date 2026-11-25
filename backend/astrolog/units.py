@@ -4,6 +4,7 @@ the comparable number already."""
 import math
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
+from decimal import Decimal
 from typing import Any
 
 # The digits a float32 can really assert: `4.29` read back in double precision becomes
@@ -33,11 +34,11 @@ def most_frequent[T](weights: Mapping[T, int]) -> T | None:
 
 
 def physical_pixel_um(pixel_um: float | None, binning: int | None) -> float | None:
-    """`XPIXSZ` includes binning by convention (sources in `docs/domini/spina-solve.md`), so it is
-    divided, then cleaned like a float32: a header's 11.28 / 3 gives 3.76, not 3.759999910990397."""
+    """`XPIXSZ` includes binning (`docs/domini/spina-solve.md`): split in decimal, 11.4 / 3 is 3.8.
+    Float32 tail cut by header readers (`pipeline/values`, `fits/header_fields`), not here."""
     if pixel_um is None or not binning:
         return None
-    return strip_float32_noise(pixel_um / binning)
+    return float(Decimal(repr(pixel_um)) / binning)
 
 
 def hundredths(value: float | None) -> float | None:
