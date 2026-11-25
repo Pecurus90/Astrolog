@@ -12,6 +12,8 @@ from . import gear, rigs
 from . import rig_numbers as rn
 
 _GUIDES = tuple(rigs.GUIDES)
+# module level: mutmut upper-cases names in functions, and SQLite ignores case
+_COLUMNS = ("subject", "subject_id", "numbers_json")
 # The parts a number reads, besides optics, camera and the guide.
 _ONE_OF_A_KIND = {
     "reducer": InstrumentKind.REDUCER,
@@ -94,4 +96,4 @@ def write(conn: sqlite3.Connection) -> None:
             "label": labels.get(rig["id"]),
         }
         rows.append(("rig", rig["id"], json.dumps(written)))
-    replace_rows(conn, "gear_numbers", ("subject", "subject_id", "numbers_json"), rows)
+    replace_rows(conn, "gear_numbers", _COLUMNS, rows)

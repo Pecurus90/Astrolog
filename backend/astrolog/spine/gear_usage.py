@@ -262,16 +262,19 @@ def add_new(conn: sqlite3.Connection, subject: UsageSubject, row_id: int) -> Non
     _add_row(conn, subject, row_id, known=True)
 
 
+# module level: mutmut upper-cases SQL in functions, and SQLite ignores case
+_ADD_ROW = (
+    "INSERT OR REPLACE INTO gear_usage(subject, subject_id, frames, integration_s, untimed,"
+    " position) VALUES(?, ?, ?, ?, ?,"
+    " CASE WHEN ? = 'rig' THEN"
+    " (SELECT COALESCE(MAX(position) + 1, 0) FROM gear_usage WHERE subject = 'rig') END)"
+)
+
+
 def _add_row(conn: sqlite3.Connection, subject: UsageSubject, row_id: int, *, known: bool) -> None:
     """A rig goes at the bottom of its list, which runs from the most used: at the top, with zero
     hours, it would lie."""
-    conn.execute(
-        "INSERT OR REPLACE INTO gear_usage(subject, subject_id, frames, integration_s, untimed,"
-        " position) VALUES(?, ?, ?, ?, ?,"
-        " CASE WHEN ? = 'rig' THEN"
-        " (SELECT COALESCE(MAX(position) + 1, 0) FROM gear_usage WHERE subject = 'rig') END)",
-        (subject, row_id, *((0, 0.0, 0) if known else (None,) * 3), subject),
-    )
+    conn.execute(_ADD_ROW, (subject, row_id, *((0, 0.0, 0) if known else (None,) * 3), subject))
     write_bars(conn)
 
 
