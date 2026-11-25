@@ -372,6 +372,21 @@ def test_one_candidate_alone_is_never_ambiguous():
     assert score.is_ambiguous(M31, None, separation_deg=None) is False
 
 
+def test_a_rival_whose_distance_is_unknown_does_not_contend():
+    """Senza la distanza fra i due non si sa se uno sta dentro l'altro: non si chiede, anche a
+    punteggio pari."""
+    gemello = nel_cono(name="NGC 1", sep_deg=0.3, size_major_arcmin=10.0, magnitude=9.0)
+    assert score.is_ambiguous(gemello, gemello, separation_deg=None) is False
+
+
+def test_a_score_exactly_at_the_ratio_contends(monkeypatch):
+    """La soglia e' "almeno": un secondo che vale esattamente il rapporto del primo si chiede."""
+    gemello = nel_cono(name="NGC 1", sep_deg=0.3, size_major_arcmin=10.0, magnitude=9.0)
+    # rapporto a 1: due gemelli lontani stanno proprio sulla soglia
+    monkeypatch.setattr(score, "AMBIGUOUS_SCORE_RATIO", 1.0)
+    assert score.is_ambiguous(gemello, gemello, separation_deg=5.0) is True
+
+
 def test_a_competitive_score_is_needed_and_not_just_two_distinct_objects():
     """L'ambiguita' vuole **tutte e due** le condizioni. Due oggetti ben separati ma con
     punteggi lontani non sono un dubbio: il primo ha vinto, e chiedere sarebbe far lavorare
