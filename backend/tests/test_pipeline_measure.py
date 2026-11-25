@@ -168,6 +168,64 @@ def test_the_file_measured_is_the_one_whose_card_stands_for_the_shot(conn, tmp_p
     assert read.fetchone()[0] == "b.fits"
 
 
+def test_a_copy_in_another_root_waits_for_the_card_of_its_shot(conn, tmp_path):
+    """Scheda in B, copia in A misurata per prima: si misura la scheda. Prima: la copia, e
+    il cielo prendeva sito e ora dalla sua scheda (Issue #108)."""
+    original = _light(tmp_path / "b" / "x.fits", _field())
+    root_b = _scanned(conn, tmp_path / "b")
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "x.fits").write_bytes(original.read_bytes())
+    settle(tmp_path / "a" / "x.fits")
+    root_a = _scanned(conn, tmp_path / "a")
+    measure_root(conn, root_a, LATER)
+    measure_root(conn, root_b, LATER)
+    (row,) = _measures(conn)
+    read = conn.execute("SELECT root_id FROM pipeline_files WHERE id = ?", (row["file_id"],))
+    assert read.fetchone()[0] == root_b
+
+
+def test_a_copy_measured_while_its_card_was_skipped_gives_way_to_the_card(conn, tmp_path):
+    """Scheda tagliata a meta': la copia misura la posa, la scheda tornata intera la rimisura."""
+    original = _light(tmp_path / "b" / "x.fits", _field())
+    kept = original.read_bytes()
+    root_b = _scanned(conn, tmp_path / "b")
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "x.fits").write_bytes(kept)
+    settle(tmp_path / "a" / "x.fits")
+    root_a = _scanned(conn, tmp_path / "a")
+    original.write_bytes(kept[:5000])
+    settle(original, 300)
+    scan_root(conn, root_b, LATER)
+    measure_root(conn, root_a, LATER)
+    copy = _measures(conn)[0]["file_id"]
+    original.write_bytes(kept)
+    settle(original, 200)
+    scan_root(conn, root_b, LATER)
+    measure_root(conn, root_b, LATER)
+    (row,) = _measures(conn)
+    assert (copy, row["file_id"], row["outcome"]) == (2, 1, "measured")
+
+
+def test_a_copy_measures_the_shot_while_the_card_root_does_not_answer(conn, tmp_path):
+    """Cartella della scheda spenta: la copia misura la posa, la scheda tornata la rimisura.
+    Prima della correzione la posa restava illeggibile finche' la cartella non tornava."""
+    original = _light(tmp_path / "b" / "x.fits", _field())
+    root_b = _scanned(conn, tmp_path / "b")
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "x.fits").write_bytes(original.read_bytes())
+    settle(tmp_path / "a" / "x.fits")
+    root_a = _scanned(conn, tmp_path / "a")
+    (tmp_path / "b").rename(tmp_path / "off")
+    scan_root(conn, root_b, LATER)
+    for _ in range(2):
+        measure_root(conn, root_b, LATER)
+        measure_root(conn, root_a, LATER)
+    assert [(r["file_id"], r["outcome"]) for r in _measures(conn)] == [(2, "measured")]
+    (tmp_path / "off").rename(tmp_path / "b")
+    measure_root(conn, root_b, LATER)
+    assert [(r["file_id"], r["outcome"]) for r in _measures(conn)] == [(1, "measured")]
+
+
 def test_a_file_unreadable_now_is_tried_again(conn, tmp_path):
     path = _light(tmp_path / "nas" / "a.fits", _field())
     root = _scanned(conn, tmp_path / "nas")

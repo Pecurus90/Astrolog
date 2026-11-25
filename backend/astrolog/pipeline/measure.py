@@ -19,19 +19,26 @@ from .shots import first_per_shot
 from .stars import Measured, measure_frame
 from .values import as_number
 
-# Light shots without a row, or whose last file was unreadable; plain file before its copy,
-# then the file whose card stands for the shot (frame_card.py).
+# Card file skipped by the scan or last read unreadable (root off): a copy stands in meanwhile.
+_CARD_SKIPPED = (
+    "(EXISTS (SELECT 1 FROM pipeline_files AS k WHERE k.id = fr.card_file_id"
+    " AND k.skip_reason IS NOT NULL) OR EXISTS (SELECT 1 FROM pipeline_measures AS u"
+    " WHERE u.frame_id = fr.id AND u.file_id = fr.card_file_id AND u.outcome = 'unreadable'))"
+)
+# Light shots without a row read from their card, or last unreadable: the card's file, any
+# root (frame_card.py); a copy, plain before .fz, only while the card does not read.
 PENDING = (
-    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.bayer, c.exposure_s,"
+    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.bayer, c.exposure_s,"  # noqa: S608 - ours
     " h.header ->> '$.BAYERPAT' AS BAYERPAT, h.header ->> '$.XBAYROFF' AS XBAYROFF,"
     " h.header ->> '$.YBAYROFF' AS YBAYROFF, h.header ->> '$.PEDESTAL' AS PEDESTAL"
     " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
     " JOIN pipeline_headers AS h ON h.file_id = f.id"
     " JOIN pipeline_frames AS fr ON fr.id = f.frame_id"
     " WHERE f.root_id = :root AND f.state = 'present' AND f.skip_reason IS NULL"
-    " AND c.frame_type = 'light'"
+    f" AND c.frame_type = 'light' AND (f.id = fr.card_file_id OR {_CARD_SKIPPED})"
     " AND NOT EXISTS (SELECT 1 FROM pipeline_measures AS m"
-    "   WHERE m.frame_id = f.frame_id AND m.outcome <> 'unreadable')"
+    "   WHERE m.frame_id = f.frame_id AND m.outcome <> 'unreadable'"
+    f"   AND (m.file_id = fr.card_file_id OR {_CARD_SKIPPED}))"
     " ORDER BY f.frame_id, lower(f.rel_path) LIKE '%.fz', f.id IS NOT fr.card_file_id, f.rel_path"
 )
 
@@ -115,6 +122,11 @@ def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -
         "duration_s": time.perf_counter() - start, "measured_at": now,
     }  # fmt: skip
     with transaction(conn):
+        if outcome != "unreadable":  # a copy's measure goes, sky and SQM with it (cascade)
+            conn.execute(
+                "DELETE FROM pipeline_measures WHERE frame_id = ? AND file_id IS NOT ?",
+                (row["frame_id"], row["file_id"]),
+            )
         conn.execute(UPSERT, values)
     return outcome
 
