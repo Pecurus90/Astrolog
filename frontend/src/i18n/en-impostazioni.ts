@@ -203,6 +203,16 @@ export const enImpostazioni = {
   "folders.move.exists": "Path already present.",
   "folders.move.unreachable": "Path not reachable.",
   "folders.move.failed": "Path change failed.",
+  "folders.holds.titleOne": "Holds a folder already listed",
+  "folders.holds.title": "Holds folders already listed",
+  "folders.holds.one":
+    "{percorso} holds {cartelle}. Replace it with {percorso}? Its frames and your answers stay; only the new files are read.",
+  "folders.holds.many":
+    "{percorso} holds {cartelle}. Replace them with {percorso}? Their frames and your answers stay; only the new files are read.",
+  "folders.holds.item": "{percorso} ({n} frames)",
+  "folders.holds.replace": "Replace",
+  "folders.inside.title": "Already inside a listed folder",
+  "folders.inside": "{percorso} is inside {dentro}: its files are read already.",
 
   // Impostazioni.dc.html, Sites (v82): The site, The site's sky, New site
   "sites.add": "+ Add site", // glifo-ok: board text

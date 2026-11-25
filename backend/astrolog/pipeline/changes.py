@@ -95,8 +95,8 @@ def _still(stored: str, path: str) -> bool:
 
 
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
-    """Existing folder only. Same folder written another way: same root; inside or around one
-    (written or real key): RootOverlapError. Other roots' disks touched only when ids match."""
+    """Existing folder only. Same folder another way: same root; around roots as written: takes
+    them over (step 38); other overlap: RootOverlapError. Other disks touched only on id match."""
     written_path = plain(_unquoted(os.fspath(path)))
     if not os.path.isabs(written_path):  # empty or relative: would be app's working folder
         raise NotADirectoryError(written_path)
@@ -108,10 +108,14 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
     identity = _identity(absolute)
     ancestors = _above(absolute)
     with transaction(conn):
-        same = _same_root(conn, written, real, identity, ancestors)
+        held = [
+            r for r in conn.execute("SELECT id, path, written_key FROM pipeline_roots")
+            if _inside(r["written_key"], written)
+        ]  # fmt: skip
+        same = _same_root(conn, (written, real), identity, ancestors, {r["id"] for r in held})
         if same is not None:
             return same
-        return inserted_id(
+        root_id = inserted_id(
             conn.execute(
                 "INSERT INTO pipeline_roots"
                 " (path, written_key, real_key, device, inode, ancestors, created_at)"
@@ -120,6 +124,24 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
                  now),
             )
         )  # fmt: skip
+        for inner in held:
+            _take_over(conn, root_id, inner["id"], _rel(inner["path"], absolute) + "/")
+        return root_id
+
+
+def _take_over(conn: sqlite3.Connection, outer: int, inner: int, prefix: str) -> None:
+    """Files, receipts and their moves pass to the outer root, paths prefixed: same rows."""
+    conn.execute(
+        "UPDATE pipeline_files SET root_id = ?, rel_path = ? || rel_path WHERE root_id = ?",
+        (outer, prefix, inner),
+    )
+    conn.execute(
+        "UPDATE pipeline_moves SET was_path = :p || was_path, now_path = :p || now_path"
+        " WHERE scan_id IN (SELECT id FROM pipeline_scans WHERE root_id = :inner)",
+        {"p": prefix, "inner": inner},
+    )
+    conn.execute("UPDATE pipeline_scans SET root_id = ? WHERE root_id = ?", (outer, inner))
+    conn.execute("DELETE FROM pipeline_roots WHERE id = ?", (inner,))
 
 
 def _unquoted(path: str) -> str:
@@ -147,15 +169,18 @@ def _ancestors(path: str) -> dict[str, str]:
 
 def _same_root(
     conn: sqlite3.Connection,
-    written: str,
-    real: str,
+    keys: tuple[str, str],
     identity: tuple[str, str] | None,
     ancestors: dict[str, str],
+    held: set[int],
 ) -> int | None:
-    """Id of root that is this folder; one inside or around it (text or disk): RootOverlapError.
-    Disk id survives rename: match only while stored path still is this folder."""
+    """Id of root that is this folder; one inside or around it (text or disk), not `held`:
+    RootOverlapError. Disk id survives rename: match only while stored path still is this folder."""
+    written, real = keys
     mine_id = ":".join(identity) if identity is not None else None
     for row in conn.execute("SELECT * FROM pipeline_roots"):
+        if row["id"] in held:
+            continue
         if written == row["written_key"] or real == row["real_key"]:
             return int(row["id"])
         theirs_id = f"{row['device']}:{row['inode']}" if row["device"] is not None else None

@@ -181,6 +181,14 @@ stessi senza cambiare niente, e *Usa questo percorso* la sposta. In tutti e due 
 sono gli stessi file, te lo dice e non cambia niente. Dopo lo spostamento la cartella e' la stessa di prima, con i suoi frame e le tue
 risposte, e leggendola di nuovo non entra niente due volte.
 
+**Se aggiungi una cartella che ne contiene altre gia' in elenco** -- per esempio `D:\Astro`
+quando hai gia' `D:\Astro\M31` -- l'app te lo dice prima di aggiungerla: *Contiene una cartella
+gia' in elenco*, con il percorso e quanti frame ha (o tutte, se sono piu' d'una). Con
+*Sostituisci* la cartella nuova prende il loro posto: i loro frame e le risposte che hai dato
+restano, e la scansione legge solo i file che stanno fuori da loro. Se invece scegli una cartella
+che sta **dentro** una gia' in elenco, l'app non la aggiunge e ti dice perche': i suoi file li
+legge gia'. Vale anche al primo avvio.
+
 Poi **Siti**: da dove osservi. Ci trovi i posti che hai dichiarato, con le loro
 coordinate e che cielo hanno, e uno segnato **predefinito** -- e' quello da cui l'app calcola le notti
 e l'altezza degli oggetti; gli altri servono alle uscite. Di ognuno puoi modificare nome,

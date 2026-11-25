@@ -26,6 +26,8 @@ const SONDA = {
   root_path: "D:/Astro",
   moved_from: null,
   moved_check: "none",
+  inside: null,
+  holds: [],
 }
 
 /** Le cartelle come le manda `GET /folders`. La stessa risposta serve anche al POST -- il banco
@@ -215,7 +217,7 @@ describe("le cartelle del primo avvio", () => {
       },
       "POST /api/v1/folders/probe": {
         stato: 200,
-        corpo: { reachable: true, fits_count: 7, complete: true, root_path: "/data/Notti" },
+        corpo: { ...SONDA, fits_count: 7, root_path: "/data/Notti" },
       },
     })
     await alTerzoPasso()
@@ -256,7 +258,7 @@ describe("le cartelle del primo avvio", () => {
       },
       "POST /api/v1/folders/probe": {
         stato: 200,
-        corpo: { reachable: true, fits_count: 7, complete: true, root_path: "/data/Notti" },
+        corpo: { ...SONDA, fits_count: 7, root_path: "/data/Notti" },
       },
     })
     await alTerzoPasso()
@@ -513,6 +515,92 @@ describe("una cartella spostata", () => {
     expect((screen.getByLabelText(/percorso della cartella/i) as HTMLInputElement).value).toBe(
       "",
     )
+  })
+})
+
+describe("una cartella che ne contiene altre gia' in elenco", () => {
+  async function guardaAstro(
+    sonda: Record<string, unknown>,
+    altre: Record<string, { stato: number; corpo: unknown }> = {},
+  ) {
+    primoAvvio({ "POST /api/v1/folders/probe": { stato: 200, corpo: { ...SONDA, ...sonda } }, ...altre })
+    await alTerzoPasso()
+    fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
+      target: { value: "D:/Astro" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
+  }
+
+  it("propone di sostituirle tutte, coi loro frame, e Sostituisci le nomina", async () => {
+    // Marco 25/11: la esterna prende il posto delle interne, frame e risposte restano.
+    await guardaAstro({
+      holds: [
+        { id: 3, root_path: "D:/Astro/M31", frames: 12400 },
+        { id: 4, root_path: "D:/Astro/M42", frames: 310 },
+      ],
+    })
+
+    expect(await screen.findByText("Contiene cartelle gi\u00e0 in elenco")).toBeDefined()
+    expect(
+      screen.getByText(
+        // le migliaia col separatore della lingua, qualunque sia il carattere
+        /^D:\/Astro contiene D:\/Astro\/M31 \(12\D400 frame\), D:\/Astro\/M42 \(310 frame\)\. Sostituirle con D:\/Astro\? I loro frame e le tue risposte restano; si leggono solo i file nuovi\.$/,
+      ),
+    ).toBeDefined()
+    expect(screen.queryByRole("button", { name: /aggiungi/i })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: /^sostituisci$/i }))
+
+    await waitFor(() =>
+      expect(
+        scritture().some(
+          (s) =>
+            s.url.endsWith("/api/v1/folders") &&
+            JSON.stringify(s.corpo) === JSON.stringify({ root_path: "D:/Astro", replaces: [3, 4] }),
+        ),
+      ).toBe(true),
+    )
+  })
+
+  it("con una sola la domanda e' al singolare", async () => {
+    await guardaAstro({ holds: [{ id: 3, root_path: "D:/Astro/M31", frames: 1 }] })
+
+    expect(await screen.findByText("Contiene una cartella gi\u00e0 in elenco")).toBeDefined()
+    expect(screen.getByText(/D:\/Astro\/M31 \(1 frame\)\. Sostituirla con D:\/Astro\? I suoi frame/)).toBeDefined()
+  })
+
+  it("una cartella non ancora letta non dice 0 frame, che sarebbe falso", async () => {
+    // il conto viene dal database, che conta solo dopo la scansione (collaudo 25/11)
+    await guardaAstro({ holds: [{ id: 3, root_path: "D:/Astro/M31", frames: 0 }] })
+
+    expect(
+      await screen.findByText(/^D:\/Astro contiene D:\/Astro\/M31\. Sostituirla con D:\/Astro\?/),
+    ).toBeDefined()
+  })
+
+  it("se nel frattempo le cartelle dentro sono cambiate, guarda di nuovo invece di fallire", async () => {
+    await guardaAstro(
+      { holds: [{ id: 3, root_path: "D:/Astro/M31", frames: 1 }] },
+      { "POST /api/v1/folders": { stato: 409, corpo: { detail: { code: "folder_contains", folders: [] } } } },
+    )
+    fireEvent.click(await screen.findByRole("button", { name: /^sostituisci$/i }))
+
+    await waitFor(() =>
+      expect(scritture().filter((s) => s.url.endsWith("/api/v1/folders/probe")).length).toBe(2),
+    )
+    expect(screen.queryByText(/cartella non aggiunta/i)).toBeNull()
+  })
+
+  it("una cartella dentro una gia' in elenco si rifiuta col perche', senza tasto", async () => {
+    await guardaAstro({
+      root_path: "D:/Astro/M31/Notte1",
+      inside: { id: 3, root_path: "D:/Astro/M31", frames: 1 },
+    })
+
+    expect(await screen.findByText("Gi\u00e0 dentro una cartella in elenco")).toBeDefined()
+    expect(
+      screen.getByText("D:/Astro/M31/Notte1 sta dentro D:/Astro/M31: i suoi file si leggono gi\u00e0."),
+    ).toBeDefined()
+    expect(screen.queryByRole("button", { name: /aggiungi|sostituisci/i })).toBeNull()
   })
 })
 

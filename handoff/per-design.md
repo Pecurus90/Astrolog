@@ -13,6 +13,14 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Cartelle che si sovrappongono, Primo avvio (passo Cartelle) e Impostazioni (Cartelle
+  e scansione), passo 38, 25/11: dopo *Verifica*, una cartella che ne contiene altre gia' in
+  elenco mostra l'esito «Contiene una cartella gia' in elenco» / «Contiene cartelle gia' in
+  elenco» con le cartelle e i loro frame in una frase e il tasto **Sostituisci** al posto di
+  *Aggiungi cartella*; una cartella dentro una gia' in elenco mostra «Gia' dentro una cartella in
+  elenco», senza tasto. Oggi e' l'`Avviso` dell'esito, che ha un'azione sola: la schermata scelta
+  da Marco aveva anche **Annulla** accanto a Sostituisci, e le cartelle una per riga. Da
+  disegnare: l'esito con due azioni e l'elenco delle cartelle, desktop e telefono.
 - [da dare] Parola «corredo» nei file della consegna (passo 17, 25/11): il glossario dice
   **setup, mai corredo**, e l'app ora lo dice ovunque. Restano nei vostri file: la classe
   `.as-produzioni__corredo` e l'area `corredo` di `.as-produzioni__voce` (`astrolog.css`, che

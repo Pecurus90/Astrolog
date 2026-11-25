@@ -687,7 +687,8 @@ export interface paths {
          *     on the folder they have just chosen.
          *
          *     `moved_from` is the registered folder these files belonged to, when the place is one moved here
-         *     (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`.
+         *     (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`. `inside`
+         *     and `holds` are the registered folders it overlaps, from the database: what adding it does.
          *
          *     422 when the path is refused, with the reason as its code.
          */
@@ -741,10 +742,14 @@ export interface paths {
         put?: never;
         /**
          * Create Folder
-         * @description Registers a folder; registering a retired one again reactivates it.
+         * @description Registers a folder; registering a retired one again reactivates it. One holding registered
+         *     folders replaces them only when `replaces` names exactly those: their frames, positions and
+         *     answers pass to it (`folder_move.absorb`), so a scan reads only the files outside them.
          *
-         *     409 `folder_exists` with its `folder_id` if it is already active; 422 when the path is
-         *     refused, with the reason as its code.
+         *     409 `folder_exists` with its `folder_id` if it is already active; 409 `folder_inside` with the
+         *     `folder_id` and `root_path` of the active folder holding it; 409 `folder_contains` with the
+         *     `folders` it holds (`id`, `root_path`, `frames`) while `replaces` is not that list; 422 when
+         *     the path is refused, with the reason as its code.
          */
         post: operations["create_folder"];
         delete?: never;
@@ -2655,6 +2660,11 @@ export interface components {
             root_path: string;
             /** Name */
             name?: string | null;
+            /**
+             * Replaces
+             * @description The ids of the registered folders inside root_path the user agreed to replace, as the 409 `folder_contains` listed them; any other list asks again.
+             */
+            replaces?: number[];
         };
         /** FolderEntry */
         FolderEntry: {
@@ -4762,6 +4772,18 @@ export interface components {
              */
             bias_adu: number;
         };
+        /**
+         * Overlapping
+         * @description A registered folder the probed one holds or sits inside, with its present frames.
+         */
+        Overlapping: {
+            /** Id */
+            id: number;
+            /** Root Path */
+            root_path: string;
+            /** Frames */
+            frames: number;
+        };
         /** PathInfo */
         PathInfo: {
             /**
@@ -4911,6 +4933,13 @@ export interface components {
             root_path: string;
             /** Reachable */
             reachable: boolean;
+            /** @description The active folder this one sits inside: its files are read already, adding it is refused (409 `folder_inside`). None: inside no folder. */
+            inside: components["schemas"]["Overlapping"] | null;
+            /**
+             * Holds
+             * @description The active folders this one holds: adding it replaces them when `replaces` names these ids. Empty: it holds none.
+             */
+            holds: components["schemas"]["Overlapping"][];
             /**
              * Fits Count
              * @description None = not looked at (the folder is unreachable); never reported as 0.

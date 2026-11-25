@@ -226,7 +226,7 @@ describe("Cartelle", () => {
     await app({
       "POST /api/v1/folders/probe": {
         stato: 200,
-        corpo: { root_path: "E:\\Nuova", reachable: true, fits_count: 12, complete: true, moved_from: null, moved_check: "none" },
+        corpo: { root_path: "E:\\Nuova", reachable: true, fits_count: 12, complete: true, moved_from: null, moved_check: "none", inside: null, holds: [] },
       },
       "POST /api/v1/folders": { stato: 201, corpo: CARTELLE.items[0] },
     })
@@ -242,11 +242,58 @@ describe("Cartelle", () => {
     await waitFor(() => expect(scritta("POST", "/api/v1/folders")).toBe(true))
   })
 
+  it("una cartella che ne contiene una in elenco propone di sostituirla, e Sostituisci la nomina", async () => {
+    await app({
+      "POST /api/v1/folders/probe": {
+        stato: 200,
+        corpo: {
+          root_path: "D:\\Astro", reachable: true, fits_count: 12, complete: true, moved_from: null,
+          moved_check: "none", inside: null, holds: [{ id: 1, root_path: "D:\\Astro\\2025", frames: 3 }],
+        },
+      },
+      "POST /api/v1/folders": { stato: 201, corpo: CARTELLE.items[0] },
+    })
+    const carta = await vaiAlleCartelle()
+    const campo = within(carta).getByRole("textbox", { name: "Percorso della cartella" })
+    fireEvent.change(campo, { target: { value: "D:\\Astro" } })
+    fireEvent.keyDown(campo, { key: "Enter" })
+
+    expect(await within(carta).findByText("Contiene una cartella già in elenco")).toBeDefined()
+    expect(within(carta).queryByRole("button", { name: "Aggiungi cartella" })).toBeNull()
+    fireEvent.click(within(carta).getByRole("button", { name: "Sostituisci" }))
+    await waitFor(() =>
+      expect(
+        scritture().some(
+          (s) => s.url.endsWith("/api/v1/folders") && JSON.stringify((s.corpo as { replaces?: number[] }).replaces) === "[1]",
+        ),
+      ).toBe(true),
+    )
+  })
+
+  it("una cartella dentro una in elenco si rifiuta col perche'", async () => {
+    await app({
+      "POST /api/v1/folders/probe": {
+        stato: 200,
+        corpo: {
+          root_path: "D:\\Astro\\2025\\Notte1", reachable: true, fits_count: 3, complete: true, moved_from: null,
+          moved_check: "none", inside: { id: 1, root_path: "D:\\Astro\\2025", frames: 3 }, holds: [],
+        },
+      },
+    })
+    const carta = await vaiAlleCartelle()
+    const campo = within(carta).getByRole("textbox", { name: "Percorso della cartella" })
+    fireEvent.change(campo, { target: { value: "D:\\Astro\\2025\\Notte1" } })
+    fireEvent.keyDown(campo, { key: "Enter" })
+
+    expect(await within(carta).findByText("Già dentro una cartella in elenco")).toBeDefined()
+    expect(within(carta).queryByRole("button", { name: "Aggiungi cartella" })).toBeNull()
+  })
+
   it("una cartella gia nell elenco lo dice, invece di un errore", async () => {
     await app({
       "POST /api/v1/folders/probe": {
         stato: 200,
-        corpo: { root_path: "D:\\Astro\\2025", reachable: true, fits_count: 3, complete: true, moved_from: null, moved_check: "none" },
+        corpo: { root_path: "D:\\Astro\\2025", reachable: true, fits_count: 3, complete: true, moved_from: null, moved_check: "none", inside: null, holds: [] },
       },
       "POST /api/v1/folders": { stato: 409, corpo: { detail: { code: "folder_exists", folder_id: 1 } } },
     })
@@ -274,7 +321,7 @@ describe("Cartelle", () => {
     await app({
       "POST /api/v1/folders/probe": {
         stato: 200,
-        corpo: { root_path: "F:\\", reachable: false, fits_count: null, complete: true, moved_from: null, moved_check: "place_unreachable" },
+        corpo: { root_path: "F:\\", reachable: false, fits_count: null, complete: true, moved_from: null, moved_check: "place_unreachable", inside: null, holds: [] },
       },
     })
     const carta = await vaiAlleCartelle()
@@ -296,7 +343,7 @@ describe("Cartelle", () => {
         },
         "POST /api/v1/folders/probe": {
           stato: 200,
-          corpo: { root_path: "/data", reachable: true, fits_count: 3, complete: true, moved_from: null, moved_check: "none" },
+          corpo: { root_path: "/data", reachable: true, fits_count: 3, complete: true, moved_from: null, moved_check: "none", inside: null, holds: [] },
         },
       },
       CARTELLE,

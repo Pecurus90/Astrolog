@@ -2,11 +2,14 @@
 fingerprint, so only the folder answers, keyed on the whole path, have to follow."""
 
 import json
+import os
 import sqlite3
 import time
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import Final
 
+from ..clock import now_iso
 from ..db.transaction import transaction
 from ..fits.header_read import HeaderReadError, frame_fingerprint, read_frame
 from ..fits.walk import long_path
@@ -67,6 +70,70 @@ def _restored_sample(conn: sqlite3.Connection, folder_id: int) -> dict[str, str]
         return {}
     row = conn.execute("SELECT sample_json FROM folders WHERE id = ?", (folder_id,)).fetchone()
     return dict(json.loads(row[0])) if row and row[0] else {}
+
+
+@dataclass(frozen=True)
+class Registered:
+    """A registered folder another one overlaps, with its present frames."""
+
+    id: int
+    root_path: str
+    frames: int
+
+
+def _compared(root_path: str) -> str:
+    """Key form in this system's case rule: `D:\\Astro\\` and `d:/astro` are one on Windows."""
+    return os.path.normcase(folder_key(root_path))
+
+
+def _inside(child: str, parent: str) -> bool:
+    """Strictly inside, on key text: `D:/Astro2` is not in `D:/Astro`."""
+    return _compared(child).startswith(_compared(parent) + os.path.normcase("/"))
+
+
+_REGISTERED = (
+    "SELECT f.id, f.root_path, (SELECT COUNT(*) FROM positions p WHERE p.folder_id = f.id"
+    " AND p.status = 'present') FROM folders f WHERE ? OR f.retired_at IS NULL ORDER BY f.id"
+)
+
+
+def _registered(conn: sqlite3.Connection, *, active: bool) -> list[Registered]:
+    return [Registered(*r) for r in conn.execute(_REGISTERED, (not active,)).fetchall()]
+
+
+def held(conn: sqlite3.Connection, root_path: str) -> list[Registered]:
+    """The active folders `root_path` would hold: adding it replaces them, when the user says so."""
+    return [r for r in _registered(conn, active=True) if _inside(r.root_path, root_path)]
+
+
+def holder(conn: sqlite3.Connection, root_path: str) -> Registered | None:
+    """The active folder `root_path` is inside: its files are read already."""
+    return next(
+        (r for r in _registered(conn, active=True) if _inside(root_path, r.root_path)), None
+    )
+
+
+def absorb(conn: sqlite3.Connection, outer_id: int) -> None:
+    """In the caller's transaction. Each folder inside, retired too, gives its positions prefixed
+    (same rows, frames) and retires; answers keyed on the whole path hold as they are."""
+    outer = conn.execute("SELECT root_path FROM folders WHERE id = ?", (outer_id,)).fetchone()[0]
+    after = len(folder_key(outer)) + 1
+    for inner in _registered(conn, active=False):
+        if inner.id == outer_id or not _inside(inner.root_path, outer):
+            continue
+        prefix = folder_key(inner.root_path)[after:] + "/"
+        # IGNORE: a file two nested folders both held is one position of the outer one
+        conn.execute(
+            "UPDATE OR IGNORE positions SET folder_id = ?, rel_path = ? || rel_path"
+            " WHERE folder_id = ?",
+            (outer_id, prefix, inner.id),
+        )
+        conn.execute("DELETE FROM positions WHERE folder_id = ?", (inner.id,))
+        conn.execute(
+            "UPDATE folders SET retired_at = ? WHERE id = ? AND retired_at IS NULL",
+            (now_iso(), inner.id),
+        )
+    typeless_folders.write(conn)
 
 
 def move(conn: sqlite3.Connection, folder_id: int, new_root: str) -> None:

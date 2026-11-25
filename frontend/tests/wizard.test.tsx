@@ -186,7 +186,7 @@ describe("il primo avvio", () => {
     conTimbro(false, {
       "/api/v1/folders/probe": {
         stato: 200,
-        corpo: { root_path: "D:/Astro", reachable: true, fits_count: 10957, complete: true },
+        corpo: { root_path: "D:/Astro", reachable: true, fits_count: 10957, complete: true, inside: null, holds: [] },
       },
       "/api/v1/folders": { stato: 201, corpo: { id: 1, name: null, root_path: "D:/Astro" } },
     })
@@ -219,7 +219,7 @@ describe("il primo avvio", () => {
     conTimbro(false, {
       "/api/v1/folders/probe": {
         stato: 200,
-        corpo: { root_path: "D:/Astro", reachable: true, fits_count: 10957, complete: false },
+        corpo: { root_path: "D:/Astro", reachable: true, fits_count: 10957, complete: false, inside: null, holds: [] },
       },
     })
     await disegna()
@@ -241,7 +241,7 @@ describe("il primo avvio", () => {
     conTimbro(false, {
       "/api/v1/folders/probe": {
         stato: 200,
-        corpo: { root_path: "D:/Astro", reachable: true, fits_count: 12, complete: true },
+        corpo: { root_path: "D:/Astro", reachable: true, fits_count: 12, complete: true, inside: null, holds: [] },
       },
       "/api/v1/folders": { stato: 500, corpo: { detail: { code: "rotto" } } },
     })
@@ -262,7 +262,7 @@ describe("il primo avvio", () => {
     conTimbro(false, {
       "/api/v1/folders/probe": {
         stato: 200,
-        corpo: { root_path: "Z:/via", reachable: false, fits_count: null, complete: null },
+        corpo: { root_path: "Z:/via", reachable: false, fits_count: null, complete: null, inside: null, holds: [] },
       },
     })
     await disegna()

@@ -209,6 +209,17 @@ export const itImpostazioni = {
   "folders.move.exists": "Percorso gi\u00e0 presente.",
   "folders.move.unreachable": "Percorso non raggiungibile.",
   "folders.move.failed": "Modifica del percorso non riuscita.",
+  // passo 38, testi concordati con Marco il 25/11/2026
+  "folders.holds.titleOne": "Contiene una cartella già in elenco", // glifo-ok: testo concordato
+  "folders.holds.title": "Contiene cartelle già in elenco", // glifo-ok: testo concordato
+  "folders.holds.one":
+    "{percorso} contiene {cartelle}. Sostituirla con {percorso}? I suoi frame e le tue risposte restano; si leggono solo i file nuovi.",
+  "folders.holds.many":
+    "{percorso} contiene {cartelle}. Sostituirle con {percorso}? I loro frame e le tue risposte restano; si leggono solo i file nuovi.",
+  "folders.holds.item": "{percorso} ({n} frame)",
+  "folders.holds.replace": "Sostituisci",
+  "folders.inside.title": "Già dentro una cartella in elenco", // glifo-ok: testo concordato
+  "folders.inside": "{percorso} sta dentro {dentro}: i suoi file si leggono già.", // glifo-ok: testo concordato
 
   // Impostazioni.dc.html, Siti (v82): Il sito, Il cielo del sito, Nuovo sito
   "sites.add": "+ Aggiungi sito", // glifo-ok: testo della tavola

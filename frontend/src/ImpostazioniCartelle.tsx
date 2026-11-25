@@ -10,7 +10,13 @@ import { Tema, type Formato } from "./componenti/Tema"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
 import type { components } from "./api/schema"
-import { esitoDelloSpostamento, RIFIUTI_SPOSTA, sposta, useCartelle } from "./cartelle"
+import {
+  esitoDellaSovrapposizione,
+  esitoDelloSpostamento,
+  RIFIUTI_SPOSTA,
+  sposta,
+  useCartelle,
+} from "./cartelle"
 import { CartaScansione } from "./ImpostazioniScansione"
 import { numero, t } from "./i18n"
 import { useRadiceDati } from "./radiceDati"
@@ -405,6 +411,8 @@ function esitoDellaSonda(
       testo: t("settings.folders.unreachableHelp"),
     }
   }
+  const sovrapposta = esitoDellaSovrapposizione(c, fatto)
+  if (sovrapposta) return sovrapposta
   const spostamento = esitoDelloSpostamento(c, fatto)
   if (spostamento) return spostamento
   const parziale = v.complete === false

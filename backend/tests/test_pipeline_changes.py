@@ -462,8 +462,8 @@ def test_the_same_folder_written_another_way_is_the_same_root(conn, tmp_path):
     assert conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 1
 
 
-def test_a_folder_inside_or_around_a_root_is_refused_saying_which(conn, tmp_path):
-    """Dentro o intorno a una gia' aggiunta: rifiutata col perche', mai contata due volte."""
+def test_a_folder_inside_a_root_is_refused_saying_which(conn, tmp_path):
+    """Dentro una gia' aggiunta: rifiutata col perche', mai contata due volte."""
     (tmp_path / "archive" / "night").mkdir(parents=True)
     add_root(conn, tmp_path / "archive", NOW)
     with pytest.raises(RootOverlapError) as inside:
@@ -471,10 +471,43 @@ def test_a_folder_inside_or_around_a_root_is_refused_saying_which(conn, tmp_path
     assert inside.value.inside is True
     assert Path(inside.value.other) == tmp_path / "archive"
     assert str(inside.value) == f"inside {tmp_path / 'archive'}"
-    with pytest.raises(RootOverlapError) as around:
-        add_root(conn, tmp_path, NOW)
-    assert around.value.inside is False
     assert conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 1
+
+
+def test_a_folder_around_roots_takes_their_files_and_reads_only_the_new(conn, tmp_path):
+    """La spina l'ha fatta sostituire (passo 38): la esterna prende file, frame e ricevute delle
+    interne col prefisso della sottocartella; la scansione dopo trova nuovo solo il file fuori."""
+    _file(tmp_path / "archive" / "M31" / "a.fits")
+    inner = add_root(conn, tmp_path / "archive" / "M31", NOW)
+    scan_root(conn, inner, NOW)
+    file_id = conn.execute("SELECT id FROM pipeline_files").fetchone()[0]
+    _file(tmp_path / "archive" / "b.fits")
+
+    outer = add_root(conn, tmp_path / "archive", LATER)
+
+    assert [tuple(r) for r in conn.execute("SELECT id, root_id, rel_path FROM pipeline_files")] == [
+        (file_id, outer, "M31/a.fits")
+    ]
+    assert conn.execute("SELECT root_id FROM pipeline_scans").fetchone()[0] == outer
+    assert [r[0] for r in conn.execute("SELECT id FROM pipeline_roots")] == [outer]
+    changes = scan_root(conn, outer, LATER).changes
+    assert (changes.new, changes.unchanged) == (["b.fits"], ["M31/a.fits"])
+
+
+def test_a_root_taken_by_one_around_it_brings_its_moves_along(conn, tmp_path):
+    """Gli spostati delle ricevute vecchie stanno relativi alla radice: prendono il prefisso."""
+    _file(tmp_path / "archive" / "M31" / "a.fits")
+    inner = add_root(conn, tmp_path / "archive" / "M31", NOW)
+    scan_root(conn, inner, NOW)
+    scan_id = conn.execute("SELECT id FROM pipeline_scans").fetchone()[0]
+    conn.execute("INSERT INTO pipeline_moves VALUES (?, 'x/a.fits', 'a.fits')", (scan_id,))
+
+    add_root(conn, tmp_path / "archive", LATER)
+
+    assert tuple(conn.execute("SELECT was_path, now_path FROM pipeline_moves").fetchone()) == (
+        "M31/x/a.fits",
+        "M31/a.fits",
+    )
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="drive letters: Windows only")
@@ -523,15 +556,21 @@ def test_a_folder_inside_a_network_share_root_is_inside(conn):
         add_root(conn, r"\\localhost\C$\Windows", NOW)
 
 
-@pytest.mark.parametrize("drive_first", [True, False])
-def test_a_folder_on_a_drive_root_added_is_inside_it(conn, tmp_path, drive_first):
+def test_a_folder_on_a_drive_root_added_is_inside_it(conn, tmp_path):
     """Radice di un disco ('C:\\' o '/'): finisce gia' con la barra, il dentro si vede lo stesso."""
-    drive = Path(tmp_path.anchor)
-    first, second = (drive, tmp_path) if drive_first else (tmp_path, drive)
-    add_root(conn, first, NOW)
+    add_root(conn, Path(tmp_path.anchor), NOW)
     with pytest.raises(RootOverlapError) as overlap:
-        add_root(conn, second, NOW)
-    assert overlap.value.inside is drive_first
+        add_root(conn, tmp_path, NOW)
+    assert overlap.value.inside is True
+
+
+def test_a_drive_root_takes_a_root_on_it_without_a_double_bar(conn, tmp_path):
+    """Intorno, dalla radice del disco: il prefisso e' il percorso intero, senza barra in testa."""
+    _file(tmp_path / "a.fits")
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    add_root(conn, Path(tmp_path.anchor), LATER)
+    rel = conn.execute("SELECT rel_path FROM pipeline_files").fetchone()[0]
+    assert rel == str(tmp_path.relative_to(tmp_path.anchor) / "a.fits").replace(os.sep, "/")
 
 
 def test_the_same_folder_through_a_link_is_the_same_root(conn, tmp_path):

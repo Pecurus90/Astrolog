@@ -6,6 +6,7 @@ import os
 import sqlite3
 import threading
 import time
+from dataclasses import asdict
 from typing import Final
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -30,6 +31,7 @@ from .models import (
     MoveCheck,
     MoveChecked,
     MovedFrom,
+    Overlapping,
     PathInfo,
     PathProbe,
     ProbeOut,
@@ -110,13 +112,19 @@ def probe(
     on the folder they have just chosen.
 
     `moved_from` is the registered folder these files belonged to, when the place is one moved here
-    (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`.
+    (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`. `inside`
+    and `holds` are the registered folders it overlaps, from the database: what adding it does.
 
     422 when the path is refused, with the reason as its code."""
     canonical = validate_root(body.root_path, request.app.state.data_root)
+    outer = folder_move.holder(conn, canonical)
+    inside = None if outer is None else Overlapping(**asdict(outer))
+    holds = [Overlapping(**asdict(r)) for r in folder_move.held(conn, canonical)]
     if not root_readable(canonical):
         return ProbeOut(
             root_path=canonical,
+            inside=inside,
+            holds=holds,
             reachable=False,
             fits_count=None,
             complete=None,
@@ -137,6 +145,8 @@ def probe(
     moved_from, check = _moved_here(conn, canonical, found, deadline)
     return ProbeOut(
         root_path=canonical,
+        inside=inside,
+        holds=holds,
         reachable=True,
         fits_count=len(found) + len(online),
         complete=not (unvisited or unreadable),
@@ -222,29 +232,53 @@ def list_folders(
 def create_folder(
     body: FolderCreate, request: Request, conn: sqlite3.Connection = Depends(get_db)
 ) -> FolderOut:
-    """Registers a folder; registering a retired one again reactivates it.
+    """Registers a folder; registering a retired one again reactivates it. One holding registered
+    folders replaces them only when `replaces` names exactly those: their frames, positions and
+    answers pass to it (`folder_move.absorb`), so a scan reads only the files outside them.
 
-    409 `folder_exists` with its `folder_id` if it is already active; 422 when the path is
-    refused, with the reason as its code."""
+    409 `folder_exists` with its `folder_id` if it is already active; 409 `folder_inside` with the
+    `folder_id` and `root_path` of the active folder holding it; 409 `folder_contains` with the
+    `folders` it holds (`id`, `root_path`, `frames`) while `replaces` is not that list; 422 when
+    the path is refused, with the reason as its code."""
     canonical = validate_root(body.root_path, request.app.state.data_root)
     existing = conn.execute(
         "SELECT id, retired_at FROM folders WHERE root_path = ?", (canonical,)
     ).fetchone()
+    if existing is not None and existing["retired_at"] is None:
+        raise HTTPException(
+            status_code=409, detail={"code": "folder_exists", "folder_id": existing["id"]}
+        )
+    _refuse_overlap(conn, canonical, body.replaces)
     if existing is not None:
-        if existing["retired_at"] is None:
-            raise HTTPException(
-                status_code=409, detail={"code": "folder_exists", "folder_id": existing["id"]}
-            )
+        with transaction(conn):
+            folder_move.absorb(conn, existing["id"])
         _move(conn, request.app.state, existing["id"], None)
         row = conn.execute(_SELECT + " WHERE f.id = ?", (existing["id"],)).fetchone()
         return _out(row, reactivated=True)
-    folder_id = inserted_id(
-        conn.execute(
-            "INSERT INTO folders(root_path, name, created_at) VALUES(?, ?, ?)",
-            (canonical, body.name, now_iso()),
+    with transaction(conn):
+        folder_id = inserted_id(
+            conn.execute(
+                "INSERT INTO folders(root_path, name, created_at) VALUES(?, ?, ?)",
+                (canonical, body.name, now_iso()),
+            )
         )
-    )
+        folder_move.absorb(conn, folder_id)
     return _out(conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone())
+
+
+def _refuse_overlap(conn: sqlite3.Connection, root: str, replaces: list[int]) -> None:
+    """Inside an active folder: refused. Around some: asked, until the answer names them all."""
+    if (outer := folder_move.holder(conn, root)) is not None:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "folder_inside", "folder_id": outer.id, "root_path": outer.root_path},
+        )
+    held = folder_move.held(conn, root)
+    if held and sorted(replaces) != [r.id for r in held]:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "folder_contains", "folders": [asdict(r) for r in held]},
+        )
 
 
 def _same_folder_at(

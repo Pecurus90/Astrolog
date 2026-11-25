@@ -5,7 +5,7 @@ import type { SegnoAvviso } from "./componenti/Avviso"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
 import type { components } from "./api/schema"
-import { type Chiave, t } from "./i18n"
+import { type Chiave, numero, t } from "./i18n"
 
 type Probe = components["schemas"]["ProbeOut"]
 
@@ -49,6 +49,45 @@ export function esitoDelloSpostamento(
     azione: t("folders.move.here"),
     onAzione: () => {
       if (!c.inCorso) void c.spostaQui(da.id).then(fatto)
+    },
+  }
+}
+
+/** The probe's overlap notices, same on both pages: a folder inside a listed one is refused with
+ *  it; one holding listed folders offers to replace them all. `fatto` hears whether it was added. */
+export function esitoDellaSovrapposizione(
+  c: ReturnType<typeof useCartelle>,
+  fatto: (aggiunta: boolean) => void,
+): EsitoSonda | null {
+  const v = c.vista
+  if (!v) return null
+  if (v.inside)
+    return {
+      segno: "!",
+      titolo: t("folders.inside.title"),
+      testo: t("folders.inside", { percorso: v.root_path, dentro: v.inside.root_path }),
+    }
+  const tenute = v.holds
+  if (tenute.length === 0) return null
+  const una = tenute.length === 1
+  const cartelle = tenute
+    // 0 is not "none": the database counts frames only after the scan
+    .map((h) =>
+      h.frames > 0
+        ? t("folders.holds.item", { percorso: h.root_path, n: numero(h.frames) })
+        : h.root_path,
+    )
+    .join(", ")
+  return {
+    segno: "!",
+    titolo: t(una ? "folders.holds.titleOne" : "folders.holds.title"),
+    testo: t(una ? "folders.holds.one" : "folders.holds.many", {
+      percorso: v.root_path,
+      cartelle,
+    }),
+    azione: t("folders.holds.replace"),
+    onAzione: () => {
+      if (!c.inCorso) void c.aggiungi(tenute.map((h) => h.id)).then(fatto)
     },
   }
 }
@@ -98,6 +137,16 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
     void cache.invalidateQueries({ queryKey: ["review"] })
   }
 
+  const guarda = async (quale: string) => {
+    const { data, error } = await api.POST("/api/v1/folders/probe", {
+      body: { root_path: quale },
+    })
+    setRotto(error ? "guarda" : undefined)
+    setNonSpostata(undefined)
+    setScelto(quale)
+    setVista(data)
+  }
+
   return {
     elenco,
     rileggi,
@@ -105,22 +154,21 @@ export function useCartelle(chiaveErrore: "wizard.folders.failed" | "settings.fo
     rotto,
     inCorso,
     nonSpostata,
-    guarda: async (quale: string) => {
-      const { data, error } = await api.POST("/api/v1/folders/probe", {
-        body: { root_path: quale },
-      })
-      setRotto(error ? "guarda" : undefined)
-      setNonSpostata(undefined)
-      setScelto(quale)
-      setVista(data)
-    },
-    /** True when registered. */
-    aggiungi: async (): Promise<boolean> => {
+    guarda,
+    /** True when registered. `sostituite`: the listed folders it holds, as the probe named them. */
+    aggiungi: async (sostituite?: number[]): Promise<boolean> => {
       setInCorso(true)
-      const { error } = await api.POST("/api/v1/folders", { body: { root_path: scelto } })
+      const { error } = await api.POST("/api/v1/folders", {
+        body: sostituite ? { root_path: scelto, replaces: sostituite } : { root_path: scelto },
+      })
       setInCorso(false)
       // 409 folder_exists: the path is already in the list, not a failure
       const codice = (error as { detail?: { code?: string } } | undefined)?.detail?.code
+      // 409 folder_contains: the folders inside changed since the probe; ask again with the new list
+      if (codice === "folder_contains") {
+        await guarda(scelto)
+        return false
+      }
       setRotto(!error ? undefined : codice === "folder_exists" ? "registrata" : "aggiungi")
       if (error) return false
       setVista(undefined)

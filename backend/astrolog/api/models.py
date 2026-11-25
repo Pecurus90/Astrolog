@@ -27,6 +27,11 @@ class PathInfo(BaseModel):
 class FolderCreate(BaseModel):
     root_path: str = Field(min_length=1)
     name: str | None = None
+    replaces: list[int] = Field(
+        default_factory=list,
+        description="The ids of the registered folders inside root_path the user agreed to"
+        " replace, as the 409 `folder_contains` listed them; any other list asks again.",
+    )
 
 
 class PathProbe(BaseModel):
@@ -47,9 +52,25 @@ class MovedFrom(BaseModel):
     root_path: str
 
 
+class Overlapping(BaseModel):
+    """A registered folder the probed one holds or sits inside, with its present frames."""
+
+    id: int
+    root_path: str
+    frames: int
+
+
 class ProbeOut(BaseModel):
     root_path: str
     reachable: bool
+    inside: Overlapping | None = Field(
+        description="The active folder this one sits inside: its files are read already, adding it"
+        " is refused (409 `folder_inside`). None: inside no folder."
+    )
+    holds: list[Overlapping] = Field(
+        description="The active folders this one holds: adding it replaces them when `replaces`"
+        " names these ids. Empty: it holds none."
+    )
     fits_count: int | None = Field(
         description="None = not looked at (the folder is unreachable); never reported as 0."
     )

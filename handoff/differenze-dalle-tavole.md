@@ -192,6 +192,11 @@ Scelte diverse:
   fuso); senza, la data.
 - **Aggiungi su una cartella gia' nell'elenco**: «Cartella già registrata · {percorso} è già fra le
   cartelle qui sopra: i suoi file si leggono già.» La tavola ha il titolo per la cartella spostata.
+- **Cartelle che si sovrappongono** (passo 38, 25/11, la tavola non le disegna): una dentro una
+  gia' in elenco, «Già dentro una cartella in elenco · {percorso} sta dentro {dentro}: ...», senza
+  tasto; una che ne contiene, «Contiene una cartella / cartelle già in elenco» con le cartelle e i
+  loro frame in una frase e **Sostituisci** al posto di *Aggiungi cartella*. La schermata scelta da
+  Marco ha anche *Annulla* e una cartella per riga: l'`Avviso` ha un'azione sola (`per-design.md`).
 - **Verifica percorso di ASTAP**, subito dopo: «ASTAP trovato · Gli oggetti ripresi verranno
   identificati.» (tavola); riaprendo la sezione, il percorso e da dove viene.
 - **Gli avvisi vanno a capo nelle parole lunghe** (un percorso senza spazi): `overflow-wrap:
@@ -277,6 +282,9 @@ Il riquadro scuro del foglio vecchio non c'e' piu'. Diverso dalla tavola:
 - **Stesso percorso gia' registrato**: «Cartella già registrata» con «{percorso} è già fra le
   cartelle…», come nelle Impostazioni. La tavola usa quel titolo per la cartella spostata
   («Corrisponde a…», «Usa questo percorso»), che l'app ha uguale.
+- **Cartelle che si sovrappongono** (passo 38, 25/11): gli stessi due esiti delle Impostazioni
+  («Già dentro una cartella in elenco» senza tasto; «Contiene ...» con **Sostituisci**, senza
+  *Annulla*, le cartelle in una frase). La tavola non li disegna.
 - **Elenco del NAS che cade sotto la cartella dei dati**: l'avviso porta «Cartella dei dati» per
   tornare su; la tavola disegna solo l'elenco che non arriva affatto, senza gesto.
 - **Seleziona cartella spento** mentre arriva l'elenco della cartella appena aperta: si

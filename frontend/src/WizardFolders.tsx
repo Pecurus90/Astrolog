@@ -7,7 +7,12 @@ import type { Formato } from "./componenti/Tema"
 import { CampoAvvio, Comando, segno } from "./PrimoAvvioCornice"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { type EsitoSonda as Esito, esitoDelloSpostamento, useCartelle } from "./cartelle"
+import {
+  type EsitoSonda as Esito,
+  esitoDellaSovrapposizione,
+  esitoDelloSpostamento,
+  useCartelle,
+} from "./cartelle"
 import { numero, t } from "./i18n"
 import { usePienoDelPasso } from "./pienoDelPasso"
 import { useRadiceDati } from "./radiceDati"
@@ -23,8 +28,9 @@ function quanti(v: Probe): string {
     : t("wizard.folders.found", { n })
 }
 
-/** The probe's outcome (tavola `EC`): found, partial count, unreachable, the files of a registered
- *  folder that moved here; a refused registration says why. The command that registers sits in it. */
+/** The probe's outcome (tavola `EC`): found, partial count, unreachable, inside or holding listed
+ *  folders, the files of a registered folder that moved here; a refused registration says why.
+ *  The command that registers sits in it. */
 function esitoDellaSonda(
   c: Cartelle,
   onAggiunta: (v: Probe) => void,
@@ -49,6 +55,8 @@ function esitoDellaSonda(
       titolo: t("wizard.folders.unreachableTitle"),
       testo: t("wizard.folders.unreachableHelp"),
     }
+  const sovrapposta = esitoDellaSovrapposizione(c, (ok) => ok && onAggiunta(v))
+  if (sovrapposta) return sovrapposta
   const spostamento = esitoDelloSpostamento(c, (ok) => ok && onSpostata())
   if (spostamento) return spostamento
   const parziale = v.complete === false
