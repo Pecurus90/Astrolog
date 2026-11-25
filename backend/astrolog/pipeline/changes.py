@@ -10,7 +10,7 @@ from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from .scanner import Skip
 from .values import SQLITE_MAX, SQLITE_MIN
-from .walk import Walk, ignores_case, long_path, plain, real_key, walk_dir
+from .walk import Walk, long_path, plain, real_key, walk_dir
 from .walk import absolute as walk_absolute
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
@@ -53,10 +53,19 @@ class RootOverlapError(ValueError):
         self.inside = inside
 
 
+def _ignores_case(path: str) -> bool:
+    """Asks the disk: same folder under swapped case (macOS APFS default, Windows)."""
+    swapped = path.swapcase()
+    try:
+        return swapped != path and os.path.samefile(path, swapped)
+    except OSError:
+        return False
+
+
 def _keys(path: str) -> tuple[str, str]:
     """(as written, real) comparison keys; computed once, on this path only."""
     written, real = os.path.normcase(path), real_key(path)
-    if ignores_case(path):
+    if _ignores_case(path):
         written, real = written.casefold(), real.casefold()
     return written, real
 

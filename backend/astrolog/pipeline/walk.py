@@ -180,15 +180,6 @@ class Walk:
     not_fits: Counter[str] = field(default_factory=Counter)  # by extension, "" for none
 
 
-def ignores_case(path: str) -> bool:
-    """Asks the disk: same folder under swapped case (macOS APFS default, Windows)."""
-    swapped = path.swapcase()
-    try:
-        return swapped != path and os.path.samefile(path, swapped)
-    except OSError:
-        return False
-
-
 def real_key(path: str) -> str:
     return os.path.normcase(os.path.realpath(long_path(path)))
 

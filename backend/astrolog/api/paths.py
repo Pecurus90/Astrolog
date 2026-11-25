@@ -9,7 +9,6 @@ from typing import NoReturn
 from fastapi import HTTPException
 
 from ..fits.walk import absolute, long_path, trailing_dot_or_space
-from ..pipeline.walk import ignores_case
 
 BLOCKLIST_POSIX = ("/", "/etc", "/sys", "/proc", "/dev", "/var", "/boot", "/root")
 
@@ -79,6 +78,15 @@ def stored_form(written: str, resolved: str, rules: ModuleType = os.path) -> str
 _REALPATH_KEEPS_CASE = os.name != "nt"
 
 
+def _ignores_case(path: str) -> bool:
+    """Asks the disk: same folder under swapped case. Twin of pipeline.changes', until step 40."""
+    swapped = path.swapcase()
+    try:
+        return swapped != path and os.path.samefile(path, swapped)
+    except OSError:
+        return False
+
+
 def _disk_case(path: str) -> str:
     """Each name as the disk lists it: `/volumes/astro` is `/Volumes/Astro`, one row."""
     head, name = os.path.split(path)
@@ -126,7 +134,7 @@ def validate_root(raw: str, data_root: str | None) -> str:  # noqa: C901
     except OSError:
         # An unreachable share is checked as written and accepted like an unplugged disk.
         canonical = written
-    if _REALPATH_KEEPS_CASE and ignores_case(canonical):
+    if _REALPATH_KEEPS_CASE and _ignores_case(canonical):
         canonical = _disk_case(canonical)
     if not os.path.isabs(canonical):
         _refuse("path_not_absolute", canonical)
