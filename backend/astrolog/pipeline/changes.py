@@ -101,7 +101,8 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
     if not os.path.isabs(written_path):  # empty or relative: would be app's working folder
         raise NotADirectoryError(written_path)
     absolute = os.path.normpath(walk_absolute(written_path))
-    if not os.path.isdir(long_path(absolute)):
+    # name not text (PEP 383): DB stores UTF-8, its files could never be read either
+    if not _is_text(absolute) or not os.path.isdir(long_path(absolute)):
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
     identity = _identity(absolute)

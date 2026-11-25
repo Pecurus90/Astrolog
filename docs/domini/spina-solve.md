@@ -10,6 +10,8 @@ Cio' che vale per tutta la catena sta in [`spina.md`](spina.md).
 | Ogni frame viene risolto sul cielo da ASTAP, prima uno per sessione, poi tutti; il FITS non viene mai modificato | `test_solve_order_one_per_group`, `test_solve_never_writes_fits`, `test_solve_field_from_the_header` |
 | Un frame risolto una volta non si ri-risolve dopo un reset: la cache per hash lo ricorda | `test_solve_cache_by_hash` |
 | Un frame che ASTAP non risolve e' "non risolto" con il suo perche', e l'archivio va avanti | `test_solve_failure_is_a_reason` |
+| Il cielo che ASIAIR ha gia' risolto vale da indizio anche con una scala assurda, se il pixel di riferimento cade nell'immagine: nessuna convenzione WCS limita la CD e la focale scritta puo' sbagliare (ADR 0016); un indizio falso fa salire ASTAP fino alla ricerca cieca (pipeline nuova) | `test_an_absurd_scale_with_the_reference_inside_stays_a_hint`, `test_a_shot_never_solved_tries_every_step_then_says_so` |
+| L'avviso di ASTAP sul campo dato (`scale was inaccurate ... FL=561mm`) si tiene parola per parola e non si legge: la focale misurata viene dalla CD (ADR 0016), e il numero porta la virgola del sistema (ADR 0036) | `test_astap_s_own_warning_is_kept_as_written` |
 
 ## Le decisioni
 

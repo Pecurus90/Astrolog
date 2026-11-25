@@ -51,7 +51,10 @@ Non dipende da nessuno stadio: gira anche prima del solver.
 
 **I vocabolari dicono solo cio' che scrivono i programmi verificati** (ADR 0029). I filtri:
 lista standard, abbinamento esatto, cio' che non combacia si chiede (ADR 0031, 0033); nella
-pipeline vecchia restano le bande di `vocab/filters.json` (16 piu' `UNKNOWN`). Il software
+pipeline vecchia restano le bande di `vocab/filters.json` (16 piu' `UNKNOWN`). Nella pipeline
+nuova le risposte stanno in `pipeline_filter_answers`, solo filtri
+(`test_an_answer_holds_for_a_file_scanned_later`): la colonna `kind` arriva quando le ottiche e le
+camere chiedono la loro (passo 40), un'astrazione alla seconda occorrenza. Il software
 riconosciuto e' solo quello verificato, e la copia calibrata
 si riconosce dal marchio che il file porta, non dal nome del programma. Le chiavi dell'header sono
 lo standard FITS piu' cio' che i verificati scrivono, salvo le due che dicono che il file e' stato

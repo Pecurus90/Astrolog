@@ -205,6 +205,17 @@ def test_a_name_that_is_not_text_is_left_out_and_the_scan_goes_on(conn, tmp_path
     assert bad in json.loads(receipt["left_out"])["unlooked"]
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="APFS accepts only valid UTF-8 names")
+def test_a_root_whose_name_is_not_text_is_refused_as_a_folder_not_found(conn, tmp_path):
+    """Radice latin-1 su NAS Linux: il percorso non entra nel DB, si rifiuta come cartella
+    che non c'e', non come errore del programma."""
+    nas = tmp_path / "nuit\udce9"
+    _file(nas / "a.fits")
+    with pytest.raises(NotADirectoryError):
+        add_root(conn, nas, NOW)
+    assert conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 0
+
+
 def test_each_scan_leaves_its_receipt(conn, tmp_path):
     _file(tmp_path / "a.fits")
     root = add_root(conn, tmp_path, NOW)

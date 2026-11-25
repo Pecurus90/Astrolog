@@ -439,6 +439,14 @@ def test_a_broken_solve_falls_to_the_target(broken, tmp_path):
     assert read_card(ASIAIR, values).pointing_source is PointingSource.TARGET
 
 
+def test_an_absurd_scale_with_the_reference_inside_stays_a_hint(tmp_path):
+    """Nessuna convenzione WCS limita la CD, e la focale scritta puo' sbagliare (ADR 0016): il
+    posto vale da indizio; se e' falso ASTAP non risolve e sale fino alla cieca."""
+    values = {**_values("asiair_asi2600.txt", tmp_path), "CD1_1": 1.0, "CD2_2": 1.0}
+    card = read_card(ASIAIR, values)
+    assert card.pointing_source is PointingSource.SOLVE
+
+
 def test_calibration_frames_keep_where_the_mount_was():
     card = read_card(NINA, {"IMAGETYP": "DARK", "RA": 10.0, "DEC": 20.0})
     assert card.pointing_source is PointingSource.MOUNT

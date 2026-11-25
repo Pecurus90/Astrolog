@@ -55,7 +55,9 @@ impacchettare su tre bersagli); esegue gli stadi in sequenza; ASTAP gira come so
 l'altro, a transazione chiusa: "fermare ferma, non trasforma". Un solo processo `uvicorn`,
 niente `workers`. Il lock per cartella si prende dopo i pre-controlli e lo rilascia il
 worker a fine corsa (non a fine stadio: la normalizzazione lavora ancora su quei frame),
-comunque vada.
+comunque vada. I lucchetti oggi sono due: `folder_locks` dell'API per le cartelle della spina e
+`busy(root_id)` della pipeline nuova (`test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing`).
+Non si uniscono: il primo muore col ponte del passo 40, e da li' l'API chiede `busy`.
 
 **Commit per frame.** Un'interruzione lascia un prefisso coerente, mai un DB a meta'.
 
