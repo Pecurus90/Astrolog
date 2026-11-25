@@ -17,7 +17,7 @@ from .footprint import position_angle
 from .scan import busy
 
 # Measured shots without a row, or with one before their solution came. Site and time from the
-# card of the file measured: a copy's card may say other.
+# card of the file measured: the shot's own (frame_card.py), a copy only if it could not be read.
 PENDING = (
     "SELECT m.frame_id, m.hfd_px, m.fwhm_px, m.off_axis_px, m.angle_deg, m.gradient_angle_deg,"
     " c.start_utc, c.exposure_s, c.site_lat_deg, c.site_lon_deg,"

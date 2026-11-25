@@ -99,6 +99,10 @@ class _World:
             " VALUES (?, 'light', ?, 'ZWO ASI2600MM Pro', 100, ?)",
             (file, exp, start),
         )
+        if state == "present":  # as the scan writes it (frame_card.py)
+            self.conn.execute(
+                "UPDATE pipeline_frames SET card_file_id = ? WHERE id = ?", (file, pframe)
+            )
         if measured is not None:
             self.conn.execute(
                 "INSERT INTO pipeline_measures (frame_id, file_id, outcome, measured_at, hfd_px,"

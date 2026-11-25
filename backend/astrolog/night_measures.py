@@ -100,8 +100,8 @@ _OFFSETS = """
 SELECT g.camera_id, c.camera, c.offset, COUNT(DISTINCT f.id) AS frames
 FROM frames f JOIN rigs g ON g.id = f.rig_id
 JOIN night_measure_frames b ON b.frame_id = f.id
-JOIN pipeline_files pf ON pf.frame_id = b.pipeline_frame_id
-JOIN pipeline_cards c ON c.file_id = pf.id
+JOIN pipeline_frames pr ON pr.id = b.pipeline_frame_id
+JOIN pipeline_cards c ON c.file_id = pr.card_file_id
 WHERE g.camera_id IS NOT NULL AND f.copy_of IS NULL AND c.camera IS NOT NULL
   AND c.frame_type = 'light'
 GROUP BY g.camera_id, c.camera, c.offset

@@ -154,6 +154,20 @@ def test_the_plain_file_is_read_before_its_fpack_copy(conn, tmp_path):
     assert (row["outcome"], read.fetchone()[0]) == ("measured", "b.fits")
 
 
+def test_the_file_measured_is_the_one_whose_card_stands_for_the_shot(conn, tmp_path):
+    """La copia arrivata dopo viene prima per nome, si misura l'originale. Prima: la
+    prima per percorso, e il cielo prendeva sito e ora dalla sua scheda."""
+    original = _light(tmp_path / "nas" / "b.fits", _field())
+    root = _scanned(conn, tmp_path / "nas")
+    (tmp_path / "nas" / "a-backup.fits").write_bytes(original.read_bytes())
+    settle(tmp_path / "nas" / "a-backup.fits")
+    scan_root(conn, root, LATER)
+    measure_root(conn, root, LATER)
+    (row,) = _measures(conn)
+    read = conn.execute("SELECT rel_path FROM pipeline_files WHERE id = ?", (row["file_id"],))
+    assert read.fetchone()[0] == "b.fits"
+
+
 def test_a_file_unreadable_now_is_tried_again(conn, tmp_path):
     path = _light(tmp_path / "nas" / "a.fits", _field())
     root = _scanned(conn, tmp_path / "nas")

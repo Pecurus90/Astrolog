@@ -48,6 +48,7 @@ PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE rea
     " h.header ->> '$.ROWORDER' AS row_order"
     " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
     " JOIN pipeline_headers AS h ON h.file_id = f.id"
+    " JOIN pipeline_frames AS fr ON fr.id = f.frame_id"
     " WHERE f.root_id = :root AND f.state = 'present' AND f.skip_reason IS NULL"
     # typeless too: a light written wrong finds its sky, a calibration fails fast
     " AND c.frame_type IN ('light', 'unknown')"
@@ -58,9 +59,10 @@ PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE rea
     "     s.outcome = 'fz_unsupported' OR (s.outcome IN ('timeout', 'crashed', 'unreadable')"
     "       AND s.attempts >= :passes AND s.installed IS :installed)))))"
     # shots with their own hint and field first: solved, they lend them to their sisters; per
-    # shot, not per file, or a hinted .fz copy would pass its plain one
+    # shot, not per file, or a hinted .fz copy would pass its plain one; then the card's file
     " ORDER BY min(c.pointing_ra_deg IS NULL OR c.focal_mm IS NULL OR c.pixel_um IS NULL)"
-    " OVER (PARTITION BY f.frame_id), f.frame_id, lower(f.rel_path) LIKE '%.fz', f.rel_path"
+    " OVER (PARTITION BY f.frame_id), f.frame_id, lower(f.rel_path) LIKE '%.fz',"
+    " f.id IS NOT fr.card_file_id, f.rel_path"
 )
 
 # Measured centre of a solved shot of the same object, never of a session: two shots without

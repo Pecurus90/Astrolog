@@ -13,6 +13,7 @@ parole in [`glossario.md`](glossario.md).
 | richiesta | prova |
 |---|---|
 | Ogni mio light viene misurato una volta, da uno dei suoi file, e la misura resta | `test_a_light_is_measured_once_and_written`, `test_only_lights_are_measured`, `test_the_plain_file_is_read_before_its_fpack_copy` (`backend/tests/test_pipeline_measure.py`) |
+| Se la stessa posa sta in due file che dicono cose diverse, vale il file che l'app ha visto per primo: una copia aggiunta dopo non cambia niente a schermo; se il primo se ne va, vale la copia e la posa si rimisura; spostato, resta lui con la sua misura (Marco, 25/11/2026, passo 36) | `test_a_copy_that_arrives_later_does_not_change_the_card`, `test_two_copies_seen_in_the_same_scan_take_the_first_read`, `test_when_the_original_goes_its_copy_takes_the_card`, `test_an_original_rewritten_by_another_program_leaves_the_card_to_its_copy`, `test_an_original_back_after_its_copy_took_the_card_does_not_take_it_back`, `test_a_moved_original_keeps_the_card_and_its_measure`, `test_a_new_card_sends_the_shot_to_be_measured_again`, `test_a_card_that_stays_keeps_the_measure`, `test_an_fpack_copy_stands_for_the_shot_only_without_a_plain_file`, `test_a_shot_without_files_left_has_no_card`, `test_the_camera_offsets_count_shots_not_their_copies` (`backend/tests/test_pipeline_frame_card.py`), `test_the_file_measured_is_the_one_whose_card_stands_for_the_shot` (`backend/tests/test_pipeline_measure.py`) |
 | L'HFD e' il diametro che contiene meta' della luce della stella, anche con le ali di una stella vera | `test_the_hfd_of_gaussian_stars_is_the_diameter_holding_half_the_flux`, `test_the_hfd_of_moffat_stars_holds_their_wings`, `test_the_truth_is_the_analytic_hfd_once_the_pixel_is_small` (`backend/tests/test_pipeline_stars.py`) |
 | Ogni misura si chiama col nome tecnico inglese dei programmi (PixInsight, Siril, ASTAP, N.I.N.A.), uguale in ogni lingua: niente traduzioni, anche la documentazione italiana di Siril le lascia in inglese (Marco, 9/11/2026) <!-- software-ok --> | `le altre misure hanno il nome tecnico dei programmi, anche quelle che la tavola non nomina` (`frontend/tests/notti-finestra.test.tsx`) |
 | Fondo cielo e rumore sono quelli del cielo, non delle stelle | `test_background_and_noise_are_the_sky_and_its_spread` |
@@ -57,9 +58,9 @@ immagine primaria a due assi, BITPIX 8/16/32 con BZERO e BSCALE (FITS 4.0, sez. 
 accanto ai FITS. Sotto 20 pixel di lato non e' un frame da misurare (`not_supported`, da
 `old/misura.py`); un `.fz` aspetta (`fz_unsupported`), come in `solve` prima di ASTAP 2026.07.17.
 
-**Quali frame.** I light presenti, uno per posa: il file semplice prima della sua copia fpack
-(`pipeline/shots.py`, lo stesso ordine di `solve`). `unreadable` si riprova al giro dopo; gli
-altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'.
+**Quali frame.** I light presenti, uno per posa: il file semplice prima del suo `.fz`, poi quello
+della scheda della posa (ADR 0030; `pipeline/shots.py`, ordine di `solve`). `unreadable` si
+riprova al giro dopo; gli altri esiti restano. Un frame alla volta, il parallelo quando servira'.
 
 **Il metodo** (ADR 0022, punti 1, 2, 3, 7, 8, 9; ADR 0033, D1):
 
@@ -216,10 +217,9 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   a cavallo (26.5, nostra lettura; solo la linea perdeva scie deboli: 120 -> 146 su 188, 1 falsa
   su 120, 2 sigma denso 2 cieli su 20; Marco 5/11/2026). Colonna calda non calibrata: scia per tutti.
 - **Col cielo** (`pipeline/sky_measure.py`, stadio `sky` dopo `measure`; ADR 0022 punti 5 e 7):
-  le misure dei pixel con la soluzione di `solve`, il sito e l'ora della scheda del file misurato,
-  in `pipeline_sky`. Una posa senza soluzione si scrive subito e si riscrive quando la soluzione
-  arriva; `solve.forget` porta via la sua riga. Nessun pixel letto: un conto erfa, uno di
-  effemeridi per sito (Luna e Sole) e una scrittura per cartella; una fermata vale prima del conto.
+  misure dei pixel, soluzione di `solve`, sito e ora della scheda del file misurato (ADR 0030),
+  in `pipeline_sky` (senza soluzione subito, riscritta quando arriva; `solve.forget` la toglie);
+  nessun pixel letto (conto erfa, Luna e Sole per sito, scrittura per cartella; fermata prima).
   Il confronto calcola il cielo con la stessa funzione (`on_sky`, in `card_observation`).
   - **Ora**: meta' posa, inizio piu' meta' di `EXPTIME`; posa ignota, l'inizio.
   - **Altezza** del centro risolto, se no del puntamento (anche il bersaglio pianificato: in un

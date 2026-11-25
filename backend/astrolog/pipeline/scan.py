@@ -14,6 +14,7 @@ from pathlib import Path
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
+from . import frame_card
 from .card import Card, Conditions, read_card, read_conditions
 from .changes import PASSING, Changes, finish_scan, record_changes
 from .filters import resolve
@@ -86,8 +87,10 @@ def _scan_root(
         reasons.update(got.reason for got in skipped)
         _count_unknown(unknown, [got for _, got in batch if isinstance(got, Extracted)])
         with transaction(conn):
+            touched: set[int] = set()
             for rel, got in batch:
-                _store(conn, changes, rel, got, now)
+                touched |= _store(conn, changes, rel, got, now)
+            frame_card.settle(conn, touched)
             conn.execute(  # running totals: a stopped scan keeps what its saved batches saw
                 "UPDATE pipeline_scans SET skipped = ?, unknown_keys = ?, unknown_more = ?"
                 " WHERE id = ?",
@@ -103,6 +106,8 @@ def _scan_root(
     with transaction(conn):  # gone and moves together: a crash loses neither
         finish_scan(conn, changes)
         result.moved = _moved(conn, root_id, changes)
+        frame_card.follow_moves(conn, root_id, changes.scan_id, result.moved)
+        frame_card.settle_stale(conn)
         conn.execute(  # name no card carries any more: nothing left to ask
             "DELETE FROM pipeline_filter_spellings WHERE written NOT IN"
             " (SELECT filter FROM pipeline_cards WHERE filter IS NOT NULL)"
@@ -148,9 +153,9 @@ def _vanished(got: Extracted | Skipped) -> bool:
 
 def _store(
     conn: sqlite3.Connection, changes: Changes, rel: str, got: Extracted | Skipped, now: str
-) -> None:
+) -> set[int]:
     """File's size and date written with its read, frame and header together: skipped file
-    loses both, unless passing skip (locked) of file read before."""
+    loses both, unless passing skip (locked) of file read before. Returns shots touched."""
     skipped = isinstance(got, Skipped)
     shot = None if skipped else _frame_of(conn, got, now)
     was = _row_for(conn, changes.root_id, rel, shot)
@@ -158,12 +163,13 @@ def _store(
     held = skipped and got.reason in PASSING and before is not None  # locked: keeps its shot
     frame_id = (before if held else None) if skipped else shot
     file_id = _write_file(conn, changes, rel, was, (frame_id, got.reason if skipped else None))
+    touched = {shot for shot in (before, frame_id) if shot is not None}
     if before not in (None, frame_id):
         _drop_if_unused(conn, before)
     if skipped:
         if not held:
             conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
-        return
+        return touched
     conn.execute(
         "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",
         (file_id, got.program, json.dumps(got.values, allow_nan=False)),
@@ -175,6 +181,7 @@ def _store(
         _insert(conn, "pipeline_conditions", file_id, conditions)
     if card.filter is not None:
         resolve(conn, card.filter)
+    return touched
 
 
 def _row_for(

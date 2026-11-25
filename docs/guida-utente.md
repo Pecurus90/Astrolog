@@ -247,7 +247,9 @@ Ognuna dice quando (oggi, ieri o la data, e l'ora), quanto e' durata e com'e' an
 la barra e *Interrompi*. Poi le cartelle lette, i frame **entrati**, cio' che e' **rimasto fuori**
 e perche' (gia' in archivio, duplicati, calibrazioni, immagini integrate, file ancora in scrittura,
 cartelle lasciate fuori) e i file **non leggibili**, ognuno col suo motivo: i primi cinque, poi
-*Mostra tutti*. L'elenco dei file non leggibili lo tiene **l'ultima scansione di ogni cartella**:
+*Mostra tutti*. Se lo stesso scatto sta in due file (un backup, una copia in un'altra cartella)
+e i due dicono cose diverse, conta quello che l'app ha visto per primo: aggiungere una copia dopo
+non cambia niente; se cancelli il primo, vale la copia. L'elenco dei file non leggibili lo tiene **l'ultima scansione di ogni cartella**:
 delle piu' vecchie restano i numeri, e l'app te lo dice. Sulla piu' recente bloccata c'e'
 *Riprova*. Una scansione appena partita compare **da sola**, senza ricaricare.
 

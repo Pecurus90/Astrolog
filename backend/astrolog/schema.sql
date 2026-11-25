@@ -1046,8 +1046,12 @@ CREATE TABLE pipeline_scans (
 CREATE TABLE pipeline_frames (
   id          INTEGER PRIMARY KEY,
   fingerprint TEXT NOT NULL UNIQUE,
-  created_at  TEXT NOT NULL
+  created_at  TEXT NOT NULL,
+  -- scheda della posa: il file presente visto per primo, .fz solo senza semplice; la scrive
+  -- la scansione (pipeline/frame_card.py). NULL: nessun file con scheda
+  card_file_id INTEGER REFERENCES pipeline_files (id) ON DELETE SET NULL
 ) STRICT;
+CREATE INDEX pipeline_frames_card ON pipeline_frames (card_file_id);  -- DELETE di un file
 
 -- RILEVATO. File: size e data dell'ultima lettura (fermata: si rilegge). Due file, stesso frame:
 -- doppione.

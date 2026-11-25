@@ -44,6 +44,16 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
   `.fits` e la sua copia fpack sono la stessa posa (con la frazione); ogni file si apre una volta.
   Rischi accettati: due camere gemelle sincronizzate al millisecondo; senza frazione, la copia
   fpack conta come seconda posa. Sull'archivio di prova: stessi 15.226 frame.
+- **Scheda della posa** (Marco, 25/11/2026, passo 36, scelta a schermo): fra i file di una posa
+  vale quello presente visto per primo (`arrived_scan_id`, poi l'ordine di lettura del giro); un
+  `.fz` solo senza file semplice (fpack copia l'header). La scrive la scansione in
+  `pipeline_frames.card_file_id` (`pipeline/frame_card.py`), a ogni lotto e alla chiusura dopo
+  gli spostamenti: lo spostato tiene scheda, misura, soluzione e SQM; un file che lascia la posa
+  (sparito, riscritto) la passa alla copia e la posa si rimisura (cielo e SQM in cascata: sito,
+  ora, esposizione erano della scheda vecchia); la soluzione resta, dipende dai pixel. Misura e
+  solve leggono prima il file della scheda; una copia solo se quello non si legge, e i fatti sono
+  della copia letta. Bias e offset contano i frame per scheda, non i file. Costo accettato: una
+  copia in un'altra radice puo' essere misurata prima della scheda (Issue #108).
 - **Cartella nascosta dopo** (Marco, 22/10/2026, secondo audit): non si cammina e i suoi frame non
   si giudicano, come una cartella che non risponde; la vecchia li dava "non trovati". Il cestino
   resta "sparito": un file cestinato cambia percorso. Un FITS nascosto (punto, attributo) resta

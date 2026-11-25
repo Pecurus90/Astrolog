@@ -23,9 +23,8 @@ _NIGHT = (
 SERIES = f"""
 SELECT f.id, f.object_id, f.night_id, f.filter_id, m.outcome, m.shape, m.tilt_level,
        m.sampling_class, k.angle_axis, k.gradient_side,
-       (SELECT c.start_utc FROM pipeline_files pf JOIN pipeline_cards c ON c.file_id = pf.id
-         WHERE pf.frame_id = b.pipeline_frame_id AND pf.state = 'present'
-         ORDER BY pf.id LIMIT 1) AS start_utc,
+       (SELECT c.start_utc FROM pipeline_frames pr JOIN pipeline_cards c
+         ON c.file_id = pr.card_file_id WHERE pr.id = b.pipeline_frame_id) AS start_utc,
        (SELECT c.pier_side FROM pipeline_cards c WHERE c.file_id = m.file_id) AS pier_side,
        {VALUES}"""  # noqa: S608 - our columns
 # Never measured (a program not read, a compressed file): not in the series.

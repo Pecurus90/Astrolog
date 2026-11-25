@@ -19,18 +19,20 @@ from .shots import first_per_shot
 from .stars import Measured, measure_frame
 from .values import as_number
 
-# Light shots without a row, or whose last file was unreadable; plain file before its copy.
+# Light shots without a row, or whose last file was unreadable; plain file before its copy,
+# then the file whose card stands for the shot (frame_card.py).
 PENDING = (
     "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.bayer, c.exposure_s,"
     " h.header ->> '$.BAYERPAT' AS BAYERPAT, h.header ->> '$.XBAYROFF' AS XBAYROFF,"
     " h.header ->> '$.YBAYROFF' AS YBAYROFF, h.header ->> '$.PEDESTAL' AS PEDESTAL"
     " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
     " JOIN pipeline_headers AS h ON h.file_id = f.id"
+    " JOIN pipeline_frames AS fr ON fr.id = f.frame_id"
     " WHERE f.root_id = :root AND f.state = 'present' AND f.skip_reason IS NULL"
     " AND c.frame_type = 'light'"
     " AND NOT EXISTS (SELECT 1 FROM pipeline_measures AS m"
     "   WHERE m.frame_id = f.frame_id AND m.outcome <> 'unreadable')"
-    " ORDER BY f.frame_id, lower(f.rel_path) LIKE '%.fz', f.rel_path"
+    " ORDER BY f.frame_id, lower(f.rel_path) LIKE '%.fz', f.id IS NOT fr.card_file_id, f.rel_path"
 )
 
 _NUMBERS = (  # TooFewStars: no hfd_px
