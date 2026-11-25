@@ -168,15 +168,20 @@ def test_the_file_measured_is_the_one_whose_card_stands_for_the_shot(conn, tmp_p
     assert read.fetchone()[0] == "b.fits"
 
 
-def test_a_copy_in_another_root_waits_for_the_card_of_its_shot(conn, tmp_path):
-    """Scheda in B, copia in A misurata per prima: si misura la scheda. Prima: la copia, e
-    il cielo prendeva sito e ora dalla sua scheda (Issue #108)."""
+def _card_in_b_copy_in_a(conn, tmp_path: Path) -> tuple[Path, int, int]:
+    """The shot's card file in root B (file 1), its copy in root A (file 2): original, B, A."""
     original = _light(tmp_path / "b" / "x.fits", _field())
     root_b = _scanned(conn, tmp_path / "b")
     (tmp_path / "a").mkdir()
     (tmp_path / "a" / "x.fits").write_bytes(original.read_bytes())
     settle(tmp_path / "a" / "x.fits")
-    root_a = _scanned(conn, tmp_path / "a")
+    return original, root_b, _scanned(conn, tmp_path / "a")
+
+
+def test_a_copy_in_another_root_waits_for_the_card_of_its_shot(conn, tmp_path):
+    """Scheda in B, copia in A misurata per prima: si misura la scheda. Prima: la copia, e
+    il cielo prendeva sito e ora dalla sua scheda (Issue #108)."""
+    _, root_b, root_a = _card_in_b_copy_in_a(conn, tmp_path)
     measure_root(conn, root_a, LATER)
     measure_root(conn, root_b, LATER)
     (row,) = _measures(conn)
@@ -186,13 +191,8 @@ def test_a_copy_in_another_root_waits_for_the_card_of_its_shot(conn, tmp_path):
 
 def test_a_copy_measured_while_its_card_was_skipped_gives_way_to_the_card(conn, tmp_path):
     """Scheda tagliata a meta': la copia misura la posa, la scheda tornata intera la rimisura."""
-    original = _light(tmp_path / "b" / "x.fits", _field())
+    original, root_b, root_a = _card_in_b_copy_in_a(conn, tmp_path)
     kept = original.read_bytes()
-    root_b = _scanned(conn, tmp_path / "b")
-    (tmp_path / "a").mkdir()
-    (tmp_path / "a" / "x.fits").write_bytes(kept)
-    settle(tmp_path / "a" / "x.fits")
-    root_a = _scanned(conn, tmp_path / "a")
     original.write_bytes(kept[:5000])
     settle(original, 300)
     scan_root(conn, root_b, LATER)
@@ -209,12 +209,7 @@ def test_a_copy_measured_while_its_card_was_skipped_gives_way_to_the_card(conn, 
 def test_a_copy_measures_the_shot_while_the_card_root_does_not_answer(conn, tmp_path):
     """Cartella della scheda spenta: la copia misura la posa, la scheda tornata la rimisura.
     Prima della correzione la posa restava illeggibile finche' la cartella non tornava."""
-    original = _light(tmp_path / "b" / "x.fits", _field())
-    root_b = _scanned(conn, tmp_path / "b")
-    (tmp_path / "a").mkdir()
-    (tmp_path / "a" / "x.fits").write_bytes(original.read_bytes())
-    settle(tmp_path / "a" / "x.fits")
-    root_a = _scanned(conn, tmp_path / "a")
+    _, root_b, root_a = _card_in_b_copy_in_a(conn, tmp_path)
     (tmp_path / "b").rename(tmp_path / "off")
     scan_root(conn, root_b, LATER)
     for _ in range(2):
