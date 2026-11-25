@@ -56,13 +56,13 @@ def test_answering_no_filter_writes_mono_on_the_card(client):
 
 
 def test_renaming_a_piece_keeps_the_name_of_its_rig(client):
-    """Il nome di un corredo sta sotto la chiave (ottica, camera, focale): rinominare la camera
-    cambia la chiave, e senza portarsi dietro il nome il corredo tornava senza. La rinomina e il
-    nome del corredo stanno a un clic l'uno dall'altro nella stessa pagina (auditor, 15/9/2026)."""
+    """Il nome di un setup sta sotto la chiave (ottica, camera, focale): rinominare la camera
+    cambia la chiave, e senza portarsi dietro il nome il setup tornava senza. La rinomina e il
+    nome del setup stanno a un clic l'uno dall'altro nella stessa pagina (auditor, 15/9/2026)."""
     page = gear(client)
-    corredo = next(r for r in page["rigs"] if r["camera"] == "ATR2600M(USB2.0)")
+    setup = next(r for r in page["rigs"] if r["camera"] == "ATR2600M(USB2.0)")
     camera = by_name(page["instruments"], "ATR2600M(USB2.0)")
-    _nomina(client, corredo["id"], "Principale")
+    _nomina(client, setup["id"], "Principale")
     correct(client, camera["id"], name="ATR 2600M USB")
     dopo = next(r for r in gear(client)["rigs"] if r["camera"] == "ATR 2600M USB")
     assert dopo["name"] == "Principale"
@@ -118,7 +118,7 @@ def test_a_merge_into_a_piece_that_is_gone_is_refused_by_name(client):
 
 def test_two_spellings_of_a_wheel_can_really_be_joined(client):
     """Offrire un'unione che poi **schianta** e' peggio che non offrirla. Ruota, focheggiatore e
-    camera di guida stanno **sulla posa**, non sul corredo: staccando i soli corredi la riga
+    camera di guida stanno **sulla posa**, non sul setup: staccando i soli setup la riga
     assorbita non si cancella -- la chiave esterna la trattiene -- e la scrittura va a rotoli.
 
     Qui si prova il gesto intero, dalla rotta: si uniscono, la riga sparisce, le pose restano e
@@ -149,10 +149,10 @@ def test_two_spellings_of_a_wheel_can_really_be_joined(client):
 
 
 def test_renaming_a_guide_camera_does_not_touch_a_rig_named_like_it(client):
-    """La chiave di un corredo e' `ottica|camera|focale`, e porta i **nomi**. Seguire una rinomina
+    """La chiave di un setup e' `ottica|camera|focale`, e porta i **nomi**. Seguire una rinomina
     guardando i soli nomi -- come si faceva -- riscriveva quella chiave anche quando a cambiare era
     una **camera di guida** che si chiama come la camera principale -- e i `GUIDECAM` degli header
-    veri portano nomi della stessa famiglia. Il nome che avevi dato al corredo spariva."""
+    veri portano nomi della stessa famiglia. Il nome che avevi dato al setup spariva."""
     with connect(client.app.state.db_path) as conn:
         camera = conn.execute(
             "SELECT name FROM instruments WHERE kind = 'camera' LIMIT 1"
@@ -162,18 +162,18 @@ def test_renaming_a_guide_camera_does_not_touch_a_rig_named_like_it(client):
             " VALUES('guide_camera', ?, 1, ?)",
             (camera, now_iso()),
         ).lastrowid
-    corredo = next(r for r in gear(client)["rigs"] if r["camera"] == camera)
-    _nomina(client, corredo["id"], "Il grande")
+    setup = next(r for r in gear(client)["rigs"] if r["camera"] == camera)
+    _nomina(client, setup["id"], "Il grande")
 
     correct(client, guida, name="La mia guida")
 
-    dopo = next(r for r in gear(client)["rigs"] if r["id"] == corredo["id"])
+    dopo = next(r for r in gear(client)["rigs"] if r["id"] == setup["id"])
     assert dopo["name"] == "Il grande"
 
 
 def test_merging_a_guide_camera_does_not_touch_a_rig_named_like_it(client):
     """La stessa cieca della rinomina, dall'altra porta: **unire** due camere di guida non deve
-    riscrivere la chiave di un corredo che porta quel nome sulla camera principale. E' lo stesso
+    riscrivere la chiave di un setup che porta quel nome sulla camera principale. E' lo stesso
     `follow_rename`, chiamato dall'unione invece che dalla scheda."""
     with connect(client.app.state.db_path) as conn:
         camera = conn.execute(
@@ -189,13 +189,13 @@ def test_merging_a_guide_camera_does_not_touch_a_rig_named_like_it(client):
             " VALUES('guide_camera', 'La mia guida', 1, ?)",
             (now_iso(),),
         )
-    corredo = next(r for r in gear(client)["rigs"] if r["camera"] == camera)
-    _nomina(client, corredo["id"], "Il grande")
+    setup = next(r for r in gear(client)["rigs"] if r["camera"] == camera)
+    _nomina(client, setup["id"], "Il grande")
     tenuta = by_name(gear(client)["instruments"], "La mia guida")
 
     correct(client, omonima, merge_into=tenuta["id"])
 
-    dopo = next(r for r in gear(client)["rigs"] if r["id"] == corredo["id"])
+    dopo = next(r for r in gear(client)["rigs"] if r["id"] == setup["id"])
     assert dopo["name"] == "Il grande"
 
 
@@ -374,7 +374,7 @@ def test_two_mount_spellings_merge_like_a_camera(client):
 
 
 def test_a_piece_is_not_merged_with_itself(client):
-    """Unire un pezzo con se stesso lo cancellerebbe insieme ai suoi corredi: si rifiuta, e
+    """Unire un pezzo con se stesso lo cancellerebbe insieme ai suoi setup: si rifiuta, e
     non si scrive niente."""
     askar = by_name(gear(client)["instruments"], "Askar 103Apo")
     r = correct(client, askar["id"], merge_into=askar["id"])
@@ -385,8 +385,8 @@ def test_a_piece_is_not_merged_with_itself(client):
 
 
 def test_the_name_of_a_rig_survives_a_merge(client):
-    """Il nome del corredo sta fra le dichiarazioni, non nella riga rilevata: un'unione che
-    cancella quel corredo non porta via il nome, che torna quando il corredo si rifa'."""
+    """Il nome del setup sta fra le dichiarazioni, non nella riga rilevata: un'unione che
+    cancella quel setup non porta via il nome, che torna quando il setup si rifa'."""
     rig = next(r for r in gear(client)["rigs"] if r["camera"] == "ATR2600M")
     _nomina(client, rig["id"], "Il piccolo")
     nominato = next(r for r in gear(client)["rigs"] if r["camera"] == "ATR2600M")
@@ -399,12 +399,12 @@ def test_the_name_of_a_rig_survives_a_merge(client):
         riga = conn.execute(
             "SELECT value FROM declarations WHERE entity_type = 'rig' AND field = 'name'"
         ).fetchone()
-        assert riga["value"] == "Il piccolo"  # il nome non e' sparito col corredo
+        assert riga["value"] == "Il piccolo"  # il nome non e' sparito col setup
 
 
 def test_two_rigs_cannot_share_a_name(client):
-    """Come due pezzi o due filtri: due corredi con lo stesso nome non si distinguono piu' in
-    nessun elenco. Rinominare un corredo col suo stesso nome invece va."""
+    """Come due pezzi o due filtri: due setup con lo stesso nome non si distinguono piu' in
+    nessun elenco. Rinominare un setup col suo stesso nome invece va."""
     primo, secondo = gear(client)["rigs"][:2]
     _nomina(client, primo["id"], "Il piccolo")
     _nomina(client, primo["id"], "Il piccolo")

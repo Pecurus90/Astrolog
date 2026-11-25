@@ -36,7 +36,7 @@ SI = "catalog:ic-405"  # il si' si scrive col suo oggetto: "si', ed e' IC 405"
 
 
 def prepara(conn):
-    """Due oggetti e tre corredi: il mosaico li incrocia, non li crea."""
+    """Due oggetti e tre setup: il mosaico li incrocia, non li crea."""
     for i in (1, 2):
         conn.execute(
             "INSERT INTO objects(id, catalog_slug, identity_method, identity_confidence,"
@@ -52,13 +52,13 @@ def prepara(conn):
 
 
 def posa(
-    conn, cielo, *, oggetto=1, corredo=1, quando=NOTTE, campo=(0.6, 0.4), copia=None, tempo=TEMPO
+    conn, cielo, *, oggetto=1, setup=1, quando=NOTTE, campo=(0.6, 0.4), copia=None, tempo=TEMPO
 ):
-    """Una posa risolta, gia' identificata e col suo corredo, piazzata come la piazza `group`."""
+    """Una posa risolta, gia' identificata e col suo setup, piazzata come la piazza `group`."""
     frame_id = conn.execute(
         "INSERT INTO frames(frame_hash, image_type, date_obs, object_id, rig_id, copy_of,"
         " exposure_s, header_json, created_at) VALUES(?, 'light', ?, ?, ?, ?, ?, '[]', ?)",
-        (f"h{next(_progressivo)}", quando, oggetto, corredo, copia, tempo, now_iso()),
+        (f"h{next(_progressivo)}", quando, oggetto, setup, copia, tempo, now_iso()),
     ).lastrowid
     if cielo is not None:
         conn.execute(
@@ -93,7 +93,7 @@ def chiave_di(conn, frame_id):
 
 def test_two_panels_side_by_side_are_a_mosaic(archivio):
     """Il caso per cui tutto questo esiste: due inquadrature affiancate riprese con lo stesso
-    corredo sono un mosaico da proporre, con quanti pannelli e quante pose."""
+    setup sono un mosaico da proporre, con quanti pannelli e quante pose."""
     prepara(archivio)
     prima = posa(archivio, A)
     posa(archivio, B)
@@ -123,8 +123,8 @@ def test_a_vertical_strip_is_a_mosaic_whatever_field_comes_first(archivio):
     prepara(archivio)
     posa(archivio, A, campo=(0.2, 0.2))
     posa(archivio, (A[0], A[1] + 0.5), campo=(1.2, 1.0))
-    posa(archivio, A, corredo=2, campo=(1.2, 1.0))
-    posa(archivio, (A[0], A[1] + 0.5), corredo=2, campo=(0.2, 0.2))
+    posa(archivio, A, setup=2, campo=(1.2, 1.0))
+    posa(archivio, (A[0], A[1] + 0.5), setup=2, campo=(0.2, 0.2))
     assert [m["panels"] for m in proposti(archivio)] == [2, 2]
 
 
@@ -214,15 +214,15 @@ def test_panels_from_different_nights_are_the_same_mosaic(archivio):
 
 
 def test_another_rig_is_another_production(archivio):
-    """Corredi diversi sono due progetti, anche sullo stesso cielo."""
+    """Setup diversi sono due progetti, anche sullo stesso cielo."""
     prepara(archivio)
-    posa(archivio, A, corredo=1)
-    posa(archivio, B, corredo=2)
+    posa(archivio, A, setup=1)
+    posa(archivio, B, setup=2)
     assert proposti(archivio) == []
 
 
 def test_a_far_region_is_another_mosaic_not_this_one(archivio):
-    """Due regioni lontane dello stesso corredo sono due mosaici, e un campo lontano non entra."""
+    """Due regioni lontane dello stesso setup sono due mosaici, e un campo lontano non entra."""
     prepara(archivio)
     for cielo in (A, B, LONTANO, ACCANTO_A_LONTANO):
         posa(archivio, cielo)
@@ -280,8 +280,8 @@ def test_a_calibrated_copy_is_not_another_pose(archivio):
 def test_a_mosaic_whose_rig_is_unknown_is_proposed_all_the_same(archivio):
     """Le pose che non dicono la camera fanno i loro mosaici come le altre."""
     prepara(archivio)
-    posa(archivio, A, corredo=None)
-    posa(archivio, B, corredo=None)
+    posa(archivio, A, setup=None)
+    posa(archivio, B, setup=None)
     assert chiavi(proposti(archivio)) == [("IC 401", 2, 2)]
 
 
@@ -305,7 +305,7 @@ def test_placing_again_does_not_redo_the_geometry(archivio, monkeypatch):
 
 
 def test_a_new_pose_is_compared_only_with_nearby_panels(archivio, monkeypatch):
-    """Una posa nuova non si confronta con l'archivio intero: solo coi pannelli del suo corredo
+    """Una posa nuova non si confronta con l'archivio intero: solo coi pannelli del suo setup
     che potrebbero toccarla. Un pannello a 20 gradi di declinazione non entra nel conto."""
     prepara(archivio)
     posa(archivio, (A[0], A[1] + 20))
@@ -402,7 +402,7 @@ def test_the_answer_holds_when_the_mosaic_grows(archivio):
 
 
 def test_an_answer_does_not_silence_another_mosaic_of_the_same_rig(archivio):
-    """Un corredo ha una risposta per ognuna delle sue regioni."""
+    """Un setup ha una risposta per ognuna delle sue regioni."""
     prepara(archivio)
     for cielo in (A, B, LONTANO, ACCANTO_A_LONTANO):
         posa(archivio, cielo)
@@ -414,9 +414,9 @@ def test_an_answer_does_not_silence_another_rig(archivio):
     """La stessa regione ripresa con un'altra attrezzatura e' un'altra produzione, e resta una
     domanda sua."""
     prepara(archivio)
-    for corredo in (1, 2):
-        posa(archivio, A, corredo=corredo)
-        posa(archivio, B, corredo=corredo)
+    for setup in (1, 2):
+        posa(archivio, A, setup=setup)
+        posa(archivio, B, setup=setup)
     rispondi(archivio, SI, riga=0)
     assert [m["answer"] for m in proposti(archivio)] == [decl.MosaicAnswer.YES, None]
 
@@ -432,11 +432,11 @@ def test_a_confirmed_mosaic_is_written_on_its_poses(archivio):
 
 
 def test_an_object_inside_and_outside_a_mosaic_keeps_its_own_poses(archivio):
-    """Lo stesso oggetto ripreso dentro un mosaico e poi da solo, con un altro corredo: solo le
+    """Lo stesso oggetto ripreso dentro un mosaico e poi da solo, con un altro setup: solo le
     pose del mosaico stanno nel mosaico."""
     prepara(archivio)
     dentro = [posa(archivio, A, oggetto=1), posa(archivio, B, oggetto=2)]
-    da_solo = posa(archivio, A, oggetto=1, corredo=2)
+    da_solo = posa(archivio, A, oggetto=1, setup=2)
     rispondi(archivio, SI)
     assert all(chiave_di(archivio, p) for p in dentro)
     assert chiave_di(archivio, da_solo) is None

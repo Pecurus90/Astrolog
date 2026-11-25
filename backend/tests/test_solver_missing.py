@@ -34,7 +34,7 @@ def settings_out(client):
 
 def test_the_app_says_when_the_solver_is_missing(client, monkeypatch):
     """`GET /settings` dichiara `no_solver` fra le cose che mancano, con un codice e non una
-    frase -- come fa gia' col sito di casa. E' la riga che il primo avvio guarda per decidere se
+    frase -- come fa gia' col sito predefinito. E' la riga che il primo avvio guarda per decidere se
     fare la domanda in piu'."""
     monkeypatch.setattr(astap, "find_exe", lambda *a, **k: None)
     assert "no_solver" in settings_out(client)["missing"]

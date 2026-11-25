@@ -788,3 +788,9 @@ test_a_cold_at_its_lowest_is_cut_down_and_never_rounded_up_to_its_threshold - pa
 test_condensation_comes_under_three_degrees_between_air_and_dew_point - passo 15, Beysens sostituisce i 3 gradi; sostituito da test_condensation_comes_when_the_spread_falls_under_the_hours_dew_threshold
 test_the_condensation_is_the_first_hour_under_three_degrees_of_spread - passo 15, Beysens sostituisce i 3 gradi; sostituito da test_the_condensation_is_the_first_hour_under_its_hours_dew_threshold
 la condensa dice da quando si scende sotto la soglia, o che non succede - passo 15, Beysens: la soglia e' quella dell'ora; sostituito da la condensa dice da quando lo scarto scende sotto la soglia di quell'ora, o che non succede
+automatico senza sito di casa, o un modo fisso, non rilegge - passo 17, glossario: sito predefinito; rinominato in place
+automatico veste il modo che l'API dice in vigore e nomina il sito di casa - passo 17, glossario: sito predefinito; rinominato in place
+il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no - passo 17, glossario: sito predefinito; rinominato in place
+il sito di casa e' quello predefinito, non il primo dell'elenco; la veste e la chiave dal timbro - passo 17, glossario: sito predefinito; rinominato "il sito predefinito e' quello segnato, ..."
+senza sito di casa manda a dichiararlo - passo 17, glossario: sito predefinito; rinominato in place
+un sito di casa senza fuso orario lo dice, e porta a sistemarlo - passo 17, glossario: sito predefinito; rinominato in place

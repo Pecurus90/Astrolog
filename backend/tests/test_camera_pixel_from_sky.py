@@ -1,6 +1,6 @@
 """Il pixel di una camera ricavato dal cielo, quando i file non lo dicono (Marco, 23/9/2026).
 
-Si ricava da cio' che il solver ha misurato: il pixel fisico e' la scala per la focale del corredo,
+Si ricava da cio' che il solver ha misurato: il pixel fisico e' la scala per la focale del setup,
 diviso il binning (`units.pixel_um_from_scale`), e la camera prende la **mediana** delle sue pose
 risolte. Lo scrive chi lavora le pose, a fine giro (`camera_sky.write`): la pagina lo legge e
 basta. Rischio dichiarato: un riduttore che la focale dell'header non conta sposta il pixel.
@@ -14,7 +14,7 @@ from conftest import add_folder, by_name, correct, db, gear, run_normalize
 from test_solve import solver
 from test_typeless import _frame
 
-CAMERA = "ATR2600M(USB2.0)"  # nell'archivio sintetico: 7 pose, corredo a 560 mm
+CAMERA = "ATR2600M(USB2.0)"  # nell'archivio sintetico: 7 pose, setup a 560 mm
 
 
 def _scala(pixel_um, focal_mm, binning=1):
@@ -160,11 +160,11 @@ def test_calibration_answered_takes_back_the_pixel_its_sky_gave(conn):
     camera = conn.execute(
         "INSERT INTO instruments(kind, name, created_at) VALUES('camera', 'Muta', 'ora')"
     ).lastrowid
-    corredo = conn.execute(
+    setup = conn.execute(
         "INSERT INTO rigs(camera_id, focal_mm, created_at) VALUES(?, 500.0, 'ora')", (camera,)
     ).lastrowid
     frame_id = _frame(conn, radice, "dark/a.fits", sky="done")
-    conn.execute("UPDATE frames SET rig_id = ?, binning = 1 WHERE id = ?", (corredo, frame_id))
+    conn.execute("UPDATE frames SET rig_id = ?, binning = 1 WHERE id = ?", (setup, frame_id))
     _risolvi(conn, frame_id, _scala(3.76, 500.0))
     camera_sky.write(conn)
     assert _ricavato(conn, "Muta") == 3.76

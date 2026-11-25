@@ -1,9 +1,9 @@
 """Le **prove** accanto a una domanda di *Da confermare* (`spine/frame_proofs.py`), lette su un
 archivio fatto a mano: notti e ottica e camera dei frame di un gruppo, in una query sola.
 
-* Un gruppo coi soli corredi e senza notte, o con la notte e senza corredo, ha la sua riga lo
+* Un gruppo coi soli setup e senza notte, o con la notte e senza setup, ha la sua riga lo
   stesso: le due liste sono indipendenti.
-* A pari frame i corredi vanno per nome dell'ottica, poi della camera; il pezzo che manca va
+* A pari frame i setup vanno per nome dell'ottica, poi della camera; il pezzo che manca va
   prima di ogni nome, e l'ordine non dipende da quello delle notti.
 """
 
@@ -28,11 +28,11 @@ def _of(conn):
 
 
 def test_a_group_with_rigs_and_no_night_and_one_with_a_night_and_no_rig(conn):
-    _frame(conn, "solo corredo", rig=_rig(conn, "Askar", "ATR"))
+    _frame(conn, "solo setup", rig=_rig(conn, "Askar", "ATR"))
     _frame(conn, "solo notte", night="2024-10-31")
     proofs = _of(conn)
-    assert proofs["solo corredo"].nights == []
-    assert proofs["solo corredo"].rigs == [FrameRig(optics="Askar", camera="ATR", frames=1)]
+    assert proofs["solo setup"].nights == []
+    assert proofs["solo setup"].rigs == [FrameRig(optics="Askar", camera="ATR", frames=1)]
     assert proofs["solo notte"].nights == ["2024-10-31"]
     assert proofs["solo notte"].rigs == []
 

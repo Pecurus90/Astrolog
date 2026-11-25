@@ -3,7 +3,7 @@ S1) che chiede insieme camera, ottica e filtro, solo le parti che mancano.
 
 Ci cadono le pose che non dicono la camera -- anche quelle che portano il telescopio, perche'
 l'ASIAIR scrive la montatura in `TELESCOP` -- e quelle che la camera la dicono ma non l'ottica. Si
-risponde scegliendo un corredo fra quelli che l'app conosce, oppure scrivendo i pezzi: nascono dai
+risponde scegliendo un setup fra quelli che l'app conosce, oppure scrivendo i pezzi: nascono dai
 nomi, come da un header. La notte resta: se gli altri frame della stessa notte dicono una camera
 sola, quella non si chiede. Le regole stanno in `spine/signature.py` e nel contratto
 `docs/domini/spina-normalize.md`. Il filtro ha le sue prove in `test_review_gear_filter.py`.
@@ -74,8 +74,8 @@ def _schede(client):
     return {g["key"]: g for g in review(client)["gear"]}
 
 
-def _corredo_della_posa(client, nome):
-    """(ottica, camera, focale) del corredo attaccato a quella posa, o None."""
+def _setup_del_frame(client, nome):
+    """(ottica, camera, focale) del setup attaccato a quella posa, o None."""
     with db(client) as conn:
         riga = conn.execute(
             "SELECT o.name AS optics, c.name AS camera, g.focal_mm, g.id FROM frames f"
@@ -88,7 +88,7 @@ def _corredo_della_posa(client, nome):
 
 
 def _camera_della_posa(client, nome):
-    return (_corredo_della_posa(client, nome) or (None, None, None))[1]
+    return (_setup_del_frame(client, nome) or (None, None, None))[1]
 
 
 def _senza_filtro(client, sotto):
@@ -195,13 +195,13 @@ def test_a_question_per_group_with_the_largest_first(pagina):
 
 def test_answering_with_the_pieces_makes_the_rig_and_moves_the_poses(pagina):
     """Si scrivono ottica, camera e focale: i pezzi nascono dai nomi -- come nascono da un header --
-    e le pose passano da quel corredo. L'ottica dichiarata **vince** su `TELESCOP`, che qui portava
+    e le pose passano da quel setup. L'ottica dichiarata **vince** su `TELESCOP`, che qui portava
     la montatura. La scheda resta in pagina con la sua risposta, perche' si deve poter cambiare
     idea."""
     chiave = _chiave(pagina, "a_0.fits")
     out = apply(pagina, gear=[{"key": chiave, "optics": OTT, "camera": CAM, "focal_mm": 800.0}])
     assert out["requeued"] == 3
-    assert _corredo_della_posa(pagina, "a_0.fits") == (OTT, CAM, 800.0)
+    assert _setup_del_frame(pagina, "a_0.fits") == (OTT, CAM, 800.0)
     risposta = _schede(pagina)[chiave]["answer"]
     assert risposta == {
         "optics": OTT,
@@ -210,10 +210,10 @@ def test_answering_with_the_pieces_makes_the_rig_and_moves_the_poses(pagina):
         "filter": None,
         "filter_id": None,
     }
-    # fra cui scegliere: il corredo mezzo vuoto nato dalla sola montatura, rimasto a zero pose,
+    # fra cui scegliere: il setup mezzo vuoto nato dalla sola montatura, rimasto a zero pose,
     # non si offre piu'
-    corredi = review(pagina)["rig_choices"]
-    assert [(r["optics"], r["camera"]) for r in corredi] == [(OTT, CAM), (MONTATURA, DETTA)]
+    setups = review(pagina)["rig_choices"]
+    assert [(r["optics"], r["camera"]) for r in setups] == [(OTT, CAM), (MONTATURA, DETTA)]
 
 
 def test_the_camera_written_by_hand_becomes_a_piece_and_the_filter_question_follows(pagina):
@@ -255,26 +255,26 @@ def test_a_name_with_spaces_around_is_written_without_them(pagina):
 
 
 def test_choosing_a_rig_from_the_list_writes_its_names(pagina):
-    """Si puo' rispondere scegliendo un corredo fra quelli che l'app conosce: si manda il suo
+    """Si puo' rispondere scegliendo un setup fra quelli che l'app conosce: si manda il suo
     numero di riga, che e' cio' che la pagina ha in mano dopo un clic, ma a essere scritti sono i
     **nomi** dei suoi pezzi -- un'unione cancella la riga rilevata, e una risposta scritta sul suo
     numero non sopravviverebbe a un azzeramento del rilevato."""
     apply(pagina, gear=[{"key": _chiave(pagina, "a_0.fits"), "camera": CAM, "focal_mm": 800.0}])
-    corredo = next(r for r in review(pagina)["rig_choices"] if r["camera"] == CAM)
+    setup = next(r for r in review(pagina)["rig_choices"] if r["camera"] == CAM)
     chiave = _chiave(pagina, "b_0.fits")
-    apply(pagina, gear=[{"key": chiave, "rig_id": corredo["id"]}])
-    # il corredo scelto porta anche la sua ottica: si sceglie un corredo intero, non la sola camera
+    apply(pagina, gear=[{"key": chiave, "rig_id": setup["id"]}])
+    # il setup scelto porta anche la sua ottica: si sceglie un setup intero, non la sola camera
     risposta = _schede(pagina)[chiave]["answer"]
     assert (risposta["optics"], risposta["camera"], risposta["focal_mm"]) == (
         MONTATURA,
         CAM,
         800.0,
     )
-    assert _corredo_della_posa(pagina, "b_0.fits") == (MONTATURA, CAM, 800.0)
+    assert _setup_del_frame(pagina, "b_0.fits") == (MONTATURA, CAM, 800.0)
 
 
 def test_a_rig_without_a_camera_does_not_answer_this_question(pagina):
-    """Il corredo mezzo vuoto nato dalla sola montatura non risponde: sceglierlo lascerebbe le pose
+    """Il setup mezzo vuoto nato dalla sola montatura non risponde: sceglierlo lascerebbe le pose
     esattamente dove sono. Non si offre, e mandarlo lo stesso si dice invece di scrivere una
     risposta che non sposta niente. Una casa sola per l'elenco e per chi lo rifiuta
     (`review_page.rig_choices`)."""
@@ -287,9 +287,9 @@ def test_a_rig_without_a_camera_does_not_answer_this_question(pagina):
 
 
 def test_the_declared_focal_does_not_leave_two_twin_rigs(pagina, tmp_path):
-    """Un corredo e' ottica + camera **a una focale**, e una focale ignota non e' la stessa cosa di
-    una focale nota: senza chiedere la focale, il corredo nato dalla risposta e quello che le pose
-    diranno domani sarebbero due corredi gemelli per sempre, con le ore spartite fra i due
+    """Un setup e' ottica + camera **a una focale**, e una focale ignota non e' la stessa cosa di
+    una focale nota: senza chiedere la focale, il setup nato dalla risposta e quello che le pose
+    diranno domani sarebbero due setup gemelli per sempre, con le ore spartite fra i due
     (misurato su `rigs.rig_for`). Con la focale dichiarata la riga e' una sola."""
     apply(pagina, gear=[{"key": _chiave(pagina, "a_0.fits"), "camera": CAM, "focal_mm": 800.0}])
     # la posa che arriva dice tutto da se': la stessa montatura, la camera e la focale -- in
@@ -299,7 +299,7 @@ def test_the_declared_focal_does_not_leave_two_twin_rigs(pagina, tmp_path):
         **{"DATE-OBS": "2026-03-17T21:30:00"},
     )  # fmt: skip
     _scansiona_ancora(pagina)
-    assert _corredo_della_posa(pagina, "dopo.fits") == (MONTATURA, CAM, 800.0)
+    assert _setup_del_frame(pagina, "dopo.fits") == (MONTATURA, CAM, 800.0)
     with db(pagina) as conn:
         quanti = conn.execute(
             "SELECT COUNT(*) FROM rigs g JOIN instruments c ON c.id = g.camera_id WHERE c.name = ?",
@@ -318,8 +318,8 @@ def test_the_answer_holds_for_the_poses_that_arrive_later_in_that_group(pagina, 
     _posa(tmp_path / "lib" / M51 / "e_0.fits", 40, TELESCOP=MONTATURA,
           **{"DATE-OBS": "2026-04-02T21:40:00"})  # fmt: skip
     _scansiona_ancora(pagina)
-    assert _corredo_della_posa(pagina, "dopo.fits") == (OTT, CAM, 800.0)
-    assert _corredo_della_posa(pagina, "e_0.fits") == (OTT, CAM, 800.0)
+    assert _setup_del_frame(pagina, "dopo.fits") == (OTT, CAM, 800.0)
+    assert _setup_del_frame(pagina, "e_0.fits") == (OTT, CAM, 800.0)
     assert _schede(pagina)[chiave]["frames"] == 5
 
 
@@ -332,19 +332,19 @@ def test_the_focal_of_the_optics_card_is_what_the_page_proposes(pagina):
 
 
 def test_answering_again_moves_the_poses_to_the_new_rig(pagina):
-    """Si cambia idea rispondendo di nuovo: le pose lasciano il corredo di prima e passano a quello
+    """Si cambia idea rispondendo di nuovo: le pose lasciano il setup di prima e passano a quello
     nuovo, invece di restare su una risposta che l'utente ha ritirato."""
     chiave = _chiave(pagina, "c_0.fits")
     apply(pagina, gear=[{"key": chiave, "camera": CAM, "focal_mm": 800.0}])
-    assert _corredo_della_posa(pagina, "c_0.fits") == (None, CAM, 800.0)
+    assert _setup_del_frame(pagina, "c_0.fits") == (None, CAM, 800.0)
     apply(pagina, gear=[{"key": chiave, "camera": "Altra", "focal_mm": 250.0}])
-    assert _corredo_della_posa(pagina, "c_0.fits") == (None, "Altra", 250.0)
+    assert _setup_del_frame(pagina, "c_0.fits") == (None, "Altra", 250.0)
 
 
 def test_an_unanswered_group_counts_among_the_things_to_confirm(pagina):
     """Una scheda conta finche' ogni parte che chiede non ha la sua risposta; quella completa resta
     in pagina ma non si conta piu'. Un conto che tornasse a zero con delle pose ancora senza
-    corredo sarebbe un conto che mente."""
+    setup sarebbe un conto che mente."""
     letta = review(pagina)
     assert letta["to_confirm"] == to_confirm_without(letta, "gear") + 3
     chiave = _chiave(pagina, "detta.fits")  # chiede solo il filtro
@@ -356,7 +356,7 @@ def test_an_unanswered_group_counts_among_the_things_to_confirm(pagina):
 
 def test_after_the_answer_the_filter_question_reaches_those_poses(pagina):
     """La catena deve arrivare **in fondo**: risposti camera e filtro nella stessa scheda, la
-    risposta raggiunge davvero le pose -- prima del corredo il filtro non aveva una camera a cui
+    risposta raggiunge davvero le pose -- prima del setup il filtro non aveva una camera a cui
     chiederlo, e restavano senza filtro mentre la pagina diceva "niente da confermare"."""
     chiave = _chiave(pagina, "a_0.fits")
     apply(pagina, gear=[{"key": chiave, "camera": CAM, "focal_mm": 800.0}])
@@ -366,8 +366,8 @@ def test_after_the_answer_the_filter_question_reaches_those_poses(pagina):
 
 
 def test_a_rig_whose_only_poses_are_copies_stays_in_the_page(pagina):
-    """Un corredo le cui uniche pose sono copie riscritte **esiste**: nasconderlo lo renderebbe
-    impossibile da scegliere. Si nasconde solo il corredo che non ha piu' nessuna posa, nemmeno una
+    """Un setup le cui uniche pose sono copie riscritte **esiste**: nasconderlo lo renderebbe
+    impossibile da scegliere. Si nasconde solo il setup che non ha piu' nessuna posa, nemmeno una
     copia."""
     with db(pagina) as conn:
         detta = conn.execute("SELECT id FROM frames WHERE instrument_raw IS NOT NULL").fetchone()[
@@ -402,7 +402,7 @@ def test_a_part_the_card_does_not_ask_is_refused(pagina):
     [
         ({"key": "/x"}, "nessuna parte"),
         ({"key": "/x", "camera": CAM, "focal_mm": 800.0, "rig_id": 1}, "tutti e due"),
-        ({"key": "/x", "rig_id": 1, "optics": OTT}, "un corredo porta i suoi pezzi"),
+        ({"key": "/x", "rig_id": 1, "optics": OTT}, "un setup porta i suoi pezzi"),
         ({"key": "/x", "camera": ""}, "una camera senza nome"),
         ({"key": "/x", "camera": "   ", "focal_mm": 800.0}, "una camera di soli spazi"),
         ({"key": "/x", "optics": "   "}, "an optics of only spaces"),
@@ -412,7 +412,7 @@ def test_a_part_the_card_does_not_ask_is_refused(pagina):
     ],
 )
 def test_an_answer_that_says_two_things_or_none_is_refused(pagina, corpo, perche_):
-    """Un corredo dall'elenco **oppure** i pezzi scritti: accettarli tutti e due vorrebbe dire
+    """Un setup dall'elenco **oppure** i pezzi scritti: accettarli tutti e due vorrebbe dire
     scegliere noi quale vince, e nessuna delle due scelte e' quella dell'utente."""
     r = pagina.post("/api/v1/review/apply", json={"gear": [corpo]})
     assert r.status_code == 422, perche_
@@ -513,7 +513,7 @@ def ottiche(db_path, tmp_path):
 
 
 def _ottica_della_posa(client, nome):
-    return (_corredo_della_posa(client, nome) or (None, None, None))[0]
+    return (_setup_del_frame(client, nome) or (None, None, None))[0]
 
 
 def _pezzo(client, nome):
@@ -532,14 +532,14 @@ def test_poses_that_do_not_name_the_optics_are_asked_once_per_camera_and_focal(o
 
 
 def test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it(ottiche):
-    """Detta l'ottica, le pose ASIAIR stanno nel corredo che quell'ottica ha gia' con quella camera:
+    """Detta l'ottica, le pose ASIAIR stanno nel setup che quell'ottica ha gia' con quella camera:
     lo stesso della posa di N.I.N.A., non un gemello. La scheda resta in pagina con la sua
     risposta, per cambiare idea, e non conta piu' fra le cose da confermare."""
     apply(ottiche, gear=[{"key": _chiave(ottiche, "a_0.fits"), "optics": NEWTON}])
     assert _ottica_della_posa(ottiche, "a_0.fits") == NEWTON
-    assert _corredo_della_posa(ottiche, "a_0.fits") == _corredo_della_posa(ottiche, "n_0.fits")
-    corredi = {(g["optics"], g["camera"]) for g in gear(ottiche)["rigs"]}
-    assert (None, CAMERA) not in corredi and (NEWTON, CAMERA) in corredi
+    assert _setup_del_frame(ottiche, "a_0.fits") == _setup_del_frame(ottiche, "n_0.fits")
+    setups = {(g["optics"], g["camera"]) for g in gear(ottiche)["rigs"]}
+    assert (None, CAMERA) not in setups and (NEWTON, CAMERA) in setups
     risposta = _schede(ottiche)[_chiave(ottiche, "a_0.fits")]
     assert (risposta["answer"]["optics"], risposta["frames"], risposta["complete"]) == (
         NEWTON,
@@ -627,30 +627,30 @@ def test_merging_the_optics_into_another_carries_the_answer(ottiche):
 
 
 def test_a_rig_written_by_hand_stays_even_without_poses(ottiche):
-    """I corredi rilevati rimasti senza pose spariscono a fine giro; uno scritto a mano no, anche
+    """I setup rilevati rimasti senza pose spariscono a fine giro; uno scritto a mano no, anche
     vuoto: e' tuo, e lo aspetta la scansione che verra'."""
     body = {"optics_id": _pezzo(ottiche, NEWTON), "camera_id": _pezzo(ottiche, ALTRA)}
     body["focal_mm"] = 1000
     assert ottiche.post("/api/v1/gear/rigs", json=body).status_code in (200, 201)
     _rilavora_tutto(ottiche)
-    corredi = {(g["optics"], g["camera"], g["focal_mm"]) for g in gear(ottiche)["rigs"]}
-    assert (NEWTON, ALTRA, 1000.0) in corredi
+    setups = {(g["optics"], g["camera"], g["focal_mm"]) for g in gear(ottiche)["rigs"]}
+    assert (NEWTON, ALTRA, 1000.0) in setups
 
 
 def test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses(ottiche):
-    """Il nome e la montatura che avevi dato al corredo senza ottica non si perdono con la risposta:
-    passano al corredo dove vanno le sue pose, e le pose tengono la montatura. Il file senza
+    """Il nome e la montatura che avevi dato al setup senza ottica non si perdono con la risposta:
+    passano al setup dove vanno le sue pose, e le pose tengono la montatura. Il file senza
     `TELESCOP` la montatura non la dice: senza, resterebbe senza."""
     senza = next(g for g in gear(ottiche)["rigs"] if g["camera"] == ALTRA)
     montatura = ottiche.post("/api/v1/gear/instruments", json={"kind": "mount", "name": "EQ6-R"})
     assert montatura.status_code in (200, 201), montatura.text
-    corredo = f"/api/v1/gear/rigs/{senza['id']}"
-    assert ottiche.patch(corredo, json={"name": "Il piccolo"}).status_code == 200
-    r = ottiche.put(f"{corredo}/parts/mount", json={"piece_id": montatura.json()["id"]})
+    setup = f"/api/v1/gear/rigs/{senza['id']}"
+    assert ottiche.patch(setup, json={"name": "Il piccolo"}).status_code == 200
+    r = ottiche.put(f"{setup}/parts/mount", json={"piece_id": montatura.json()["id"]})
     assert r.status_code == 200, r.text
     ottiche.app.state.worker.join(10.0)
     chiave = _chiave(ottiche, "m_0.fits")
-    # e anche cambiando idea: il corredo della seconda risposta li ritrova
+    # e anche cambiando idea: il setup della seconda risposta li ritrova
     for ottica in ("Takahashi FSQ-85", "Askar 107PHQ"):
         apply(ottiche, gear=[{"key": chiave, "optics": ottica}])
         nuovo = next(g for g in gear(ottiche)["rigs"] if g["camera"] == ALTRA)
@@ -669,8 +669,8 @@ def test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses(ottiche)
 
 
 def test_a_rig_that_was_already_there_keeps_its_own_word(ottiche):
-    """Se le pose vanno in un corredo che c'era gia', quello tiene la sua parola, anche quando e'
-    "nessun nome": il nome del corredo senza ottica passa solo a un corredo che nasce li'."""
+    """Se le pose vanno in un setup che c'era gia', quello tiene la sua parola, anche quando e'
+    "nessun nome": il nome del setup senza ottica passa solo a un setup che nasce li'."""
     senza = next(g for g in gear(ottiche)["rigs"] if g["camera"] == CAMERA and g["optics"] is None)
     r = ottiche.patch(f"/api/v1/gear/rigs/{senza['id']}", json={"name": "Il gemello"})
     assert r.status_code == 200, r.text

@@ -110,7 +110,7 @@ describe("data e sito", () => {
   it("il sito dice da dove viene", () => {
     expect(fonteDelSito(NOTTE)).toBe("dalle coordinate nei frame")
     expect(fonteDelSito({ ...NOTTE, site_from: "home" })).toBe(
-      "il sito di casa, dalle Impostazioni",
+      "il sito predefinito, dalle Impostazioni",
     )
     expect(fonteDelSito({ ...NOTTE, site_from: "answer" })).toBe(
       "dalla tua risposta in Da confermare",

@@ -6,7 +6,7 @@ import type { components } from "./schema"
 
 type Esito = components["schemas"]["WeatherRefreshOut"]["status"]
 
-/** La previsione del sito di casa: la leggono il Meteo e la Dashboard. Fuori dalla pagina Meteo,
+/** La previsione del sito predefinito: la leggono il Meteo e la Dashboard. Fuori dalla pagina Meteo,
  *  o la Dashboard se la scaricherebbe tutta. */
 export function usePrevisione() {
   return useQuery({

@@ -160,9 +160,9 @@ def test_an_object_answer_follows_its_poses_into_the_new_night(pagina):
 
 
 def test_the_poses_of_the_nights_that_changed_are_worked_again(pagina):
-    """Il corredo della notte e le risposte per gruppo si rileggono da `normalize` in poi: le pose
+    """Il setup della notte e le risposte per gruppo si rileggono da `normalize` in poi: le pose
     delle notti toccate tornano in coda da li', anche d, che sta nel suo fuso ma porta la stessa
-    data -- il corredo della notte si cerca per data. Le altre notti no."""
+    data -- il setup della notte si cerca per data. Le altre notti no."""
     _casa(pagina)
     with db(pagina) as conn:
         stato = dict(

@@ -1,7 +1,7 @@
 """Lo stadio `group`: da una posa alla sua notte e alla sua sessione.
 
 Le notti vanno da mezzogiorno a mezzogiorno **nel fuso del sito**, e una sessione e' oggetto x
-notte x corredo. Qui si prova cosa finisce nel database e cosa resta fuori col suo perche':
+notte x setup. Qui si prova cosa finisce nel database e cosa resta fuori col suo perche':
 un archivio in cui una posa sparisce senza motivo e' peggio di uno in cui manca una notte.
 """
 
@@ -96,29 +96,29 @@ def test_two_places_the_same_date_are_two_nights(archivio):
 
 
 def test_group_session_key(archivio):
-    """Oggetto x notte x corredo, e i filtri stanno dentro. Cambiare telescopio o camera a
+    """Oggetto x notte x setup, e i filtri stanno dentro. Cambiare telescopio o camera a
     meta' notte apre un'altra sessione; la stessa terna non ne apre due."""
     luogo(archivio, ROMA)
-    a = posa(archivio, quando="2024-05-17T22:00:00Z", oggetto=1, corredo=1, hash_="a")
-    b = posa(archivio, quando="2024-05-17T23:00:00Z", oggetto=1, corredo=1, hash_="b")
-    c = posa(archivio, quando="2024-05-17T23:30:00Z", oggetto=1, corredo=2, hash_="c")
-    d = posa(archivio, quando="2024-05-17T23:40:00Z", oggetto=2, corredo=1, hash_="d")
-    e = posa(archivio, quando="2024-05-18T22:00:00Z", oggetto=1, corredo=1, hash_="e")
+    a = posa(archivio, quando="2024-05-17T22:00:00Z", oggetto=1, setup=1, hash_="a")
+    b = posa(archivio, quando="2024-05-17T23:00:00Z", oggetto=1, setup=1, hash_="b")
+    c = posa(archivio, quando="2024-05-17T23:30:00Z", oggetto=1, setup=2, hash_="c")
+    d = posa(archivio, quando="2024-05-17T23:40:00Z", oggetto=2, setup=1, hash_="d")
+    e = posa(archivio, quando="2024-05-18T22:00:00Z", oggetto=1, setup=1, hash_="e")
     ricevuta = corri(archivio)
 
     assert sessione_di(archivio, a)["id"] == sessione_di(archivio, b)["id"]
     diverse = {sessione_di(archivio, x)["id"] for x in (a, c, d, e)}
-    assert len(diverse) == 4, "corredo, oggetto o notte diversi devono aprire un'altra sessione"
+    assert len(diverse) == 4, "setup, oggetto o notte diversi devono aprire un'altra sessione"
     assert ricevuta["sessions"] == 4 and ricevuta["nights"] == 2
     assert ricevuta["linked"] == 5
 
 
 def test_a_frame_whose_rig_is_unknown_does_not_open_two_sessions(archivio):
     """In SQLite due vuoti non contendono un indice unico: senza la chiave scritta come
-    espressione, due pose senza corredo aprivano due sessioni identiche."""
+    espressione, due pose senza setup aprivano due sessioni identiche."""
     luogo(archivio, ROMA)
-    a = posa(archivio, quando="2024-05-17T22:00:00Z", corredo=None, hash_="a")
-    b = posa(archivio, quando="2024-05-17T23:00:00Z", corredo=None, hash_="b")
+    a = posa(archivio, quando="2024-05-17T22:00:00Z", setup=None, hash_="a")
+    b = posa(archivio, quando="2024-05-17T23:00:00Z", setup=None, hash_="b")
     corri(archivio)
     assert sessione_di(archivio, a)["id"] == sessione_di(archivio, b)["id"]
     assert archivio.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 1
@@ -352,14 +352,14 @@ def test_a_session_left_without_frames_disappears(archivio):
 
 
 def test_when_a_rig_disappears_its_sessions_go_and_the_frames_stay(archivio):
-    """Unire due grafie di un pezzo, in Da confermare, **cancella un corredo**. Le sessioni che
+    """Unire due grafie di un pezzo, in Da confermare, **cancella un setup**. Le sessioni che
     lo usavano sono un derivato e se ne vanno con lui; le pose restano, senza sessione, e il
     giro dopo le rimette dove vanno -- l'unione rimette in coda anche `group`.
 
     Senza questa regola l'unione falliva col database in faccia: misurato,
     `FOREIGN KEY constraint failed`. Era una voce della coda, e si chiude qui."""
     luogo(archivio, ROMA)
-    f = posa(archivio, quando="2024-05-17T22:00:00Z", corredo=1)
+    f = posa(archivio, quando="2024-05-17T22:00:00Z", setup=1)
     corri(archivio)
 
     archivio.execute("UPDATE frames SET rig_id = 2 WHERE id = ?", (f,))
@@ -378,10 +378,10 @@ def test_the_database_refuses_two_sessions_with_the_same_key(archivio):
 
     Lo stadio la rispetta da solo -- cerca prima di creare -- quindi senza un inserimento
     diretto l'indice non verrebbe mai interrogato, e toglierlo dallo schema non farebbe
-    diventare rosso niente. Il caso che conta e' il corredo vuoto: li' un `UNIQUE` di colonne
+    diventare rosso niente. Il caso che conta e' il setup vuoto: li' un `UNIQUE` di colonne
     non avrebbe fermato nessuno."""
     luogo(archivio, ROMA)
-    posa(archivio, quando="2024-05-17T22:00:00Z", corredo=None)
+    posa(archivio, quando="2024-05-17T22:00:00Z", setup=None)
     corri(archivio)
     riga = archivio.execute("SELECT night_id, object_id FROM sessions").fetchone()
     with pytest.raises(sqlite3.IntegrityError):

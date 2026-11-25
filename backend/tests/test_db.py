@@ -116,7 +116,7 @@ def test_foreign_keys_are_enforced(conn):
 def test_the_row_numbers_of_the_confirmed_tables_are_never_reused(conn):
     """Una risposta di Da confermare porta il NUMERO DI RIGA del pezzo, e l'Applica dice "ho visto
     fin qui" col numero (`api/review_write.py`); queste quattro tabelle perdono righe: un'unione
-    cancella uno strumento o un filtro, la spazzata di identify un oggetto, group i corredi rimasti
+    cancella uno strumento o un filtro, la spazzata di identify un oggetto, group i setup rimasti
     senza pose. Senza `AUTOINCREMENT` SQLite ridarebbe il numero piu' alto appena liberato alla
     prima riga nuova, che nascerebbe gia' "vista", o riceverebbe la risposta scritta per quella che
     c'era prima.

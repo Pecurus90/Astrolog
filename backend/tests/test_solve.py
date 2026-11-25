@@ -546,12 +546,12 @@ def test_the_cache_key_is_the_fingerprint_not_the_row_number(db_path, tmp_path):
 
 def test_the_sister_must_be_of_the_same_object(db_path, tmp_path):
     """L'indizio si eredita solo da una posa dello STESSO oggetto. Due pose senza `OBJECT`
-    riprese la stessa notte con lo stesso corredo finiscono nello stesso gruppo del solver pur
+    riprese la stessa notte con lo stesso setup finiscono nello stesso gruppo del solver pur
     guardando due punti di cielo diversi: ereditare li' manderebbe il solver nel posto
     sbagliato, e non risolverebbe -- mentre alla cieca ce l'avrebbe fatta."""
     root = tmp_path / "lib"
     write_light(root / "a.fits", obj="M 31", date="2024-05-11T21:00:00", RA=10.5, DEC=41.2)
-    # stessa notte, stesso corredo, nessun oggetto: per il solver sono lo stesso gruppo
+    # stessa notte, stesso setup, nessun oggetto: per il solver sono lo stesso gruppo
     write_light(root / "b.fits", obj="", date="2024-05-11T22:00:00")
     write_light(root / "c.fits", obj="", date="2024-05-11T23:00:00")
     popola(db_path, root)

@@ -73,7 +73,7 @@ def test_every_write_of_the_user_rewrites_the_file_and_a_new_database_gets_it_ba
 
 
 def test_the_status_says_the_size_and_the_day_of_the_file(tmp_path, offline):
-    """«oggi, 07:14 · 46 KB» (tavola v82, Backup): il giorno dall'orologio del sito di casa."""
+    """«oggi, 07:14 · 46 KB» (tavola v82, Backup): il giorno dall'orologio del sito predefinito."""
     db = tmp_path / "astrolog.db"
     with _app(db) as c:
         mai = c.get("/api/v1/backup").json()

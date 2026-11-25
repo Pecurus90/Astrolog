@@ -115,7 +115,7 @@ def of(subject: Subject, *, rigs_joined: bool = False) -> str:
     if not rigs_joined:
         return where
     if subject != Subject.INSTRUMENT:
-        raise KeyError(f"la forma coi corredi esiste solo per il pezzo, non per {subject}")
+        raise KeyError(f"la forma coi setup esiste solo per il pezzo, non per {subject}")
     return _WITH_RIGS
 
 

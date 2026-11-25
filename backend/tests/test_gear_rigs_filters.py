@@ -1,9 +1,9 @@
-"""I gesti dell'Attrezzatura sui **corredi**, sui **filtri** e sull'**unione di due pezzi**, dalla
+"""I gesti dell'Attrezzatura sui **setup**, sui **filtri** e sull'**unione di due pezzi**, dalla
 stessa mano di *Da confermare* (Marco, 25/9/2026).
 
 Regole, e il test che le rompe:
 
-* **Un corredo prende un nome dall'Attrezzatura**, e il nome resta alla riga.
+* **Un setup prende un nome dall'Attrezzatura**, e il nome resta alla riga.
 * **Un filtro rinominato o unito non rinasce**: la regola imparata vale anche sul nome che il
   vocabolario da' (`L` diventa `Lum`), dopo il colore -- quindi una posa con la matrice resta OSC.
 * **Un filtro si unisce solo in uno con la banda nota**, mai alla riga "nessun filtro" ne' da lei.

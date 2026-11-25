@@ -375,7 +375,7 @@ function LaPagina({ formato }: { formato: Formato }) {
     gear: (
       <SezioneAttrezzatura
         schede={dati.gear}
-        corredi={dati.rig_choices}
+        setups={dati.rig_choices}
         ottiche={dati.optics_choices}
         filtri={dati.filter_choices}
         risposte={accumulo.gear}

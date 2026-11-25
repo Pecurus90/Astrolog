@@ -1,5 +1,5 @@
 /**
- * I testi della pagina **Meteo** (tavola v82): le prossime notti del sito di casa, ora per ora.
+ * I testi della pagina **Meteo** (tavola v82): le prossime notti del sito predefinito, ora per ora.
  *
  * Vincolo non ovvio: un numero che il modello non da' si scrive con una parola, mai con un trattino
  * ne' con uno zero -- zero nuvole e' un cielo sereno, non un dato che manca. Le unita' fuori

@@ -29,7 +29,7 @@ def frame_safely[T](  # noqa: PLR0913
         return work()
     except Exception as err:
         set_status(conn, frame_id, stage, StageStatus.FAILED, reason="internal_error")
-        log.exception("%s: posa non lavorata", stage, extra={"frame_id": frame_id})
+        log.exception("%s: frame non lavorato", stage, extra={"frame_id": frame_id})
         counts["errors"] += 1
         errors.append({"frame_id": frame_id, "reason": f"{type(err).__name__}: {err}"})
         return None

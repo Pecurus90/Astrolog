@@ -258,7 +258,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     })
     const scheda = riga(await sezione(), "EQ6-R")
     expect(scelto(scelta(scheda, "Col riduttore"))).toBe(true)
-    // l'altro corredo e' un cambio vero, e parte
+    // l'altro setup e' un cambio vero, e parte
     fireEvent.click(scelta(scheda, "Notte in quota"))
     expect(await mandate()).toEqual([{ key: "firma-1", rig_id: 5 }])
   })

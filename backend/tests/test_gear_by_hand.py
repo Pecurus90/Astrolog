@@ -1,6 +1,6 @@
-"""Un filtro e un corredo scritti a mano sono quelli che i file porteranno, non un doppione.
+"""Un filtro e un setup scritti a mano sono quelli che i file porteranno, non un doppione.
 
-Decisione di Marco (21/9/2026, `docs/domini/attrezzatura.md`): un filtro e' il suo nome, un corredo
+Decisione di Marco (21/9/2026, `docs/domini/attrezzatura.md`): un filtro e' il suo nome, un setup
 la sua impronta -- ottica, camera, focale entro il 5 % -- e cio' che crei tu e' esattamente cio'
 che la scansione riconoscera'. Qui si crea prima, e si scansiona dopo.
 """
@@ -8,7 +8,7 @@ che la scansione riconoscera'. Qui si crea prima, e si scansiona dopo.
 import pytest
 
 from astrolog.spine import gear, gear_create
-from astrolog.spine import rigs as corredi
+from astrolog.spine import rigs as setups
 from conftest import frame_by_file, one, run_normalize, scan
 
 
@@ -54,8 +54,8 @@ def test_a_piece_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path, kind
     _dopo_la_scansione(conn, tmp_path)
 
     colonna = {"camera": "camera_id", "optics": "optics_id"}[kind]
-    corredo = frame_by_file(conn, "L_001.fits")["rig_id"]
-    assert one(conn, f"SELECT {colonna} FROM rigs WHERE id = ?", (corredo,)) == scritto  # noqa: S608
+    setup = frame_by_file(conn, "L_001.fits")["rig_id"]
+    assert one(conn, f"SELECT {colonna} FROM rigs WHERE id = ?", (setup,)) == scritto  # noqa: S608
     assert (
         one(conn, "SELECT COUNT(*) FROM instruments WHERE kind = ? AND name = ?", (kind, nome)) == 1
     )
@@ -66,7 +66,7 @@ def test_a_rig_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path):
     come fra due scansioni."""
     ottica = _pezzo(conn, "optics", "Askar 103Apo")
     camera = _pezzo(conn, "camera", "ATR2600M(USB2.0)")
-    scritto = corredi.create_declared(conn, ottica, camera, 570.0, "ora")
+    scritto = setups.create_declared(conn, ottica, camera, 570.0, "ora")
     _dopo_la_scansione(conn, tmp_path)
 
     assert frame_by_file(conn, "L_001.fits")["rig_id"] == scritto
@@ -83,29 +83,29 @@ def test_a_rig_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path):
 def test_a_rig_you_already_have_is_refused(conn):
     ottica = _pezzo(conn, "optics", "TS 130 APO")
     camera = _pezzo(conn, "camera", "ASI2600MM")
-    corredi.create_declared(conn, ottica, camera, 910.0, "ora")
-    with pytest.raises(corredi.RigExistsError):
-        corredi.create_declared(conn, ottica, camera, 920.0, "ora")
-    # una focale diversa davvero e' un altro corredo: lo stesso telescopio col riduttore
-    corredi.create_declared(conn, ottica, camera, 700.0, "ora")
+    setups.create_declared(conn, ottica, camera, 910.0, "ora")
+    with pytest.raises(setups.RigExistsError):
+        setups.create_declared(conn, ottica, camera, 920.0, "ora")
+    # una focale diversa davvero e' un altro setup: lo stesso telescopio col riduttore
+    setups.create_declared(conn, ottica, camera, 700.0, "ora")
 
 
 def test_a_rig_is_made_of_an_optics_and_a_camera_you_own(conn):
     ottica = _pezzo(conn, "optics", "TS 130 APO")
     montatura = _pezzo(conn, "mount", "EQ6-R")
-    with pytest.raises(corredi.WrongKindError):
-        corredi.create_declared(conn, ottica, montatura, 910.0, "ora")
-    with pytest.raises(corredi.WrongKindError):
-        corredi.create_declared(conn, 9999, ottica, 910.0, "ora")
+    with pytest.raises(setups.WrongKindError):
+        setups.create_declared(conn, ottica, montatura, 910.0, "ora")
+    with pytest.raises(setups.WrongKindError):
+        setups.create_declared(conn, 9999, ottica, 910.0, "ora")
 
 
 def test_a_rig_you_wrote_survives_the_merge_of_its_camera(conn):
-    """Un'unione cancella i corredi del pezzo che sparisce, e `normalize` li rifa' dalle pose: il
+    """Un'unione cancella i setup del pezzo che sparisce, e `normalize` li rifa' dalle pose: il
     tuo pose non ne ha, e si rifa' dalla tua parola, col pezzo tenuto."""
     ottica = _pezzo(conn, "optics", "TS 130 APO")
     vecchia = _pezzo(conn, "camera", "ASI2600")
     tenuta = _pezzo(conn, "camera", "ASI2600MM Pro")
-    corredi.create_declared(conn, ottica, vecchia, 910.0, "ora")
+    setups.create_declared(conn, ottica, vecchia, 910.0, "ora")
     gear.merge_instrument(conn, vecchia, tenuta)
 
     rifatto = conn.execute(
@@ -122,12 +122,12 @@ def test_a_rig_you_wrote_survives_the_merge_of_its_camera(conn):
 
 
 def test_a_merge_into_a_rig_you_already_have_keeps_one(conn):
-    """Se il pezzo tenuto ha gia' lo stesso corredo, dopo l'unione ce n'e' uno solo."""
+    """Se il pezzo tenuto ha gia' lo stesso setup, dopo l'unione ce n'e' uno solo."""
     ottica = _pezzo(conn, "optics", "TS 130 APO")
     vecchia = _pezzo(conn, "camera", "ASI2600")
     tenuta = _pezzo(conn, "camera", "ASI2600MM Pro")
-    corredi.create_declared(conn, ottica, vecchia, 910.0, "ora")
-    corredi.create_declared(conn, ottica, tenuta, 910.0, "ora")
+    setups.create_declared(conn, ottica, vecchia, 910.0, "ora")
+    setups.create_declared(conn, ottica, tenuta, 910.0, "ora")
     gear.merge_instrument(conn, vecchia, tenuta)
 
     assert one(conn, "SELECT COUNT(*) FROM rigs WHERE optics_id = ?", (ottica,)) == 1
@@ -143,17 +143,17 @@ def test_a_filter_written_with_the_app_name_learns_no_rule(conn):
 def test_a_rig_you_wrote_is_born_declared_and_when_you_wrote_it(conn):
     ottica = _pezzo(conn, "optics", "TS 130 APO")
     camera = _pezzo(conn, "camera", "ASI2600MM")
-    rig = corredi.create_declared(conn, ottica, camera, 910.0, "2026-09-26T12:00:00Z")
+    rig = setups.create_declared(conn, ottica, camera, 910.0, "2026-09-26T12:00:00Z")
     riga = conn.execute("SELECT detected, created_at FROM rigs WHERE id = ?", (rig,)).fetchone()
     assert (riga["detected"], riga["created_at"]) == (0, "2026-09-26T12:00:00Z")
 
 
 def test_a_declared_rig_whose_piece_is_gone_is_not_born_half(conn):
-    """Una dichiarazione che nomina un pezzo che non c'e' piu' non rifa' un corredo con la sola
-    ottica: il corredo e' la sua impronta intera."""
+    """Una dichiarazione che nomina un pezzo che non c'e' piu' non rifa' un setup con la sola
+    ottica: il setup e' la sua impronta intera."""
     from astrolog.spine.declarations import write_declaration
 
     _pezzo(conn, "optics", "TS 130 APO")
-    write_declaration(conn, "rig", "TS 130 APO|Sparita|500.0", corredi.RigField.DECLARED, 1, "ora")
-    corredi.restore_declared(conn, "ora")
+    write_declaration(conn, "rig", "TS 130 APO|Sparita|500.0", setups.RigField.DECLARED, 1, "ora")
+    setups.restore_declared(conn, "ora")
     assert one(conn, "SELECT COUNT(*) FROM rigs") == 0

@@ -165,7 +165,7 @@ def test_a_rewritten_copy_is_not_another_pose_but_comes_back_in_the_queue(conn):
 
 
 def test_the_focal_is_shown_only_when_the_poses_agree(conn):
-    """La focale entra nella firma con la regola dei corredi (+-5 %): 530 e 532 sono una scheda,
+    """La focale entra nella firma con la regola dei setup (+-5 %): 530 e 532 sono una scheda,
     400 un'altra. Si mostra per riempire la risposta **solo se le pose dicono una cosa sola**: con
     due focali non si sceglie per l'utente, e il campo resta vuoto."""
     radice = add_folder(conn, "/vol/astro")
@@ -179,8 +179,8 @@ def test_the_focal_is_shown_only_when_the_poses_agree(conn):
 
 
 def test_the_focal_of_the_optics_card_is_proposed_when_the_poses_do_not_say_it(conn):
-    """Un corredo e' ottica + camera **a una focale**: se le pose non la dicono, si propone quella
-    nativa dell'ottica che l'utente ha in scheda. Senza una focale il corredo che nasce dalla
+    """Un setup e' ottica + camera **a una focale**: se le pose non la dicono, si propone quella
+    nativa dell'ottica che l'utente ha in scheda. Senza una focale il setup che nasce dalla
     risposta resterebbe un gemello separato per sempre da quello rilevato (`normalize_store`)."""
     radice = add_folder(conn, "/vol/astro")
     conn.execute(
@@ -275,7 +275,7 @@ def test_the_pose_reads_the_answer_of_its_own_group(conn):
 
 
 def test_a_focal_that_drifts_finds_the_same_answer(conn):
-    """La focale si confronta con la regola dei corredi: una posa a 803 mm trova la risposta data
+    """La focale si confronta con la regola dei setup: una posa a 803 mm trova la risposta data
     a 800, una a 400 no."""
     radice = add_folder(conn, "/vol/astro")
     a = _posa(conn, radice, "a.fits", instrument=CAM, focal=800.0)
@@ -381,7 +381,7 @@ def test_the_key_is_never_split_to_find_the_pieces(conn):
 
 
 def test_the_cards_ask_the_rig_only_of_the_nights_of_their_poses(conn, monkeypatch):
-    """Il corredo della notte si chiede per le sole notti delle pose che chiedono la camera: una
+    """Il setup della notte si chiede per le sole notti delle pose che chiedono la camera: una
     notte in cui ogni posa dice la camera non cambia nessuna parte, e su un archivio che la camera
     la dice quasi sempre leggerle tutte costerebbe quasi l'archivio intero."""
     radice = add_folder(conn, "/vol/astro")

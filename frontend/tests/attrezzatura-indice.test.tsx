@@ -8,19 +8,19 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { components } from "../src/api/schema"
 import { Indice, esiste, gruppiDi, primaScelta } from "../src/AttrezzaturaIndice"
-import { CORREDO, FILTRO, MONTATURA, OTTICA } from "./attrezzatura-banco"
+import { SETUP, FILTRO, MONTATURA, OTTICA } from "./attrezzatura-banco"
 import { pulisci } from "./banco"
 
 type Pagina = components["schemas"]["GearList"]
 
 afterEach(pulisci)
 
-const ALTRO = { ...CORREDO, id: 11, name: "Il piccolo", title: "Il piccolo" }
+const ALTRO = { ...SETUP, id: 11, name: "Il piccolo", title: "Il piccolo" }
 
 function pagina(corpo: Partial<Record<keyof Pagina, unknown>> = {}): Pagina {
   return {
     instruments: [OTTICA, MONTATURA],
-    rigs: [CORREDO],
+    rigs: [SETUP],
     filters: [FILTRO],
     cards: {},
     moon_deg: 0.527,
@@ -56,18 +56,18 @@ describe("cosa sceglie l indice", () => {
   })
 
   it("si apre il primo setup; senza setup il primo gruppo; senza niente nulla", () => {
-    expect(primaScelta(pagina({ rigs: [ALTRO, CORREDO] }))).toEqual({ setup: ALTRO.id })
+    expect(primaScelta(pagina({ rigs: [ALTRO, SETUP] }))).toEqual({ setup: ALTRO.id })
     expect(primaScelta(pagina({ rigs: [] }))).toEqual({ gruppo: "optics" })
     expect(primaScelta(pagina({ rigs: [], instruments: [] }))).toEqual({ gruppo: "filter" })
     expect(primaScelta(pagina({ rigs: [], instruments: [], filters: [] }))).toBeNull()
   })
 
   it("una scelta resta finche' il suo setup o il suo gruppo e' ancora sulla pagina", () => {
-    const p = pagina({ rigs: [ALTRO, CORREDO] })
-    expect(esiste(p, { setup: CORREDO.id })).toBe(true)
+    const p = pagina({ rigs: [ALTRO, SETUP] })
+    expect(esiste(p, { setup: SETUP.id })).toBe(true)
     expect(esiste(p, { setup: ALTRO.id })).toBe(true)
     expect(esiste(p, { setup: 99 })).toBe(false)
-    expect(esiste(pagina({ rigs: [] }), { setup: CORREDO.id })).toBe(false)
+    expect(esiste(pagina({ rigs: [] }), { setup: SETUP.id })).toBe(false)
     expect(esiste(p, { gruppo: "mount" })).toBe(true)
     expect(esiste(p, { gruppo: "focuser" })).toBe(false)
     expect(esiste(pagina({ filters: [] }), { gruppo: "filter" })).toBe(false)
@@ -88,15 +88,15 @@ describe("l indice dell Attrezzatura", () => {
   })
 
   it("un clic su una carta o su una pillola dice cosa si e' scelto", () => {
-    const { nav, onScegli } = indice(pagina({ rigs: [ALTRO, CORREDO] }))
+    const { nav, onScegli } = indice(pagina({ rigs: [ALTRO, SETUP] }))
     fireEvent.click(cartaDi(nav, /il grande/i))
-    expect(onScegli).toHaveBeenLastCalledWith({ setup: CORREDO.id })
+    expect(onScegli).toHaveBeenLastCalledWith({ setup: SETUP.id })
     fireEvent.click(within(nav).getByRole("link", { name: /montature/i }))
     expect(onScegli).toHaveBeenLastCalledWith({ gruppo: "mount" })
   })
 
   it("e' segnata solo la scelta, con l anello; sul telefono niente", () => {
-    const { nav } = indice(pagina({ rigs: [ALTRO, CORREDO] }), { setup: CORREDO.id })
+    const { nav } = indice(pagina({ rigs: [ALTRO, SETUP] }), { setup: SETUP.id })
     const scelta = cartaDi(nav, /il grande/i)
     expect(scelta.getAttribute("aria-current")).toBe("true")
     expect(scelta.style.boxShadow).toBe("inset 0 0 0 2px var(--accento)")
@@ -111,7 +111,7 @@ describe("l indice dell Attrezzatura", () => {
     expect(cartaDi(gruppo, /il grande/i).getAttribute("aria-current")).toBeNull()
     pulisci()
 
-    const { nav: tel } = indice(pagina(), { setup: CORREDO.id }, "telefono")
+    const { nav: tel } = indice(pagina(), { setup: SETUP.id }, "telefono")
     expect(tel.querySelectorAll('[aria-current="true"]')).toHaveLength(0)
   })
 
@@ -136,7 +136,7 @@ describe("la carta di un setup", () => {
     const { nav } = indice(
       pagina({
         rigs: [
-          { ...CORREDO, bar_pct: 40 },
+          { ...SETUP, bar_pct: 40 },
           { ...ALTRO, counted: false },
         ],
       }),
@@ -154,7 +154,7 @@ describe("la carta di un setup", () => {
     const { nav } = indice(
       pagina({
         rigs: [
-          { ...CORREDO, integration_s: null },
+          { ...SETUP, integration_s: null },
           { ...ALTRO, bar_pct: null },
         ],
       }),
@@ -166,7 +166,7 @@ describe("la carta di un setup", () => {
   })
 
   it("ottica e camera per nome, o che non sono indicate", () => {
-    const { nav } = indice(pagina({ rigs: [CORREDO, { ...ALTRO, optics: null, camera: null }] }))
+    const { nav } = indice(pagina({ rigs: [SETUP, { ...ALTRO, optics: null, camera: null }] }))
     const pieno = within(cartaDi(nav, /il grande/i))
       .getAllByRole("listitem")
       .map((x) => x.title)
@@ -178,9 +178,9 @@ describe("la carta di un setup", () => {
   })
 
   it("la focale solo se c'e', le parti da indicare solo se mancano", () => {
-    const tutte = CORREDO.slots.map((s) => ({ ...s, filled: true }))
+    const tutte = SETUP.slots.map((s) => ({ ...s, filled: true }))
     const { nav } = indice(
-      pagina({ rigs: [CORREDO, { ...ALTRO, focal_mm: null, slots: tutte, slots_missing: 0 }] }),
+      pagina({ rigs: [SETUP, { ...ALTRO, focal_mm: null, slots: tutte, slots_missing: 0 }] }),
     )
     const grande = cartaDi(nav, /il grande/i)
     expect(grande.textContent).toContain("910 mm")

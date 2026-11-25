@@ -1,5 +1,5 @@
 """Il calendario della Luna della Dashboard: lo scrive il giro, chi legge non calcola. Questo mese e
-il prossimo, per il sito di casa, coi gradini della regola della Luna delle Impostazioni."""
+il prossimo, per il sito predefinito, coi gradini della regola della Luna delle Impostazioni."""
 
 import datetime as dt
 import shutil
@@ -65,7 +65,7 @@ def _copia(modello, db_path):
 
 @pytest.fixture
 def scritto(_scritto_a_ottobre, db_path):
-    """Il sito di casa col calendario di ottobre e novembre 2026 gia' scritto dal giro."""
+    """Il sito predefinito col calendario di ottobre e novembre 2026 gia' scritto dal giro."""
     yield from _copia(_scritto_a_ottobre, db_path)
 
 
@@ -113,7 +113,7 @@ def test_the_settings_say_the_automatic_mode_in_force(db_path, scritto, monkeypa
         r = c.patch("/api/v1/settings", json={"values": {"theme_mode": "automatico"}})
     alba = _giu(scritto, "2026-10-16")["sun_down_until"]
     assert r.json()["theme_now"] == {"mode": "scuro", "until": alba}
-    # la nota della tavola nomina il sito di casa: «Scuro dal tramonto all'alba di <sito>»
+    # la nota della tavola nomina il sito predefinito: «Scuro dal tramonto all'alba di <sito>»
     assert r.json()["theme_site"] == home_site(scritto).name
 
 

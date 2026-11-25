@@ -27,7 +27,7 @@ Le prove del backend stanno in `backend/tests/test_api_nights.py` e nei file acc
 | Cerco fra le notti coi **criteri**: oggetto, anno, sito, setup, filtri, costellazione, cielo; ogni scelta mi dice quante notti restano | `test_the_criteria_count_with_the_other_choices_applied`, `test_within_a_criterion_any_across_all`, `test_an_object_is_found_by_name_and_common_name`; *i criteri dicono quante notti restano* |
 | Nessuna notte coi criteri scelti: me lo dice, e tolgo i criteri | *nessuna notte con questi criteri* |
 | Accanto alla data vedo anche che giorno della settimana era | *accanto alla data c'e' il giorno della settimana* |
-| Accanto al sito vedo da dove viene: dalle coordinate nei frame, il sito di casa, o la mia risposta | `test_a_night_says_where_its_site_comes_from`; *il sito dice da dove viene* |
+| Accanto al sito vedo da dove viene: dalle coordinate nei frame, il sito predefinito, o la mia risposta | `test_a_night_says_where_its_site_comes_from`; *il sito dice da dove viene* |
 | Vedo con che filtri ho ripreso quella notte, e quanto ho dato a ciascuno | `test_a_night_says_which_filters_and_how_long_each_one_ran`, `test_a_night_or_an_object_lists_its_filters_in_the_one_order` (`backend/tests/test_filter_order.py`); *una notte dice i filtri, nell'ordine dei filtri* |
 | In fondo vedo quante notti, oggetti, frame e ore ho in tutto, e quanti frame senza durata | `test_the_page_opens_with_what_the_whole_archive_holds`; *in fondo c'e' tutto l'archivio* |
 | Due siti nella stessa data restano due notti, non una | `test_two_sites_on_the_same_date_stay_two_nights` |
@@ -73,7 +73,7 @@ chiave con cui la notte nasce (`sites` + `night_date` in `backend/astrolog/schem
 calendario un giorno con due notti ha due segni.
 
 **Il sito dice da dove viene** (DECISIONI v65, 5.4; Marco, 7/11/2026): «dalle coordinate nei
-frame» se almeno un frame le porta, «il sito di casa, dalle Impostazioni» se nessuno le porta,
+frame» se almeno un frame le porta, «il sito predefinito, dalle Impostazioni» se nessuno le porta,
 «dalla tua risposta in Da confermare» se il sito l'hai scelto tu. Lo manda l'API.
 
 **Le ore si contano in una casa sola** (`spine/counts.py`): gli stessi numeri escono dallo

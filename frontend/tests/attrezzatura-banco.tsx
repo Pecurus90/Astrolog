@@ -83,7 +83,7 @@ export const NUMERI = {
   load: { percent: null, within: null, weight_kg: null, payload_kg: null, ...manca("mount", null) },
 }
 
-export const CORREDO = {
+export const SETUP = {
   id: 10,
   name: "Il grande",
   optics_id: 1,
@@ -145,7 +145,7 @@ export function attrezzatura(corpo: Record<string, unknown> = {}, porte: Record<
       stato: 200,
       corpo: {
         instruments: [OTTICA, MONTATURA],
-        rigs: [CORREDO],
+        rigs: [SETUP],
         filters: [FILTRO],
         cards: SCHEDE,
         moon_deg: 0.527,

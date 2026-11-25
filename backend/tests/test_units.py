@@ -1,4 +1,4 @@
-"""Le unita' e i numeri: la scala dal corredo, il raggio di un oggetto, il rumore della float32
+"""Le unita' e i numeri: la scala dal setup, il raggio di un oggetto, il rumore della float32
 tolto dove il dato entra. Portati da old/ (numeri dell'archivio reale)."""
 
 from pathlib import Path

@@ -386,7 +386,7 @@ def test_the_solver_keeps_two_rigs_of_the_same_night_apart(conn, tmp_path):
     run(conn, add_folder(conn, tmp_path))
     tutte = [r[0] for r in conn.execute("SELECT id FROM frames")]
     assert len(solve_store.first_per_order_key(conn, tutte)) == 3, (
-        "a e b sono lo stesso corredo; c cambia l'ottica e d la camera"
+        "a e b sono lo stesso setup; c cambia l'ottica e d la camera"
     )
 
 

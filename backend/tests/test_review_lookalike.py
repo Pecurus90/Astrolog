@@ -200,7 +200,7 @@ def test_an_answer_on_a_pair_the_page_no_longer_asks_is_refused(client):
 
 
 def test_the_cameras_do_not_search_the_rigs_row_by_row(client):
-    """Il conto delle pose di ogni camera non deve cercare i corredi **una volta per coppia**
+    """Il conto delle pose di ogni camera non deve cercare i setup **una volta per coppia**
     (posa, camera): e' cio' che rendeva la pagina lenta su un archivio grande. Il piano e'
     deterministico: si chiede a SQLite invece di cronometrare."""
     with connect(client.app.state.db_path) as conn:

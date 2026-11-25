@@ -28,7 +28,7 @@ schema e ricrea. Le migrazioni nasceranno alla versione 1.0, e solo allora.
 controintuitivo di un vincolo sopravvive. Un `CHECK` protegge un invariante che il codice
 non puo' garantire da solo; un vincolo che il codice gia' garantisce e' rumore.
 
-**Le chiavi sono stabili.** Cio' che il dichiarato riferisce (un oggetto, un corredo) ha
+**Le chiavi sono stabili.** Cio' che il dichiarato riferisce (un oggetto, un setup) ha
 una chiave che non cambia quando il derivato si ricalcola: altrimenti il reimport delle
 dichiarazioni non ritrova a cosa agganciarsi.
 

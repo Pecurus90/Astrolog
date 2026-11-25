@@ -21,7 +21,7 @@ from group_bench import ROMA, attrezzo, corri, filtro, luogo, posa, prepara
 SCALA = 1.23  # arcosecondi per pixel, come li misura il riconoscitore
 
 
-def corredo(conn, optics_id, camera_id, focal_mm):
+def setup(conn, optics_id, camera_id, focal_mm):
     return conn.execute(
         "INSERT INTO rigs(optics_id, camera_id, focal_mm, detected, created_at)"
         " VALUES(?, ?, ?, 1, ?)",
@@ -30,7 +30,7 @@ def corredo(conn, optics_id, camera_id, focal_mm):
 
 
 def risolta(conn, frame_id, *, scala=SCALA, larghezza=1.5, altezza=1.0):
-    """Il cielo misurato su quella posa: e' da qui che esce quanto inquadra un corredo."""
+    """Il cielo misurato su quella posa: e' da qui che esce quanto inquadra un setup."""
     conn.execute(
         "INSERT INTO frame_wcs(frame_id, ra_deg, dec_deg, scale_arcsec_px, width_deg,"
         " height_deg, solved_at) VALUES(?, 10.0, 41.0, ?, ?, ?, ?)",
@@ -50,7 +50,7 @@ def pezzi(pagina, kind):
 
 @pytest.fixture
 def archivio(db_path):
-    """Un corredo che ha ripreso -- ottica, camera, due pose risolte in Ha -- piu' una montatura
+    """Un setup che ha ripreso -- ottica, camera, due pose risolte in Ha -- piu' una montatura
     che nessun file lega a niente, che e' il caso su cui la pagina deve dire la verita'."""
     conn = connect(db_path)
     try:
@@ -62,7 +62,7 @@ def archivio(db_path):
         addosso = {
             k: attrezzo(conn, k, f"Il mio {k}") for k in ("filter_wheel", "focuser", "guide_camera")
         }
-        rig = corredo(conn, ottica, camera, 910.0)
+        rig = setup(conn, ottica, camera, 910.0)
         ha = filtro(conn, "Ha", "HA")
         for n, quando in enumerate(("2024-05-18T22:00:00Z", "2024-05-18T23:00:00Z")):
             f = posa(conn, quando=quando, filtro_id=ha, esposizione=300.0, hash_=f"p{n}")
@@ -80,27 +80,27 @@ def archivio(db_path):
         yield c
 
 
-def parti(corredo):
-    return [(p["kind"], p["name"], p["frames"]) for p in corredo["parts"]]
+def parti(setup):
+    return [(p["kind"], p["name"], p["frames"]) for p in setup["parts"]]
 
 
 def test_a_rig_says_every_part_its_frames_used(archivio):
-    """Il corredo completo: oltre a ottica e camera, cio' che i suoi frame dicono di aver usato --
+    """Il setup completo: oltre a ottica e camera, cio' che i suoi frame dicono di aver usato --
     ruota, focheggiatore, camera di guida, filtri -- ognuno con quanti frame. Nell'ordine fisso
     delle parti; la montatura non c'e' perche' nessun frame la porta."""
-    corredo_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
-    assert parti(corredo_) == [
+    setup_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
+    assert parti(setup_) == [
         ("filter_wheel", "Il mio filter_wheel", 2),
         ("focuser", "Il mio focuser", 2),
         ("guide_camera", "Il mio guide_camera", 2),
         ("filter", "Ha", 2),
     ]
-    assert all(p["id"] is not None for p in corredo_["parts"])
+    assert all(p["id"] is not None for p in setup_["parts"])
 
 
 def test_a_part_carried_only_by_choice_is_counted_like_the_others(archivio):
     """Riduttore e ottica di guida stanno sulle pose solo perche' li hai scelti: una volta li',
-    il corredo li elenca coi loro frame e il pezzo ha le sue ore, dopo i pezzi che i file nominano
+    il setup li elenca coi loro frame e il pezzo ha le sue ore, dopo i pezzi che i file nominano
     e prima dei filtri."""
     with db(archivio) as conn:
         riduttore = attrezzo(conn, "reducer", "0,8x")
@@ -142,17 +142,17 @@ def test_a_rig_used_with_two_of_a_kind_lists_both_most_used_first(archivio):
         conn.execute("UPDATE frames SET rig_id = ?, software = 'ASIAIR' WHERE id = ?", (rig, copia))
         gear_usage.write(conn)
         conn.commit()
-    corredo_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
-    assert [p for p in parti(corredo_) if p[0] in ("software", "filter_wheel")] == [
+    setup_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
+    assert [p for p in parti(setup_) if p[0] in ("software", "filter_wheel")] == [
         ("filter_wheel", "Il mio filter_wheel", 2),
         ("filter_wheel", "Ruota vecchia", 1),
         ("software", "N.I.N.A.", 3),
         ("software", "ASIAIR", 1),
     ]
     # il programma non e' un pezzo: non ha un id
-    assert [p["id"] for p in corredo_["parts"] if p["kind"] == "software"] == [None, None]
+    assert [p["id"] for p in setup_["parts"] if p["kind"] == "software"] == [None, None]
     # e niente qui e' una scelta tua: lo dicono i file
-    assert not any(p["chosen"] for p in corredo_["parts"])
+    assert not any(p["chosen"] for p in setup_["parts"])
 
 
 def test_a_part_renamed_reads_with_its_new_name(archivio):
@@ -160,14 +160,14 @@ def test_a_part_renamed_reads_with_its_new_name(archivio):
     with db(archivio) as conn:
         conn.execute("UPDATE instruments SET name = 'EAF' WHERE kind = 'focuser'")
         conn.commit()
-    corredo_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
-    assert ("focuser", "EAF", 2) in parti(corredo_)
+    setup_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
+    assert ("focuser", "EAF", 2) in parti(setup_)
 
 
 @pytest.mark.parametrize("genere", ["filter_wheel", "focuser", "guide_camera"])
 def test_a_piece_the_files_name_on_every_frame_has_its_hours(archivio, genere):
     """La ruota portafiltri, il focheggiatore e la camera di guida stanno **sulla posa**, non sul
-    corredo: i file dicono quale hai usato per ogni scatto, quindi le loro ore si sanno davvero.
+    setup: i file dicono quale hai usato per ogni scatto, quindi le loro ore si sanno davvero.
 
     E' la differenza con la **montatura**, che nessun header lega a una posa e che infatti dice
     perche' non ne ha. Provati tutti e tre: con uno solo si potevano togliere le altre due strade
@@ -203,10 +203,10 @@ def test_a_kind_no_frame_of_yours_names_has_hours_the_app_cannot_know(db_path):
 
 
 def test_a_frame_with_no_rig_still_gives_the_wheel_its_hours(db_path):
-    """Una posa che nomina la ruota ma **non ha corredo** -- l'header non dice la camera -- conta
-    comunque nelle ore della ruota: con una giunzione secca sui corredi resterebbe fuori.
+    """Una posa che nomina la ruota ma **non ha setup** -- l'header non dice la camera -- conta
+    comunque nelle ore della ruota: con una giunzione secca sui setup resterebbe fuori.
 
-    E' il caso di chi riprende con N.I.N.A. senza `INSTRUME`: il corredo non nasce, la ruota si'."""
+    E' il caso di chi riprende con N.I.N.A. senza `INSTRUME`: il setup non nasce, la ruota si'."""
     conn = connect(db_path)
     try:
         prepara(conn)
@@ -229,7 +229,7 @@ def test_a_frame_with_no_rig_still_gives_the_wheel_its_hours(db_path):
 
 
 def test_the_shapes_of_the_link_pick_the_same_frames(archivio):
-    """Il legame fra una posa e un pezzo ha **tre forme**: una che cerca i corredi da se', per chi
+    """Il legame fra una posa e un pezzo ha **tre forme**: una che cerca i setup da se', per chi
     non ce li ha nel `FROM`, una che li usa dove sono gia' -- senza la ricerca correlata -- e le
     coppie (pezzo, posa) per chi conta tutti i pezzi insieme.
 
@@ -268,16 +268,16 @@ def test_the_page_lists_the_gear_you_own(archivio):
     assert [p["name"] for p in pezzi(pagina, "camera")] == ["ASI2600MM"]
     assert [p["name"] for p in pezzi(pagina, "mount")] == ["EQ6-R"]
     assert [f["name"] for f in pagina["filters"]] == ["Ha"]
-    # il corredo che ha ripreso e' in cima: l'ordine lo decide il backend, per tempo dato
+    # il setup che ha ripreso e' in cima: l'ordine lo decide il backend, per tempo dato
     assert pagina["rigs"][0]["optics"] == "TS 130 APO"
 
 
 def test_a_piece_says_how_much_you_shot_with_it(archivio):
     """Le ore di ogni pezzo: e' il consuntivo per cui la pagina esiste. Le ore escono dalla
     stessa casa che le conta per oggetto e per notte, non da un conto suo."""
-    corredo_letto = gear(archivio)["rigs"][0]
+    setup_letto = gear(archivio)["rigs"][0]
 
-    assert corredo_letto["integration_s"] == 600.0
+    assert setup_letto["integration_s"] == 600.0
 
 
 def test_a_rig_a_piece_and_a_filter_say_only_their_hours(archivio):
@@ -293,18 +293,18 @@ def test_a_rig_a_piece_and_a_filter_say_only_their_hours(archivio):
 
 
 def test_the_hours_of_a_piece_come_from_its_rigs(archivio):
-    """Un'ottica e una camera non stanno su una posa: stanno su un **corredo**, e le loro ore sono
-    quelle dei corredi che le portano -- non quelle dell'archivio. (Gli altri tre generi ci
+    """Un'ottica e una camera non stanno su una posa: stanno su un **setup**, e le loro ore sono
+    quelle dei setup che le portano -- non quelle dell'archivio. (Gli altri tre generi ci
     arrivano per l'altra strada, ed e' la prova qui sopra.)
 
-    Nell'archivio c'e' apposta una posa ripresa con **un altro** corredo: senza, un conto che
+    Nell'archivio c'e' apposta una posa ripresa con **un altro** setup: senza, un conto che
     prendesse tutte le pose darebbe gli stessi numeri e questa prova direbbe di si' senza
     guardare niente (visto verde sabotando, prima di aggiungerla)."""
     with db(archivio) as conn:
         altra = attrezzo(conn, "optics", "RC8", focal_mm=1624.0)
         camera = attrezzo(conn, "camera", "ASI533", pixel_size_um=3.76)
-        altro = corredo(conn, altra, camera, 1624.0)
-        f = posa(conn, quando="2024-07-01T22:00:00Z", esposizione=900.0, hash_="altro corredo")
+        altro = setup(conn, altra, camera, 1624.0)
+        f = posa(conn, quando="2024-07-01T22:00:00Z", esposizione=900.0, hash_="altro setup")
         conn.execute("UPDATE frames SET rig_id = ? WHERE id = ?", (altro, f))
         gear_usage.write(conn)  # come a fine giro di uno stadio
         conn.commit()
@@ -314,13 +314,13 @@ def test_the_hours_of_a_piece_come_from_its_rigs(archivio):
 
 
 def test_a_piece_on_two_rigs_does_not_count_its_hours_twice(archivio):
-    """La stessa camera su due corredi: le sue ore sono la somma, **una volta sola**. Un conto
+    """La stessa camera su due setup: le sue ore sono la somma, **una volta sola**. Un conto
     scritto a mano su una giunzione le raddoppierebbe, ed e' il difetto che la casa comune evita."""
     with db(archivio) as conn:
         camera = conn.execute("SELECT id FROM instruments WHERE kind = 'camera'").fetchone()["id"]
         altra = attrezzo(conn, "optics", "RC8", focal_mm=1624.0)
-        secondo = corredo(conn, altra, camera, 1624.0)
-        f = posa(conn, quando="2024-06-01T22:00:00Z", esposizione=120.0, hash_="altro corredo")
+        secondo = setup(conn, altra, camera, 1624.0)
+        f = posa(conn, quando="2024-06-01T22:00:00Z", esposizione=120.0, hash_="altro setup")
         conn.execute("UPDATE frames SET rig_id = ? WHERE id = ?", (secondo, f))
         gear_usage.write(conn)  # come a fine giro di uno stadio
         conn.commit()
@@ -331,7 +331,7 @@ def test_a_piece_on_two_rigs_does_not_count_its_hours_twice(archivio):
 
 def test_the_sky_of_a_rig_is_the_middle_value_not_the_average(archivio):
     """**Mediana, non media**: una posa risolta storta -- capita su un campo povero di stelle --
-    sposterebbe la media e lascia ferma la mediana, e qui si descrive com'e' fatto un corredo,
+    sposterebbe la media e lascia ferma la mediana, e qui si descrive com'e' fatto un setup,
     non un caso. Con 1,2 / 1,23 / 6,0 la mediana e' 1,23 e la media 2,81."""
     with db(archivio) as conn:
         rig = conn.execute("SELECT id FROM rigs WHERE focal_mm = 910").fetchone()["id"]
@@ -342,8 +342,8 @@ def test_the_sky_of_a_rig_is_the_middle_value_not_the_average(archivio):
         gear_usage.write(conn)  # come a fine giro di uno stadio
         conn.commit()
 
-    corredo_letto = next(r for r in gear(archivio)["rigs"] if r["focal_mm"] == 910)
-    assert corredo_letto["scale_arcsec_px"] == pytest.approx(SCALA), "il valore di mezzo"
+    setup_letto = next(r for r in gear(archivio)["rigs"] if r["focal_mm"] == 910)
+    assert setup_letto["scale_arcsec_px"] == pytest.approx(SCALA), "il valore di mezzo"
 
 
 def test_the_sky_of_a_rig_is_written_as_the_screen_reads_it(archivio):
@@ -357,8 +357,8 @@ def test_the_sky_of_a_rig_is_written_as_the_screen_reads_it(archivio):
         gear_usage.write(conn)
         conn.commit()
 
-    corredo = next(r for r in gear(archivio)["rigs"] if r["focal_mm"] == 910)
-    assert (corredo["scale_arcsec_px"], corredo["width_deg"], corredo["height_deg"]) == (
+    setup = next(r for r in gear(archivio)["rigs"] if r["focal_mm"] == 910)
+    assert (setup["scale_arcsec_px"], setup["width_deg"], setup["height_deg"]) == (
         1.23,
         1.5,
         0.99,
@@ -373,28 +373,28 @@ def test_a_frame_that_did_not_say_its_field_does_not_drag_the_others(archivio):
         gear_usage.write(conn)  # come a fine giro di uno stadio
         conn.commit()
 
-    corredo_letto = next(r for r in gear(archivio)["rigs"] if r["focal_mm"] == 910)
-    assert corredo_letto["width_deg"] == pytest.approx(1.5)
+    setup_letto = next(r for r in gear(archivio)["rigs"] if r["focal_mm"] == 910)
+    assert setup_letto["width_deg"] == pytest.approx(1.5)
 
 
 def test_a_rig_says_the_sky_it_really_frames(archivio):
     """La scala e il campo **misurati** sulle pose risolte, non calcolati da focale e pixel: su
-    un corredo con un riduttore il conto teorico direbbe un altro numero, giusto sulla carta e
+    un setup con un riduttore il conto teorico direbbe un altro numero, giusto sulla carta e
     sbagliato nel cielo."""
-    corredo_letto = gear(archivio)["rigs"][0]
+    setup_letto = gear(archivio)["rigs"][0]
 
-    assert corredo_letto["scale_arcsec_px"] == pytest.approx(SCALA)
-    assert corredo_letto["width_deg"] == pytest.approx(1.5)
-    assert corredo_letto["height_deg"] == pytest.approx(1.0)
+    assert setup_letto["scale_arcsec_px"] == pytest.approx(SCALA)
+    assert setup_letto["width_deg"] == pytest.approx(1.5)
+    assert setup_letto["height_deg"] == pytest.approx(1.0)
 
 
 def test_a_rig_that_never_shot_says_nothing_about_the_sky(archivio):
-    """Un corredo senza pose risolte non ha una scala: la riga tace, invece di riempirsi con il
+    """Un setup senza pose risolte non ha una scala: la riga tace, invece di riempirsi con il
     numero che la scheda direbbe."""
     with db(archivio) as conn:
         ottica = attrezzo(conn, "optics", "RC8", aperture_mm=203.0, focal_mm=1624.0)
         camera = attrezzo(conn, "camera", "ASI533", pixel_size_um=3.76)
-        corredo(conn, ottica, camera, 1624.0)
+        setup(conn, ottica, camera, 1624.0)
         gear_usage.write(conn)  # come a fine giro di uno stadio
         conn.commit()
 
@@ -404,8 +404,8 @@ def test_a_rig_that_never_shot_says_nothing_about_the_sky(archivio):
 
 
 def test_a_mount_has_no_hours_and_the_page_says_why(archivio):
-    """Nessuna posa porta questa montatura -- i file non la nominano e nessun corredo ce l'ha: la
-    riga non prende uno zero, che sarebbe un dato, ma dice che nessun corredo la porta ancora."""
+    """Nessuna posa porta questa montatura -- i file non la nominano e nessun setup ce l'ha: la
+    riga non prende uno zero, che sarebbe un dato, ma dice che nessun setup la porta ancora."""
     montatura = pezzi(gear(archivio), "mount")[0]
     assert montatura["no_hours"] == "no_rig"
 
@@ -475,15 +475,15 @@ def test_a_frame_without_a_time_is_not_zero_hours_of_gear(archivio):
         gear_usage.write(conn)  # come a fine giro di uno stadio
         conn.commit()
 
-    corredo_letto = gear(archivio)["rigs"][0]
-    assert corredo_letto["integration_s"] == 300.0
-    assert corredo_letto["untimed"] == 1
+    setup_letto = gear(archivio)["rigs"][0]
+    assert setup_letto["integration_s"] == 300.0
+    assert setup_letto["untimed"] == 1
 
 
 def test_the_page_counts_nothing_and_the_writer_asks_per_page(archivio):
     """La pagina non conta niente: legge cio' che la spina ha scritto (Marco, 22/9/2026). E chi
-    scrive chiede il cielo dei corredi **per elenco, non per corredo**: una domanda, che ci sia un
-    corredo o venti.
+    scrive chiede il cielo dei setup **per elenco, non per setup**: una domanda, che ci sia un
+    setup o venti.
 
     La guardia e' sul **numero di chiamate**, non sul tempo: un tempo dipende dalla macchina, il
     conto no -- e cambia subito se un domani la domanda finisse dentro il giro dei pezzi."""
@@ -497,7 +497,7 @@ def test_the_page_counts_nothing_and_the_writer_asks_per_page(archivio):
     with db(archivio) as conn:
         for n in range(12):
             ottica = attrezzo(conn, "optics", f"telescopio {n}", focal_mm=500.0 + n)
-            corredo(conn, ottica, None, 500.0 + n)
+            setup(conn, ottica, None, 500.0 + n)
         gear_usage.write(conn)  # come a fine giro di uno stadio
         conn.commit()
 
@@ -508,7 +508,7 @@ def test_the_page_counts_nothing_and_the_writer_asks_per_page(archivio):
             gear_usage.write(conn)
 
     assert len(pagina["rigs"]) > 10, "servono abbastanza pezzi perche' la domanda abbia senso"
-    assert len(quante) == 1, f"il cielo dei corredi: {quante}"
+    assert len(quante) == 1, f"il cielo dei setup: {quante}"
 
 
 def test_an_empty_gear_page_is_an_answer_not_an_error(db_path):
@@ -522,7 +522,7 @@ def test_an_empty_gear_page_is_an_answer_not_an_error(db_path):
 
 def test_a_mount_carried_by_the_frames_has_their_hours(archivio):
     """Quando le pose portano la montatura -- perche' il file la nomina o perche' l'hai data al
-    corredo -- la montatura ha ore, come gli altri pezzi."""
+    setup -- la montatura ha ore, come gli altri pezzi."""
     with db(archivio) as conn:
         montatura = conn.execute("SELECT id FROM instruments WHERE kind = 'mount'").fetchone()[0]
         conn.execute("UPDATE frames SET mount_id = ?", (montatura,))
@@ -534,7 +534,7 @@ def test_a_mount_carried_by_the_frames_has_their_hours(archivio):
 
 
 def test_a_mount_no_frame_carries_says_so_even_where_others_have_hours(archivio):
-    """Dove altre montature hanno pose, una che non ne ha non ha fatto "zero ore": nessun corredo
+    """Dove altre montature hanno pose, una che non ne ha non ha fatto "zero ore": nessun setup
     la porta ancora, e la pagina lo dice. Le ore, dove ci sono, non portano un perche'."""
     with db(archivio) as conn:
         altra = conn.execute(
@@ -552,7 +552,7 @@ def test_a_mount_no_frame_carries_says_so_even_where_others_have_hours(archivio)
 @pytest.mark.parametrize("kind", ["reducer", "guide_scope"])
 def test_a_piece_only_a_rig_can_carry_says_no_rig_carries_it(archivio, kind):
     """Riduttore e ottica di guida i file non li scrivono mai: "non indicato nei file" non dice
-    cosa fare. Senza pose dicono che nessun corredo li porta, anche dove un altro ne ha."""
+    cosa fare. Senza pose dicono che nessun setup li porta, anche dove un altro ne ha."""
     with db(archivio) as conn:
         attrezzo(conn, kind, "Fermo")
         gear_usage.write(conn)

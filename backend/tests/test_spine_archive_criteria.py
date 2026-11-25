@@ -46,7 +46,7 @@ def test_two_years_are_either(archivio):
     banco(archivio)
     oggetto_vecchio = oggetto(archivio, "M 13", "m-13")
     nel_2023 = notte(archivio, 1, "2023-05-01")
-    riprese(archivio, oggetto_vecchio, 1, notte_id=nel_2023, corredo_id=None, filtro=None,
+    riprese(archivio, oggetto_vecchio, 1, notte_id=nel_2023, setup_id=None, filtro=None,
             secondi=60.0)  # fmt: skip
 
     righe, quanti = archive.page(archivio, limit=50, offset=0, scope=Scope(years=("2023", "2025")))
@@ -104,7 +104,7 @@ def test_an_option_count_is_the_page_it_would_give(archivio, criteria, con_mosai
     pezzi = banco(archivio)
     if con_mosaico:
         ic405 = oggetto(archivio, "IC 405", "ic-405")
-        pose = riprese(archivio, ic405, 2, notte_id=pezzi["agosto"], corredo_id=pezzi["a"],
+        pose = riprese(archivio, ic405, 2, notte_id=pezzi["agosto"], setup_id=pezzi["a"],
                        filtro=pezzi["ha"], secondi=300.0)  # fmt: skip
         mosaico(archivio, pose)
     base = archive.Criteria(**criteria)
@@ -195,7 +195,7 @@ def test_by_hours_and_by_the_latest_night_are_two_different_orders(archivio):
     banco(archivio)
     m13 = oggetto(archivio, "M 13", "m-13")
     settembre = notte(archivio, 1, "2025-09-01")
-    riprese(archivio, m13, 1, notte_id=settembre, corredo_id=None, filtro=None, secondi=60.0)
+    riprese(archivio, m13, 1, notte_id=settembre, setup_id=None, filtro=None, secondi=60.0)
 
     per_ore, _ = archive.page(archivio, limit=50, offset=0, sort=archive.Order.HOURS)
     recenti, _ = archive.page(archivio, limit=50, offset=0, sort=archive.Order.RECENT)

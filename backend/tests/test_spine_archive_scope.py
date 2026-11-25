@@ -20,37 +20,37 @@ def notte(conn, sito, data):
     ).lastrowid
 
 
-def corredo(conn, ottica, camera):
+def setup(conn, ottica, camera):
     return conn.execute(
         "INSERT INTO rigs(optics_id, camera_id, detected, created_at) VALUES(?, ?, 1, ?)",
         (ottica, camera, now_iso()),
     ).lastrowid
 
 
-def riprese(conn, oggetto_id, quante, *, notte_id, corredo_id, filtro, secondi):
+def riprese(conn, oggetto_id, quante, *, notte_id, setup_id, filtro, secondi):
     ids = [posa(conn, oggetto_id, filtro=filtro, secondi=secondi) for _ in range(quante)]
     conn.executemany(
         "UPDATE frames SET night_id = ?, rig_id = ? WHERE id = ?",
-        [(notte_id, corredo_id, i) for i in ids],
+        [(notte_id, setup_id, i) for i in ids],
     )
     return ids
 
 
 def banco(conn):
-    """Due oggetti, due siti, due corredi, tre notti. Per ore M 31 sta davanti (3600 s contro
+    """Due oggetti, due siti, due setup, tre notti. Per ore M 31 sta davanti (3600 s contro
     1800), ma nel 2024 no (600 contro 1800): cosi' l'ordine dice se guarda le ore ristrette."""
     casa, deserto = luogo(conn), luogo(conn, ARIZONA, casa=False)
     rifrattore, newton = attrezzo(conn, "optics", "Rifrattore"), attrezzo(conn, "optics", "Newton")
     asi2600, asi533 = attrezzo(conn, "camera", "ASI2600"), attrezzo(conn, "camera", "ASI533")
-    a, b = corredo(conn, rifrattore, asi2600), corredo(conn, newton, asi533)
+    a, b = setup(conn, rifrattore, asi2600), setup(conn, newton, asi533)
     novembre, gennaio = notte(conn, casa, "2024-11-10"), notte(conn, casa, "2025-01-15")
     agosto = notte(conn, deserto, "2025-08-02")
     ha, lum = nasce_filtro(conn, "Ha", "ha"), nasce_filtro(conn, "Lum", "l")
     m31, ngc = oggetto(conn, "M 31", "m-31"), oggetto(conn, "NGC 7000", "ngc-7000")
-    riprese(conn, m31, 2, notte_id=novembre, corredo_id=a, filtro=lum, secondi=300.0)
-    riprese(conn, m31, 1, notte_id=gennaio, corredo_id=b, filtro=ha, secondi=600.0)
-    riprese(conn, m31, 4, notte_id=agosto, corredo_id=a, filtro=ha, secondi=600.0)
-    riprese(conn, ngc, 3, notte_id=novembre, corredo_id=a, filtro=ha, secondi=600.0)
+    riprese(conn, m31, 2, notte_id=novembre, setup_id=a, filtro=lum, secondi=300.0)
+    riprese(conn, m31, 1, notte_id=gennaio, setup_id=b, filtro=ha, secondi=600.0)
+    riprese(conn, m31, 4, notte_id=agosto, setup_id=a, filtro=ha, secondi=600.0)
+    riprese(conn, ngc, 3, notte_id=novembre, setup_id=a, filtro=ha, secondi=600.0)
     # mai ripreso: senza filtri c'e', con un filtro sulle pose non ha niente da far passare
     oggetto(conn, "Il campo dietro casa")
     return {
@@ -90,7 +90,7 @@ def test_the_period_reads_the_night_not_the_clock(archivio):
     pezzi = banco(archivio)
     capodanno = notte(archivio, pezzi["casa"], "2024-12-31")
     ngc = pezzi["ngc"]
-    ids = riprese(archivio, ngc, 1, notte_id=capodanno, corredo_id=None, filtro=None, secondi=60.0)
+    ids = riprese(archivio, ngc, 1, notte_id=capodanno, setup_id=None, filtro=None, secondi=60.0)
     archivio.execute("UPDATE frames SET date_obs = '2025-01-01T01:00:00Z' WHERE id = ?", ids)
 
     assert "NGC 7000" not in stretto(archivio, years=("2025",))[0]

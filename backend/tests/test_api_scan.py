@@ -63,7 +63,7 @@ def test_the_new_run_is_visible_before_the_worker_starts(app):
 
 def test_the_last_scan_says_today_by_the_home_site_clock(app):
     """La riga dell'ultima scansione dice «oggi» (tavola Menu 36-41): il giorno relativo nel fuso
-    del sito di casa arriva dall'API, per la scansione finita e per il worker."""
+    del sito predefinito arriva dall'API, per la scansione finita e per il worker."""
     client, fid, _ = app
     corpo = {"name": "Vicenza", "latitude": 45.5, "longitude": 11.5, "is_default": True}
     corpo |= {"timezone": "Europe/Rome", "elevation_m": 40}

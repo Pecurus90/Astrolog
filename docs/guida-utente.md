@@ -59,7 +59,7 @@ alto e i comandi restano sempre in vista in fondo allo schermo.
 3. **Tema.** Scegli come si vede l'app: **Chiaro**, **Scuro** o **Automatico**, e uno dei cinque
    accenti, ognuno con un campione nel modo che stai usando. La scelta vale subito e la cambi
    quando vuoi da *Impostazioni*, *Generale*. **Automatico** e' scuro dal tramonto all'alba del
-   tuo sito di casa e chiaro di giorno, e cambia da solo all'ora giusta: per questo ha bisogno di
+   tuo sito predefinito e chiaro di giorno, e cambia da solo all'ora giusta: per questo ha bisogno di
    un sito, e se hai saltato il passo prima non si puo' scegliere -- te lo dice sotto i tre modi.
    Appena dichiarato un sito, finche' l'app non ha calcolato tramonto e alba resta scuro.
 4. **Cartelle.** Scrivi il percorso di una cartella e premi *Verifica*: l'app conta i
@@ -303,7 +303,7 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   larga buona con la Luna fino al 25%, al limite fino al 65%, poi solo banda stretta -- e le ore
   di buio senza Luna; *nuova* e *piena* nel loro giorno. Una **stella** segna le notti che hai
   ripreso: toccala e leggi dove e cosa, con la freccia che apre quella notte nelle Notti. Il
-  calendario lo prepara l'app da sola appena c'e' un sito di casa: nei primi secondi puo' non
+  calendario lo prepara l'app da sola appena c'e' un sito predefinito: nei primi secondi puo' non
   esserci ancora, e lo dice.
 - **Il meteo della notte**: sei carte, sempre nello stesso ordine -- Nuvole, Seeing, Jet stream,
   Vento, Condensa, Aerosol -- col valore della notte, le barrette ora per ora nei colori del
@@ -425,7 +425,7 @@ Appena installata, l'Archivio e' vuoto e **te lo dice**, insieme a cosa fare per
 
 In testa c'e' **una notte grande**, all'inizio la piu' recente: che **giorno** era -- con il
 giorno della settimana, perche' una notte ce la si ricorda come *"quel sabato"* -- da quale
-**sito** e come l'app lo sa (dalle coordinate dei frame, dal tuo sito di casa, o dalla tua
+**sito** e come l'app lo sa (dalle coordinate dei frame, dal tuo sito predefinito, o dalla tua
 risposta in *Da confermare*); quante **ore** e quanti **frame**; cosa hai **ripreso**, i primi tre
 oggetti ognuno con una barra lunga quanto le sue ore e gli altri contati; con quali **filtri**, in
 una barra divisa per ore; che **Luna** c'era e quale **ripresa** lasciava; e **che cielo** c'era.

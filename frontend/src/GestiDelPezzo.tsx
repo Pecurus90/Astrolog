@@ -26,7 +26,7 @@ const TIPI: { kind: DaScrivere; l: Chiave }[] = [
   { kind: "rig", l: "gear.write.kind.rig" },
 ]
 const icona = (kind: DaScrivere) =>
-  ICONE[kind === "rig" ? "corredo" : (GRUPPI.find((g) => g.kind === kind)?.icona ?? "corredo")]
+  ICONE[kind === "rig" ? "setup" : (GRUPPI.find((g) => g.kind === kind)?.icona ?? "setup")]
 
 /**
  * Il gesto *Aggiungi strumento* (tavola v82 `modulo`, k `nuovo`): prima il tipo a tasselli, poi

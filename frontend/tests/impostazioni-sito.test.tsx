@@ -118,7 +118,7 @@ describe("Impostazioni / Siti", () => {
     expect(screen.getByText("SQM a mano").getAttribute("aria-pressed")).toBe("false")
   })
 
-  it("il sito di casa che cambia fa rileggere Stanotte; rinominare un sito d'uscita no", async () => {
+  it("il sito predefinito che cambia fa rileggere Stanotte; rinominare un sito d'uscita no", async () => {
     await apri([CASA, USCITA], "/impostazioni/siti?sito=2", {
       "POST /api/v1/sites/2/default": { stato: 200, corpo: { ...USCITA, is_default: true } },
       "PATCH /api/v1/sites/2": { stato: 200, corpo: { ...USCITA, name: "Grappa" } },

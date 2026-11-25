@@ -68,7 +68,7 @@ export function impostazioni(fatto: boolean, manca?: readonly string[]) {
     missing: manca ?? (fatto ? [] : ["no_active_site"]),
     ranges: { moon_good_pct: { min: 0, max: 100 }, moon_limit_pct: { min: 0, max: 100 } },
     choices: { moon_above_deg: [-5, 0, 5, 10], language: ["it", "en"] },
-    // col timbro c'e' il sito di casa (`missing` vuoto); Automatico non scelto, niente ora
+    // col timbro c'e' il sito predefinito (`missing` vuoto); Automatico non scelto, niente ora
     theme_now: null,
     theme_site: fatto && !(manca ?? []).includes("no_active_site") ? "Vicenza" : null,
   }
@@ -180,7 +180,7 @@ export const FERMO = {
 
 export const SPINA = { "/api/v1/pipeline/status": { stato: 200, corpo: FERMO } }
 
-/** Un sito di casa come lo manda `GET /api/v1/sites`, tipato dallo schema. */
+/** Un sito predefinito come lo manda `GET /api/v1/sites`, tipato dallo schema. */
 export const SITO_DI_CASA: components["schemas"]["SiteOut"] = {
   id: 1,
   name: "Vicenza",

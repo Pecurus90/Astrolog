@@ -62,8 +62,8 @@ def test_the_round_writes_the_next_night_once(client_vuoto, db_path, monkeypatch
 
 
 def test_a_moved_home_site_gets_its_sky_at_once(client_vuoto):
-    """Spostato il sito di casa, la Luna di stanotte e' quella del posto nuovo, gia' alla lettura
-    dopo: la riga vecchia, scritta altrove, non vale piu'."""
+    """Spostato il sito predefinito, la Luna di stanotte e' quella del posto nuovo, gia' alla
+    lettura dopo: la riga vecchia, scritta altrove, non vale piu'."""
     sito = _casa(client_vuoto)
     qui = client_vuoto.get("/api/v1/tonight").json()
 

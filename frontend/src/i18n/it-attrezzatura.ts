@@ -105,7 +105,7 @@ export const itAttrezzatura = {
   "gear.write.needName": "Per salvare serve il nome.",
   "gear.write.needRig": "Per salvare servono ottica, camera e focale effettiva.",
   "gear.write.rig.label": "Rinomina {nome}",
-  // Il dettaglio di un setup (tavola v82, `corredoV` e `conti`).
+  // Il dettaglio di un setup (tavola v82, la vista del setup e `conti`).
   "gear.rig.pair": "{ottica} · {camera}", // glifo-ok: separatore della tavola
   "gear.rig.ratio": "f/{n}",
   "gear.rig.computed": "(calcolato)",

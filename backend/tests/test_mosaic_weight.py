@@ -64,7 +64,7 @@ def test_without_the_time_few_poses_still_do_not_count(archivio):
 
 
 def test_a_pose_that_leaves_for_another_rig_reweighs_the_mosaic(archivio):
-    """Il peso segue anche le pose che se ne vanno: una posa di B che risulta di un altro corredo
+    """Il peso segue anche le pose che se ne vanno: una posa di B che risulta di un altro setup
     esce dal pannello, e B, sceso al 20%, non fa piu' un mosaico."""
     prepara(archivio)
     _pannello(archivio, A, 10)

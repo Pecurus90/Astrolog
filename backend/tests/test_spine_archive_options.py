@@ -25,7 +25,7 @@ def fresca(conn):
 
 def con_mosaico(conn, pezzi):
     ic405 = oggetto(conn, "IC 405", "ic-405")
-    pose = riprese(conn, ic405, 2, notte_id=pezzi["agosto"], corredo_id=pezzi["a"],
+    pose = riprese(conn, ic405, 2, notte_id=pezzi["agosto"], setup_id=pezzi["a"],
                    filtro=pezzi["ha"], secondi=300.0)  # fmt: skip
     mosaico(conn, pose)
 
@@ -80,7 +80,7 @@ def test_a_criterion_with_another_chosen_is_still_counted(archivio):
 
 def _nuova_notte(conn, pezzi):
     riprese(conn, pezzi["ngc"], 1, notte_id=notte(conn, pezzi["casa"], "2023-03-01"),
-            corredo_id=pezzi["a"], filtro=pezzi["ha"], secondi=60.0)  # fmt: skip
+            setup_id=pezzi["a"], filtro=pezzi["ha"], secondi=60.0)  # fmt: skip
 
 
 SCRITTURE = {
@@ -96,7 +96,7 @@ SCRITTURE = {
     "una notte che cambia data": lambda c, p: c.execute(
         "UPDATE nights SET night_date = '2023-08-02' WHERE id = ?", (p["agosto"],)
     ),
-    "un corredo che cambia camera": lambda c, p: c.execute(
+    "un setup che cambia camera": lambda c, p: c.execute(
         "UPDATE rigs SET camera_id = ? WHERE id = ?", (p["asi533"], p["a"])
     ),
     "un filtro rinominato": lambda c, p: c.execute(

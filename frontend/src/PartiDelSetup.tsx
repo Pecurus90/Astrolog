@@ -13,12 +13,12 @@ import { type Scritto, rifiutoDetto, useScrittura } from "./ModuloDelGesto"
 
 type Schema = components["schemas"]
 type Pagina = Schema["GearList"]
-type Corredo = Schema["RigOnPage"]
+type Setup = Schema["RigOnPage"]
 type Pezzo = Schema["InstrumentOnPage"]
 type Genere = Pezzo["kind"]
 
 /** One of the ten parts of a rig (board v82 `PARTI`). */
-export type Parte = Corredo["slots"][number]["kind"]
+export type Parte = Setup["slots"][number]["kind"]
 type Scelta = Schema["RigPart"]["kind"]
 type Sceglibile =
   "filter_wheel" | "focuser" | "guide_camera" | "mount" | "reducer" | "guide_scope" | "oag"
@@ -50,7 +50,7 @@ interface Nome {
 }
 
 /** The names a part holds: the files' ones with their frames, the ones you chose said so. */
-function nomiDi(r: Corredo, parte: Parte): Nome[] {
+function nomiDi(r: Setup, parte: Parte): Nome[] {
   if (parte === "optics") return r.optics ? [{ n: r.optics, f: "", vai: r.optics_id }] : []
   if (parte === "camera") return r.camera ? [{ n: r.camera, f: "", vai: r.camera_id }] : []
   return r.parts
@@ -82,7 +82,7 @@ export function PartiDelSetup({
   proposto,
 }: {
   pagina: Pagina
-  setup: Corredo
+  setup: Setup
   formato: Formato
   aperto: Parte | null
   onApri: (p: Parte | null) => void
@@ -238,7 +238,7 @@ function vociDi(pagina: Pagina, parte: Parte): Pezzo[] {
 }
 
 /** The pieces you chose for the part, by id. */
-function sceltiDi(r: Corredo, parte: Parte): Schema["RigPart"][] {
+function sceltiDi(r: Setup, parte: Parte): Schema["RigPart"][] {
   return r.parts.filter((p) => p.chosen && p.id !== null && PARTI[parte].generi.includes(p.kind))
 }
 
@@ -252,7 +252,7 @@ function Seleziona({
   proposto,
 }: {
   pagina: Pagina
-  setup: Corredo
+  setup: Setup
   parte: Parte
   formato: Formato
   onChiudi: () => void
@@ -360,7 +360,7 @@ function Seleziona({
 /** The write: the spacers as a list, one kind for the others. A guide is one, scope or OAG: the
  *  backend takes off the other kind (`rigs.declare_part`). */
 async function manda(
-  r: Corredo,
+  r: Setup,
   parte: Parte,
   scelti: number[],
   prima: Schema["RigPart"][],

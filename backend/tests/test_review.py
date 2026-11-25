@@ -496,7 +496,7 @@ def test_the_scan_receipt_survives_a_normalize_run(client, tmp_path):
 
 
 def test_the_rig_choices_count_the_poses_from_the_index(client):
-    """La tendina dei corredi conta le pose di ogni corredo dall'indice, senza leggere la tabella:
+    """La tendina dei setup conta le pose di ogni setup dall'indice, senza leggere la tabella:
     la chiedono la pagina e ogni Applica con una risposta sulla camera."""
     with db(client) as conn:
         plan = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + review_page.USED_RIGS))

@@ -2,7 +2,7 @@ import type { Formato } from "./componenti/Tema"
 import type { components } from "./api/schema"
 import { t } from "./i18n"
 
-type Corredo = components["schemas"]["RigOnPage"]
+type Setup = components["schemas"]["RigOnPage"]
 
 // [T] Attrezzatura.dc.html `L` (210-213): the rig detail's measures per format
 export const MISURE_DETTAGLIO = {
@@ -43,7 +43,7 @@ export const MISURE_DETTAGLIO = {
 } as const satisfies Record<Formato, Record<string, string>>
 
 /** Optics and camera in full, "ottica non indicata" for the missing one (board `defC`). */
-export function coppiaDelSetup(r: Corredo): string {
+export function coppiaDelSetup(r: Setup): string {
   return t("gear.rig.pair", {
     ottica: r.optics ?? t("gear.rig.noOptics"),
     camera: r.camera ?? t("gear.rig.noCamera"),
@@ -51,6 +51,6 @@ export function coppiaDelSetup(r: Corredo): string {
 }
 
 /** The name the detail gives a rig: yours, else optics and camera in full (board `nomeC`). */
-export function nomeDelSetup(r: Corredo): string {
+export function nomeDelSetup(r: Setup): string {
   return r.name ?? coppiaDelSetup(r)
 }

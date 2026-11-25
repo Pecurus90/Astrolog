@@ -43,7 +43,7 @@ export const itNotti = {
   // La notte protagonista.
   "nights.night": "La notte",
   "nights.site.frames": "dalle coordinate nei frame",
-  "nights.site.home": "il sito di casa, dalle Impostazioni",
+  "nights.site.home": "il sito predefinito, dalle Impostazioni",
   "nights.site.answer": "dalla tua risposta in Da confermare",
   "nights.prev": "La notte prima",
   "nights.next": "La notte dopo",

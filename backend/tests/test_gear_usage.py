@@ -78,7 +78,7 @@ def _group(conn, pose, tmp_path):
 
 @pytest.mark.parametrize("stadio", [_normalize, _solve, _identify, _group])
 def test_every_stage_that_moves_poses_writes_the_usage_at_the_end(client, tmp_path, stadio):
-    """Corredo e filtro (normalize), cielo (solve), oggetto (identify), notte (group): ognuno
+    """Setup e filtro (normalize), cielo (solve), oggetto (identify), notte (group): ognuno
     cambia un numero della pagina, e ognuno lo riscrive a fine giro."""
     with db(client) as conn:
         pose = [r[0] for r in conn.execute("SELECT id FROM frames")]
@@ -89,7 +89,7 @@ def test_every_stage_that_moves_poses_writes_the_usage_at_the_end(client, tmp_pa
 
 
 def test_only_rigs_carry_the_counters_order(client):
-    """La pagina ordina i corredi dal piu' usato, gli strumenti per tipo e nome, i filtri per banda:
+    """La pagina ordina i setup dal piu' usato, gli strumenti per tipo e nome, i filtri per banda:
     una posizione scritta per strumenti e filtri nessuno la leggerebbe."""
     with db(client) as conn:
         gear_usage.write(conn)
@@ -115,8 +115,8 @@ def test_a_piece_not_yet_counted_says_so_and_not_that_the_files_are_silent(clien
     pagina = gear(client)
     nata = by_name(pagina["instruments"], "Appena nata")
     assert (nata["counted"], nata["frames"]) == (False, None)
-    corredo = next(r for r in pagina["rigs"] if r["focal_mm"] == 333.0)
-    assert (corredo["counted"], corredo["integration_s"]) == (False, None)
+    setup = next(r for r in pagina["rigs"] if r["focal_mm"] == 333.0)
+    assert (setup["counted"], setup["integration_s"]) == (False, None)
     scritto = client.post("/api/v1/gear/instruments", json={"kind": "reducer", "name": "0.8x"})
     assert scritto.status_code == 201, scritto.text
     riduttore = by_name(gear(client)["instruments"], "0.8x")
@@ -238,7 +238,7 @@ def test_calibration_answered_takes_its_sky_off_the_gear(conn):
     dopo: l'uso si riscrive nella risposta stessa, o l'Attrezzatura resterebbe a dire la scala di
     un dark."""
     radice = add_folder(conn, "D:/Astro")
-    corredo = conn.execute("INSERT INTO rigs(focal_mm, created_at) VALUES(500.0, 'ora')").lastrowid
+    setup = conn.execute("INSERT INTO rigs(focal_mm, created_at) VALUES(500.0, 'ora')").lastrowid
     oggetto = conn.execute(
         "INSERT INTO objects(catalog_slug, created_at) VALUES('m-1', 'ora')"
     ).lastrowid
@@ -252,7 +252,7 @@ def test_calibration_answered_takes_its_sky_off_the_gear(conn):
     frame_id = _frame(conn, radice, "dark/a.fits", sky="done")
     conn.execute(
         "UPDATE frames SET rig_id = ?, object_id = ?, night_id = ? WHERE id = ?",
-        (corredo, oggetto, notte, frame_id),
+        (setup, oggetto, notte, frame_id),
     )
     gear_usage.write(conn)
 
@@ -271,10 +271,10 @@ def test_calibration_answered_takes_its_sky_off_the_gear(conn):
 @pytest.mark.parametrize(
     ("query", "indice"),
     [(gear_usage._RIGS, "frames_rig"), (gear_usage._FILTERS, "frames_filter")],
-    ids=["corredi", "filtri"],
+    ids=["setup", "filtri"],
 )
 def test_gear_usage_counts_rigs_and_filters_from_the_index_alone(conn, query, indice):
-    """Chi scrive l'uso dell'Attrezzatura a fine giro conta le pose di ogni corredo e di ogni filtro
+    """Chi scrive l'uso dell'Attrezzatura a fine giro conta le pose di ogni setup e di ogni filtro
     dall'indice, senza la tabella: un indice sulla sola colonna gli farebbe leggere comunque la riga
     di ogni posa."""
     piano = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + query))

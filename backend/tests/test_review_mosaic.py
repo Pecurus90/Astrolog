@@ -2,7 +2,7 @@
 
 Il banco riproduce il caso che ha deciso le regole (Marco, 12/9/2026): quattro pannelli veri
 identificati come **oggetti diversi** -- quattro, rimisurati il 14/9/2026 sull'archivio intero --
-quindi si raggruppa per corredo e regione; e due regioni dello stesso corredo, ognuna con la sua
+quindi si raggruppa per setup e regione; e due regioni dello stesso setup, ognuna con la sua
 risposta. Le regole stanno in `spine/mosaic.py` e nel contratto `docs/domini/mosaico.md`.
 """
 
@@ -54,7 +54,7 @@ def test_mosaic_subjects_are_named_once_per_object_not_once_per_pose(conn):
 
 
 CAM, OTT = "ZWO ASI2600MM", "Newton 200/800"
-# L'inquadratura di quel corredo, e il passo fra un pannello e il successivo: i rettangoli si
+# L'inquadratura di quel setup, e il passo fra un pannello e il successivo: i rettangoli si
 # sovrappongono (1.5 di lato contro un passo di 1.0) e nessuno contiene l'altro, che e' la
 # definizione di due pannelli. Il dithering e' un ventesimo del passo: non spezza un pannello.
 LATO, ALTO, PASSO, DITHER = 1.5, 1.0, 1.0, 0.05
@@ -66,16 +66,16 @@ NOMI = ["LDN 1516", "IC 405", "IC 405", "SH2 230"]
 ALTROVE = (200.0, 20.0)  # una regione ripresa in un'inquadratura sola: non c'e' niente da proporre
 
 
-def _posa(path, minuto, oggetto, *, corredo=True):
-    """Una posa di quel corredo: ottica, camera e focale, cosi' il corredo e' uno solo. Senza
-    corredo, una posa che non dice con che cosa e' stata ripresa."""
+def _posa(path, minuto, oggetto, *, setup=True):
+    """Una posa di quel setup: ottica, camera e focale, cosi' il setup e' uno solo. Senza
+    setup, una posa che non dice con che cosa e' stata ripresa."""
     card = {
         "IMAGETYP": "Light Frame",
         "EXPTIME": 300.0,
         "DATE-OBS": f"2026-03-14T21:{minuto:02d}:00",
         "OBJECT": oggetto,
     }
-    if corredo:
+    if setup:
         card |= {"TELESCOP": OTT, "INSTRUME": CAM, "FOCALLEN": 800.0}
     return write_fits(path, card)
 
@@ -96,15 +96,15 @@ def _cielo(conn, nome, ra, dec):
     stages.invalidate(conn, [frame_id], "identify")
 
 
-def _archivio(root, db_path, *, corredo=True):
+def _archivio(root, db_path, *, setup=True):
     """Quattro pannelli affiancati da due pose ciascuno, piu' un'inquadratura sola altrove."""
     minuto = 0
     for i, nome in enumerate(NOMI):
         for j in range(2):
-            _posa(root / f"p{i}_{j}.fits", minuto, nome, corredo=corredo)
+            _posa(root / f"p{i}_{j}.fits", minuto, nome, setup=setup)
             minuto += 1
     for j in range(2):
-        _posa(root / f"sola_{j}.fits", minuto + j, "M 51", corredo=corredo)
+        _posa(root / f"sola_{j}.fits", minuto + j, "M 51", setup=setup)
     populate(db_path, root)
     conn = connect(db_path)
     try:
@@ -336,7 +336,7 @@ def test_before_an_answer_no_frame_is_merged(pagina):
 def test_the_panels_are_gathered_even_though_they_are_three_different_objects(pagina):
     """I quattro pannelli di questo banco portano **tre** nomi diversi: ogni pannello inquadra
     una parte diversa del complesso. Raggruppando per soggetto il mosaico si spezzerebbe, quindi il
-    criterio e' corredo e regione -- e la proposta dice quali soggetti tocca, in ordine alfabetico.
+    criterio e' setup e regione -- e la proposta dice quali soggetti tocca, in ordine alfabetico.
 
     Qui l'alfabetico e l'ordine di lettura sono diversi apposta -- i pannelli si leggono LDN, IC,
     SH2 -- perche' con dei nomi gia' in ordine la regola non si vedrebbe: chi cambiasse il `sorted`
@@ -398,8 +398,8 @@ def test_the_page_still_shows_the_answer_after_a_scan_adds_a_panel(pagina, tmp_p
 
 
 def test_two_regions_of_the_same_rig_keep_their_own_answers(pagina, tmp_path):
-    """Un corredo solo ha ripreso 13 regioni distinte sull'archivio vero: una risposta agganciata al
-    corredo le avrebbe zittite tutte. Si risponde su una e l'altra resta aperta."""
+    """Un setup solo ha ripreso 13 regioni distinte sull'archivio vero: una risposta agganciata al
+    setup le avrebbe zittite tutte. Si risponde su una e l'altra resta aperta."""
     for j in range(2):
         _posa(tmp_path / "lib" / f"q_{j}.fits", 40 + j, "NGC 7000")
         _posa(tmp_path / "lib" / f"r_{j}.fits", 50 + j, "Pellicano")
@@ -470,9 +470,9 @@ def test_an_answer_that_is_not_yes_or_no_is_refused(pagina, cambio, perche_):
 @pytest.mark.parametrize("answer", ["yes", "no"])
 def test_saying_the_camera_of_the_poses_keeps_the_mosaic(db_path, tmp_path, answer):
     """Pose che non dicono la camera: si risponde sul mosaico, poi sulla scheda della loro firma, e
-    le pose passano al corredo vero. Il mosaico resta com'era -- col si' nell'Archivio col suo nome,
+    le pose passano al setup vero. Il mosaico resta com'era -- col si' nell'Archivio col suo nome,
     col no senza tornare fra le domande -- invece di sparire in silenzio alla corsa dopo."""
-    _archivio(tmp_path / "lib", db_path, corredo=False)
+    _archivio(tmp_path / "lib", db_path, setup=False)
     with TestClient(create_app(db_path), base_url="http://localhost") as pagina:
         _risposta(pagina, _mosaici(pagina)[0], answer)
         firma = next(g["key"] for g in review(pagina)["gear"] if g["asks_camera"])

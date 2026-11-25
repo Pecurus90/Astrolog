@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Il primo avvio da un passo all'altro (tavola v82 `Primo avvio`): cio' che si scrive lasciando un
- * passo, il timbro che non riesce, e la chiusura letta dal database (sito di casa, veste, chiave,
+ * passo, il timbro che non riesce, e la chiusura letta dal database (sito predefinito, veste, chiave,
  * cartelle e scansione). Le regole di fondo stanno in `wizard.test.tsx`.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
@@ -161,7 +161,7 @@ describe("il primo avvio, passo dopo passo", () => {
 })
 
 describe("la chiusura legge dal database", () => {
-  it("il sito di casa e' quello predefinito, non il primo dell'elenco; la veste e la chiave dal timbro", async () => {
+  it("il sito predefinito e' quello segnato, non il primo dell'elenco; la veste e la chiave dal timbro", async () => {
     const altro = { ...SITO_DI_CASA, id: 2, name: "Asiago", bortle: 3, is_default: false }
     const casa = { ...SITO_DI_CASA, id: 1, name: "Vicenza", bortle: null, is_default: true }
     primoAvvio({

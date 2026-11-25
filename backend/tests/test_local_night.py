@@ -3,7 +3,7 @@ posa entra (`scan`), e letta da chi la chiedeva in UTC. Quando casa cambia fuso:
 `test_home_nights.py`.
 
 La regola sta in CLAUDE.md ("Le date portano il fuso"); il fuso viene dalle coordinate dell'header,
-se ci sono, o dal sito di casa, altrimenti e' UTC. Una posa che non dice quando e' stata ripresa
+se ci sono, o dal sito predefinito, altrimenti e' UTC. Una posa che non dice quando e' stata ripresa
 prende la data del file (Marco, 27/9/2026).
 """
 
@@ -67,7 +67,7 @@ def test_in_the_east_the_night_is_cut_at_local_noon(db_path, tmp_path):
 
 
 def test_without_coordinates_the_home_site_gives_the_zone(db_path, tmp_path):
-    """Una posa che non dice dove e' stata ripresa prende il fuso del sito di casa."""
+    """Una posa che non dice dove e' stata ripresa prende il fuso del sito predefinito."""
     from astrolog.db.connect import connect
 
     with connect(db_path) as conn:

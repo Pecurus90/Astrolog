@@ -2,7 +2,7 @@ import type { components } from "./api/schema"
 import type { Esito } from "./componenti/Pillola"
 import { type Chiave, alPiu, decimali, numero, t } from "./i18n"
 
-type Corredo = components["schemas"]["RigOnPage"]
+type Setup = components["schemas"]["RigOnPage"]
 type Conti = components["schemas"]["RigNumbers"]
 type Manca = NonNullable<Conti["sampling"]["missing"]>
 
@@ -51,7 +51,7 @@ const riga = (v: string, sub: string, esito: Esito | null = null, pillola = ""):
   v, sub, esito, pillola,
 }) // prettier-ignore
 
-function campionamento(c: Conti["sampling"], r: Corredo): Riga {
+function campionamento(c: Conti["sampling"], r: Setup): Riga {
   const cielo =
     r.scale_arcsec_px === null
       ? t("gear.n.onSky.none")
@@ -61,7 +61,7 @@ function campionamento(c: Conti["sampling"], r: Corredo): Riga {
   return riga(PX(c.value ?? 0), t("gear.n.seeing", { cielo, da, a }))
 }
 
-function campo(c: Conti["field"], r: Corredo): Riga {
+function campo(c: Conti["field"], r: Setup): Riga {
   const cielo =
     r.width_deg === null || r.height_deg === null
       ? t("gear.n.onSky.none")
@@ -126,7 +126,7 @@ function carico(c: Conti["load"]): Riga {
 
 /** Le righe di "Dati del setup", nell'ordine della tavola: ognuna col suo valore, o con cio'
  *  che le manca. I numeri arrivano gia' fatti (`numbers`); qui si scrivono. */
-export function contiDelSetup(r: Corredo, conti: Conti): Conto[] {
+export function contiDelSetup(r: Setup, conti: Conti): Conto[] {
   const scrivi: { [K in keyof Conti]: (c: Conti[K]) => Riga } = {
     focal_ratio: (c) =>
       riga(

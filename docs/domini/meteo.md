@@ -23,9 +23,9 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
 | Se il servizio tace ma la previsione vale ancora, la pagina resta intera e una riga dice l'ora dell'ultima richiesta senza risposta e quella della previsione che si legge | `test_the_round_writes_how_the_forecast_request_went`, `test_a_round_without_a_timezone_writes_no_attempt`, `test_a_silent_service_says_why_and_the_last_forecast_stays`, *se l'ultima richiesta non ha avuto risposta lo dice, con l'ora della previsione che resta*, *se l'ultima richiesta e' andata bene non dice niente*, *anche senza nessuna previsione, una richiesta senza risposta lo dice*, *dopo Aggiorna senza risposta la pagina rilegge e la riga compare* |
 | Degli altri fattori vedo i due piu' gravi, e gli altri li apro con «Altri N fattori»; dove non c'e' un mouse la frase sopra il grafico dice di toccare | *di %i fattori ne mostra due, gli altri dietro «%s» che li apre senza cambiare testo*, *con due fattori soli non c'e' niente da aprire*, *dove non c'e' un mouse la frase dice di toccare il grafico o le barrette* |
 | Il cielo della notte mostra le nubi basse, medie e alte e la Trasparenza ora per ora; l'umidita' e, a destra, una misura alla volta col colore del giudizio si accendono a mano, e la legenda dice solo cio' che e' sul grafico; il filo dell'ora porta tutte le carte a quell'ora, e una carta si porta a un'ora da sola | `test_an_hour_says_whether_it_is_a_clear_hour_of_the_night`, `test_each_hour_carries_its_exposure_weighed_by_its_dark_and_they_add_up_to_the_night`, *all'apertura disegna solo le nubi, ognuna dal suo zero; l'umidita' si accende*, *la legenda e il lettore dicono solo cio' che e' sul grafico*, *a destra una metrica si sceglie, con la sua parola dove cambia; un'altra la sostituisce*, *il seeing senza chiave c'e' fra le metriche ma non si sceglie, e dice perche'*, *il grafico disegna la Trasparenza di ogni ora, e il lettore la dice*, *con le frecce il filo va a un'ora, il lettore la dice e tutte le carte la seguono; Esc torna alla notte*, *le frecce sulle barrette portano la carta a un'ora e ce la lasciano; × la riporta alla notte* |
-| La previsione arriva da sola: appena ho un sito di casa, e poi ogni tre ore | `test_the_forecast_renews_itself_in_the_background`, `test_a_home_site_declared_later_gets_its_forecast_without_waiting_the_full_round` |
-| Senza sito di casa la pagina mi manda a dichiararlo, e non chiede niente a nessuno | `test_without_a_home_site_the_page_says_so_and_asks_nothing`, *senza sito di casa manda a dichiararlo* |
-| Un sito di casa senza fuso orario lo dice, invece di aspettare una previsione che non arrivera' | `test_a_home_site_without_a_timezone_is_said`, *un sito di casa senza fuso orario lo dice, e porta a sistemarlo* |
+| La previsione arriva da sola: appena ho un sito predefinito, e poi ogni tre ore | `test_the_forecast_renews_itself_in_the_background`, `test_a_home_site_declared_later_gets_its_forecast_without_waiting_the_full_round` |
+| Senza sito predefinito la pagina mi manda a dichiararlo, e non chiede niente a nessuno | `test_without_a_home_site_the_page_says_so_and_asks_nothing`, *senza sito predefinito manda a dichiararlo* |
+| Un sito predefinito senza fuso orario lo dice, invece di aspettare una previsione che non arrivera' | `test_a_home_site_without_a_timezone_is_said`, *un sito predefinito senza fuso orario lo dice, e porta a sistemarlo* |
 | Una risposta senza notti intere non cancella la previsione di prima, e una nuova non tocca gli altri siti ne' il meteo osservato | `test_an_answer_that_brings_no_whole_night_leaves_the_last_forecast_alone`, `test_a_new_forecast_leaves_other_sites_and_the_observed_weather_alone` |
 | D'estate al nord, dove il buio astronomico non arriva, il verdetto guarda il buio nautico (Sole sotto -12°, ADR 0035) e lo dice; dove manca anche quello, le ore col Sole sotto l'orizzonte, detto; dove il Sole non tramonta non c'e' verdetto (tre gradini: Marco, 19/11/2026) | `test_without_astronomical_dark_the_night_is_the_nautical_dark`, `test_without_astronomical_dark_the_nautical_dark_is_judged_by_its_minutes`, `test_the_nautical_dark_shares_of_a_june_night_at_fifty_degrees`, `test_without_dark_the_night_is_the_hours_with_the_sun_down`, `test_where_the_sun_never_sets_there_is_no_verdict`, *dove il buio non arriva conta le ore col Sole sotto l'orizzonte, e dove il Sole non tramonta non da' un verdetto finto* |
 | Le prime tre notti hanno le ore; dalla quarta alla settima vedo solo la tendenza, detta meno affidabile | `test_three_nights_are_full_and_the_following_are_a_trend`, `test_a_trend_night_keeps_the_moon_as_written`, *dalla quarta notte mostra la tendenza, senza ore* |
@@ -127,7 +127,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
     rugiada. *Serve la fascia*: incerta e mai niente (la nebbia la dice la visibilita'). Il
     termine in H del secondo polinomio e' lineare, come stampato: NREL pvdeg scrive H^2, refuso.
     Senza quota il sito sta al livello del mare (soglia piu' bassa di circa 1 grado ogni km) e
-    la notte lo dice (`elevation_known`); cambiare la quota del sito di casa riscrive la vista.
+    la notte lo dice (`elevation_known`); cambiare la quota del sito predefinito riscrive la vista.
     Ogni ora porta `dew_threshold_c`, scritta al decimale dalla parte dello scarto; la notte
     porta `dew_threshold_top_c`, la piu' alta del buio, per "mai sotto la soglia, al piu'";
   - jet stream (250 hPa): niente da 126 km/h, i 35 m/s che meteoblue dice "seeing
@@ -154,7 +154,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
     25% esatto e' gia' grigio, come nel calendario. Conta da quando sorge (-0,833 gradi
     sull'altezza topocentrica, USNO; ADR 0035), come ESO, astroplan e lo scheduler di N.I.N.A.;
     i tre numeri sono la regola della Luna delle Impostazioni ([`effemeridi.md`](effemeridi.md)),
-    e cambiarla riscrive subito la previsione del sito di casa. La
+    e cambiarla riscrive subito la previsione del sito predefinito. La
     riga dice le ore in cui e' su e cosa resta nelle altre (Marco, 12/10/2026): "Luna al 55% dalle
     23 · banda larga fino alle 23". Il calendario della Luna usa gli stessi tre gradini
     (`effemeridi.md`). Di fabbrica 25 e 65, dall'orizzonte; i due gradini si cambiano nelle
@@ -241,7 +241,7 @@ frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`
   stretta, ora per ora. Per la planetaria e la Luna il plenilunio non e' un difetto. Il totale delle nuvole e' quello del modello, mai
   ricalcolato dagli strati.
 
-**Quando si scarica.** La previsione appena c'e' un sito di casa (o cambia), poi ogni tre ore in
+**Quando si scarica.** La previsione appena c'e' un sito predefinito (o cambia), poi ogni tre ore in
 sottofondo, e a richiesta col pulsante. Lo
 storico **da solo, dopo la scansione, in sottofondo** (Marco, 25/9/2026). Fuori dalla lettura dei file comunque: il pacchetto
 `astrolog.weather` sta accanto alla spina e i due non si conoscono, e una scansione senza rete va
@@ -255,7 +255,7 @@ giudizi e l'accordo gia' fatti. Una lettura non calcola mai. Non sta
 nella tabella delle notti, che spazza le notti senza frame -- e la notte di domani non ne ha ancora.
 Si tiene cio' che l'app usa, mai la risposta intera del servizio.
 
-**A mani vuote.** Il meteo funziona appena c'e' un sito di casa, senza chiavi. Il primo avvio ha un
+**A mani vuote.** Il meteo funziona appena c'e' un sito predefinito, senza chiavi. Il primo avvio ha un
 passo facoltativo per la chiave Meteoblue, saltabile; la stessa chiave si cambia nelle Impostazioni,
 non si mostra mai intera e si prova sul conto prima di salvarla. Sotto i dati, le attribuzioni che i
 servizi chiedono: "Weather data by Open-Meteo.com", e per CAMS la frase della licenza

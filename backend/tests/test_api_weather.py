@@ -141,7 +141,7 @@ def test_the_forecast_renews_itself_in_the_background(db_path, monkeypatch):
 def test_a_home_site_declared_later_gets_its_forecast_without_waiting_the_full_round(
     db_path, monkeypatch, caplog
 ):
-    """Il giro guarda il sito di casa spesso: chi lo dichiara ora non aspetta tre ore."""
+    """Il giro guarda il sito predefinito spesso: chi lo dichiara ora non aspetta tre ore."""
     from astrolog.api import app as fabbrica
 
     # Issue #83: se cade in CI, il log dice cosa ha visto ogni giro e con che esito
@@ -312,7 +312,7 @@ def test_the_time_of_the_forecast_is_the_one_of_the_models_not_of_the_sky(letto,
 
 @pytest.fixture(scope="session")
 def _meteo_scritto(tmp_path_factory):
-    """Un DB col sito di casa e un giro del meteo gia' scritto, dai servizi finti: si copia."""
+    """Un DB col sito predefinito e un giro del meteo gia' scritto, dai servizi finti: si copia."""
     percorso = tmp_path_factory.mktemp("meteo") / "scritto.db"
     create_database(percorso)
     metti_casa(percorso)

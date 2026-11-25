@@ -26,7 +26,7 @@ run_vero = astap._run
 
 BASELINE = Path(__file__).with_name("perf_baseline.json")
 GIRI = 5
-# La misura fatta a mano su due corredi diversi da' 0,2 s a posa col campo dato: si accetta
+# La misura fatta a mano su due setup diversi da' 0,2 s a posa col campo dato: si accetta
 # fino al doppio, perche' una CI e' piu' lenta di un portatile.
 TOLLERANZA = 2.0
 

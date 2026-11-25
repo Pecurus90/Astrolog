@@ -13,7 +13,7 @@ scansionato l'archivio vero):
 - ASIAIR, 542 frame: OBJECT 0, SITELAT 0, RA/DEC 0; WCS (CRVAL, CD) in 537; nome
   `Light_<oggetto>_<esposizione>_Bin1_...` in 542 su 542;
 - N.I.N.A., 9.457 frame: OBJECT, RA/DEC, SITELAT/LONG nel 100 %;
-- 579 frame senza coordinate del sito: oggi vanno al sito di casa senza domanda
+- 579 frame senza coordinate del sito: oggi vanno al sito predefinito senza domanda
   (`spine/group.py`); 579 frame con `TELESCOP = EQMod Mount`, una montatura;
 - pianeti, Luna, comete: riconosciuti solo dal nome (`vocab/moving.py`); un frame lunare
   finirebbe nel cono come campo stellare.

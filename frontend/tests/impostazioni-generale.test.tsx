@@ -160,7 +160,7 @@ describe("Impostazioni, Generale", () => {
     const { container } = await app({ "PATCH /api/v1/settings": scritte({ theme_mode: "chiaro" }) })
 
     const modo = await screen.findByRole("radiogroup", { name: "Modo" })
-    // c'e' il sito di casa: Automatico si sceglie (tavola v82)
+    // c'e' il sito predefinito: Automatico si sceglie (tavola v82)
     expect(
       within(modo).getByRole("radio", { name: "Automatico" }).getAttribute("aria-disabled"),
     ).toBeNull()
@@ -179,7 +179,7 @@ describe("Impostazioni, Generale", () => {
     expect(container.querySelector(".al-imp__griglia-1")).not.toBeNull()
   })
 
-  it("automatico veste il modo che l'API dice in vigore e nomina il sito di casa", async () => {
+  it("automatico veste il modo che l'API dice in vigore e nomina il sito predefinito", async () => {
     window.history.pushState({}, "", "/impostazioni/generale")
     const ora = { mode: "chiaro", until: "2026-10-16T18:27:00+02:00" }
     await app({}, { theme_mode: "automatico" }, { theme_now: ora })
@@ -235,7 +235,7 @@ describe("Impostazioni, Generale", () => {
     }
   })
 
-  it("automatico senza sito di casa, o un modo fisso, non rilegge", async () => {
+  it("automatico senza sito predefinito, o un modo fisso, non rilegge", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     try {
       for (const [valori, resto] of [

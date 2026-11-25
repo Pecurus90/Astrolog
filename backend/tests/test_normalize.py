@@ -1,4 +1,4 @@
-"""Lo stadio `normalize`: dai grezzi dell'header ai filtri, agli strumenti e ai corredi
+"""Lo stadio `normalize`: dai grezzi dell'header ai filtri, agli strumenti e ai setup
 dell'utente. Una regola, un test che si rompe se la regola si rompe.
 
 L'archivio di prova e' quello sintetico (`synthetic.py`), non quello di Marco: gli header
@@ -346,14 +346,14 @@ def test_normalize_falls_back_when_a_rule_points_at_a_deleted_filter(conn, tmp_p
 
 def test_normalize_rig_focal_is_the_median_and_ignores_the_file_order(conn, archive):
     """Il rappresentante del gruppo di focali e' la mediana dei distinti, non la prima letta:
-    con 561, 560 e 559 il corredo si chiama 560 anche se il primo file letto porta 561."""
+    con 561, 560 e 559 il setup si chiama 560 anche se il primo file letto porta 561."""
     focals = {r["focal_mm"] for r in rows(conn, "SELECT DISTINCT focal_mm FROM rigs")}
     assert focals == {560.0, 910.0, 1624.0}
 
 
 def test_normalize_a_zero_focal_length_does_not_explode(conn, tmp_path):
     """Una reflex che scrive FOCALLEN = 0 non e' "focale ignota": due pose cosi' devono finire
-    nello stesso corredo, non far cadere la corsa su un vincolo del database."""
+    nello stesso setup, non far cadere la corsa su un vincolo del database."""
     for i in range(2):
         write_light(
             tmp_path / f"a{i}.fits",
@@ -379,7 +379,7 @@ def test_normalize_a_broken_frame_does_not_stop_the_others(conn, tmp_path, monke
     real = normalize_mod.rig_for_frame
 
     # Gli argomenti si passano come arrivano: questo finto serve a far esplodere UN frame, non
-    # a ricopiare la firma di chi fa il corredo. Copiata, era rimasta indietro di un argomento e
+    # a ricopiare la firma di chi fa il setup. Copiata, era rimasta indietro di un argomento e
     # faceva fallire tutti i frame con un `TypeError` invece dell'errore che il test vuole provare.
     def explode(conn_, frame, *args, **kwargs):
         if frame["object_raw"] == "M 1":
@@ -425,7 +425,7 @@ def test_normalize_counts_what_is_left_to_confirm(conn, archive):
 
 
 def test_normalize_an_unknown_focal_length_is_not_the_same_rig(conn, tmp_path):
-    """Una focale ignota da una parte sola non e' "la stessa focale": due corredi, non uno."""
+    """Una focale ignota da una parte sola non e' "la stessa focale": due setup, non uno."""
     write_light(tmp_path / "a.fits", date="2024-05-17T21:00:00", TELESCOP="T", INSTRUME="C",
                 FOCALLEN=559.0)  # fmt: skip
     write_light(tmp_path / "b.fits", date="2024-05-17T21:05:00", TELESCOP="T", INSTRUME="C")

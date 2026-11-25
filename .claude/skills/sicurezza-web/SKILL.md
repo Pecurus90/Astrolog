@@ -32,7 +32,7 @@ dentro le radici che ha dichiarato: un `..` in una richiesta non esce mai dall'a
 
 **L'app non parla con nessuno da sola, per costruzione.** Nessuna telemetria, nessun invio
 di errori. **Scarica da sola solo cio' che l'utente ha attivato** (Marco, 24/10/2026; ADR
-0003): il meteo del sito di casa e il suo storico, il catalogo stellare al primo avvio,
+0003): il meteo del sito predefinito e il suo storico, il catalogo stellare al primo avvio,
 l'arricchimento online quando lo chiede; il controllo degli aggiornamenti solo se acceso.
 Sempre da un indirizzo fisso, mai letto da un dato; il catalogo con checksum verificato
 prima dell'uso e dichiarato a schermo, mai in silenzio.

@@ -5,7 +5,7 @@
  *
  * - **Niente e' preselezionato**: un'unione non si disfa, e si sceglie cliccando.
  * - **Si' e no mandano la coppia** che l'API ha proposto: quale grafia resta non si sceglie qui.
- * - **L'attrezzatura non c'e' piu'**: schede e corredi stanno nell'Attrezzatura.
+ * - **L'attrezzatura non c'e' piu'**: schede e setup stanno nell'Attrezzatura.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"

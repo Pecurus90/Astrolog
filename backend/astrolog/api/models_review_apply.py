@@ -104,7 +104,7 @@ class GearEdit(BaseModel):
         """Accepting both a listed rig and written pieces would mean choosing which one wins.
         Checked here so the OpenAPI declares it and the answer is the usual 422."""
         if self.rig_id and (self.camera or self.optics or self.focal_mm):
-            raise ValueError("un corredo dall'elenco porta i suoi pezzi")
+            raise ValueError("un setup dall'elenco porta i suoi pezzi")
         if bool(self.camera) != (self.focal_mm is not None):
             # A rig is optics + camera at one focal length: without it, this rig and the one the
             # files name tomorrow would stay twins forever, splitting the hours between them.

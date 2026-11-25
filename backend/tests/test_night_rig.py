@@ -1,8 +1,8 @@
-"""Il **corredo della notte**, e le risposte sui gruppi che seguono i pezzi.
+"""Il **setup della notte**, e le risposte sui gruppi che seguono i pezzi.
 
 Una posa che non dice la camera la prende dalla sua notte (`spine/night_rig.py`). Se non dice
 l'ottica, prende quella della notte quando la notte ne dice una sola a una focale sola, con la
-focale se la posa non la dice: senza, nasceva un corredo senza ottica accanto a quello delle
+focale se la posa non la dice: senza, nasceva un setup senza ottica accanto a quello delle
 pose complete, e le ore si spartivano.
 E una risposta sul gruppo porta i NOMI dei pezzi: rinominati o uniti, la risposta li segue, o
 al giro dopo il nome vecchio farebbe rinascere il pezzo.
@@ -32,7 +32,7 @@ def _posa(path, giorno, minuto, **header):
 @pytest.fixture
 def pagina(db_path, tmp_path):
     root = tmp_path / "lib"
-    # notte del 14: un corredo solo, e una posa che non dice niente dell'attrezzatura
+    # notte del 14: un setup solo, e una posa che non dice niente dell'attrezzatura
     for i in range(2):
         _posa(root / "14" / f"n_{i}.fits", 14, i, TELESCOP=NEWTON, FOCALLEN=800, **NINA)
     _posa(root / "14" / "muta.fits", 14, 30)
@@ -61,8 +61,8 @@ def pagina(db_path, tmp_path):
         yield c
 
 
-def _corredo(client, nome):
-    """(ottica, camera, focale, id) del corredo di quella posa."""
+def _setup(client, nome):
+    """(ottica, camera, focale, id) del setup di quella posa."""
     with db(client) as conn:
         r = conn.execute(
             "SELECT o.name AS optics, c.name AS camera, g.focal_mm, g.id FROM frames f"
@@ -81,42 +81,42 @@ def _rilavora_tutto(client):
 
 
 def test_a_silent_pose_takes_the_rig_of_its_night(pagina):
-    """**La regola.** Nella notte c'e' un corredo solo: la posa che non dice niente ci entra, e non
-    nasce un corredo senza ottica accanto."""
-    assert _corredo(pagina, "14/muta.fits") == _corredo(pagina, "14/n_0.fits")
+    """**La regola.** Nella notte c'e' un setup solo: la posa che non dice niente ci entra, e non
+    nasce un setup senza ottica accanto."""
+    assert _setup(pagina, "14/muta.fits") == _setup(pagina, "14/n_0.fits")
     # anche quella che scrive una focale zero, che la focale non la dice
-    assert _corredo(pagina, "14/zero.fits") == _corredo(pagina, "14/n_0.fits")
+    assert _setup(pagina, "14/zero.fits") == _setup(pagina, "14/n_0.fits")
 
 
 def test_a_pose_with_its_own_focal_does_not_take_the_optics_of_another(pagina):
     """La focale che la posa dice e' sua: a 400 mm l'ottica della notte, che lavora a 800, non e'
     la sua. Prende la camera, e l'ottica resta da chiedere."""
-    assert _corredo(pagina, "altra_focale.fits")[:3] == (None, CAM, 400.0)
+    assert _setup(pagina, "altra_focale.fits")[:3] == (None, CAM, 400.0)
 
 
 def test_a_night_with_two_optics_gives_only_the_camera(pagina):
     """Due ottiche nella stessa notte: quale fosse non si indovina. La posa prende la camera, e il
     resto lo chiede la domanda "quale ottica era"."""
-    ottica, camera, focale, _ = _corredo(pagina, "15/muta.fits")
+    ottica, camera, focale, _ = _setup(pagina, "15/muta.fits")
     assert (ottica, camera, focale) == (None, CAM, None)
 
 
 def test_one_optics_at_two_focals_gives_only_the_camera(pagina):
-    """La stessa ottica a due focali -- un riduttore -- non e' un corredo solo: quale focale avesse
+    """La stessa ottica a due focali -- un riduttore -- non e' un setup solo: quale focale avesse
     la posa muta non si indovina."""
-    assert _corredo(pagina, "17/muta.fits")[:3] == (None, CAM, None)
+    assert _setup(pagina, "17/muta.fits")[:3] == (None, CAM, None)
 
 
 def test_a_night_of_asiair_and_other_poses_gives_only_the_camera(pagina):
     """ "Nessuna ottica" dell'ASIAIR e' un valore: accanto a pose che l'ottica la dicono, la notte
     ne dice due, e l'ottica della posa muta non si indovina."""
-    assert _corredo(pagina, "18/muta.fits")[:3] == (None, CAM, None)
+    assert _setup(pagina, "18/muta.fits")[:3] == (None, CAM, None)
 
 
 def test_an_asiair_night_gives_the_rig_without_optics_of_its_poses(pagina):
-    """Una notte di sole pose ASIAIR ha un corredo senza ottica: la posa muta ci entra, e la
+    """Una notte di sole pose ASIAIR ha un setup senza ottica: la posa muta ci entra, e la
     domanda sull'ottica e' una sola per tutte e due."""
-    assert _corredo(pagina, "16/muta.fits") == _corredo(pagina, "16/s.fits")
+    assert _setup(pagina, "16/muta.fits") == _setup(pagina, "16/s.fits")
 
 
 def _gruppo_senza_camera(db_path, tmp_path):
@@ -151,7 +151,7 @@ def test_renaming_a_camera_carries_the_answer_on_the_group(db_path, tmp_path):
         risposte = {g["telescope"]: g["answer"]["camera"] for g in review(c)["gear"] if g["answer"]}
         # la risposta sull'altra camera non cambia: la rinomina segue solo il suo pezzo
         assert risposte == {"Newton 8": "ASI2600 Pro", "Un altro": "QHY268M"}
-        assert _corredo(c, "20/g.fits")[:2] == (NEWTON, "ASI2600 Pro")
+        assert _setup(c, "20/g.fits")[:2] == (NEWTON, "ASI2600 Pro")
 
 
 def test_merging_the_optics_carries_the_answer_on_the_group(db_path, tmp_path):
@@ -169,12 +169,12 @@ def test_merging_the_optics_carries_the_answer_on_the_group(db_path, tmp_path):
         assert "Newton 8" not in ottiche
         gruppo = next(g for g in review(c)["gear"] if g["key"] == chiave)
         assert gruppo["answer"]["optics"] == NEWTON
-        assert _corredo(c, "20/g.fits")[0] == NEWTON
+        assert _setup(c, "20/g.fits")[0] == NEWTON
 
 
 def test_night_rig_asked_for_some_nights_reads_only_those(pagina):
-    """La pagina chiede il corredo delle sole notti delle pose che chiedono, e lo trova con
-    l'indice: il corredo di una notte dipende solo dalle pose di quella notte, e rileggere
+    """La pagina chiede il setup delle sole notti delle pose che chiedono, e lo trova con
+    l'indice: il setup di una notte dipende solo dalle pose di quella notte, e rileggere
     l'archivio intero per saperlo sarebbe la parte cara della domanda sulla camera."""
     with db(pagina) as conn:
         tutte = night_rig.night_rigs(conn)

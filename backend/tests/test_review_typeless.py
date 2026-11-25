@@ -231,7 +231,7 @@ def _attaccato(client, nome):
 
 
 def _casa(client):
-    """Un sito di casa, perche' i frame abbiano una notte e una sessione."""
+    """Un sito predefinito, perche' i frame abbiano una notte e una sessione."""
     with db(client) as conn:
         conn.execute(
             "INSERT INTO sites(name, latitude, longitude, timezone, is_default, created_at)"

@@ -215,7 +215,7 @@ giusta. Un header di un programma non verificato non entra nel corpus.
 
 **La notte della posa si scrive quando la posa entra** (`scan`, `frames.local_night` e
 `local_tz`, con l'istante da cui viene in `night_instant`): da mezzogiorno a mezzogiorno nel fuso
-delle coordinate dell'header, o del sito di casa, o in UTC se non si sa nessuno dei due; senza `DATE-OBS` e' la notte in cui il file e' stato scritto
+delle coordinate dell'header, o del sito predefinito, o in UTC se non si sa nessuno dei due; senza `DATE-OBS` e' la notte in cui il file e' stato scritto
 (Marco, 27/9/2026). La leggono le domande per notte, il solver e la domanda sui luoghi, che vengono
 prima di `group` o non sanno il sito. **Quando cambia il fuso di casa** -- nasce, se ne sceglie
 un'altra, si sposta, si toglie -- i frame che non hanno un fuso dalle coordinate dell'header si riscrivono nel fuso

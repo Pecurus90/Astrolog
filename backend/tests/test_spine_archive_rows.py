@@ -82,7 +82,7 @@ def test_a_fresh_page_reads_what_is_written(archivio):
 
 SCRITTURE = {
     "una posa nuova": lambda c, p: riprese(
-        c, p["ngc"], 1, notte_id=notte(c, p["casa"], "2023-03-01"), corredo_id=p["a"],
+        c, p["ngc"], 1, notte_id=notte(c, p["casa"], "2023-03-01"), setup_id=p["a"],
         filtro=p["ha"], secondi=60.0,
     ),
     "una posa che cambia durata": lambda c, p: c.execute(

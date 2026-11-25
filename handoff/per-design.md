@@ -13,6 +13,11 @@ Consegna controllata: b173aada (v82, 11/11), in `handoff/design/` al posto della
 
 ## Da dare
 
+- [da dare] Parola «corredo» nei file della consegna (passo 17, 25/11): il glossario dice
+  **setup, mai corredo**, e l'app ora lo dice ovunque. Restano nei vostri file: la classe
+  `.as-produzioni__corredo` e l'area `corredo` di `.as-produzioni__voce` (`astrolog.css`, che
+  nessuna pagina usa piu'), il commento di `consegna/astrolog.css:4279`, `corredi` e `corredoV`
+  in `componenti/dati.js` e nelle tavole, e `DECISIONI.md`. Da rinominare alla prossima consegna.
 - [da dare] Meteo, carta Condensa e cielo della notte (passo 15, 24/11): la soglia non e' piu' 3
   gradi fissi ma una **per ora** (modello di Beysens: nuvole, vento, quota del sito). L'app oggi:
   scarto con un decimale; sotto il valore «sotto la soglia di 4,9 °C dalle 22:00» o «mai sotto

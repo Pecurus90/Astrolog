@@ -77,7 +77,7 @@ FRAMES = [
         {"INSTRUME": "ATR2600M"},
     ),
     # la focale che oscilla di un millimetro (il primo frame del gruppo porta 561): un
-    # corredo solo, e la sua focale e' la mediana 560, non la prima letta
+    # setup solo, e la sua focale e' la mediana 560, non la prima letta
     ("nina/L_003.fits", NINA, "L", "M 31", 120.0, "2024-11-01T20:05:00.000", {}),
     ("nina/L_004.fits", NINA, "L", "M 31", 120.0, "2024-11-01T20:10:00.000", {"FOCALLEN": 559.0}),
     # mono che dichiara "nessun filtro" e non ha matrice di Bayer: non si assume niente

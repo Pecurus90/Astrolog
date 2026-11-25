@@ -8,7 +8,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
-  CORREDO,
+  SETUP,
   NUMERI,
   OTTICA,
   apriAttrezzatura,
@@ -37,7 +37,7 @@ describe("la carta del setup", () => {
     attrezzatura({
       rigs: [
         {
-          ...CORREDO,
+          ...SETUP,
           numbers: NUMERI,
           parts: [montatura(2, "AM5", false), montatura(3, "EQ6-R", true)],
         },
@@ -55,7 +55,7 @@ describe("la carta del setup", () => {
 
   it("senza montatura scelta, quella che i file nominano per prima", async () => {
     attrezzatura({
-      rigs: [{ ...CORREDO, parts: [montatura(2, "AM5", false), montatura(3, "EQ6-R", false)] }],
+      rigs: [{ ...SETUP, parts: [montatura(2, "AM5", false), montatura(3, "EQ6-R", false)] }],
     })
     await apriAttrezzatura()
     expect(pastiglie(await carta())).toEqual(["910 mm", "su AM5"])
@@ -63,33 +63,33 @@ describe("la carta del setup", () => {
 
   it("una scelta che non e' una montatura non conta come montatura", async () => {
     const riduttore = { kind: "reducer", id: 4, name: "Riduttore 0,8", frames: 3, chosen: true }
-    attrezzatura({ rigs: [{ ...CORREDO, parts: [riduttore, montatura(2, "AM5", false)] }] })
+    attrezzatura({ rigs: [{ ...SETUP, parts: [riduttore, montatura(2, "AM5", false)] }] })
     await apriAttrezzatura()
     expect(pastiglie(await carta())).toEqual(["910 mm", "su AM5"])
   })
 
   it("senza focale, rapporto ne' montatura, nessuna pastiglia", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, focal_mm: null }] })
+    attrezzatura({ rigs: [{ ...SETUP, focal_mm: null }] })
     await apriAttrezzatura()
     expect(pastiglie(await carta())).toEqual([])
   })
 
   it("senza nome tuo il titolo e' la coppia, e non si ripete sotto", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, name: null }] })
+    attrezzatura({ rigs: [{ ...SETUP, name: null }] })
     await apriAttrezzatura()
     const c = await carta(/TS 130 APO · ASI2600MM/)
     expect(c.querySelector(".al-attr__testo-9")).toBeNull()
   })
 
   it("non ancora contato, o senza ore, dice che conta", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, counted: false }] })
+    attrezzatura({ rigs: [{ ...SETUP, counted: false }] })
     await apriAttrezzatura()
     expect((await carta()).querySelector(".al-attr__riga-16")?.textContent).toBe(
       "conteggio in corso",
     )
     pulisci()
 
-    attrezzatura({ rigs: [{ ...CORREDO, integration_s: null }] })
+    attrezzatura({ rigs: [{ ...SETUP, integration_s: null }] })
     await apriAttrezzatura()
     const c = await carta()
     expect(c.querySelector(".al-attr__testo-10")).toBeNull()
@@ -125,7 +125,7 @@ describe("la carta del setup", () => {
         { ...OTTICA, aperture_mm: null, focal_mm: null },
         { ...camera, pixel_size_um: 3.76 },
       ],
-      rigs: [{ ...CORREDO, camera_id: 9 }],
+      rigs: [{ ...SETUP, camera_id: 9 }],
     })
     await apriAttrezzatura()
     const c = await carta()
@@ -134,7 +134,7 @@ describe("la carta del setup", () => {
   })
 
   it("ottica e camera non indicate", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, optics: null, camera: null, optics_id: null }] })
+    attrezzatura({ rigs: [{ ...SETUP, optics: null, camera: null, optics_id: null }] })
     await apriAttrezzatura()
     expect(chi(await carta())).toEqual(["otticaottica non indicata", "cameracamera non indicata"])
   })

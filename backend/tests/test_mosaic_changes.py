@@ -28,14 +28,14 @@ def test_a_pose_changing_camera_stays_in_its_mosaic(archivio):
     """Si dice di che camera sono le pose (*Frame senza camera*), le pose ripassano da `group`, e
     il mosaico resta com'era: la sua chiave non porta la camera."""
     prepara(archivio)
-    pose = [posa(archivio, A, corredo=None), posa(archivio, B, corredo=None)]
+    pose = [posa(archivio, A, setup=None), posa(archivio, B, setup=None)]
     riga = rispondi(archivio, SI)
 
     archivio.execute("UPDATE frames SET rig_id = 1")
     mosaic.place(archivio, pose)
 
     assert [chiave_di(archivio, p) for p in pose] == [riga["key"]] * 2
-    nuovo = posa(archivio, C, corredo=1)
+    nuovo = posa(archivio, C, setup=1)
     assert chiave_di(archivio, nuovo) == riga["key"]
 
 
@@ -44,9 +44,9 @@ def test_merging_two_spellings_of_a_camera_joins_the_confirmed_mosaic(archivio):
     unite, le pose dell'altra entrano nel mosaico confermato invece di restare una domanda
     sovrapposta."""
     prepara(archivio)
-    posa(archivio, A, corredo=1)
-    posa(archivio, B, corredo=1)
-    altre = [posa(archivio, A, corredo=2), posa(archivio, B, corredo=2)]
+    posa(archivio, A, setup=1)
+    posa(archivio, B, setup=1)
+    altre = [posa(archivio, A, setup=2), posa(archivio, B, setup=2)]
     riga = next(m for m in proposti(archivio) if m["frames"] == 2)
     mosaic.write_answer(archivio, riga["key"], SI)
     confermato = chiave_di(archivio, 1) or chiave_di(archivio, altre[0])
@@ -62,12 +62,12 @@ def test_merging_two_spellings_of_a_camera_joins_the_confirmed_mosaic(archivio):
 
 def test_a_pose_told_its_camera_later_joins_the_confirmed_mosaic(archivio):
     """Un frame arrivato senza camera apre un pannello suo; detta la camera, entra nel pannello
-    del corredo vero, e con lui nel mosaico gia' confermato."""
+    del setup vero, e con lui nel mosaico gia' confermato."""
     prepara(archivio)
     posa(archivio, A)
     posa(archivio, B)
     riga = rispondi(archivio, SI)
-    tardi = posa(archivio, A, corredo=None)
+    tardi = posa(archivio, A, setup=None)
 
     archivio.execute("UPDATE frames SET rig_id = 1 WHERE id = ?", (tardi,))
     mosaic.place(archivio, [tardi])
@@ -108,21 +108,21 @@ def test_an_emptied_panel_does_not_link_its_neighbours(archivio):
 
 
 def test_a_mosaic_never_mixes_two_rigs(archivio):
-    """La posa piu' vecchia di un mosaico senza risposta cambia corredo e ne apre uno nuovo: la
+    """La posa piu' vecchia di un mosaico senza risposta cambia setup e ne apre uno nuovo: la
     chiave nata da lei non puo' riportarla nel mosaico vecchio, che vive ancora nell'altro."""
     prepara(archivio)
-    vecchia = posa(archivio, A, corredo=None, quando=NOTTE)
-    posa(archivio, B, corredo=None, quando=ALTRA_NOTTE)
+    vecchia = posa(archivio, A, setup=None, quando=NOTTE)
+    posa(archivio, B, setup=None, quando=ALTRA_NOTTE)
     archivio.execute("UPDATE frames SET rig_id = 1 WHERE id = ?", (vecchia,))
     mosaic.place(archivio, [vecchia])
 
-    posa(archivio, B, corredo=1)
+    posa(archivio, B, setup=1)
 
-    corredi = archivio.execute(
+    setups = archivio.execute(
         "SELECT mosaic_id, COUNT(DISTINCT COALESCE(rig_id, -1)) FROM panels"
         " WHERE mosaic_id IS NOT NULL GROUP BY mosaic_id"
     ).fetchall()
-    assert corredi and all(quanti == 1 for _, quanti in corredi)
+    assert setups and all(quanti == 1 for _, quanti in setups)
 
 
 def test_a_confirmed_mosaic_left_with_one_panel_is_not_a_mosaic(archivio):
@@ -154,8 +154,8 @@ def test_an_answer_from_an_old_page_on_a_single_panel_is_refused(archivio):
 
 
 def test_a_panel_keeps_its_rig_while_some_of_its_poses_are_still_there(archivio):
-    """Una sola delle due pose di un pannello cambia camera: il pannello resta del corredo delle
-    altre, o una posa nuova di quel corredo nello stesso punto ne aprirebbe un terzo."""
+    """Una sola delle due pose di un pannello cambia camera: il pannello resta del setup delle
+    altre, o una posa nuova di quel setup nello stesso punto ne aprirebbe un terzo."""
     prepara(archivio)
     prima = posa(archivio, A)
     posa(archivio, A)

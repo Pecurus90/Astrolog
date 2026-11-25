@@ -1,5 +1,5 @@
 """Le **produzioni** di una riga dell'Archivio: lo stesso oggetto ripreso con la stessa ottica e
-la stessa camera (Marco, 8/10/2026), finche' non esistono i progetti. Ognuna dice il suo corredo,
+la stessa camera (Marco, 8/10/2026), finche' non esistono i progetti. Ognuna dice il suo setup,
 i suoi frame, le sue ore e i suoi filtri; insieme fanno la riga, senza contare niente due volte.
 """
 
@@ -14,10 +14,10 @@ from group_bench import attrezzo
 from group_bench import filtro as nasce_filtro
 from test_spine_archive import oggetto, posa
 from test_spine_archive_mosaic import CHIAVE, mosaico
-from test_spine_archive_scope import banco, corredo, riprese
+from test_spine_archive_scope import banco, riprese, setup
 
 
-def corredi(lista):
+def setups(lista):
     return [(p["optics"], p["camera"]) for p in lista]
 
 
@@ -28,7 +28,7 @@ def test_an_object_shot_with_two_rigs_has_two_productions_most_time_first(archiv
 
     sue = productions.of(archivio, Subject.OBJECT, [b["m31"]], alone=True)[b["m31"]]
 
-    assert corredi(sue) == [("Rifrattore", "ASI2600"), ("Newton", "ASI533")]
+    assert setups(sue) == [("Rifrattore", "ASI2600"), ("Newton", "ASI533")]
     assert [(p["frames"], p["integration_s"], p["untimed"]) for p in sue] == [
         (6, 3000.0, 0),
         (1, 600.0, 0),
@@ -62,7 +62,7 @@ def test_the_productions_of_a_row_add_up_to_the_row(archivio):
 
 
 def test_the_same_optics_and_camera_at_two_focal_lengths_are_one_production(archivio):
-    """Un riduttore cambia la focale e il corredo (`rigs` li distingue), non la produzione: la
+    """Un riduttore cambia la focale e il setup (`rigs` li distingue), non la produzione: la
     definizione guarda l'ottica e la camera."""
     b = banco(archivio)
     ridotto = archivio.execute(
@@ -70,39 +70,39 @@ def test_the_same_optics_and_camera_at_two_focal_lengths_are_one_production(arch
         " VALUES(?, ?, 320.0, 1, ?)",
         (b["rifrattore"], b["asi2600"], now_iso()),
     ).lastrowid
-    riprese(archivio, b["ngc"], 2, notte_id=None, corredo_id=ridotto, filtro=None, secondi=100.0)
+    riprese(archivio, b["ngc"], 2, notte_id=None, setup_id=ridotto, filtro=None, secondi=100.0)
 
     sue = productions.of(archivio, Subject.OBJECT, [b["ngc"]], alone=True)[b["ngc"]]
 
-    assert corredi(sue) == [("Rifrattore", "ASI2600")]
+    assert setups(sue) == [("Rifrattore", "ASI2600")]
     assert sue[0]["frames"] == 5
 
 
 def test_frames_that_do_not_say_their_rig_are_a_production_that_says_so(archivio):
-    """Un frame senza corredo non sparisce e non si attacca a un altro: e' una produzione col
-    corredo che non si sa (`None`), e i frame senza durata si contano a parte."""
+    """Un frame senza setup non sparisce e non si attacca a un altro: e' una produzione col
+    setup che non si sa (`None`), e i frame senza durata si contano a parte."""
     b = banco(archivio)
-    riprese(archivio, b["ngc"], 2, notte_id=None, corredo_id=None, filtro=None, secondi=None)
+    riprese(archivio, b["ngc"], 2, notte_id=None, setup_id=None, filtro=None, secondi=None)
 
     sue = productions.of(archivio, Subject.OBJECT, [b["ngc"]], alone=True)[b["ngc"]]
 
-    assert corredi(sue) == [("Rifrattore", "ASI2600"), (None, None)]
+    assert setups(sue) == [("Rifrattore", "ASI2600"), (None, None)]
     ignota = sue[1]
     assert (ignota["frames"], ignota["integration_s"], ignota["untimed"]) == (2, 0, 2)
     assert ignota["filters"] == []
 
 
 def test_a_rig_that_knows_only_its_camera_is_its_own_production(archivio):
-    """Meta' corredo e' un dato: la camera si dice, l'ottica non si sa. Non si fonde con chi non
+    """Meta' setup e' un dato: la camera si dice, l'ottica non si sa. Non si fonde con chi non
     dice niente."""
     b = banco(archivio)
-    solo_camera = corredo(archivio, None, b["asi533"])
-    riprese(archivio, b["ngc"], 1, notte_id=None, corredo_id=solo_camera, filtro=None, secondi=50.0)
-    riprese(archivio, b["ngc"], 1, notte_id=None, corredo_id=None, filtro=None, secondi=40.0)
+    solo_camera = setup(archivio, None, b["asi533"])
+    riprese(archivio, b["ngc"], 1, notte_id=None, setup_id=solo_camera, filtro=None, secondi=50.0)
+    riprese(archivio, b["ngc"], 1, notte_id=None, setup_id=None, filtro=None, secondi=40.0)
 
     sue = productions.of(archivio, Subject.OBJECT, [b["ngc"]], alone=True)[b["ngc"]]
 
-    assert corredi(sue) == [("Rifrattore", "ASI2600"), (None, "ASI533"), (None, None)]
+    assert setups(sue) == [("Rifrattore", "ASI2600"), (None, "ASI533"), (None, None)]
 
 
 def test_a_rewritten_copy_is_not_a_frame_of_a_production(archivio):
@@ -132,14 +132,14 @@ def test_a_narrowed_row_tells_the_productions_of_what_was_asked(archivio):
 
 
 def test_a_mosaic_has_its_productions_too_and_the_object_alone_keeps_its_own(archivio):
-    """Un mosaico e' una riga come le altre: le sue produzioni sono i corredi delle sue pose.
+    """Un mosaico e' una riga come le altre: le sue produzioni sono i setup delle sue pose.
     L'oggetto ripreso anche da solo porta le sole pose fuori dal mosaico."""
     ottica, camera = attrezzo(archivio, "optics", "Newton"), attrezzo(archivio, "camera", "ASI2600")
-    a = corredo(archivio, ottica, camera)
+    a = setup(archivio, ottica, camera)
     ha = nasce_filtro(archivio, "Ha", "ha")
     ic = oggetto(archivio, "IC 405", "ic-405")
-    nel_mosaico = riprese(archivio, ic, 3, notte_id=None, corredo_id=a, filtro=ha, secondi=300.0)
-    riprese(archivio, ic, 1, notte_id=None, corredo_id=a, filtro=ha, secondi=100.0)
+    nel_mosaico = riprese(archivio, ic, 3, notte_id=None, setup_id=a, filtro=ha, secondi=300.0)
+    riprese(archivio, ic, 1, notte_id=None, setup_id=a, filtro=ha, secondi=100.0)
     mosaico(archivio, nel_mosaico)
 
     del_mosaico = productions.of(archivio, Subject.MOSAIC, [CHIAVE])[CHIAVE]
@@ -171,10 +171,10 @@ def test_the_route_hands_the_row_scope_and_the_object_alone_to_the_productions(
     conn = connect(db_path_col_catalogo)
     try:
         b = banco(conn)
-        a, ha = corredo(conn, b["newton"], b["asi2600"]), nasce_filtro(conn, "OIII", "oiii")
+        a, ha = setup(conn, b["newton"], b["asi2600"]), nasce_filtro(conn, "OIII", "oiii")
         ic = oggetto(conn, "IC 405", "ic-405")
-        nel_mosaico = riprese(conn, ic, 3, notte_id=None, corredo_id=a, filtro=ha, secondi=300.0)
-        riprese(conn, ic, 1, notte_id=None, corredo_id=a, filtro=ha, secondi=100.0)
+        nel_mosaico = riprese(conn, ic, 3, notte_id=None, setup_id=a, filtro=ha, secondi=300.0)
+        riprese(conn, ic, 1, notte_id=None, setup_id=a, filtro=ha, secondi=100.0)
         mosaico(conn, nel_mosaico)
         conn.commit()
     finally:

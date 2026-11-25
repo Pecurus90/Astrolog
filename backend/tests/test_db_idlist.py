@@ -61,7 +61,7 @@ def test_past_the_ceiling_sqlite_refuses_the_query(conn):
         pytest.param(lambda c: group_store.detach(c, TANTI), id="group.detach"),
         pytest.param(lambda c: solve_store.first_per_order_key(c, TANTI), id="solve.primo"),
         pytest.param(lambda c: solve_store.newest_first(c, TANTI), id="solve.piu_recenti"),
-        pytest.param(lambda c: gear._detach_rigs(c, TANTI), id="gear.corredi"),
+        pytest.param(lambda c: gear._detach_rigs(c, TANTI), id="gear.setup"),
     ],
 )
 def test_ids_past_the_ceiling_do_not_break_the_query(conn, chiamata):

@@ -17,7 +17,7 @@ versione della formula nella riga toglie quel rischio.
 - **Tabella `night_moons`, una riga per notte dell'archivio (derivata).** Porta fase e
   illuminazione a mezzanotte nel fuso del sito, buio astronomico e buio con la Luna sotto la soglia
   d'altezza della regola, e con cosa e' stata calcolata: formula, data, coordinate e fuso del sito,
-  soglia. Distinta da `moon_nights`, il calendario del sito di casa, che prende la Luna a meta'
+  soglia. Distinta da `moon_nights`, il calendario del sito predefinito, che prende la Luna a meta'
   della finestra: due istanti diversi, due fatti.
 - **`night_moons.refresh` riscrive solo le righe vecchie**: mancanti, o con un'altra formula, data,
   posizione, fuso o soglia. Senza righe vecchie costa una query.

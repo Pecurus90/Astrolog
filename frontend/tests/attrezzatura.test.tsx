@@ -4,14 +4,14 @@
  *
  * La regola che la pagina non deve tradire e' una sola, e viene dal contratto: **si mostra solo
  * cio' che l'app possiede davvero**. Dove un numero non c'e' -- le ore di una montatura, la scala
- * di un corredo di cui non si sono ancora riconosciute le pose -- si scrive **perche'**, mai uno zero
+ * di un setup di cui non si sono ancora riconosciute le pose -- si scrive **perche'**, mai uno zero
  * (`docs/domini/attrezzatura.md`).
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
-  CORREDO,
+  SETUP,
   FILTRO,
   MONTATURA,
   NUMERI,
@@ -216,9 +216,9 @@ describe("l Attrezzatura", () => {
   })
 
   it("il campo si confronta con gli altri setup e con la Luna, in percento dall'API", async () => {
-    const piccolo = { ...CORREDO, id: 11, name: null, title: "RedCat · ASI2600MM" }
+    const piccolo = { ...SETUP, id: 11, name: null, title: "RedCat · ASI2600MM" }
     attrezzatura({
-      rigs: [CORREDO, piccolo],
+      rigs: [SETUP, piccolo],
       fields: [
         { rig_id: 11, width_pct: 87, height_pct: 87.3 },
         { rig_id: 10, width_pct: 38.8, height_pct: 38.8 },
@@ -240,7 +240,7 @@ describe("l Attrezzatura", () => {
   })
 
   it("i dati del setup dicono ogni conto, o cosa gli manca", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, numbers: NUMERI }] })
+    attrezzatura({ rigs: [{ ...SETUP, numbers: NUMERI }] })
     await apriAttrezzatura()
 
     const dati = await screen.findByRole("region", { name: /^dati del setup$/i })
@@ -264,7 +264,7 @@ describe("l Attrezzatura", () => {
       kind: "filter", id: 3, name, frames: 1, chosen: false, passband, ring_from, ring_to,
     }) // prettier-ignore
     attrezzatura({
-      rigs: [{ ...CORREDO, parts: [filtro("Ha", "HA", 0, 75), filtro("OIII", "OIII", 75, 100)] }],
+      rigs: [{ ...SETUP, parts: [filtro("Ha", "HA", 0, 75), filtro("OIII", "OIII", 75, 100)] }],
     })
     await apriAttrezzatura()
 
@@ -279,12 +279,12 @@ describe("l Attrezzatura", () => {
   it("un setup di cui non si sa quanto inquadra non scrive una scala", async () => {
     // La riga tace e dice perche': un numero preso dalla scheda sarebbe giusto sulla carta e
     // sbagliato nel cielo, e nessuno potrebbe accorgersene. Il caso non e' solo "non ha mai
-    // ripreso": visto dal vivo, un corredo con otto pose **non ancora riconosciute** non ha una
+    // ripreso": visto dal vivo, un setup con otto pose **non ancora riconosciute** non ha una
     // scala, e dirgli "dopo la prima ripresa" sarebbe falso.
     attrezzatura({
       rigs: [
         {
-          ...CORREDO,
+          ...SETUP,
           integration_s: 0,
           scale_arcsec_px: null,
           width_deg: null,
@@ -327,7 +327,7 @@ describe("l Attrezzatura", () => {
     attrezzatura({
       rigs: [
         {
-          ...CORREDO,
+          ...SETUP,
           parts: [
             { kind: "filter_wheel", id: 7, name: "ZWO EFW", frames: 100, chosen: false },
             { kind: "filter_wheel", id: 8, name: "Ruota vecchia", frames: 20, chosen: false },
@@ -337,7 +337,7 @@ describe("l Attrezzatura", () => {
             { kind: "filter", id: 3, name: "Ha 3nm", frames: 60, chosen: false },
           ],
           // le tacche le scrive l'API dalle parti
-          slots: CORREDO.slots.map((s) => ({
+          slots: SETUP.slots.map((s) => ({
             ...s,
             filled: s.filled || ["filter_wheel", "focuser", "software"].includes(s.kind),
           })),
@@ -385,7 +385,7 @@ describe("l Attrezzatura", () => {
     attrezzatura({
       rigs: [
         {
-          ...CORREDO,
+          ...SETUP,
           parts: [
             { kind: "mount", id: 2, name: "EQ6-R", frames: 120, chosen: false },
             { kind: "reducer", id: 30, name: "0,8x", frames: 120, chosen: true },
@@ -413,7 +413,7 @@ describe("l Attrezzatura", () => {
     attrezzatura(
       {
         rigs: [
-          { ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 0, chosen: true }] },
+          { ...SETUP, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 0, chosen: true }] },
         ],
       },
       {
@@ -490,7 +490,7 @@ describe("l Attrezzatura", () => {
         instruments: [OTTICA, cercatore, oag],
         rigs: [
           {
-            ...CORREDO,
+            ...SETUP,
             parts: [{ kind: "guide_scope", id: 50, name: "30 mm f/4", frames: 0, chosen: true }],
           },
         ],
@@ -523,7 +523,7 @@ describe("l Attrezzatura", () => {
         instruments: [OTTICA, cercatore],
         rigs: [
           {
-            ...CORREDO,
+            ...SETUP,
             parts: [{ kind: "guide_scope", id: 50, name: "30 mm f/4", frames: 0, chosen: true }],
           },
         ],
@@ -549,7 +549,7 @@ describe("l Attrezzatura", () => {
   it("senza cambiare niente Salva chiude, e non rimanda i frame a rielaborare", async () => {
     attrezzatura({
       rigs: [
-        { ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 0, chosen: true }] },
+        { ...SETUP, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 0, chosen: true }] },
       ],
     })
     await apriAttrezzatura()
@@ -562,7 +562,7 @@ describe("l Attrezzatura", () => {
   })
 
   it("rinomina senza nome non salva, e dice perche'", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, name: null, title: "TS 130 APO · ASI2600MM" }] })
+    attrezzatura({ rigs: [{ ...SETUP, name: null, title: "TS 130 APO · ASI2600MM" }] })
     await apriAttrezzatura()
     const nome = await carta(/TS 130 APO · ASI2600MM/)
     fireEvent.click(within(nome).getByRole("button", { name: /^rinomina/i }))

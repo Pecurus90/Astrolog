@@ -19,7 +19,7 @@ Raspberry Pi 4 (2-15 s a frame), nessuno di un NAS. Pesi da SourceForge `star_da
   cartella dati: nessun installer da un GB, nessun aggiornamento che lo riscarica, e l'utente non
   sceglie niente. Dichiarato a schermo.
 - **Da sola l'app scarica solo cio' che l'utente ha attivato** (Marco, 24/10/2026): il meteo del
-  sito di casa e il suo storico, il catalogo stellare; il controllo degli aggiornamenti solo se
+  sito predefinito e il suo storico, il catalogo stellare; il controllo degli aggiornamenti solo se
   l'utente lo accende. Oggi il pacchetto non c'e': l'app installata da sorgente non scarica ne'
   ASTAP ne' il catalogo, e il primo avvio dice da dove prendere ASTAP (`docs/domini/sito.md`, *Il passo del riconoscitore*).
 - **Quando ASTAP non c'e' (chi installa da sorgente) l'app lo dice prima della prima scansione**:

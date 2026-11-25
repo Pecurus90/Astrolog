@@ -215,7 +215,7 @@ def _rig_or_none(conn: sqlite3.Connection, rig_id: int) -> sqlite3.Row | None:
 def _rig(conn: sqlite3.Connection, rig_id: int) -> sqlite3.Row:
     row = _rig_or_none(conn, rig_id)
     if row is None:
-        raise LookupError(f"corredo {rig_id}")
+        raise LookupError(f"setup {rig_id}")
     return row
 
 

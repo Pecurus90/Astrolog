@@ -22,7 +22,7 @@ const campoDa = (n: number | null | undefined) => (n == null ? "" : numeroNelCam
 
 type Scheda = components["schemas"]["GearSignature"]
 type Risposta = components["schemas"]["GearEdit"]
-type Corredo = components["schemas"]["RigChoice"]
+type Setup = components["schemas"]["RigChoice"]
 type Mio = components["schemas"]["FilterCandidate"]
 
 // La scelta che apre i campi da scrivere, nella camera e nell'ottica.
@@ -61,14 +61,14 @@ type Mano = {
  */
 export function SezioneAttrezzatura({
   schede,
-  corredi,
+  setups,
   ottiche,
   filtri,
   risposte,
   onRisposta,
 }: {
   schede: Scheda[]
-  corredi: Corredo[]
+  setups: Setup[]
   ottiche: string[]
   filtri: Mio[]
   risposte: Record<string, Risposta>
@@ -82,7 +82,7 @@ export function SezioneAttrezzatura({
       chiave={(s) => s.key}
       riga={(s, indice) => (
         <RigaAttrezzatura
-          corredi={corredi}
+          setups={setups}
           filtri={filtri}
           indice={indice}
           ottiche={ottiche}
@@ -95,18 +95,18 @@ export function SezioneAttrezzatura({
   )
 }
 
-const corredoDi = (c: Corredo) => [c.optics, c.camera].filter(Boolean).join(" \u00b7 ")
+const setupDi = (c: Setup) => [c.optics, c.camera].filter(Boolean).join(" \u00b7 ")
 
 /** Da dove si parte: dalla risposta in mano, se c'e' (la sezione si rimonta), poi dalla salvata. */
 function partenza(
   scheda: Scheda,
   risposta: Risposta | undefined,
-  corredi: Corredo[],
+  setups: Setup[],
   ottiche: string[],
 ): Mano {
   const data = scheda.answer
   // la focale conta: la stessa ottica con e senza riduttore sono due setup
-  const salvato = corredi.find(
+  const salvato = setups.find(
     (c) =>
       c.camera === data?.camera &&
       (c.optics ?? null) === (data?.optics ?? null) &&
@@ -151,7 +151,7 @@ function toccateDi(scheda: Scheda, risposta: Risposta | undefined): Parte[] {
 function RigaAttrezzatura({
   scheda,
   indice,
-  corredi,
+  setups,
   ottiche,
   filtri,
   risposta,
@@ -159,13 +159,13 @@ function RigaAttrezzatura({
 }: {
   scheda: Scheda
   indice: number
-  corredi: Corredo[]
+  setups: Setup[]
   ottiche: string[]
   filtri: Mio[]
   risposta: Risposta | undefined
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
-  const [mano, setMano] = useState<Mano>(() => partenza(scheda, risposta, corredi, ottiche))
+  const [mano, setMano] = useState<Mano>(() => partenza(scheda, risposta, setups, ottiche))
   const [toccate, setToccate] = useState<readonly Parte[]>(() => toccateDi(scheda, risposta))
   const sens = sensore(scheda.width_px, scheda.height_px, scheda.pixel_um)
   const titolo = scheda.camera ?? scheda.telescope ?? sens ?? t("review.gear.unnamed")
@@ -194,7 +194,7 @@ function RigaAttrezzatura({
     return m.quale === undefined ? null : { filter: "filter", filter_id: m.quale }
   }
   // La camera rimessa com'era salvata non e' un cambio.
-  const prima = partenza(scheda, undefined, corredi, ottiche)
+  const prima = partenza(scheda, undefined, setups, ottiche)
   const comeSalvata = (m: Mano) =>
     prima.camera !== null &&
     m.camera === prima.camera &&
@@ -205,7 +205,7 @@ function RigaAttrezzatura({
   /** Camera e ottica insieme: un setup dell'elenco parte per pezzi scritti, l'ottica dentro. */
   const insieme = (camera: Partial<Risposta>, ottica: string): Partial<Risposta> => {
     if (!camera.rig_id) return { ...camera, optics: ottica }
-    const setup = corredi.find((c) => c.id === camera.rig_id)
+    const setup = setups.find((c) => c.id === camera.rig_id)
     // senza focale il setup non si scrive per pezzi: parte da solo, con la sua ottica
     return setup?.focal_mm != null
       ? { camera: setup.camera, focal_mm: setup.focal_mm, optics: ottica }
@@ -236,7 +236,7 @@ function RigaAttrezzatura({
 
   const inMano = pezzi(mano, toccate)
   const data = scheda.answer
-  const scelto = corredi.find((c) => `${c.id}` === mano.camera)
+  const scelto = setups.find((c) => `${c.id}` === mano.camera)
   const filtroDetto = (parola: Risposta["filter"], quale: number | null | undefined) =>
     parola === "filter"
       ? t("review.filters.mine", { nome: filtri.find((f) => f.id === quale)?.name ?? "" })
@@ -324,12 +324,12 @@ function RigaAttrezzatura({
           <Risposte
             etichetta={capo(p)}
             opzioni={[
-              ...corredi.map((c) =>
+              ...setups.map((c) =>
                 voce(
                   mano.camera === `${c.id}`,
-                  c.name ?? corredoDi(c),
+                  c.name ?? setupDi(c),
                   () => cambia("camera", { camera: `${c.id}` }),
-                  c.name ? corredoDi(c) : undefined,
+                  c.name ? setupDi(c) : undefined,
                 ),
               ),
               voce(mano.camera === ALTRA, t("review.gear.camera.other"), () =>

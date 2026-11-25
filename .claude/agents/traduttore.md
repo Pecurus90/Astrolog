@@ -13,7 +13,7 @@ vive in un posto solo nel frontend: leggilo, non presumerlo). Non tocchi nient'a
 
 - **Leggi `testi-per-pagina`** (`.claude/skills/testi-per-pagina/SKILL.md`): e' la casa
   di cosa si traduce e cosa no. Qui sotto c'e' solo cio' che riguarda il tuo mestiere.
-- **Leggi il glossario.** I termini fissi dell'app (frame, corredo, notte, sessione,
+- **Leggi il glossario.** I termini fissi dell'app (frame, setup, notte, sessione,
   oggetto, sito, piano, produzione) hanno **una** traduzione per lingua, e sta nel file
   comune di traduzione (`frontend/src/i18n/`). Lo leggi
   per primo e non lo contraddici: una parola nuova per una cosa che ha gia' un nome e' un

@@ -8,7 +8,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it } from "vitest"
 
 import { TrenoOttico, trenoDelSetup } from "../src/TrenoOttico"
-import { CORREDO, NUMERI, OTTICA, apriAttrezzatura, attrezzatura } from "./attrezzatura-banco"
+import { SETUP, NUMERI, OTTICA, apriAttrezzatura, attrezzatura } from "./attrezzatura-banco"
 import { pulisci } from "./banco"
 import { impronta } from "./impronta"
 
@@ -31,7 +31,7 @@ const PEZZI = {
 function conTreno(pieces: Record<string, unknown> | null = PEZZI) {
   attrezzatura({
     instruments: [OTTICA, CAMERA, DIST],
-    rigs: [{ ...CORREDO, camera_id: CAMERA.id, numbers: pieces ? NUMERI : null, pieces }],
+    rigs: [{ ...SETUP, camera_id: CAMERA.id, numbers: pieces ? NUMERI : null, pieces }],
   })
 }
 

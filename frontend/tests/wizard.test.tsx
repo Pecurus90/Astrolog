@@ -419,7 +419,7 @@ describe("il primo avvio", () => {
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(2)
     expect(screen.getByText(/come si vede l'app/i)).toBeDefined()
-    // passo Sito saltato, nessun sito di casa: Automatico spento e la nota dice perche' (v82)
+    // passo Sito saltato, nessun sito predefinito: Automatico spento e la nota dice perche' (v82)
     screen.getByText(/Automatico ha bisogno di un sito di osservazione/)
     expect(screen.getByRole("radio", { name: "Automatico" }).getAttribute("aria-disabled")).toBe("true")
     fireEvent.click(screen.getByRole("radio", { name: "Chiaro" }))

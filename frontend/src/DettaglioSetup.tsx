@@ -15,7 +15,7 @@ import { MISURE_DETTAGLIO, coppiaDelSetup, nomeDelSetup } from "./misureDelSetup
 import { inBreve } from "./vociDellaScheda"
 
 type Pagina = components["schemas"]["GearList"]
-type Corredo = components["schemas"]["RigOnPage"]
+type Setup = components["schemas"]["RigOnPage"]
 type Genere = components["schemas"]["InstrumentOnPage"]["kind"]
 
 /** What is open in the rig's detail: its name, or one of its parts. */
@@ -35,7 +35,7 @@ export function DettaglioSetup({
   proposta,
 }: {
   pagina: Pagina
-  setup: Corredo
+  setup: Setup
   formato: Formato
   /** Opens a piece among the components. */
   onVai: (pezzo: number) => void
@@ -92,7 +92,7 @@ function Carta({
   onApri,
 }: {
   pagina: Pagina
-  setup: Corredo
+  setup: Setup
   formato: Formato
   aperto: boolean
   onApri: (si: boolean) => void
@@ -227,7 +227,7 @@ function Rinomina({
   formato,
   onChiudi,
 }: {
-  setup: Corredo
+  setup: Setup
   nome: string
   formato: Formato
   onChiudi: () => void

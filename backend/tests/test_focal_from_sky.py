@@ -1,8 +1,8 @@
 """La focale di un frame si misura dal cielo, e l'header e' il ripiego (ADR 0016).
 
 Dopo una soluzione la focale e' `206,265 x pixel / scala`: e' quella vera del treno ottico, col
-riduttore dentro, che `FOCALLEN` spesso non dice. Il corredo nasce dall'header prima del cielo;
-il cielo lo corregge quando la misura non e' quella del corredo.
+riduttore dentro, che `FOCALLEN` spesso non dice. Il setup nasce dall'header prima del cielo;
+il cielo lo corregge quando la misura non e' quella del setup.
 """
 
 from astrolog.api import instrument_answer
@@ -67,7 +67,7 @@ def test_the_sky_writes_the_measured_focal_next_to_the_solution(db_path, tmp_pat
 
 def test_a_reducer_the_header_does_not_say_moves_the_frames_to_the_true_focal(db_path, tmp_path):
     """L'header dice la focale nativa, 700; col riduttore 0,8x il cielo misura 560: i frame
-    vanno al corredo della focale vera, e quello dell'header non ha piu' frame."""
+    vanno al setup della focale vera, e quello dell'header non ha piu' frame."""
     conn = connect(db_path)
     _gira(conn, _archivio(tmp_path, FOCALLEN=700.0, XPIXSZ=PIXEL), 560.0, tmp_path / "c")
     assert _focali(conn) == [560] * 3
@@ -98,7 +98,7 @@ def test_the_frames_the_sky_sends_back_are_redone_in_the_same_run(db_path, tmp_p
 
 
 def test_a_measure_within_the_tolerance_keeps_the_rig_and_redoes_nothing(db_path, tmp_path):
-    """Header 560, cielo 562: e' lo stesso corredo, e il cielo non rimanda niente indietro."""
+    """Header 560, cielo 562: e' lo stesso setup, e il cielo non rimanda niente indietro."""
     conn = connect(db_path)
     root = _archivio(tmp_path, FOCALLEN=560.0, XPIXSZ=PIXEL)
     list(scan_folder(conn, add_folder(conn, root)))
@@ -126,7 +126,7 @@ def test_without_a_pixel_the_header_focal_stays(db_path, tmp_path):
 
 
 def test_a_frame_without_a_header_focal_takes_the_measured_one(db_path, tmp_path):
-    """L'header non dice la focale: il corredo nasce senza, e il cielo gliela da'."""
+    """L'header non dice la focale: il setup nasce senza, e il cielo gliela da'."""
     conn = connect(db_path)
     _gira(conn, _archivio(tmp_path, XPIXSZ=PIXEL), 560.0, tmp_path / "c")
     assert _focali(conn) == [560] * 3

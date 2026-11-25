@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * La pagina **Meteo** nella tavola v82: le prossime notti del sito di casa, una alla volta.
+ * La pagina **Meteo** nella tavola v82: le prossime notti del sito predefinito, una alla volta.
  *
  * La pagina non decide niente (`docs/domini/meteo.md`): verdetto, giudizi, Ore di posa, ordine
  * delle misure e scale arrivano scritti. Qui si prova che li mostra senza tradirli, che un numero
@@ -603,7 +603,7 @@ describe("il Meteo, la testa", () => {
 })
 
 describe("il Meteo, quando manca qualcosa", () => {
-  it("senza sito di casa manda a dichiararlo", async () => {
+  it("senza sito predefinito manda a dichiararlo", async () => {
     meteo({ site: null })
     await apriMeteo()
 
@@ -629,7 +629,7 @@ describe("il Meteo, quando manca qualcosa", () => {
     expect(await screen.findByText(/nessuna notte disponibile per questo modello/i)).toBeDefined()
   })
 
-  it("un sito di casa senza fuso orario lo dice, e porta a sistemarlo", async () => {
+  it("un sito predefinito senza fuso orario lo dice, e porta a sistemarlo", async () => {
     meteo({ missing: "no_timezone" })
     await apriMeteo()
 

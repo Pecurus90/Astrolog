@@ -98,7 +98,7 @@ def rig_parts(
         return edit.optics, edit.camera, edit.focal_mm
     chosen = choices.get(edit.rig_id)
     if chosen is None:
-        raise decl.UnknownTargetError(f"corredo {edit.rig_id}")
+        raise decl.UnknownTargetError(f"setup {edit.rig_id}")
     return chosen.optics, chosen.camera, chosen.focal_mm
 
 

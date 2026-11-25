@@ -21,7 +21,7 @@ VICINO = (45.6, 11.667)
 
 
 def prepara(conn):
-    """Due oggetti e due corredi gia' in casa: `group` viene dopo di loro. E' una funzione e non
+    """Due oggetti e due setup gia' in casa: `group` viene dopo di loro. E' una funzione e non
     una fixture perche' la fixture la dichiara ogni file di test in tre righe -- importarla
     farebbe litigare il nome col parametro dei test, e con `archivio` di `conftest`, che e'
     un'altra cosa."""
@@ -79,7 +79,7 @@ def posa(
     *,
     quando,
     oggetto=1,
-    corredo=1,
+    setup=1,
     coord=None,
     hash_=None,
     identify="done",
@@ -104,13 +104,13 @@ def posa(
         " object_id, rig_id, site_lat, site_lon, header_json, filter_id, exposure_s, copy_of,"
         " created_at) VALUES(?, 'light', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
-            hash_ or f"h{quando}{oggetto}{corredo}{coord}{filtro_id}{esposizione}{copia_di}",
+            hash_ or f"h{quando}{oggetto}{setup}{coord}{filtro_id}{esposizione}{copia_di}",
             quando,
             notte,
             fuso,
             istante,
             oggetto,
-            corredo,
+            setup,
             *(coord or (None, None)),
             header,
             filtro_id,

@@ -1,4 +1,4 @@
-"""Che luna fa stanotte, chiesto dalla rotta: il giro intero, dal sito di casa alla risposta.
+"""Che luna fa stanotte, chiesto dalla rotta: il giro intero, dal sito predefinito alla risposta.
 
 Le prove del calcolo stanno in `test_ephemeris_moon.py`. Qui si guarda cio' che il calcolo da
 solo non puo' sbagliare: **da quale sito**, **in quale notte**, e cosa succede quando un sito di
@@ -34,7 +34,7 @@ def orologio(monkeypatch, quando: str) -> None:
 
 
 def crea_sito(client_vuoto, nome, lat, lon, sky_sqm=None):
-    """Un sito di casa. Senza `sky_sqm` la classe del suo cielo resta **non dichiarata**, che e'
+    """Un sito predefinito. Senza `sky_sqm` la classe del suo cielo resta **non dichiarata**, che e'
     lo stato di chi salta quella domanda al primo avvio."""
     corpo = {"name": nome, "latitude": lat, "longitude": lon, "is_default": True}
     if sky_sqm is not None:
@@ -76,7 +76,7 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
 
 
 def test_with_a_home_site_the_moon_is_told_with_its_night(client_vuoto):
-    """Col sito di casa arrivano i due numeri che il piede della barra mostra, e la **notte** a
+    """Col sito predefinito arrivano i due numeri che il piede della barra mostra, e la **notte** a
     cui si riferiscono: senza quella, chi li mostra non sa quando sono scaduti."""
     crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
 
@@ -265,8 +265,9 @@ def test_the_route_sends_the_curve_and_the_highest_point(client_vuoto):
 
 
 def test_the_route_sends_the_ceiling_of_the_home_site(client_vuoto):
-    """Il bordo alto del grafico dipende **dalla latitudine del sito di casa**, non da stanotte, e
-    lo manda il backend gia' fatto: derivarlo nel disegno vorrebbe dire un conto dentro il layout.
+    """Il bordo alto del grafico dipende **dalla latitudine del sito predefinito**, non da
+    stanotte, e lo manda il backend gia' fatto: derivarlo nel disegno vorrebbe dire un conto dentro
+    il layout.
 
     Si guarda con due siti a latitudini diverse, perche' un tetto costante -- o preso dal sito
     sbagliato -- resterebbe verde con un sito solo."""

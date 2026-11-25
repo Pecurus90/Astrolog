@@ -251,7 +251,7 @@ stretta); due tratti vicini della stessa banda sono uno. Insieme fanno `dark_s`
 ## Dove vive
 
 `backend/astrolog/ephemeris/` -- puro: non tocca il database, la spina, le rotte ne' la rete, e un
-contratto di import-linter lo fa rispettare. Il cielo di stanotte dal sito di casa lo calcola
+contratto di import-linter lo fa rispettare. Il cielo di stanotte dal sito predefinito lo calcola
 `backend/astrolog/api/tonight_sky.py`, l'unico posto dove le effemeridi della notte incontrano un
 sito dell'utente, e lo scrive in `tonight_sky` per stanotte e la notte dopo: all'avvio, dal giro in
 background (ogni minuto, se manca una notte o il sito si e' spostato), e subito quando cambiano i

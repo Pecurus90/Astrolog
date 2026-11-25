@@ -15,14 +15,14 @@ import { t } from "./i18n"
 import { MISURE_DETTAGLIO } from "./misureDelSetup"
 
 type Pagina = components["schemas"]["GearList"]
-type Corredo = components["schemas"]["RigOnPage"]
+type Setup = components["schemas"]["RigOnPage"]
 type Strumento = components["schemas"]["InstrumentOnPage"]
 
 const VE = "non-scaling-stroke"
 
 /** I pezzi che i conti leggono (`pieces`), con le voci della scheda che il disegno usa.
  *  Senza ottica non c'e' treno (tavola `trenoDi`, 333). */
-export function trenoDelSetup(pagina: Pagina, setup: Corredo): Treno | null {
+export function trenoDelSetup(pagina: Pagina, setup: Setup): Treno | null {
   const p = setup.pieces
   if (!p) return null
   const di = (id: number | null, ruolo?: Ruolo): Pezzo | undefined => {

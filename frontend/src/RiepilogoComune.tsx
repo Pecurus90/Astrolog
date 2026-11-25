@@ -162,7 +162,7 @@ export function CroceDegliStati({ onChiudi }: { onChiudi: () => void }) {
 }
 
 type Parte = Setup["parts"][number]["kind"]
-// L'ordine e l'icona dei pezzi come la tavola (`dati.js`, `corredi`); i filtri stanno nella testa.
+// L'ordine e l'icona dei pezzi come la tavola (`dati.js`, la lista dei setup); i filtri stanno nella testa.
 const PEZZI: { kind: Parte; nome: Chiave; icona: keyof typeof ICONE }[] = [
   { kind: "reducer", nome: "review.kind.reducer", icona: "riduttore" },
   { kind: "filter_wheel", nome: "review.kind.filter_wheel", icona: "ruota" },

@@ -8,7 +8,7 @@ import { MISURE_DETTAGLIO, nomeDelSetup } from "./misureDelSetup"
 import { pallinoDi } from "./MisureDati"
 
 type Pagina = components["schemas"]["GearList"]
-type Corredo = components["schemas"]["RigOnPage"]
+type Setup = components["schemas"]["RigOnPage"]
 
 // [T] Attrezzatura.dc.html `anello` (443): the paper thread between two slices, in percent
 const FILO = 0.8
@@ -26,7 +26,7 @@ export function CampoDelSetup({
   formato,
 }: {
   pagina: Pagina
-  setup: Corredo
+  setup: Setup
   formato: Formato
 }) {
   return (
@@ -38,15 +38,7 @@ export function CampoDelSetup({
   )
 }
 
-function Campo({
-  pagina,
-  setup: r,
-  formato,
-}: {
-  pagina: Pagina
-  setup: Corredo
-  formato: Formato
-}) {
+function Campo({ pagina, setup: r, formato }: { pagina: Pagina; setup: Setup; formato: Formato }) {
   const { modo } = useTema()
   const m = MISURE_DETTAGLIO[formato]
   const misurato = r.scale_arcsec_px !== null
@@ -135,8 +127,8 @@ function Dati({
   conti,
   formato,
 }: {
-  setup: Corredo
-  conti: NonNullable<Corredo["numbers"]>
+  setup: Setup
+  conti: NonNullable<Setup["numbers"]>
   formato: Formato
 }) {
   const m = MISURE_DETTAGLIO[formato]
@@ -184,7 +176,7 @@ function Dati({
   )
 }
 
-function Filtri({ setup, formato }: { setup: Corredo; formato: Formato }) {
+function Filtri({ setup, formato }: { setup: Setup; formato: Formato }) {
   const m = MISURE_DETTAGLIO[formato]
   const fette = setup.parts.flatMap((p) =>
     p.kind === "filter" && p.ring_from !== null && p.ring_to !== null && p.passband !== null

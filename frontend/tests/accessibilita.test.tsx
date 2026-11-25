@@ -565,7 +565,7 @@ describe("l accessibilita della prima pagina", () => {
 
   it("e nemmeno l Attrezzatura, coi pezzi che non hanno numeri", async () => {
     // La pagina si monta **piena** e con dentro i casi che parlano: la montatura senza ore e il
-    // corredo senza scala sono testo dentro una riga di dettagli, cioe' proprio il markup che
+    // setup senza scala sono testo dentro una riga di dettagli, cioe' proprio il markup che
     // axe guarda -- e con l'elenco vuoto non ci sarebbero.
     const pezzo = {
       brand: null,

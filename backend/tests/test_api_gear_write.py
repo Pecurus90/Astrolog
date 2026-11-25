@@ -45,7 +45,7 @@ def correggi(client, instrument_id, **corpo):
 
 @pytest.fixture
 def archivio(db_path):
-    """Un corredo che ha ripreso, e una camera le cui pose non dicono il filtro: il secondo caso
+    """Un setup che ha ripreso, e una camera le cui pose non dicono il filtro: il secondo caso
     serve perche' il colore di una camera e' anche una risposta sulle sue pose."""
     conn = connect(db_path)
     try:
@@ -323,7 +323,7 @@ def test_a_piece_that_is_not_there_is_not_found(archivio):
 
 def test_a_measure_of_zero_is_not_a_measure(vuoto):
     """Zero non e' "non lo so", e' un vuoto scritto male: una focale a zero fa sparire la scala di
-    un corredo senza che nessuno se ne accorga. Vale creando come correggendo."""
+    un setup senza che nessuno se ne accorga. Vale creando come correggendo."""
     assert crea(vuoto, kind="optics", name="Zero", focal_mm=0).status_code == 422
 
 
@@ -395,37 +395,37 @@ def monta(client, rig_id, mount_id):
 
 
 def scelte(client, n=0):
-    """Le parti che hai scelto tu sul corredo `n`, per genere."""
+    """Le parti che hai scelto tu sul setup `n`, per genere."""
     parti = client.get("/api/v1/gear").json()["rigs"][n]["parts"]
     return {p["kind"]: p["id"] for p in parti if p["chosen"]}
 
 
 def test_a_rig_gets_its_mount_from_its_card_and_its_frames_go_back_to_be_read(archivio):
-    """La montatura si sceglie dalla scheda del corredo (Marco, 26/9/2026), fra quelle che
-    possiedi. Le pose di quel corredo tornano a `normalize`, che la scrive su ognuna: e' da li'
+    """La montatura si sceglie dalla scheda del setup (Marco, 26/9/2026), fra quelle che
+    possiedi. Le pose di quel setup tornano a `normalize`, che la scrive su ognuna: e' da li'
     che la montatura prende le ore."""
     montatura = crea(archivio, kind="mount", name="EQ6-R").json()["id"]
-    corredo = archivio.get("/api/v1/gear").json()["rigs"][0]
+    setup = archivio.get("/api/v1/gear").json()["rigs"][0]
     assert scelte(archivio) == {}
 
     with mock.patch.object(work, "after", return_value=True):
-        risposta = monta(archivio, corredo["id"], montatura)
+        risposta = monta(archivio, setup["id"], montatura)
 
     assert risposta.status_code == 200, risposta.text
     assert risposta.json()["requeued"] == 2
     assert scelte(archivio) == {"mount": montatura}
 
     with mock.patch.object(work, "after", return_value=True):
-        monta(archivio, corredo["id"], None)
+        monta(archivio, setup["id"], None)
     assert scelte(archivio) == {}
 
 
 def test_only_a_mount_you_own_can_be_the_mount_of_a_rig(archivio):
-    corredo = archivio.get("/api/v1/gear").json()["rigs"][0]
+    setup = archivio.get("/api/v1/gear").json()["rigs"][0]
     ottica = pezzo(archivio, "optics", "TS 130 APO")["id"]
 
-    assert monta(archivio, corredo["id"], ottica).status_code == 422
-    assert monta(archivio, corredo["id"], 9999).status_code == 422
+    assert monta(archivio, setup["id"], ottica).status_code == 422
+    assert monta(archivio, setup["id"], 9999).status_code == 422
     assert monta(archivio, 9999, None).status_code == 404
 
 
@@ -438,14 +438,14 @@ def test_a_mount_that_is_not_a_mount_is_refused_with_its_code(archivio):
 
 
 def test_a_part_you_choose_reads_as_chosen_at_once(archivio):
-    """Il riduttore nessun file lo nomina: scelto sul corredo si legge subito fra le sue parti,
+    """Il riduttore nessun file lo nomina: scelto sul setup si legge subito fra le sue parti,
     segnato come scelto, prima ancora che le pose siano rilavorate. Una parte letta dai file non
     e' scelta."""
     riduttore = crea(archivio, kind="reducer", name="0,8x").json()["id"]
-    corredo = archivio.get("/api/v1/gear").json()["rigs"][0]
+    setup = archivio.get("/api/v1/gear").json()["rigs"][0]
 
     with mock.patch.object(work, "after", return_value=True):
-        risposta = scegli(archivio, corredo["id"], "reducer", riduttore)
+        risposta = scegli(archivio, setup["id"], "reducer", riduttore)
 
     assert (risposta.status_code, risposta.json()["requeued"]) == (200, 2)
     parti = archivio.get("/api/v1/gear").json()["rigs"][0]["parts"]
@@ -456,10 +456,10 @@ def test_a_part_you_choose_reads_as_chosen_at_once(archivio):
 
 
 def test_a_kind_a_rig_cannot_be_given_is_refused(archivio):
-    """Ottica e camera fanno il corredo, non si scelgono: e un genere che non esiste nemmeno."""
-    corredo = archivio.get("/api/v1/gear").json()["rigs"][0]
+    """Ottica e camera fanno il setup, non si scelgono: e un genere che non esiste nemmeno."""
+    setup = archivio.get("/api/v1/gear").json()["rigs"][0]
     for genere in ("optics", "camera", "software", "filter"):
-        assert scegli(archivio, corredo["id"], genere, None).status_code == 422, genere
+        assert scegli(archivio, setup["id"], genere, None).status_code == 422, genere
 
 
 def test_you_can_write_a_filter_you_have_not_used_yet(archivio):
@@ -524,7 +524,7 @@ def test_a_rig_you_have_or_not_made_of_optics_and_camera_is_refused(archivio):
 
 
 def test_what_you_write_by_hand_goes_to_the_bottom_not_the_top(archivio):
-    """I corredi vanno dal piu' usato: uno appena scritto, con zero ore, sta in fondo -- visto dal
+    """I setup vanno dal piu' usato: uno appena scritto, con zero ore, sta in fondo -- visto dal
     vivo, nasceva in cima. Un filtro sta invece al posto della sua banda (test_filter_order)."""
     ottica = pezzo(archivio, "optics", "TS 130 APO")["id"]
     camera = crea(archivio, kind="camera", name="ASI533MC").json()["id"]

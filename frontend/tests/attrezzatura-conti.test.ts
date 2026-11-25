@@ -8,10 +8,10 @@ import { describe, expect, it } from "vitest"
 import type { components } from "../src/api/schema"
 import { contiDelSetup, mancanza } from "../src/contiDelSetup"
 import { inBreve, vociDellaScheda } from "../src/vociDellaScheda"
-import { CORREDO, NUMERI, OTTICA } from "./attrezzatura-banco"
+import { SETUP, NUMERI, OTTICA } from "./attrezzatura-banco"
 
 type Pezzo = components["schemas"]["InstrumentOnPage"]
-type Corredo = components["schemas"]["RigOnPage"]
+type Setup = components["schemas"]["RigOnPage"]
 type Conti = components["schemas"]["RigNumbers"]
 
 const pezzo = (campi: Record<string, unknown> = {}) =>
@@ -137,17 +137,17 @@ describe("la scheda di un pezzo", () => {
   })
 })
 
-const corredo = (campi: Record<string, unknown> = {}) =>
-  ({ ...CORREDO, ...campi }) as unknown as Corredo
+const unSetup = (campi: Record<string, unknown> = {}) =>
+  ({ ...SETUP, ...campi }) as unknown as Setup
 const conti = (campi: Record<string, unknown> = {}) => ({ ...NUMERI, ...campi }) as unknown as Conti
-const conto = (chiave: keyof Conti, campi: Record<string, unknown>, r = corredo()) =>
+const conto = (chiave: keyof Conti, campi: Record<string, unknown>, r = unSetup()) =>
   contiDelSetup(r, conti({ [chiave]: { missing: null, ...campi } })).find(
     (c) => c.chiave === chiave,
   )
 
 describe("i dati del setup", () => {
   it("nove righe nell'ordine della tavola, coi nomi e cio' che manca", () => {
-    expect(contiDelSetup(corredo(), conti())).toEqual([
+    expect(contiDelSetup(unSetup(), conti())).toEqual([
       {
         chiave: "focal_ratio",
         l: "Rapporto focale",
@@ -233,10 +233,10 @@ describe("i dati del setup", () => {
   })
 
   it("il cielo non ancora misurato", () => {
-    const r = corredo({ scale_arcsec_px: null, width_deg: null, height_deg: 1 })
+    const r = unSetup({ scale_arcsec_px: null, width_deg: null, height_deg: 1 })
     expect(conto("sampling", NUMERI.sampling, r)?.sub).toMatch(/^sul cielo: non ancora misurato ·/)
     expect(conto("field", NUMERI.field, r)?.sub).toBe("sul cielo: non ancora misurato")
-    const alto = corredo({ width_deg: 1.5, height_deg: null })
+    const alto = unSetup({ width_deg: 1.5, height_deg: null })
     expect(conto("field", NUMERI.field, alto)?.sub).toBe("sul cielo: non ancora misurato")
   })
 

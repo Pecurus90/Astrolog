@@ -8,12 +8,12 @@ import { screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { anello, tinte } from "../src/anelloDeiFiltri"
-import { CORREDO, NUMERI, apriAttrezzatura, attrezzatura, campo } from "./attrezzatura-banco"
+import { SETUP, NUMERI, apriAttrezzatura, attrezzatura, campo } from "./attrezzatura-banco"
 import { pulisci } from "./banco"
 
 afterEach(pulisci)
 
-const ALTRO = { ...CORREDO, id: 11, name: null, title: "RedCat · ASI2600MM" }
+const ALTRO = { ...SETUP, id: 11, name: null, title: "RedCat · ASI2600MM" }
 const riquadri = (img: HTMLElement) => [...img.querySelectorAll<HTMLElement>(".al-attr__strato-1")]
 
 describe("il campo del setup", () => {
@@ -29,7 +29,7 @@ describe("il campo del setup", () => {
 
   it("il riquadro del setup aperto e' segnato, gli altri no, e le etichette si alternano", async () => {
     attrezzatura({
-      rigs: [CORREDO, ALTRO],
+      rigs: [SETUP, ALTRO],
       fields: [
         { rig_id: 11, width_pct: 87, height_pct: 87.3 },
         { rig_id: 10, width_pct: 38.8, height_pct: 38.8 },
@@ -66,20 +66,20 @@ describe("il campo del setup", () => {
   })
 
   it("con la scala ma senza i lati, scrive la scala e non i gradi", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, width_deg: null }] })
+    attrezzatura({ rigs: [{ ...SETUP, width_deg: null }] })
     await apriAttrezzatura()
     const testo = (await campo()).textContent ?? ""
     expect(testo).toContain("0,85 arcosecondi per pixel")
     expect(testo).not.toContain("°")
     pulisci()
 
-    attrezzatura({ rigs: [{ ...CORREDO, height_deg: null }] })
+    attrezzatura({ rigs: [{ ...SETUP, height_deg: null }] })
     await apriAttrezzatura()
     expect((await campo()).textContent).not.toContain("°")
   })
 
   it("una scala di un arcosecondo si dice al singolare", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, scale_arcsec_px: 1 }] })
+    attrezzatura({ rigs: [{ ...SETUP, scale_arcsec_px: 1 }] })
     await apriAttrezzatura()
     expect((await campo()).textContent).toContain("1,00 arcosecondo per pixel")
   })
@@ -91,7 +91,7 @@ describe("i dati del setup", () => {
       ...NUMERI,
       coverage: { diagonal_mm: 28.3, circle_mm: 44, covers: false, missing: null },
     }
-    attrezzatura({ rigs: [{ ...CORREDO, numbers: conti }] })
+    attrezzatura({ rigs: [{ ...SETUP, numbers: conti }] })
     await apriAttrezzatura()
 
     const dati = await screen.findByRole("region", { name: /^dati del setup$/i })
@@ -129,7 +129,7 @@ describe("l'anello dei filtri", () => {
     attrezzatura({
       rigs: [
         {
-          ...CORREDO,
+          ...SETUP,
           parts: [
             parte("filter", "Ha", "HA", 0, 100),
             parte("filter", "Senza banda", null, 0, 100),
@@ -151,7 +151,7 @@ describe("l'anello dei filtri", () => {
   })
 
   it("senza fette non c'e' la sezione", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, parts: [parte("filter", "Ha", null, 0, 100)] }] })
+    attrezzatura({ rigs: [{ ...SETUP, parts: [parte("filter", "Ha", null, 0, 100)] }] })
     await apriAttrezzatura()
     await campo()
     expect(screen.queryByRole("region", { name: /^filtri$/i })).toBeNull()

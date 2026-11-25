@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * **SceltaTema** (componente v82): il modo e i cinque accenti, ciascuno col campione nel modo in
- * uso. Automatico segue tramonto e alba del sito di casa: senza sito e' spento e la nota dice
+ * uso. Automatico segue tramonto e alba del sito predefinito: senza sito e' spento e la nota dice
  * perche'.
  */
 import { fireEvent, render, screen, within } from "@testing-library/react"

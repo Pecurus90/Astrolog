@@ -11,7 +11,7 @@
 -- instruments, filters, rigs, objects -- hanno l'id AUTOINCREMENT, e sono le sole (lo prova
 -- `backend/tests/test_db.py`): una risposta porta l'id del pezzo, e tre di loro l'Applica le
 -- conferma dicendo "ho visto fin qui" col numero (`backend/astrolog/api/review_write.py`). Tutte e
--- quattro perdono righe (le unioni, la spazzata di identify, i corredi rimasti senza frame).
+-- quattro perdono righe (le unioni, la spazzata di identify, i setup rimasti senza frame).
 -- Senza, SQLite ridarebbe il numero piu' alto appena liberato alla riga nuova: una risposta da
 -- una pagina aperta prima finirebbe su di lei, o la farebbe nascere gia' "vista". Il perche' per
 -- esteso sta in `docs/domini/spina.md`.
@@ -116,13 +116,13 @@ CREATE TABLE instruments (
   image_circle_mm REAL,                            -- ottica e riduttore: copre il sensore?
   required_backfocus_mm  REAL,                     -- ottica e riduttore
   backfocus_tolerance_mm REAL,                     -- del produttore: senza, il backfocus non si giudica
-  reducer_factor  REAL,                            -- riduttore: 0.8 vuol dire un corredo diverso
+  reducer_factor  REAL,                            -- riduttore: 0.8 vuol dire un setup diverso
   thickness_mm    REAL,                            -- lungo il treno: camera fino al sensore, ruota, OAG, distanziale
   prism_mm        REAL,                            -- OAG
   filter_size     TEXT CHECK (filter_size IN ('1.25in', '31mm', '36mm', '2in', '50mm_square')),
   step_um         REAL,                            -- focheggiatore
   total_steps     INTEGER,
-  weight_kg       REAL,                            -- col carico della montatura dice se il corredo sta in piedi
+  weight_kg       REAL,                            -- col carico della montatura dice se il setup sta in piedi
   payload_kg      REAL,                            -- montatura: quanto regge, col contrappeso
   payload_no_cw_kg REAL,                           -- e senza
   slots           INTEGER,                         -- ruota portafiltri: quanti filtri ci stanno
@@ -196,7 +196,7 @@ CREATE TABLE header_aliases (
 -- sul rilevato. In lettura "presenza della riga vince"; il rilevato resta nella sua colonna.
 -- `entity_key` e' una chiave che sopravvive ai reset del rilevato, mai un numero di riga:
 -- per un oggetto il nome pulito o lo slug di catalogo, per
--- una notte "sito:<id>|<data>", per una sessione "notte|oggetto|corredo", e per delle
+-- una notte "sito:<id>|<data>", per una sessione "notte|oggetto|setup", e per delle
 -- COORDINATE quelle che l'header portava, arrotondate al chilometro ("45.60,11.67") -- li' il
 -- campo `site` dice il NOME del sito a cui appartengono i frame ripresi di li'. Sono la chiave
 -- giusta perche' la risposta e' un fatto sul posto e non su una notte: vale anche per le notti
@@ -229,13 +229,13 @@ CREATE TABLE declarations (
 
 -- ============================================================ RILEVATO
 
--- Un corredo: ottica + camera a una focale. Le focali che stanno entro il +-5 % sono la
+-- Un setup: ottica + camera a una focale. Le focali che stanno entro il +-5 % sono la
 -- stessa focale: il raggruppamento lo fa la spina prima di scrivere, e qui si conserva il
 -- rappresentante del gruppo -- percio' l'impronta e' su uguaglianza esatta.
--- Il NOME che l'utente da' a un corredo non sta qui: sta fra le dichiarazioni, con la
+-- Il NOME che l'utente da' a un setup non sta qui: sta fra le dichiarazioni, con la
 -- chiave (ottica, camera, focale). Questa riga la fa la spina dai frame, o l'utente
 -- (`detected` = 0), e un'unione di due grafie la cancella; il nome invece deve tornare da solo
--- quando la spina ricostruisce il corredo, e quello scritto dall'utente dalla sua dichiarazione.
+-- quando la spina ricostruisce il setup, e quello scritto dall'utente dalla sua dichiarazione.
 CREATE TABLE rigs (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   optics_id  INTEGER REFERENCES instruments (id),
@@ -284,8 +284,8 @@ CREATE TABLE frames (
   -- Gli altri pezzi che l'header nomina, com'erano scritti. A differenza della montatura,
   -- questi i file li legano alla SINGOLA posa: N.I.N.A. scrive FWHEEL e FOCNAME, l'ASIAIR
   -- GUIDECAM. Il grezzo resta perche' `normalize` lo ririsolva dopo una rinomina, come fa
-  -- con `telescope_raw`. Nessuno di questi entra nell'impronta del corredo: cambiare ruota
-  -- non fa un secondo corredo.
+  -- con `telescope_raw`. Nessuno di questi entra nell'impronta del setup: cambiare ruota
+  -- non fa un secondo setup.
   filter_wheel_raw TEXT,
   focuser_raw      TEXT,
   guide_camera_raw TEXT,
@@ -337,11 +337,11 @@ CREATE TABLE frames (
   filter_wheel_id  INTEGER REFERENCES instruments (id),   -- normalize
   focuser_id       INTEGER REFERENCES instruments (id),   -- normalize
   guide_camera_id  INTEGER REFERENCES instruments (id),   -- normalize
-  -- La montatura: quella che hai dato al corredo, o dove taci quella che il file nomina
+  -- La montatura: quella che hai dato al setup, o dove taci quella che il file nomina
   -- (`spine/normalize_rig.py`). Non ha un grezzo suo: con l'ASIAIR sta in `telescope_raw`.
   mount_id         INTEGER REFERENCES instruments (id),   -- normalize
   -- Riduttore, ottica di guida e guida fuori asse: nessun programma li scrive, ci sono solo se
-  -- li hai scelti sul corredo.
+  -- li hai scelti sul setup.
   reducer_id       INTEGER REFERENCES instruments (id),   -- normalize
   guide_scope_id   INTEGER REFERENCES instruments (id),   -- normalize
   oag_id           INTEGER REFERENCES instruments (id),   -- normalize
@@ -376,20 +376,20 @@ CREATE INDEX frames_found ON frames (found_key) WHERE found_key IS NOT NULL;
 -- I frame di un oggetto, con cio' che serve a contarli: l'elenco degli oggetti di Da confermare li
 -- conta tutti a ogni apertura, e dall'indice non legge la tabella.
 CREATE INDEX frames_object ON frames (object_id, copy_of, exposure_s);
--- I frame di un corredo, con cio' che serve a contarli: li conta la tendina dei corredi a ogni
+-- I frame di un setup, con cio' che serve a contarli: li conta la tendina dei setup a ogni
 -- apertura e a ogni Applica con una risposta sulla camera, e l'uso dell'Attrezzatura a fine giro.
 -- Sulla sola colonna, chi conta le ore leggerebbe comunque la riga di ogni posa.
 CREATE INDEX frames_rig ON frames (rig_id, copy_of, exposure_s, night_id);
 CREATE INDEX frames_session ON frames (session_id);
 CREATE INDEX frames_night ON frames (night_id);
--- Cio' che i frame di una notte locale dicono del corredo (`spine/night_rig.py`): lo chiedono la
+-- Cio' che i frame di una notte locale dicono del setup (`spine/night_rig.py`): lo chiedono la
 -- domanda sulla camera e la normalizzazione, e dall'indice non leggono la tabella.
 CREATE INDEX frames_local_night
   ON frames (local_night, instrument_raw, telescope_raw, software_raw, focal_mm_raw);
 CREATE INDEX frames_date ON frames (date_obs);
 -- I frame di un filtro: li conta Da confermare, e la tendina dell'Archivio ci cerca il primo buono
 -- (senza, anche un filtro con molti frame e nessuno buono scorrerebbe l'archivio), e l'uso
--- dell'Attrezzatura li conta dall'indice come per i corredi.
+-- dell'Attrezzatura li conta dall'indice come per i setup.
 CREATE INDEX frames_filter ON frames (filter_id, copy_of, exposure_s, night_id);
 -- I frame su cui Da confermare chiede qualcosa, per i giudizi sul grezzo: la pagina legge solo
 -- quelli, e un archivio i cui header dicono camera, filtro e ottica non ne ha nessuno.
@@ -437,7 +437,7 @@ CREATE TABLE frame_stages (
 ) STRICT;
 CREATE INDEX frame_stages_pending ON frame_stages (stage, status);
 
--- I mosaici: pannelli dello stesso corredo che si toccano senza contenersi (`docs/domini/
+-- I mosaici: pannelli dello stesso setup che si toccano senza contenersi (`docs/domini/
 -- mosaico.md`). Li scrive `group` quando una posa apre un pannello, e nessuno li ricalcola.
 -- `key` e' l'impronta di uno dei suoi frame, scelta quando nasce e poi ferma: la chiave della
 -- risposta, che non cambia quando cambia la camera. Il centro e il nome proposto -- la voce del catalogo al
@@ -452,7 +452,7 @@ CREATE TABLE mosaics (
 
 -- Le inquadrature: il cielo della posa che le ha aperte, e il mosaico di cui fanno parte.
 -- `radius_deg` e' la mezza diagonale del campo, e con la declinazione restringe a una fascia i
--- pannelli con cui una posa nuova si confronta. `rig_id` NULL e' il corredo che non si sa.
+-- pannelli con cui una posa nuova si confronta. `rig_id` NULL e' il setup che non si sa.
 CREATE TABLE panels (
   id           INTEGER PRIMARY KEY,
   rig_id       INTEGER,
@@ -681,7 +681,7 @@ CREATE TABLE weather_view (
   PRIMARY KEY (site_id, night_date, model)
 ) STRICT;
 
--- Il calendario della Luna del sito di casa, questo mese e il prossimo (DERIVATO: lo riscrive
+-- Il calendario della Luna del sito predefinito, questo mese e il prossimo (DERIVATO: lo riscrive
 -- `spine/moon_calendar.py` dal giro in background quando manca un mese o il sito si e' spostato;
 -- il cambio della regola della Luna riscrive le stesse notti, cielo compreso). Chi legge non
 -- calcola.
@@ -708,7 +708,7 @@ CREATE TABLE moon_nights (
   PRIMARY KEY (site_id, night_date)
 ) STRICT;
 
--- Il cielo di stanotte e della notte dopo dal sito di casa, pronto per Stanotte (DERIVATO: lo
+-- Il cielo di stanotte e della notte dopo dal sito predefinito, pronto per Stanotte (DERIVATO: lo
 -- riscrive `api/tonight_sky.py` all'avvio, dal giro in background quando manca una notte o il sito
 -- si e' spostato, e subito quando cambiano i siti o la regola della Luna). Chi legge non calcola
 -- (#96): Sole, Luna e pianeti di una notte costano piu' di un secondo su un NAS.
@@ -757,26 +757,26 @@ CREATE TABLE night_moons (
   CHECK ((dark_s IS NULL) = (moonless_dark_s IS NULL))
 ) STRICT;
 
--- Una sessione: oggetto x notte x corredo.
+-- Una sessione: oggetto x notte x setup.
 CREATE TABLE sessions (
   id        INTEGER PRIMARY KEY,
   night_id  INTEGER NOT NULL REFERENCES nights (id) ON DELETE CASCADE,
   -- L'oggetto se ne va (la spazzata di `identify` toglie quelli rimasti a zero frame) e la
-  -- sessione va con lui, per la stessa ragione del corredo qui sotto. Non porta via un frame
+  -- sessione va con lui, per la stessa ragione del setup qui sotto. Non porta via un frame
   -- a nessuno: un oggetto arriva a zero frame solo perche' `identify` glieli ha appena
   -- staccati tutti, e `group` -- che gira dopo, sempre, perche' `invalidate` li rimette in
   -- coda insieme -- stacca comunque notte e sessione da quegli stessi frame in apertura di
   -- corsa. Senza, premere Applica su un archivio gia' raggruppato moriva col database in
   -- faccia. Il perche' per l'utente sta nel contratto della spina.
   object_id INTEGER NOT NULL REFERENCES objects (id) ON DELETE CASCADE,
-  -- Il corredo se ne va (due grafie unite in Da confermare) e la sessione va con lui: e'
+  -- Il setup se ne va (due grafie unite in Da confermare) e la sessione va con lui: e'
   -- un derivato, e `group` la rifa' al giro dopo. Senza, l'unione falliva col database in
   -- faccia -- misurato, `FOREIGN KEY constraint failed`.
   rig_id    INTEGER REFERENCES rigs (id) ON DELETE CASCADE  -- vuoto: non si e' saputo
 ) STRICT;
 
 -- La chiave della sessione. E' un indice su un'espressione e non un `UNIQUE` di colonne perche'
--- in SQLite due NULL non contendono: con `rig_id` vuoto -- una posa il cui corredo non si sa --
+-- in SQLite due NULL non contendono: con `rig_id` vuoto -- una posa il cui setup non si sa --
 -- la stessa notte e lo stesso oggetto avrebbero potuto aprire due sessioni identiche.
 CREATE UNIQUE INDEX sessions_key ON sessions (night_id, object_id, COALESCE(rig_id, -1));
 
@@ -807,7 +807,7 @@ CREATE TABLE scan_runs (
   skipped_by_reason_json TEXT                      -- quanti file saltati, per motivo
 ) STRICT;
 
--- Quanto e' servito ogni pezzo, corredo e filtro (DERIVATO: si riscrive intero a fine giro di
+-- Quanto e' servito ogni pezzo, setup e filtro (DERIVATO: si riscrive intero a fine giro di
 -- ogni stadio che cambia i frame, `spine/gear_usage.py`, e la pagina Attrezzatura lo legge e
 -- basta). `subject_id` e' l'id della riga di `instruments`, `rigs` o `filters`: niente chiave
 -- esterna, perche' punta a tre tabelle, e chi legge parte da quelle -- una riga orfana non si
@@ -820,24 +820,24 @@ CREATE TABLE gear_usage (
   frames          INTEGER,
   integration_s   REAL,
   untimed         INTEGER,
-  scale_arcsec_px REAL,                            -- solo i corredi: la mediana del cielo misurato
+  scale_arcsec_px REAL,                            -- solo i setup: la mediana del cielo misurato
   width_deg       REAL,
   height_deg      REAL,
   -- la barra delle ore sul piu' usato del gruppo (setup, filtri, pezzi per genere), 3-100;
   -- NULL senza ore note. La riscrive `gear_usage.write_bars` dopo ogni scrittura dell'uso
   bar_pct         REAL,
-  -- solo i corredi col cielo misurato: il loro campo e la Luna piena sulla cornice del confronto,
+  -- solo i setup col cielo misurato: il loro campo e la Luna piena sulla cornice del confronto,
   -- in percento (`rig_card.field_boxes`); li riscrive `gear_usage.write_fields` con l'uso
   field_w_pct     REAL,
   field_h_pct     REAL,
   moon_pct        REAL,
-  -- l'ordine dei corredi, dal piu' usato; strumenti per tipo e nome, filtri per banda (inventory)
+  -- l'ordine dei setup, dal piu' usato; strumenti per tipo e nome, filtri per banda (inventory)
   position        INTEGER,
   PRIMARY KEY (subject, subject_id),
   CHECK ((subject = 'rig') = (position IS NOT NULL))
 ) STRICT;
 
--- Le parti di un corredo: cio' che i suoi frame dicono di aver usato oltre a ottica e camera
+-- Le parti di un setup: cio' che i suoi frame dicono di aver usato oltre a ottica e camera
 -- (DERIVATO: lo riscrive `spine/gear_usage.py` insieme a `gear_usage`, la pagina lo legge e
 -- basta). `piece_id` e' la riga di `instruments`, o di `filters` per `filter`; il programma di
 -- ripresa non e' un pezzo e sta in `software`. Il nome non si copia: lo da' il pezzo, cosi' una
@@ -850,18 +850,18 @@ CREATE TABLE rig_parts (
   piece_id INTEGER,
   software TEXT,
   frames   INTEGER NOT NULL,
-  -- La parte l'hai scelta tu sul corredo; una scelta che nessuna posa porta ancora ha zero frame.
+  -- La parte l'hai scelta tu sul setup; una scelta che nessuna posa porta ancora ha zero frame.
   chosen   INTEGER NOT NULL DEFAULT 0 CHECK (chosen IN (0, 1)),
   position INTEGER NOT NULL,                       -- l'ordine della scheda: genere, poi uso
-  -- solo i filtri: la loro fetta dell'anello, in percento dei frame coi filtri del corredo
+  -- solo i filtri: la loro fetta dell'anello, in percento dei frame coi filtri del setup
   ring_from REAL,
   ring_to   REAL,
   PRIMARY KEY (rig_id, position),
   CHECK ((kind = 'software') = (piece_id IS NULL) AND (kind = 'software') = (software IS NOT NULL))
 ) STRICT;
 
--- I distanziali di un corredo (DERIVATO dalle dichiarazioni `spacer:<nome>` del corredo, che
--- seguono rinomina e unione): nessuna posa li porta, le loro ore sono quelle dei corredi. Lo
+-- I distanziali di un setup (DERIVATO dalle dichiarazioni `spacer:<nome>` del setup, che
+-- seguono rinomina e unione): nessuna posa li porta, le loro ore sono quelle dei setup. Lo
 -- riscrive `spine/rigs.write_spacers` prima di contare.
 CREATE TABLE rig_spacers (
   rig_id   INTEGER NOT NULL REFERENCES rigs (id) ON DELETE CASCADE,
@@ -869,7 +869,7 @@ CREATE TABLE rig_spacers (
   PRIMARY KEY (rig_id, piece_id)
 ) STRICT;
 
--- I conti dalle schede (ADR 0021): del corredo (rapporto focale, campionamento, campo, copertura,
+-- I conti dalle schede (ADR 0021): del setup (rapporto focale, campionamento, campo, copertura,
 -- guida, backfocus, carico) e del pezzo (Dawes, sensore). DERIVATO: lo riscrive intero
 -- `spine/gear_numbers.write` dopo ogni scrittura di schede o parti; la pagina lo legge e basta.
 CREATE TABLE gear_numbers (
@@ -1737,7 +1737,7 @@ CREATE TABLE derived_fresh (
 ) STRICT;
 
 -- Gli ingressi delle tabelle `archive_*`: frame, oggetti e loro nomi, catalogo, risposte sui
--- mosaici, notti, corredi, filtri. Siti e strumenti no: id nella tabella, nome in lettura.
+-- mosaici, notti, setup, filtri. Siti e strumenti no: id nella tabella, nome in lettura.
 CREATE TRIGGER archive_options_frame_in AFTER INSERT ON frames BEGIN
   DELETE FROM derived_fresh WHERE name = 'archive_options'; END;
 CREATE TRIGGER archive_options_frame_out AFTER DELETE ON frames BEGIN
