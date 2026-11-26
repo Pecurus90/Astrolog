@@ -97,8 +97,8 @@ def id_per_percorso(conn):
     """`{percorso assoluto -> frame_id}`: e' cosi' che si legge l'ordine in cui lo stadio ha
     lavorato, guardando i comandi che ha composto."""
     righe = conn.execute(
-        "SELECT p.rel_path, d.root_path, p.frame_id FROM positions p"
-        " JOIN folders d ON d.id = p.folder_id"
+        "SELECT p.rel_path, d.path AS root_path, p.frame_id FROM positions p"
+        " JOIN pipeline_roots d ON d.id = p.folder_id"
     )
     return {os.path.normpath(os.path.join(root, rel)): fid for rel, root, fid in righe}
 

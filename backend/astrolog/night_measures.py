@@ -2,7 +2,6 @@
 same folder and path (ADR 0045). SQL on both worlds, imports neither."""
 
 import json
-import os
 import sqlite3
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator
@@ -29,13 +28,13 @@ LEFT JOIN pipeline_sky k ON k.frame_id = b.pipeline_frame_id
 LEFT JOIN pipeline_sqm q ON q.frame_id = b.pipeline_frame_id"""
 NEVER = ("not_supported", "rewritten", "broken")  # read, no frame, never measured
 
-# Per present position, the present pipeline file at the same path (roots paired in Python): its
+# Per present position, the present pipeline file of its root at the same path: its
 # frame, or why it will never have one. Unreadable or incomplete is tried again: no row.
 _PAIRS = f"""
 SELECT po.frame_id, MIN(pf.frame_id) AS pipeline_frame_id,
        MIN(CASE WHEN pf.skip_reason IN {NEVER} THEN pf.skip_reason END) AS never
 FROM positions po JOIN pipeline_files pf ON pf.rel_path = po.rel_path AND pf.state = 'present'
-WHERE po.status = 'present' AND po.folder_id = ? AND pf.root_id = ?
+WHERE po.status = 'present' AND pf.root_id = po.folder_id
 GROUP BY po.frame_id
 HAVING MIN(pf.frame_id) IS NOT NULL OR never IS NOT NULL
 """  # noqa: S608 - our constants
@@ -133,22 +132,8 @@ def rebuild(conn: sqlite3.Connection) -> None:
 
 
 def _bridge(conn: sqlite3.Connection) -> list[tuple[int, int | None, str | None]]:
-    """The spine keeps a folder as the user added it, the pipeline normalised: compared as the
-    disk compares them (case, separators, `..`)."""
-    roots = {_same(r["path"]): r["id"] for r in conn.execute("SELECT id, path FROM pipeline_roots")}
-    pairs: list[tuple[int, int | None, str | None]] = []
-    for folder in conn.execute("SELECT id, root_path FROM folders").fetchall():
-        root = roots.get(_same(folder["root_path"]))
-        if root is not None:
-            pairs += [
-                (f, p, None if p is not None else why)
-                for f, p, why in conn.execute(_PAIRS, (folder["id"], root))
-            ]
-    return pairs
-
-
-def _same(path: str) -> str:
-    return os.path.normcase(os.path.normpath(path))
+    """Position and pipeline file of one root (one row for both, step 40.3), same path."""
+    return [(f, p, None if p is not None else why) for f, p, why in conn.execute(_PAIRS).fetchall()]
 
 
 def _keys_of(night: int, obj: int | None, flt: int | None) -> Iterator[GroupKey]:

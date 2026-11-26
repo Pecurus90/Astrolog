@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from astrolog.pipeline.changes import RootOverlapError, _emptied, add_root
+from astrolog.pipeline.changes import _emptied
+from astrolog.pipeline.roots import RootOverlapError, add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.walk import Walk
 from conftest import LATER, NOW, THEN, folder_link, nina_light
@@ -441,13 +442,26 @@ def test_the_same_root_is_added_once(conn, tmp_path):
     assert add_root(conn, tmp_path, NOW) == add_root(conn, tmp_path, LATER)
 
 
-@pytest.mark.parametrize("name", ["a.fits", "missing"])
-def test_only_a_folder_that_exists_is_added(conn, tmp_path, name):
-    """Un file o un percorso che non c'e': nessuna radice."""
+def test_a_file_is_not_a_root(conn, tmp_path):
     (tmp_path / "a.fits").write_bytes(b"")
     with pytest.raises(NotADirectoryError):
-        add_root(conn, tmp_path / name, NOW)
+        add_root(conn, tmp_path / "a.fits", NOW)
     assert conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 0
+
+
+def test_a_folder_not_answering_is_added_and_known_on_disk_when_it_answers(conn, tmp_path):
+    """NAS spento quando la si aggiunge (spina-scan.md): la radice c'e', senza id del disco; alla
+    prima scansione che la trova lo prende, e da li' dentro/intorno valgono anche sul disco."""
+    nas = tmp_path / "nas"
+    root = add_root(conn, nas, NOW)
+    row = conn.execute("SELECT device, inode FROM pipeline_roots").fetchone()
+    assert (row["device"], row["inode"]) == (None, None)
+    _file(nas / "a.fits")
+    scan_root(conn, root, LATER)
+    row = conn.execute("SELECT device, inode, ancestors FROM pipeline_roots").fetchone()
+    disk = os.stat(nas)
+    assert (row["device"], row["inode"]) == (str(disk.st_dev), str(disk.st_ino))
+    assert json.loads(row["ancestors"])
 
 
 def test_the_same_folder_written_another_way_is_the_same_root(conn, tmp_path):
@@ -489,7 +503,9 @@ def test_a_folder_around_roots_takes_their_files_and_reads_only_the_new(conn, tm
         (file_id, outer, "M31/a.fits")
     ]
     assert conn.execute("SELECT root_id FROM pipeline_scans").fetchone()[0] == outer
-    assert [r[0] for r in conn.execute("SELECT id FROM pipeline_roots")] == [outer]
+    # retired, not deleted: frames and receipts of the old spine still point at it
+    roots = conn.execute("SELECT id, retired_at FROM pipeline_roots ORDER BY id").fetchall()
+    assert [(r["id"], r["retired_at"]) for r in roots] == [(inner, LATER), (outer, None)]
     changes = scan_root(conn, outer, LATER).changes
     assert (changes.new, changes.unchanged) == (["b.fits"], ["M31/a.fits"])
 

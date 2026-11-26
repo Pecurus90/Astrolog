@@ -24,8 +24,10 @@ from astrolog.api import scan as api_scan
 from astrolog.api.app import create_app
 from astrolog.catalog import bundle, load
 from astrolog.db.connect import connect, create_database
+from astrolog.db.transaction import transaction
+from astrolog.pipeline import roots
 from astrolog.pipeline.scanner import Extracted, Skipped, scan_file
-from astrolog.spine import solve_store, stages
+from astrolog.spine import folder_move, solve_store, stages
 from astrolog.weather import climate, forecast, history, meteoblue, sky
 from recinto import SuiteInRete
 
@@ -406,10 +408,35 @@ def settle(path, age_s=600):
 
 
 def add_folder(conn, root):
-    """Una cartella registrata nel DB di prova; torna il suo id."""
+    """Una cartella registrata nel DB di prova, percorso com'e' scritto (anche finto, 'D:/Astro'
+    su Linux), chiavi dal testo; torna il suo id. La porta vera e' POST /folders."""
+    key = os.path.normcase(os.path.normpath(str(root)))
     return conn.execute(
-        "INSERT INTO folders(root_path, created_at) VALUES(?, 'now')", (str(root),)
+        "INSERT INTO pipeline_roots (path, written_key, real_key, ancestors, created_at)"
+        " VALUES (?, ?, ?, '[]', 'now')",
+        (str(root), key, key),
     ).lastrowid
+
+
+def absorb_folder(conn, outer_id):
+    """La sostituzione come la fa POST /folders: la radice prende i file della nuova, poi le
+    posizioni della vecchia seguono."""
+    with transaction(conn):
+        roots.absorb(conn, outer_id, "ora")
+        folder_move.absorb(conn, outer_id)
+
+
+def move_folder(conn, folder_id, new_root):
+    """Lo spostamento come lo fa POST /folders/{id}/move, percorso com'e' scritto (anche finto):
+    prima la riga della radice, poi le risposte che la seguono."""
+    old = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (folder_id,)).fetchone()[0]
+    key = os.path.normcase(os.path.normpath(str(new_root)))
+    with transaction(conn):
+        conn.execute(
+            "UPDATE pipeline_roots SET path = ?, written_key = ?, real_key = ? WHERE id = ?",
+            (str(new_root), key, key, folder_id),
+        )
+        folder_move.follow_answers(conn, folder_id, old)
 
 
 def sky_solved(conn, frame_id, ra=202.47, dec=47.2):

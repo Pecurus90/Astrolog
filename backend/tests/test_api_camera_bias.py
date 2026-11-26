@@ -109,6 +109,8 @@ def test_a_restored_bias_rewrites_the_sky_brightness_too(db_path, conn, tmp_path
         backup.json_text(backup.collect(other, this_machine=True)), encoding="utf-8"
     )
     with _client(db_path) as c:
+        # the shot's root is a folder, an answer (step 40.3): the offer of a new database, by hand
+        c.app.state.backup_offer = True
         answer = c.post("/api/v1/backup/restore")
         assert answer.status_code == 200, answer.text
     row = _row(connect(db_path))

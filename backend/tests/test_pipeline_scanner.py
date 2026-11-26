@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from astrolog.pipeline.changes import add_root
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped, scan_file
 from astrolog.pipeline.values import Program

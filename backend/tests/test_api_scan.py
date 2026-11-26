@@ -15,7 +15,7 @@ from astrolog.api.app import TOKEN_HEADER, create_app
 from astrolog.db.connect import connect
 from astrolog.spine.scan_store import run_outcomes, start_run
 from astrolog.worker.worker import State
-from conftest import blocking_reader, settle, wait_until, write_light
+from conftest import add_folder, blocking_reader, settle, wait_until, write_light
 
 _FEED_BEHIND = scan_api._feed_behind  # the real one, before the suite's fence turns it off
 
@@ -116,9 +116,7 @@ def test_a_scan_feeds_the_new_pipeline_behind_the_scenes(app, db_path, monkeypat
 def test_the_outcome_of_a_reading_does_not_carry_the_files_not_read(conn):
     """Lo stato chiede com'e' finita ogni cartella a ogni interrogazione: la riga porta l'esito e
     basta, non l'elenco dei file non letti, che si legge a pagine quando serve."""
-    folder_id = conn.execute(
-        "INSERT INTO folders(root_path, created_at) VALUES('D:/Astro', 'ora')"
-    ).lastrowid
+    folder_id = add_folder(conn, "D:/Astro")
     run_id = start_run(conn, folder_id, "ora")
     (riga,) = run_outcomes(conn, [run_id, run_id + 1])
     assert set(riga.keys()) == {"id", "status", "errors", "ended_at"}

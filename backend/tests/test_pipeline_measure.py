@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.measure import measure_root
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import scan_root
 from conftest import LATER, NOW, fits_bytes, nina_light, settle
 from test_pipeline_stars import _field, _true_hfd

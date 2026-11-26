@@ -18,7 +18,7 @@ from astrolog.fits.walk import walk_dir
 from astrolog.spine import folder_move, typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import set_status
-from conftest import add_folder, write_fits, write_light
+from conftest import add_folder, move_folder, write_fits, write_light
 
 
 def _frame(conn, folder_id, rel_path):
@@ -52,9 +52,9 @@ def test_a_moved_folder_takes_its_answer_and_its_frames_stay(conn):
     typeless_folders.write(conn)
     frames, _ = _still(conn)
 
-    folder_move.move(conn, folder_id, "E:/Astro")
+    move_folder(conn, folder_id, "E:/Astro")
 
-    root = conn.execute("SELECT root_path FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (folder_id,)).fetchone()
     assert root[0] == "E:/Astro"
     assert typeless.answer(conn, "E:/Astro/dark") == TypeAnswer.CALIBRATION
     assert typeless.answer(conn, "D:/Astro/dark") is None
@@ -70,7 +70,7 @@ def test_the_root_and_every_subfolder_move_and_a_neighbour_does_not(conn):
     for key in ("D:/Astro", "D:/Astro/dark", "D:/Astro/a/b", "D:/Astro2/dark"):
         typeless.declare(conn, key, TypeAnswer.LIGHT)
 
-    folder_move.move(conn, folder_id, "\\\\NAS\\Foto\\")
+    move_folder(conn, folder_id, "\\\\NAS\\Foto\\")
 
     keys = sorted(r[0] for r in conn.execute("SELECT entity_key FROM declarations"))
     assert keys == ["//NAS/Foto", "//NAS/Foto/a/b", "//NAS/Foto/dark", "D:/Astro2/dark"]
@@ -84,7 +84,7 @@ def test_a_folder_registered_inside_the_moved_one_keeps_its_answers(conn):
     for key in ("D:/Astro/x", "D:/Astro/sub/dark"):
         typeless.declare(conn, key, TypeAnswer.LIGHT)
 
-    folder_move.move(conn, folder_id, "//NAS/Foto")
+    move_folder(conn, folder_id, "//NAS/Foto")
 
     keys = sorted(r[0] for r in conn.execute("SELECT entity_key FROM declarations"))
     assert keys == ["//NAS/Foto/x", "D:/Astro/sub/dark"]
@@ -94,10 +94,10 @@ def test_a_retired_folder_inside_the_moved_one_holds_back_nothing(conn):
     """Ritirata, la cartella dentro non possiede piu' niente: le risposte seguono la madre."""
     folder_id = add_folder(conn, "D:/Astro")
     sub = add_folder(conn, "D:/Astro/sub")
-    conn.execute("UPDATE folders SET retired_at = 'ora' WHERE id = ?", (sub,))
+    conn.execute("UPDATE pipeline_roots SET retired_at = 'ora' WHERE id = ?", (sub,))
     typeless.declare(conn, "D:/Astro/sub/dark", TypeAnswer.CALIBRATION)
 
-    folder_move.move(conn, folder_id, "//NAS/Foto")
+    move_folder(conn, folder_id, "//NAS/Foto")
 
     keys = [r[0] for r in conn.execute("SELECT entity_key FROM declarations")]
     assert keys == ["//NAS/Foto/sub/dark"]
@@ -172,7 +172,7 @@ def test_checking_a_move_says_same_files_and_writes_nothing(client_vuoto, tmp_pa
 
     assert r.status_code == 200, r.text
     assert r.json() == {"root_path": os.path.realpath(new)}
-    assert _count(db_path, "SELECT root_path FROM folders") == f["root_path"]
+    assert _count(db_path, "SELECT path FROM pipeline_roots") == f["root_path"]
     r = client_vuoto.post(f"/api/v1/folders/{f['id']}/move/check", json={"root_path": str(other)})
     assert (r.status_code, r.json()["detail"]["code"]) == (409, "not_the_same_folder")
     r = client_vuoto.post("/api/v1/folders/99999/move/check", json={"root_path": str(new)})
@@ -254,7 +254,7 @@ def test_a_place_with_other_files_is_refused_and_nothing_changes(client_vuoto, t
         assert r.status_code == 409, r.text
         assert r.json()["detail"]["code"] == "not_the_same_folder"
     c = connect(db_path)
-    assert c.execute("SELECT root_path FROM folders").fetchone()[0] == f["root_path"]
+    assert c.execute("SELECT path FROM pipeline_roots").fetchone()[0] == f["root_path"]
     assert typeless.answer(c, f["root_path"].replace("\\", "/")) == TypeAnswer.LIGHT
     c.close()
 

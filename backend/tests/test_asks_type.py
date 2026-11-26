@@ -179,7 +179,7 @@ def test_any_write_to_an_input_moves_the_mark_without_a_helper(conn):
     conn.execute("DELETE FROM frame_wcs WHERE frame_id = ?", (posa,))
     assert _scritto(conn, posa) == 1
     typeless.declare(conn, "D:/Astro/luci", TypeAnswer.LIGHT)
-    conn.execute("UPDATE folders SET retired_at = 'ora' WHERE id = ?", (radice,))
+    conn.execute("UPDATE pipeline_roots SET retired_at = 'ora' WHERE id = ?", (radice,))
     assert _scritto(conn, posa) == 1
     _come_la_regola(conn)
 

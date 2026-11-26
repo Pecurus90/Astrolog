@@ -6,7 +6,7 @@ import threading
 from astrolog import astap
 from astrolog.pipeline import run as run_module
 from astrolog.pipeline.behind import Behind
-from astrolog.pipeline.changes import add_root
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.run import run_roots
 from astrolog.pipeline.scan import busy
 from conftest import NOW, nina_light
@@ -20,8 +20,8 @@ def _solver(tmp_path):
 def test_each_folder_is_scanned_and_solved_and_a_missing_one_is_skipped(conn, tmp_path, caplog):
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
-    paths = [str(tmp_path / "gone"), str(nas)]
-    events = list(run_roots(conn, paths, NOW, _solver(tmp_path), (tmp_path / "work", None)))
+    roots = [add_root(conn, tmp_path / "gone", NOW), add_root(conn, nas, NOW)]
+    events = list(run_roots(conn, roots, NOW, _solver(tmp_path), (tmp_path / "work", None)))
     assert events[-1] == {"done": True, "total": 2}
     assert [e["current"] for e in events[:-1]] == [1, 2]
     assert [r["outcome"] for r in _solutions(conn)] == ["solved"]
@@ -55,23 +55,24 @@ def test_behind_runs_on_its_own_thread_and_folders_kicked_meanwhile_wait(
     gate, entered, seen = threading.Event(), threading.Event(), []
     real = run_module.run_roots
 
-    def slow(conn_, paths, *rest):
-        seen.append(list(paths))
+    def slow(conn_, roots, *rest):
+        seen.append(list(roots))
         entered.set()
         gate.wait(10.0)
-        yield from real(conn_, paths, *rest)
+        yield from real(conn_, roots, *rest)
 
     monkeypatch.setattr(run_module, "run_roots", slow)
     for name in ("a", "b"):
         nina_light(tmp_path / name / "x.fits", ord(name))
+    a, b = (add_root(conn, tmp_path / n, NOW) for n in ("a", "b"))
     behind = _behind(db_path, tmp_path)
-    behind.kick([str(tmp_path / "a")])
+    behind.kick([a])
     assert entered.wait(10.0)  # the first round has taken `a`: the next kick waits its turn
-    behind.kick([str(tmp_path / "b"), str(tmp_path / "a")])
+    behind.kick([b, a])
     gate.set()
     behind.join(10.0)
     # `a` kicked again while it ran: a scan may have brought new files, it runs again
-    assert seen == [[str(tmp_path / "a")], [str(tmp_path / "b"), str(tmp_path / "a")]]
+    assert seen == [[a], [b, a]]
     assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 2
 
 
@@ -90,7 +91,7 @@ def test_the_sky_of_the_sites_is_written_again_behind_even_after_a_stop(
 
 
 def test_what_follows_the_sites_runs_after_their_sky_and_a_failure_is_only_logged(
-    db_path, tmp_path, monkeypatch, caplog
+    conn, db_path, tmp_path, monkeypatch, caplog
 ):
     """`follow` e' dell'app (la Luna delle notti): dopo il cielo dei siti, sia da solo sia a fine
     giro di cartelle; se cade, Behind lo scrive nel log e va avanti."""
@@ -99,7 +100,7 @@ def test_what_follows_the_sites_runs_after_their_sky_and_a_failure_is_only_logge
     behind = Behind(db_path, tmp_path / "work", lambda conn: None, followed.append)
     behind.refresh_sky()
     behind.join(10.0)
-    behind.kick([str(tmp_path / "none")])
+    behind.kick([add_root(conn, tmp_path / "none", NOW)])
     behind.join(10.0)
     assert len(followed) == 2
 
@@ -116,7 +117,7 @@ def test_a_stopped_behind_starts_again_at_the_next_kick(conn, db_path, tmp_path)
     nina_light(tmp_path / "a" / "x.fits", 1)
     behind = _behind(db_path, tmp_path)
     behind.stop()
-    behind.kick([str(tmp_path / "a")])
+    behind.kick([add_root(conn, tmp_path / "a", NOW)])
     behind.join(10.0)
     assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 1
 
@@ -131,26 +132,27 @@ def test_a_kick_while_a_stopped_round_is_still_ending_starts_a_new_one(
     entered, seen = threading.Event(), []
     real = run_module.run_roots
 
-    def until_stopped(conn_, paths, now, solver, where):
-        seen.append(list(paths))
+    def until_stopped(conn_, roots, now, solver, where):
+        seen.append(list(roots))
         if len(seen) == 1:  # holds its root as a batch does, a little past the stop
-            with busy(add_root(conn_, paths[0], now)):
+            with busy(roots[0]):
                 entered.set()
                 while not where[1].is_set():
                     time.sleep(0.01)
                 time.sleep(0.3)
-        yield from real(conn_, paths, now, solver, where)
+        yield from real(conn_, roots, now, solver, where)
 
     monkeypatch.setattr(run_module, "run_roots", until_stopped)
     nina_light(tmp_path / "a" / "x.fits", 1)
+    a = add_root(conn, tmp_path / "a", NOW)
     behind = _behind(db_path, tmp_path)
-    behind.kick([str(tmp_path / "a")])
+    behind.kick([a])
     assert entered.wait(10.0)
     behind.stop()
-    behind.kick([str(tmp_path / "a")])
+    behind.kick([a])
     time.sleep(2.0)
     behind.join(10.0)
-    assert seen == [[str(tmp_path / "a")], [str(tmp_path / "a")]]
+    assert seen == [[a], [a]]
     assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 1
 
 
@@ -159,5 +161,9 @@ def test_a_stop_before_a_folder_leaves_it_for_next_time(conn, tmp_path):
     nina_light(nas / "a.fits", 1, _SKY)
     stop = threading.Event()
     stop.set()
-    events = list(run_roots(conn, [str(nas)], NOW, _solver(tmp_path), (tmp_path / "work", stop)))
+    events = list(
+        run_roots(
+            conn, [add_root(conn, nas, NOW)], NOW, _solver(tmp_path), (tmp_path / "work", stop)
+        )
+    )
     assert events == [{"done": True, "total": 1}] and _solutions(conn) == []

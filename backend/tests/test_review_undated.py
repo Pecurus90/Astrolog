@@ -49,7 +49,7 @@ def pagina(db_path, tmp_path):
 
 def _chiave(client):
     with db(client) as conn:
-        radice = conn.execute("SELECT root_path FROM folders").fetchone()[0]
+        radice = conn.execute("SELECT path FROM pipeline_roots").fetchone()[0]
     return folder_key(radice, f"{SENZA}/")
 
 

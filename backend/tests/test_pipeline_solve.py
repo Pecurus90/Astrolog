@@ -17,7 +17,7 @@ from astropy.io import fits
 from astrolog import astap
 from astrolog.db.connect import connect
 from astrolog.pipeline import scan
-from astrolog.pipeline.changes import add_root
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.scanner import Skip, Skipped
 from astrolog.pipeline.solve import solve_root

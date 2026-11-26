@@ -23,7 +23,7 @@ from astrolog.clock import now_iso
 from astrolog.db.connect import connect
 from astrolog.spine import stages
 from astrolog.vocab.filters import Passband
-from conftest import apply, by_name, db, review, unnamed_cards, wait_until, write_light
+from conftest import add_folder, apply, by_name, db, review, unnamed_cards, wait_until, write_light
 
 # --- l'elenco -------------------------------------------------------------------------
 
@@ -43,10 +43,7 @@ def test_folders_added_and_never_read_are_said_apart(client_vuoto, db_path):
     """Issue #20: con cartelle aggiunte e non lette il gesto giusto e' leggerle, non aggiungerne;
     lette e senza frame, si'."""
     conn = connect(db_path)
-    conn.execute(
-        "INSERT INTO folders (id, root_path, created_at)"
-        " VALUES (1, 'D:/Astro', '2026-11-18T00:00:00Z')"
-    )
+    assert add_folder(conn, "D:/Astro") == 1
     conn.commit()
     assert review(client_vuoto)["empty"] == "unread"
     conn.execute(

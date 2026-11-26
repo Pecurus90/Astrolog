@@ -210,7 +210,7 @@ def test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything(conn):
     """Una cartella che l'utente ha ritirato e un file che non si trova piu' non fanno domande: non
     c'e' niente su cui agire. Se il frame vive anche in una cartella viva, si chiede."""
     ritirata = add_folder(conn, "/vol/ritirata")
-    conn.execute("UPDATE folders SET retired_at = 'ieri' WHERE id = ?", (ritirata,))
+    conn.execute("UPDATE pipeline_roots SET retired_at = 'ieri' WHERE id = ?", (ritirata,))
     viva = add_folder(conn, "/vol/viva")
     _posa(conn, ritirata, "notte/a.fits")
     sparita = _posa(conn, viva, "notte/b.fits")

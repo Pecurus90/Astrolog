@@ -8,7 +8,6 @@ import pytest
 from astrolog.db.connect import connect
 from astrolog.pipeline import filters
 from astrolog.pipeline.card import read_card
-from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.filters import (
     FORMS,
     Band,
@@ -17,6 +16,7 @@ from astrolog.pipeline.filters import (
     filter_key,
     resolve,
 )
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.values import Program
 from conftest import NOW, nina_light

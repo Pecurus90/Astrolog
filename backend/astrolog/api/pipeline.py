@@ -169,8 +169,8 @@ def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None
 
 
 def _folder_path(conn: sqlite3.Connection, folder_id: int) -> str | None:
-    row = conn.execute("SELECT root_path FROM folders WHERE id = ?", (folder_id,)).fetchone()
-    return row["root_path"] if row else None
+    row = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (folder_id,)).fetchone()
+    return row["path"] if row else None
 
 
 @router.get("/pipeline/status", response_model=PipelineStatus)

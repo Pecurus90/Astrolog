@@ -27,14 +27,14 @@ class Behind:
     ) -> None:
         self._db_path, self._work, self._exe, self._follow = db_path, work, exe, follow
         self._lock = threading.Lock()
-        self._pending: list[str] = []
+        self._pending: list[int] = []  # root ids
         self._sky = False  # the site's sky asked again
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
 
-    def kick(self, paths: Iterable[str]) -> None:
+    def kick(self, root_ids: Iterable[int]) -> None:
         with self._lock:
-            self._pending += [p for p in paths if p not in self._pending]
+            self._pending += [r for r in root_ids if r not in self._pending]
             if self._stop.is_set():  # a new go: the round being stopped ends, then the queue runs
                 self._stop = threading.Event()
             self._start()
@@ -69,14 +69,14 @@ class Behind:
             while True:
                 with self._lock:  # stopped or empty, gone in one step: a kick never finds it dying
                     stop = self._stop
-                    paths = [] if stop.is_set() else self._pending
+                    roots = [] if stop.is_set() else self._pending
                     self._pending = self._pending if stop.is_set() else []
                     sky, self._sky = self._sky, False
-                    if not paths and not sky:
+                    if not roots and not sky:
                         self._thread = None
                         return
-                if paths:
-                    self._run(paths, stop)  # the sky at its end
+                if roots:
+                    self._run(roots, stop)  # the sky at its end
                 else:
                     self._rebuild_sky()
         except Exception:
@@ -86,12 +86,12 @@ class Behind:
                 if self._thread is threading.current_thread():
                     self._thread = None
 
-    def _run(self, paths: list[str], stop: threading.Event) -> None:
+    def _run(self, roots: list[int], stop: threading.Event) -> None:
         from . import run  # the measuring stack: here, not at the app's start
 
         conn = connect(self._db_path, check_same_thread=False)
         try:
-            for _ in run.run_roots(conn, paths, now_iso(), self._exe(conn), (self._work, stop)):
+            for _ in run.run_roots(conn, roots, now_iso(), self._exe(conn), (self._work, stop)):
                 pass
             self._followed(conn)  # a sky asked with the folders was taken by this round
         finally:

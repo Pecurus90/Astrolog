@@ -32,7 +32,7 @@ sono gia' agganciate a chiavi stabili (impronta del frame, grafia dell'header, n
   `config`, `sites`, `folders`, `instruments`, `filters`, `header_aliases`, `declarations`, poi i
   setup dichiarati (`rigs.restore_declared`). La scansione rifa' il resto.
 - **Cartelle su un'altra macchina**: la riga torna anche se il percorso non c'e', col suo campione
-  (`folders.sample_json`); lo spostamento di M2 riconosce la cartella dal campione quando non ha
+  (`pipeline_roots.sample_json`, passo 40.3); lo spostamento di M2 riconosce la cartella dal campione quando non ha
   ancora frame, cosi' "aggiungi la cartella nel posto nuovo" porta le risposte.
 - **Esporta e Importa a mano** in Impostazioni, per un'altra macchina: lo stesso file **senza le
   chiavi segrete** (Marco) e senza `astap_path`: un percorso dichiarato vince sulla ricerca

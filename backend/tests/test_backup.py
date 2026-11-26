@@ -14,7 +14,7 @@ from astrolog.db.connect import connect, create_database
 from astrolog.fits.header_read import frame_fingerprint, read_frame
 from astrolog.spine import backup, folder_move, typeless
 from astrolog.spine.declarations import TypeAnswer
-from conftest import add_folder, write_light
+from conftest import add_folder, move_folder, write_light
 
 
 def _file(db_path):
@@ -254,7 +254,7 @@ def test_the_answers_keep_their_keys_and_the_folder_its_sample(conn, tmp_path):
     altro = connect(tmp_path / "nuovo.db")
     backup.restore(altro, data)
     assert typeless.answer(altro, "D:/Astro/dark") == TypeAnswer.CALIBRATION
-    campione = altro.execute("SELECT sample_json FROM folders").fetchone()[0]
+    campione = altro.execute("SELECT sample_json FROM pipeline_roots").fetchone()[0]
     assert json.loads(campione) == [["dark/a.fits", "impronta-1"]]
 
 
@@ -293,9 +293,9 @@ def test_a_restored_folder_without_frames_is_recognised_by_its_sample(tmp_path):
             ],
         },
     )
-    vecchia = conn.execute("SELECT id FROM folders").fetchone()[0]
+    vecchia = conn.execute("SELECT id FROM pipeline_roots").fetchone()[0]
     assert folder_move.same_files(conn, vecchia, str(nuovo), [str(nuovo / "dark" / "a.fits")])
-    folder_move.move(conn, vecchia, str(nuovo))
+    move_folder(conn, vecchia, str(nuovo))
     assert typeless.answer(conn, f"{nuovo.as_posix()}/dark") == TypeAnswer.CALIBRATION
 
 
@@ -308,8 +308,8 @@ def test_a_folder_restored_without_a_sample_is_recognised_by_nothing(tmp_path):
     conn = connect(tmp_path / "nuovo.db")
     folder = {"root_path": "D:/Astro", "name": None, "retired_at": None}
     backup.restore(conn, {"version": backup.VERSION, "folders": [folder]})
-    vecchia = conn.execute("SELECT id FROM folders").fetchone()[0]
-    assert conn.execute("SELECT sample_json FROM folders").fetchone()[0] == "[]"
+    vecchia = conn.execute("SELECT id FROM pipeline_roots").fetchone()[0]
+    assert conn.execute("SELECT sample_json FROM pipeline_roots").fetchone()[0] == "[]"
     assert folder_move.same_files(conn, vecchia, str(nuovo), [str(nuovo / "a.fits")]) is False
 
 

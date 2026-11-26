@@ -109,7 +109,8 @@ def _launch(state: State, pairs: Sequence[tuple[int, int]], stages: list[Stage])
 
 def active_folder_ids(conn: sqlite3.Connection) -> list[int]:
     return [
-        r[0] for r in conn.execute("SELECT id FROM folders WHERE retired_at IS NULL ORDER BY id")
+        r[0]
+        for r in conn.execute("SELECT id FROM pipeline_roots WHERE retired_at IS NULL ORDER BY id")
     ]
 
 
@@ -161,13 +162,8 @@ def sky_follows(request: Request) -> None:
 
 
 def _feed_behind(state: State, folder_ids: Iterable[int]) -> None:
-    """Its own connection: this runs in the worker's thread."""
-    conn = connect(state.db_path)
-    try:
-        paths = [folder_root(conn, folder_id)[0] for folder_id in folder_ids]
-    finally:
-        conn.close()
-    state.behind.kick(paths)
+    """A folder is a pipeline root (one row, step 40.3): its id is enough."""
+    state.behind.kick(list(folder_ids))
 
 
 def _backup_new_samples(db_path: str | Path) -> None:

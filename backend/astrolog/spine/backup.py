@@ -13,6 +13,7 @@ from .. import place
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
+from ..pipeline import roots
 from . import gear, gear_usage, previews
 from .folder_move import SAMPLE_FILES
 
@@ -45,6 +46,7 @@ _SAMPLE = (
     "SELECT p.rel_path, f.frame_hash FROM positions p JOIN frames f ON f.id = p.frame_id"
     " WHERE p.folder_id = ? ORDER BY p.rel_path LIMIT ?"
 )
+_ROOTS = "SELECT id, path, name, retired_at, sample_json FROM pipeline_roots ORDER BY id"
 
 
 class BackupError(ValueError):
@@ -70,7 +72,7 @@ def collect(
             if this_machine or r["key"] not in _STAYS_HERE
         },
         "sites": rows(_SITES),
-        "folders": [_folder(conn, r) for r in conn.execute("SELECT * FROM folders ORDER BY id")],
+        "folders": [_folder(conn, r) for r in conn.execute(_ROOTS)],
         "instruments": rows(
             f"SELECT {', '.join(_INSTRUMENT)} FROM instruments"  # noqa: S608 - constant columns
             " WHERE detected = 0 ORDER BY kind, name"
@@ -98,7 +100,7 @@ def _folder(conn: sqlite3.Connection, row: sqlite3.Row) -> dict[str, Any]:
     if not sample and row["sample_json"]:
         sample = json.loads(row["sample_json"])
     return {
-        "root_path": row["root_path"],
+        "root_path": row["path"],
         "name": row["name"],
         "retired_at": row["retired_at"],
         "sample": sample,
@@ -141,8 +143,8 @@ def write_if_new_sample(conn: sqlite3.Connection, db_path: str | Path) -> bool:
     if old is None:
         return False
     saved = {f["root_path"]: f["sample"] for f in old.get("folders", [])}
-    rows = conn.execute("SELECT * FROM folders ORDER BY id").fetchall()
-    if all(saved.get(r["root_path"]) == _folder(conn, r)["sample"] for r in rows):
+    rows = conn.execute(_ROOTS).fetchall()
+    if all(saved.get(r["path"]) == _folder(conn, r)["sample"] for r in rows):
         return False
     write_quietly(conn, db_path)
     return True
@@ -301,14 +303,13 @@ def _restore_site(conn: sqlite3.Connection, site: dict[str, Any], now: str) -> N
 
 def _restore_folder(conn: sqlite3.Connection, folder: dict[str, Any], now: str) -> None:
     """Back even if the path is not here: on another machine the move recognises it by its
-    sample (`folder_move.same_files`)."""
-    conn.execute(
-        "INSERT INTO folders(root_path, name, retired_at, sample_json, created_at)"
-        " VALUES(?, ?, ?, ?, ?) ON CONFLICT(root_path) DO UPDATE SET name = excluded.name,"
-        " retired_at = excluded.retired_at, sample_json = excluded.sample_json",
-        (folder["root_path"], folder["name"], folder["retired_at"],
-         json.dumps(folder.get("sample", [])), now),
+    sample (`folder_move.same_files`). A path not usable here is left out."""
+    declared = roots.Declared(
+        folder["root_path"], folder["name"], folder["retired_at"],
+        json.dumps(folder.get("sample", [])),
     )  # fmt: skip
+    if roots.restore(conn, declared, now) is None:
+        log.warning("backup: folder %s not usable here, left out", folder["root_path"])
 
 
 def _restore_filter(conn: sqlite3.Connection, f: dict[str, Any], now: str) -> None:

@@ -22,7 +22,7 @@ from astrolog.spine import run, scan_store
 from astrolog.spine.scan_store import COUNTS, start_run
 from astrolog.spine.stages import mark_pending
 from astrolog.worker.worker import Stage, WorkerBusyError
-from conftest import settle, wait_until, write_light
+from conftest import add_folder, settle, wait_until, write_light
 
 
 @pytest.fixture
@@ -164,12 +164,8 @@ def test_the_end_of_the_run_is_not_a_number(db_path, tmp_path):
     root = tmp_path / "lib"
     write_light(root / "a.fits", obj="M 1")
     with connect(db_path) as conn:
-        uno = conn.execute(
-            "INSERT INTO folders(root_path, created_at) VALUES(?, 'ora')", (str(root),)
-        ).lastrowid
-        due = conn.execute(
-            "INSERT INTO folders(root_path, created_at) VALUES(?, 'ora')", (str(tmp_path),)
-        ).lastrowid
+        uno = add_folder(conn, root)
+        due = add_folder(conn, tmp_path)
         corse = [
             (uno, start_run(conn, uno, "2026-09-16T10:00:00.000Z")),
             (due, start_run(conn, due, "2026-09-16T10:00:01.000Z")),
@@ -686,7 +682,7 @@ def test_resume_with_no_active_folder_left_says_no_folders(app):
     _stopped_while_reading(client, uno)
     # a mano: il DELETE puo' avviare il lavoro a valle e togliere lo stato fermo
     with connect(client.app.state.db_path) as conn:
-        conn.execute("UPDATE folders SET retired_at = 'ora'")
+        conn.execute("UPDATE pipeline_roots SET retired_at = 'ora'")
     r = client.post("/api/v1/pipeline/run")
     assert r.status_code == 409, r.text
     assert r.json()["detail"]["code"] == "no_folders"

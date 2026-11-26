@@ -8,10 +8,10 @@ from dataclasses import dataclass, field
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
+from .roots import above, identity, is_text
 from .scanner import Skip
 from .values import SQLITE_MAX, SQLITE_MIN
-from .walk import Walk, long_path, plain, real_key, walk_dir
-from .walk import absolute as walk_absolute
+from .walk import Walk, long_path, walk_dir
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
 PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
@@ -44,158 +44,6 @@ class Changes:
         return sorted(self.new + self.changed + self.reread)
 
 
-class RootOverlapError(ValueError):
-    """Folder inside (`inside`) or around a root already added: files would count twice."""
-
-    def __init__(self, other: str, *, inside: bool) -> None:
-        super().__init__(f"{'inside' if inside else 'around'} {other}")
-        self.other = other
-        self.inside = inside
-
-
-def _ignores_case(path: str) -> bool:
-    """Asks the disk: same folder under swapped case (macOS APFS default, Windows)."""
-    swapped = path.swapcase()
-    try:
-        return swapped != path and os.path.samefile(path, swapped)
-    except OSError:
-        return False
-
-
-def _keys(path: str) -> tuple[str, str]:
-    """(as written, real) comparison keys; computed once, on this path only."""
-    written, real = os.path.normcase(path), real_key(path)
-    if _ignores_case(path):
-        written, real = written.casefold(), real.casefold()
-    return written, real
-
-
-def _inside(child: str, parent: str) -> bool:
-    """On key text. Parent ending in bar (drive root, share written with one): no bar added.
-    Another drive never inside."""
-    return child.startswith(parent if parent.endswith(os.sep) else parent + os.sep)
-
-
-def _identity(path: str) -> tuple[str, str] | None:
-    """Volume and folder id from disk: same in every spelling (letter, share, `\\\\?\\`).
-    Digits: Windows volume serial is unsigned 64 bit, past SQLite INTEGER. Silent disk: None."""
-    try:
-        st = os.stat(long_path(path))
-    except OSError:
-        return None
-    return (str(st.st_dev), str(st.st_ino)) if st.st_ino else None
-
-
-def _still(stored: str, path: str) -> bool:
-    """Stored root path is still this folder; only asked when ids match. Not answering: no."""
-    try:
-        return os.path.samefile(long_path(stored), long_path(path))
-    except OSError:
-        return False
-
-
-def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
-    """Existing folder only. Same folder another way: same root; around roots as written: takes
-    them over (step 38); other overlap: RootOverlapError. Other disks touched only on id match."""
-    written_path = plain(_unquoted(os.fspath(path)))
-    if not os.path.isabs(written_path):  # empty or relative: would be app's working folder
-        raise NotADirectoryError(written_path)
-    absolute = os.path.normpath(walk_absolute(written_path))
-    # name not text (PEP 383): DB stores UTF-8, its files could never be read either
-    if not _is_text(absolute) or not os.path.isdir(long_path(absolute)):
-        raise NotADirectoryError(absolute)
-    written, real = _keys(absolute)
-    identity = _identity(absolute)
-    ancestors = _above(absolute)
-    with transaction(conn):
-        held = [
-            r for r in conn.execute("SELECT id, path, written_key FROM pipeline_roots")
-            if _inside(r["written_key"], written)
-        ]  # fmt: skip
-        same = _same_root(conn, (written, real), identity, ancestors, {r["id"] for r in held})
-        if same is not None:
-            return same
-        root_id = inserted_id(
-            conn.execute(
-                "INSERT INTO pipeline_roots"
-                " (path, written_key, real_key, device, inode, ancestors, created_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (absolute, written, real, *(identity or (None, None)), json.dumps(list(ancestors)),
-                 now),
-            )
-        )  # fmt: skip
-        for inner in held:
-            _take_over(conn, root_id, inner["id"], _rel(inner["path"], absolute) + "/")
-        return root_id
-
-
-def _take_over(conn: sqlite3.Connection, outer: int, inner: int, prefix: str) -> None:
-    """Files, receipts and their moves pass to the outer root, paths prefixed: same rows."""
-    conn.execute(
-        "UPDATE pipeline_files SET root_id = ?, rel_path = ? || rel_path WHERE root_id = ?",
-        (outer, prefix, inner),
-    )
-    conn.execute(
-        "UPDATE pipeline_moves SET was_path = :p || was_path, now_path = :p || now_path"
-        " WHERE scan_id IN (SELECT id FROM pipeline_scans WHERE root_id = :inner)",
-        {"p": prefix, "inner": inner},
-    )
-    conn.execute("UPDATE pipeline_scans SET root_id = ? WHERE root_id = ?", (outer, inner))
-    conn.execute("DELETE FROM pipeline_roots WHERE id = ?", (inner,))
-
-
-def _unquoted(path: str) -> str:
-    """Windows 'Copy as path' wraps it in quotes: one pair off, only when path as written
-    is not there (Linux name may hold quotes)."""
-    quoted = len(path) > 1 and path[0] == path[-1] == '"'
-    return path[1:-1] if quoted and not os.path.exists(long_path(path)) else path
-
-
-def _above(absolute: str) -> dict[str, str]:
-    """Letter mapped below a share (or link): what holds it shows only on the real path."""
-    return _ancestors(absolute) | _ancestors(plain(os.path.realpath(long_path(absolute))))
-
-
-def _ancestors(path: str) -> dict[str, str]:
-    """'device:inode' -> folder, for every folder holding path: share and letter agree there."""
-    found: dict[str, str] = {}
-    current = path
-    while (parent := os.path.dirname(current)) != current:
-        current = parent
-        if (identity := _identity(current)) is not None:
-            found[":".join(identity)] = current
-    return found
-
-
-def _same_root(
-    conn: sqlite3.Connection,
-    keys: tuple[str, str],
-    identity: tuple[str, str] | None,
-    ancestors: dict[str, str],
-    held: set[int],
-) -> int | None:
-    """Id of root that is this folder; one inside or around it (text or disk), not `held`:
-    RootOverlapError. Disk id survives rename: match only while stored path still is this folder."""
-    written, real = keys
-    mine_id = ":".join(identity) if identity is not None else None
-    for row in conn.execute("SELECT * FROM pipeline_roots"):
-        if row["id"] in held:
-            continue
-        if written == row["written_key"] or real == row["real_key"]:
-            return int(row["id"])
-        theirs_id = f"{row['device']}:{row['inode']}" if row["device"] is not None else None
-        if mine_id is not None and mine_id == theirs_id and _still(row["path"], written):
-            return int(row["id"])
-        for mine, theirs in ((written, row["written_key"]), (real, row["real_key"])):
-            if _inside(mine, theirs) or _inside(theirs, mine):
-                raise RootOverlapError(row["path"], inside=_inside(mine, theirs))
-        if theirs_id in ancestors and _still(row["path"], ancestors[theirs_id]):
-            raise RootOverlapError(row["path"], inside=True)
-        if mine_id is not None and mine_id in json.loads(row["ancestors"]):
-            raise RootOverlapError(row["path"], inside=False)
-    return None
-
-
 def _rel(path: str, root: str) -> str:
     """Walk builds every path from root: cut it. relpath (abspath) strips a trailing dot."""
     return path[len(root) :].lstrip(os.sep).replace(os.sep, "/")
@@ -205,22 +53,13 @@ def _under(rel: str, folders: list[str]) -> bool:
     return any(rel == f or rel.startswith(f + "/") for f in folders)
 
 
-def _is_text(path: str) -> bool:
-    """Linux name in another encoding comes as lone surrogates (Python, PEP 383)."""
-    try:
-        path.encode("utf-8")
-    except UnicodeEncodeError:
-        return False
-    return True
-
-
 def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], set[str]]:
     """rel path -> (size, mtime_ns), plus files not looked at (passing NAS error, rights, gone
     since walk, name not text: DB stores UTF-8): not judged, and said."""
     seen: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     for path in found:
-        if not _is_text(path):
+        if not is_text(path):
             unlooked.add(_rel(path, root))
             continue
         try:  # not DirEntry.stat: NTFS listing stays stale when file changed via another hard link
@@ -253,11 +92,11 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     )
     # other disk under root (same letter, remount): judged anyway, said in receipt; owner's
     # choice: wrong disk shows frames gone, back with right disk, never silent for good
-    identity = _identity(root)
-    other_volume = (
-        identity is not None and row["device"] is not None and identity[0] != row["device"]
-    )
-    above = _above(root) if other_volume else {}  # folders above belong to new disk too
+    ident = identity(root)
+    other_volume = ident is not None and row["device"] is not None and ident[0] != row["device"]
+    # added while silent (NAS off): disk known only now
+    first_seen = ident is not None and row["device"] is None
+    heights = above(root) if other_volume or first_seen else {}  # held by new disk too
     disk: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     if changes.reachable:
@@ -285,10 +124,10 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
             )
         )
         if changes.reachable:
-            if other_volume and identity is not None:  # root now lives on this volume
+            if ident is not None and (other_volume or first_seen):  # root lives on this volume
                 conn.execute(
                     "UPDATE pipeline_roots SET device = ?, inode = ?, ancestors = ? WHERE id = ?",
-                    (*identity, json.dumps(list(above)), root_id),
+                    (*ident, json.dumps(list(heights)), root_id),
                 )
             _judge(conn, root_id, disk, changes)
             _write_counts(conn, changes)

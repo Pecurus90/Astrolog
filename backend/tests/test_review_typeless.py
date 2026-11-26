@@ -48,7 +48,7 @@ def pagina(db_path, tmp_path):
 
 def _chiave(client, sotto):
     with db(client) as conn:
-        radice = conn.execute("SELECT root_path FROM folders").fetchone()[0]
+        radice = conn.execute("SELECT path FROM pipeline_roots").fetchone()[0]
     return folder_key(radice, f"{sotto}/")
 
 
@@ -250,7 +250,7 @@ def _foto_con_le_ore(client):
 def _rileggi(client, quale):
     """La scansione di tutte le cartelle, o quella di una sola: due strade della corsa."""
     with db(client) as conn:
-        (cartella,) = conn.execute("SELECT id FROM folders").fetchone()
+        (cartella,) = conn.execute("SELECT id FROM pipeline_roots").fetchone()
     r = client.post("/api/v1/scan" if quale == "tutte" else f"/api/v1/folders/{cartella}/scan")
     assert r.status_code in (200, 202), r.text
     client.app.state.worker.join(20.0)
@@ -343,7 +343,7 @@ def test_a_detached_frame_left_without_a_live_folder_keeps_waiting(pagina, tmp_p
         _rileggi(pagina, "tutte")
     else:
         with db(pagina) as conn:
-            (cartella,) = conn.execute("SELECT id FROM folders").fetchone()
+            (cartella,) = conn.execute("SELECT id FROM pipeline_roots").fetchone()
         assert pagina.delete(f"/api/v1/folders/{cartella}").status_code == 200
         pagina.app.state.worker.join(20.0)
     assert _aspetta(pagina, "a_0.fits")
@@ -436,7 +436,7 @@ def _anche_altrove_poi_via_la_prima(pagina, tmp_path):
     pagina.app.state.worker.join(20.0)
     assert None not in _attaccato(pagina, "a_0.fits")
     with db(pagina) as conn:
-        (prima,) = conn.execute("SELECT id FROM folders ORDER BY id").fetchone()
+        (prima,) = conn.execute("SELECT id FROM pipeline_roots ORDER BY id").fetchone()
     assert pagina.delete(f"/api/v1/folders/{prima}").status_code == 200
     assert _attaccato(pagina, "a_0.fits") == (None, None, None)
     pagina.app.state.worker.join(20.0)
@@ -476,7 +476,7 @@ def test_putting_back_a_folder_sends_a_frame_that_lost_its_sky_back_to_the_sky(
     assert pagina.post(f"/api/v1/folders/{r.json()['id']}/scan").status_code == 202
     pagina.app.state.worker.join(20.0)
     with db(pagina) as conn:
-        (prima,) = conn.execute("SELECT id FROM folders ORDER BY id").fetchone()
+        (prima,) = conn.execute("SELECT id FROM pipeline_roots ORDER BY id").fetchone()
     assert pagina.delete(f"/api/v1/folders/{prima}").status_code == 200
     pagina.app.state.worker.join(20.0)
     assert _attaccato(pagina, "a_0.fits") == (None, None, None)
@@ -514,11 +514,13 @@ def test_a_retire_that_fails_leaves_the_folder_where_it_was(pagina, monkeypatch)
 
     monkeypatch.setattr(typeless_answer, "detach_waiting", cade)
     with db(pagina) as conn:
-        (prima,) = conn.execute("SELECT id FROM folders ORDER BY id").fetchone()
+        (prima,) = conn.execute("SELECT id FROM pipeline_roots ORDER BY id").fetchone()
     with pytest.raises(RuntimeError):
         pagina.delete(f"/api/v1/folders/{prima}")
     with db(pagina) as conn:
-        riga = conn.execute("SELECT retired_at FROM folders WHERE id = ?", (prima,)).fetchone()
+        riga = conn.execute(
+            "SELECT retired_at FROM pipeline_roots WHERE id = ?", (prima,)
+        ).fetchone()
     assert riga["retired_at"] is None
 
 
@@ -534,7 +536,7 @@ def test_retiring_the_folder_keeps_the_hours(pagina):
     """Ritirare una cartella non cancella niente: i suoi frame senza tipo tengono le ore."""
     _foto_con_le_ore(pagina)
     with db(pagina) as conn:
-        (cartella,) = conn.execute("SELECT id FROM folders").fetchone()
+        (cartella,) = conn.execute("SELECT id FROM pipeline_roots").fetchone()
     assert pagina.delete(f"/api/v1/folders/{cartella}").status_code == 200
     assert None not in _attaccato(pagina, "a_0.fits")
 

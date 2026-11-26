@@ -275,7 +275,7 @@ class Empty(StrEnum):
     WAITING = "waiting"
 
 
-_FOLDERS = "SELECT EXISTS (SELECT 1 FROM folders WHERE retired_at IS NULL)"
+_FOLDERS = "SELECT EXISTS (SELECT 1 FROM pipeline_roots WHERE retired_at IS NULL)"
 
 
 def empty(conn: sqlite3.Connection, waiting: list[dict[str, Any]], left: int) -> Empty | None:

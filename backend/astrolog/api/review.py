@@ -126,8 +126,8 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
 _EMPTY = """
 SELECT CASE
   WHEN EXISTS (SELECT 1 FROM frames) THEN NULL
-  WHEN NOT EXISTS (SELECT 1 FROM folders WHERE retired_at IS NULL) THEN 'no_folders'
-  WHEN EXISTS (SELECT 1 FROM folders f WHERE f.retired_at IS NULL AND NOT EXISTS
+  WHEN NOT EXISTS (SELECT 1 FROM pipeline_roots WHERE retired_at IS NULL) THEN 'no_folders'
+  WHEN EXISTS (SELECT 1 FROM pipeline_roots f WHERE f.retired_at IS NULL AND NOT EXISTS
     (SELECT 1 FROM scan_runs r WHERE r.folder_id = f.id AND r.status = 'ok')) THEN 'unread'
   ELSE 'no_frames'
 END

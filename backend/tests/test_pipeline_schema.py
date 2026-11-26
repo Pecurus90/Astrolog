@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from astrolog.pipeline.card import Card, Conditions, FrameType
-from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.filters import Band, StandardFilter
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.scanner import Skip
 from astrolog.pipeline.sky import PointingSource

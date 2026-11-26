@@ -20,7 +20,7 @@ def test_database_is_created_from_the_single_schema(tmp_path):
     create_database(p)
     c = connect(p)
     tables = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    assert {"frames", "positions", "folders", "frame_stages", "scan_runs", "sites"} <= tables
+    assert {"frames", "positions", "pipeline_roots", "frame_stages", "scan_runs", "sites"} <= tables
     c.close()
 
 
@@ -47,7 +47,7 @@ def test_create_refuses_to_overwrite_and_ensure_is_idempotent(tmp_path):
     c.close()
     ensure_database(p)  # non ricrea: la riga resta
     c = connect(p)
-    assert c.execute("SELECT COUNT(*) FROM folders").fetchone()[0] == 1
+    assert c.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 1
     c.close()
     with pytest.raises(FileExistsError):
         create_database(p)
@@ -90,10 +90,10 @@ def test_on_a_nas_an_older_database_is_set_aside_and_the_app_starts(tmp_path):
     aside = list(tmp_path.glob("astrolog.db.schema-vecchio-*"))
     assert len(aside) == 1
     old = connect(aside[0])
-    assert old.execute("SELECT COUNT(*) FROM folders").fetchone()[0] == 1
+    assert old.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 1
     old.close()
     c = connect(p)
-    assert c.execute("SELECT COUNT(*) FROM folders").fetchone()[0] == 0
+    assert c.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 0
     c.close()
 
 

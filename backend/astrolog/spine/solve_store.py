@@ -12,7 +12,7 @@ def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
     an error."""
     return conn.execute(
         "SELECT f.*,"
-        " (SELECT d.root_path FROM positions p JOIN folders d ON d.id = p.folder_id"
+        " (SELECT d.path FROM positions p JOIN pipeline_roots d ON d.id = p.folder_id"
         "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS root_path,"
         " (SELECT p.rel_path FROM positions p"
         "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS rel_path,"

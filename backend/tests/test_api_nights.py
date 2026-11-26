@@ -16,7 +16,7 @@ from astrolog.clock import midnight_of
 from astrolog.db.connect import connect
 from astrolog.ephemeris import moon
 from astrolog.spine import night_moons, nights
-from conftest import db
+from conftest import add_folder, db
 from group_bench import ROMA, corri, filtro, luogo, posa, prepara
 
 ALTROVE = ("Cima Ekar", 45.8667, 11.5167, "Europe/Rome")
@@ -252,9 +252,7 @@ def test_the_ways_of_having_no_nights_are_different_answers(db_path):
             vuoto = notti(c)
         assert (vuoto["totals"]["nights"], vuoto["waiting"], vuoto["still_reading"]) == (0, [], 0)
         assert vuoto["empty"] == "no_folders"
-        conn.execute(
-            "INSERT INTO folders(root_path, created_at) VALUES('/dati/astro', '2026-01-01')"
-        )
+        add_folder(conn, "/dati/astro")
         conn.commit()
         with TestClient(create_app(db_path), base_url="http://localhost") as c:
             assert notti(c)["empty"] == "no_frames"

@@ -23,7 +23,8 @@ def test_a_database_with_something_in_it_is_refused(tmp_path):
     reset_db.main([str(db)])
     conn = sqlite3.connect(db)
     conn.execute(
-        "INSERT INTO folders(root_path, created_at) VALUES('D:/Astro', '2026-09-23T00:00:00Z')"
+        "INSERT INTO pipeline_roots(path, written_key, real_key, ancestors, created_at)"
+        " VALUES('D:/Astro', 'd:/astro', 'd:/astro', '[]', '2026-09-23T00:00:00Z')"
     )
     conn.commit()
     conn.close()
@@ -43,7 +44,9 @@ def test_a_second_reset_does_not_overwrite_the_first_copy(tmp_path):
         reset_db.main([str(db), reset_db.ANCHE_SE_PIENO])
         conn = sqlite3.connect(db)
         conn.execute(
-            "INSERT INTO folders(root_path, created_at) VALUES(?, 'x')", (f"D:/Astro{volta}",)
+            "INSERT INTO pipeline_roots(path, written_key, real_key, ancestors, created_at)"
+            " VALUES(?1, ?1, ?1, '[]', 'x')",
+            (f"D:/Astro{volta}",),
         )
         conn.commit()
         conn.close()
@@ -59,7 +62,10 @@ def test_the_copy_keeps_what_is_still_in_the_write_ahead_log(tmp_path):
     tiene = sqlite3.connect(db)  # tiene aperto il registro: le scritture restano nel -wal
     tiene.execute("PRAGMA journal_mode=WAL")
     tiene.execute("PRAGMA wal_autocheckpoint=0")
-    tiene.execute("INSERT INTO folders(root_path, created_at) VALUES('D:/Astro', 'x')")
+    tiene.execute(
+        "INSERT INTO pipeline_roots(path, written_key, real_key, ancestors, created_at)"
+        " VALUES('D:/Astro', 'k', 'k', '[]', 'x')"
+    )
     tiene.commit()
     copia = tmp_path / "copia.db"
     reset_db._copia(db, copia)
@@ -72,7 +78,7 @@ def _cartelle(db):
     cancella, e il reset fallirebbe per colpa della prova."""
     conn = sqlite3.connect(db)
     try:
-        return conn.execute("SELECT COUNT(*) FROM folders").fetchone()[0]
+        return conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0]
     finally:
         conn.close()
 

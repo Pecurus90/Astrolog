@@ -70,20 +70,30 @@ CREATE TABLE sites (
 CREATE UNIQUE INDEX sites_name ON sites (name);
 CREATE UNIQUE INDEX sites_one_default ON sites (is_default) WHERE is_default = 1;
 
--- Una cartella di FITS indicata dall'utente. Si ritira, non si cancella: i frame restano.
--- root_path e' nella forma che l'utente ritrova (api/paths.py): risolta, salvo un disco di rete
--- collegato a una lettera; puo' essere una cartella di rete.
-CREATE TABLE folders (
+-- DICHIARATO. Cartella di FITS scelta dall'utente, radice dei percorsi delle due pipeline
+-- (pipeline/roots.py). Si ritira, non si cancella: frame e ricevute restano.
+CREATE TABLE pipeline_roots (
   id         INTEGER PRIMARY KEY,
-  root_path  TEXT NOT NULL UNIQUE,
-  name       TEXT,
-  retired_at TEXT,
-  -- Le coppie (percorso relativo, impronta) che la riconoscono altrove: le rimette il backup
-  -- (ADR 0017) per una cartella che non ha ancora frame; JSON, NULL finche' non serve.
+  -- forma che l'utente ritrova (api/paths.py): risolta, salvo disco di rete su lettera
+  path        TEXT NOT NULL UNIQUE,
+  -- chiavi di confronto, scritte all'aggiunta: dentro/intorno senza toccare dischi altrui
+  written_key TEXT NOT NULL UNIQUE,  -- percorso come scritto
+  real_key    TEXT NOT NULL UNIQUE,  -- collegamenti risolti
+  -- volume e cartella dal disco (os.stat), NULL non dati. Non unici: rinominata, tiene l'id del
+  -- disco ma e' radice nuova; vale la riga il cui percorso e' ancora lei
+  device      TEXT,  -- in cifre: il seriale Windows e' a 64 bit senza segno, oltre INTEGER
+  inode       TEXT,
+  -- "device:inode" delle cartelle che la contengono, prese all'aggiunta: dentro/intorno anche
+  -- fra share e lettera, senza toccare i dischi delle altre radici
+  ancestors   TEXT NOT NULL CHECK (json_valid(ancestors) AND json_type(ancestors) = 'array'),
+  name        TEXT,
+  retired_at  TEXT,
+  -- coppie (percorso relativo, impronta) che la riconoscono altrove: le rimette il backup
+  -- (ADR 0017) per una cartella senza frame; JSON, NULL finche' non serve
   sample_json TEXT,
-  created_at TEXT NOT NULL,
-  -- la radice nella forma delle chiavi di cartella (`spine/frame_folder.py`)
-  root_key   TEXT GENERATED ALWAYS AS (rtrim(replace(root_path, '\', '/'), '/')) VIRTUAL
+  created_at  TEXT NOT NULL,
+  -- radice nella forma delle chiavi di cartella (`spine/frame_folder.py`)
+  root_key    TEXT GENERATED ALWAYS AS (rtrim(replace(path, '\', '/'), '/')) VIRTUAL
 ) STRICT;
 
 -- Uno strumento posseduto: ottica, camera, montatura, riduttore, ruota, guida (ottica o fuori
@@ -408,7 +418,7 @@ CREATE INDEX frames_asks_type ON frames (asks_type) WHERE asks_type = 1;
 CREATE TABLE positions (
   id         INTEGER PRIMARY KEY,
   frame_id   INTEGER NOT NULL REFERENCES frames (id) ON DELETE CASCADE,
-  folder_id  INTEGER NOT NULL REFERENCES folders (id),
+  folder_id  INTEGER NOT NULL REFERENCES pipeline_roots (id),
   rel_path   TEXT NOT NULL,
   filesize   INTEGER NOT NULL,
   mtime      REAL NOT NULL,
@@ -500,14 +510,14 @@ CREATE TABLE frame_wcs (
 CREATE VIEW position_folders AS
 SELECT p.id AS position_id, p.frame_id,
   d.root_key || CASE WHEN p.rel_dir = '' THEN '' ELSE '/' || p.rel_dir END AS folder_key
-FROM positions p JOIN folders d ON d.id = p.folder_id;
+FROM positions p JOIN pipeline_roots d ON d.id = p.folder_id;
 
 CREATE VIEW frame_waits AS
 SELECT f.id AS frame_id, f.image_type = 'unknown' AND CASE (
   SELECT dc.value FROM declarations dc WHERE dc.entity_type = 'folder'
     AND dc.field = 'image_type' AND dc.entity_key = (
       SELECT pf.folder_key FROM position_folders pf WHERE pf.position_id = (
-        SELECT p2.id FROM positions p2 JOIN folders d2 ON d2.id = p2.folder_id
+        SELECT p2.id FROM positions p2 JOIN pipeline_roots d2 ON d2.id = p2.folder_id
         WHERE p2.frame_id = f.id AND p2.status = 'present' AND d2.retired_at IS NULL
         ORDER BY p2.id LIMIT 1)))
   WHEN 'light' THEN 0 WHEN 'calibration' THEN 1
@@ -554,7 +564,7 @@ CREATE TRIGGER asks_type_answer_in AFTER INSERT ON declarations
   WHEN NEW.entity_type = 'folder' AND NEW.field = 'image_type' BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'
-    AND id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+    AND id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
       AND p.rel_dir = substr(NEW.entity_key, length(d.root_key) + 2)
     WHERE NEW.entity_key = d.root_key OR substr(NEW.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/'); END;
 CREATE TRIGGER asks_type_answer_moved AFTER UPDATE ON declarations
@@ -562,20 +572,20 @@ CREATE TRIGGER asks_type_answer_moved AFTER UPDATE ON declarations
     OR (OLD.entity_type = 'folder' AND OLD.field = 'image_type') BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'
-    AND (id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+    AND (id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
       AND p.rel_dir = substr(NEW.entity_key, length(d.root_key) + 2)
     WHERE NEW.entity_key = d.root_key OR substr(NEW.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/')
-      OR id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+      OR id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
       AND p.rel_dir = substr(OLD.entity_key, length(d.root_key) + 2)
     WHERE OLD.entity_key = d.root_key OR substr(OLD.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/')); END;
 CREATE TRIGGER asks_type_answer_out AFTER DELETE ON declarations
   WHEN OLD.entity_type = 'folder' AND OLD.field = 'image_type' BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'
-    AND id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+    AND id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
       AND p.rel_dir = substr(OLD.entity_key, length(d.root_key) + 2)
     WHERE OLD.entity_key = d.root_key OR substr(OLD.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/'); END;
-CREATE TRIGGER asks_type_folder_moved AFTER UPDATE OF root_path, retired_at ON folders BEGIN
+CREATE TRIGGER asks_type_folder_moved AFTER UPDATE OF path, retired_at ON pipeline_roots BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'; END;
 
@@ -786,7 +796,7 @@ CREATE UNIQUE INDEX sessions_key ON sessions (night_id, object_id, COALESCE(rig_
 -- "in corso" scritto da nessuna parte.
 CREATE TABLE scan_runs (
   id         INTEGER PRIMARY KEY,
-  folder_id  INTEGER NOT NULL REFERENCES folders (id),
+  folder_id  INTEGER NOT NULL REFERENCES pipeline_roots (id),
   batch      INTEGER,      -- id della prima ricevuta del gesto (anche se poi scartata); NULL: se stessa
   started_at TEXT NOT NULL,
   ended_at   TEXT,
@@ -989,23 +999,6 @@ CREATE TABLE catalog_version (
 
 -- ============================================================ PIPELINE NUOVA (ADR 0030)
 -- Accanto alla vecchia finche' la sostituisce. Commenti: regola di tools/commenti.py.
-
--- DICHIARATO. Cartella scelta dall'utente: radice dei percorsi.
-CREATE TABLE pipeline_roots (
-  id         INTEGER PRIMARY KEY,
-  path        TEXT NOT NULL UNIQUE,  -- assoluta e normalizzata, sul sistema dell'app
-  -- chiavi di confronto, scritte all'aggiunta: dentro/intorno senza toccare dischi altrui
-  written_key TEXT NOT NULL UNIQUE,  -- percorso come scritto
-  real_key    TEXT NOT NULL UNIQUE,  -- collegamenti risolti
-  -- volume e cartella dal disco (os.stat), NULL non dati. Non unici: rinominata, tiene l'id del
-  -- disco ma e' radice nuova; vale la riga il cui percorso e' ancora lei
-  device      TEXT,  -- in cifre: il seriale Windows e' a 64 bit senza segno, oltre INTEGER
-  inode       TEXT,
-  -- "device:inode" delle cartelle che la contengono, prese all'aggiunta: dentro/intorno anche
-  -- fra share e lettera, senza toccare i dischi delle altre radici
-  ancestors   TEXT NOT NULL CHECK (json_valid(ancestors) AND json_type(ancestors) = 'array'),
-  created_at  TEXT NOT NULL
-) STRICT;
 
 -- RILEVATO. Ricevuta di ogni scansione.
 CREATE TABLE pipeline_scans (

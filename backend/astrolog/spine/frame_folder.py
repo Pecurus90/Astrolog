@@ -8,7 +8,7 @@ from typing import Any
 from ..db.row import Row
 
 _FIRST_POSITION = """
-  SELECT p2.id FROM positions p2 JOIN folders d2 ON d2.id = p2.folder_id
+  SELECT p2.id FROM positions p2 JOIN pipeline_roots d2 ON d2.id = p2.folder_id
   WHERE p2.frame_id = f.id AND p2.status = 'present' AND d2.retired_at IS NULL
   ORDER BY p2.id LIMIT 1
 """
@@ -16,26 +16,26 @@ _FIRST_POSITION = """
 # `rtrim` strips from the right every character that is NOT a slash, i.e. the file name, leaving
 # `night/M51/`; a file in the root has no slash and leaves it empty.
 _SUB = "rtrim(p.rel_path, replace(p.rel_path, '/', ''))"
-COLUMNS = f"d.root_path AS root, {_SUB} AS sub"
-JOIN = f"JOIN positions p ON p.id = ({_FIRST_POSITION}) JOIN folders d ON d.id = p.folder_id"
+COLUMNS = f"d.path AS root, {_SUB} AS sub"
+JOIN = f"JOIN positions p ON p.id = ({_FIRST_POSITION}) JOIN pipeline_roots d ON d.id = p.folder_id"
 
 # `folder_key` in SQL, for comparing inside a query; the two must say the same thing.
-_ROOT_KEY = r"rtrim(replace(d.root_path, '\', '/'), '/')"
+_ROOT_KEY = r"rtrim(replace(d.path, '\', '/'), '/')"
 _INSIDE = f"trim({_SUB}, '/')"
 KEY = f"{_ROOT_KEY} || CASE WHEN {_INSIDE} = '' THEN '' ELSE '/' || {_INSIDE} END"
 # For a query that already has `frames f`.
 KEY_OF_FRAME = (
     f"SELECT {KEY} FROM positions p"  # noqa: S608 - constants
-    f" JOIN folders d ON d.id = p.folder_id WHERE p.id = ({_FIRST_POSITION})"
+    f" JOIN pipeline_roots d ON d.id = p.folder_id WHERE p.id = ({_FIRST_POSITION})"
 )
 
 # Searched from the folder, by index on its positions: starting from the frames would rebuild the
 # folder of every frame in the archive at each answer.
 _IN_FOLDER = (
-    "SELECT f.id, f.image_type FROM folders d"  # noqa: S608 - constants of this file
+    "SELECT f.id, f.image_type FROM pipeline_roots d"  # noqa: S608 - constants of this file
     " CROSS JOIN positions p ON p.folder_id = d.id"
     " CROSS JOIN frames f ON f.id = p.frame_id"
-    f" WHERE d.root_path = ? AND p.rel_path >= ? AND p.rel_path < ? AND {_SUB} = ?"
+    f" WHERE d.path = ? AND p.rel_path >= ? AND p.rel_path < ? AND {_SUB} = ?"
     f" AND p.id = ({_FIRST_POSITION})"
 )
 # `night/` runs to `night0`, `0` being the character right after the slash. Under the root, an

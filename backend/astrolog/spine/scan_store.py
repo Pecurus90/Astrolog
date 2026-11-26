@@ -51,11 +51,11 @@ class FolderNotFoundError(ValueError):
 
 def folder_root(conn: sqlite3.Connection, folder_id: int) -> tuple[str, str | None]:
     row = conn.execute(
-        "SELECT root_path, retired_at FROM folders WHERE id = ?", (folder_id,)
+        "SELECT path, retired_at FROM pipeline_roots WHERE id = ?", (folder_id,)
     ).fetchone()
     if row is None:
         raise FolderNotFoundError(f"cartella inesistente: id={folder_id}")
-    return row["root_path"], row["retired_at"]
+    return row["path"], row["retired_at"]
 
 
 def start_run(conn: sqlite3.Connection, folder_id: int, now: str, batch: int | None = None) -> int:
@@ -90,8 +90,8 @@ def discard_run(conn: sqlite3.Connection, run_id: int) -> None:
 # The folder path is what the user recognises. The join is inner because a folder is retired,
 # never deleted: `scan_runs.folder_id` references it and the schema stops the delete.
 SELECT_RUN = (
-    "SELECT r.*, f.root_path AS folder_path, f.retired_at IS NOT NULL AS folder_retired"
-    " FROM scan_runs r JOIN folders f ON f.id = r.folder_id"
+    "SELECT r.*, f.path AS folder_path, f.retired_at IS NOT NULL AS folder_retired"
+    " FROM scan_runs r JOIN pipeline_roots f ON f.id = r.folder_id"
 )
 
 

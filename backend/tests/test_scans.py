@@ -5,14 +5,13 @@ regola e' sul raggruppamento, non sulla lettura dei file."""
 import json
 
 from astrolog.db.connect import connect
+from conftest import add_folder
 
 T0 = "2026-11-15T21:05:00+00:00"
 
 
 def _folder(conn, path):
-    return conn.execute(
-        "INSERT INTO folders(root_path, created_at) VALUES(?, ?)", (path, T0)
-    ).lastrowid
+    return add_folder(conn, path)
 
 
 def _run(conn, folder_id, *, batch=None, ended=True, status="ok", reason=None, **counts):

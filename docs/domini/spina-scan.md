@@ -38,6 +38,7 @@ Cio' che vale per tutta la catena sta in [`spina.md`](spina.md).
 | Fermare ferma entro il file in corso, e non fa partire altro; chiudere la finestra non ferma niente | `test_worker_stop_cooperative`, `test_scan_answers_at_once_and_the_receipt_arrives_in_status` |
 | Una lettura fermata prima di cominciare, o che non riesce a partire, non lascia una ricevuta aperta per sempre, che sia di una cartella o di tutte; Riprendi la rilegge lo stesso | `test_resume_reads_one_folder_stopped_before_it_began`, `test_a_start_that_breaks_unexpectedly_leaves_nothing_behind`, `test_a_stop_does_not_leave_receipts_open_forever`, `test_a_busy_worker_leaves_no_folder_locked` |
 | La ricevuta di una cartella tolta dice che la cartella e' ritirata, cosi' so perche' quel percorso non si aggiorna piu' | `test_duplicate_is_409_and_retire_reactivate_keep_data` |
+| Una cartella e' una sola per tutta l'app: la aggiungo anche col NAS spento, la tolgo e la rimetto, la sposto o la sostituisco, e resta la stessa riga coi suoi frame; un backup la riporta anche se il percorso e' di un altro computer (passo 40.3) | `test_a_folder_not_answering_is_added_and_known_on_disk_when_it_answers` (`backend/tests/test_pipeline_changes.py`), `test_a_retired_outer_root_comes_back_over_an_active_inner_one`, `test_a_move_onto_another_roots_path_is_refused_with_its_id`, `test_a_moved_root_keeps_its_id_files_and_takes_the_new_keys`, `test_a_backup_brings_back_a_retired_root_inside_an_active_one_and_a_foreign_path`, `test_the_same_folder_written_another_way_finds_its_retired_row` (`backend/tests/test_pipeline_roots.py`) |
 | Se sposto le foto (un altro disco, un'altra lettera, il NAS) la cartella resta la stessa: le risposte *che file sono* la seguono, i frame non si muovono e una scansione dopo non ne crea di nuovi; l'app riconosce da sola la cartella spostata quando guardo nel posto nuovo, e non la sposta dove non ci sono gli stessi file; prima di spostarla posso chiedere se li ci sono gli stessi file, senza che cambi niente | `test_checking_a_move_says_same_files_and_writes_nothing`, `test_a_moved_folder_takes_its_answer_and_its_frames_stay`, `test_the_root_and_every_subfolder_move_and_a_neighbour_does_not`, `test_moving_to_the_same_files_keeps_everything_and_a_scan_adds_nothing`, `test_a_place_with_other_files_is_refused_and_nothing_changes`, `test_moving_onto_a_registered_folder_is_409`, `test_the_probe_recognises_an_unreachable_folder_moved_here`, `test_the_probe_recognises_a_retired_folder_and_moving_it_brings_it_back`, `test_a_copy_of_a_reachable_folder_is_not_a_move`, `test_recognising_stops_reading_headers_at_the_deadline`, `test_a_folder_that_has_not_said_whether_it_answers_is_not_skipped_as_gone`, `test_a_silent_unrelated_folder_does_not_hide_a_move`, *la sonda la riconosce, e il tasto la sposta invece di registrarne una nuova* (`frontend/tests/wizard-cartelle.test.tsx`), *Verifica di Sposta guarda senza spostare, e Usa questo percorso sposta* (`frontend/tests/impostazioni.test.tsx`) |
 | Se aggiungo una cartella che ne contiene altre gia' in elenco, l'app me lo dice prima di aggiungerla, con le cartelle e i loro frame, e propone di sostituirle tutte insieme; se accetto, frame, posizioni e risposte restano e la scansione legge solo i file nuovi; una cartella dentro una gia' in elenco si rifiuta col perche' (Marco 22/10 e 25/11/2026, passo 38) | `test_the_outer_folder_takes_the_frames_of_the_inner_ones`, `test_the_answers_of_the_inner_folders_still_hold`, `test_a_neighbour_with_the_same_prefix_is_not_inside`, `test_a_retired_folder_inside_gives_its_frames_too`, `test_held_and_holder_say_which_folders_overlap`, `test_the_probe_says_what_adding_would_do`, `test_adding_a_folder_around_registered_ones_asks_first`, `test_replacing_keeps_the_frames_and_a_scan_reads_only_the_new_files`, `test_replacing_with_another_list_than_the_folders_inside_asks_again`, `test_a_folder_inside_a_registered_one_is_refused_with_it`, `test_a_retired_folder_inside_a_registered_one_does_not_come_back` (`backend/tests/test_folder_replace.py`), `test_a_folder_around_roots_takes_their_files_and_reads_only_the_new`, `test_a_root_taken_by_one_around_it_brings_its_moves_along`, `test_a_drive_root_takes_a_root_on_it_without_a_double_bar` (`backend/tests/test_pipeline_changes.py`), *propone di sostituirle tutte, coi loro frame, e Sostituisci le nomina*, *una cartella dentro una gia' in elenco si rifiuta col perche', senza tasto*, *una cartella non ancora letta non dice 0 frame, che sarebbe falso*, *se nel frattempo le cartelle dentro sono cambiate, guarda di nuovo invece di fallire* (`frontend/tests/wizard-cartelle.test.tsx`), *una cartella che ne contiene una in elenco propone di sostituirla, e Sostituisci la nomina* (`frontend/tests/impostazioni.test.tsx`) |
 | La notte di un frame va da mezzogiorno a mezzogiorno nel fuso del posto -- delle coordinate dell'header, o di casa -- e un frame senza data prende quella in cui il file e' stato scritto | `test_in_the_east_the_night_is_cut_at_local_noon`, `test_without_coordinates_the_home_site_gives_the_zone`, `test_without_coordinates_and_home_the_night_is_in_utc`, `test_a_pose_without_a_date_takes_the_date_of_its_file` (`backend/tests/test_local_night.py`) |
@@ -109,9 +110,16 @@ girare il walk a vuoto -- **e la ricevuta li nomina** (`linked_dirs`). Percorsi 
 in forma `\\?\`, e una cartella di rete nella sua (`\\?\UNC\server\share`, come vuole la
 documentazione di Windows: col prefisso sbagliato non si apre).
 
-**Spostare una cartella e' cambiarle percorso, non registrarne un'altra** (`spine/folder_move.py`).
-Stessa riga di `folders`, `root_path` nuovo: le posizioni sono relative alla radice, i frame si
-riconoscono dall'impronta, le letture stanno per `folder_id`. Seguono il percorso solo le
+**Una cartella e' una riga sola per le due pipeline** (`pipeline_roots`, `pipeline/roots.py`,
+passo 40.3): `folder_id` della vecchia e `root_id` della nuova sono lo stesso numero. Si
+registra anche se non risponde (NAS spento): l'id del disco lo prende la prima scansione che la
+trova. Si ritira, non si cancella.
+
+**Spostare una cartella e' cambiarle percorso, non registrarne un'altra** (`roots.move`, poi
+`spine/folder_move.py` per cio' che segue). Stessa riga, percorso e chiavi nuove: le posizioni e
+i file sono relativi alla radice, i frame si riconoscono dall'impronta, le letture stanno per
+id. Un percorso che e' gia' di un'altra riga, anche per collegamento, e' `409 folder_exists`
+con quella. Seguono il percorso solo le
 risposte per cartella, che lo hanno nella chiave: quelle uguali alla vecchia radice o che
 cominciano con lei e una barra passano al prefisso nuovo (forma di `frame_folder.folder_key`), e
 `typeless_folders` si riscrive, tutto in una transazione. **Si sposta solo dove ci sono gli stessi
@@ -129,19 +137,20 @@ raggiunge": se ha gli stessi file potrebbe essere l'originale, e non si propone 
 `out_of_time`.
 
 **Una cartella che ne contiene altre le sostituisce, se l'utente lo dice** (passo 38,
-`folder_move.held`, `holder`, `absorb`). Dentro e intorno si confrontano sulla chiave della
-cartella (`frame_folder.folder_key`) con la regola delle maiuscole del sistema (`normcase`), solo
-fra cartelle attive: dentro una attiva e' `409 folder_inside` con quella cartella, anche per una
+`roots.held`, `holder`, `absorb`, poi `folder_move.absorb` per le posizioni). Dentro e intorno si
+confrontano sulla chiave come scritta (`written_key`) con la regola delle maiuscole del sistema,
+solo fra cartelle attive: dentro una attiva e' `409 folder_inside` con quella cartella, anche per una
 ritirata che si riaggiunge; intorno ad attive e' `409 folder_contains` con l'elenco (`id`,
 `root_path`, `frames`), finche' `replaces` non nomina esattamente quelle: una aggiunta nel
 frattempo rifa' la domanda. La sonda le dice prima del tasto (`inside`, `holds`). Sostituire, in
 una transazione con la registrazione: ogni cartella dentro la nuova, ritirate comprese, le passa
-le posizioni (stesse righe, stessi frame) col prefisso della sottocartella e si ritira; le
-risposte hanno il percorso intero nella chiave e valgono come sono. Le ricevute vecchie restano
-alle cartelle ritirate. La pipeline nuova (ADR 0030) fa lo stesso in `changes.add_root`: una
-radice nuova intorno ad altre come scritte (la spina l'ha fatta sostituire) prende file, ricevute
-e spostati, col prefisso; intorno solo per collegamento o id del disco resta `RootOverlapError`,
-perche' il prefisso non si ricava senza toccare i dischi delle altre radici.
+posizioni e file della nuova pipeline (stesse righe, stessi frame) col prefisso della
+sottocartella e si ritira; una ritirata intorno alla nuova le rende quelli sotto di lei. Un file
+che le due avevano gia' entrambe resta una volta sola. Le risposte hanno il percorso intero
+nella chiave e valgono come sono. Le ricevute vecchie restano alle cartelle ritirate, quelle
+della nuova pipeline passano alla esterna coi loro spostati. Intorno o dentro solo per
+collegamento o id del disco e' rifiutata come se fosse scritta (`folder_inside`,
+`folder_contains`): il prefisso non si ricava senza toccare i dischi delle altre radici.
 
 **Sul NAS la cartella si sceglie da un elenco.** Dentro il container l'utente non sa quale
 percorso ha la cartella che conosce come `/volume1/photo`: `GET /folders/browse` elenca le

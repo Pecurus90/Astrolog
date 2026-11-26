@@ -57,7 +57,8 @@ niente `workers`. Il lock per cartella si prende dopo i pre-controlli e lo rilas
 worker a fine corsa (non a fine stadio: la normalizzazione lavora ancora su quei frame),
 comunque vada. I lucchetti oggi sono due: `folder_locks` dell'API per le cartelle della spina e
 `busy(root_id)` della pipeline nuova (`test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing`).
-Non si uniscono: il primo muore col ponte del passo 40, e da li' l'API chiede `busy`.
+Non si uniscono: `busy` copre anche il solve (ore di ASTAP), e il primo muore con la scansione
+vecchia al passo 40.4: da li' la scansione dell'utente e' quella della nuova, sotto `busy`.
 
 **Commit per frame.** Un'interruzione lascia un prefisso coerente, mai un DB a meta'.
 

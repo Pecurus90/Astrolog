@@ -1,16 +1,13 @@
-"""A folder moved elsewhere stays the same row: positions are relative and frames are known by their
-fingerprint, so only the folder answers, keyed on the whole path, have to follow."""
+"""Old tables when a root changes (row: `pipeline/roots.py`): positions and whole-path folder
+answers follow; recognition by frame_hash. Dies with positions (step 40.4)."""
 
 import json
 import os
 import sqlite3
 import time
 from collections.abc import Iterable
-from dataclasses import dataclass
 from typing import Final
 
-from ..clock import now_iso
-from ..db.transaction import transaction
 from ..fits.header_read import HeaderReadError, frame_fingerprint, read_frame
 from ..fits.walk import long_path
 from . import typeless_folders
@@ -68,81 +65,59 @@ def _restored_sample(conn: sqlite3.Connection, folder_id: int) -> dict[str, str]
     """The sample a backup brought back (ADR 0017), read only while the folder has no frames."""
     if conn.execute("SELECT 1 FROM positions WHERE folder_id = ? LIMIT 1", (folder_id,)).fetchone():
         return {}
-    row = conn.execute("SELECT sample_json FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    row = conn.execute(
+        "SELECT sample_json FROM pipeline_roots WHERE id = ?", (folder_id,)
+    ).fetchone()
     return dict(json.loads(row[0])) if row and row[0] else {}
 
 
-@dataclass(frozen=True)
-class Registered:
-    """A registered folder another one overlaps, with its present frames."""
-
-    id: int
-    root_path: str
-    frames: int
-
-
-def _compared(root_path: str) -> str:
-    """Key form in this system's case rule: `D:\\Astro\\` and `d:/astro` are one on Windows."""
-    return os.path.normcase(folder_key(root_path))
-
-
-def _inside(child: str, parent: str) -> bool:
-    """Strictly inside, on key text: `D:/Astro2` is not in `D:/Astro`."""
-    return _compared(child).startswith(_compared(parent) + os.path.normcase("/"))
-
-
-_REGISTERED = (
-    "SELECT f.id, f.root_path, (SELECT COUNT(*) FROM positions p WHERE p.folder_id = f.id"
-    " AND p.status = 'present') FROM folders f WHERE ? OR f.retired_at IS NULL ORDER BY f.id"
-)
-
-
-def _registered(conn: sqlite3.Connection, *, active: bool) -> list[Registered]:
-    return [Registered(*r) for r in conn.execute(_REGISTERED, (not active,)).fetchall()]
-
-
-def held(conn: sqlite3.Connection, root_path: str) -> list[Registered]:
-    """The active folders `root_path` would hold: adding it replaces them, when the user says so."""
-    return [r for r in _registered(conn, active=True) if _inside(r.root_path, root_path)]
-
-
-def holder(conn: sqlite3.Connection, root_path: str) -> Registered | None:
-    """The active folder `root_path` is inside: its files are read already."""
-    return next(
-        (r for r in _registered(conn, active=True) if _inside(root_path, r.root_path)), None
+def frames(conn: sqlite3.Connection, folder_id: int) -> int:
+    """Present positions: what the user sees the folder hold."""
+    return int(
+        conn.execute(
+            "SELECT COUNT(*) FROM positions WHERE folder_id = ? AND status = 'present'",
+            (folder_id,),
+        ).fetchone()[0]
     )
 
 
+def _inside(child: sqlite3.Row, parent: sqlite3.Row) -> bool:
+    """Same test as `pipeline/roots.py`, on `written_key`: the same roots follow."""
+    key = parent["written_key"]
+    return bool(child["written_key"].startswith(key if key.endswith(os.sep) else key + os.sep))
+
+
 def absorb(conn: sqlite3.Connection, outer_id: int) -> None:
-    """In caller's transaction. Folders inside, retired too, give positions prefixed and retire;
-    a retired one around gives back those under it. Whole-path answers hold as they are."""
-    outer = conn.execute("SELECT root_path FROM folders WHERE id = ?", (outer_id,)).fetchone()[0]
-    after = len(folder_key(outer)) + 1
-    for inner in _registered(conn, active=False):
-        if inner.id != outer_id and _inside(outer, inner.root_path):
-            _give_back(conn, inner.root_path, inner.id, outer, outer_id)
-        if inner.id == outer_id or not _inside(inner.root_path, outer):
+    """In caller's transaction, after `roots.absorb`, same rule on positions: roots inside, retired
+    too, give theirs prefixed; a retired one around gives back those under it."""
+    rows = conn.execute(
+        "SELECT id, root_key, written_key, retired_at FROM pipeline_roots"
+    ).fetchall()
+    outer_row = next(r for r in rows if r["id"] == outer_id)
+    outer = outer_row["root_key"]
+    for inner in rows:
+        if inner["id"] == outer_id:
             continue
-        prefix = folder_key(inner.root_path)[after:] + "/"
+        if inner["retired_at"] is not None and _inside(outer_row, inner):
+            _give_back(conn, inner["root_key"], inner["id"], outer, outer_id)
+        if not _inside(inner, outer_row):
+            continue
+        prefix = inner["root_key"][len(outer) + 1 :] + "/"
         # IGNORE: a file two nested folders both held is one position of the outer one
         conn.execute(
             "UPDATE OR IGNORE positions SET folder_id = ?, rel_path = ? || rel_path"
             " WHERE folder_id = ?",
-            (outer_id, prefix, inner.id),
+            (outer_id, prefix, inner["id"]),
         )
-        conn.execute("DELETE FROM positions WHERE folder_id = ?", (inner.id,))
-        conn.execute(
-            "UPDATE folders SET retired_at = ? WHERE id = ? AND retired_at IS NULL",
-            (now_iso(), inner.id),
-        )
+        conn.execute("DELETE FROM positions WHERE folder_id = ?", (inner["id"],))
     typeless_folders.write(conn)
 
 
 def _give_back(
     conn: sqlite3.Connection, around: str, around_id: int, root: str, root_id: int
 ) -> None:
-    """Positions of the retired `around` under `root` pass to it, prefix cut: same rows, frames."""
-    prefix = folder_key(root)[len(folder_key(around)) + 1 :] + "/"
+    """Positions of `around` under `root` pass to it, prefix cut: same rows, frames."""
+    prefix = root[len(around) + 1 :] + "/"
     args = (around_id, len(prefix), prefix)
     # IGNORE: a file the folder holds already stays its; the outer copy goes
     conn.execute(
@@ -153,24 +128,23 @@ def _give_back(
     conn.execute("DELETE FROM positions WHERE folder_id = ? AND substr(rel_path, 1, ?) = ?", args)
 
 
-def move(conn: sqlite3.Connection, folder_id: int, new_root: str) -> None:
-    """Same id, new `root_path`; the folder answers under the old root take the new prefix."""
-    old_key = conn.execute("SELECT root_key FROM folders WHERE id = ?", (folder_id,)).fetchone()[0]
-    new_key = folder_key(new_root)
+def follow_answers(conn: sqlite3.Connection, folder_id: int, old_root: str) -> None:
+    """In caller's transaction, after `roots.move` (answer triggers match `root_key`): answers
+    under old root take the new prefix; a folder registered inside did not move, its stay."""
+    old_key = folder_key(old_root)
+    new_key = conn.execute(
+        "SELECT root_key FROM pipeline_roots WHERE id = ?", (folder_id,)
+    ).fetchone()[0]
     after = len(old_key) + 1
-    with transaction(conn):
-        # Root first: the answer triggers match the new key against `root_key`.
-        conn.execute("UPDATE folders SET root_path = ? WHERE id = ?", (new_root, folder_id))
-        # OR REPLACE: a stale answer of another folder on the new key yields to this folder's.
-        # A folder registered inside this one did not move: its answers stay.
-        conn.execute(
-            "UPDATE OR REPLACE declarations SET entity_key = ? || substr(entity_key, ?)"
-            " WHERE entity_type = ? AND (entity_key = ? OR substr(entity_key, 1, ?) = ?)"
-            " AND NOT EXISTS (SELECT 1 FROM folders o WHERE o.id <> ? AND o.retired_at IS NULL"
-            "  AND substr(o.root_key, 1, ?) = ?"
-            "  AND (entity_key = o.root_key OR substr(entity_key, 1, length(o.root_key) + 1)"
-            "       = o.root_key || '/'))",
-            (new_key, after, EntityType.FOLDER, old_key, after, old_key + "/",
-             folder_id, after, old_key + "/"),
-        )  # fmt: skip
-        typeless_folders.write(conn)
+    # OR REPLACE: a stale answer of another folder on the new key yields to this folder's.
+    conn.execute(
+        "UPDATE OR REPLACE declarations SET entity_key = ? || substr(entity_key, ?)"
+        " WHERE entity_type = ? AND (entity_key = ? OR substr(entity_key, 1, ?) = ?)"
+        " AND NOT EXISTS (SELECT 1 FROM pipeline_roots o WHERE o.id <> ? AND o.retired_at IS NULL"
+        "  AND substr(o.root_key, 1, ?) = ?"
+        "  AND (entity_key = o.root_key OR substr(entity_key, 1, length(o.root_key) + 1)"
+        "       = o.root_key || '/'))",
+        (new_key, after, EntityType.FOLDER, old_key, after, old_key + "/",
+         folder_id, after, old_key + "/"),
+    )  # fmt: skip
+    typeless_folders.write(conn)

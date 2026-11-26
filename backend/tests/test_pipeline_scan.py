@@ -11,7 +11,7 @@ import pytest
 
 from astrolog.db.connect import connect
 from astrolog.pipeline import scan
-from astrolog.pipeline.changes import add_root
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import ScanRunningError, scan_root
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped
 from conftest import LATER, NOW, THEN, nina_light

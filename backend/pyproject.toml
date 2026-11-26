@@ -326,9 +326,12 @@ source_modules = ["astrolog.fits", "astrolog.vocab", "astrolog.spine", "astrolog
 forbidden_modules = ["astrolog.pipeline"]
 # Una porta sola: la nuova dietro le scansioni dell'app, mai a schermo (Marco 26/10/2026, passo 24).
 # Seconda, dichiarata: il bias della camera e' una risposta che la nuova applica allo SQM (Marco
-# 7/11/2026, passo 32), fino al passo 40.
+# 7/11/2026, passo 32), fino al passo 40. Terza: una radice, una riga per le due (passo 40.3):
+# cartelle e backup la scrivono da pipeline/roots.py, fino al taglio del 40.11.
 ignore_imports = ["astrolog.api.scan -> astrolog.pipeline.behind",
-                  "astrolog.api.camera_bias -> astrolog.pipeline.sqm_measure"]
+                  "astrolog.api.camera_bias -> astrolog.pipeline.sqm_measure",
+                  "astrolog.api.folders -> astrolog.pipeline.roots",
+                  "astrolog.spine.backup -> astrolog.pipeline.roots"]
 
 [[tool.importlinter.contracts]]
 # Mappa, passo 4: la scheda e' una funzione pura, si rifa' su tutti gli header senza database.

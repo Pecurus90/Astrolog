@@ -4,7 +4,7 @@ Prima: ogni lettore sceglieva il suo file (misurato, primo per percorso, tutti).
 import shutil
 import sqlite3
 
-from astrolog.pipeline.changes import add_root
+from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.sqm_measure import biases
 from conftest import LATER, NOW, THEN, nina_light

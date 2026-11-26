@@ -6,16 +6,15 @@ import os
 import sqlite3
 import threading
 import time
-from dataclasses import asdict
 from typing import Final
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from starlette.datastructures import State
 
 from ..clock import now_iso
-from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from ..fits.walk import subfolders, walk_dir
+from ..pipeline import roots
 from ..spine import folder_move, typeless_answer
 from ..spine.scan import root_readable
 from ..spine.stages import StageName, count_pending
@@ -47,9 +46,9 @@ log = logging.getLogger(__name__)
 PROBE_SECONDS: Final = 10  # [C Nielsen 1993: 10 s attention limit]
 
 _SELECT = (
-    "SELECT f.id, f.name, f.root_path, f.created_at,"
+    "SELECT f.id, f.name, f.path AS root_path, f.created_at,"
     " (SELECT COUNT(*) FROM positions p WHERE p.folder_id = f.id AND p.status = 'present')"
-    " AS frames FROM folders f"
+    " AS frames FROM pipeline_roots f"
 )
 
 
@@ -117,9 +116,9 @@ def probe(
 
     422 when the path is refused, with the reason as its code."""
     canonical = validate_root(body.root_path, request.app.state.data_root)
-    outer = folder_move.holder(conn, canonical)
-    inside = None if outer is None else Overlapping(**asdict(outer))
-    holds = [Overlapping(**asdict(r)) for r in folder_move.held(conn, canonical)]
+    outer, held = _overlaps(conn, canonical)
+    inside = None if outer is None else _overlapping(conn, outer)
+    holds = [_overlapping(conn, r) for r in held]
     if not root_readable(canonical):
         return ProbeOut(
             root_path=canonical,
@@ -155,12 +154,26 @@ def probe(
     )
 
 
+def _overlaps(conn: sqlite3.Connection, root: str) -> tuple[roots.Root | None, list[roots.Root]]:
+    """Active roots `root` sits inside, and those it holds. A file there: none."""
+    try:
+        return roots.holder(conn, root), roots.held(conn, root)
+    except NotADirectoryError:
+        return None, []
+
+
+def _overlapping(conn: sqlite3.Connection, root: roots.Root) -> Overlapping:
+    return Overlapping(id=root.id, root_path=root.path, frames=folder_move.frames(conn, root.id))
+
+
 def _moved_here(
     conn: sqlite3.Connection, root: str, found: list[str], deadline: float
 ) -> tuple[MovedFrom | None, MoveCheck]:
     """Only a folder that is gone (retired, or not answering) can have moved: one still reachable
     holding the same files is a copy."""
-    rows = conn.execute("SELECT id, root_path, retired_at FROM folders ORDER BY id").fetchall()
+    rows = conn.execute(
+        "SELECT id, path AS root_path, retired_at FROM pipeline_roots ORDER BY id"
+    ).fetchall()
     if any(r["root_path"] == root for r in rows):
         return None, MoveCheck.NONE  # already registered: adding it says so
     reach = _reachable([r["root_path"] for r in rows if r["retired_at"] is None], deadline)
@@ -218,7 +231,9 @@ def list_folders(
     """The active folders (the retired ones do not appear). All are asked at once whether they
     answer, under one deadline of `PROBE_SECONDS`: one that has not answered by then is
     `reachable: false`, so a dead network share cannot hold the list."""
-    total = conn.execute("SELECT COUNT(*) FROM folders WHERE retired_at IS NULL").fetchone()[0]
+    total = conn.execute("SELECT COUNT(*) FROM pipeline_roots WHERE retired_at IS NULL").fetchone()[
+        0
+    ]
     rows = conn.execute(
         _SELECT + " WHERE f.retired_at IS NULL ORDER BY f.id LIMIT ? OFFSET ?", (limit, offset)
     ).fetchall()
@@ -241,43 +256,61 @@ def create_folder(
     `folders` it holds (`id`, `root_path`, `frames`) while `replaces` is not that list; 422 when
     the path is refused, with the reason as its code."""
     canonical = validate_root(body.root_path, request.app.state.data_root)
-    existing = conn.execute(
-        "SELECT id, retired_at FROM folders WHERE root_path = ?", (canonical,)
-    ).fetchone()
-    if existing is not None and existing["retired_at"] is None:
-        raise HTTPException(
-            status_code=409, detail={"code": "folder_exists", "folder_id": existing["id"]}
-        )
     _refuse_overlap(conn, canonical, body.replaces)
-    if existing is not None:
-        with transaction(conn):
-            folder_move.absorb(conn, existing["id"])
-        _move(conn, request.app.state, existing["id"], None)
-        row = conn.execute(_SELECT + " WHERE f.id = ?", (existing["id"],)).fetchone()
-        return _out(row, reactivated=True)
+    now = now_iso()
+    before = {r[0] for r in conn.execute("SELECT id FROM pipeline_roots")}
     with transaction(conn):
-        folder_id = inserted_id(
-            conn.execute(
-                "INSERT INTO folders(root_path, name, created_at) VALUES(?, ?, ?)",
-                (canonical, body.name, now_iso()),
+        folder_id = _register(conn, canonical, now, body.name)
+        # same folder written another way, retired too: that row
+        existing = conn.execute(
+            "SELECT retired_at FROM pipeline_roots WHERE id = ?", (folder_id,)
+        ).fetchone()
+        if folder_id in before and existing["retired_at"] is None:
+            raise HTTPException(
+                status_code=409, detail={"code": "folder_exists", "folder_id": folder_id}
             )
-        )
+        if folder_id in before:
+            roots.absorb(conn, folder_id, now)
         folder_move.absorb(conn, folder_id)
-    return _out(conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone())
+    if folder_id in before:
+        _move(conn, request.app.state, folder_id, None)
+    row = conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone()
+    return _out(row, reactivated=folder_id in before)
+
+
+def _register(conn: sqlite3.Connection, root: str, now: str, name: str | None) -> int:
+    """Overlap seen only on disk (link, share and letter): refused as the one written is."""
+    try:
+        return roots.register(conn, root, now, name)
+    except NotADirectoryError as err:
+        raise HTTPException(status_code=422, detail={"code": "path_invalid", "path": root}) from err
+    except roots.RootOverlapError as err:
+        if err.inside:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "folder_inside", "folder_id": err.other_id, "root_path": err.other},
+            ) from err
+        other = _overlapping(conn, roots.Root(err.other_id, err.other))
+        raise HTTPException(
+            status_code=409, detail={"code": "folder_contains", "folders": [other.model_dump()]}
+        ) from err
 
 
 def _refuse_overlap(conn: sqlite3.Connection, root: str, replaces: list[int]) -> None:
     """Inside an active folder: refused. Around some: asked, until the answer names them all."""
-    if (outer := folder_move.holder(conn, root)) is not None:
+    outer, held = _overlaps(conn, root)
+    if outer is not None:
         raise HTTPException(
             status_code=409,
-            detail={"code": "folder_inside", "folder_id": outer.id, "root_path": outer.root_path},
+            detail={"code": "folder_inside", "folder_id": outer.id, "root_path": outer.path},
         )
-    held = folder_move.held(conn, root)
     if held and sorted(replaces) != [r.id for r in held]:
         raise HTTPException(
             status_code=409,
-            detail={"code": "folder_contains", "folders": [asdict(r) for r in held]},
+            detail={
+                "code": "folder_contains",
+                "folders": [_overlapping(conn, r).model_dump() for r in held],
+            },
         )
 
 
@@ -285,11 +318,13 @@ def _same_folder_at(
     conn: sqlite3.Connection, folder_id: int, root_path: str, request: Request
 ) -> tuple[sqlite3.Row, str]:
     """The folder's row and the canonical `root_path`, if its files are there; else the refusal."""
-    row = conn.execute("SELECT id, retired_at FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    row = conn.execute(
+        "SELECT id, path, retired_at FROM pipeline_roots WHERE id = ?", (folder_id,)
+    ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "folder_not_found"})
     canonical = validate_root(root_path, request.app.state.data_root)
-    existing = conn.execute("SELECT id FROM folders WHERE root_path = ?", (canonical,)).fetchone()
+    existing = conn.execute("SELECT id FROM pipeline_roots WHERE path = ?", (canonical,)).fetchone()
     if existing is not None:
         raise HTTPException(
             status_code=409, detail={"code": "folder_exists", "folder_id": existing["id"]}
@@ -324,7 +359,14 @@ def move_folder(
     active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when
     the path is refused, with the reason as its code."""
     row, canonical = _same_folder_at(conn, folder_id, body.root_path, request)
-    folder_move.move(conn, folder_id, canonical)
+    with transaction(conn):  # root first: answer triggers match its new key
+        try:
+            roots.move(conn, folder_id, canonical)
+        except roots.RootTakenError as err:  # same folder through a link: that row
+            raise HTTPException(
+                status_code=409, detail={"code": "folder_exists", "folder_id": err.other_id}
+            ) from err
+        folder_move.follow_answers(conn, folder_id, row["path"])
     retired = row["retired_at"] is not None
     if retired:
         _move(conn, request.app.state, folder_id, None)
@@ -340,7 +382,9 @@ def retire_folder(
     """Retires: the app stops looking there. The frames stay. Idempotent.
 
     404 `folder_not_found` if it is unknown."""
-    row = conn.execute("SELECT id, retired_at FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    row = conn.execute(
+        "SELECT id, retired_at FROM pipeline_roots WHERE id = ?", (folder_id,)
+    ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "folder_not_found"})
     kept = conn.execute(
@@ -358,7 +402,7 @@ def _move(conn: sqlite3.Connection, state: State, folder_id: int, retired_at: st
     # Not refused while the worker runs: re-adding goes through Add, used while scanning, and
     # removing must always work; `identify` and `group` recheck every frame before working it.
     with transaction(conn):
-        conn.execute("UPDATE folders SET retired_at = ? WHERE id = ?", (retired_at, folder_id))
+        roots.retire(conn, folder_id, retired_at)
         detached, requeued = typeless_answer.detach_waiting(conn)
     # even with nothing detached: a restored folder can make the waiting frames ready again
     if requeued:

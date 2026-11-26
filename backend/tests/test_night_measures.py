@@ -15,7 +15,7 @@ KEY = "hfd_px"
 
 class _World:
     """The two worlds side by side, by SQL: the spine's frame, night, object, filter, the
-    pipeline's file and measures. Paths written differently on purpose."""
+    pipeline's file and measures, on one root."""
 
     def __init__(self, conn, base) -> None:
         self.conn = conn
@@ -25,15 +25,12 @@ class _World:
             (LATER,),
         ).lastrowid
         self.night = self._night(site, "2026-10-12")
-        self.folder = conn.execute(
-            "INSERT INTO folders (root_path, created_at) VALUES (?, ?)",
-            (str(base) + os.sep, LATER),
-        ).lastrowid
         self.root = conn.execute(
             "INSERT INTO pipeline_roots (path, written_key, real_key, ancestors, created_at)"
             " VALUES (?, 'w', 'r', '[]', ?)",
             (os.path.normpath(str(base)), LATER),
         ).lastrowid
+        self.folder = self.root  # one row for both pipelines (step 40.3)
         self.scan = conn.execute(
             "INSERT INTO pipeline_scans (root_id, scanned_at, reachable, volume_changed, new,"
             " changed, reread, unchanged, gone, skipped, unknown_keys, unknown_more, finished)"
@@ -161,14 +158,6 @@ def test_a_frame_takes_the_measures_of_its_own_file(conn, world) -> None:
     ]
     row = _row(conn, world.night)
     assert (row["frames"], row["measured"], row["median"]) == (1, 1, 3.2)
-
-
-def test_the_root_is_the_same_folder_written_another_way(conn, tmp_path) -> None:
-    """The spine keeps the folder as the user added it, the pipeline normalised: still one."""
-    world = _World(conn, tmp_path / "Acq" / ".." / "Acq")
-    world.shot(2.0)
-    night_measures.rebuild(conn)
-    assert _row(conn, world.night)["measured"] == 1
 
 
 def test_a_file_gone_from_the_pipeline_gives_no_measures(conn, world) -> None:

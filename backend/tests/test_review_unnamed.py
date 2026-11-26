@@ -179,7 +179,7 @@ def test_a_file_that_is_gone_and_a_retired_folder_do_not_ask_anything(pagina):
         )
     assert _gruppi(pagina)[_chiave(pagina, M81)]["frames"] == 1
     with db(pagina) as conn:
-        conn.execute("UPDATE folders SET retired_at = '2026-09-15'")
+        conn.execute("UPDATE pipeline_roots SET retired_at = '2026-09-15'")
     assert unnamed_cards(review(pagina)) == []
 
 

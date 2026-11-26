@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 from astrolog.api.pipeline import _remaining, is_first_scan, remaining_s
 from astrolog.clock import iso_z
 from astrolog.spine.scan_store import start_run
+from conftest import add_folder
 
 
 def test_what_is_left_goes_at_the_pace_so_far():
@@ -37,9 +38,7 @@ def test_the_pace_starts_with_the_folder_being_read_not_with_the_gesture():
 
 
 def _folder(conn, dove: str) -> int:
-    return conn.execute(
-        "INSERT INTO folders(root_path, created_at) VALUES(?, 'ora')", (dove,)
-    ).lastrowid
+    return add_folder(conn, dove)
 
 
 def test_the_first_reading_is_the_one_with_no_reading_ended_before(conn):

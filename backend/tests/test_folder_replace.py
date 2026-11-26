@@ -7,10 +7,10 @@ import os
 import pytest
 
 from astrolog.api import paths
-from astrolog.db.transaction import transaction
-from astrolog.spine import folder_move, typeless, typeless_folders
+from astrolog.pipeline import roots
+from astrolog.spine import typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
-from conftest import add_folder, wait_until, write_light
+from conftest import absorb_folder, add_folder, wait_until, write_light
 from test_folder_move import _frame
 
 
@@ -26,20 +26,19 @@ def test_the_outer_folder_takes_the_frames_of_the_inner_ones(conn):
     ora di D:/Astro col prefisso della sottocartella; le interne si ritirano."""
     outer = add_folder(conn, "D:/Astro")
     m31 = add_folder(conn, "D:/Astro/M31")
-    m42 = add_folder(conn, "D:\\Astro\\M42\\")
+    m42 = add_folder(conn, "D:/Astro/M42/")
     a = _frame(conn, m31, "a.fits")
     b = _frame(conn, m42, "n1/b.fits")
     before = _places(conn)
 
-    with transaction(conn):
-        folder_move.absorb(conn, outer)
+    absorb_folder(conn, outer)
 
     assert _places(conn) == [
         (before[0][0], a, outer, "M31/a.fits"),
         (before[1][0], b, outer, "M42/n1/b.fits"),
     ]
     retired = conn.execute(
-        "SELECT id FROM folders WHERE retired_at IS NOT NULL ORDER BY id"
+        "SELECT id FROM pipeline_roots WHERE retired_at IS NOT NULL ORDER BY id"
     ).fetchall()
     assert [r[0] for r in retired] == [m31, m42]
 
@@ -54,8 +53,7 @@ def test_the_answers_of_the_inner_folders_still_hold(conn):
     typeless_folders.write(conn)
     asks = conn.execute("SELECT asks_type FROM frames WHERE id = ?", (frame,)).fetchone()[0]
 
-    with transaction(conn):
-        folder_move.absorb(conn, outer)
+    absorb_folder(conn, outer)
 
     assert typeless.answer(conn, "D:/Astro/M31/dark") == TypeAnswer.CALIBRATION
     assert [r["key"] for r in typeless.by_folder(conn)] == ["D:/Astro/M31/dark"]
@@ -68,12 +66,12 @@ def test_a_neighbour_with_the_same_prefix_is_not_inside(conn):
     other = add_folder(conn, "D:/Astro2")
     _frame(conn, other, "a.fits")
 
-    with transaction(conn):
-        folder_move.absorb(conn, outer)
+    absorb_folder(conn, outer)
 
     assert _places(conn)[0][2:] == (other, "a.fits")
     assert (
-        conn.execute("SELECT retired_at FROM folders WHERE id = ?", (other,)).fetchone()[0] is None
+        conn.execute("SELECT retired_at FROM pipeline_roots WHERE id = ?", (other,)).fetchone()[0]
+        is None
     )
 
 
@@ -84,8 +82,7 @@ def test_a_neighbour_that_starts_like_the_outer_path_gives_back_nothing(conn):
     other = add_folder(conn, "D:/Astro/M")
     _frame(conn, other, "1/a.fits")
 
-    with transaction(conn):
-        folder_move.absorb(conn, outer)
+    absorb_folder(conn, outer)
 
     assert _places(conn)[0][2:] == (other, "1/a.fits")
 
@@ -95,29 +92,28 @@ def test_a_retired_folder_inside_gives_its_frames_too(conn):
     le sue posizioni passano alla esterna invece di rileggerli."""
     outer = add_folder(conn, "D:/Astro")
     old = add_folder(conn, "D:/Astro/vecchia")
-    conn.execute("UPDATE folders SET retired_at = 'ora' WHERE id = ?", (old,))
+    conn.execute("UPDATE pipeline_roots SET retired_at = 'ora' WHERE id = ?", (old,))
     frame = _frame(conn, old, "a.fits")
 
-    with transaction(conn):
-        folder_move.absorb(conn, outer)
+    absorb_folder(conn, outer)
 
     assert _places(conn)[0][1:] == (frame, outer, "vecchia/a.fits")
 
 
-def test_held_and_holder_say_which_folders_overlap(conn):
+def test_held_and_holder_say_which_folders_overlap(conn, tmp_path):
     """Solo le attive contano per la domanda; la stessa cartella non e' ne' dentro ne' intorno."""
-    m31 = add_folder(conn, "D:/Astro/M31")
-    gone = add_folder(conn, "D:/Astro/M42")
-    conn.execute("UPDATE folders SET retired_at = 'ora' WHERE id = ?", (gone,))
-    _frame(conn, m31, "a.fits")
+    astro = tmp_path / "Astro"
+    m31 = roots.add_root(conn, astro / "M31", "ora")
+    gone = roots.add_root(conn, astro / "M42", "ora")
+    roots.retire(conn, gone, "ora")
 
-    held = folder_move.held(conn, "D:/Astro")
-    assert [(r.id, r.root_path, r.frames) for r in held] == [(m31, "D:/Astro/M31", 1)]
-    assert folder_move.held(conn, "D:/Astro/M31") == []
-    outer = folder_move.holder(conn, "D:/Astro/M31/n1")
+    held = roots.held(conn, str(astro))
+    assert [(r.id, r.path) for r in held] == [(m31, str(astro / "M31"))]
+    assert roots.held(conn, str(astro / "M31")) == []
+    outer = roots.holder(conn, str(astro / "M31" / "n1"))
     assert outer is not None and outer.id == m31
-    assert folder_move.holder(conn, "D:/Astro/M31") is None
-    assert folder_move.holder(conn, "D:/Astro/M42/n1") is None
+    assert roots.holder(conn, str(astro / "M31")) is None
+    assert roots.holder(conn, str(astro / "M42" / "n1")) is None
 
 
 def _client_add(client, root, replaces=None):

@@ -37,8 +37,8 @@ _COLUMNS = ("key", "root", "sub", "frames", "nights", "integration_s", "untimed"
 
 # Answered folders inside a live registered root, the deepest root first.
 _ANSWERED = f"""
-SELECT dc.entity_key AS key, d.root_path AS root, d.root_key FROM declarations dc
-JOIN folders d ON d.retired_at IS NULL AND (dc.entity_key = d.root_key
+SELECT dc.entity_key AS key, d.path AS root, d.root_key FROM declarations dc
+JOIN pipeline_roots d ON d.retired_at IS NULL AND (dc.entity_key = d.root_key
   OR substr(dc.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/')
 WHERE dc.entity_type = '{decl.EntityType.FOLDER}' AND dc.field = '{decl.FOLDER_TYPE}'
   AND dc.value IN ({", ".join(f"'{a}'" for a in decl.TypeAnswer)})
