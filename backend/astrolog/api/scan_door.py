@@ -47,6 +47,7 @@ def scan_events(
     since = now_iso()
     events: queue.Queue[Any] = queue.Queue()
     stop = threading.Event()
+    turn = threading.Semaphore(0)  # one file, then the worker's turn: a Stop lands before the next
 
     def progress(read: int, total: int, rel: str, seen: ScanResult) -> None:
         changes = seen.changes
@@ -58,6 +59,8 @@ def scan_events(
         }
         events.put({"current": read, "total": total, "file": _shown(rel.rsplit("/", 1)[-1]),
                     **counts})  # fmt: skip
+        if not stop.is_set():  # closed: nobody takes the turn back
+            turn.acquire()
 
     def work() -> None:
         try:
@@ -74,18 +77,15 @@ def scan_events(
         while (item := events.get()) is not _DONE:
             if isinstance(item, dict):
                 yield {**item, "run_id": run_id, "folder_id": folder_id, "since": since}
+                turn.release()
             else:
                 outcome = item
     finally:
         stop.set()
+        turn.release()
+        if outcome is None:  # closed while reading: its batches saved stay, said stopped
+            _close_closed(conn, folder_id, run_id, events)
         thread.join()
-        if outcome is None:  # closed while reading: what its batches saved stays, said stopped
-            while (item := events.get()) is not _DONE:
-                outcome = item if not isinstance(item, dict) else outcome
-            if isinstance(outcome, ScanResult):
-                close(conn, folder_id, run_id, outcome)
-            else:
-                _close_stopped(conn, folder_id, run_id)
     if isinstance(outcome, BaseException):
         _close_failed(conn, run_id, outcome)
         raise outcome
@@ -134,6 +134,18 @@ def close(conn: sqlite3.Connection, folder_id: int, run_id: int, result: ScanRes
     }
     finish_run(conn, run_id, status, reason, counts, left_out, errors, now_iso())
     return receipt(status, reason, counts, errors, run_id=run_id, folder_id=folder_id, **left_out)
+
+
+def _close_closed(
+    conn: sqlite3.Connection, folder_id: int, run_id: int, events: queue.Queue[Any]
+) -> None:
+    outcome: Any = None
+    while (item := events.get()) is not _DONE:
+        outcome = item if not isinstance(item, dict) else outcome
+    if isinstance(outcome, ScanResult):
+        close(conn, folder_id, run_id, outcome)
+    else:
+        _close_stopped(conn, folder_id, run_id)
 
 
 def _close_stopped(conn: sqlite3.Connection, folder_id: int, run_id: int) -> None:

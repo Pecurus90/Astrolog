@@ -20,6 +20,7 @@ from astrolog.api import pipeline, scan_door
 from astrolog.api import scan as scan_api
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
+from astrolog.pipeline import scan as pipeline_scan
 from astrolog.spine import run, scan_store
 from astrolog.spine.scan_store import COUNTS, start_run
 from astrolog.spine.stages import mark_pending
@@ -196,6 +197,32 @@ def test_the_end_of_the_run_is_not_a_number(db_path, tmp_path):
     assert fine["done"] is True, f"il segnale di fine e' diventato un numero: {fine['done']!r}"
     interi = {k for k, v in fine.items() if isinstance(v, int) and not isinstance(v, bool)}
     assert interi == set(COUNTS), "nella somma e' entrato qualcosa che non e' un conteggio"
+
+
+def test_the_scan_waits_for_the_worker_after_each_file(db_path, tmp_path):
+    """La lettura gira in un thread suo, ma non corre avanti: dopo un file aspetta che il worker
+    abbia preso l'evento. Senza, uno Stop premuto al primo file arriva a cartella gia' letta
+    (CI su Linux, 26/11/2026) e la ricevuta dice "ok" a chi aveva fermato."""
+    root = tmp_path / "lib"
+    for i in range(3):
+        write_light(root / f"a{i}.fits", obj=f"M {i + 1}")
+    vero, letti, secondo = pipeline_scan.scan_file, [], threading.Event()
+
+    def conta(path, *rest):
+        letti.append(path)
+        if len(letti) == 2:
+            secondo.set()
+        return vero(path, *rest)
+
+    with connect(db_path) as conn, mock.patch.object(pipeline_scan, "scan_file", conta):
+        uno = add_folder(conn, root)
+        corsa = start_run(conn, uno, "2026-09-16T10:00:00.000Z")
+        eventi = scan_door.scan_events(conn, uno, corsa, scan_door.direct(db_path))
+        assert next(eventi)["current"] == 1
+        assert not secondo.wait(0.5), "la lettura e' andata avanti senza aspettare il worker"
+        eventi.close()
+        stato = conn.execute("SELECT status FROM scan_runs WHERE id = ?", (corsa,)).fetchone()[0]
+    assert (len(letti), stato) == (1, "stopped")
 
 
 def test_a_folder_lost_while_reading_does_not_look_like_a_clean_run(app, tmp_path):
