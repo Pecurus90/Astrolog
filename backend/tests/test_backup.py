@@ -299,6 +299,20 @@ def test_a_restored_folder_without_frames_is_recognised_by_its_sample(tmp_path):
     assert typeless.answer(conn, f"{nuovo.as_posix()}/dark") == TypeAnswer.CALIBRATION
 
 
+def test_a_folder_restored_without_a_sample_is_recognised_by_nothing(tmp_path):
+    """Un file senza campione per la cartella: torna con un campione vuoto, e un posto con dei
+    file non e' lei spostata, invece di un errore."""
+    nuovo = tmp_path / "E" / "Astro"
+    write_light(nuovo / "a.fits")
+    create_database(tmp_path / "nuovo.db")
+    conn = connect(tmp_path / "nuovo.db")
+    folder = {"root_path": "D:/Astro", "name": None, "retired_at": None}
+    backup.restore(conn, {"version": backup.VERSION, "folders": [folder]})
+    vecchia = conn.execute("SELECT id FROM folders").fetchone()[0]
+    assert conn.execute("SELECT sample_json FROM folders").fetchone()[0] == "[]"
+    assert folder_move.same_files(conn, vecchia, str(nuovo), [str(nuovo / "a.fits")]) is False
+
+
 def test_no_row_id_goes_in_the_file(conn):
     """Due database con le stesse risposte danno lo stesso file: un id di riga lo cambierebbe."""
     conn.execute("INSERT INTO filters(name, passband, created_at) VALUES('Ha Antlia', 'HA', 'ora')")

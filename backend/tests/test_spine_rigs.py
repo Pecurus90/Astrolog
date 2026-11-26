@@ -130,6 +130,28 @@ def test_the_subject_stays_a_key_on_both_shapes():
         counts.of("rig", rigs_joined=True)  # la forma giunta esiste solo per lo strumento
 
 
+@pytest.mark.parametrize("kind", ["filter_wheel", "oag"])
+def test_a_piece_the_frame_carries_reaches_it_without_a_rig(conn, kind):
+    """Ruota, OAG e gli altri pezzi sul frame lo raggiungono dalla loro colonna, senza setup: e'
+    il legame che conta frame e ore di un pezzo (`counts._piece`)."""
+    from astrolog.spine import counts
+
+    pezzo = conn.execute(
+        "INSERT INTO instruments(kind, name, detected, created_at) VALUES(?, 'P', 1, ?)",
+        (kind, now_iso()),
+    ).lastrowid
+    for carica in (pezzo, None):
+        conn.execute(
+            f"INSERT INTO frames(frame_hash, image_type, header_json, created_at, {kind}_id)"
+            " VALUES(?, 'light', '[]', ?, ?)",
+            (f"h{carica}", now_iso(), carica),
+        )
+    # built once at import: the count reads its copy, the builder is asked here
+    legame = counts._piece("0")
+    sql = f"SELECT COUNT(*) FROM frames f, instruments i WHERE i.id = ? AND {legame}"  # noqa: S608
+    assert one(conn, sql, (pezzo,)) == 1
+
+
 @pytest.mark.parametrize("kind", declarations.ALIAS_KINDS)
 def test_every_kind_that_learns_a_spelling_is_one_the_schema_accepts(conn, kind):
     """I generi che imparano una grafia sono un elenco in Python (`ALIAS_KINDS`), e lo schema ne

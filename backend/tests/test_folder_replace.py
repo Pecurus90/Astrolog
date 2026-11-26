@@ -77,6 +77,19 @@ def test_a_neighbour_with_the_same_prefix_is_not_inside(conn):
     )
 
 
+def test_a_neighbour_that_starts_like_the_outer_path_gives_back_nothing(conn):
+    """D:/Astro/M non sta intorno a D:/Astro/M31, anche se il nome ne e' l'inizio: il suo file
+    1/a.fits resta suo."""
+    outer = add_folder(conn, "D:/Astro/M31")
+    other = add_folder(conn, "D:/Astro/M")
+    _frame(conn, other, "1/a.fits")
+
+    with transaction(conn):
+        folder_move.absorb(conn, outer)
+
+    assert _places(conn)[0][2:] == (other, "1/a.fits")
+
+
 def test_a_retired_folder_inside_gives_its_frames_too(conn):
     """Ritirata, la cartella dentro non e' nella domanda, ma i suoi file sono sotto la nuova:
     le sue posizioni passano alla esterna invece di rileggerli."""

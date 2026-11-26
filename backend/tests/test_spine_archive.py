@@ -332,3 +332,13 @@ def test_an_archive_with_nothing_in_it_offers_no_choices(archivio):
     """A mani vuote i criteri non ci sono, non pieni di tutto il catalogo: chi ha appena
     installato l'app non ha ancora nessun catalogo e nessuna costellazione."""
     assert archive_criteria.offered(archivio, archive.Criteria()) == []
+
+
+@pytest.mark.parametrize("code", [*archive.TYPE_FAMILY, None, "TIPO_INVENTATO"])
+def test_the_family_in_sql_is_the_one_in_python(conn, code):
+    """La famiglia di un tipo la dice il database per stringere e ordinare, e il dizionario per
+    mostrarla: dicono la stessa, anche per un tipo sconosciuto e per nessun tipo."""
+    sql = archive.family_sql("t.code")
+    got = conn.execute(f"SELECT {sql} FROM (SELECT ? AS code) t", (code,)).fetchone()[0]  # noqa: S608
+    expected = archive.Family.UNKNOWN if code is None else archive.TYPE_FAMILY.get(code)
+    assert got == (expected or archive.Family.OTHER)

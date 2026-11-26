@@ -194,6 +194,35 @@ def test_one_file_in_common_is_not_a_move(client_vuoto, tmp_path):
     assert r.json()["detail"]["code"] == "not_the_same_folder"
 
 
+def test_a_folder_of_two_files_and_a_place_with_one_is_not_a_move(client_vuoto, tmp_path):
+    """Due file, il posto nuovo ne ha uno: il campione chiede tutti e due, uno solo non basta."""
+    old, other = tmp_path / "F", tmp_path / "G"
+    for i in range(2):
+        write_light(old / f"a{i}.fits", obj=f"M {i + 1}")
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    other.mkdir()
+    shutil.copy2(old / "a0.fits", other / "a0.fits")
+    r = client_vuoto.post(f"/api/v1/folders/{f['id']}/move", json={"root_path": str(other)})
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == "not_the_same_folder"
+
+
+def test_a_file_that_cannot_be_read_proves_nothing(client_vuoto, tmp_path, db_path):
+    """Stessi nomi, ma il primo file del posto nuovo non si legge: non e' una prova, non e' lei."""
+    old, new = tmp_path / "vecchia", tmp_path / "nuova"
+    _archive(old)
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    shutil.copytree(old, new)
+    (new / "a.fits").write_bytes(b"non un FITS")
+    c = connect(db_path)
+    try:
+        assert folder_move.same_files(c, f["id"], str(new), walk_dir(str(new))) is False
+    finally:
+        c.close()
+
+
 def test_a_small_folder_with_a_deleted_file_is_still_recognised(client_vuoto, tmp_path):
     """Tolto un frame brutto, poi spostato tutto: il file che non c'e' piu' non si chiede."""
     old, new = tmp_path / "H", tmp_path / "I"
@@ -341,6 +370,25 @@ def test_recognising_stops_reading_headers_at_the_deadline(
     finally:
         c.close()
     assert len(reads) == 2
+
+
+def test_at_the_deadline_no_header_is_read(client_vuoto, tmp_path, db_path, monkeypatch):
+    """Il tempo finito proprio adesso e' gia' finito: "non so" senza leggere nulla."""
+    old = tmp_path / "vecchia"
+    _archive(old)
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    reads = []
+    real = folder_move.read_frame
+    monkeypatch.setattr(folder_move, "read_frame", lambda path: reads.append(path) or real(path))
+    monkeypatch.setattr(folder_move, "time", SimpleNamespace(monotonic=lambda: 7.0))
+    c = connect(db_path)
+    try:
+        found = walk_dir(f["root_path"])
+        assert folder_move.same_files(c, f["id"], f["root_path"], found, deadline=7.0) is None
+    finally:
+        c.close()
+    assert reads == []
 
 
 def test_a_folder_that_has_not_said_whether_it_answers_is_not_skipped_as_gone(
