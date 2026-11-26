@@ -791,8 +791,8 @@ export interface paths {
         /**
          * Move Folder
          * @description The folder's files are now at `root_path`: same folder, so frames, scans and the answers
-         *     on its folders follow it. Only to a place with the same files (`folder_move.same_files`); a
-         *     retired folder comes back (`reactivated`).
+         *     on its folders follow it. Only to a place with the same files
+         *     (`pipeline/recognise.same_files`); a retired folder comes back (`reactivated`).
          *
          *     404 `folder_not_found`; 409 `folder_exists` with its `folder_id` if the path is registered,
          *     active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when
@@ -3457,7 +3457,7 @@ export interface components {
              * Reason
              * @enum {string}
              */
-            reason: "unchanged" | "duplicates" | "calibration" | "stack" | "still_writing" | "online_only";
+            reason: "unchanged" | "duplicates" | "calibration" | "rewritten" | "not_supported" | "still_writing" | "online_only";
             /** Count */
             count: number;
         };
@@ -6013,7 +6013,7 @@ export interface components {
              * Reason
              * @enum {string}
              */
-            reason: "calibration" | "stack" | "still_writing";
+            reason: "calibration" | "rewritten" | "not_supported" | "still_writing";
             /** Count */
             count: number;
         };

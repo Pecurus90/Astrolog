@@ -33,10 +33,9 @@ Cio' che vale per tutta la catena sta in [`spina.md`](spina.md).
 | Cambio idea rispondendo di nuovo: i frame lasciano il setup di prima, e quelli che l'ottica la dicono restano col loro | `test_answering_again_moves_the_poses_to_the_new_rig`, `test_changing_the_answer_moves_the_poses` |
 | Un frame in due cartelle o una copia riscritta e' una posa sola; una cartella ritirata o un file sparito non chiedono niente; un setup con le sole copie resta fra le scelte | `test_a_pose_that_lives_in_two_folders_counts_once`, `test_a_rewritten_copy_is_not_another_pose_but_comes_back_in_the_queue`, `test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything`, `test_a_rig_whose_only_poses_are_copies_stays_in_the_page` |
 | La copia calibrata di un frame non raddoppia il conteggio delle ore | `test_normalize_calibrated_copy` |
-| Anche se riprendo con un programma che l'app non conosce, purche' la copia dica di essere stata calibrata | `test_normalize_finds_the_copy_of_an_unsupported_capture_program` |
-| E se chi elabora lascia nell'header il nome del mio programma accanto al suo, o me lo riscrive col suo | `test_normalize_calibrated_copy`, `test_normalize_the_copy_that_overwrites_the_capture_software` |
-| Ma se ho tenuto **solo** il file calibrato, quelle ore restano mie | `test_normalize_a_marked_frame_without_a_twin_still_counts` |
-| E se due file dicono di essere lo stesso scatto e niente dice quale sia l'originale, l'app non indovina: li conta tutti e due | `test_normalize_does_not_guess_between_two_twins_that_say_nothing`, `test_normalize_does_not_mark_a_capture_program_that_writes_only_its_own_key` |
+| E se chi elabora lascia nell'header il nome del mio programma accanto al suo | `test_normalize_calibrated_copy` |
+| Un file elaborato da un altro programma -- pixel a virgola mobile, o le chiavi `PROGRAM` / `STACKCNT` -- non entra nell'archivio, anche se e' l'unico file di quello scatto: la ricevuta lo conta fra gli elaborati altrove (Marco, 26/11/2026; ADR 0029). Lo stesso per i file di un programma che l'app non legge | `test_the_receipt_counts_the_skipped_by_reason` |
+| E se due file dicono di essere lo stesso scatto e niente dice quale sia l'originale, l'app non indovina: li conta tutti e due | `test_normalize_does_not_guess_between_two_twins_that_say_nothing` |
 | La scheda della mia camera ha il pixel fisico su cui concordano i file, qualunque sia l'ordine in cui arrivano e anche se riprendo binnato | `test_the_pixel_follows_the_files_not_the_first_one`, `test_files_at_bin_two_give_the_physical_pixel` |
 | Il pixel e il colore che scrivo sulla scheda restano miei: nessun ricalcolo li tocca | `test_what_i_write_on_the_card_is_never_recomputed`, `test_the_card_shows_what_i_wrote_over_what_the_files_say` |
 

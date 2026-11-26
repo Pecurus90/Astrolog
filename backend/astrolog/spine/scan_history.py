@@ -23,7 +23,8 @@ class LeftOut(StrEnum):
     UNCHANGED = "unchanged"
     DUPLICATES = "duplicates"
     CALIBRATION = SkipReason.CALIBRATION.value
-    STACK = SkipReason.STACK.value
+    REWRITTEN = SkipReason.REWRITTEN.value
+    NOT_SUPPORTED = SkipReason.NOT_SUPPORTED.value
     STILL_WRITING = SkipReason.STILL_WRITING.value
     ONLINE_ONLY = "online_only"
 

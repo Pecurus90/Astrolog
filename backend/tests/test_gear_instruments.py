@@ -383,7 +383,7 @@ def test_a_piece_is_not_merged_with_itself(client):
     assert r.status_code == 422 and r.json()["detail"]["code"] == "merge_refused"
     dopo = gear(client)
     assert by_name(dopo["instruments"], "Askar 103Apo")["frames"] == 8
-    assert len(dopo["rigs"]) == 5
+    assert len(dopo["rigs"]) == 3
 
 
 def test_the_name_of_a_rig_survives_a_merge(client):

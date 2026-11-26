@@ -26,6 +26,7 @@ from . import (
     copies,
     declarations,
     gear_usage,
+    header_asks,
     night_rig,
     rewrite,
     rigs,
@@ -60,6 +61,7 @@ def normalize_frames(conn: sqlite3.Connection) -> Iterator[Event]:
             gear_usage.write(conn)
 
     with watched(StageName.NORMALIZE, counts, at_end):
+        header_asks.fill(conn)  # the scan's frames, judged before anyone asks
         frame_ids, context = _before_the_round(conn)
         for frame_id in frame_ids:
             work = partial(_one_frame, conn, frame_id, context, counts)

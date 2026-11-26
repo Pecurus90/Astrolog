@@ -154,7 +154,7 @@ def test_a_frame_takes_the_measures_of_its_own_file(conn, world) -> None:
     night_measures.rebuild(conn)
     bridged = conn.execute("SELECT * FROM night_measure_frames").fetchall()
     assert [(r["frame_id"], r["pipeline_frame_id"]) for r in bridged] == [
-        (spine, conn.execute("SELECT id FROM pipeline_frames").fetchone()[0])
+        (spine, conn.execute("SELECT frame_id FROM pipeline_files").fetchone()[0])
     ]
     row = _row(conn, world.night)
     assert (row["frames"], row["measured"], row["median"]) == (1, 1, 3.2)

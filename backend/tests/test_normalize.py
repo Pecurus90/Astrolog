@@ -19,34 +19,27 @@ from conftest import (
 )
 from synthetic import build_archive
 
+# the 14 synthetic files minus Voyager, SGP and the rewritten copy, skipped by the scan (ADR 0029)
+SYNTHETIC_FRAMES = 11
 # --- il corpus: cosa esce dai quattro software ------------------------------------------
 
 
 def test_normalize_vocab_corpus(conn, archive):
     """Il vocabolario attraversa gli header dei quattro software: ogni frame esce con il suo
     software normalizzato, e i filtri riconosciuti diventano filtri con la loro banda."""
-    assert archive["status"] == "ok" and archive["normalized"] == 14
+    assert archive["status"] == "ok" and archive["normalized"] == SYNTHETIC_FRAMES
 
     software = {
         r["software"]: r["n"]
         for r in rows(conn, "SELECT software, COUNT(*) n FROM frames GROUP BY 1")
     }
-    assert software == {
-        # la copia riscritta porta ancora N.I.N.A.: chi elabora aggiunge la sua chiave e non
-        # cancella quella di chi ha acquisito. Il software non dice piu' chi e' la copia.
-        "N.I.N.A.": 9,
-        "ASIAIR": 3,
-        "Voyager": 1,
-        "Sequence Generator Pro": 1,
-    }
+    # Voyager, SGP e la copia riscritta non entrano piu' (ADR 0029, 26/11/2026)
+    assert software == {"N.I.N.A.": 8, "ASIAIR": 3}
 
     bands = {r["name"]: r["passband"] for r in rows(conn, "SELECT name, passband FROM filters")}
     assert bands["Lum"] == "L" and bands["R"] == "R"
     assert bands["L-eXtreme"] == "DUO_HAOIII"  # un modello di catalogo porta la sua banda
     assert bands["OSC"] == "OSC"  # ASIAIR a colori senza filtro: la matrice e' la banda
-    # Voyager scrive "Ha 3nm": la larghezza si spoglia e resta la banda
-    voyager = frame_by_file(conn, "ha_001.fits")
-    assert one(conn, "SELECT passband FROM filters WHERE id = ?", (voyager["filter_id"],)) == "HA"
     assert bands["N"] == "UNKNOWN"  # una lettera fuori dalla lista: non si indovina
     assert bands["X"] == "UNKNOWN"
 
@@ -122,51 +115,19 @@ def test_normalize_applies_a_filter_rule(conn, tmp_path):
 # --- la copia calibrata ---------------------------------------------------------------------
 
 
-def test_normalize_calibrated_copy(conn, archive):
-    """Un programma di elaborazione riscrive il light nella cartella di acquisizione: stessa
-    data, stessa camera, stessa esposizione. E' lo stesso scatto, il grezzo vince, e le ore
-    non raddoppiano.
-
-    E' la forma difficile, quella misurata: chi elabora **non cancella** la chiave di chi ha
-    acquisito, ci aggiunge la sua. I due gemelli dicono tutti e due N.I.N.A., e senza il
-    marchio nessuno dei due troverebbe un fratello."""
-    copy_row = frame_by_file(conn, "L_001_c.fits")
-    raw_row = frame_by_file(conn, "L_001.fits")
-    assert copy_row["software"] == raw_row["software"] == "N.I.N.A."
-    assert copy_row["rewrite_mark"] == "rewritten" and raw_row["rewrite_mark"] is None
-    assert copy_row["copy_of"] == raw_row["id"]
-    assert raw_row["copy_of"] is None
-    hours = one(
-        conn, "SELECT SUM(exposure_s) FROM frames WHERE copy_of IS NULL AND filter_raw = 'L'"
-    )
-    assert hours == 480.0  # quattro frame da 120 s, non cinque
-    assert archive["copies"] == 1
-
-
-def test_normalize_the_copy_that_overwrites_the_capture_software(conn, tmp_path):
-    """L'altra forma: chi elabora riscrive col **proprio** nome la chiave di chi ha acquisito,
-    e il file non porta nessun marchio. Qui decide il secondo criterio, il software fra i
-    quattro -- ed e' l'unico caso in cui decide da solo."""
+def test_normalize_calibrated_copy(conn, tmp_path):
+    """Una copia N.I.N.A. che dice `CALSTAT` accanto al grezzo: stessa data, camera ed
+    esposizione. E' lo stesso scatto, il grezzo vince, le ore non raddoppiano. La copia con
+    `PROGRAM` o a pixel float non entra piu' (ADR 0029, 26/11/2026)."""
     same = {"INSTRUME": "ATR2600M", "date": "2024-10-31T21:00:00"}
-    write_light(tmp_path / "raw.fits", SWCREATE="N.I.N.A. 3.1.2.9001 (x64)", **same)
-    write_light(tmp_path / "cal.fits", SWCREATE="Elaborazione 1.9", **same)
+    write_light(tmp_path / "raw.fits", **same)
+    write_light(tmp_path / "cal.fits", CALSTAT="BDF", **same)
     scan(conn, tmp_path)
     assert run_normalize(conn)["copies"] == 1
     copy_row, raw_row = frame_by_file(conn, "cal.fits"), frame_by_file(conn, "raw.fits")
-    assert copy_row["rewrite_mark"] is None and raw_row["rewrite_mark"] is None
+    assert copy_row["software"] == raw_row["software"] == "N.I.N.A."
+    assert copy_row["rewrite_mark"] == "calibrated" and raw_row["rewrite_mark"] is None
     assert copy_row["copy_of"] == raw_row["id"] and raw_row["copy_of"] is None
-
-
-def test_normalize_finds_the_copy_of_an_unsupported_capture_program(conn, tmp_path):
-    """Chi riprende con un programma fuori dai quattro non e' riconosciuto **nemmeno sul
-    grezzo**: senza il marchio nessuno dei due gemelli sarebbe una copia. Col marchio la
-    copia si riconosce lo stesso, e l'app non ha bisogno di sapere che programmi siano."""
-    same = {"INSTRUME": "ASI2600MM", "date": "2024-05-17T21:00:00"}
-    write_light(tmp_path / "raw.fits", SWCREATE="Un programma qualunque 7", **same)
-    write_light(tmp_path / "cal.fits", SWCREATE="Un programma qualunque 7", CALSTAT="BDF", **same)
-    scan(conn, tmp_path)
-    assert run_normalize(conn)["copies"] == 1
-    assert frame_by_file(conn, "cal.fits")["copy_of"] == frame_by_file(conn, "raw.fits")["id"]
     assert one(conn, "SELECT SUM(exposure_s) FROM frames WHERE copy_of IS NULL") == 300.0
 
 
@@ -182,23 +143,6 @@ def test_normalize_does_not_guess_between_two_twins_that_say_nothing(conn, tmp_p
     assert one(conn, "SELECT COUNT(*) FROM frames WHERE copy_of IS NULL") == 2
 
 
-def test_normalize_a_touched_raw_still_beats_its_calibrated_copy(conn, tmp_path):
-    """Un grezzo puo' portare il marchio senza essere una copia: un solutore o un correttore di
-    metadati gli riscrive l'header e ci lascia il suo nome. Le calibrazioni applicate pesano di
-    piu' -- quelle dicono che sono cambiati i pixel -- se no i due gemelli pareggerebbero e le
-    ore tornerebbero doppie."""
-    same = {"INSTRUME": "ASI2600MM", "date": "2024-05-17T21:00:00"}
-    toccato = {"SWCREATE": "N.I.N.A. 3.1", "PROGRAM": "Risolutore 1.2"}
-    write_light(tmp_path / "raw.fits", **toccato, **same)
-    write_light(tmp_path / "cal.fits", **toccato, CALSTAT="BDF", **same)
-    scan(conn, tmp_path)
-    assert run_normalize(conn)["copies"] == 1
-    raw_row, copy_row = frame_by_file(conn, "raw.fits"), frame_by_file(conn, "cal.fits")
-    assert raw_row["rewrite_mark"] == "rewritten" and copy_row["rewrite_mark"] == "calibrated"
-    assert copy_row["copy_of"] == raw_row["id"] and raw_row["copy_of"] is None
-    assert one(conn, "SELECT SUM(exposure_s) FROM frames WHERE copy_of IS NULL") == 300.0
-
-
 def test_normalize_a_marked_frame_without_a_twin_still_counts(conn, tmp_path):
     """Il marchio decide chi vince fra due gemelli, mai se un frame conta: chi ha tenuto solo
     il file calibrato le vede tutte."""
@@ -206,46 +150,6 @@ def test_normalize_a_marked_frame_without_a_twin_still_counts(conn, tmp_path):
     scan(conn, tmp_path)
     assert run_normalize(conn)["copies"] == 0
     assert one(conn, "SELECT SUM(exposure_s) FROM frames WHERE copy_of IS NULL") == 300.0
-
-
-def test_normalize_does_not_mark_a_capture_program_that_writes_only_its_own_key(conn, tmp_path):
-    """`PROGRAM` e `SWMODIFY` sono le grafie con cui due dei quattro si presentano: **un nome
-    solo** non e' un marchio, o il grezzo di chi riprende con quei due sarebbe marchiato -- e
-    il suo calibrato lo pareggerebbe, riportando le ore al doppio. Accanto a un secondo nome
-    diverso, invece, il marchio c'e': chi elabora aggiunge la sua chiave a quella di chi ha
-    ripreso, **qualunque** delle due lui abbia occupato."""
-    same = {"INSTRUME": "ASI2600MM", "date": "2024-05-17T21:00:00"}
-    write_light(tmp_path / "solo.fits", PROGRAM="Voyager 2.3")
-    write_light(tmp_path / "raw.fits", PROGRAM="Voyager 2.3", **same)
-    write_light(tmp_path / "cal.fits", PROGRAM="Voyager 2.3", CALSTAT="BDF", **same)
-    write_light(tmp_path / "mod.fits", PROGRAM="Voyager 2.3", SWMODIFY="Elaborazione 1.9", **same)
-    scan(conn, tmp_path)
-    assert run_normalize(conn)["copies"] == 2
-    assert frame_by_file(conn, "solo.fits")["rewrite_mark"] is None
-    raw_row = frame_by_file(conn, "raw.fits")
-    assert raw_row["rewrite_mark"] is None and raw_row["copy_of"] is None
-    assert frame_by_file(conn, "cal.fits")["copy_of"] == raw_row["id"]
-    assert frame_by_file(conn, "mod.fits")["rewrite_mark"] == "rewritten"
-    assert frame_by_file(conn, "mod.fits")["copy_of"] == raw_row["id"]
-    assert one(conn, "SELECT SUM(exposure_s) FROM frames WHERE copy_of IS NULL") == 600.0
-
-
-def test_normalize_a_copy_points_at_the_original_not_at_another_copy(conn, tmp_path):
-    """`copy_of` porta all'originale in un passo: se il grezzo arriva per ultimo, le copie che
-    intanto si erano appoggiate a un'altra copia si rifanno, o "l'originale di questa copia"
-    sarebbe una frase falsa."""
-    same = {"INSTRUME": "ASI2600MM", "date": "2024-05-17T21:00:00"}
-    write_light(tmp_path / "prima" / "marchiata.fits", SWCREATE="Elab 1.9", CALSTAT="BDF", **same)
-    write_light(tmp_path / "prima" / "muta.fits", SWCREATE="Elab 1.9", **same)
-    scan(conn, tmp_path / "prima")
-    run_normalize(conn)
-    write_light(tmp_path / "poi" / "grezza.fits", SWCREATE="N.I.N.A. 3.1", **same)
-    scan(conn, tmp_path / "poi")
-    run_normalize(conn)
-    grezza = frame_by_file(conn, "grezza.fits")
-    for nome in ("marchiata.fits", "muta.fits"):
-        assert frame_by_file(conn, nome)["copy_of"] == grezza["id"], nome
-    assert grezza["copy_of"] is None
 
 
 def test_normalize_does_not_call_a_second_pose_a_copy(conn, tmp_path):
@@ -268,7 +172,7 @@ def test_normalize_is_incremental_and_idempotent(conn, tmp_path):
     first_run = run_normalize(conn)
     before = one(conn, "SELECT COUNT(*) FROM filters") + one(conn, "SELECT COUNT(*) FROM rigs")
     second_run = run_normalize(conn)
-    assert first_run["normalized"] == 14 and second_run["normalized"] == 0
+    assert first_run["normalized"] == SYNTHETIC_FRAMES and second_run["normalized"] == 0
     assert (
         one(conn, "SELECT COUNT(*) FROM filters") + one(conn, "SELECT COUNT(*) FROM rigs") == before
     )
@@ -312,8 +216,8 @@ def test_normalize_stop_leaves_a_coherent_prefix(conn, tmp_path):
     done_now = one(
         conn, "SELECT COUNT(*) FROM frame_stages WHERE stage='normalize' AND status='done'"
     )
-    assert 0 < done_now < 14
-    assert stages.count_pending(conn, "normalize") == 14 - done_now
+    assert 0 < done_now < SYNTHETIC_FRAMES
+    assert stages.count_pending(conn, "normalize") == SYNTHETIC_FRAMES - done_now
 
 
 def test_normalize_survives_a_frame_without_anything(conn, tmp_path):
@@ -348,7 +252,7 @@ def test_normalize_rig_focal_is_the_median_and_ignores_the_file_order(conn, arch
     """Il rappresentante del gruppo di focali e' la mediana dei distinti, non la prima letta:
     con 561, 560 e 559 il setup si chiama 560 anche se il primo file letto porta 561."""
     focals = {r["focal_mm"] for r in rows(conn, "SELECT DISTINCT focal_mm FROM rigs")}
-    assert focals == {560.0, 910.0, 1624.0}
+    assert focals == {560.0}  # 910 di Voyager e 1624 di SGP non entrano piu' (ADR 0029)
 
 
 def test_normalize_a_zero_focal_length_does_not_explode(conn, tmp_path):
@@ -396,32 +300,33 @@ def test_normalize_a_broken_frame_does_not_stop_the_others(conn, tmp_path, monke
 
 def test_normalize_the_raw_arriving_after_its_copy_still_wins(conn, tmp_path):
     """La copia entra per prima (la cartella del grezzo si scansiona dopo): quando il grezzo
-    arriva, la copia torna in coda e smette di contare come un'altra ora di cielo."""
-    build_archive(tmp_path / "copie")
-    (tmp_path / "copie" / "nina" / "L_001.fits").unlink()  # prima entra solo la copia
+    arriva, la copia torna in coda e smette di contare come un'altra ora di cielo. La copia e'
+    la forma `CALSTAT`: quella con `PROGRAM` non entra piu' (ADR 0029, 26/11/2026)."""
+    same = {"INSTRUME": "ATR2600M", "date": "2024-10-31T21:00:00"}
+    write_light(tmp_path / "copie" / "cal.fits", CALSTAT="BDF", **same)
     scan(conn, tmp_path / "copie")
     assert run_normalize(conn)["copies"] == 0
-    copy_id = frame_by_file(conn, "L_001_c.fits")["id"]
+    copy_id = frame_by_file(conn, "cal.fits")["id"]
     assert one(conn, "SELECT copy_of FROM frames WHERE id = ?", (copy_id,)) is None
 
-    build_archive(tmp_path / "grezzi")  # ora arriva anche il grezzo
+    write_light(tmp_path / "grezzi" / "raw.fits", **same)  # ora arriva anche il grezzo
     scan(conn, tmp_path / "grezzi")
     receipt = run_normalize(conn)
-    raw_id = frame_by_file(conn, "nina/L_001.fits")["id"]
+    raw_id = frame_by_file(conn, "raw.fits")["id"]
     assert one(conn, "SELECT copy_of FROM frames WHERE id = ?", (copy_id,)) == raw_id
-    # i quattordici frame nuovi piu' la copia vecchia, rientrata nello stesso giro: quindici
-    assert receipt["normalized"] == receipt["total"] == 15
-    assert receipt["copies"] == 2  # la copia vecchia e quella nuova, ognuna una volta
+    # il grezzo nuovo piu' la copia vecchia, rientrata nello stesso giro
+    assert receipt["normalized"] == receipt["total"] == 2
+    assert receipt["copies"] == 1
 
 
 def test_normalize_counts_what_is_left_to_confirm(conn, archive):
     """Il numero da confermare dice il vero: un filtro con banda sconosciuta (`N`) e un frame
     senza filtro contano, un filtro riconosciuto no."""
     assert archive["to_review"] == 3  # le due lettere N e X, piu' il mono che dice "none"
-    # tredici strumenti: tre ottiche, cinque camere, DUE montature -- l'ASIAIR del banco ne scrive
-    # due nomi diversi in TELESCOP -- piu' i TRE che gli altri programmi nominano sul singolo frame:
-    # la ruota e il focheggiatore di N.I.N.A., la camera di guida dell'ASIAIR
-    assert archive["instruments"] == 13 and archive["rigs"] == 5
+    # nove strumenti: un'ottica, tre camere, DUE montature -- l'ASIAIR del banco ne scrive due nomi
+    # in TELESCOP -- piu' ruota e focheggiatore di N.I.N.A. e la camera di guida dell'ASIAIR; le
+    # ottiche e camere di Voyager e SGP non entrano piu' (ADR 0029)
+    assert archive["instruments"] == 9 and archive["rigs"] == 3
 
 
 def test_normalize_an_unknown_focal_length_is_not_the_same_rig(conn, tmp_path):

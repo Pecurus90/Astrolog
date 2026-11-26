@@ -20,11 +20,11 @@ from astrolog.spine.stages import invalidate
 from conftest import apply, correct, db, gear, populate, review, write_fits
 
 CAM, NEWTON, ASKAR = "ZWO ASI2600MM Pro", "Newton 200/800", "Askar 107PHQ"
-NINA = {"CREATOR": "N.I.N.A.", "INSTRUME": CAM}
+NINA = {"SWCREATE": "N.I.N.A. 3.1.2.9001 (x64)", "INSTRUME": CAM}
 
 
 def _posa(path, giorno, minuto, **header):
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0, "OBJECT": "M 51", "FILTER": "L"}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 300.0, "OBJECT": "M 51", "FILTER": "L"}
     card["DATE-OBS"] = f"2026-03-{giorno:02d}T21:{minuto:02d}:00"
     return write_fits(path, {**card, **header})
 

@@ -420,7 +420,8 @@ ogni lettera.
 
 Le ore sono quelle vere:
 
-- se tieni accanto agli originali anche le **copie calibrate**, non contano due volte;
+- le **copie calibrate o integrate** da un altro programma non entrano nell'archivio: le ore sono
+  quelle dei file come li ha scritti la camera, e la ricevuta della scansione le conta a parte;
 - un frame che **non dice quanto e' durato** non vale zero: non entra nelle ore, e l'app te lo
   dice a parte (*12 senza durata*);
 - se **nessun** frame di un oggetto dice la durata, non leggi "0 h": restano i frame, *senza

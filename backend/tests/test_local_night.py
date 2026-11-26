@@ -21,7 +21,7 @@ TOKYO = {"SITELAT": 35.68, "SITELONG": 139.69}
 
 
 def _posa(path, **header):
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0, "FILTER": "L", "INSTRUME": "ZWO ASI294MC"}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 300.0, "FILTER": "L", "INSTRUME": "ZWO ASI294MC"}
     return write_fits(path, {**card, **header})
 
 

@@ -9,6 +9,7 @@ import sqlite3
 import pytest
 
 import astrolog.spine.scan as scan_mod
+from astrolog.api.scan_door import scan_once
 from astrolog.spine.scan import scan_folder
 from conftest import add_folder, online_only, settle, write_fits, write_light
 from test_spine_scan import count, run
@@ -199,12 +200,13 @@ def test_the_receipt_counts_the_skipped_by_reason(conn, tmp_path):
     2026-09-11): un NAS con l'orologio avanti, che fa saltare gli stessi frame a ogni scansione
     come "ancora in scrittura", si vede invece di sparire dentro un numero."""
     write_light(tmp_path / "light.fits")
-    write_fits(tmp_path / "dark.fits", {"IMAGETYP": "Dark", "EXPTIME": 1.0})
-    write_fits(tmp_path / "bias.fits", {"IMAGETYP": "Bias Frame", "EXPTIME": 1.0})
-    write_fits(tmp_path / "master.fits", {"IMAGETYP": "Light", "NCOMBINE": 40, "OBJECT": "M 1"})
+    write_fits(tmp_path / "dark.fits", {"IMAGETYP": "DARK", "EXPTIME": 1.0})
+    write_fits(tmp_path / "bias.fits", {"IMAGETYP": "BIAS", "EXPTIME": 1.0})
+    # integrato altrove: fuori come elaborato da un altro programma (ADR 0029, Marco 26/11/2026)
+    write_fits(tmp_path / "master.fits", {"IMAGETYP": "LIGHT", "STACKCNT": 40, "OBJECT": "M 1"})
     settle(write_light(tmp_path / "fresco.fits", obj="M 2"), 0)
-    done = run(conn, add_folder(conn, tmp_path), min_age_s=30)
-    atteso = {"calibration": 2, "stack": 1, "still_writing": 1}
+    done = scan_once(conn, add_folder(conn, tmp_path), min_age_s=30)  # la scansione nuova
+    atteso = {"calibration": 2, "rewritten": 1, "still_writing": 1}
     assert {e["reason"]: e["count"] for e in done["skipped_by_reason"]} == atteso
     salvato = json.loads(count(conn, "SELECT skipped_by_reason_json FROM scan_runs"))
     assert {e["reason"]: e["count"] for e in salvato} == atteso

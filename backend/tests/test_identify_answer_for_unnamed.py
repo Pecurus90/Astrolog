@@ -21,12 +21,11 @@ from dataclasses import asdict
 import pytest
 from fastapi.testclient import TestClient
 
+import porta
 from astrolog.api.app import create_app
 from astrolog.spine import declarations as decl
 from astrolog.spine import stages, unnamed
 from astrolog.spine.identify import identify_frames
-from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from conftest import db, populate, review, unnamed_cards, write_fits
 
 ROSETTA, M81 = "2024-03-12_Rosetta/LIGHT", "2024-04-01_M81"
@@ -38,7 +37,7 @@ PUNTA = {ROSETTA: (98.0, 4.9), M81: (149.0, 69.0)}
 
 
 def _posa(path, minuto, **header):
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 120.0, "INSTRUME": "Canon EOS 700D"}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 120.0, "INSTRUME": "Canon EOS 700D"}
     card |= {"FOCALLEN": 400.0, "XPIXSZ": 4.3}
     ra, dec = next((p for k, p in PUNTA.items() if k in str(path)), PUNTA[ROSETTA])
     card |= {"RA": ra, "DEC": dec}
@@ -164,8 +163,7 @@ def test_the_rule_holds_for_the_poses_that_arrive_later(archivio, tmp_path):
     _posa(tmp_path / "lib" / ROSETTA / "r_dopo.fits", 30)
     _posa(tmp_path / "lib" / ROSETTA / "col_nome.fits", 31, OBJECT="Caldwell 49")
     with db(archivio) as conn:
-        list(scan_folder(conn, 1))
-        list(normalize_frames(conn))
+        porta.fill(conn, 1, porta.Upto.NORMALIZED)
         for (frame_id,) in conn.execute("SELECT frame_id FROM frame_stages WHERE stage = 'solve'"
                                         " AND status = 'pending'").fetchall():  # fmt: skip
             stages.set_status(conn, frame_id, "solve", "failed", reason="no_solution")

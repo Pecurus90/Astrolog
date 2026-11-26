@@ -35,9 +35,10 @@ _READ_FROM = ("pipeline_frames SET card_file_id", "pipeline_measures SET file_id
               "pipeline_solutions SET file_id", "pipeline_sqm SET file_id")  # fmt: skip
 
 
-def settle(conn: sqlite3.Connection, frames: Iterable[int]) -> None:
-    """Caller's transaction. A held card stays; a new one sends the shot to be measured again:
-    measure, sky and SQM used the old card's facts (pipeline_sky, pipeline_sqm cascade)."""
+def settle(conn: sqlite3.Connection, frames: Iterable[int]) -> set[int]:
+    """Caller's transaction; returns shots whose card changed. Held card stays; new one: shot
+    measured again (measure, sky, SQM used old card's facts: pipeline_sky, pipeline_sqm cascade)."""
+    changed: set[int] = set()
     for frame in sorted(set(frames)):
         held = conn.execute(_HELD, (frame,)).fetchone()
         if held is None:  # shot dropped with its last file
@@ -49,15 +50,17 @@ def settle(conn: sqlite3.Connection, frames: Iterable[int]) -> None:
         if card == held["card_file_id"]:
             continue
         conn.execute("UPDATE pipeline_frames SET card_file_id = ? WHERE id = ?", (card, frame))
+        changed.add(frame)
         if card is not None:
             conn.execute(
                 "DELETE FROM pipeline_measures WHERE frame_id = ? AND file_id IS NOT ?",
                 (frame, card),
             )
+    return changed
 
 
-def settle_stale(conn: sqlite3.Connection) -> None:
-    settle(conn, [row["id"] for row in conn.execute(_STALE)])
+def settle_stale(conn: sqlite3.Connection) -> set[int]:
+    return settle(conn, [row["id"] for row in conn.execute(_STALE)])
 
 
 def follow_moves(

@@ -1,74 +1,12 @@
 """Old tables when a root changes (row: `pipeline/roots.py`): positions and whole-path folder
-answers follow; recognition by frame_hash. Dies with positions (step 40.4)."""
+answers follow (recognition: `pipeline/recognise.py`). Dies with positions (step 40.4)."""
 
-import json
 import os
 import sqlite3
-import time
-from collections.abc import Iterable
-from typing import Final
 
-from ..fits.header_read import HeaderReadError, frame_fingerprint, read_frame
-from ..fits.walk import long_path
 from . import typeless_folders
 from .declarations import EntityType
 from .frame_folder import folder_key
-from .scan import rel_path
-
-# Enough to tell a copy of the archive from another one with the same names; each costs a header
-# read, which on a NAS is the slow part.
-SAMPLE_FILES: Final = 5  # [P ADR 0017]
-
-_KNOWN = (
-    "SELECT f.frame_hash FROM positions p JOIN frames f ON f.id = p.frame_id"
-    " WHERE p.folder_id = ? AND p.rel_path = ?"
-)
-
-
-def same_files(
-    conn: sqlite3.Connection,
-    folder_id: int,
-    root: str,
-    found: Iterable[str],
-    deadline: float | None = None,
-) -> bool | None:
-    """The first `SAMPLE_FILES` under `root` the folder has a position for, fingerprinted as the
-    scan does; fewer than it can ask, or one different: not it. `None`: `deadline` passed first."""
-    sampled = 0
-    restored = _restored_sample(conn, folder_id)
-    for rel, path in sorted((rel_path(p, root), p) for p in found):
-        known = conn.execute(_KNOWN, (folder_id, rel)).fetchone()
-        expected = known["frame_hash"] if known is not None else restored.get(rel)
-        if expected is None:
-            continue
-        if deadline is not None and time.monotonic() >= deadline:
-            return None
-        try:
-            header, block = read_frame(long_path(path))
-            fingerprint = frame_fingerprint(long_path(path), header, block)
-        except (HeaderReadError, OSError):
-            return False  # unread is unproven
-        if fingerprint != expected:
-            return False
-        sampled += 1
-        if sampled == SAMPLE_FILES:
-            break
-    # every file it can ask: one copied elsewhere is not the folder moved
-    known = conn.execute(
-        "SELECT COUNT(DISTINCT rel_path) FROM positions WHERE folder_id = ? AND status = 'present'",
-        (folder_id,),
-    ).fetchone()[0]
-    return sampled > 0 and sampled >= min(SAMPLE_FILES, known or len(restored))
-
-
-def _restored_sample(conn: sqlite3.Connection, folder_id: int) -> dict[str, str]:
-    """The sample a backup brought back (ADR 0017), read only while the folder has no frames."""
-    if conn.execute("SELECT 1 FROM positions WHERE folder_id = ? LIMIT 1", (folder_id,)).fetchone():
-        return {}
-    row = conn.execute(
-        "SELECT sample_json FROM pipeline_roots WHERE id = ?", (folder_id,)
-    ).fetchone()
-    return dict(json.loads(row[0])) if row and row[0] else {}
 
 
 def frames(conn: sqlite3.Connection, folder_id: int) -> int:

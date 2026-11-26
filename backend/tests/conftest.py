@@ -371,6 +371,9 @@ def db(client):
     return connect(client.app.state.db_path)
 
 
+NINA = "N.I.N.A. 3.1.2.9001 (x64)"
+
+
 def write_fits(path, header=None, shape=(3, 4), dtype=np.int16, age_s=600):
     """Scrive un FITS REALE con le card date (astropy aggiunge SIMPLE/BITPIX/NAXIS*), con
     un mtime di `age_s` secondi fa: un file appena scritto la scansione lo salta apposta.
@@ -379,8 +382,12 @@ def write_fits(path, header=None, shape=(3, 4), dtype=np.int16, age_s=600):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     h = fits.Header()
-    for k, v in (header or {}).items():
-        h[k] = v
+    header = dict(header or {})
+    if not {"SWCREATE", "CREATOR"} & header.keys():  # the app reads N.I.N.A. and ASIAIR only
+        header["SWCREATE"] = NINA  # (ADR 0029): a file that says no program is N.I.N.A.'s
+    for k, v in header.items():
+        if v is not None:
+            h[k] = v
     seed = int(hashlib.sha256(str(path).encode()).hexdigest()[:8], 16)
     data = np.random.default_rng(seed).integers(0, 1000, size=shape).astype(dtype)
     fits.PrimaryHDU(data=data, header=h).writeto(path, overwrite=True)
@@ -391,14 +398,14 @@ def write_fits(path, header=None, shape=(3, 4), dtype=np.int16, age_s=600):
 def write_light(path, obj="M 31", filt="Ha", date="2024-05-17T21:00:00", **extra):
     """Un frame light minimo ma completo: tipo, oggetto, filtro, esposizione, data."""
     header = {
-        "IMAGETYP": "Light Frame",
+        "IMAGETYP": "LIGHT",
         "OBJECT": obj,
         "FILTER": filt,
         "EXPTIME": 300.0,
         "DATE-OBS": date,
         **extra,
     }
-    return write_fits(path, header, shape=(8, 8), dtype=np.float32)
+    return write_fits(path, header, shape=(8, 8))
 
 
 def settle(path, age_s=600):
@@ -470,14 +477,14 @@ def wait_until(pred, timeout=30.0):
 
 
 def blocking_reader(real, gate, seen, at=2):
-    """Un `read_frame` che alla lettura numero `at` aspetta `gate`: cosi' un test puo'
-    fermare la scansione in un punto noto."""
+    """Una lettura (`pipeline.scan.scan_file`) che alla numero `at` aspetta `gate`: cosi' un test
+    puo' fermare la scansione in un punto noto."""
 
-    def read(path):
+    def read(path, *rest):
         seen.append(path)
         if len(seen) == at:
             gate.wait(10.0)
-        return real(path)
+        return real(path, *rest)
 
     return read
 
@@ -677,4 +684,5 @@ def nina_light(path: Path, seed: int, extra: tuple[str, ...] = (), imagetyp: str
     data = bytes((seed + i) % 256 for i in range(512))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(fits_bytes(lines) + data + b"\0" * (2880 - 512))
+    settle(path)  # the app's scan waits for young files
     return path

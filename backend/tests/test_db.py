@@ -128,6 +128,9 @@ def test_the_row_numbers_of_the_confirmed_tables_are_never_reused(conn):
         ("filters", "INSERT INTO filters(name, passband, created_at) VALUES(?, 'unknown', 'x')"),
         ("rigs", "INSERT INTO rigs(focal_mm, created_at) VALUES(?, 'x')"),
         ("objects", "INSERT INTO objects(catalog_slug, created_at) VALUES(?, 'x')"),
+        # passo 40.4: il suo numero e' anche `frames.id`, e le risposte di un frame tolto non
+        # passano a quello nuovo
+        ("pipeline_frames", "INSERT INTO pipeline_frames(fingerprint, created_at) VALUES(?, 'x')"),
     ]
     con_autoincrement = {
         r[0]

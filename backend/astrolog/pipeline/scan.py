@@ -5,8 +5,9 @@ import json
 import os
 import sqlite3
 import threading
+import time
 from collections import Counter
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field, fields
 from datetime import datetime
@@ -14,7 +15,7 @@ from pathlib import Path
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
-from . import frame_card
+from . import frame_card, frame_row
 from .card import Card, Conditions, read_card, read_conditions
 from .changes import PASSING, Changes, finish_scan, record_changes
 from .filters import resolve
@@ -53,34 +54,73 @@ class ScanResult:
     duplicates: dict[int, list[str]] = field(default_factory=dict)  # frame -> its files
     moved: list[tuple[str, str]] = field(default_factory=list)  # (was, is now)
     skipped: list[Skipped] = field(default_factory=list)  # read, but not a frame
+    born: set[int] = field(default_factory=set)  # frames that entered the archive now
+    still_writing: list[str] = field(default_factory=list)  # too young: read next scan
+    finished: bool = False
+
+
+# A copy may preallocate the final size: header whole, pixels still zero. Young file waits. [T]
+MIN_AGE_S = 30
+type Progress = Callable[[int, int, str, ScanResult], object]  # read, to read, file, so far
+
+
+@dataclass(frozen=True, slots=True)
+class Watch:
+    """What the caller follows: stop between batches, a call per file read, the clock. The app's
+    scans wait MIN_AGE_S; a bare call (tests, tools) reads at once."""
+
+    stop: threading.Event = field(default_factory=threading.Event)
+    progress: Progress | None = None
+    now_s: Callable[[], float] = time.time
+    min_age_s: float = 0
 
 
 def scan_root(
-    conn: sqlite3.Connection, root_id: int, now: str, *, stop: threading.Event | None = None
+    conn: sqlite3.Connection,
+    root_id: int,
+    now: str,
+    *,
+    stop: threading.Event | None = None,
+    watch: Watch | None = None,
 ) -> ScanResult:
     """One scan per root at a time (ScanRunningError, `busy`); a stop ends it between batches."""
+    watch = watch or Watch(stop or threading.Event())
     with busy(root_id):
-        return _scan_root(conn, root_id, now, stop or threading.Event())
+        return _scan_root(conn, root_id, now, watch)
 
 
-def _scan_root(
-    conn: sqlite3.Connection, root_id: int, now: str, stop: threading.Event
-) -> ScanResult:
+def _young(changes: Changes, watch: Watch) -> list[str]:
+    """Written in the last seconds (either side: float rounding of the clock): not read now, row
+    keeps old size and date. Date further ahead (camera PC, NAS clock) says nothing: read."""
+    if watch.min_age_s <= 0:
+        return []
+    now_ns = watch.now_s() * 1e9
+    span_ns = watch.min_age_s * 1e9
+    return [rel for rel in changes.to_read if abs(changes.stat[rel][1] - now_ns) < span_ns]
+
+
+def _scan_root(conn: sqlite3.Connection, root_id: int, now: str, watch: Watch) -> ScanResult:
     """Files opened outside any transaction, saved per batch: lock held only to write; stopped
     scan keeps saved batches, unread files keep old size and date, so read next time."""
+    stop = watch.stop
     changes = record_changes(conn, root_id, now)
     result = ScanResult(changes)
-    to_read = changes.to_read
+    result.still_writing = _young(changes, watch)
+    young = set(result.still_writing)
+    to_read = [rel for rel in changes.to_read if rel not in young]
     reasons: Counter[str] = Counter()
     unknown: Counter[str] = Counter()
     vanished: set[str] = set()
     for start in range(0, len(to_read), BATCH):
         if stop.is_set():  # as interrupted: not finished, nothing judged gone
             return result
-        read = [
-            (rel, scan_file(Path(changes.root, rel), changes.stat[rel][0]))  # size already stat-ed
-            for rel in to_read[start : start + BATCH]
-        ]
+        read = []
+        for number, rel in enumerate(to_read[start : start + BATCH], start + 1):
+            if stop.is_set():  # between two files: what was read is saved, the rest waits
+                break
+            read.append((rel, scan_file(Path(changes.root, rel), changes.stat[rel][0])))
+            if watch.progress is not None:
+                watch.progress(number, len(to_read), rel, result)
         batch = [(rel, got) for rel, got in read if not _vanished(got)]
         vanished.update(rel for rel, got in read if _vanished(got))
         skipped = [got for _, got in batch if isinstance(got, Skipped)]
@@ -90,7 +130,8 @@ def _scan_root(
             touched: set[int] = set()
             for rel, got in batch:
                 touched |= _store(conn, changes, rel, got, now)
-            frame_card.settle(conn, touched)
+            touched |= frame_card.settle(conn, touched)
+            result.born |= frame_row.write(conn, touched)
             conn.execute(  # running totals: a stopped scan keeps what its saved batches saw
                 "UPDATE pipeline_scans SET skipped = ?, unknown_keys = ?, unknown_more = ?"
                 " WHERE id = ?",
@@ -102,12 +143,15 @@ def _scan_root(
                 ),
             )
         result.skipped.extend(skipped)
+        if stop.is_set():  # stopped inside the batch: saved, not finished
+            return result
     _left_unread(changes, vanished)
     with transaction(conn):  # gone and moves together: a crash loses neither
         finish_scan(conn, changes)
         result.moved = _moved(conn, root_id, changes)
         frame_card.follow_moves(conn, root_id, changes.scan_id, result.moved)
-        frame_card.settle_stale(conn)
+        again = frame_card.settle_stale(conn) | frame_row.left_out(conn, root_id)
+        result.born |= frame_row.write(conn, again)
         conn.execute(  # name no card carries any more: nothing left to ask
             "DELETE FROM pipeline_filter_spellings WHERE written NOT IN"
             " (SELECT filter FROM pipeline_cards WHERE filter IS NOT NULL)"
@@ -118,6 +162,7 @@ def _scan_root(
         " WHERE root_id = ? AND state = 'present' AND frame_id IS NOT NULL",
         (root_id,),
     ).fetchone()[0]
+    result.finished = True
     return result
 
 
@@ -164,8 +209,8 @@ def _store(
     frame_id = (before if held else None) if skipped else shot
     file_id = _write_file(conn, changes, rel, was, (frame_id, got.reason if skipped else None))
     touched = {shot for shot in (before, frame_id) if shot is not None}
-    if before not in (None, frame_id):
-        _drop_if_unused(conn, before)
+    if before is not None and before != frame_id:
+        _drop_if_unused(conn, before, frame_id)
     if skipped:
         if not held:
             conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
@@ -253,13 +298,24 @@ def _column(value: object) -> object:
     return value.isoformat(timespec="microseconds") if isinstance(value, datetime) else value
 
 
-def _drop_if_unused(conn: sqlite3.Connection, frame_id: int) -> None:
-    """Frame left by every file, present or gone: phantom shot. Gone file keeps its own."""
-    conn.execute(
-        "DELETE FROM pipeline_frames WHERE id = ?"
+def _drop_if_unused(conn: sqlite3.Connection, frame_id: int, heir: int | None) -> None:
+    """Frame left by every file, present or gone: phantom shot. Gone file keeps its own. A file
+    rewritten in place (header fixed: new fingerprint) hands the user's answers to its heir."""
+    old = conn.execute(
+        "SELECT fingerprint FROM pipeline_frames WHERE id = ?"
         " AND NOT EXISTS (SELECT 1 FROM pipeline_files WHERE frame_id = ?)",
         (frame_id, frame_id),
-    )
+    ).fetchone()
+    if old is None:
+        return
+    if heir is not None:
+        conn.execute(  # declarations keyed on the frame's fingerprint (schema: declarations)
+            "UPDATE OR IGNORE declarations SET entity_key ="
+            " (SELECT fingerprint FROM pipeline_frames WHERE id = ?)"
+            " WHERE entity_type IN ('frame', 'mosaic') AND entity_key = ?",
+            (heir, old["fingerprint"]),
+        )
+    conn.execute("DELETE FROM pipeline_frames WHERE id = ?", (frame_id,))  # frames: cascade
 
 
 def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:

@@ -40,7 +40,7 @@ def pagina(db_path, tmp_path):
     for i in range(3):
         _muto(root / DARK / f"d_{i}.fits")
     _muto(root / M51 / "a_0.fits", OBJECT="M 51", **{"DATE-OBS": "2026-03-14T21:00:00"})
-    write_fits(root / M51 / "detto.fits", {"IMAGETYP": "Light Frame", "EXPTIME": 300.0})
+    write_fits(root / M51 / "detto.fits", {"IMAGETYP": "LIGHT", "EXPTIME": 300.0})
     populate(db_path, root)
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         yield c

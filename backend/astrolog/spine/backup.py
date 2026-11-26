@@ -14,8 +14,8 @@ from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
 from ..pipeline import roots
+from ..pipeline.recognise import SAMPLE_FILES
 from . import gear, gear_usage, previews
-from .folder_move import SAMPLE_FILES
 
 log = logging.getLogger(__name__)
 
@@ -303,7 +303,7 @@ def _restore_site(conn: sqlite3.Connection, site: dict[str, Any], now: str) -> N
 
 def _restore_folder(conn: sqlite3.Connection, folder: dict[str, Any], now: str) -> None:
     """Back even if the path is not here: on another machine the move recognises it by its
-    sample (`folder_move.same_files`). A path not usable here is left out."""
+    sample (`pipeline/recognise.same_files`). A path not usable here is left out."""
     declared = roots.Declared(
         folder["root_path"], folder["name"], folder["retired_at"],
         json.dumps(folder.get("sample", [])),

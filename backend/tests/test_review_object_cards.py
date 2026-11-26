@@ -27,7 +27,7 @@ NESSUNO = {"kind": "none", "value": None, "name": None}
 
 
 def _posa(path, minuto, **header):
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 120.0, "INSTRUME": "Canon EOS 700D"}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 120.0, "INSTRUME": "Canon EOS 700D"}
     card |= {"FOCALLEN": 400.0, "XPIXSZ": 4.3}
     ra, dec = next((p for k, p in PUNTA.items() if k in str(path)), PUNTA[ROSETTA])
     card |= {"RA": ra, "DEC": dec}

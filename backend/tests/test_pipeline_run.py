@@ -8,7 +8,7 @@ from astrolog.pipeline import run as run_module
 from astrolog.pipeline.behind import Behind
 from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.run import run_roots
-from astrolog.pipeline.scan import busy
+from astrolog.pipeline.scan import Watch, busy
 from conftest import NOW, nina_light
 from test_pipeline_solve import _SKY, FakeAstap, _solutions
 
@@ -154,6 +154,39 @@ def test_a_kick_while_a_stopped_round_is_still_ending_starts_a_new_one(
     behind.join(10.0)
     assert seen == [[a], [a]]
     assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 1
+
+
+def test_a_stop_while_the_round_yields_to_a_scan_holds_after_it(
+    conn, db_path, tmp_path, monkeypatch
+):
+    """Stop premuto mentre il giro cede il passo alla scansione dell'utente: finita la scansione,
+    il giro interrotto non riparte (spina-scan.md: non fa partire altro)."""
+    import time
+
+    entered, rounds = threading.Event(), []
+
+    def slow_to_yield(conn_, roots, now, solver, where):
+        rounds.append(list(roots))
+        entered.set()
+        where[1].wait(10.0)
+        time.sleep(0.5)
+        yield {"done": True, "total": len(roots)}
+
+    monkeypatch.setattr(run_module, "run_roots", slow_to_yield)
+    nina_light(tmp_path / "a" / "x.fits", 1)
+    a = add_root(conn, tmp_path / "a", NOW)
+    behind = _behind(db_path, tmp_path)
+    behind.kick([a])
+    assert entered.wait(10.0)
+    results = []
+    user = threading.Thread(target=lambda: results.append(behind.scan_now(a, Watch())))
+    user.start()
+    time.sleep(0.1)
+    behind.stop()
+    user.join(10.0)
+    behind.join(10.0)
+    assert results and results[0].finished
+    assert rounds == [[a]]
 
 
 def test_a_stop_before_a_folder_leaves_it_for_next_time(conn, tmp_path):

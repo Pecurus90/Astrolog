@@ -15,7 +15,8 @@ from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.fits import walk as fits_walk
 from astrolog.fits.walk import walk_dir
-from astrolog.spine import folder_move, typeless, typeless_folders
+from astrolog.pipeline import recognise
+from astrolog.spine import typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import set_status
 from conftest import add_folder, move_folder, write_fits, write_light
@@ -218,7 +219,7 @@ def test_a_file_that_cannot_be_read_proves_nothing(client_vuoto, tmp_path, db_pa
     (new / "a.fits").write_bytes(b"non un FITS")
     c = connect(db_path)
     try:
-        assert folder_move.same_files(c, f["id"], str(new), walk_dir(str(new))) is False
+        assert recognise.same_files(c, f["id"], str(new), walk_dir(str(new))) is False
     finally:
         c.close()
 
@@ -354,19 +355,19 @@ def test_recognising_stops_reading_headers_at_the_deadline(
     _scanned(client_vuoto, f["id"])
     clock = [0.0]
     reads = []
-    real = folder_move.read_frame
+    real = recognise.scan_file
 
-    def slow(path):
+    def slow(path, size):
         reads.append(path)
         clock[0] += 1.0
-        return real(path)
+        return real(path, size)
 
-    monkeypatch.setattr(folder_move, "read_frame", slow)
-    monkeypatch.setattr(folder_move, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    monkeypatch.setattr(recognise, "scan_file", slow)
+    monkeypatch.setattr(recognise, "time", SimpleNamespace(monotonic=lambda: clock[0]))
     found = walk_dir(f["root_path"])
     c = connect(db_path)
     try:
-        assert folder_move.same_files(c, f["id"], f["root_path"], found, deadline=1.5) is None
+        assert recognise.same_files(c, f["id"], f["root_path"], found, deadline=1.5) is None
     finally:
         c.close()
     assert len(reads) == 2
@@ -379,13 +380,15 @@ def test_at_the_deadline_no_header_is_read(client_vuoto, tmp_path, db_path, monk
     f = _client_folder(client_vuoto, old)
     _scanned(client_vuoto, f["id"])
     reads = []
-    real = folder_move.read_frame
-    monkeypatch.setattr(folder_move, "read_frame", lambda path: reads.append(path) or real(path))
-    monkeypatch.setattr(folder_move, "time", SimpleNamespace(monotonic=lambda: 7.0))
+    real = recognise.scan_file
+    monkeypatch.setattr(
+        recognise, "scan_file", lambda path, size: reads.append(path) or real(path, size)
+    )
+    monkeypatch.setattr(recognise, "time", SimpleNamespace(monotonic=lambda: 7.0))
     c = connect(db_path)
     try:
         found = walk_dir(f["root_path"])
-        assert folder_move.same_files(c, f["id"], f["root_path"], found, deadline=7.0) is None
+        assert recognise.same_files(c, f["id"], f["root_path"], found, deadline=7.0) is None
     finally:
         c.close()
     assert reads == []
@@ -415,7 +418,7 @@ def test_a_folder_that_has_not_said_whether_it_answers_is_not_skipped_as_gone(
     monkeypatch.setattr(folders, "root_readable", slow)
     monkeypatch.setattr(folders, "PROBE_SECONDS", 0.3)
     monkeypatch.setattr(folders, "time", still)
-    monkeypatch.setattr(folder_move, "time", still)
+    monkeypatch.setattr(recognise, "time", still)
     # the walk too: on a slow runner 0.3 s of real time ended it before the probe looked
     monkeypatch.setattr(fits_walk, "time", still)
     try:
@@ -450,7 +453,7 @@ def test_a_silent_unrelated_folder_does_not_hide_a_move(client_vuoto, tmp_path, 
     monkeypatch.setattr(folders, "root_readable", slow)
     monkeypatch.setattr(folders, "PROBE_SECONDS", 0.3)
     monkeypatch.setattr(folders, "time", still)
-    monkeypatch.setattr(folder_move, "time", still)
+    monkeypatch.setattr(recognise, "time", still)
     monkeypatch.setattr(fits_walk, "time", still)
     try:
         p = _probe(client_vuoto, new)

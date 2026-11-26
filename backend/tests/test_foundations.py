@@ -168,7 +168,7 @@ def test_the_queue_is_in_the_order_of_the_chain_whoever_asks(tmp_path):
     ordine. Prima erano tre posti a deciderlo -- questo file, il pulsante Avvia e l'Applica di
     Da confermare -- e i tre non dicevano la stessa cosa."""
     db = str(tmp_path / "x.db")
-    cartella = {"folder_id": 1, "run_id": 1}  # servono a `scan`, e solo a lui
+    cartella = {"folder_id": 1, "run_id": 1, "scan": run_mod.Reading(lambda *_: iter(()))}
     chiesti = [StageName.GROUP, StageName.SCAN, StageName.SOLVE]  # in disordine apposta
     # `solve` si porta dietro il nome e le notti (lo dice il grafo), e il tutto esce comunque
     # nell'ordine della catena, non in quello in cui e' stato chiesto

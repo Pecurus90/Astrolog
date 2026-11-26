@@ -53,12 +53,13 @@ di riga: un reset ricrea il rilevato e le dichiarazioni restano vere.
 impacchettare su tre bersagli); esegue gli stadi in sequenza; ASTAP gira come sottoprocesso
 (nella pipeline nuova piu' d'uno insieme: meta' dei core fisici, mai oltre un quarto della RAM, ADR 0033) e restituisce file nella cache, mai scritture nel DB. Stop cooperativo fra un frame e
 l'altro, a transazione chiusa: "fermare ferma, non trasforma". Un solo processo `uvicorn`,
-niente `workers`. Il lock per cartella si prende dopo i pre-controlli e lo rilascia il
-worker a fine corsa (non a fine stadio: la normalizzazione lavora ancora su quei frame),
-comunque vada. I lucchetti oggi sono due: `folder_locks` dell'API per le cartelle della spina e
-`busy(root_id)` della pipeline nuova (`test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing`).
-Non si uniscono: `busy` copre anche il solve (ore di ASTAP), e il primo muore con la scansione
-vecchia al passo 40.4: da li' la scansione dell'utente e' quella della nuova, sotto `busy`.
+niente `workers`. Dal passo 40.4 la scansione dell'utente e' quella della pipeline nuova e gira
+sul thread di `Behind` (ADR 0030): lo stadio `scan` del worker la chiede (`api/scan_door.py`) e
+ne gira gli eventi file per file; il giro di `Behind` in corso (solve, misure) cede fra due file o
+due frame, poi riprende cio' che manca. Il lucchetto e' uno, `busy(root_id)`
+(`test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing`): una cartella che una
+scansione tiene rifiuta la seconda (`scan_running`), e una corsa del worker non ancora finita
+rifiuta il gesto (`worker_busy`), cosi' nessuno passa sopra frame che si stanno normalizzando.
 
 **Commit per frame.** Un'interruzione lascia un prefisso coerente, mai un DB a meta'.
 

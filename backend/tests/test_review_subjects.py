@@ -27,7 +27,7 @@ MONO = "ZWO ASI6200MM"
 
 
 def _posa(path, quando, **header):
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0, "XPIXSZ": 3.76, "XBINNING": 1}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 300.0, "XPIXSZ": 3.76, "XBINNING": 1}
     return write_fits(path, {**card, "INSTRUME": MONO, "DATE-OBS": quando, **header})
 
 

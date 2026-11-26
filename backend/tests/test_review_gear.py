@@ -15,12 +15,13 @@ from datetime import UTC, datetime
 import pytest
 from fastapi.testclient import TestClient
 
+import porta
 from astrolog.api.app import create_app
 from astrolog.spine import signature
 from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.stages import invalidate
 from conftest import (
+    NINA,
     apply,
     by_name,
     correct,
@@ -40,7 +41,7 @@ M51, NGC, MUTA = "2026-03-14/M51/LIGHT", "2026-03-21/NGC7000", "senza_niente"
 
 def _posa(path, minuto=None, **header):
     """Un frame che NON dice il filtro: la scheda chiede anche quello."""
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 300.0}
     if minuto is not None:
         card["DATE-OBS"] = f"2026-03-14T21:{minuto:02d}:00"
         card["OBJECT"] = "M 51"
@@ -103,8 +104,7 @@ def _senza_filtro(client, sotto):
 
 def _scansiona_ancora(client):
     with db(client) as conn:
-        list(scan_folder(conn, 1))
-        list(normalize_frames(conn))
+        porta.fill(conn, 1, porta.Upto.NORMALIZED)
 
 
 def _rilavora_tutto(client):
@@ -500,7 +500,7 @@ ASIAIR = {"CREATOR": "ZWO ASIAIR Plus", "TELESCOP": "ZWO AM5", "INSTRUME": CAMER
 
 def _scatto(path, minuto, **header):
     card = {
-        "IMAGETYP": "Light Frame",
+        "IMAGETYP": "LIGHT",
         "EXPTIME": 300.0,
         "DATE-OBS": f"2026-03-14T21:{minuto:02d}:00",
         "OBJECT": "M 51",
@@ -515,7 +515,7 @@ def ottiche(db_path, tmp_path):
     for i in range(3):
         _scatto(root / "asiair" / f"a_{i}.fits", i, **ASIAIR)
     # la stessa camera, alla stessa focale, da un programma che l'ottica la scrive
-    _scatto(root / "nina" / "n_0.fits", 30, CREATOR="N.I.N.A.", TELESCOP=NEWTON, INSTRUME=CAMERA,
+    _scatto(root / "nina" / "n_0.fits", 30, SWCREATE=NINA, TELESCOP=NEWTON, INSTRUME=CAMERA,
             FOCALLEN=800)  # fmt: skip
     # un file che TELESCOP non lo scrive affatto: un'altra camera, a un'altra focale
     _scatto(root / "muta" / "m_0.fits", 40, INSTRUME=ALTRA, FOCALLEN=400)
@@ -716,7 +716,7 @@ def test_a_mixed_group_does_not_offer_the_mount_as_optics_either(db_path, tmp_pa
     root = tmp_path / "lib"
     senza_camera = {k: v for k, v in ASIAIR.items() if k != "INSTRUME"}
     _scatto(root / "asiair" / "s_0.fits", 0, **senza_camera)
-    _scatto(root / "nina" / "s_1.fits", 1, **{**senza_camera, "CREATOR": "N.I.N.A."})
+    _scatto(root / "nina" / "s_1.fits", 1, **{**senza_camera, "CREATOR": None, "SWCREATE": NINA})
     populate(db_path, root)
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         schede = review(c)["gear"]

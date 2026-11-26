@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 413; senza fonte: 0.
-Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T tecnico: 99.
+Valori: 414; senza fonte: 0.
+Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T tecnico: 100.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -477,6 +477,12 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T
 | LOCAL_SKY_PX | `24` | C SExtractor BACKPHOTO_THICK default 24 |
 | RING_OUTER | `1.5` | T |
 
+### pipeline/recognise.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| SAMPLE_FILES | `5` | P ADR 0017 |
+
 ### pipeline/scan.py
 
 | simbolo | valore | fonte |
@@ -484,6 +490,7 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T
 | BATCH | `100` | T |
 | UNKNOWN_KEPT | `100` | P ADR 0038 |
 | UNKNOWN_TRACKED | `10_000` | T |
+| MIN_AGE_S | `30` | T |
 
 ### pipeline/scanner.py
 
@@ -689,12 +696,6 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T
 | MEDIAN_CORRECTION | `(1.7198, 1.022)` | C Maples et al. 2018, Table 3, N > 100 |
 | MEAN_CORRECTION | `(0.7240, 0.773)` | C Maples et al. 2018, Table 3, N > 100 |
 | CHAUVENET_MIN | `3` | C Maples et al. 2018, par. 2: at least two distinct values stay |
-
-### spine/folder_move.py
-
-| simbolo | valore | fonte |
-|---|---|---|
-| SAMPLE_FILES | `5` | P ADR 0017 |
 
 ### spine/gear_usage.py
 

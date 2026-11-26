@@ -394,7 +394,7 @@ def test_software_raw_chain(make_fits):
         read(make_fits("b.fits", {"CREATOR": "ZWO ASIAIR Plus"})).software_raw == "ZWO ASIAIR Plus"
     )
     assert (
-        read(make_fits("c.fits", {"PROGRAM": "Elaborazione 1.9"})).software_raw
+        read(make_fits("c.fits", {"PROGRAM": "Elaborazione 1.9", "SWCREATE": None})).software_raw
         == "Elaborazione 1.9"
     )
 
@@ -416,7 +416,8 @@ def test_data_page_header_for_multi_hdu(tmp_path):
 
 
 def test_missing_keys_give_none_and_defaults(make_fits):
-    m = read(make_fits("bare.fits", {"OBJECT": "M 1"}))
+    # SWCREATE None: write_fits otherwise names N.I.N.A. (conftest, ADR 0029)
+    m = read(make_fits("bare.fits", {"OBJECT": "M 1", "SWCREATE": None}))
     for field in (
         "ccd_temp_c",
         "ra_deg",

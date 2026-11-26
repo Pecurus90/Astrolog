@@ -3,6 +3,7 @@ the factory opens and closes its own connection."""
 
 import sqlite3
 from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -12,7 +13,6 @@ from . import typeless_answer
 from .group import group_frames
 from .identify import identify_frames
 from .normalize import normalize_frames
-from .scan import scan_folder
 from .scan_store import COUNTS, ScanStatus
 from .solve import solve_frames
 from .stage_run import Event, Factory, receipt
@@ -28,6 +28,16 @@ ORDER = (
 
 type Work = Callable[[sqlite3.Connection], Iterable[Event]]
 type OnFolder = Callable[[int, int], object]
+# (conn, folder_id, run_id): the new pipeline's scan, given by the app (the spine cannot import it)
+type ScanWork = Callable[[sqlite3.Connection, int, int], Generator[Event]]
+
+
+@dataclass(frozen=True, slots=True)
+class Reading:
+    """The scan's work, and who hears when a folder's reading begins."""
+
+    work: ScanWork
+    on_folder: OnFolder | None = None
 
 
 def _with_conn(db_path: str | Path, work: Work) -> Factory:
@@ -71,7 +81,7 @@ def queue(
     *,
     folder_id: int | None = None,
     run_id: int | None = None,
-    on_folder: OnFolder | None = None,
+    scan: Reading | None = None,
 ) -> list[tuple[StageName, Factory]]:
     """The only door: callers say what they need, never the order. Who pulls whom is the graph's
     (`stages.downstream`), so an answer on a filter also requeues names and nights."""
@@ -86,20 +96,26 @@ def queue(
     if unknown:  # a stage without work is the caller's mistake, not a shorter queue
         raise ValueError(f"stadi che non esistono: {sorted(map(str, unknown))}")
     if StageName.SCAN in asked:
-        if folder_id is None or run_id is None:
+        if folder_id is None or run_id is None or scan is None:
             # later it would break inside the generator, in the worker thread, silently
-            raise ValueError("scan vuole folder_id e run_id")
-        jobs[StageName.SCAN] = lambda c: _then_detach(c, _scan_one(c, folder_id, run_id, on_folder))
+            raise ValueError("scan vuole folder_id, run_id e il lavoro della scansione")
+        jobs[StageName.SCAN] = lambda c: _then_detach(
+            c, _scan_one(c, (folder_id, run_id), scan.on_folder, scan.work)
+        )
     # `measure` is in the graph but has no work yet
     wanted = asked | {d for s in asked for d in downstream(s) if d in jobs}
     return [(s, _with_conn(db_path, jobs[s])) for s in ORDER if s in wanted]
 
 
 def _scan_one(
-    conn: sqlite3.Connection, folder_id: int, run_id: int, on_folder: OnFolder | None
+    conn: sqlite3.Connection,
+    folder: tuple[int, int],
+    on_folder: OnFolder | None,
+    scan: ScanWork,
 ) -> Iterator[Event]:
     # begun at the first event: before it the receipt is not closed, and the run end discards it
-    events = scan_folder(conn, folder_id, run_id=run_id)
+    folder_id, run_id = folder
+    events = scan(conn, folder_id, run_id)
     try:
         first = next(events, None)
         if first is None:
@@ -115,6 +131,7 @@ def _scan_one(
 def queue_folders(
     db_path: str | Path,
     folders: Sequence[tuple[int, int]],
+    scan: ScanWork,
     *,
     on_folder: OnFolder | None = None,
 ) -> list[tuple[StageName, Factory]]:
@@ -129,7 +146,7 @@ def queue_folders(
         errors: list[dict[str, Any]] = []
         outcomes: list[tuple[Any, Any]] = []
         for folder_id, run_id in folders:
-            for event in _scan_one(conn, folder_id, run_id, on_folder):
+            for event in _scan_one(conn, (folder_id, run_id), on_folder, scan):
                 if not event.get("done"):
                     yield event
                     continue

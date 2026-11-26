@@ -374,15 +374,8 @@
             'chosen': False,
             'label': None,
             'passband': 'R',
-            'rows': 2,
-            'value': 'R',
-          }),
-          dict({
-            'chosen': False,
-            'label': None,
-            'passband': 'HA',
             'rows': 1,
-            'value': 'Hα',
+            'value': 'R',
           }),
           dict({
             'chosen': False,
@@ -414,7 +407,7 @@
             'chosen': False,
             'label': None,
             'passband': None,
-            'rows': 5,
+            'rows': 3,
             'value': 'one',
           }),
           dict({
@@ -427,41 +420,8 @@
         ]),
       }),
       dict({
-        'key': 'optics',
-        'options': list([
-          dict({
-            'chosen': False,
-            'label': 'Askar 103Apo',
-            'passband': None,
-            'rows': 3,
-            'value': '5',
-          }),
-          dict({
-            'chosen': False,
-            'label': 'RC8',
-            'passband': None,
-            'rows': 1,
-            'value': '10',
-          }),
-          dict({
-            'chosen': False,
-            'label': 'TS 130 APO',
-            'passband': None,
-            'rows': 1,
-            'value': '12',
-          }),
-        ]),
-      }),
-      dict({
         'key': 'camera',
         'options': list([
-          dict({
-            'chosen': False,
-            'label': 'ASI2600MM Pro',
-            'passband': None,
-            'rows': 1,
-            'value': '13',
-          }),
           dict({
             'chosen': False,
             'label': 'ATR2600M',
@@ -483,19 +443,12 @@
             'rows': 1,
             'value': '1',
           }),
-          dict({
-            'chosen': False,
-            'label': 'QHY268M',
-            'passband': None,
-            'rows': 1,
-            'value': '11',
-          }),
         ]),
       }),
     ]),
     'found': dict({
       'mosaics': 0,
-      'objects': 6,
+      'objects': 4,
     }),
     'items': list([
       dict({
@@ -666,53 +619,6 @@
         'filters': list([
           dict({
             'frames': 1,
-            'integration_s': 240.0,
-            'name': 'R',
-            'passband': 'R',
-          }),
-        ]),
-        'frames': 1,
-        'integration_s': 240.0,
-        'key': 'M 51',
-        'name': 'M 51',
-        'panel_list': list([
-        ]),
-        'panels': None,
-        'previews': list([
-          dict({
-            'at': None,
-            'url': '/api/v1/archive/preview?key=M+51&production=10%3A11',
-          }),
-        ]),
-        'productions': list([
-          dict({
-            'camera': 'QHY268M',
-            'camera_id': 11,
-            'filters': list([
-              dict({
-                'frames': 1,
-                'integration_s': 240.0,
-                'name': 'R',
-                'passband': 'R',
-              }),
-            ]),
-            'frames': 1,
-            'integration_s': 240.0,
-            'optics': 'RC8',
-            'optics_id': 10,
-            'untimed': 0,
-          }),
-        ]),
-        'slug': None,
-        'type_code': None,
-        'untimed': 0,
-      }),
-      dict({
-        'common_name': None,
-        'constellation': None,
-        'filters': list([
-          dict({
-            'frames': 1,
             'integration_s': 300.0,
             'name': 'N',
             'passband': 'UNKNOWN',
@@ -766,57 +672,10 @@
         'type_code': None,
         'untimed': 0,
       }),
-      dict({
-        'common_name': None,
-        'constellation': None,
-        'filters': list([
-          dict({
-            'frames': 1,
-            'integration_s': 600.0,
-            'name': 'Hα',
-            'passband': 'HA',
-          }),
-        ]),
-        'frames': 1,
-        'integration_s': 600.0,
-        'key': 'Sh2 155',
-        'name': 'Sh2 155',
-        'panel_list': list([
-        ]),
-        'panels': None,
-        'previews': list([
-          dict({
-            'at': None,
-            'url': '/api/v1/archive/preview?key=Sh2+155&production=12%3A13',
-          }),
-        ]),
-        'productions': list([
-          dict({
-            'camera': 'ASI2600MM Pro',
-            'camera_id': 13,
-            'filters': list([
-              dict({
-                'frames': 1,
-                'integration_s': 600.0,
-                'name': 'Hα',
-                'passband': 'HA',
-              }),
-            ]),
-            'frames': 1,
-            'integration_s': 600.0,
-            'optics': 'TS 130 APO',
-            'optics_id': 12,
-            'untimed': 0,
-          }),
-        ]),
-        'slug': None,
-        'type_code': None,
-        'untimed': 0,
-      }),
     ]),
     'limit': 20,
     'offset': 0,
-    'total': 6,
+    'total': 4,
     'unresolved': dict({
       'filters': list([
         dict({
@@ -832,11 +691,11 @@
       'untimed': 0,
     }),
     'whole': dict({
-      'frames': 11,
-      'integration_s': 2400.0,
+      'frames': 9,
+      'integration_s': 1560.0,
       'mosaics': 0,
       'nights': 0,
-      'rows': 6,
+      'rows': 4,
       'untimed': 0,
     }),
   })
@@ -845,7 +704,7 @@
   dict({
     'items': list([
       dict({
-        'frames': 14,
+        'frames': 11,
         'id': 1,
         'name': None,
         'reachable': True,
@@ -1224,7 +1083,7 @@
       dict({
         'bands': list([
         ]),
-        'bar_pct': 80.0,
+        'bar_pct': 100.0,
         'brand': None,
         'counted': True,
         'delete_refused': dict({
@@ -1254,7 +1113,6 @@
         'integration_s': 480.0,
         'mergeable_into': list([
           5,
-          7,
           1,
           2,
         ]),
@@ -1268,20 +1126,19 @@
       dict({
         'bands': list([
         ]),
-        'bar_pct': 60.0,
+        'bar_pct': 25.0,
         'brand': None,
         'counted': True,
         'delete_refused': dict({
           'code': 'in_use',
-          'frames': 2,
+          'frames': 1,
           'rigs': list([
             2,
-            4,
           ]),
         }),
         'fast_optics': None,
         'filter_size': None,
-        'frames': 2,
+        'frames': 1,
         'id': 5,
         'in_rigs': list([
           dict({
@@ -1289,16 +1146,10 @@
             'frames': 1,
             'rig_id': 2,
           }),
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'rig_id': 4,
-          }),
         ]),
-        'integration_s': 360.0,
+        'integration_s': 120.0,
         'mergeable_into': list([
           3,
-          7,
           1,
           2,
         ]),
@@ -1312,45 +1163,7 @@
       dict({
         'bands': list([
         ]),
-        'bar_pct': 100.0,
-        'brand': None,
-        'counted': True,
-        'delete_refused': dict({
-          'code': 'in_use',
-          'frames': 1,
-          'rigs': list([
-            5,
-          ]),
-        }),
-        'fast_optics': None,
-        'filter_size': None,
-        'frames': 1,
-        'id': 7,
-        'in_rigs': list([
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'rig_id': 5,
-          }),
-        ]),
-        'integration_s': 600.0,
-        'mergeable_into': list([
-          3,
-          5,
-          1,
-          2,
-        ]),
-        'model': None,
-        'mounted': None,
-        'name': 'Hα',
-        'passband': 'HA',
-        'thickness_mm': None,
-        'untimed': 0,
-      }),
-      dict({
-        'bands': list([
-        ]),
-        'bar_pct': 60.0,
+        'bar_pct': 75.0,
         'brand': None,
         'counted': True,
         'delete_refused': dict({
@@ -1375,7 +1188,6 @@
         'mergeable_into': list([
           3,
           5,
-          7,
           2,
         ]),
         'model': None,
@@ -1388,7 +1200,7 @@
       dict({
         'bands': list([
         ]),
-        'bar_pct': 50.0,
+        'bar_pct': 62.5,
         'brand': None,
         'counted': True,
         'delete_refused': dict({
@@ -1413,7 +1225,6 @@
         'mergeable_into': list([
           3,
           5,
-          7,
           1,
         ]),
         'model': None,
@@ -1426,7 +1237,7 @@
       dict({
         'bands': list([
         ]),
-        'bar_pct': 50.0,
+        'bar_pct': 62.5,
         'brand': None,
         'counted': True,
         'delete_refused': dict({
@@ -1451,7 +1262,6 @@
         'mergeable_into': list([
           3,
           5,
-          7,
           1,
           2,
         ]),
@@ -1465,7 +1275,7 @@
       dict({
         'bands': list([
         ]),
-        'bar_pct': 50.0,
+        'bar_pct': 62.5,
         'brand': None,
         'counted': True,
         'delete_refused': dict({
@@ -1490,7 +1300,6 @@
         'mergeable_into': list([
           3,
           5,
-          7,
           1,
           2,
         ]),
@@ -1503,83 +1312,6 @@
       }),
     ]),
     'instruments': list([
-      dict({
-        'adc_bits': None,
-        'aperture_mm': None,
-        'backfocus_tolerance_mm': None,
-        'bar_pct': 52.6,
-        'biases': list([
-        ]),
-        'brand': None,
-        'camera_type': None,
-        'cooled': None,
-        'cooling_c': None,
-        'counted': True,
-        'delete_refused': dict({
-          'code': 'in_use',
-          'frames': 1,
-          'rigs': list([
-            5,
-          ]),
-        }),
-        'detected': True,
-        'filter_size': None,
-        'focal_mm': None,
-        'frames': 1,
-        'from_files': list([
-        ]),
-        'height_px': None,
-        'id': 13,
-        'image_circle_mm': None,
-        'in_rigs': list([
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'rig_id': 5,
-          }),
-        ]),
-        'integration_s': 600.0,
-        'kind': 'camera',
-        'mergeable_into': list([
-          9,
-          6,
-          1,
-          11,
-        ]),
-        'model': None,
-        'name': 'ASI2600MM Pro',
-        'no_hours': None,
-        'notes': None,
-        'numbers': dict({
-          'dawes': None,
-          'focal_ratio': None,
-          'sensor_size': dict({
-            'height': None,
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'width': None,
-          }),
-        }),
-        'optical_design': None,
-        'payload_kg': None,
-        'payload_no_cw_kg': None,
-        'pixel_from_sky_um': None,
-        'pixel_size_um': None,
-        'prism_mm': None,
-        'reducer_factor': None,
-        'required_backfocus_mm': None,
-        'rig_for_mount': None,
-        'sensor': None,
-        'slots': None,
-        'step_um': None,
-        'thickness_mm': None,
-        'total_steps': None,
-        'untimed': 0,
-        'weight_kg': None,
-        'width_px': None,
-      }),
       dict({
         'adc_bits': None,
         'aperture_mm': None,
@@ -1621,10 +1353,8 @@
         'integration_s': 120.0,
         'kind': 'camera',
         'mergeable_into': list([
-          13,
           6,
           1,
-          11,
         ]),
         'model': None,
         'name': 'ATR2600M',
@@ -1698,10 +1428,8 @@
         'integration_s': 1140.0,
         'kind': 'camera',
         'mergeable_into': list([
-          13,
           9,
           1,
-          11,
         ]),
         'model': None,
         'name': 'ATR2600M(USB2.0)',
@@ -1776,10 +1504,8 @@
         'integration_s': 660.0,
         'kind': 'camera',
         'mergeable_into': list([
-          13,
           9,
           6,
-          11,
         ]),
         'model': None,
         'name': 'Canon EOS 700D',
@@ -1811,83 +1537,6 @@
         'untimed': 0,
         'weight_kg': None,
         'width_px': 4,
-      }),
-      dict({
-        'adc_bits': None,
-        'aperture_mm': None,
-        'backfocus_tolerance_mm': None,
-        'bar_pct': 21.1,
-        'biases': list([
-        ]),
-        'brand': None,
-        'camera_type': None,
-        'cooled': None,
-        'cooling_c': None,
-        'counted': True,
-        'delete_refused': dict({
-          'code': 'in_use',
-          'frames': 1,
-          'rigs': list([
-            4,
-          ]),
-        }),
-        'detected': True,
-        'filter_size': None,
-        'focal_mm': None,
-        'frames': 1,
-        'from_files': list([
-        ]),
-        'height_px': None,
-        'id': 11,
-        'image_circle_mm': None,
-        'in_rigs': list([
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'rig_id': 4,
-          }),
-        ]),
-        'integration_s': 240.0,
-        'kind': 'camera',
-        'mergeable_into': list([
-          13,
-          9,
-          6,
-          1,
-        ]),
-        'model': None,
-        'name': 'QHY268M',
-        'no_hours': None,
-        'notes': None,
-        'numbers': dict({
-          'dawes': None,
-          'focal_ratio': None,
-          'sensor_size': dict({
-            'height': None,
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'width': None,
-          }),
-        }),
-        'optical_design': None,
-        'payload_kg': None,
-        'payload_no_cw_kg': None,
-        'pixel_from_sky_um': None,
-        'pixel_size_um': None,
-        'prism_mm': None,
-        'reducer_factor': None,
-        'required_backfocus_mm': None,
-        'rig_for_mount': None,
-        'sensor': None,
-        'slots': None,
-        'step_um': None,
-        'thickness_mm': None,
-        'total_steps': None,
-        'untimed': 0,
-        'weight_kg': None,
-        'width_px': None,
       }),
       dict({
         'adc_bits': None,
@@ -2284,171 +1933,9 @@
         'integration_s': 1260.0,
         'kind': 'optics',
         'mergeable_into': list([
-          10,
-          12,
         ]),
         'model': None,
         'name': 'Askar 103Apo',
-        'no_hours': None,
-        'notes': None,
-        'numbers': dict({
-          'dawes': dict({
-            'missing': dict({
-              'field': 'aperture_mm',
-              'kind': 'optics',
-            }),
-            'value': None,
-          }),
-          'focal_ratio': dict({
-            'missing': dict({
-              'field': 'focal_mm',
-              'kind': 'optics',
-            }),
-            'value': None,
-          }),
-          'sensor_size': None,
-        }),
-        'optical_design': None,
-        'payload_kg': None,
-        'payload_no_cw_kg': None,
-        'pixel_from_sky_um': None,
-        'pixel_size_um': None,
-        'prism_mm': None,
-        'reducer_factor': None,
-        'required_backfocus_mm': None,
-        'rig_for_mount': None,
-        'sensor': None,
-        'slots': None,
-        'step_um': None,
-        'thickness_mm': None,
-        'total_steps': None,
-        'untimed': 0,
-        'weight_kg': None,
-        'width_px': None,
-      }),
-      dict({
-        'adc_bits': None,
-        'aperture_mm': None,
-        'backfocus_tolerance_mm': None,
-        'bar_pct': 19.0,
-        'biases': list([
-        ]),
-        'brand': None,
-        'camera_type': None,
-        'cooled': None,
-        'cooling_c': None,
-        'counted': True,
-        'delete_refused': dict({
-          'code': 'in_use',
-          'frames': 1,
-          'rigs': list([
-            4,
-          ]),
-        }),
-        'detected': True,
-        'filter_size': None,
-        'focal_mm': None,
-        'frames': 1,
-        'from_files': list([
-        ]),
-        'height_px': None,
-        'id': 10,
-        'image_circle_mm': None,
-        'in_rigs': list([
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'rig_id': 4,
-          }),
-        ]),
-        'integration_s': 240.0,
-        'kind': 'optics',
-        'mergeable_into': list([
-          5,
-          12,
-        ]),
-        'model': None,
-        'name': 'RC8',
-        'no_hours': None,
-        'notes': None,
-        'numbers': dict({
-          'dawes': dict({
-            'missing': dict({
-              'field': 'aperture_mm',
-              'kind': 'optics',
-            }),
-            'value': None,
-          }),
-          'focal_ratio': dict({
-            'missing': dict({
-              'field': 'focal_mm',
-              'kind': 'optics',
-            }),
-            'value': None,
-          }),
-          'sensor_size': None,
-        }),
-        'optical_design': None,
-        'payload_kg': None,
-        'payload_no_cw_kg': None,
-        'pixel_from_sky_um': None,
-        'pixel_size_um': None,
-        'prism_mm': None,
-        'reducer_factor': None,
-        'required_backfocus_mm': None,
-        'rig_for_mount': None,
-        'sensor': None,
-        'slots': None,
-        'step_um': None,
-        'thickness_mm': None,
-        'total_steps': None,
-        'untimed': 0,
-        'weight_kg': None,
-        'width_px': None,
-      }),
-      dict({
-        'adc_bits': None,
-        'aperture_mm': None,
-        'backfocus_tolerance_mm': None,
-        'bar_pct': 47.6,
-        'biases': list([
-        ]),
-        'brand': None,
-        'camera_type': None,
-        'cooled': None,
-        'cooling_c': None,
-        'counted': True,
-        'delete_refused': dict({
-          'code': 'in_use',
-          'frames': 1,
-          'rigs': list([
-            5,
-          ]),
-        }),
-        'detected': True,
-        'filter_size': None,
-        'focal_mm': None,
-        'frames': 1,
-        'from_files': list([
-        ]),
-        'height_px': None,
-        'id': 12,
-        'image_circle_mm': None,
-        'in_rigs': list([
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'rig_id': 5,
-          }),
-        ]),
-        'integration_s': 600.0,
-        'kind': 'optics',
-        'mergeable_into': list([
-          5,
-          10,
-        ]),
-        'model': None,
-        'name': 'TS 130 APO',
         'no_hours': None,
         'notes': None,
         'numbers': dict({
@@ -2919,362 +2406,6 @@
         'width_deg': None,
       }),
       dict({
-        'bar_pct': 52.6,
-        'camera': 'ASI2600MM Pro',
-        'camera_id': 13,
-        'counted': True,
-        'focal_mm': 910.0,
-        'height_deg': None,
-        'id': 5,
-        'integration_s': 600.0,
-        'name': None,
-        'numbers': dict({
-          'backfocus': dict({
-            'difference_mm': None,
-            'missing': dict({
-              'field': 'required_backfocus_mm',
-              'kind': 'optics',
-            }),
-            'required_by': None,
-            'required_mm': None,
-            'tolerance_mm': None,
-            'train_mm': None,
-            'verdict': None,
-          }),
-          'coverage': dict({
-            'circle_mm': None,
-            'covers': None,
-            'diagonal_mm': None,
-            'missing': dict({
-              'field': 'image_circle_mm',
-              'kind': 'optics',
-            }),
-          }),
-          'field': dict({
-            'height': None,
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'width': None,
-          }),
-          'focal_ratio': dict({
-            'missing': dict({
-              'field': 'aperture_mm',
-              'kind': 'optics',
-            }),
-            'value': None,
-          }),
-          'guide_ratio': dict({
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'value': None,
-          }),
-          'guide_scale': dict({
-            'guide': None,
-            'guide_name': None,
-            'in_range': None,
-            'missing': dict({
-              'field': None,
-              'kind': 'guide',
-            }),
-            'range_from': None,
-            'range_to': None,
-            'value': None,
-          }),
-          'load': dict({
-            'missing': dict({
-              'field': None,
-              'kind': 'mount',
-            }),
-            'payload_kg': None,
-            'percent': None,
-            'weight_kg': None,
-            'within': None,
-          }),
-          'sampling': dict({
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'seeing_from': None,
-            'seeing_to': None,
-            'value': None,
-          }),
-          'sensor_size': dict({
-            'height': None,
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'width': None,
-          }),
-        }),
-        'optics': 'TS 130 APO',
-        'optics_id': 12,
-        'parts': list([
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'id': None,
-            'kind': 'software',
-            'name': 'Voyager',
-            'passband': None,
-            'ring_from': None,
-            'ring_to': None,
-          }),
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'id': 7,
-            'kind': 'filter',
-            'name': 'Hα',
-            'passband': 'HA',
-            'ring_from': 0.0,
-            'ring_to': 100.0,
-          }),
-        ]),
-        'pieces': dict({
-          'camera': 13,
-          'focuser': None,
-          'guide': None,
-          'guide_camera': None,
-          'mount': None,
-          'optics': 12,
-          'reducer': None,
-          'spacers': list([
-          ]),
-          'wheel': None,
-        }),
-        'scale_arcsec_px': None,
-        'slots': list([
-          dict({
-            'filled': True,
-            'kind': 'optics',
-          }),
-          dict({
-            'filled': True,
-            'kind': 'camera',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'reducer',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'filter_wheel',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'spacer',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'mount',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'focuser',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'guide',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'guide_camera',
-          }),
-          dict({
-            'filled': True,
-            'kind': 'software',
-          }),
-        ]),
-        'slots_missing': 7,
-        'title': 'TS 130 APO · ASI2600MM Pro',
-        'untimed': 0,
-        'width_deg': None,
-      }),
-      dict({
-        'bar_pct': 21.1,
-        'camera': 'QHY268M',
-        'camera_id': 11,
-        'counted': True,
-        'focal_mm': 1624.0,
-        'height_deg': None,
-        'id': 4,
-        'integration_s': 240.0,
-        'name': None,
-        'numbers': dict({
-          'backfocus': dict({
-            'difference_mm': None,
-            'missing': dict({
-              'field': 'required_backfocus_mm',
-              'kind': 'optics',
-            }),
-            'required_by': None,
-            'required_mm': None,
-            'tolerance_mm': None,
-            'train_mm': None,
-            'verdict': None,
-          }),
-          'coverage': dict({
-            'circle_mm': None,
-            'covers': None,
-            'diagonal_mm': None,
-            'missing': dict({
-              'field': 'image_circle_mm',
-              'kind': 'optics',
-            }),
-          }),
-          'field': dict({
-            'height': None,
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'width': None,
-          }),
-          'focal_ratio': dict({
-            'missing': dict({
-              'field': 'aperture_mm',
-              'kind': 'optics',
-            }),
-            'value': None,
-          }),
-          'guide_ratio': dict({
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'value': None,
-          }),
-          'guide_scale': dict({
-            'guide': None,
-            'guide_name': None,
-            'in_range': None,
-            'missing': dict({
-              'field': None,
-              'kind': 'guide',
-            }),
-            'range_from': None,
-            'range_to': None,
-            'value': None,
-          }),
-          'load': dict({
-            'missing': dict({
-              'field': None,
-              'kind': 'mount',
-            }),
-            'payload_kg': None,
-            'percent': None,
-            'weight_kg': None,
-            'within': None,
-          }),
-          'sampling': dict({
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'seeing_from': None,
-            'seeing_to': None,
-            'value': None,
-          }),
-          'sensor_size': dict({
-            'height': None,
-            'missing': dict({
-              'field': 'pixel_size_um',
-              'kind': 'camera',
-            }),
-            'width': None,
-          }),
-        }),
-        'optics': 'RC8',
-        'optics_id': 10,
-        'parts': list([
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'id': None,
-            'kind': 'software',
-            'name': 'Sequence Generator Pro',
-            'passband': None,
-            'ring_from': None,
-            'ring_to': None,
-          }),
-          dict({
-            'chosen': False,
-            'frames': 1,
-            'id': 5,
-            'kind': 'filter',
-            'name': 'R',
-            'passband': 'R',
-            'ring_from': 0.0,
-            'ring_to': 100.0,
-          }),
-        ]),
-        'pieces': dict({
-          'camera': 11,
-          'focuser': None,
-          'guide': None,
-          'guide_camera': None,
-          'mount': None,
-          'optics': 10,
-          'reducer': None,
-          'spacers': list([
-          ]),
-          'wheel': None,
-        }),
-        'scale_arcsec_px': None,
-        'slots': list([
-          dict({
-            'filled': True,
-            'kind': 'optics',
-          }),
-          dict({
-            'filled': True,
-            'kind': 'camera',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'reducer',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'filter_wheel',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'spacer',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'mount',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'focuser',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'guide',
-          }),
-          dict({
-            'filled': False,
-            'kind': 'guide_camera',
-          }),
-          dict({
-            'filled': True,
-            'kind': 'software',
-          }),
-        ]),
-        'slots_missing': 7,
-        'title': 'RC8 · QHY268M',
-        'untimed': 0,
-        'width_deg': None,
-      }),
-      dict({
         'bar_pct': 10.5,
         'camera': 'ATR2600M',
         'camera_id': 9,
@@ -3479,11 +2610,6 @@
         'id': 5,
         'name': 'R',
         'passband': 'R',
-      }),
-      dict({
-        'id': 7,
-        'name': 'Hα',
-        'passband': 'HA',
       }),
       dict({
         'id': 1,
@@ -3735,58 +2861,6 @@
         'candidates': list([
         ]),
         'common_name': None,
-        'confidence': 'low',
-        'frames': 1,
-        'group': None,
-        'integration_s': 240.0,
-        'key': 'object:M 51',
-        'method': 'exact_name',
-        'name': 'M 51',
-        'nights': list([
-          '2024-04-05',
-        ]),
-        'rigs': list([
-          dict({
-            'camera': 'QHY268M',
-            'frames': 1,
-            'optics': 'RC8',
-          }),
-        ]),
-        'searched': True,
-        'slug': None,
-        'untimed': 0,
-      }),
-      dict({
-        'answer': None,
-        'candidates': list([
-        ]),
-        'common_name': None,
-        'confidence': 'low',
-        'frames': 1,
-        'group': None,
-        'integration_s': 600.0,
-        'key': 'object:Sh2 155',
-        'method': 'exact_name',
-        'name': 'Sh2 155',
-        'nights': list([
-          '2024-09-19',
-        ]),
-        'rigs': list([
-          dict({
-            'camera': 'ASI2600MM Pro',
-            'frames': 1,
-            'optics': 'TS 130 APO',
-          }),
-        ]),
-        'searched': True,
-        'slug': None,
-        'untimed': 0,
-      }),
-      dict({
-        'answer': None,
-        'candidates': list([
-        ]),
-        'common_name': None,
         'confidence': None,
         'frames': 1,
         'group': dict({
@@ -3841,8 +2915,6 @@
     ]),
     'optics_choices': list([
       'Askar 103Apo',
-      'RC8',
-      'TS 130 APO',
     ]),
     'rig_choices': list([
       dict({
@@ -3866,20 +2938,6 @@
         'name': None,
         'optics': 'Askar 103Apo',
       }),
-      dict({
-        'camera': 'QHY268M',
-        'focal_mm': 1624.0,
-        'id': 4,
-        'name': None,
-        'optics': 'RC8',
-      }),
-      dict({
-        'camera': 'ASI2600MM Pro',
-        'focal_mm': 910.0,
-        'id': 5,
-        'name': None,
-        'optics': 'TS 130 APO',
-      }),
     ]),
     'sections': list([
       dict({
@@ -3895,12 +2953,12 @@
         'key': 'gear',
       }),
       dict({
-        'count': 8,
+        'count': 6,
         'key': 'objects',
       }),
     ]),
     'settled_objects': 0,
-    'to_confirm': 13,
+    'to_confirm': 11,
     'typeless': list([
     ]),
     'unclear': list([
@@ -3924,11 +2982,19 @@
         'linked_dirs': list([
         ]),
         'missing': 0,
-        'new': 14,
+        'new': 11,
         'online_only': 0,
         'reason': None,
-        'skipped': 0,
+        'skipped': 3,
         'skipped_by_reason': list([
+          dict({
+            'count': 2,
+            'reason': 'not_supported',
+          }),
+          dict({
+            'count': 1,
+            'reason': 'rewritten',
+          }),
         ]),
         'status': 'ok',
         'unchanged': 0,

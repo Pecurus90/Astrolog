@@ -6,6 +6,7 @@ una corsa sola, una ricevuta per cartella, e cio' che non si e' potuto leggere d
 che taciuto.
 """
 
+import contextlib
 import shutil
 import sqlite3
 import threading
@@ -15,7 +16,8 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
-from astrolog.api import pipeline
+from astrolog.api import pipeline, scan_door
+from astrolog.api import scan as scan_api
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.spine import run, scan_store
@@ -23,6 +25,19 @@ from astrolog.spine.scan_store import COUNTS, start_run
 from astrolog.spine.stages import mark_pending
 from astrolog.worker.worker import Stage, WorkerBusyError
 from conftest import add_folder, settle, wait_until, write_light
+
+
+@contextlib.contextmanager
+def _being_read(client, *folder_ids):
+    """Folders a user's scan holds on Behind's thread (`Behind.scanning`), as while it reads."""
+    behind = client.app.state.behind
+    with behind._lock:
+        behind._scanning.update(folder_ids)
+    try:
+        yield
+    finally:
+        with behind._lock:
+            behind._scanning.difference_update(folder_ids)
 
 
 @pytest.fixture
@@ -172,7 +187,10 @@ def test_the_end_of_the_run_is_not_a_number(db_path, tmp_path):
         ]
         # solo lo stadio della lettura: gli altri della catena hanno i loro numeri, e l'ultimo
         # evento della corsa sarebbe quello delle notti
-        nome, fabbrica = run.queue_folders(db_path, corse)[0]
+        lettura = scan_door.direct(db_path)
+        nome, fabbrica = run.queue_folders(
+            db_path, corse, lambda c, f, r: scan_door.scan_events(c, f, r, lettura)
+        )[0]
         assert nome == "scan"
         fine = list(fabbrica())[-1]
     assert fine["done"] is True, f"il segnale di fine e' diventato un numero: {fine['done']!r}"
@@ -186,7 +204,7 @@ def test_a_folder_lost_while_reading_does_not_look_like_a_clean_run(app, tmp_pat
     stadio dicesse "tutto bene", l'utente leggerebbe *fatto* con una cartella non letta: finche'
     non c'e' la pagina Cartelle, questa e' l'unica cosa che glielo dice."""
     client, uno, due = app
-    with mock.patch.object(run, "scan_folder", _cade(tmp_path, "seconda", due)):
+    with mock.patch.object(scan_api, "scan_events", _cade(tmp_path, "seconda", due)):
         scan_all(client)
         client.app.state.worker.join(30.0)
 
@@ -204,8 +222,8 @@ def test_a_folder_lost_while_reading_does_not_look_like_a_clean_run(app, tmp_pat
 
 
 def _cade(tmp_path, cartella, quale):
-    """`run.scan_folder` che fa sparire la radice di `quale` appena comincia a leggerla."""
-    vero = run.scan_folder
+    """`scan_api.scan_events` che fa sparire la radice di `quale` appena comincia a leggerla."""
+    vero = scan_api.scan_events
 
     def cade_la_radice(conn, folder_id, *a, **k):
         if folder_id == quale:
@@ -231,13 +249,13 @@ def test_the_first_folder_is_not_covered_by_the_last(app, tmp_path, prima_fa_alt
     un guasto nella prima non lo copre l'ultima letta bene, e resta detto quando il worker passa
     a un altro lavoro -- e' da questo stato che la pagina accende l'avviso della cartella persa."""
     client, uno, _ = app
-    lettura = run.scan_folder
+    lettura = scan_api.scan_events
     if guasto == "cartella persa":
         lettura = _cade(tmp_path, "prima", uno)
     elif guasto == "file illeggibile":
         (tmp_path / "prima" / "rotto.fits").write_bytes(b"non e' un FITS" * 50)
         settle(tmp_path / "prima" / "rotto.fits")
-    with mock.patch.object(run, "scan_folder", lettura):
+    with mock.patch.object(scan_api, "scan_events", lettura):
         scan_all(client)
         client.app.state.worker.join(30.0)
     if prima_fa_altro:  # un lavoro che finisce bene, o lo stato del worker direbbe gia' `error`
@@ -402,9 +420,9 @@ def test_resume_that_reads_again_says_the_folders_it_skipped(app, tmp_path):
 
 
 def _stops_while_reading(client, folder_id):
-    """`run.scan_folder` che preme Stop appena ha letto un file di `folder_id`: da dentro la
+    """`scan_api.scan_events` che preme Stop appena ha letto un file di `folder_id`: da dentro la
     lettura, perche' chiesto da fuori lo Stop puo' arrivare a lettura gia' finita."""
-    vero = run.scan_folder
+    vero = scan_api.scan_events
 
     def ferma_appena_legge(conn, fid, *a, **k):
         for evento in vero(conn, fid, *a, **k):
@@ -412,7 +430,7 @@ def _stops_while_reading(client, folder_id):
             if fid == folder_id and not evento.get("done"):
                 client.post("/api/v1/pipeline/stop")
 
-    return mock.patch.object(run, "scan_folder", ferma_appena_legge)
+    return mock.patch.object(scan_api, "scan_events", ferma_appena_legge)
 
 
 def _holding(stage):
@@ -461,22 +479,21 @@ def test_resume_reads_even_when_the_stop_came_before_the_first_folder(app):
 
 
 def test_every_folder_stays_locked_until_the_whole_run_ends(app):
-    """I lock si rilasciano a fine CORSA, non a fine lettura: mentre la catena lavora su quei
-    frame, chiedere di nuovo il gesto sente "gia' in corso" su **tutte** le cartelle.
-
-    Rilasciarli a fine lettura sembrerebbe funzionare -- la lettura e' finita davvero -- ma
-    lascerebbe passare una seconda corsa sopra frame che la prima sta ancora normalizzando."""
+    """Finche' la CORSA non e' finita, non solo la lettura: mentre la catena lavora su quei
+    frame, chiedere di nuovo il gesto sente "occupato" -- il worker e' uno, e una seconda corsa
+    passerebbe sopra frame che la prima sta ancora normalizzando. Finita, nessuna cartella resta
+    tenuta (passo 40.4: il lucchetto e' la scansione di Behind, `Behind.scanning`)."""
     client, uno, due = app
     blocco, porta, visto = _holding("normalize_frames")
     with blocco:
         scan_all(client)
         assert wait_until(lambda: visto != [])
-        assert client.app.state.folder_locks == {uno, due}, "lock lasciati a fine lettura"
         r = client.post("/api/v1/scan")
         assert r.status_code == 409 and r.json()["detail"]["code"] == "worker_busy"
         porta.set()
         client.app.state.worker.join(30.0)
-    assert client.app.state.folder_locks == set(), "lock mai rilasciati"
+    behind = client.app.state.behind
+    assert not behind.scanning(uno) and not behind.scanning(due), "cartelle tenute per sempre"
 
 
 def test_resume_does_not_re_read_when_the_reading_had_finished(app):
@@ -579,18 +596,15 @@ def test_a_folder_already_being_read_is_skipped_and_said(app):
     """Se una cartella e' gia' sotto le mani di un'altra corsa non si legge due volte, e il
     perche' si dice: e' il secondo motivo che il contratto dichiara, accanto al disco staccato."""
     client, uno, due = app
-    with client.app.state.folder_locks_mutex:
-        client.app.state.folder_locks.add(uno)
-    try:
-        r = scan_all(client)
-        assert {c["folder_id"] for c in r.json()["started"]} == {due}
-        saltata = r.json()["skipped"]
-        assert [(s["folder_id"], s["reason"]) for s in saltata] == [(uno, "scan_running")]
-        assert saltata[0]["root_path"]
-    finally:
-        client.app.state.worker.join(30.0)
-        with client.app.state.folder_locks_mutex:
-            client.app.state.folder_locks.discard(uno)
+    with _being_read(client, uno):
+        try:
+            r = scan_all(client)
+            assert {c["folder_id"] for c in r.json()["started"]} == {due}
+            saltata = r.json()["skipped"]
+            assert [(s["folder_id"], s["reason"]) for s in saltata] == [(uno, "scan_running")]
+            assert saltata[0]["root_path"]
+        finally:
+            client.app.state.worker.join(30.0)
 
 
 def test_when_no_folder_can_be_read_it_says_which_ones(app, tmp_path):
@@ -642,13 +656,8 @@ def test_a_reading_that_breaks_before_it_begins_leaves_no_open_receipt(app):
 def test_a_second_press_while_every_folder_is_being_read_says_busy(app):
     """Un doppio clic su Scansiona: le cartelle si stanno leggendo, non sono irraggiungibili."""
     client, uno, due = app
-    with client.app.state.folder_locks_mutex:
-        client.app.state.folder_locks.update({uno, due})
-    try:
+    with _being_read(client, uno, due):
         r = client.post("/api/v1/scan")
-    finally:
-        with client.app.state.folder_locks_mutex:
-            client.app.state.folder_locks.clear()
     assert r.status_code == 409
     assert r.json()["detail"]["code"] == "worker_busy"
     assert {s["reason"] for s in r.json()["detail"]["skipped"]} == {"scan_running"}
@@ -662,8 +671,6 @@ def test_a_busy_worker_leaves_no_folder_locked(app):
     with mock.patch.object(client.app.state.worker, "start", side_effect=WorkerBusyError("gia")):
         r = client.post("/api/v1/scan")
     assert r.status_code == 409 and r.json()["detail"]["code"] == "worker_busy"
-    with client.app.state.folder_locks_mutex:
-        assert client.app.state.folder_locks == set(), "cartelle chiuse a chiave per sempre"
     with connect(client.app.state.db_path) as conn:
         assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
 
@@ -708,13 +715,8 @@ def test_resume_while_every_folder_is_being_read_says_busy(app):
     """Riprendi su cartelle che un'altra corsa sta gia' leggendo: occupato, non irraggiungibile."""
     client, uno, due = app
     _stopped_while_reading(client, uno)
-    with client.app.state.folder_locks_mutex:
-        client.app.state.folder_locks.update({uno, due})
-    try:
+    with _being_read(client, uno, due):
         r = client.post("/api/v1/pipeline/run")
-    finally:
-        with client.app.state.folder_locks_mutex:
-            client.app.state.folder_locks.clear()
     assert r.status_code == 409, r.text
     assert r.json()["detail"]["code"] == "worker_busy"
     assert {s["reason"] for s in r.json()["detail"]["skipped"]} == {"scan_running"}

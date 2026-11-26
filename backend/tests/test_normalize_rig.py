@@ -15,11 +15,11 @@ import random
 
 import pytest
 
+import porta
 from astrolog.clock import now_iso
 from astrolog.db.connect import connect, create_database
 from astrolog.spine import gear, gear_create
 from astrolog.spine import rigs as setups
-from astrolog.spine.scan import scan_folder
 from astrolog.vocab.instruments import InstrumentKind
 from astrolog.vocab.software import Software
 from conftest import add_folder, frame_by_file, one, rows, run_normalize, write_light
@@ -27,27 +27,25 @@ from conftest import add_folder, frame_by_file, one, rows, run_normalize, write_
 
 def test_normalize_makes_instruments_and_rigs(conn, archive):
     """Ottica e camera vengono da TELESCOP e INSTRUME, e il setup e' la coppia a una focale.
-    Le ottiche sono TRE e non quattro: cio' che l'ASIAIR scrive in TELESCOP e' una montatura, e
-    sta fra le montature (la regola e' qui sotto, `test_the_mount_asiair_writes_in_telescop...`)."""
+    L'ottica e' UNA e non due: cio' che l'ASIAIR scrive in TELESCOP e' una montatura, e sta fra
+    le montature (la regola e' qui sotto, `test_the_mount_asiair_writes_in_telescop...`)."""
     optics_names = sorted(
         r["name"] for r in rows(conn, "SELECT name FROM instruments WHERE kind='optics'")
     )
-    assert optics_names == ["Askar 103Apo", "RC8", "TS 130 APO"]
+    assert optics_names == ["Askar 103Apo"]
     cameras = sorted(
         r["name"] for r in rows(conn, "SELECT name FROM instruments WHERE kind='camera'")
     )
-    assert cameras == ["ASI2600MM Pro", "ATR2600M", "ATR2600M(USB2.0)", "Canon EOS 700D", "QHY268M"]
+    assert cameras == ["ATR2600M", "ATR2600M(USB2.0)", "Canon EOS 700D"]
     assert one(conn, "SELECT COUNT(*) FROM instruments WHERE detected = 0") == 0
     # la camera a colori si riconosce dalla matrice, mai dal nome
     assert one(conn, "SELECT camera_type FROM instruments WHERE name = 'Canon EOS 700D'") == "color"
-    assert one(conn, "SELECT camera_type FROM instruments WHERE name = 'QHY268M'") is None
+    assert one(conn, "SELECT camera_type FROM instruments WHERE name = 'ATR2600M(USB2.0)'") is None
     # la dimensione del pixel arriva dall'header, gia' compilata
     assert (
         one(conn, "SELECT pixel_size_um FROM instruments WHERE name = 'ATR2600M(USB2.0)'") == 3.76
     )
     assert one(conn, "SELECT pixel_size_um FROM instruments WHERE name = 'Canon EOS 700D'") == 4.29
-    # chi non dichiara il binning non dice quale pixel fisico sia: la scheda resta da compilare
-    assert one(conn, "SELECT pixel_size_um FROM instruments WHERE name = 'QHY268M'") is None
 
 
 def test_the_pieces_a_frame_names_come_from_the_header_too(conn, archive):
@@ -138,8 +136,8 @@ def test_normalize_groups_focal_lengths_within_five_percent(conn, archive):
     """559, 560 e 561 mm sono la stessa focale: un setup, non tre."""
     rig_ids = {frame_by_file(conn, n)["rig_id"] for n in ("L_001.fits", "L_003.fits", "L_004.fits")}
     assert len(rig_ids) == 1
-    # ma due ottiche diverse restano due setup, e 910 non e' 560
-    assert one(conn, "SELECT COUNT(*) FROM rigs") == 5
+    # Askar con due camere e l'ASIAIR senza ottica: tre setup
+    assert one(conn, "SELECT COUNT(*) FROM rigs") == 3
 
 
 def test_normalize_links_every_frame_to_its_rig(conn, archive):
@@ -149,7 +147,7 @@ def test_normalize_links_every_frame_to_its_rig(conn, archive):
         "SELECT COUNT(*) FROM frames f JOIN rigs r ON r.id = f.rig_id"
         " JOIN instruments o ON o.id = r.optics_id WHERE o.name = 'Askar 103Apo'",
     )
-    assert askar == 9  # gli otto N.I.N.A. piu' la copia riscritta
+    assert askar == 8  # gli otto N.I.N.A.: la copia riscritta non entra (ADR 0029)
 
 
 def test_the_mount_asiair_writes_in_telescop_is_not_an_optics(conn, archive):
@@ -160,13 +158,13 @@ def test_the_mount_asiair_writes_in_telescop_is_not_an_optics(conn, archive):
     Il criterio e' il **software**, non il nome. Il banco porta due montature diverse dallo
     stesso programma -- `EQMod Mount` e `ZWO AM3`, tutte e due vere e di due utenti diversi
     (`tests/header/asiair_am3.txt`) -- e una regola scritta su una lista di nomi passerebbe con
-    la prima e cadrebbe sulla seconda. Le ottiche degli altri tre software non si toccano."""
+    la prima e cadrebbe sulla seconda. L'ottica di N.I.N.A. non si tocca."""
     montature = sorted(
         r["name"] for r in rows(conn, "SELECT name FROM instruments WHERE kind='mount'")
     )
     assert montature == ["EQMod Mount", "ZWO AM3"]
     ottiche = {r["name"] for r in rows(conn, "SELECT name FROM instruments WHERE kind='optics'")}
-    assert ottiche == {"Askar 103Apo", "RC8", "TS 130 APO"}
+    assert ottiche == {"Askar 103Apo"}
 
     # I frame ASIAIR stanno in UN setup solo: due nomi di montatura non fanno due setup, ed
     # e' il danno che questa regola toglie.
@@ -463,8 +461,7 @@ def _rigs_read_in(tmp_path, rounds, camera="CamK", optics="Ottica K"):
                 INSTRUME=instrument,
                 FOCALLEN=float(focal),
             )
-        list(scan_folder(conn, folder))
-        run_normalize(conn)
+        porta.fill(conn, folder, porta.Upto.NORMALIZED)
     by_rig: dict[int, set[float]] = {}
     for r in rows(conn, "SELECT rig_id, focal_mm_raw FROM frames"):
         by_rig.setdefault(r["rig_id"], set()).add(r["focal_mm_raw"])

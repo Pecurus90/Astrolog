@@ -29,7 +29,7 @@ POSE = {"a": "2026-03-14T02:00:00", "b": "2026-03-14T04:00:00", "c": "2026-03-14
 def _posa(path, date_obs=None, **header):
     """Un frame che, se `header` non aggiunge niente, non dice camera, nome ne' coordinate: la notte
     la decide casa, e la domanda sull'oggetto, che porta la notte nella chiave, la chiede."""
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0, "TELESCOP": "Newton 200"}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 300.0, "TELESCOP": "Newton 200"}
     if date_obs:
         card["DATE-OBS"] = date_obs
     return write_fits(path, {**card, **header})

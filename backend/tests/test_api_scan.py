@@ -169,7 +169,7 @@ def test_a_start_that_breaks_unexpectedly_leaves_nothing_behind(app):
         client.post(f"/api/v1/folders/{fid}/scan")
     with connect(state.db_path) as conn:
         assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 1
-    assert fid not in state.folder_locks
+    assert not state.behind.scanning(fid)
     assert (state.last_scan, state.scan_runs) == previous
 
 
@@ -261,10 +261,10 @@ def test_scan_lock_stop_and_the_button_verb(app):
     worker = client.app.state.worker
     gate = threading.Event()
     seen = []
-    import astrolog.spine.scan as scan_mod
+    import astrolog.pipeline.scan as scan_mod
 
-    slow_read = blocking_reader(scan_mod.read_frame, gate, seen)
-    with mock.patch.object(scan_mod, "read_frame", side_effect=slow_read):
+    slow_read = blocking_reader(scan_mod.scan_file, gate, seen)
+    with mock.patch.object(scan_mod, "scan_file", side_effect=slow_read):
         assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202
         assert wait_until(lambda: len(seen) >= 2)
         assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 409
@@ -280,7 +280,7 @@ def test_scan_lock_stop_and_the_button_verb(app):
     assert s["action"] == "resume" and s["scan"]["folder_id"] == fid  # cosa riprendere
     assert s["scan"]["receipt"]["status"] == "stopped"  # dal DB: il generatore non la emette
     assert s["scan"]["receipt"]["new"] >= 1 and s["scan"]["receipt"]["ended_at"]
-    assert client.app.state.folder_locks == set()
+    assert not client.app.state.behind.scanning(fid)
     assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202  # si riparte
 
 
@@ -293,10 +293,10 @@ def test_a_second_folder_finds_the_worker_busy_and_leaves_no_open_receipt(app, t
     other_id = client.post("/api/v1/folders", json={"root_path": str(other)}).json()["id"]
     gate = threading.Event()
     seen = []
-    import astrolog.spine.scan as scan_mod
+    import astrolog.pipeline.scan as scan_mod
 
-    slow_read = blocking_reader(scan_mod.read_frame, gate, seen)
-    with mock.patch.object(scan_mod, "read_frame", side_effect=slow_read):
+    slow_read = blocking_reader(scan_mod.scan_file, gate, seen)
+    with mock.patch.object(scan_mod, "scan_file", side_effect=slow_read):
         assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202
         assert wait_until(lambda: len(seen) >= 2)  # la scansione e' ferma sul secondo file
         r = client.post(f"/api/v1/folders/{other_id}/scan")
@@ -305,7 +305,7 @@ def test_a_second_folder_finds_the_worker_busy_and_leaves_no_open_receipt(app, t
         assert open_receipts(client.app.state.db_path) == 1
         gate.set()
         client.app.state.worker.join(10.0)
-    assert client.app.state.folder_locks == set()
+    assert not client.app.state.behind.scanning(fid)
 
 
 def test_no_autostart_and_precheck_409s(app):
@@ -317,7 +317,7 @@ def test_no_autostart_and_precheck_409s(app):
         p.unlink()
     root.rmdir()
     assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 409
-    assert client.app.state.folder_locks == set()
+    assert not client.app.state.behind.scanning(fid)
 
 
 def test_scan_schedule_nas(db_path, tmp_path):
@@ -448,8 +448,9 @@ def test_desktop_token_is_required_when_set(db_path):
 
 
 def test_the_folder_stays_locked_until_the_whole_run_ends(app):
-    """Il lock si rilascia a fine corsa, non a fine lettura: mentre la normalizzazione lavora
-    su quei frame, una seconda scansione della stessa cartella sente "gia' in corso"."""
+    """Finche' la corsa non e' finita, non solo la lettura: mentre la normalizzazione lavora su
+    quei frame, una seconda scansione della stessa cartella e' rifiutata (il worker e' uno:
+    "occupato"); a fine corsa nessuna cartella resta tenuta (passo 40.4, `Behind.scanning`)."""
     client, fid, _ = app
     gate = threading.Event()
     seen = []
@@ -466,8 +467,7 @@ def test_the_folder_stays_locked_until_the_whole_run_ends(app):
         assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202
         assert wait_until(lambda: seen != [])
         r = client.post(f"/api/v1/folders/{fid}/scan")
-        assert r.status_code == 409 and r.json()["detail"]["code"] == "scan_running"
-        assert client.app.state.folder_locks == {fid}
+        assert r.status_code == 409 and r.json()["detail"]["code"] == "worker_busy"
         gate.set()
         client.app.state.worker.join(10.0)
-    assert client.app.state.folder_locks == set()
+    assert not client.app.state.behind.scanning(fid)

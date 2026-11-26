@@ -6,10 +6,10 @@ import sqlite3
 from enum import IntEnum
 from typing import Any
 
+from astrolog.api.scan_door import scan_once
 from astrolog.spine import stages, typeless_folders
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 
 
 class Upto(IntEnum):
@@ -25,7 +25,7 @@ def fill(conn: sqlite3.Connection, folder_id: int | None, upto: Upto) -> Any:
     `folder_id` non si scansiona: si riprendono gli stadi sui frame che ci sono."""
     receipt = None
     if folder_id is not None:
-        receipt = list(scan_folder(conn, folder_id))[-1]
+        receipt = scan_once(conn, folder_id)  # the new pipeline's scan (step 40.4)
     if upto >= Upto.NORMALIZED:
         receipt = list(normalize_frames(conn))[-1]
     if upto >= Upto.IDENTIFIED:

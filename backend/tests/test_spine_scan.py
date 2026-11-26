@@ -11,6 +11,7 @@ from astropy.io import fits
 
 import astrolog.fits.walk as walk_mod
 import astrolog.spine.scan as scan_mod
+from astrolog.api.scan_door import scan_once
 from astrolog.fits.header_read import HeaderReadError
 from astrolog.spine import frame_folder, typeless
 from astrolog.spine.declarations import TypeAnswer
@@ -206,14 +207,19 @@ def test_scan_unknown_type_enters_and_waits_before_the_object(conn, tmp_path):
 def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path):
     """Detto che in quella cartella ci sono file di calibrazione, i file nuovi che arrivano dopo
     non entrano affatto e la ricevuta li conta per motivo, come quelli che lo dicono da soli. Un
-    frame gia' in archivio spostato li' invece entra (`test_review_typeless.py`)."""
+    frame gia' in archivio spostato li' invece entra (`test_review_typeless.py`). Cambiata la
+    risposta, il file entra alla scansione dopo. La scansione nuova (passo 40.4)."""
     folder_id = add_folder(conn, tmp_path)
-    typeless.declare(conn, frame_folder.folder_key(str(tmp_path)), TypeAnswer.CALIBRATION)
+    chiave = frame_folder.folder_key(str(tmp_path))
+    typeless.declare(conn, chiave, TypeAnswer.CALIBRATION)
     _muto(tmp_path, "dark.fits")
-    done = run(conn, folder_id)
+    done = scan_once(conn, folder_id)
     assert (done["new"], done["skipped"]) == (0, 1)
     assert done["skipped_by_reason"] == [{"reason": "calibration", "count": 1}]
     assert count(conn, "SELECT COUNT(*) FROM frames") == 0
+    typeless.declare(conn, chiave, TypeAnswer.LIGHT)
+    done = scan_once(conn, folder_id)
+    assert (done["new"], done["skipped"]) == (1, 0)
 
 
 def test_scan_lets_in_a_folder_the_user_called_sky(conn, tmp_path):

@@ -871,11 +871,9 @@ def test_a_gone_file_keeps_its_card(conn, tmp_path):
     assert _cards(conn) == {"a.fits": "light"}
 
 
-def test_a_stop_ends_the_scan_between_two_batches_as_an_interrupted_one(
-    conn, tmp_path, monkeypatch
-):
-    """Lo Stop dell'app non aspetta la cartella intera: il lotto letto resta, gli altri file si
-    leggono alla prossima, e la corsa resta non finita (nessuno sparito giudicato)."""
+def test_a_stop_ends_the_scan_between_two_files_as_an_interrupted_one(conn, tmp_path, monkeypatch):
+    """Lo Stop non aspetta la cartella ne' il lotto, ferma fra due file: il letto resta, il resto
+    alla prossima, e la corsa resta non finita (nessuno sparito giudicato)."""
     import threading
 
     for k in range(4):
@@ -890,7 +888,7 @@ def test_a_stop_ends_the_scan_between_two_batches_as_an_interrupted_one(
 
     monkeypatch.setattr(scan, "scan_file", then_stop)
     scan_root(conn, root, NOW, stop=stop)
-    assert len(_files(conn)) == 2
+    assert len(_files(conn)) == 1
     assert conn.execute("SELECT finished FROM pipeline_scans").fetchone()[0] == 0
     monkeypatch.setattr(scan, "scan_file", real)
     scan_root(conn, root, LATER)

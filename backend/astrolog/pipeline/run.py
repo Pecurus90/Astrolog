@@ -12,7 +12,7 @@ from typing import Any
 from .. import astap, night_measures
 from ..db.transaction import transaction
 from .measure import measure_root
-from .scan import scan_root
+from .scan import MIN_AGE_S, Watch, scan_root
 from .site_sky import rebuild
 from .sky_measure import sky_root
 from .solve import solve_root
@@ -45,7 +45,7 @@ def run_roots(
                 raise LookupError(f"root {root} not in use")
             if not os.path.isdir(long_path(row["path"])):
                 raise NotADirectoryError(row["path"])
-            scan_root(conn, root, now, stop=stop)
+            scan_root(conn, root, now, watch=Watch(stop or threading.Event(), min_age_s=MIN_AGE_S))
             solve_root(conn, root, now, solver, work, stop=stop)
             measure_root(conn, root, now, stop=stop)
             sky_root(conn, root, now, stop=stop)

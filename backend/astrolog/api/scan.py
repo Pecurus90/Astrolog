@@ -1,5 +1,5 @@
-"""The work lives in the worker, not in the request: the folder lock is taken after the pre-checks
-and the worker releases it at the end of the RUN, however it goes."""
+"""The work lives in the worker, not in the request; the scan itself is the new pipeline's, on
+Behind's thread (`scan_door`), and a root a scan holds refuses a second one (`Behind.scanning`)."""
 
 import json
 import sqlite3
@@ -14,7 +14,7 @@ from ..db.connect import connect
 from ..db.paths import cache_dir
 from ..pipeline.behind import Behind
 from ..spine import backup, night_moons
-from ..spine.run import ORDER, queue, queue_folders
+from ..spine.run import ORDER, Reading, ScanWork, queue, queue_folders
 from ..spine.scan import root_readable
 from ..spine.scan_store import (
     COUNTS,
@@ -42,13 +42,16 @@ from .models import (
     ScanStarted,
 )
 from .models_page import page_of
+from .scan_door import scan_events
 
 router = APIRouter(prefix="/api/v1", tags=["scan"])
 
 
-def _release(state: State, folder_id: int) -> None:
-    with state.folder_locks_mutex:
-        state.folder_locks.discard(folder_id)
+def scan_work(state: State) -> ScanWork:
+    """The user's scan: the new pipeline's, on Behind's thread, followed by the worker."""
+    return lambda conn, folder_id, run_id: scan_events(
+        conn, folder_id, run_id, state.behind.scan_now
+    )
 
 
 def run_out(row: sqlite3.Row) -> ScanRunOut:
@@ -66,8 +69,8 @@ def run_out(row: sqlite3.Row) -> ScanRunOut:
 
 
 def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
-    """Pre-checks, folder lock, receipt opened, run started; returns `run_id`. HTTPException
-    404/409 when it cannot."""
+    """Pre-checks, receipt opened, run started; returns `run_id`. HTTPException 404/409 when it
+    cannot."""
     try:
         root, retired_at = folder_root(conn, folder_id)
     except FolderNotFoundError as err:
@@ -76,12 +79,10 @@ def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
         raise HTTPException(status_code=409, detail={"code": "folder_retired"})
     if not root_readable(root):
         raise HTTPException(status_code=409, detail={"code": "root_unreachable", "path": root})
-    with state.folder_locks_mutex:
-        if folder_id in state.folder_locks:
-            raise HTTPException(
-                status_code=409, detail={"code": "scan_running", "folder_id": folder_id}
-            )
-        state.folder_locks.add(folder_id)
+    if state.behind.scanning(folder_id):
+        raise HTTPException(
+            status_code=409, detail={"code": "scan_running", "folder_id": folder_id}
+        )
     run_id: int | None = None
     previous = (state.last_scan, state.scan_runs)
     try:
@@ -90,7 +91,6 @@ def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
         return run_id
     except Exception as err:
         # whatever broke the start, the open receipt will never have a run
-        _release(state, folder_id)
         state.last_scan, state.scan_runs = previous
         if run_id is not None:
             discard_run(conn, run_id)
@@ -121,7 +121,7 @@ def _one_folder_stages(state: State, folder_id: int, run_id: int) -> list[Stage]
         ORDER,
         folder_id=folder_id,
         run_id=run_id,
-        on_folder=lambda _f, r: begun.add(r),
+        scan=Reading(scan_work(state), lambda _f, r: begun.add(r)),
     )
     started = [ScanStarted(run_id=run_id, folder_id=folder_id)]
     return _stages_with_cleanup(state, steps, [folder_id], started, begun)
@@ -135,8 +135,6 @@ def _stages_with_cleanup(
     begun: Container[int],
 ) -> list[Stage]:
     def at_end() -> None:
-        for folder_id in locked:
-            _release(state, folder_id)
         _discard_never_begun(state.db_path, started, begun)
         _backup_new_samples(state.db_path)
         if not state.worker.stop_requested():
@@ -176,15 +174,10 @@ def _backup_new_samples(db_path: str | Path) -> None:
         conn.close()
 
 
-def _forget_start(
-    state: State, conn: sqlite3.Connection, taken: Iterable[int], opened: Iterable[ScanStarted]
-) -> None:
-    """A run that never started leaves nothing behind: no locked folders (they would not reopen
-    until a restart), no open receipts that no run will close."""
+def _forget_start(conn: sqlite3.Connection, opened: Iterable[ScanStarted]) -> None:
+    """A run that never started leaves no open receipts that no run will close."""
     for c in opened:
         discard_run(conn, c.run_id)
-    for folder_id in taken:
-        _release(state, folder_id)
 
 
 def _discard_never_begun(
@@ -221,7 +214,7 @@ def _unreachable_receipts(
 
 def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
     """A folder that cannot be read is skipped and reported instead of stopping the others: one NAS
-    switched off would otherwise stop every scan. The locks are all taken before the start."""
+    switched off would otherwise stop every scan; one a scan already holds, too."""
     ids = active_folder_ids(conn)
     if not ids:
         raise HTTPException(status_code=409, detail={"code": "no_folders"})
@@ -235,13 +228,9 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
                 FolderSkipped(folder_id=folder_id, root_path=root, reason="root_unreachable")
             )
             continue
-        with state.folder_locks_mutex:
-            if folder_id in state.folder_locks:
-                skips.append(
-                    FolderSkipped(folder_id=folder_id, root_path=root, reason="scan_running")
-                )
-                continue
-            state.folder_locks.add(folder_id)
+        if state.behind.scanning(folder_id):
+            skips.append(FolderSkipped(folder_id=folder_id, root_path=root, reason="scan_running"))
+            continue
         taken.append(folder_id)
     if not taken:
         # a folder being read is not unreachable: a double click says busy
@@ -267,10 +256,10 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
             begun_runs.add(run_id)
             state.last_scan = (folder_id, run_id)
 
-        steps = queue_folders(state.db_path, pairs, on_folder=follow)
+        steps = queue_folders(state.db_path, pairs, scan_work(state), on_folder=follow)
         _launch(state, pairs, _stages_with_cleanup(state, steps, taken, opened, begun_runs))
     except Exception as err:
-        _forget_start(state, conn, taken, opened)
+        _forget_start(conn, opened)
         state.last_scan, state.scan_runs = previous
         if isinstance(err, WorkerBusyError):
             raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err

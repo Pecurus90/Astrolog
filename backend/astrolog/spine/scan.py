@@ -267,7 +267,7 @@ def _one_file(run: _Run, abs_path: str, rel: str) -> None:
     fields = extract_fields(header, abs_path)
     kind = fields.image_type
     if kind in CALIBRATION_TYPES or kind == FrameType.STACK:
-        why = SkipReason.STACK if kind == FrameType.STACK else SkipReason.CALIBRATION
+        why = SkipReason.REWRITTEN if kind == FrameType.STACK else SkipReason.CALIBRATION
         _skip(run, rel, why, pos)
         return
     # A typeless file in a folder the user called calibration is skipped like a calibration; one

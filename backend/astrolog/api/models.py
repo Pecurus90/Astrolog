@@ -158,7 +158,7 @@ class ScanAllStarted(BaseModel):
 
 # The words of `spine/scan_store` for why a file did not get in and why it was skipped.
 FileError = Literal["file_unreadable", "header_unreadable", "name_not_utf8", "internal_error"]
-SkipReason = Literal["calibration", "stack", "still_writing"]
+SkipReason = Literal["calibration", "rewritten", "not_supported", "still_writing"]
 
 
 class FileNotRead(BaseModel):
@@ -335,7 +335,13 @@ class PipelineStatus(BaseModel):
 
 
 LeftOutReason = Literal[
-    "unchanged", "duplicates", "calibration", "stack", "still_writing", "online_only"
+    "unchanged",
+    "duplicates",
+    "calibration",
+    "rewritten",
+    "not_supported",
+    "still_writing",
+    "online_only",
 ]
 
 

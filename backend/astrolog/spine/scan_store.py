@@ -140,7 +140,8 @@ class FileError(StrEnum):
 
 class SkipReason(StrEnum):
     CALIBRATION = "calibration"
-    STACK = "stack"
+    REWRITTEN = "rewritten"  # processed elsewhere: calibrated or stacked (ADR 0029)
+    NOT_SUPPORTED = "not_supported"  # a program the app does not read (ADR 0029)
     STILL_WRITING = "still_writing"
 
 

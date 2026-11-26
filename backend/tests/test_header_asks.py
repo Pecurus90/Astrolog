@@ -1,5 +1,6 @@
 """Tre giudizi che dipendono solo da cio' che il file dice -- la camera, il filtro, l'ottica -- si
-scrivono sul frame quando la scansione lo legge, e le pagine di Da confermare li filtrano in SQL
+scrivono sul frame in testa a `normalize` (la scansione nuova non ha il vocabolario: li lascia
+NULL, passo 40.4), e le pagine di Da confermare li filtrano in SQL
 invece di rileggere l'archivio (`spine/header_asks.py`). Il grezzo non cambia, quindi nessuno deve
 riscriverli: la prova e' che su ogni frame dicono cio' che direbbero le regole sul suo grezzo."""
 
@@ -21,6 +22,8 @@ def test_every_frame_carries_what_its_raw_header_asks(conn, tmp_path):
     build_archive(tmp_path / "lib")
     write_light(tmp_path / "lib" / "muta" / "senza_camera.fits")  # nessun INSTRUME
     scan(conn, tmp_path / "lib")
+    assert {r[0] for r in conn.execute("SELECT asks_camera FROM frames")} == {None}
+    header_asks.fill(conn)  # come in testa a normalize
     pose = rows(conn, "SELECT * FROM frames")
     assert pose, "il banco non ha frame: la prova non guarda niente"
     for p in pose:

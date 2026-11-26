@@ -297,8 +297,6 @@ def create_app(  # noqa: PLR0913
     app.state.data_root = root
     app.state.worker = Worker()
     app.state.behind = scan.behind(db_path)
-    app.state.folder_locks = set()
-    app.state.folder_locks_mutex = threading.Lock()
     app.state.token = token
     app.state.last_scan = None  # (folder_id, run_id) of the last scan started
     app.state.scan_runs = ()  # the receipts of every folder of that gesture: its outcome

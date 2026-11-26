@@ -6,6 +6,10 @@ Vincolo non ovvio: i profili N.I.N.A. e ASIAIR ricalcano header veri (`tests/hea
 profili Voyager e SGP ricalcano la forma nota, perche' in casa non c'e' un loro header vero
 (Issue #23: quando arrivera' entra prima della correzione che lo fa passare). Nessuna
 chiave inventata: solo grafie diverse di chiavi che i quattro scrivono davvero.
+
+Dal passo 40.4 la scansione legge solo N.I.N.A. e ASIAIR e salta le copie riscritte (ADR 0029,
+26/11/2026): i frame Voyager, SGP e `L_001_c` restano scritti ma non entrano; entrano 11 frame su
+14. I profili escono al passo 40.7.
 """
 
 import sys
@@ -98,10 +102,12 @@ FRAMES = [
     ),
     # camera a colori con un duo-banda avvitato davanti: il filtro c'e' e vale
     ("asiair/Light_003.fits", ASIAIR, "L-eXtreme", "IC 1396", 300.0, "2024-08-02T22:00:00", {}),
-    # Voyager e SGP: altre grafie, altra attrezzatura, i sette decimali di SGP sulla data
+    # Voyager e SGP: altre grafie, altra attrezzatura, i sette decimali di SGP sulla data.
+    # La scansione li salta come non supportati (ADR 0029)
     ("voyager/ha_001.fits", VOYAGER, "Ha 3nm", "Sh2 155", 600.0, "2024-09-19T21:00:00.500", {}),
     ("sgp/red_001.fits", SGP, "Red", "M 51", 240.0, "2024-04-05T22:12:33.1234567", {}),
-    # la copia riscritta accanto al grezzo: stessa data, stessa camera, stessa esposizione
+    # la copia riscritta accanto al grezzo: stessa data, camera, esposizione. `PROGRAM`: la
+    # scansione la salta come riscritta (ADR 0029)
     ("nina/L_001_c.fits", NINA, "L", "M 31", 120.0, "2024-10-31T21:00:00.100", REWRITTEN),
 ]
 

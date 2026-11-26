@@ -12,10 +12,9 @@ una copia calibrata), una camera con un solo file che porta la matrice, e una OS
 import pytest
 from fastapi.testclient import TestClient
 
+import porta
 from astrolog.api.app import create_app
 from astrolog.spine import signature
-from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.unfiltered import says_no_filter
 from conftest import (
     apply,
@@ -37,7 +36,7 @@ MONO, COLORI, OSC = "ZWO ASI6200MM", "ZWO ASI533MC", "ZWO ASI2600MC"
 
 def _posa(path, minuto, **header):
     # il pixel c'e', come in ogni header vero; e l'ottica, o la scheda chiederebbe anche quella
-    card = {"IMAGETYP": "Light Frame", "OBJECT": "M 31", "EXPTIME": 300.0, "TELESCOP": "RC8"}
+    card = {"IMAGETYP": "LIGHT", "OBJECT": "M 31", "EXPTIME": 300.0, "TELESCOP": "RC8"}
     card |= {"XPIXSZ": 3.76, "XBINNING": 1}
     return write_fits(path, {**card, "DATE-OBS": f"2024-05-17T21:{minuto:02d}:00", **header})
 
@@ -123,8 +122,7 @@ def _filtro_del_file(client, nome):
 
 def _scansiona_ancora(client):
     with db(client) as conn:
-        list(scan_folder(conn, 1))
-        list(normalize_frames(conn))
+        porta.fill(conn, 1, porta.Upto.NORMALIZED)
 
 
 def test_a_question_per_camera_with_the_largest_first(pagina):

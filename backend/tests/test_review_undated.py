@@ -22,7 +22,7 @@ SETUP = {"INSTRUME": "ZWO ASI2600MM", "TELESCOP": "Askar FRA400", "FOCALLEN": 40
 
 
 def _posa(path, oggetto, quando=None):
-    card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0, "OBJECT": oggetto, **SETUP}
+    card = {"IMAGETYP": "LIGHT", "EXPTIME": 300.0, "OBJECT": oggetto, **SETUP}
     if quando:
         card["DATE-OBS"] = quando
     return write_fits(path, {**card, "XPIXSZ": 3.76})

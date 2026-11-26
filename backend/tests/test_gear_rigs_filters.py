@@ -13,9 +13,8 @@ Regole, e il test che le rompe:
 
 import pytest
 
+import porta
 from astrolog.spine import gear
-from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from astrolog.vocab.filters import Passband
 from conftest import by_name, db, write_light
 
@@ -35,8 +34,7 @@ def _scansiona_un_altro(client, tmp_path, filtro, **header):
     client.app.state.worker.join(10.0)
     write_light(tmp_path / "lib" / "nina" / "dopo.fits", filt=filtro, INSTRUME="ATR2600M", **header)
     with db(client) as conn:
-        list(scan_folder(conn, 1))
-        list(normalize_frames(conn))
+        porta.fill(conn, 1, porta.Upto.NORMALIZED)
         riga = conn.execute(
             "SELECT fi.name FROM frames f JOIN positions p ON p.frame_id = f.id"
             " LEFT JOIN filters fi ON fi.id = f.filter_id WHERE p.rel_path LIKE '%dopo.fits'"
@@ -70,10 +68,10 @@ def test_a_colour_frame_stays_osc_after_a_rename(client, tmp_path):
 
 
 def test_a_merged_recognised_filter_does_not_come_back(client, tmp_path):
-    lum, ha = _filtro(client, "Lum"), _filtro(client, "H\u03b1")
-    r = client.patch(f"/api/v1/gear/filters/{lum['id']}", json={"merge_into": ha["id"]})
+    lum, red = _filtro(client, "Lum"), _filtro(client, "R")
+    r = client.patch(f"/api/v1/gear/filters/{lum['id']}", json={"merge_into": red["id"]})
     assert r.status_code == 200, r.text
-    assert _scansiona_un_altro(client, tmp_path, "L") == "H\u03b1"
+    assert _scansiona_un_altro(client, tmp_path, "L") == "R"
     assert "Lum" not in [f["name"] for f in _gear(client)["filters"]], "il filtro e' rinato"
 
 

@@ -258,12 +258,12 @@ CREATE UNIQUE INDEX rigs_fingerprint
   ON rigs (COALESCE(optics_id, -1), COALESCE(camera_id, -1), COALESCE(focal_mm, -1));
 
 -- Un frame: un file light (o un file che non dice cosa e': `unknown`, e finisce in Da
--- completare). L'identita' e' UNA, decisa alla scansione: `frame_hash` = sha256 delle
--- dimensioni e di 64 KB di pixel dal centro, stabile a una riscrittura dell'header. Due copie
--- dello stesso file sono un frame con due posizioni; niente fusioni, mai. I file di
--- calibrazione non entrano.
+-- completare). L'identita' e' quella della posa (ADR 0030): `id` = `pipeline_frames.id`,
+-- `frame_hash` = la sua impronta; la riga la scrive la scansione dalla scheda della posa
+-- (`pipeline/frame_row.py`). Due copie dello stesso file sono un frame con due posizioni. I file
+-- di calibrazione non entrano.
 CREATE TABLE frames (
-  id             INTEGER PRIMARY KEY,
+  id             INTEGER PRIMARY KEY REFERENCES pipeline_frames (id) ON DELETE CASCADE,
   frame_hash     TEXT NOT NULL UNIQUE,
   image_type     TEXT NOT NULL CHECK (image_type IN ('light', 'unknown')),
   date_obs       TEXT,                             -- UTC ISO, dall'header: cio' che il file dice
@@ -301,15 +301,14 @@ CREATE TABLE frames (
   guide_camera_raw TEXT,
   software       TEXT,                             -- normalizzato (vocab)
   software_raw   TEXT,
-  -- Tre giudizi sul grezzo, scritti dalla scansione (`spine/header_asks.py`): il file non dice la
-  -- camera, non dice il filtro, nomina l'ottica. Dipendono solo da cio' che il file dice e dal
-  -- vocabolario, che oggi cambia solo col codice: nessuno li riscrive (dopo il rilascio si', vedi
-  -- `docs/piano.json`). Da confermare li filtra invece di rileggere l'archivio. Il
-  -- ripiego e' il giudizio di un header che non dice niente, come il ripiego vuoto delle colonne
-  -- grezze.
-  asks_camera    INTEGER NOT NULL DEFAULT 1 CHECK (asks_camera IN (0, 1)),
-  asks_filter    INTEGER NOT NULL DEFAULT 1 CHECK (asks_filter IN (0, 1)),
-  names_optics   INTEGER NOT NULL DEFAULT 0 CHECK (names_optics IN (0, 1)),
+  -- Tre giudizi sul grezzo (`spine/header_asks.py`): il file non dice la camera, non dice il
+  -- filtro, nomina l'ottica. Vogliono il vocabolario, che la pipeline non conosce: la scansione
+  -- li lascia NULL (non ancora giudicato: nessuna domanda) e li scrive `normalize`, il primo
+  -- stadio. Da confermare li filtra invece di rileggere l'archivio. Il ripiego e' il giudizio di
+  -- un header che non dice niente.
+  asks_camera    INTEGER DEFAULT 1 CHECK (asks_camera IN (0, 1)),
+  asks_filter    INTEGER DEFAULT 1 CHECK (asks_filter IN (0, 1)),
+  names_optics   INTEGER DEFAULT 0 CHECK (names_optics IN (0, 1)),
   -- Il frame aspetta una risposta sul tipo di file (DERIVATO dalla vista `frame_waits`): i
   -- trigger accanto alla vista lo riscrivono a ogni scrittura di un ingresso -- il cielo, la
   -- posizione, la risposta della cartella -- e chi legge legge questo.
@@ -446,6 +445,10 @@ CREATE TABLE frame_stages (
   PRIMARY KEY (frame_id, stage)
 ) STRICT;
 CREATE INDEX frame_stages_pending ON frame_stages (stage, status);
+-- Un frame ha la sua posa: chi scrive la riga a mano (le prove) la ha con lui.
+CREATE TRIGGER frames_have_a_shot AFTER INSERT ON frames BEGIN
+  INSERT OR IGNORE INTO pipeline_frames (id, fingerprint, created_at)
+  VALUES (NEW.id, NEW.frame_hash, NEW.created_at); END;
 
 -- I mosaici: pannelli dello stesso setup che si toccano senza contenersi (`docs/domini/
 -- mosaico.md`). Li scrive `group` quando un frame apre un pannello, e nessuno li ricalcola.
@@ -1037,7 +1040,7 @@ CREATE TABLE pipeline_scans (
 -- RILEVATO. Frame (camera, inizio con frazione di secondo, dimensioni, durata: ADR 0030); senza
 -- file si toglie, sparito tiene la sua. Risposte alla chiave (nome, impronta...), mai a un id.
 CREATE TABLE pipeline_frames (
-  id          INTEGER PRIMARY KEY,
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,  -- mai un id riusato: e' anche frames.id
   fingerprint TEXT NOT NULL UNIQUE,
   created_at  TEXT NOT NULL,
   -- scheda della posa: il file presente visto per primo, .fz solo senza semplice; la scrive

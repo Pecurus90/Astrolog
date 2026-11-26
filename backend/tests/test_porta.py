@@ -10,7 +10,7 @@ from conftest import add_folder, one
 QUI = Path(__file__).parent
 
 # Gli stadi della vecchia che riempiono un archivio: solo la porta li chiama per il conftest.
-STADI = {"scan_folder", "normalize_frames", "identify_frames"}
+STADI = {"scan_once", "normalize_frames", "identify_frames"}
 
 
 def _called(path: Path) -> set[str]:

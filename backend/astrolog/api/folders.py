@@ -14,7 +14,7 @@ from starlette.datastructures import State
 from ..clock import now_iso
 from ..db.transaction import transaction
 from ..fits.walk import subfolders, walk_dir
-from ..pipeline import roots
+from ..pipeline import recognise, roots
 from ..spine import folder_move, typeless_answer
 from ..spine.scan import root_readable
 from ..spine.stages import StageName, count_pending
@@ -180,7 +180,7 @@ def _moved_here(
     for row in rows:
         # A silent folder with these files may be the original, this its copy: no proposal.
         if row["retired_at"] is None and reach[row["root_path"]] is None:
-            same = folder_move.same_files(conn, row["id"], root, found, deadline)
+            same = recognise.same_files(conn, row["id"], root, found, deadline)
             if same is None or same:
                 return None, MoveCheck.OUT_OF_TIME
     for row in rows:
@@ -188,7 +188,7 @@ def _moved_here(
             continue
         if time.monotonic() >= deadline:
             return None, MoveCheck.OUT_OF_TIME
-        same = folder_move.same_files(conn, row["id"], root, found, deadline)
+        same = recognise.same_files(conn, row["id"], root, found, deadline)
         if same is None:
             return None, MoveCheck.OUT_OF_TIME
         if same:
@@ -332,7 +332,7 @@ def _same_folder_at(
     if not root_readable(canonical):
         raise HTTPException(status_code=409, detail={"code": "root_unreachable", "path": canonical})
     found = walk_dir(canonical, deadline=time.monotonic() + PROBE_SECONDS)
-    if not folder_move.same_files(conn, folder_id, canonical, found):
+    if not recognise.same_files(conn, folder_id, canonical, found):
         raise HTTPException(status_code=409, detail={"code": "not_the_same_folder"})
     return row, canonical
 
@@ -352,8 +352,8 @@ def move_folder(
     folder_id: int, body: FolderMove, request: Request, conn: sqlite3.Connection = Depends(get_db)
 ) -> FolderOut:
     """The folder's files are now at `root_path`: same folder, so frames, scans and the answers
-    on its folders follow it. Only to a place with the same files (`folder_move.same_files`); a
-    retired folder comes back (`reactivated`).
+    on its folders follow it. Only to a place with the same files
+    (`pipeline/recognise.same_files`); a retired folder comes back (`reactivated`).
 
     404 `folder_not_found`; 409 `folder_exists` with its `folder_id` if the path is registered,
     active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when

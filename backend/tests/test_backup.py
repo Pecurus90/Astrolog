@@ -11,8 +11,9 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.db import config
 from astrolog.db.connect import connect, create_database
-from astrolog.fits.header_read import frame_fingerprint, read_frame
-from astrolog.spine import backup, folder_move, typeless
+from astrolog.pipeline import recognise
+from astrolog.pipeline.scanner import scan_file
+from astrolog.spine import backup, typeless
 from astrolog.spine.declarations import TypeAnswer
 from conftest import add_folder, move_folder, write_light
 
@@ -268,8 +269,8 @@ def test_a_restored_folder_without_frames_is_recognised_by_its_sample(tmp_path):
         sonda = c.post("/api/v1/folders/probe", json={"root_path": str(nuovo)}).json()
         assert sonda["moved_check"] == "none"
     conn = connect(db)
-    header, block = read_frame(str(nuovo / "dark" / "a.fits"))
-    impronta = frame_fingerprint(str(nuovo / "dark" / "a.fits"), header, block)
+    dark = nuovo / "dark" / "a.fits"
+    impronta = scan_file(dark, dark.stat().st_size).fingerprint  # come la scansione
     backup.restore(
         conn,
         {
@@ -294,7 +295,7 @@ def test_a_restored_folder_without_frames_is_recognised_by_its_sample(tmp_path):
         },
     )
     vecchia = conn.execute("SELECT id FROM pipeline_roots").fetchone()[0]
-    assert folder_move.same_files(conn, vecchia, str(nuovo), [str(nuovo / "dark" / "a.fits")])
+    assert recognise.same_files(conn, vecchia, str(nuovo), [str(nuovo / "dark" / "a.fits")])
     move_folder(conn, vecchia, str(nuovo))
     assert typeless.answer(conn, f"{nuovo.as_posix()}/dark") == TypeAnswer.CALIBRATION
 
@@ -310,7 +311,7 @@ def test_a_folder_restored_without_a_sample_is_recognised_by_nothing(tmp_path):
     backup.restore(conn, {"version": backup.VERSION, "folders": [folder]})
     vecchia = conn.execute("SELECT id FROM pipeline_roots").fetchone()[0]
     assert conn.execute("SELECT sample_json FROM pipeline_roots").fetchone()[0] == "[]"
-    assert folder_move.same_files(conn, vecchia, str(nuovo), [str(nuovo / "a.fits")]) is False
+    assert recognise.same_files(conn, vecchia, str(nuovo), [str(nuovo / "a.fits")]) is False
 
 
 def test_no_row_id_goes_in_the_file(conn):

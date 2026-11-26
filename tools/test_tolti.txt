@@ -848,3 +848,9 @@ test_a_folder_inside_or_around_a_root_is_refused_saying_which - passo 38: intorn
 test_a_faint_object_never_scores_worse_than_one_with_no_magnitude - passo 40: diviso in test_the_magnitude_term_stays_inside_its_floor_and_ceiling e test_a_missing_magnitude_is_zero_and_the_double_cluster_pays_for_it, stessi casi
 test_only_a_folder_that_exists_is_added - passo 40.3: una cartella che non risponde si registra (spina-scan.md); il file resta rifiutato in test_a_file_is_not_a_root, la muta in test_a_folder_not_answering_is_added_and_known_on_disk_when_it_answers
 test_the_root_is_the_same_folder_written_another_way - passo 40.3: niente ponte per percorso, posizione e file hanno la stessa radice (folder_id == root_id)
+test_a_stop_ends_the_scan_between_two_batches_as_an_interrupted_one - passo 40.4: lo stop arriva fra due file; rinominato test_a_stop_ends_the_scan_between_two_files_as_an_interrupted_one
+test_normalize_a_copy_points_at_the_original_not_at_another_copy - passo 40.4: le copie calibrate non entrano (Marco 26/11/2026, ADR 0029), nessuna copia da puntare
+test_normalize_a_touched_raw_still_beats_its_calibrated_copy - passo 40.4: la copia calibrata resta fuori dalla scansione (Marco 26/11/2026)
+test_normalize_does_not_mark_a_capture_program_that_writes_only_its_own_key - passo 40.4: lo scanner legge solo N.I.N.A. e ASIAIR (ADR 0029), gli altri programmi non entrano
+test_normalize_finds_the_copy_of_an_unsupported_capture_program - passo 40.4: un programma non supportato resta fuori dalla scansione (ADR 0029)
+test_normalize_the_copy_that_overwrites_the_capture_software - passo 40.4: la copia riscritta resta fuori dalla scansione (Marco 26/11/2026)

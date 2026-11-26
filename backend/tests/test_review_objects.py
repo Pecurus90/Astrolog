@@ -106,7 +106,8 @@ def test_the_objects_section_shows_the_archive_objects_not_the_header_spellings(
 
 def test_an_object_carries_its_hours_and_the_copy_does_not_count(client):
     """Le ore arrivano fino alla pagina, ed e' la stessa regola del conteggio: M 31 ha cinque frame
-    da 120 secondi **piu' una copia riscritta** con lo stesso tempo, quindi 600 secondi e non 720.
+    da 120 secondi **piu' una copia riscritta** con lo stesso tempo, che non entra nell'archivio
+    (ADR 0029), quindi 600 secondi e non 720.
     Un numero esatto e non un "maggiore di zero": una guardia che si accontenta di un positivo
     resterebbe verde anche contando le copie."""
     m31 = by_name(review(client)["objects"], "M 31")
@@ -213,9 +214,8 @@ def test_answering_on_an_object_moves_its_frames_and_locks_it(client_col_catalog
     dichiarazione -- `identify` deve rifare il lavoro e portarcele."""
     m31 = by_name(all_objects(client_col_catalogo), "M 31")
     esito = apply(client_col_catalogo, objects=[{"key": m31["key"], "slug": "m-45"}])
-    # sei e non cinque: si rimette in coda anche la copia riscritta, che un oggetto ce l'ha
-    # come le altre -- e' solo nei CONTEGGI a schermo che non vale un'ora in piu'
-    assert esito["changed"] == 1 and esito["requeued"] == 6
+    # cinque: la copia riscritta non entra nell'archivio (ADR 0029), non c'e' da rimettere in coda
+    assert esito["changed"] == 1 and esito["requeued"] == 5
 
     conn = db(client_col_catalogo)
     try:
@@ -224,8 +224,7 @@ def test_answering_on_an_object_moves_its_frames_and_locks_it(client_col_catalog
             " JOIN frames f ON f.object_id = o.id WHERE o.catalog_slug = 'm-45' GROUP BY o.id"
         ).fetchone()
         assert riga is not None, "i frame non sono arrivati all'oggetto dichiarato"
-        # sei frame attaccati, cinque che contano: la copia riscritta ci va come gli altri
-        assert (riga["identity_method"], riga["pose"]) == ("user", 6)
+        assert (riga["identity_method"], riga["pose"]) == ("user", 5)
     finally:
         conn.close()
 
