@@ -598,8 +598,10 @@ def online_only(monkeypatch, *paths):
     arriva con l'elenco, come su un disco vero. Si finge Windows, cosi' il test gira uguale su
     tutti e tre i sistemi; il resto della cartella resta com'e'."""
     from astrolog.fits import walk
+    from astrolog.pipeline import walk as new_walk
 
     monkeypatch.setattr(walk, "PLATFORM", "win32")
+    monkeypatch.setattr(new_walk, "PLATFORM", "win32")  # the new walk asks its own
     # `realpath` da tutte e due le parti: chi elenca puo' avere il percorso gia' risolto (la sonda
     # di Aggiungi cartella lo fa), e su Windows un nome breve non combacerebbe col suo nome lungo
     segnati = {os.path.normcase(os.path.realpath(str(p))) for p in paths}
