@@ -414,10 +414,16 @@ def settle(path, age_s=600):
     os.utime(path, (past, past))
 
 
+def _key(root):
+    """Chiave dal testo, in minuscolo dove il disco ignora le maiuscole, come le scrive l'app."""
+    key = os.path.normcase(os.path.normpath(str(root)))
+    return key.casefold() if roots._ignores_case(key) else key
+
+
 def add_folder(conn, root):
     """Una cartella registrata nel DB di prova, percorso com'e' scritto (anche finto, 'D:/Astro'
     su Linux), chiavi dal testo; torna il suo id. La porta vera e' POST /folders."""
-    key = os.path.normcase(os.path.normpath(str(root)))
+    key = _key(root)
     return conn.execute(
         "INSERT INTO pipeline_roots (path, written_key, real_key, ancestors, created_at)"
         " VALUES (?, ?, ?, '[]', 'now')",
@@ -437,7 +443,7 @@ def move_folder(conn, folder_id, new_root):
     """Lo spostamento come lo fa POST /folders/{id}/move, percorso com'e' scritto (anche finto):
     prima la riga della radice, poi le risposte che la seguono."""
     old = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (folder_id,)).fetchone()[0]
-    key = os.path.normcase(os.path.normpath(str(new_root)))
+    key = _key(new_root)
     with transaction(conn):
         conn.execute(
             "UPDATE pipeline_roots SET path = ?, written_key = ?, real_key = ? WHERE id = ?",

@@ -19,20 +19,26 @@ def names_the_optics(software: str | None, telescope_raw: str | None) -> bool:
 
 
 _RAW = "software_raw, instrument_raw, filter_raw, telescope_raw"
+# module level: mutmut changes SQL case in functions, and SQLite ignores case
+_UNJUDGED = (
+    f"SELECT id, {_RAW} FROM frames WHERE asks_camera IS NULL"  # noqa: S608 - constant
+    " OR asks_filter IS NULL OR names_optics IS NULL"
+)
+_JUDGE = (
+    "UPDATE frames SET asks_camera = :asks_camera, asks_filter = :asks_filter,"
+    " names_optics = :names_optics WHERE id = :id"
+)
 
 
 def fill(conn: sqlite3.Connection) -> None:
     """Frames the scan left unjudged (NULL), or whose header it rewrote."""
-    rows = conn.execute(
-        f"SELECT id, {_RAW} FROM frames WHERE asks_camera IS NULL"  # noqa: S608 - constant
-        " OR asks_filter IS NULL OR names_optics IS NULL"
-    ).fetchall()
+    rows = conn.execute(_UNJUDGED).fetchall()
     with transaction(conn):
-        conn.executemany(
-            "UPDATE frames SET asks_camera = :asks_camera, asks_filter = :asks_filter,"
-            " names_optics = :names_optics WHERE id = :id",
-            [{**of(dict(row)), "id": row["id"]} for row in rows],
-        )
+        conn.executemany(_JUDGE, [_judged(dict(row)) for row in rows])
+
+
+def _judged(fields: dict[str, Any]) -> dict[str, Any]:
+    return {**fields, **of(fields)}
 
 
 def of(fields: Mapping[str, Any]) -> dict[str, int]:

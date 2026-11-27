@@ -93,7 +93,9 @@ def test_a_piece_written_by_hand_says_its_hours_at_once(archivio):
     with mock.patch.object(gear_usage, "write", side_effect=AssertionError("ha ricontato tutto")):
         assert crea(archivio, kind="optics", name="RC8").status_code == 201
     nuova = pezzo(archivio, "optics", "RC8")
-    assert (nuova["counted"], nuova["frames"], nuova["integration_s"]) == (True, 0, 0)
+    assert (nuova["counted"], nuova["frames"], nuova["integration_s"], nuova["untimed"]) == (
+        True, 0, 0, 0
+    )  # fmt: skip
 
 
 def test_you_can_add_a_piece_the_files_never_named(vuoto):

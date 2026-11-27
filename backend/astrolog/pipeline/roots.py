@@ -230,7 +230,10 @@ def _active(conn: sqlite3.Connection) -> list[sqlite3.Row]:
 
 
 def _ignores_case(path: str) -> bool:
-    """Asks the disk: same folder under swapped case (macOS APFS default, Windows)."""
+    """Asks the disk: same folder under swapped case (macOS APFS default, Windows). Path not
+    there yet: its nearest folder that is."""
+    while not os.path.lexists(path) and os.path.dirname(path) != path:
+        path = os.path.dirname(path)
     swapped = path.swapcase()
     try:
         return swapped != path and os.path.samefile(path, swapped)
