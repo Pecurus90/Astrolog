@@ -1,9 +1,9 @@
 """Old tables when a root changes (row: `pipeline/roots.py`): positions and whole-path folder
 answers follow (recognition: `pipeline/recognise.py`). Dies with positions (step 40.4)."""
 
+import os
 import sqlite3
 
-from ..pipeline.roots import inside
 from . import typeless_folders
 from .declarations import EntityType
 from .frame_folder import folder_key
@@ -37,8 +37,14 @@ def frames(conn: sqlite3.Connection, folder_id: int) -> int:
     return int(conn.execute(_FRAMES, (folder_id,)).fetchone()[0])
 
 
+def inside(child: str, parent: str) -> bool:
+    """Copy of `pipeline/roots._inside` (spine does not import the new pipeline): the same roots
+    follow. Dies with positions (step 40.4)."""
+    return child.startswith(parent if parent.endswith(os.sep) else parent + os.sep)
+
+
 def absorb(conn: sqlite3.Connection, outer_id: int) -> None:
-    """In caller's transaction, after `roots.absorb`, its `inside` on positions: roots inside,
+    """In caller's transaction, after `roots.absorb`, same rule on positions: roots inside,
     retired too, give theirs prefixed; a retired one around gives back those under it."""
     rows = [tuple(r) for r in conn.execute(_ROOTS)]
     _, outer, outer_written, _ = next(r for r in rows if r[0] == outer_id)

@@ -8,7 +8,7 @@ import pytest
 
 from astrolog.api import paths
 from astrolog.pipeline import roots
-from astrolog.spine import typeless, typeless_folders
+from astrolog.spine import folder_move, typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
 from conftest import absorb_folder, add_folder, wait_until, write_light
 from test_folder_move import _frame
@@ -105,8 +105,8 @@ def test_inside_a_disk_root_is_inside_it():
     """Dentro la radice di un disco (`D:\\` o `/`, che finisce gia' col separatore) si e' dentro,
     senza un separatore in piu' che nessun percorso ha."""
     radice = os.sep if os.sep == "/" else "D:" + os.sep
-    assert roots.inside(radice + "astro", radice)
-    assert not roots.inside(radice + "astro", radice + "ast")
+    assert folder_move.inside(radice + "astro", radice)
+    assert not folder_move.inside(radice + "astro", radice + "ast")
 
 
 def test_a_retired_folder_inside_gives_its_frames_too(conn):
