@@ -29,6 +29,8 @@ _RUNNING: dict[int, threading.Lock] = {}  # app is one process: a lock per root
 BATCH = 100  # [T] write lock short, a stop loses one batch at most
 UNKNOWN_KEPT = 100  # [P ADR 0038] receipt stays small, readable on screen
 UNKNOWN_TRACKED = 10_000  # [T] memory bound on distinct keys; past it unknown_more = at least
+# file of known frame not read (locked, damaged): frame stays, never "not found" (spina-scan.md)
+KEEPS_FRAME = PASSING | {Skip.BROKEN}
 
 
 class ScanRunningError(RuntimeError):
@@ -226,13 +228,13 @@ def _read(path: Path, size: int, traced: set[type[Exception]]) -> Read:
 
 def _store(conn: sqlite3.Connection, changes: Changes, rel: str, read: Read, now: str) -> set[int]:
     """File's size and date written with its read, frame and header together: skipped file
-    loses both, unless passing skip (locked) of file read before. Returns shots touched."""
+    loses both, unless locked or damaged file read before. Returns shots touched."""
     got = read.got
     skipped = isinstance(got, Skipped)
     shot = None if skipped else _frame_of(conn, got, now)
     was = _row_for(conn, changes.root_id, rel, shot)
     before = was["frame_id"] if was is not None else None
-    held = skipped and got.reason in PASSING and before is not None  # locked: keeps its shot
+    held = skipped and got.reason in KEEPS_FRAME and before is not None
     frame_id = (before if held else None) if skipped else shot
     file_id = _write_file(conn, changes, rel, was, (frame_id, got.reason if skipped else None))
     touched = {shot for shot in (before, frame_id) if shot is not None}

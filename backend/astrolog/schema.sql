@@ -1068,9 +1068,11 @@ CREATE TABLE pipeline_files (
   -- arrivato dopo l'ultima volta che lo sparito era presente: spostato, anche dopo fermate
   arrived_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),
   gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire
-  -- i passeggeri tengono il frame letto prima, finche' si rilegge
+  -- passeggeri e rovinati tengono il frame letto prima: i primi finche' si rilegge, i rovinati
+  -- finche' il file cambia
   CHECK (
-    frame_id IS NULL OR skip_reason IS NULL OR skip_reason IN ('unreadable', 'incomplete', 'fault')
+    frame_id IS NULL OR skip_reason IS NULL
+    OR skip_reason IN ('unreadable', 'incomplete', 'fault', 'broken')
   ),
   CHECK ((state = 'gone') = (gone_scan_id IS NOT NULL))
 ) STRICT;

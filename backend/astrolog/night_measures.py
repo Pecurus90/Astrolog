@@ -28,15 +28,17 @@ LEFT JOIN pipeline_sky k ON k.frame_id = b.pipeline_frame_id
 LEFT JOIN pipeline_sqm q ON q.frame_id = b.pipeline_frame_id"""
 NEVER = ("not_supported", "rewritten", "broken")  # read, no frame, never measured
 
-# Per present position, the present pipeline file of its root at the same path: its
-# frame, or why it will never have one. Unreadable or incomplete is tried again: no row.
+# Per present position, present pipeline file at same path: its frame, or why never one.
+# Unreadable, incomplete: tried again, no row. Damaged keeps frame (scan.KEEPS_FRAME), lends none.
 _PAIRS = f"""
-SELECT po.frame_id, MIN(pf.frame_id) AS pipeline_frame_id,
+SELECT po.frame_id,
+       MIN(CASE WHEN pf.skip_reason IS NULL OR pf.skip_reason NOT IN {NEVER}
+           THEN pf.frame_id END) AS pipeline_frame_id,
        MIN(CASE WHEN pf.skip_reason IN {NEVER} THEN pf.skip_reason END) AS never
 FROM positions po JOIN pipeline_files pf ON pf.rel_path = po.rel_path AND pf.state = 'present'
 WHERE po.status = 'present' AND pf.root_id = po.folder_id
 GROUP BY po.frame_id
-HAVING MIN(pf.frame_id) IS NOT NULL OR never IS NOT NULL
+HAVING pipeline_frame_id IS NOT NULL OR never IS NOT NULL
 """  # noqa: S608 - our constants
 
 # The frames the Nights page counts (spine/counts.py), with their measures if bridged.

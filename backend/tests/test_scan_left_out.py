@@ -46,6 +46,21 @@ def test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on(conn, tmp_
     assert not conn.in_transaction
 
 
+def test_a_pose_that_can_no_longer_be_read_is_not_missing(conn, tmp_path):
+    """Un frame gia' in archivio il cui file non si legge piu' (rovinato) e' li': la ricevuta lo
+    nomina fra i non letti, ma non diventa "non trovato" e il frame resta."""
+    write_light(tmp_path / "a.fits")
+    fid = add_folder(conn, tmp_path)
+    assert run(conn, fid)["new"] == 1
+    (tmp_path / "a.fits").write_bytes(b"non e' piu' un FITS\x00" * 50)
+    settle(tmp_path / "a.fits", 300)
+    done = run(conn, fid)
+    assert (done["errors"], done["missing"]) == (1, 0)
+    present = "SELECT COUNT(*) FROM pipeline_files WHERE state = 'present' AND frame_id IS NOT NULL"
+    assert count(conn, present) == 1
+    assert count(conn, "SELECT COUNT(*) FROM pipeline_frames") == 1
+
+
 def test_the_same_unexpected_fault_leaves_one_trace_in_the_log(conn, tmp_path, monkeypatch, caplog):
     """Un guasto imprevisto uguale su mille file lascia nel log una traccia per tipo, a ogni corsa:
     mille tracce da 1,2 KB riempirebbero i 20 MB del log e ne spingerebbero fuori cio' che c'era

@@ -184,6 +184,20 @@ def test_a_file_the_pipeline_skips_for_good_is_not_waiting(conn, world) -> None:
     assert (group["frames"], group["pending"]) == (1, 0)
 
 
+def test_a_file_damaged_after_its_read_keeps_its_frame_and_is_not_waiting(conn, world) -> None:
+    """Damaged after the scan read it: the scan keeps its frame (spina-scan.md), but it is
+    never read again until it changes, so not "still to measure"."""
+    spine = world.frame()
+    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
+    world.file(rel)
+    conn.execute("UPDATE pipeline_files SET skip_reason = 'broken' WHERE rel_path = ?", (rel,))
+    night_measures.rebuild(conn)
+    bridged = conn.execute("SELECT * FROM night_measure_frames").fetchone()
+    assert (bridged["pipeline_frame_id"], bridged["skip_reason"]) == (None, "broken")
+    group = _group(conn, world.night)
+    assert (group["frames"], group["pending"]) == (1, 0)
+
+
 def test_a_file_unreadable_for_now_is_still_waiting(conn, world) -> None:
     """Unreadable or incomplete is tried again at the next scan."""
     spine = world.frame()
