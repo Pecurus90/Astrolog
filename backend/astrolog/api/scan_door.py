@@ -169,8 +169,8 @@ def close(conn: sqlite3.Connection, folder_id: int, run_id: int, result: ScanRes
         _positions(conn, folder_id, mark_missing=status == ScanStatus.OK)
         counts, skipped, errors = _counts(conn, result)
     left_out: dict[str, list[Any]] = {
-        "unreadable_dirs": list(changes.unreachable),
-        "hidden_dirs": list(changes.hidden),
+        "unreadable_dirs": [_shown(d) for d in changes.unreachable],
+        "hidden_dirs": [_shown(d) for d in changes.hidden],
         "linked_dirs": [],  # the new walk follows links, once by real path
         "skipped_by_reason": skipped,
     }

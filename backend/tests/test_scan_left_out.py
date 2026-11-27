@@ -5,8 +5,10 @@ schema.sql."""
 
 import json
 import logging
+import os
 
 from astrolog.api import scan_door
+from astrolog.pipeline import changes as changes_mod
 from astrolog.pipeline import scan as pipeline_scan
 from astrolog.pipeline import scanner
 from astrolog.spine.scan_store import start_run
@@ -44,6 +46,28 @@ def test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on(conn, tmp_
     salvato = json.loads(count(conn, "SELECT errors_detail_json FROM scan_runs"))
     assert sorted(salvato, key=lambda e: e["file"]) == rotti
     assert not conn.in_transaction
+
+
+def test_a_name_the_archive_cannot_write_is_named_and_the_scan_goes_on(conn, tmp_path, monkeypatch):
+    """Un nome che non e' UTF-8 -- una condivisione Linux scritta da un sistema vecchio -- non si
+    puo' scrivere nell'archivio: si nomina, leggibile, e la corsa va avanti, anche quando e' una
+    cartella lasciata fuori. Il nome si finge: su Windows una cartella cosi' non si crea."""
+    write_light(tmp_path / "b.fits")
+    root, vera = str(tmp_path), changes_mod.walk_dir
+
+    def con_nomi_storti(cartella):
+        visto = vera(cartella)
+        visto.hidden.append(os.path.join(root, ".sub_\udce9"))
+        visto.unreachable.append(os.path.join(root, "chiusa_\udce9"))
+        return visto
+
+    monkeypatch.setattr(changes_mod, "walk_dir", con_nomi_storti)
+    done = run(conn, add_folder(conn, tmp_path))
+    assert (done["status"], done["new"]) == ("ok", 1)
+    assert (done["hidden_dirs"], done["unreadable_dirs"]) == ([".sub_?"], ["chiusa_?"])
+    salvate = "SELECT hidden_dirs_json, unreadable_dirs_json FROM scan_runs"
+    assert [json.loads(v) for v in conn.execute(salvate).fetchone()] == [[".sub_?"], ["chiusa_?"]]
+    json.dumps(done, ensure_ascii=False).encode("utf-8")  # la pagina lo riceve in JSON
 
 
 def test_a_pose_that_can_no_longer_be_read_is_not_missing(conn, tmp_path):
