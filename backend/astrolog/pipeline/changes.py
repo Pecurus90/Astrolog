@@ -71,6 +71,13 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
     return seen, unlooked
 
 
+def _ms(mtime_ns: int) -> int:
+    """Date compared to the millisecond (spina.md:40): a remounted NAS truncates the rest.
+    Toward zero like SQLite integer division in scan.MOVED, before 1970 too."""
+    whole = abs(mtime_ns) // 1_000_000
+    return whole if mtime_ns >= 0 else -whole
+
+
 def _held(mtime_ns: int) -> int:
     """Date past SQLite INTEGER (NTFS 1601, year 2300): pinned to edge; file still read."""
     return max(SQLITE_MIN, min(mtime_ns, SQLITE_MAX))
@@ -205,7 +212,7 @@ def _judge(
             changes.new.append(rel)
             changes.stat[rel] = stat  # row written with its read
             continue
-        if (before["size"], before["mtime_ns"]) != stat:
+        if (before["size"], _ms(before["mtime_ns"])) != (stat[0], _ms(stat[1])):
             changes.changed.append(rel)
             changes.stat[rel] = stat
         elif before["skip_reason"] in PASSING:  # read failed last time: never lost

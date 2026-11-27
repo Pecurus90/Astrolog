@@ -376,7 +376,8 @@ def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:
 
 MOVED = (  # by frame inside root: index pipeline_files_frame, else quadratic on big moves
     "SELECT was.rel_path AS was, now.rel_path AS now,"
-    " now.size = was.size AND now.mtime_ns = was.mtime_ns AS kept FROM pipeline_files AS now"
+    " now.size = was.size AND now.mtime_ns / 1000000 = was.mtime_ns / 1000000 AS kept"  # as _ms
+    " FROM pipeline_files AS now"
     " JOIN pipeline_files AS was ON was.frame_id = now.frame_id AND was.root_id = now.root_id"
     " WHERE now.root_id = ? AND now.state = 'present' AND was.state = 'gone'"
     " AND was.gone_scan_id = ? AND now.arrived_scan_id > was.seen_scan_id"

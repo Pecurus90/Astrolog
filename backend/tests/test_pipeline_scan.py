@@ -374,6 +374,35 @@ def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
     assert result.frames == 1
 
 
+def test_a_millisecond_truncated_mtime_is_still_unchanged(conn, tmp_path, monkeypatch):
+    path = nina_light(tmp_path / "a.fits", 1)
+    os.utime(path, ns=(1_700_000_000_123_456_700, 1_700_000_000_123_456_700))
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    os.utime(path, ns=(1_700_000_000_123_000_000, 1_700_000_000_123_000_000))  # NAS remounted
+    reads: list[Path] = []
+    real = scan.scan_file
+    monkeypatch.setattr(scan, "scan_file", lambda p, s: reads.append(p) or real(p, s))
+    result = scan_root(conn, root, LATER)
+    assert reads == []
+    assert result.frames == 1
+
+
+def test_a_move_after_a_remount_is_still_the_file_that_kept_its_date(conn, tmp_path):
+    """Data troncata al ms dopo il rimontaggio, poi spostato: resta lo spostato, non la copia."""
+    path = nina_light(tmp_path / "a.fits", 4)
+    os.utime(path, ns=(1_700_000_000_123_456_700, 1_700_000_000_123_456_700))
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    os.utime(path, ns=(1_700_000_000_123_000_000, 1_700_000_000_123_000_000))
+    scan_root(conn, root, LATER)
+    shutil.copy(path, tmp_path / "b.fits")
+    _touch_later(tmp_path / "b.fits")
+    (tmp_path / "z").mkdir()
+    path.rename(tmp_path / "z" / "a.fits")
+    assert scan_root(conn, root, THEN).moved == [("a.fits", "z/a.fits")]
+
+
 def _headers(conn) -> dict[str, tuple[str, dict]]:
     """rel_path -> (program, header) of every file with stored header, present or gone. Checks
     invariant on the way: file has frame iff it has header."""

@@ -1056,7 +1056,7 @@ CREATE TABLE pipeline_files (
   root_id      INTEGER NOT NULL REFERENCES pipeline_roots (id),
   rel_path     TEXT NOT NULL,     -- con `/`: regge cambio di sistema
   size         INTEGER NOT NULL CHECK (size >= 0),
-  mtime_ns     INTEGER NOT NULL,  -- esatta: data diversa, rilettura
+  mtime_ns     INTEGER NOT NULL,  -- confrontata al ms: NAS rimontato tronca il resto
   state        TEXT NOT NULL CHECK (state IN ('present', 'gone')),
   seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha visto presente
   -- NULL: non letto come frame. Sparito lo tiene: cosi' si riconosce lo spostato.
