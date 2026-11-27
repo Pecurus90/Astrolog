@@ -5,7 +5,7 @@ L'archivio di prova e' quello sintetico (`synthetic.py`), non quello di Marco: g
 sono dei quattro software supportati piu' i casi che rompono le assunzioni.
 """
 
-from astrolog.spine import signature, stages
+from astrolog.spine import signature, stage_run, stages
 from astrolog.spine import signature_page as cards
 from astrolog.spine.normalize import normalize_frames
 from conftest import (
@@ -21,6 +21,20 @@ from synthetic import build_archive
 
 # the 14 synthetic files minus Voyager, SGP and the rewritten copy, skipped by the scan (ADR 0029)
 SYNTHETIC_FRAMES = 11
+
+
+def test_each_frame_says_how_far_and_the_log_names_the_stage(conn, tmp_path, caplog):
+    """Ogni frame lavorato dice a che punto si e' (la barra dello stadio), e il log dice di quale
+    stadio parla."""
+    write_light(tmp_path / "a.fits", obj="M 1")
+    write_light(tmp_path / "b.fits", obj="M 2")
+    scan(conn, tmp_path)
+    with caplog.at_level("INFO", logger=stage_run.log.name):
+        eventi = list(normalize_frames(conn))
+    assert [(e["current"], e["total"]) for e in eventi[:-1]] == [(1, 2), (2, 2)]
+    assert "normalize: inizio" in [r.getMessage() for r in caplog.records]
+
+
 # --- il corpus: cosa esce dai quattro software ------------------------------------------
 
 

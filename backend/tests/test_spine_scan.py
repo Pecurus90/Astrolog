@@ -204,22 +204,54 @@ def test_scan_unknown_type_enters_and_waits_before_the_object(conn, tmp_path):
     assert _aspetta(conn)
 
 
-def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path):
+# the old scan and the new one, while both live (step 40.4 takes the old one out)
+SCANS = pytest.mark.parametrize("leggi", [run, scan_once], ids=["vecchia", "nuova"])
+
+
+@SCANS
+def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path, leggi):
     """Detto che in quella cartella ci sono file di calibrazione, i file nuovi che arrivano dopo
-    non entrano affatto e la ricevuta li conta per motivo, come quelli che lo dicono da soli. Un
-    frame gia' in archivio spostato li' invece entra (`test_review_typeless.py`). Cambiata la
-    risposta, il file entra alla scansione dopo. La scansione nuova (passo 40.4)."""
+    non entrano affatto e la ricevuta li conta per motivo, come quelli che lo dicono da soli; un
+    light che dice di esserlo entra. Un frame gia' in archivio spostato li' invece entra
+    (`test_review_typeless.py`). Cambiata la risposta, il file entra alla scansione dopo."""
     folder_id = add_folder(conn, tmp_path)
     chiave = frame_folder.folder_key(str(tmp_path))
     typeless.declare(conn, chiave, TypeAnswer.CALIBRATION)
     _muto(tmp_path, "dark.fits")
-    done = scan_once(conn, folder_id)
-    assert (done["new"], done["skipped"]) == (0, 1)
+    write_light(tmp_path / "luce.fits")
+    done = leggi(conn, folder_id)
+    assert (done["new"], done["skipped"]) == (1, 1)
     assert done["skipped_by_reason"] == [{"reason": "calibration", "count": 1}]
-    assert count(conn, "SELECT COUNT(*) FROM frames") == 0
+    assert count(conn, "SELECT COUNT(*) FROM frames") == 1
     typeless.declare(conn, chiave, TypeAnswer.LIGHT)
-    done = scan_once(conn, folder_id)
+    done = leggi(conn, folder_id)
     assert (done["new"], done["skipped"]) == (1, 0)
+
+
+def test_scan_a_pose_said_missing_found_unchanged_is_present_again(conn, tmp_path):
+    """Una posa segnata "non trovata" che la scansione ritrova uguale torna presente."""
+    write_light(tmp_path / "a.fits")
+    fid = add_folder(conn, tmp_path)
+    run(conn, fid)
+    conn.execute("UPDATE positions SET status = 'missing'")
+    assert run(conn, fid)["unchanged"] == 1
+    assert conn.execute("SELECT status FROM positions").fetchone()[0] == "present"
+
+
+def test_scan_touched_headers_and_late_copies_are_counted_one_by_one(conn, tmp_path):
+    """Due file toccati sul disco con gli stessi pixel sono due uguali; due copie arrivate dopo
+    di un frame gia' in archivio sono due doppioni."""
+    a = write_light(tmp_path / "a.fits", obj="M 1")
+    b = write_light(tmp_path / "b.fits", obj="M 2")
+    fid = add_folder(conn, tmp_path)
+    run(conn, fid)
+    for p in (a, b):
+        settle(p, 300)  # same bytes, another date: read again, same pixels
+    for copia in ("c.fits", "d.fits"):
+        (tmp_path / copia).write_bytes(Path(a).read_bytes())
+        settle(tmp_path / copia)
+    done = run(conn, fid)
+    assert (done["new"], done["unchanged"], done["duplicates"]) == (0, 2, 2)
 
 
 def test_scan_lets_in_a_folder_the_user_called_sky(conn, tmp_path):

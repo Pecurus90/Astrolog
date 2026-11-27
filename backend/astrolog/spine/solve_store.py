@@ -6,25 +6,27 @@ from collections.abc import Collection, Iterable
 
 from ..db import idlist
 
+# Out of the function: mutmut upper-cases a literal in a function, an equivalent mutant. The
+# pixel: your word over the files', as `gear.camera_specs` reads it.
+_FRAME = (
+    "SELECT f.*,"
+    " (SELECT d.path FROM positions p JOIN pipeline_roots d ON d.id = p.folder_id"
+    "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS root_path,"
+    " (SELECT p.rel_path FROM positions p"
+    "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS rel_path,"
+    " (SELECT COALESCE((SELECT d.value FROM declarations d WHERE d.entity_type = 'instrument'"
+    "   AND d.entity_key = i.kind || '|' || i.name AND d.field = 'pixel_size_um'),"
+    "   i.pixel_size_um) FROM rigs r JOIN instruments i ON i.id = r.camera_id"
+    "   WHERE r.id = f.rig_id) AS card_pixel_um,"
+    " (SELECT r.focal_mm FROM rigs r WHERE r.id = f.rig_id) AS rig_focal_mm"
+    " FROM frames f WHERE f.id = ?"
+)
+
 
 def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
     """With its first present position; all `missing` gives a `None` path: a detached disk, not
     an error."""
-    return conn.execute(
-        "SELECT f.*,"
-        " (SELECT d.path FROM positions p JOIN pipeline_roots d ON d.id = p.folder_id"
-        "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS root_path,"
-        " (SELECT p.rel_path FROM positions p"
-        "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS rel_path,"
-        # your word over the files', as `gear.camera_specs` reads it
-        " (SELECT COALESCE((SELECT d.value FROM declarations d WHERE d.entity_type = 'instrument'"
-        "   AND d.entity_key = i.kind || '|' || i.name AND d.field = 'pixel_size_um'),"
-        "   i.pixel_size_um) FROM rigs r JOIN instruments i ON i.id = r.camera_id"
-        "   WHERE r.id = f.rig_id) AS card_pixel_um,"
-        " (SELECT r.focal_mm FROM rigs r WHERE r.id = f.rig_id) AS rig_focal_mm"
-        " FROM frames f WHERE f.id = ?",
-        (frame_id,),
-    ).fetchone()
+    return conn.execute(_FRAME, (frame_id,)).fetchone()
 
 
 # Not the glossary's session (that is `group`'s): only a queue, so the raw object is enough and

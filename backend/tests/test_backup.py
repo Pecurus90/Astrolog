@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.db import config
 from astrolog.db.connect import connect, create_database
-from astrolog.pipeline import recognise
+from astrolog.pipeline import recognise, roots
 from astrolog.pipeline.scanner import scan_file
 from astrolog.spine import backup, typeless
 from astrolog.spine.declarations import TypeAnswer
@@ -257,6 +257,47 @@ def test_the_answers_keep_their_keys_and_the_folder_its_sample(conn, tmp_path):
     assert typeless.answer(altro, "D:/Astro/dark") == TypeAnswer.CALIBRATION
     campione = altro.execute("SELECT sample_json FROM pipeline_roots").fetchone()[0]
     assert json.loads(campione) == [["dark/a.fits", "impronta-1"]]
+
+
+def test_a_restored_folder_keeps_its_name_and_its_retirement(conn, tmp_path, caplog, monkeypatch):
+    """Una cartella torna col nome che le hai dato e, se l'avevi tolta, tolta; una che qui non si
+    puo' scrivere (un nome non testo, da un sistema vecchio) resta fuori, e il log lo dice."""
+    fid = add_folder(conn, "D:/Astro")
+    conn.execute(
+        "UPDATE pipeline_roots SET name = 'Casa', retired_at = '2026-11-01T10:00:00.000Z'"
+        " WHERE id = ?",
+        (fid,),
+    )
+    data = backup.collect(conn, this_machine=True)
+    storta = {"root_path": "D:/storta", "name": None, "retired_at": None, "sample": []}
+    data["folders"].append(storta)
+    create_database(tmp_path / "nuovo.db")
+    altro = connect(tmp_path / "nuovo.db")
+    vera = roots.restore  # the log carries the path: a surrogate would break xdist, so faked
+    monkeypatch.setattr(
+        roots, "restore", lambda c, d, now: None if d.path == "D:/storta" else vera(c, d, now)
+    )
+    with caplog.at_level("WARNING", logger=backup.log.name):
+        backup.restore(altro, data)
+    righe = altro.execute("SELECT name, retired_at FROM pipeline_roots").fetchall()
+    assert [tuple(r) for r in righe] == [("Casa", "2026-11-01T10:00:00.000Z")]
+    detti = [r.getMessage() for r in caplog.records if r.name == backup.log.name]
+    assert detti == ["backup: folder D:/storta not usable here, left out"]
+
+
+def test_a_scan_rewrites_the_file_only_when_it_is_one_and_a_sample_changed(conn, db_path):
+    """Dopo una scansione il file si riscrive solo se c'e', e' un file di risposte, e il campione
+    di una cartella non e' il suo -- anche un file che le cartelle non le ha ancora."""
+    add_folder(conn, "D:/Astro")
+    assert backup.write_if_new_sample(conn, db_path) is False  # nessun file: resta cosi'
+    assert not _file(db_path).exists()
+    _file(db_path).write_text("non e' un file di risposte", encoding="utf-8")
+    assert backup.write_if_new_sample(conn, db_path) is False
+    assert _file(db_path).read_text(encoding="utf-8") == "non e' un file di risposte"
+    _file(db_path).write_text(json.dumps({"version": backup.VERSION}), encoding="utf-8")
+    assert backup.write_if_new_sample(conn, db_path) is True
+    assert [f["root_path"] for f in backup.read(_file(db_path))["folders"]] == ["D:/Astro"]
+    assert backup.write_if_new_sample(conn, db_path) is False
 
 
 def test_a_restored_folder_without_frames_is_recognised_by_its_sample(tmp_path):

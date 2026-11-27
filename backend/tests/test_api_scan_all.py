@@ -84,6 +84,14 @@ def test_one_gesture_reads_every_folder(app):
     assert per_cartella[uno]["found"] == 3
     assert per_cartella[due]["found"] == 2
     assert all(r["status"] == "ok" for r in ricevute)
+    # lo stato segue la cartella che si legge: a corsa finita, l'ultima
+    assert client.app.state.last_scan == (due, avviate[due])
+
+
+def test_the_path_of_a_folder_that_is_not_there_is_not_known(conn):
+    """Lo stato chiede il percorso di una cartella che non c'e': non lo sa, non si rompe."""
+    assert pipeline._folder_path(conn, 999) is None
+    assert pipeline._folder_path(conn, add_folder(conn, "D:/Astro")) == "D:/Astro"
 
 
 def test_the_frames_of_every_folder_are_in_the_archive(app):

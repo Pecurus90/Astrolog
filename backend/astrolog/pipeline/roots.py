@@ -84,7 +84,7 @@ def register(
 def _register(conn: sqlite3.Connection, place: _Place, now: str, name: str | None) -> int:
     held = {
         r["id"] for r in conn.execute("SELECT id, written_key FROM pipeline_roots")
-        if _inside(r["written_key"], place.written)
+        if inside(r["written_key"], place.written)
     }  # fmt: skip
     same = _same_root(conn, place, held)
     if same is not None:
@@ -108,9 +108,9 @@ def absorb(conn: sqlite3.Connection, outer_id: int, now: str) -> None:
         "SELECT path, written_key FROM pipeline_roots WHERE id = ?", (outer_id,)
     ).fetchone()
     for row in conn.execute("SELECT * FROM pipeline_roots WHERE id != ?", (outer_id,)).fetchall():
-        if _inside(row["written_key"], outer["written_key"]):
+        if inside(row["written_key"], outer["written_key"]):
             _take_over(conn, outer_id, row["id"], _prefix(row["path"], outer["path"]), now)
-        elif row["retired_at"] is not None and _inside(outer["written_key"], row["written_key"]):
+        elif row["retired_at"] is not None and inside(outer["written_key"], row["written_key"]):
             _give_back(conn, row["id"], outer_id, _prefix(outer["path"], row["path"]))
 
 
@@ -211,14 +211,14 @@ def restore(conn: sqlite3.Connection, declared: Declared, now: str) -> int | Non
 def held(conn: sqlite3.Connection, path: str) -> list[Root]:
     """Active roots `path` would hold, as written: adding it takes them."""
     written = _keys(normalized(path))[0]
-    return [Root(r["id"], r["path"]) for r in _active(conn) if _inside(r["written_key"], written)]
+    return [Root(r["id"], r["path"]) for r in _active(conn) if inside(r["written_key"], written)]
 
 
 def holder(conn: sqlite3.Connection, path: str) -> Root | None:
     """Active root `path` is inside, as written: its files are read already."""
     written = _keys(normalized(path))[0]
     return next(
-        (Root(r["id"], r["path"]) for r in _active(conn) if _inside(written, r["written_key"])),
+        (Root(r["id"], r["path"]) for r in _active(conn) if inside(written, r["written_key"])),
         None,
     )
 
@@ -249,7 +249,7 @@ def _keys(path: str) -> tuple[str, str]:
     return written, real
 
 
-def _inside(child: str, parent: str) -> bool:
+def inside(child: str, parent: str) -> bool:
     """On key text. Parent ending in bar (drive root, share written with one): no bar added.
     Another drive never inside."""
     return child.startswith(parent if parent.endswith(os.sep) else parent + os.sep)
@@ -317,8 +317,8 @@ def _same_root(conn: sqlite3.Connection, place: _Place, held: set[int]) -> int |
 def _refuse_overlap(row: sqlite3.Row, place: _Place, mine_id: str | None) -> None:
     theirs_id = f"{row['device']}:{row['inode']}" if row["device"] is not None else None
     for mine, theirs in ((place.written, row["written_key"]), (place.real, row["real_key"])):
-        if _inside(mine, theirs) or _inside(theirs, mine):
-            raise RootOverlapError(row["path"], row["id"], inside=_inside(mine, theirs))
+        if inside(mine, theirs) or inside(theirs, mine):
+            raise RootOverlapError(row["path"], row["id"], inside=inside(mine, theirs))
     if theirs_id in place.ancestors and _still(row["path"], place.ancestors[theirs_id]):
         raise RootOverlapError(row["path"], row["id"], inside=True)
     if mine_id is not None and mine_id in json.loads(row["ancestors"]):

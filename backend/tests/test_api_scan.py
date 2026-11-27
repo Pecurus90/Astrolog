@@ -267,7 +267,9 @@ def test_scan_lock_stop_and_the_button_verb(app):
     with mock.patch.object(scan_mod, "scan_file", side_effect=slow_read):
         assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202
         assert wait_until(lambda: len(seen) >= 2)
-        assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 409
+        r = client.post(f"/api/v1/folders/{fid}/scan")
+        assert r.status_code == 409
+        assert r.json()["detail"] == {"code": "scan_running", "folder_id": fid}
         s = status(client)
         assert s["worker"]["state"] == "running" and s["action"] == "stop"
         assert s["scan"]["state"] == "running" and s["scan"]["folder_id"] == fid
@@ -313,11 +315,33 @@ def test_no_autostart_and_precheck_409s(app):
     assert client.app.state.worker.snapshot().state == State.IDLE
     assert status(client)["action"] == "start" and status(client)["scan"] is None
     assert client.post("/api/v1/folders/9999/scan").status_code == 404
+    scritta = client.get("/api/v1/folders").json()["items"][0]["root_path"]
     for p in root.iterdir():
         p.unlink()
     root.rmdir()
-    assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 409
+    r = client.post(f"/api/v1/folders/{fid}/scan")
+    assert r.status_code == 409
+    assert r.json()["detail"] == {"code": "root_unreachable", "path": scritta}
     assert not client.app.state.behind.scanning(fid)
+
+
+def test_the_end_of_a_run_hands_its_folders_on_unless_stopped(db_path, monkeypatch):
+    """A corsa finita -- l'ultimo stadio della catena, non uno in mezzo -- le cartelle lette passano
+    alla pipeline nuova; fermata dall'utente, no: lo Stop vale anche li'."""
+    monkeypatch.setattr(scan_api, "_feed_behind", _FEED_BEHIND)
+    date = []
+    fermato = [False]
+    stato = mock.Mock(db_path=db_path)
+    stato.worker.stop_requested = lambda: fermato[0]
+    stato.behind.kick = date.append
+    passi = [(nome, mock.Mock()) for nome in ("scan", "normalize", "identify")]
+    stadi = scan_api._stages_with_cleanup(stato, passi, iter([3, 5]), [], set())
+    assert [s.on_finish is not None for s in stadi] == [False, False, True]
+    stadi[-1].on_finish()
+    assert date == [[3, 5]]
+    fermato[0] = True
+    stadi[-1].on_finish()
+    assert date == [[3, 5]]
 
 
 def test_scan_schedule_nas(db_path, tmp_path):

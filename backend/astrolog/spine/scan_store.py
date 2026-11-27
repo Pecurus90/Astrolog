@@ -49,13 +49,14 @@ class FolderNotFoundError(ValueError):
     """An engine guard, not a user case."""
 
 
+_FOLDER_ROOT = "SELECT path, retired_at FROM pipeline_roots WHERE id = ?"
+
+
 def folder_root(conn: sqlite3.Connection, folder_id: int) -> tuple[str, str | None]:
-    row = conn.execute(
-        "SELECT path, retired_at FROM pipeline_roots WHERE id = ?", (folder_id,)
-    ).fetchone()
+    row = conn.execute(_FOLDER_ROOT, (folder_id,)).fetchone()
     if row is None:
         raise FolderNotFoundError(f"cartella inesistente: id={folder_id}")
-    return row["path"], row["retired_at"]
+    return row[0], row[1]
 
 
 def start_run(conn: sqlite3.Connection, folder_id: int, now: str, batch: int | None = None) -> int:

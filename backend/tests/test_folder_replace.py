@@ -87,6 +87,28 @@ def test_a_neighbour_that_starts_like_the_outer_path_gives_back_nothing(conn):
     assert _places(conn)[0][2:] == (other, "1/a.fits")
 
 
+def test_a_neighbour_listed_first_does_not_stop_the_inner_ones(conn):
+    """Una cartella vicina registrata prima non interrompe il giro: le interne registrate dopo
+    passano lo stesso alla esterna."""
+    other = add_folder(conn, "D:/Altro")
+    outer = add_folder(conn, "D:/Astro")
+    inner = add_folder(conn, "D:/Astro/M31")
+    a = _frame(conn, inner, "a.fits")
+
+    absorb_folder(conn, outer)
+
+    assert _places(conn)[0][1:] == (a, outer, "M31/a.fits")
+    assert other != inner
+
+
+def test_inside_a_disk_root_is_inside_it():
+    """Dentro la radice di un disco (`D:\\` o `/`, che finisce gia' col separatore) si e' dentro,
+    senza un separatore in piu' che nessun percorso ha."""
+    radice = os.sep if os.sep == "/" else "D:" + os.sep
+    assert roots.inside(radice + "astro", radice)
+    assert not roots.inside(radice + "astro", radice + "ast")
+
+
 def test_a_retired_folder_inside_gives_its_frames_too(conn):
     """Ritirata, la cartella dentro non e' nella domanda, ma i suoi file sono sotto la nuova:
     le sue posizioni passano alla esterna invece di rileggerli."""
@@ -268,6 +290,44 @@ def test_a_folder_written_in_another_case_is_found_inside_the_registered_one(
     assert r.json()["detail"]["folder_id"] == outer["id"]
     probe = client_vuoto.post("/api/v1/folders/probe", json={"root_path": swapped}).json()
     assert probe["root_path"] == outer["root_path"]
+
+
+def test_a_folder_added_with_a_name_keeps_it(client_vuoto, tmp_path):
+    """Il nome che l'utente da' alla cartella resta, e torna nell'elenco."""
+    body = {"root_path": str(tmp_path), "name": "Notti di casa"}
+    assert client_vuoto.post("/api/v1/folders", json=body).json()["name"] == "Notti di casa"
+    assert [f["name"] for f in client_vuoto.get("/api/v1/folders").json()["items"]] == [
+        "Notti di casa"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("guasto", "stato", "dettaglio"),
+    [
+        (roots.RootOverlapError("D:/Astro", 7, inside=True), 409,
+         {"code": "folder_inside", "folder_id": 7, "root_path": "D:/Astro"}),
+        (roots.RootOverlapError("D:/Astro/M31", 7, inside=False), 409,
+         {"code": "folder_contains",
+          "folders": [{"id": 7, "root_path": "D:/Astro/M31", "frames": 0}]}),
+        (NotADirectoryError("un file"), 422, {"code": "path_invalid"}),
+    ],
+)  # fmt: skip
+def test_an_overlap_seen_only_on_disk_is_refused_as_the_written_one(
+    client_vuoto, tmp_path, monkeypatch, guasto, stato, dettaglio
+):
+    """Una sovrapposizione che si vede solo sul disco (un collegamento, una condivisione, un'altra
+    lettera) si rifiuta con le stesse parole di quella scritta; un percorso che sul disco non e'
+    una cartella si rifiuta come percorso non valido."""
+
+    def rifiuta(*_args):
+        raise guasto
+
+    monkeypatch.setattr(roots, "register", rifiuta)
+    r = _client_add(client_vuoto, tmp_path)
+    assert r.status_code == stato, r.text
+    atteso = dettaglio | ({"path": r.json()["detail"].get("path")} if stato == 422 else {})
+    assert r.json()["detail"] == atteso
+    assert stato != 422 or os.path.samefile(atteso["path"], tmp_path)
 
 
 def _scanned(client, folder_id):

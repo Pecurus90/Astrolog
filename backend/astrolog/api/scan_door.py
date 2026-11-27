@@ -7,7 +7,7 @@ import sqlite3
 import threading
 from collections import Counter
 from collections.abc import Callable, Generator
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from ..clock import now_iso
@@ -37,13 +37,51 @@ _SKIP_OF = {
 _ERROR_OF = {Skip.UNREADABLE: FileError.FILE_UNREADABLE, Skip.BROKEN: FileError.HEADER_UNREADABLE}
 _DONE = object()
 
+# SQL out of the functions: mutmut upper-cases a literal in a function, an equivalent mutant
+_POSITIONS_SEEN = (
+    "INSERT INTO positions (frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
+    " SELECT pf.frame_id, pf.root_id, pf.rel_path, pf.size, pf.mtime_ns / 1e9, 'present', ?"
+    " FROM pipeline_files AS pf JOIN frames AS f ON f.id = pf.frame_id"
+    " WHERE pf.root_id = ? AND pf.state = 'present' AND true"  # upsert needs WHERE
+    " ON CONFLICT (folder_id, rel_path) DO UPDATE SET frame_id = excluded.frame_id,"
+    " filesize = excluded.filesize, mtime = excluded.mtime, status = 'present',"
+    " seen_at = excluded.seen_at"
+)
+_POSITIONS_MISSING = (
+    "UPDATE positions SET status = 'missing' WHERE folder_id = ? AND status = 'present'"
+    " AND NOT EXISTS (SELECT 1 FROM pipeline_files AS pf"
+    " WHERE pf.root_id = positions.folder_id AND pf.rel_path = positions.rel_path"
+    " AND pf.state = 'present' AND pf.frame_id = positions.frame_id)"
+)
+_LEFT_OUT = (
+    "SELECT rel_path, skip_reason FROM pipeline_files WHERE root_id = ? AND state = 'present'"
+    " AND skip_reason IS NOT NULL ORDER BY rel_path"
+)
+# a frame of the pipeline, not of the archive; a typeless one without its row: the folder
+# said calibration, as frame_row._kept_out and docs/domini/spina-scan.md tell
+_CALIBRATION = (
+    "SELECT COUNT(*) FROM pipeline_files AS pf JOIN pipeline_cards AS c ON c.file_id = pf.id"
+    " WHERE pf.root_id = ? AND pf.state = 'present' AND pf.frame_id IS NOT NULL"
+    " AND (c.frame_type NOT IN ('light', 'unknown') OR (c.frame_type = 'unknown'"
+    " AND pf.frame_id NOT IN (SELECT id FROM frames)))"
+)
+# read now, a present file of its frame first: this scan, lower id (two copies born now: one
+# duplicate), or earlier and frame not born now (copy of one held out: new only)
+_DUPLICATES = (
+    "SELECT COUNT(*) FROM pipeline_files AS pf WHERE pf.root_id = ? AND pf.state = 'present'"
+    " AND pf.arrived_scan_id = ? AND pf.frame_id IN (SELECT id FROM frames)"
+    " AND EXISTS (SELECT 1 FROM pipeline_files AS o WHERE o.frame_id = pf.frame_id"
+    "   AND o.state = 'present' AND ((o.arrived_scan_id = pf.arrived_scan_id AND o.id < pf.id)"
+    "   OR (o.arrived_scan_id < pf.arrived_scan_id"
+    "   AND pf.frame_id NOT IN (SELECT value FROM json_each(?)))))"
+)
+
 
 def scan_events(
-    conn: sqlite3.Connection, folder_id: int, run_id: int | None, runner: Runner
+    conn: sqlite3.Connection, folder_id: int, run_id: int, runner: Runner
 ) -> Generator[Event]:
     """One event per file read, then the receipt. The scan runs where `runner` puts it; a close
     of this generator (the worker's Stop) stops it between two batches."""
-    run_id = run_id if run_id is not None else start_run(conn, folder_id, now_iso())
     since = now_iso()
     events: queue.Queue[Any] = queue.Queue()
     stop = threading.Event()
@@ -57,7 +95,7 @@ def scan_events(
             "unchanged": len(changes.unchanged),
             "online_only": len(changes.online_only),
         }
-        events.put({"current": read, "total": total, "file": _shown(rel.rsplit("/", 1)[-1]),
+        events.put({"current": read, "total": total, "file": _shown(PurePosixPath(rel).name),
                     **counts})  # fmt: skip
         if not stop.is_set():  # closed: nobody takes the turn back
             turn.acquire()
@@ -97,7 +135,7 @@ def direct(db_path: str | Path) -> Runner:
     """A runner on its own connection, in the caller's thread: tests and tools, no Behind."""
 
     def run(root_id: int, watch: Watch) -> ScanResult:
-        conn = connect(db_path, check_same_thread=False)
+        conn = connect(db_path)  # opened in the scan's own thread, used there only
         try:
             return scan_root(conn, root_id, now_iso(), watch=watch)
         finally:
@@ -149,47 +187,31 @@ def _close_closed(
 
 
 def _close_stopped(conn: sqlite3.Connection, folder_id: int, run_id: int) -> None:
-    if conn.in_transaction:
-        conn.execute("ROLLBACK")
+    conn.rollback()
     with transaction(conn):
         _positions(conn, folder_id, mark_missing=False)
-    counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
-    finish_run(
-        conn, run_id, ScanStatus.STOPPED, ScanReason.STOP_REQUESTED, counts, {}, [], now_iso()
-    )
+    _close_empty(conn, run_id, ScanStatus.STOPPED, ScanReason.STOP_REQUESTED)
 
 
 def _close_failed(conn: sqlite3.Connection, run_id: int, err: BaseException) -> None:
     """A database that does not answer is not an unreadable file."""
-    if conn.in_transaction:
-        conn.execute("ROLLBACK")
+    conn.rollback()
     why = ScanReason.DATABASE_ERROR if isinstance(err, sqlite3.Error) else ScanReason.INTERNAL_ERROR
-    counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
-    finish_run(conn, run_id, ScanStatus.ERROR, why, counts, {}, [], now_iso())
+    _close_empty(conn, run_id, ScanStatus.ERROR, why)
+
+
+def _close_empty(
+    conn: sqlite3.Connection, run_id: int, status: ScanStatus, reason: ScanReason
+) -> None:
+    finish_run(conn, run_id, status, reason, dict.fromkeys(COUNTS, 0), {}, [], now_iso())
 
 
 def _positions(conn: sqlite3.Connection, folder_id: int, *, mark_missing: bool) -> None:
     """The archive's files of this folder as the old stages read them, until they read
     `pipeline_files` (step 40.4, third commit)."""
-    now = now_iso()
-    conn.execute(
-        "INSERT INTO positions (frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
-        " SELECT pf.frame_id, pf.root_id, pf.rel_path, pf.size, pf.mtime_ns / 1e9, 'present', ?"
-        " FROM pipeline_files AS pf JOIN frames AS f ON f.id = pf.frame_id"
-        " WHERE pf.root_id = ? AND pf.state = 'present' AND true"  # upsert needs WHERE
-        " ON CONFLICT (folder_id, rel_path) DO UPDATE SET frame_id = excluded.frame_id,"
-        " filesize = excluded.filesize, mtime = excluded.mtime, status = 'present',"
-        " seen_at = excluded.seen_at",
-        (now, folder_id),
-    )
+    conn.execute(_POSITIONS_SEEN, (now_iso(), folder_id))
     if mark_missing:
-        conn.execute(
-            "UPDATE positions SET status = 'missing' WHERE folder_id = ? AND status = 'present'"
-            " AND NOT EXISTS (SELECT 1 FROM pipeline_files AS pf"
-            " WHERE pf.root_id = positions.folder_id AND pf.rel_path = positions.rel_path"
-            " AND pf.state = 'present' AND pf.frame_id = positions.frame_id)",
-            (folder_id,),
-        )
+        conn.execute(_POSITIONS_MISSING, (folder_id,))
 
 
 def _counts(
@@ -199,36 +221,15 @@ def _counts(
     changes = result.changes
     # what is left out is the folder's state, read now or before: a broken file is not read again,
     # and the receipt says it at every scan, as the old one did
-    left = conn.execute(
-        "SELECT rel_path, skip_reason FROM pipeline_files WHERE root_id = ? AND state = 'present'"
-        " AND skip_reason IS NOT NULL ORDER BY rel_path",
-        (changes.root_id,),
-    ).fetchall()
-    reasons: Counter[str] = Counter(
-        _SKIP_OF[Skip(r["skip_reason"])] for r in left if Skip(r["skip_reason"]) in _SKIP_OF
-    )
+    left = [(rel, Skip(why)) for rel, why in conn.execute(_LEFT_OUT, (changes.root_id,))]
+    reasons: Counter[str] = Counter(_SKIP_OF[why] for _, why in left if why in _SKIP_OF)
     reasons[SkipReason.STILL_WRITING] += len(result.still_writing)
-    # a frame of the pipeline, not of the archive; a typeless one without its row: the folder
-    # said calibration (frame_row._kept_out, docs/domini/spina-scan.md)
-    reasons[SkipReason.CALIBRATION] += conn.execute(
-        "SELECT COUNT(*) FROM pipeline_files AS pf JOIN pipeline_cards AS c ON c.file_id = pf.id"
-        " WHERE pf.root_id = ? AND pf.state = 'present' AND pf.frame_id IS NOT NULL"
-        " AND (c.frame_type NOT IN ('light', 'unknown') OR (c.frame_type = 'unknown'"
-        " AND pf.frame_id NOT IN (SELECT id FROM frames)))",
-        (changes.root_id,),
-    ).fetchone()[0]
-    duplicates = conn.execute(  # read now, of a frame another present file already stood for
-        "SELECT COUNT(*) FROM pipeline_files AS pf WHERE pf.root_id = ? AND pf.state = 'present'"
-        " AND pf.arrived_scan_id = ? AND pf.frame_id IN (SELECT id FROM frames)"
-        " AND pf.frame_id NOT IN (SELECT value FROM json_each(?))"
-        " AND EXISTS (SELECT 1 FROM pipeline_files AS o WHERE o.frame_id = pf.frame_id"
-        "   AND o.state = 'present' AND o.id <> pf.id AND o.arrived_scan_id <= pf.arrived_scan_id)",
-        (changes.root_id, changes.scan_id, _json(sorted(result.born))),
-    ).fetchone()[0]
+    reasons[SkipReason.CALIBRATION] = conn.execute(_CALIBRATION, (changes.root_id,)).fetchone()[0]
+    born = json.dumps(sorted(result.born))
+    duplicates = conn.execute(_DUPLICATES, (changes.root_id, changes.scan_id, born)).fetchone()[0]
     errors = [
-        {"file": _shown(r["rel_path"]), "reason": _ERROR_OF[Skip(r["skip_reason"])]}
-        for r in left if Skip(r["skip_reason"]) in _ERROR_OF
-    ]  # fmt: skip
+        {"file": _shown(rel), "reason": _ERROR_OF[why]} for rel, why in left if why in _ERROR_OF
+    ]
     errors += [
         {"file": _shown(rel), "reason": _unlooked(rel)}
         for rel in changes.unlooked
@@ -254,8 +255,4 @@ def _unlooked(rel: str) -> FileError:
 
 def _shown(name: str) -> str:
     """Python carries a non-UTF-8 name as surrogates, which sqlite3 and JSON refuse: `?`."""
-    return name.encode("utf-8", "replace").decode("utf-8")
-
-
-def _json(items: list[Any]) -> str:
-    return json.dumps(items)
+    return name.encode(errors="replace").decode()

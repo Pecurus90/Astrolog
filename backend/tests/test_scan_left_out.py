@@ -9,10 +9,9 @@ import sqlite3
 import pytest
 
 import astrolog.spine.scan as scan_mod
-from astrolog.api.scan_door import scan_once
 from astrolog.spine.scan import scan_folder
 from conftest import add_folder, online_only, settle, write_fits, write_light
-from test_spine_scan import count, run
+from test_spine_scan import SCANS, count, run
 
 
 def test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on(conn, tmp_path, monkeypatch):
@@ -195,20 +194,29 @@ def test_only_the_last_scans_of_a_folder_keep_the_names(conn, tmp_path, monkeypa
     ]
 
 
-def test_the_receipt_counts_the_skipped_by_reason(conn, tmp_path):
+@SCANS
+def test_the_receipt_counts_the_skipped_by_reason(conn, tmp_path, leggi):
     """La ricevuta dice quanti file ha saltato e perche', calibrazioni comprese (Marco,
     2026-09-11): un NAS con l'orologio avanti, che fa saltare gli stessi frame a ogni scansione
-    come "ancora in scrittura", si vede invece di sparire dentro un numero."""
+    come "ancora in scrittura", si vede invece di sparire dentro un numero. Un file gia' letto
+    che diventa uno di questi non e' "non trovato"."""
     write_light(tmp_path / "light.fits")
+    write_light(tmp_path / "era_luce.fits", obj="M 3")
+    write_light(tmp_path / "era_vecchio.fits", obj="M 4")
+    fid = add_folder(conn, tmp_path)
+    leggi(conn, fid)
     write_fits(tmp_path / "dark.fits", {"IMAGETYP": "DARK", "EXPTIME": 1.0})
-    write_fits(tmp_path / "bias.fits", {"IMAGETYP": "BIAS", "EXPTIME": 1.0})
+    write_fits(tmp_path / "era_luce.fits", {"IMAGETYP": "BIAS", "EXPTIME": 1.0}, age_s=300)
     # integrato altrove: fuori come elaborato da un altro programma (ADR 0029, Marco 26/11/2026)
     write_fits(tmp_path / "master.fits", {"IMAGETYP": "LIGHT", "STACKCNT": 40, "OBJECT": "M 1"})
-    settle(write_light(tmp_path / "fresco.fits", obj="M 2"), 0)
-    done = scan_once(conn, add_folder(conn, tmp_path), min_age_s=30)  # la scansione nuova
+    settle(write_light(tmp_path / "era_vecchio.fits", obj="M 5"), 0)
+    done = leggi(conn, fid, min_age_s=30)
     atteso = {"calibration": 2, "rewritten": 1, "still_writing": 1}
     assert {e["reason"]: e["count"] for e in done["skipped_by_reason"]} == atteso
-    salvato = json.loads(count(conn, "SELECT skipped_by_reason_json FROM scan_runs"))
+    assert done["missing"] == 0
+    salvato = json.loads(
+        count(conn, "SELECT skipped_by_reason_json FROM scan_runs ORDER BY id DESC")
+    )
     assert {e["reason"]: e["count"] for e in salvato} == atteso
 
 

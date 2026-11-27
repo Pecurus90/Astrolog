@@ -120,6 +120,7 @@ _NEVER_READ = (
     " AND NOT EXISTS (SELECT 1 FROM scan_runs AS prev WHERE prev.folder_id = cur.folder_id"
     " AND prev.status = 'ok' AND prev.id NOT IN (SELECT value FROM json_each(:runs))) LIMIT 1"
 )
+_FOLDER_PATH = "SELECT path FROM pipeline_roots WHERE id = ?"
 
 
 def is_first_scan(conn: sqlite3.Connection, run_ids: Iterable[int]) -> bool:
@@ -169,8 +170,8 @@ def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None
 
 
 def _folder_path(conn: sqlite3.Connection, folder_id: int) -> str | None:
-    row = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (folder_id,)).fetchone()
-    return row["path"] if row else None
+    row = conn.execute(_FOLDER_PATH, (folder_id,)).fetchone()
+    return None if row is None else row[0]
 
 
 @router.get("/pipeline/status", response_model=PipelineStatus)

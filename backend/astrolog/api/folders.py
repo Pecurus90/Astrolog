@@ -285,33 +285,27 @@ def _register(conn: sqlite3.Connection, root: str, now: str, name: str | None) -
     except NotADirectoryError as err:
         raise HTTPException(status_code=422, detail={"code": "path_invalid", "path": root}) from err
     except roots.RootOverlapError as err:
-        if err.inside:
-            raise HTTPException(
-                status_code=409,
-                detail={"code": "folder_inside", "folder_id": err.other_id, "root_path": err.other},
-            ) from err
-        other = _overlapping(conn, roots.Root(err.other_id, err.other))
-        raise HTTPException(
-            status_code=409, detail={"code": "folder_contains", "folders": [other.model_dump()]}
-        ) from err
+        other = roots.Root(err.other_id, err.other)
+        raise (_inside(other) if err.inside else _contains(conn, [other])) from err
 
 
 def _refuse_overlap(conn: sqlite3.Connection, root: str, replaces: list[int]) -> None:
     """Inside an active folder: refused. Around some: asked, until the answer names them all."""
     outer, held = _overlaps(conn, root)
     if outer is not None:
-        raise HTTPException(
-            status_code=409,
-            detail={"code": "folder_inside", "folder_id": outer.id, "root_path": outer.path},
-        )
+        raise _inside(outer)
     if held and sorted(replaces) != [r.id for r in held]:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "code": "folder_contains",
-                "folders": [_overlapping(conn, r).model_dump() for r in held],
-            },
-        )
+        raise _contains(conn, held)
+
+
+def _inside(outer: roots.Root) -> HTTPException:
+    detail = {"code": "folder_inside", "folder_id": outer.id, "root_path": outer.path}
+    return HTTPException(status_code=409, detail=detail)
+
+
+def _contains(conn: sqlite3.Connection, held: list[roots.Root]) -> HTTPException:
+    folders = [_overlapping(conn, r).model_dump() for r in held]
+    return HTTPException(status_code=409, detail={"code": "folder_contains", "folders": folders})
 
 
 def _same_folder_at(
