@@ -109,7 +109,7 @@ def test_the_same_folder_written_another_way_finds_its_retired_row(conn, tmp_pat
 
 def _like_a_mac(monkeypatch, tmp_path):
     """Disco che ignora le maiuscole ma normcase che le tiene, come APFS (Nightly 45943367710)."""
-    if not os.path.samefile(tmp_path, str(tmp_path).swapcase()):
+    if not roots._ignores_case(str(tmp_path)):
         pytest.skip("disco che distingue le maiuscole")
     monkeypatch.setattr(os.path, "normcase", lambda p: p)
 
