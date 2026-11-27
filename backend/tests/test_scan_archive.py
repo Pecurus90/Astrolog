@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import astrolog.pipeline.changes as changes_mod
 import astrolog.pipeline.scan as pipeline_scan
 import astrolog.pipeline.walk as walk_mod
 from astrolog.api import scan_door
@@ -285,6 +286,49 @@ def test_scan_root_gone_aborts(conn, tmp_path):
         "aborted",
         "root_unreachable",
     )
+
+
+def test_scan_root_gone_midway_aborts_without_marking_missing(conn, tmp_path, monkeypatch):
+    """La cartella di rete cade mentre si leggono i file: ferma, lo dice, nessun 'non trovato'."""
+    root = tmp_path / "nas"
+    write_light(root / "a.fits")
+    fid = add_folder(conn, root)
+    run(conn, fid)
+    for i in range(3):
+        write_light(root / f"n{i}.fits", obj="M 2", date=f"2024-05-17T22:0{i}:00")
+    letti, vera = [], pipeline_scan.scan_file
+
+    def cade(p, size):
+        if not letti:
+            os.rename(root, tmp_path / "staccata")  # il NAS non risponde piu'
+        letti.append(p)
+        return vera(p, size)
+
+    monkeypatch.setattr(pipeline_scan, "scan_file", cade)
+    done = run(conn, fid)
+    assert (done["status"], done["reason"], done["missing"]) == ("aborted", "root_unreachable", 0)
+    assert len(letti) == 1  # fermata al primo file che il NAS non da' piu'
+    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 1
+
+
+def test_scan_root_gone_before_the_files_are_looked_at_aborts(conn, tmp_path, monkeypatch):
+    """Cade fra l'elenco e lo stat dei file: tutti 'non guardati', e la scansione lo dice ferma."""
+    root = tmp_path / "nas"
+    write_light(root / "a.fits")
+    write_light(root / "b.fits", obj="M 2")
+    fid = add_folder(conn, root)
+    run(conn, fid)
+    vera = changes_mod.walk_dir
+
+    def elenca_e_cade(where):
+        walk = vera(where)
+        os.rename(root, tmp_path / "staccata")
+        return walk
+
+    monkeypatch.setattr(changes_mod, "walk_dir", elenca_e_cade)
+    done = run(conn, fid)
+    assert (done["status"], done["reason"], done["missing"]) == ("aborted", "root_unreachable", 0)
+    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 2
 
 
 def test_scan_unreadable_subfolder_does_not_mark_its_frames_missing(conn, tmp_path, monkeypatch):

@@ -161,7 +161,7 @@ def close(conn: sqlite3.Connection, folder_id: int, run_id: int, result: ScanRes
     """Positions, then the receipt: the event the worker stops on."""
     changes = result.changes
     status, reason = ScanStatus.OK, None
-    if not changes.reachable:
+    if not changes.reachable or result.root_lost:
         status, reason = ScanStatus.ABORTED, ScanReason.ROOT_UNREACHABLE
     elif not result.finished:
         status, reason = ScanStatus.STOPPED, ScanReason.STOP_REQUESTED

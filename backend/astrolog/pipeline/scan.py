@@ -61,6 +61,7 @@ class ScanResult:
     born: set[int] = field(default_factory=set)  # frames that entered the archive now
     still_writing: list[str] = field(default_factory=list)  # too young: read next scan
     finished: bool = False
+    root_lost: bool = False  # root answered the walk, then went silent: nothing judged gone
 
 
 # A copy may preallocate the final size: header whole, pixels still zero. Young file waits. [T]
@@ -124,7 +125,9 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str, watch: Watch) -
             if stop.is_set():  # between two files: what was read is saved, the rest waits
                 break
             path = Path(changes.root, rel)
-            read.append((rel, _read(path, changes.stat[rel][0], traced)))
+            read.append((rel, got := _read(path, changes.stat[rel][0], traced)))
+            if _vanished(got.got) and _lost(result):  # NAS dropped: the rest would fail too
+                break
             if watch.progress is not None:
                 watch.progress(number, len(to_read), rel, result)
         batch = [(rel, got) for rel, got in read if not _vanished(got.got)]
@@ -149,8 +152,10 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str, watch: Watch) -
                 ),
             )
         result.skipped.extend(skipped)
-        if stop.is_set():  # stopped inside the batch: saved, not finished
+        if stop.is_set() or result.root_lost:  # stopped inside the batch: saved, not finished
             return result
+    if changes.unlooked and _lost(result):  # dropped between walk and stat
+        return result
     _left_unread(changes, vanished)
     with transaction(conn):  # gone and moves together: a crash loses neither
         finish_scan(conn, changes)
@@ -200,6 +205,17 @@ def _vanished(got: Extracted | Skipped) -> bool:
         and got.reason is Skip.UNREADABLE
         and not os.path.lexists(long_path(got.path))
     )
+
+
+def _lost(result: ScanResult) -> bool:
+    """Root lists nothing any more (share down, mount point left empty): scan aborts, says so,
+    marks no file gone (spina-scan.md). Asked only when a file went missing."""
+    try:
+        with os.scandir(long_path(result.changes.root)) as entries:
+            result.root_lost = next(iter(entries), None) is None
+    except OSError:
+        result.root_lost = True
+    return result.root_lost
 
 
 @dataclass(frozen=True, slots=True)
