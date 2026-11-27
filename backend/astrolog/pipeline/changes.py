@@ -14,7 +14,7 @@ from .values import SQLITE_MAX, SQLITE_MIN
 from .walk import Walk, long_path, walk_dir
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
-PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
+PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE, Skip.FAULT})
 LEFT_OUT_KEPT = 100  # [P ADR 0038] paths per list in each receipt
 
 

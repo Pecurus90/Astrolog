@@ -71,6 +71,7 @@ class Skip(StrEnum):
     UNREADABLE = "unreadable"  # disk error (locked, NAS hiccup): passing, read again
     INCOMPLETE = "incomplete"  # shorter than header says: copy still running or broken
     BROKEN = "broken"  # header wrong for good (no END, bad axes): read again only once changed
+    FAULT = "fault"  # unexpected fault reading it (trace in log): passing, read again
 
 
 @dataclass(frozen=True)

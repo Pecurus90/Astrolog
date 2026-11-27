@@ -2,6 +2,7 @@
 One frame per fingerprint: copy is duplicate, moved file stays its frame."""
 
 import json
+import logging
 import os
 import sqlite3
 import threading
@@ -22,6 +23,7 @@ from .filters import resolve
 from .scanner import Extracted, Skip, Skipped, scan_file
 from .walk import long_path
 
+log = logging.getLogger(__name__)
 _ROOTS_GUARD = threading.Lock()
 _RUNNING: dict[int, threading.Lock] = {}  # app is one process: a lock per root
 BATCH = 100  # [T] write lock short, a stop loses one batch at most
@@ -111,21 +113,23 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str, watch: Watch) -
     reasons: Counter[str] = Counter()
     unknown: Counter[str] = Counter()
     vanished: set[str] = set()
+    traced: set[type[Exception]] = set()
     for start in range(0, len(to_read), BATCH):
         if stop.is_set():  # as interrupted: not finished, nothing judged gone
             return result
-        read = []
+        read: list[tuple[str, Read]] = []
         for number, rel in enumerate(to_read[start : start + BATCH], start + 1):
             if stop.is_set():  # between two files: what was read is saved, the rest waits
                 break
-            read.append((rel, scan_file(Path(changes.root, rel), changes.stat[rel][0])))
+            path = Path(changes.root, rel)
+            read.append((rel, _read(path, changes.stat[rel][0], traced)))
             if watch.progress is not None:
                 watch.progress(number, len(to_read), rel, result)
-        batch = [(rel, got) for rel, got in read if not _vanished(got)]
-        vanished.update(rel for rel, got in read if _vanished(got))
-        skipped = [got for _, got in batch if isinstance(got, Skipped)]
+        batch = [(rel, got) for rel, got in read if not _vanished(got.got)]
+        vanished.update(rel for rel, got in read if _vanished(got.got))
+        skipped = [got.got for _, got in batch if isinstance(got.got, Skipped)]
         reasons.update(got.reason for got in skipped)
-        _count_unknown(unknown, [got for _, got in batch if isinstance(got, Extracted)])
+        _count_unknown(unknown, [got.got for _, got in batch if isinstance(got.got, Extracted)])
         with transaction(conn):
             touched: set[int] = set()
             for rel, got in batch:
@@ -196,11 +200,34 @@ def _vanished(got: Extracted | Skipped) -> bool:
     )
 
 
-def _store(
-    conn: sqlite3.Connection, changes: Changes, rel: str, got: Extracted | Skipped, now: str
-) -> set[int]:
+@dataclass(frozen=True, slots=True)
+class Read:
+    """A file read: header, and its card and conditions when it is a frame."""
+
+    got: Extracted | Skipped
+    card: Card | None = None
+    conditions: Conditions | None = None
+
+
+def _read(path: Path, size: int, traced: set[type[Exception]]) -> Read:
+    """Unexpected fault skips this file, never the scan, read again next time; log gets one
+    trace per type per run, not a thousand (docs/domini/spina-scan.md)."""
+    try:
+        got = scan_file(path, size)
+        if isinstance(got, Skipped):
+            return Read(got)
+        return Read(got, read_card(got.program, got.values), read_conditions(got.values))
+    except Exception as err:  # any fault of one file, by contract
+        if type(err) not in traced:
+            traced.add(type(err))
+            log.exception("scansione: guasto imprevisto leggendo un file (%s)", path.name)
+        return Read(Skipped(path, Skip.FAULT))
+
+
+def _store(conn: sqlite3.Connection, changes: Changes, rel: str, read: Read, now: str) -> set[int]:
     """File's size and date written with its read, frame and header together: skipped file
     loses both, unless passing skip (locked) of file read before. Returns shots touched."""
+    got = read.got
     skipped = isinstance(got, Skipped)
     shot = None if skipped else _frame_of(conn, got, now)
     was = _row_for(conn, changes.root_id, rel, shot)
@@ -219,9 +246,9 @@ def _store(
         "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",
         (file_id, got.program, json.dumps(got.values, allow_nan=False)),
     )
-    card = read_card(got.program, got.values)
+    card, conditions = read.card, read.conditions
+    assert card is not None  # a frame read always has its card (_read)
     _insert(conn, "pipeline_cards", file_id, card)
-    conditions = read_conditions(got.values)
     if conditions is not None:
         _insert(conn, "pipeline_conditions", file_id, conditions)
     if card.filter is not None:

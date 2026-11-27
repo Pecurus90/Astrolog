@@ -4,11 +4,66 @@ dell'utente in `docs/domini/spina-scan.md`; FITS veri fabbricati con astropy e u
 schema.sql."""
 
 import json
+import logging
 
 from astrolog.api import scan_door
+from astrolog.pipeline import scan as pipeline_scan
+from astrolog.pipeline import scanner
 from astrolog.spine.scan_store import start_run
 from conftest import add_folder, settle, write_fits, write_light
 from test_scan_archive import count, run
+
+
+def test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on(conn, tmp_path, monkeypatch):
+    """Un file che manda in errore la lettura per un motivo che nessuno aspettava non tiene fuori
+    quelli che vengono dopo (Marco, 2026-09-11): si salta, la ricevuta lo nomina, e il nome resta
+    scritto a corsa finita. Vale per l'header e per la scheda che se ne legge."""
+    for i in range(3):
+        write_light(tmp_path / f"f{i}.fits", obj=f"M {i}")
+    vero_header, vera_scheda = scanner._extract, pipeline_scan.read_card
+
+    def header_imprevisto(path, fh, size):
+        if path.name == "f0.fits":
+            raise KeyError("una card che nessuno si aspettava (mock)")
+        return vero_header(path, fh, size)
+
+    def scheda_imprevista(program, values):
+        if values.get("OBJECT") == "M 1":
+            raise TypeError("un valore che nessuno si aspettava (mock)")
+        return vera_scheda(program, values)
+
+    monkeypatch.setattr(scanner, "_extract", header_imprevisto)
+    monkeypatch.setattr(pipeline_scan, "read_card", scheda_imprevista)
+    done = run(conn, add_folder(conn, tmp_path))
+    assert (done["status"], done["new"], done["errors"]) == ("ok", 1, 2)
+    rotti = [
+        {"file": "f0.fits", "reason": "internal_error"},
+        {"file": "f1.fits", "reason": "internal_error"},
+    ]
+    assert sorted(done["errors_detail"], key=lambda e: e["file"]) == rotti
+    salvato = json.loads(count(conn, "SELECT errors_detail_json FROM scan_runs"))
+    assert sorted(salvato, key=lambda e: e["file"]) == rotti
+    assert not conn.in_transaction
+
+
+def test_the_same_unexpected_fault_leaves_one_trace_in_the_log(conn, tmp_path, monkeypatch, caplog):
+    """Un guasto imprevisto uguale su mille file lascia nel log una traccia per tipo, a ogni corsa:
+    mille tracce da 1,2 KB riempirebbero i 20 MB del log e ne spingerebbero fuori cio' che c'era
+    prima. Nella ricevuta i file restano nominati uno per uno, e si rileggono la volta dopo."""
+    for i in range(3):
+        write_light(tmp_path / f"f{i}.fits", obj=f"M {i}")
+
+    def header_imprevisto(path, _fh, _size):
+        guasto = KeyError if path.name == "f1.fits" else AttributeError
+        raise guasto("una card che nessuno si aspettava (mock)")
+
+    monkeypatch.setattr(scanner, "_extract", header_imprevisto)
+    caplog.set_level(logging.ERROR)
+    fid = add_folder(conn, tmp_path)
+    assert run(conn, fid)["errors"] == 3
+    assert len([r for r in caplog.records if r.exc_info]) == 2  # due tipi, due tracce
+    run(conn, fid)
+    assert len([r for r in caplog.records if r.exc_info]) == 4  # e la corsa dopo le riscrive
 
 
 def _stopped(conn, db_path, folder_id):

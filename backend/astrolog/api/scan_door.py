@@ -34,7 +34,11 @@ _SKIP_OF = {
     Skip.NOT_SUPPORTED: SkipReason.NOT_SUPPORTED,
     Skip.INCOMPLETE: SkipReason.STILL_WRITING,
 }
-_ERROR_OF = {Skip.UNREADABLE: FileError.FILE_UNREADABLE, Skip.BROKEN: FileError.HEADER_UNREADABLE}
+_ERROR_OF = {
+    Skip.UNREADABLE: FileError.FILE_UNREADABLE,
+    Skip.BROKEN: FileError.HEADER_UNREADABLE,
+    Skip.FAULT: FileError.INTERNAL_ERROR,
+}
 _DONE = object()
 
 # SQL out of the functions: mutmut upper-cases a literal in a function, an equivalent mutant
