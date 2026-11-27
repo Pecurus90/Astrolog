@@ -12,6 +12,11 @@ on:
         type: boolean
         default: false
 
+# One at a time: a run started mid-night restores the caches the running one has not saved yet.
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
 # Read only; the signal job alone also writes Issues.
 permissions:
   contents: read

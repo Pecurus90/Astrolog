@@ -583,6 +583,15 @@ def test_the_workflow_keeps_every_mutant_last_verdict_in_its_own_cache():
     )
 
 
+def test_a_second_nightly_waits_for_the_running_one_and_its_saved_caches():
+    """A run dispatched at 08:52 while the night still ran restored the night before's cache and
+    redid 1556 finished mutants, cut at 63% (Nightly 45969049470 over 45943367710)."""
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    top = workflow[: workflow.index("\njobs:")]
+    assert re.search(r"^concurrency:\n  group: nightly\n  cancel-in-progress: false$", top, re.M)
+
+
 def test_a_timeout_left_in_the_cache_is_dropped_so_the_night_runs_it_again(tmp_path, capsys):
     """Incremental Stryker reuses a Timeout: one cut by a crowded runner stays 'detected'."""
     report = {
