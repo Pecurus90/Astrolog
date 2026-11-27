@@ -53,6 +53,14 @@ _JUDGED = ("asks_camera", "asks_filter", "names_optics")
 STAGES = ("solve", "normalize", "identify", "group", "measure")
 
 
+def night_columns(
+    instant: str, lat: float | None, lon: float | None, home_tz: str | None
+) -> dict[str, str | None]:
+    """The night columns: zone of the site, else of home (place.timezone_of_frame)."""
+    zone = timezone_of_frame(lat, lon, home_tz)
+    return {"local_night": night_date(instant, zone), "local_tz": zone, "night_instant": instant}
+
+
 def write(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> set[int]:
     """Caller's transaction. Frame without a standing card (every file gone): row kept, its hours
     too. Returns the frames born now."""
@@ -149,8 +157,7 @@ def _upsert(conn: sqlite3.Connection, card: sqlite3.Row, home_tz: str | None) ->
     instant = night_instant(values["date_obs"], card["mtime_ns"] / 1e9)
     if held is not None and values["date_obs"] is None:
         instant = held["night_instant"]  # the file's date moves every time it is touched
-    zone = timezone_of_frame(values["site_lat"], values["site_lon"], home_tz)
-    night = {"local_night": night_date(instant, zone), "local_tz": zone, "night_instant": instant}
+    night = night_columns(instant, values["site_lat"], values["site_lon"], home_tz)
     if held is None:
         names = (*COLUMNS, *_NIGHT, "created_at", *_JUDGED)
         conn.execute(

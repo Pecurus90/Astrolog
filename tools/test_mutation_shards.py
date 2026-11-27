@@ -49,7 +49,7 @@ def test_every_module_of_the_backend_runs_in_exactly_one_shard():
         ("astrolog.fits.frame_type.x_image_type__mutmut_14", "rest-"),
         ("astrolog.log.x\u01c1JsonLines\u01c1format__mutmut_17", "rest-"),
         ("astrolog.weather.forecast.x\u01c1Cadence\u01c1__init____mutmut_2", "rest-"),
-        ("astrolog.spine.scan.x_scan__mutmut_1", "spine-n-z"),
+        ("astrolog.spine.solve.x_solve_frames__mutmut_1", "spine-n-z"),
         ("astrolog.spine.gear_usage.x_usage__mutmut_1", "spine-g-m"),
         ("astrolog.spine.copies.x_decide__mutmut_14", "spine-a-f"),
         ("astrolog.spine.mosaic.x_place__mutmut_29", "spine-g-m"),

@@ -16,7 +16,6 @@ from ..db.transaction import transaction
 from ..fits.walk import subfolders, walk_dir
 from ..pipeline import recognise, roots
 from ..spine import folder_move, typeless_answer
-from ..spine.scan import root_readable
 from ..spine.stages import StageName, count_pending
 from . import work
 from .deps import get_db
@@ -36,7 +35,7 @@ from .models import (
     ProbeOut,
     RetireOut,
 )
-from .paths import same_folder, validate_root
+from .paths import root_readable, same_folder, validate_root
 
 router = APIRouter(prefix="/api/v1", tags=["folders"])
 log = logging.getLogger(__name__)

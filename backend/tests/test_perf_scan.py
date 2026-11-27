@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from astrolog.api.scan_door import scan_once
 from astrolog.db.connect import connect, create_database
-from astrolog.spine.scan import scan_folder
 from conftest import add_folder, best_of, write_light
 
 BASELINE = Path(__file__).with_name("perf_baseline.json")
@@ -36,7 +36,7 @@ def test_scan_frames_per_second_does_not_regress(tmp_path):
         try:
             fid = add_folder(conn, tmp_path / "lib")
             t0 = time.perf_counter()
-            done = list(scan_folder(conn, fid))[-1]
+            done = scan_once(conn, fid)
             secondi = time.perf_counter() - t0
         finally:
             conn.close()

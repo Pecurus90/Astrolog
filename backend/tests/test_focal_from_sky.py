@@ -10,12 +10,11 @@ from astrolog.db.connect import connect
 from astrolog.spine import gear, gear_create
 from astrolog.spine import run as run_mod
 from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
 from astrolog.spine.stages import StageName
 from astrolog.units import focal_from_scale
 from astrolog.vocab.instruments import InstrumentKind
-from conftest import add_folder, write_light
+from conftest import scan, write_light
 from test_solve import solver
 
 PIXEL = 3.76
@@ -37,7 +36,7 @@ def _archivio(tmp_path, n=3, **header):
 
 
 def _gira(conn, root, misurata, cache):
-    list(scan_folder(conn, add_folder(conn, root)))
+    scan(conn, root)
     list(normalize_frames(conn))
     list(
         solve_frames(
@@ -82,7 +81,7 @@ def test_the_frames_the_sky_sends_back_are_redone_in_the_same_run(db_path, tmp_p
     """Nella coda vera `normalize` gira prima di `solve`: il frame rimandato si rifa' nello stesso
     giro, non al prossimo avvio, e `identify` lo trova pronto."""
     conn = connect(db_path)
-    list(scan_folder(conn, add_folder(conn, _archivio(tmp_path, FOCALLEN=700.0, XPIXSZ=PIXEL))))
+    scan(conn, _archivio(tmp_path, FOCALLEN=700.0, XPIXSZ=PIXEL))
     fake = solver({i: _ini(560.0) for i in range(9)})
     monkeypatch.setattr(
         run_mod,
@@ -101,7 +100,7 @@ def test_a_measure_within_the_tolerance_keeps_the_rig_and_redoes_nothing(db_path
     """Header 560, cielo 562: e' lo stesso setup, e il cielo non rimanda niente indietro."""
     conn = connect(db_path)
     root = _archivio(tmp_path, FOCALLEN=560.0, XPIXSZ=PIXEL)
-    list(scan_folder(conn, add_folder(conn, root)))
+    scan(conn, root)
     list(normalize_frames(conn))
     prima = _focali(conn)
     list(
@@ -137,7 +136,7 @@ def test_without_xpixsz_the_camera_card_pixel_times_the_binning_measures(db_path
     (2 x 3,76) da' la focale vera; senza il binning la misura uscirebbe la meta'."""
     conn = connect(db_path)
     root = _archivio(tmp_path, FOCALLEN=700.0, XBINNING=2)
-    list(scan_folder(conn, add_folder(conn, root)))
+    scan(conn, root)
     list(normalize_frames(conn))
     conn.execute("UPDATE instruments SET pixel_size_um = ? WHERE kind = 'camera'", (PIXEL,))
     esiti = {i: _ini(560.0, pixel_um=2 * PIXEL) for i in range(9)}
@@ -153,7 +152,7 @@ def test_merged_into_a_camera_with_another_pixel_the_frames_measure_with_it(
     """Unita la camera dei frame a una dal pixel 3,9, la coda che la rotta fa ripartire li
     riaggancia al setup e poi li risolve col 3,9 (Issue #64)."""
     conn = connect(db_path)
-    list(scan_folder(conn, add_folder(conn, _archivio(tmp_path, FOCALLEN=700.0, XBINNING=1))))
+    scan(conn, _archivio(tmp_path, FOCALLEN=700.0, XBINNING=1))
     list(normalize_frames(conn))
     grafia = conn.execute("SELECT id FROM instruments WHERE kind = 'camera'").fetchone()[0]
     gear.declare_instrument(conn, grafia, {"pixel_size_um": PIXEL})
@@ -179,7 +178,7 @@ def test_the_pixel_you_write_on_the_camera_measures_too(db_path, tmp_path):
     solve lo legge come la pagina, la tua parola sopra i file (Issue #62)."""
     conn = connect(db_path)
     root = _archivio(tmp_path, FOCALLEN=700.0, XBINNING=1)
-    list(scan_folder(conn, add_folder(conn, root)))
+    scan(conn, root)
     list(normalize_frames(conn))
     camera = conn.execute("SELECT id FROM instruments WHERE kind = 'camera'").fetchone()[0]
     gear.declare_instrument(conn, camera, {"pixel_size_um": PIXEL})

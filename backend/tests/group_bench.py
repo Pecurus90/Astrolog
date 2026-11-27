@@ -7,9 +7,10 @@ quando non sa da dove hai ripreso.
 
 import json
 
-from astrolog.clock import now_iso
+from astrolog.clock import night_instant, now_iso
+from astrolog.pipeline.frame_row import night_columns
 from astrolog.spine import group
-from astrolog.spine.scan import night_of
+from astrolog.spine.scan_store import home_timezone
 from astrolog.spine.stages import mark_pending, set_status
 
 # Due fusi lontani, perche' lo stesso istante cade in due notti diverse: e' cio' che il
@@ -95,10 +96,13 @@ def posa(
     chi conta ore e filtri."""
     header = json.dumps([["DATE-OBS", quando], ["DATE-LOC", ora_locale]]) if ora_locale else "[]"
     lat, lon = coord or (None, None)
-    # la notte della posa come la scrive `scan` quando il frame entra, con la sua stessa regola; un
+    # la notte della posa come la scrive la scansione all'ingresso, con la sua stessa regola; un
     # frame senza data qui non ha un file da cui prenderla, e resta senza notte invece di inventarla
-    campi = {"date_obs": quando, "site_lat": lat, "site_lon": lon}
-    notte, fuso, istante = night_of(conn, campi, 0) if quando else (None, None, None)
+    notte, fuso, istante = (
+        night_columns(night_instant(quando, 0), lat, lon, home_timezone(conn)).values()
+        if quando
+        else (None, None, None)
+    )
     frame_id = conn.execute(
         "INSERT INTO frames(frame_hash, image_type, date_obs, local_night, local_tz, night_instant,"
         " object_id, rig_id, site_lat, site_lon, header_json, filter_id, exposure_s, copy_of,"

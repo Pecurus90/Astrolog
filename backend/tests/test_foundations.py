@@ -2,30 +2,26 @@
 dichiarato su chiavi che sopravvivono, l'ordine del solver, le date canoniche,
 nessun `running` nel DB. Una regola, un test che si rompe se la regola si rompe."""
 
-import math
-import os
 import sqlite3
-from dataclasses import asdict
 
 import numpy as np
 import pytest
 from astropy.io import fits
 
+from astrolog.api.scan_door import scan_once
 from astrolog.clock import NIGHT_SQL, night_date
 from astrolog.fits import header_read
-from astrolog.fits.header_fields import canonical_utc, extract_fields
+from astrolog.fits.header_fields import canonical_utc
 from astrolog.fits.header_read import frame_fingerprint, read_header
-from astrolog.spine import header_asks, scan_store, solve_store, stages
 from astrolog.spine import run as run_mod
-from astrolog.spine import scan as scan_mod
+from astrolog.spine import scan_store, solve_store, stages
 from astrolog.spine.run import ORDER, queue
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.stages import StageName
 from conftest import add_folder, settle, write_light
 
 
 def run(conn, fid):
-    return list(scan_folder(conn, fid))[-1]
+    return scan_once(conn, fid)
 
 
 # --- identita' -------------------------------------------------------------------------
@@ -118,28 +114,6 @@ def test_the_pixels_start_where_astropy_says(tmp_path, cards):
         assert (start, span) == (expected["datLoc"], expected["datSpan"]), path.name
 
 
-def test_a_millisecond_truncated_mtime_is_still_unchanged(conn, tmp_path, monkeypatch):
-    """Un NAS rimontato con un'altra precisione tronca l'mtime al millisecondo: i file non
-    sono cambiati e **non si rileggono**.
-
-    Guardare il contatore `unchanged` non basta, ed e' il difetto che questo test aveva: quel
-    contatore sale per due strade -- il pre-controllo (dimensione e data), e la strada lunga in
-    cui il file si riapre, si rilegge l'header, si rifa' l'impronta e si scopre che i pixel
-    sono gli stessi. Col pre-controllo rotto la seconda strada teneva il test verde. Quindi si
-    guarda cio' che conta davvero: che il file **non sia stato aperto**."""
-    p = write_light(tmp_path / "a.fits")
-    fid = add_folder(conn, tmp_path)
-    run(conn, fid)
-    st = os.stat(p)
-    os.utime(p, (st.st_atime, math.floor(st.st_mtime * 1000) / 1000))
-
-    letture = []
-    vero = scan_mod.read_frame
-    monkeypatch.setattr(scan_mod, "read_frame", lambda path: letture.append(path) or vero(path))
-    assert run(conn, fid)["unchanged"] == 1
-    assert letture == [], "il file e' stato riletto: il pre-controllo non ha funzionato"
-
-
 def test_scan_uses_the_single_identity(conn, tmp_path):
     p = write_light(tmp_path / "a.fits")
     fid = add_folder(conn, tmp_path)
@@ -150,7 +124,8 @@ def test_scan_uses_the_single_identity(conn, tmp_path):
         hdul[0].header["HISTORY"] = "riscritto"
     settle(p)
     done = run(conn, fid)
-    assert (done["new"], done["unchanged"]) == (0, 1)  # stesso frame, header nuovo
+    # stesso frame, header nuovo: il file cambiato si rilegge, il frame resta uno
+    assert (done["new"], done["duplicates"]) == (0, 0)
     assert conn.execute("SELECT COUNT(*) FROM frames").fetchone()[0] == 1
 
 
@@ -226,22 +201,6 @@ def test_every_stage_closes_its_own_connection(tmp_path, monkeypatch):
     next(giro)
     giro.close()
     assert chiuse == [1, 1]
-
-
-def test_the_reader_extracts_exactly_what_gets_written(tmp_path):
-    """La promessa in testa a `header_fields`: si legge SOLO cio' che finisce in `frames`.
-
-    E' il difetto che questa fetta ha chiuso -- nove campi calcolati su ogni file e buttati --
-    ed e' invisibile senza questa guardia, perche' `insert_frame` prende le colonne che gli
-    servono e ignora in silenzio le chiavi in piu'. Vale nelle due direzioni: un campo che
-    nessuno scrive e' lavoro sprecato, una colonna che nessuno estrae resta vuota per sempre."""
-    estratti = set(asdict(extract_fields({}, "x"))) - {
-        "path"
-    }  # `path` non e' una colonna: e' il file
-    # e i giudizi sul grezzo, che la scansione aggiunge ai campi prima di scrivere
-    estratti |= set(header_asks.of({}))
-    colonne = {scan_store._FIELD_OF.get(c, c) for c in scan_store.FRAME_COLUMNS}
-    assert estratti == colonne
 
 
 def test_invalidate_reopens_the_stage_and_everything_downstream(conn, tmp_path):

@@ -25,6 +25,15 @@ ADMIN_SHARE_RE = re.compile(
 )
 
 
+def root_readable(root: str) -> bool:
+    """`isdir` not enough: dropped share can exist as folder and not answer."""
+    try:
+        os.scandir(long_path(root)).close()
+    except OSError:
+        return False
+    return True
+
+
 def blocklist_nt() -> tuple[str, ...]:
     env = os.environ
     drive = env.get("SystemDrive", "C:") + "\\"

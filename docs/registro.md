@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 414; senza fonte: 0.
-Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T tecnico: 100.
+Valori: 412; senza fonte: 0.
+Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 40; T tecnico: 100.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -806,13 +806,6 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 42; T
 | DIFFRACTION_FWHM_PER_LAMBDA_D | `1.029` | C en.wikipedia.org/wiki/Airy_disk: "full width at half maximum ... 1.029" |
 | V_BAND_NM | `551.0` | C en.wikipedia.org/wiki/Photometric_system: V 551 nm |
 | PIXEL_FWHM_PER_PIXEL | `2 * math.sqrt(2 * math.log(2)) / math.sqrt(12)` | P ADR 0039 |
-
-### spine/scan.py
-
-| simbolo | valore | fonte |
-|---|---|---|
-| DEFAULT_MIN_AGE_S | `30` | P docs/domini/spina-scan.md |
-| MTIME_TOLERANCE_S | `0.001` | P docs/domini/spina.md |
 
 ### spine/scan_history.py
 

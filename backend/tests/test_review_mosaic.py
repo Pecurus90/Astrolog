@@ -11,6 +11,7 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
+import porta
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.spine import declarations as decl
@@ -18,7 +19,6 @@ from astrolog.spine import gear, mosaic, mosaic_proposals, mosaic_weight, stages
 from astrolog.spine.group import group_frames
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from conftest import apply, correct, db, populate, review, to_confirm_without, write_fits
 
 
@@ -267,7 +267,7 @@ def test_a_group_run_stopped_halfway_still_writes_the_mosaic(pagina, tmp_path):
     _posa(tmp_path / "lib" / "p4_0.fits", 30, "IC 410")
     _posa(tmp_path / "lib" / "p4_1.fits", 31, "IC 410")
     with db(pagina) as conn:
-        list(scan_folder(conn, 1))
+        porta.fill(conn, 1, porta.Upto.SCANNED)
         list(normalize_frames(conn))
         _cielo(conn, "p4_0.fits", RA0 - PASSO, DEC)
         _cielo(conn, "p4_1.fits", RA0 - PASSO + DITHER, DEC)
@@ -286,7 +286,7 @@ def test_poses_that_arrive_later_join_the_mosaic_when_the_spine_groups_them(pagi
     _risposta(pagina, _mosaici(pagina)[0], "yes")
     _posa(tmp_path / "lib" / "p4_0.fits", 30, "IC 410")
     with db(pagina) as conn:
-        list(scan_folder(conn, 1))
+        porta.fill(conn, 1, porta.Upto.SCANNED)
         list(normalize_frames(conn))
         _cielo(conn, "p4_0.fits", RA0 - PASSO, DEC)
         list(identify_frames(conn))
@@ -387,7 +387,7 @@ def test_the_page_still_shows_the_answer_after_a_scan_adds_a_panel(pagina, tmp_p
     _risposta(pagina, _mosaici(pagina)[0], "yes")
     _posa(tmp_path / "lib" / "p4_0.fits", 30, "IC 410")
     with db(pagina) as conn:
-        list(scan_folder(conn, 1))
+        porta.fill(conn, 1, porta.Upto.SCANNED)
         list(normalize_frames(conn))
         _cielo(conn, "p4_0.fits", RA0 - PASSO, DEC)
         list(identify_frames(conn))
@@ -404,7 +404,7 @@ def test_two_regions_of_the_same_rig_keep_their_own_answers(pagina, tmp_path):
         _posa(tmp_path / "lib" / f"q_{j}.fits", 40 + j, "NGC 7000")
         _posa(tmp_path / "lib" / f"r_{j}.fits", 50 + j, "Pellicano")
     with db(pagina) as conn:
-        list(scan_folder(conn, 1))
+        porta.fill(conn, 1, porta.Upto.SCANNED)
         list(normalize_frames(conn))
         for j in range(2):
             _cielo(conn, f"q_{j}.fits", ALTROVE[0] + j * DITHER, ALTROVE[1])

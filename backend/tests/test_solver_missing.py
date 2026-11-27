@@ -16,9 +16,8 @@ from astrolog.astap import find_exe as cerca_davvero
 from astrolog.astap import where_exe as cerca_col_canale
 from astrolog.db import config
 from astrolog.db.connect import connect
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
-from conftest import add_folder, write_light
+from conftest import scan, write_light
 
 # `cerca_davvero` e' catturata **all'import**, prima che il recinto della suite
 # (`conftest.dentro_il_recinto`) sostituisca `astap.find_exe` con "non c'e' nessun solver". Le
@@ -314,7 +313,7 @@ def test_the_run_launches_the_path_written_in_settings(db_path, tmp_path, monkey
 
     conn = connect(db_path)
     try:
-        list(scan_folder(conn, add_folder(conn, tmp_path / "lib")))
+        scan(conn, tmp_path / "lib")
         config.write(conn, "astap_path", str(mio))
         list(solve_frames(conn, run=spia, cache=tmp_path / "cache"))
     finally:
@@ -342,7 +341,7 @@ def test_on_a_nas_the_run_ignores_a_path_written_in_settings(db_path, tmp_path, 
 
     conn = connect(db_path)
     try:
-        list(scan_folder(conn, add_folder(conn, tmp_path / "lib")))
+        scan(conn, tmp_path / "lib")
         config.write(conn, "astap_path", str(altro))
         list(solve_frames(conn, run=spia, cache=tmp_path / "cache"))
     finally:

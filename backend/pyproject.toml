@@ -168,7 +168,7 @@ layers = [
 name = "Gli stadi non si conoscono fra loro: a metterli in fila e' spine.run"
 type = "independence"
 # measure e' nato nella pipeline nuova (pipeline/measure.py), non qui.
-modules = ["astrolog.spine.scan", "astrolog.spine.normalize", "astrolog.spine.solve", "astrolog.spine.identify", "astrolog.spine.group"]
+modules = ["astrolog.spine.normalize", "astrolog.spine.solve", "astrolog.spine.identify", "astrolog.spine.group"]
 
 [[tool.importlinter.contracts]]
 # Lo store di uno stadio e' suo: una query che serve a due stadi va in una casa comune
@@ -177,10 +177,9 @@ modules = ["astrolog.spine.scan", "astrolog.spine.normalize", "astrolog.spine.so
 # `normalize_store` col cancello verde.
 name = "Lo store di uno stadio lo importa solo lui"
 type = "forbidden"
-source_modules = ["astrolog.spine.scan", "astrolog.spine.normalize", "astrolog.spine.solve", "astrolog.spine.identify", "astrolog.spine.group"]
+source_modules = ["astrolog.spine.normalize", "astrolog.spine.solve", "astrolog.spine.identify", "astrolog.spine.group"]
 forbidden_modules = ["astrolog.spine.scan_store", "astrolog.spine.normalize_store", "astrolog.spine.solve_store", "astrolog.spine.identify_store", "astrolog.spine.group_store"]
 ignore_imports = [
-  "astrolog.spine.scan -> astrolog.spine.scan_store",
   "astrolog.spine.normalize -> astrolog.spine.normalize_store",
   "astrolog.spine.solve -> astrolog.spine.solve_store",
   "astrolog.spine.identify -> astrolog.spine.identify_store",

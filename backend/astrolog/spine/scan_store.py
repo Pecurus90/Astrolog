@@ -1,48 +1,14 @@
-"""The scan's writes: folder, receipt, frames, positions. Nothing is decided here: it writes what
-`scan.py` decided, and a new frame is born with every stage `pending`."""
+"""The scan's receipt and its codes. Frames and files come from the new pipeline
+(`api/scan_door.py`, `pipeline/frame_row.py`)."""
 
 import json
 import sqlite3
-from collections.abc import Collection, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
-from typing import Any, NamedTuple
+from typing import Any
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
-from .stages import mark_pending
-
-FRAME_COLUMNS = (
-    "image_type",
-    "date_obs",
-    "exposure_s",
-    "gain",
-    "offset",
-    "ccd_temp_c",
-    "naxis1",
-    "naxis2",
-    "binning",
-    "pixel_size_um",
-    "bayer_pattern",
-    "focal_mm_raw",
-    "filter_raw",
-    "object_raw",
-    "telescope_raw",
-    "instrument_raw",
-    "filter_wheel_raw",
-    "focuser_raw",
-    "guide_camera_raw",
-    "software_raw",
-    "asks_camera",
-    "asks_filter",
-    "names_optics",
-    "ra_hint_deg",
-    "dec_hint_deg",
-    "site_lat",
-    "site_lon",
-    "site_elev_m",
-)
-_FIELD_OF = {"focal_mm_raw": "focal_mm", "ra_hint_deg": "ra_deg", "dec_hint_deg": "dec_deg"}
 
 
 class FolderNotFoundError(ValueError):
@@ -207,105 +173,7 @@ def _as_json(items: Sequence[Any] | None) -> str | None:
     return json.dumps(items, ensure_ascii=False) if items else None
 
 
-def position(conn: sqlite3.Connection, folder_id: int, rel_path: str) -> sqlite3.Row | None:
-    return conn.execute(
-        "SELECT id, frame_id, filesize, mtime, status FROM positions"
-        " WHERE folder_id = ? AND rel_path = ?",
-        (folder_id, rel_path),
-    ).fetchone()
-
-
-def set_position_present(conn: sqlite3.Connection, position_id: int, now: str) -> None:
-    conn.execute(
-        "UPDATE positions SET status = 'present', seen_at = ? WHERE id = ?", (now, position_id)
-    )
-
-
 def home_timezone(conn: sqlite3.Connection) -> str | None:
     """The night zone of a frame that does not say where it was taken."""
     row = conn.execute("SELECT timezone FROM sites WHERE is_default = 1").fetchone()
     return None if row is None else row["timezone"]
-
-
-def frame_id_by_hash(conn: sqlite3.Connection, frame_hash: str) -> int | None:
-    row = conn.execute("SELECT id FROM frames WHERE frame_hash = ?", (frame_hash,)).fetchone()
-    return row["id"] if row else None
-
-
-class LocalNight(NamedTuple):
-    """In the order of the columns `local_night`, `local_tz`, `night_instant`."""
-
-    night: str | None
-    zone: str | None
-    instant: str
-
-
-@dataclass(frozen=True, slots=True)
-class NewFrame:
-    fields: Mapping[str, Any]
-    frame_hash: str
-    header_json: str
-    night: LocalNight
-
-
-def insert_frame(conn: sqlite3.Connection, frame: NewFrame, now: str) -> int:
-    """Inside a transaction opened by the caller."""
-    values = [frame.fields.get(_FIELD_OF.get(c, c)) for c in FRAME_COLUMNS]
-    cols = ", ".join(f'"{c}"' for c in FRAME_COLUMNS)
-    marks = ", ".join("?" for _ in FRAME_COLUMNS)  # segnaposto-ok: the columns, not the rows
-    # S608: fixed columns.
-    sql = (
-        "INSERT INTO frames(frame_hash, header_json, created_at,"
-        f" local_night, local_tz, night_instant, {cols}) VALUES(?, ?, ?, ?, ?, ?, {marks})"
-    )
-    row = [frame.frame_hash, frame.header_json, now, *frame.night, *values]
-    frame_id = inserted_id(conn.execute(sql, row))
-    mark_pending(conn, frame_id, now)
-    return frame_id
-
-
-def upsert_position(  # noqa: PLR0913
-    conn: sqlite3.Connection,
-    frame_id: int,
-    folder_id: int,
-    rel_path: str,
-    filesize: int,
-    mtime: float,
-    now: str,
-) -> None:
-    """A different file at the same path takes the position over."""
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
-        " VALUES(?, ?, ?, ?, ?, 'present', ?)"
-        " ON CONFLICT(folder_id, rel_path) DO UPDATE SET frame_id = excluded.frame_id,"
-        " filesize = excluded.filesize, mtime = excluded.mtime, status = 'present',"
-        " seen_at = excluded.seen_at",
-        (frame_id, folder_id, rel_path, filesize, mtime, now),
-    )
-
-
-def mark_missing(
-    conn: sqlite3.Connection,
-    folder_id: int,
-    seen: Collection[str],
-    untouched: Collection[str],
-    now: str,
-) -> int:
-    """Never deleted; positions under an `untouched` subfolder (it would not open) stay as they
-    were."""
-    missing = 0
-    with transaction(conn):
-        for r in conn.execute(
-            "SELECT id, frame_id, rel_path FROM positions"
-            " WHERE folder_id = ? AND status = 'present'",
-            (folder_id,),
-        ).fetchall():
-            if any(r["rel_path"].startswith(prefix + "/") for prefix in untouched):
-                continue
-            if r["rel_path"] not in seen:
-                conn.execute(
-                    "UPDATE positions SET status = 'missing', seen_at = ? WHERE id = ?",
-                    (now, r["id"]),
-                )
-                missing += 1
-    return missing

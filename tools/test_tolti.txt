@@ -854,3 +854,22 @@ test_normalize_a_touched_raw_still_beats_its_calibrated_copy - passo 40.4: la co
 test_normalize_does_not_mark_a_capture_program_that_writes_only_its_own_key - passo 40.4: lo scanner legge solo N.I.N.A. e ASIAIR (ADR 0029), gli altri programmi non entrano
 test_normalize_finds_the_copy_of_an_unsupported_capture_program - passo 40.4: un programma non supportato resta fuori dalla scansione (ADR 0029)
 test_normalize_the_copy_that_overwrites_the_capture_software - passo 40.4: la copia riscritta resta fuori dalla scansione (Marco 26/11/2026)
+test_scan_reads_header_only - passo 40.4: la nuova scansione legge i pixel del centro per l'impronta, un file senza pixel e' incompleto (test_pipeline_scan)
+test_scan_root_gone_midway_aborts_without_marking_missing - passo 40.4: vecchia scansione tolta; torna sulla nuova con la riparazione di spina-scan.md riga 19
+test_scan_root_gone_while_reading_a_header_aborts - passo 40.4: un file sparito in lettura resta non guardato, non sparito (test_pipeline_scan)
+test_scan_file_growing_while_read_is_skipped - passo 40.4: la dimensione si prende allo stat e l'header dice quanta ne serve: incompleto per dimensione
+test_scan_root_unreadable_right_after_the_precheck_aborts - passo 40.4: coperto da test_pipeline_changes e test_scan_door
+test_scan_names_the_linked_folders_it_does_not_follow - passo 40.4: la nuova walk segue i link, una volta per percorso vero (test_pipeline_walk)
+test_scan_stop_leaves_a_coherent_prefix - passo 40.4: coperto da test_scan_door (test_a_reading_stopped_keeps_the_poses_of_its_folder) e test_pipeline_scan
+test_scan_multi_hdu_counts_as_one_frame - passo 40.4: la nuova legge il primario (test_pipeline_scanner)
+test_the_default_wait_is_the_one_that_runs_in_production - passo 40.4: diventato test_the_wait_the_door_passes_is_at_least_30_seconds
+test_scan_a_missing_pose_that_comes_back_online_only_is_present_again - passo 40.4: un segnaposto non si apre, quindi non si sa se e' lo stesso file: sparito resta sparito finche' torna sul disco
+test_a_database_fault_stops_the_scan_and_the_receipt_says_so - passo 40.4: coperto da test_scan_door (test_a_reading_that_breaks_closes_its_receipt_with_the_reason)
+test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on - passo 40.4: vecchia scansione tolta; torna sulla nuova con la riparazione di spina-scan.md riga 31
+test_the_same_unexpected_fault_leaves_one_trace_in_the_log - passo 40.4: vecchia scansione tolta; torna sulla nuova con la riparazione di spina-scan.md riga 33
+test_a_pose_that_can_no_longer_be_read_is_not_missing - passo 40.4: vecchia scansione tolta; torna sulla nuova con la riparazione di spina-scan.md riga 31
+test_a_name_the_archive_cannot_write_is_named_and_the_scan_goes_on - passo 40.4: fingeva la vecchia walk; torna sulla nuova con la sua riparazione
+test_a_millisecond_truncated_mtime_is_still_unchanged - passo 40.4: la nuova confronta l'mtime esatto e rilegge; torna con la riparazione di spina.md:40
+test_the_reader_extracts_exactly_what_gets_written - passo 40.4: le colonne le scrive pipeline/frame_row.py dalla scheda, non piu' header_fields
+test_a_reading_that_breaks_before_it_begins_leaves_no_open_receipt - passo 40.4: fingeva scan_store.folder_root, che api/scan.py importa per nome, e non provava nulla; la lettura che si rompe la prova test_scan_door
+test_the_end_of_the_normalization_writes_the_folders_without_its_copies - passo 40.4: la copia calibrata non entra (Marco 26/11/2026); diventato test_the_end_of_the_normalization_writes_the_folders

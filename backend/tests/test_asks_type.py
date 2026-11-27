@@ -14,10 +14,9 @@ import re
 
 from astrolog.fits.frame_type import FrameType
 from astrolog.spine import declarations as decl
-from astrolog.spine import scan_store, typeless, typeless_answer
+from astrolog.spine import typeless, typeless_answer
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
 from astrolog.spine.stages import (
     FOLDER_SAYS,
@@ -27,7 +26,7 @@ from astrolog.spine.stages import (
     set_status,
     waiting_sql,
 )
-from conftest import add_folder, sky_solved, write_fits
+from conftest import add_folder, file_present, put_file, scan, sky_solved, write_fits
 from test_solve import solver
 
 
@@ -40,7 +39,7 @@ def _posa(conn, folder_id, rel_path, image_type="unknown"):
         (f"{folder_id}:{rel_path}", image_type),
     ).lastrowid
     mark_pending(conn, frame_id, "ora")
-    scan_store.upsert_position(conn, frame_id, folder_id, rel_path, 1, 1.0, "ora")
+    put_file(conn, frame_id, folder_id, rel_path)
     return frame_id
 
 
@@ -139,12 +138,12 @@ def test_a_frame_whose_folder_changes_takes_the_answer_of_the_new_one(conn):
     radice = add_folder(conn, "D:/Astro")
     typeless.declare(conn, "D:/Astro/luci", TypeAnswer.LIGHT)
     posa = _posa(conn, radice, "luci/a.fits")
-    scan_store.upsert_position(conn, posa, radice, "copie/a.fits", 1, 1.0, "ora")
+    put_file(conn, posa, radice, "copie/a.fits")
     assert _scritto(conn, posa) == 0
-    scan_store.mark_missing(conn, radice, {"copie/a.fits"}, set(), "ora")
+    file_present(conn, radice, "luci/a.fits", False)
     assert _scritto(conn, posa) == 1
-    prima = scan_store.position(conn, radice, "luci/a.fits")["id"]
-    scan_store.set_position_present(conn, prima, "ora")
+
+    file_present(conn, radice, "luci/a.fits", True)
     assert _scritto(conn, posa) == 0
     _come_la_regola(conn)
 
@@ -160,7 +159,7 @@ def test_a_position_that_changes_file_moves_both_marks(conn):
         " VALUES('nuovo', 'unknown', '[]', 'ora')"
     ).lastrowid
     mark_pending(conn, nuovo, "ora")
-    scan_store.upsert_position(conn, nuovo, radice, "luci/a.fits", 2, 2.0, "ora")
+    put_file(conn, nuovo, radice, "luci/a.fits")
     assert (_scritto(conn, vecchio), _scritto(conn, nuovo)) == (1, 0)
     _come_la_regola(conn)
 
@@ -190,14 +189,12 @@ def _muto(path, **header):
     return write_fits(path, {**card, "DATE-OBS": "2024-05-17T21:00:00", **header})
 
 
-def test_the_end_of_the_normalization_writes_the_folders_without_its_copies(conn, tmp_path):
-    """La normalizzazione trova le copie, e una copia non si conta: le cartelle le riscrive lei,
-    perche' puo' ripartire da sola dopo una risposta senza che il cielo giri dopo di lei."""
-    _muto(tmp_path / "lib" / "notte" / "raw.fits", SWCREATE="Un programma qualunque 7")
-    _muto(
-        tmp_path / "lib" / "notte" / "cal.fits", SWCREATE="Un programma qualunque 7", CALSTAT="BDF"
-    )
-    list(scan_folder(conn, add_folder(conn, tmp_path / "lib")))
+def test_the_end_of_the_normalization_writes_the_folders(conn, tmp_path):
+    """Le cartelle della domanda le riscrive la normalizzazione, perche' puo' ripartire da sola
+    dopo una risposta senza che il cielo giri dopo di lei. Il calibrato resta fuori (ADR 0029)."""
+    _muto(tmp_path / "lib" / "notte" / "raw.fits")
+    _muto(tmp_path / "lib" / "notte" / "cal.fits", CALSTAT="BDF")
+    scan(conn, tmp_path / "lib")
     for (frame_id,) in conn.execute("SELECT id FROM frames").fetchall():  # il cielo non sa dire
         set_status(conn, frame_id, "solve", "failed", reason="no_solution")
     assert typeless.by_folder(conn) == []  # ne' la scansione ne' uno stato la scrivono
@@ -210,7 +207,7 @@ def test_the_end_of_the_sky_writes_the_folders_it_cannot_tell(conn, tmp_path):
     che non ha risolto diventa una domanda."""
     for i in range(2):
         _muto(tmp_path / "lib" / "dark" / f"{i}.fits")
-    list(scan_folder(conn, add_folder(conn, tmp_path / "lib")))
+    scan(conn, tmp_path / "lib")
     assert typeless.by_folder(conn) == []
     list(
         solve_frames(conn, exe="astap", run=solver(esiti={0: None, 1: None}), cache=tmp_path / "c")

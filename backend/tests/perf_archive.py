@@ -14,9 +14,8 @@ from astrolog.spine import stages, typeless_folders
 from astrolog.spine.group import group_frames
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.normalize import normalize_frames
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.stages import StageName
-from conftest import add_folder, sky_solved, write_fits
+from conftest import scan, sky_solved, write_fits
 from synthetic import ASIAIR, NINA
 
 FRAMES = 10_000
@@ -111,7 +110,7 @@ def build(db_path, root):
                 " timezone, is_default, created_at) VALUES(?, ?, ?, ?, 'declared', ?, ?, 'now')",
                 (name, lat, lon, elev, tz, home),
             )
-        list(scan_folder(conn, add_folder(conn, root)))
+        scan(conn, root)
         list(normalize_frames(conn))
         _sky_from_header(conn)
         typeless_folders.write(conn)

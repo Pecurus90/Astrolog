@@ -8,7 +8,6 @@ che taciuto.
 
 import contextlib
 import shutil
-import sqlite3
 import threading
 import time
 from unittest import mock
@@ -21,7 +20,7 @@ from astrolog.api import scan as scan_api
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.pipeline import scan as pipeline_scan
-from astrolog.spine import run, scan_store
+from astrolog.spine import run
 from astrolog.spine.scan_store import COUNTS, start_run
 from astrolog.spine.stages import mark_pending
 from astrolog.worker.worker import Stage, WorkerBusyError
@@ -667,25 +666,6 @@ def test_the_work_left_names_only_the_stages_that_run(app):
     scan_all(client)
     client.app.state.worker.join(30.0)
     assert "measure" not in status(client)["pending"]
-
-
-def test_a_reading_that_breaks_before_it_begins_leaves_no_open_receipt(app):
-    """La ricevuta conta come cominciata solo quando la lettura e' partita davvero: se cade prima
-    (la cartella non si trova), resta aperta per sempre e racconta una corsa che non c'e'."""
-    client, uno, due = app
-    vero = scan_store.folder_root
-
-    def cade_sulla_prima(conn, folder_id):
-        if folder_id == uno:
-            raise sqlite3.OperationalError("disk I/O error")
-        return vero(conn, folder_id)
-
-    with mock.patch.object(scan_store, "folder_root", cade_sulla_prima):
-        scan_all(client)
-        client.app.state.worker.join(30.0)
-    with connect(client.app.state.db_path) as conn:
-        aperte = conn.execute("SELECT folder_id FROM scan_runs WHERE ended_at IS NULL").fetchall()
-    assert [r[0] for r in aperte] == []
 
 
 def test_a_second_press_while_every_folder_is_being_read_says_busy(app):

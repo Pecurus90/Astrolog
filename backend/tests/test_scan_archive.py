@@ -1,38 +1,28 @@
-"""Lo stadio di scansione: le richieste dell'utente in `docs/domini/spina-scan.md`, una per test.
-Tutto su FITS veri fabbricati con astropy e su un DB nato da schema.sql."""
+"""La scansione vista dall'archivio: le richieste dell'utente in `docs/domini/spina-scan.md`, una
+per test, sulla porta della pipeline nuova (`api/scan_door.py`). FITS veri fabbricati con astropy,
+DB nato da schema.sql. I test della vecchia scansione tolti: `tools/test_tolti.txt`."""
 
-import json
 import os
 from pathlib import Path
 
-import numpy as np
 import pytest
-from astropy.io import fits
 
-import astrolog.fits.walk as walk_mod
-import astrolog.spine.scan as scan_mod
+import astrolog.pipeline.scan as pipeline_scan
+import astrolog.pipeline.walk as walk_mod
+from astrolog.api import scan_door
 from astrolog.api.scan_door import scan_once
-from astrolog.fits.header_read import HeaderReadError
+from astrolog.pipeline.scanner import Skip, Skipped
+from astrolog.pipeline.walk import long_path
 from astrolog.spine import frame_folder, typeless
 from astrolog.spine.declarations import TypeAnswer
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.stages import STAGES, WAITING_SQL, count_pending
-from conftest import (
-    CartellaLegata,
-    add_folder,
-    fake_entries,
-    online_only,
-    settle,
-    unreadable_dir,
-    write_fits,
-    write_light,
-)
+from conftest import add_folder, online_only, settle, unreadable_dir, write_fits, write_light
 
 
 def run(conn, folder_id, **kw):
-    events = list(scan_folder(conn, folder_id, **kw))
-    assert events[-1]["done"]
-    return events[-1]
+    done = scan_once(conn, folder_id, **kw)
+    assert done["done"]
+    return done
 
 
 def count(conn, sql):
@@ -52,22 +42,6 @@ def test_scan_walk_finds_everything_and_never_touches_the_files(conn, tmp_path):
     assert {p: (p.stat().st_size, p.stat().st_mtime) for p in root.rglob("*.fit*")} == before
     assert count(conn, "SELECT COUNT(*) FROM frames") == 4
     assert count(conn, "SELECT COUNT(*) FROM positions") == 4
-
-
-def test_scan_reads_header_only(conn, tmp_path):
-    """Un file con l'header intero ma SENZA il blocco dei pixel entra lo stesso: la
-    scansione non ha bisogno dei pixel. Se qualcuno li leggesse, questo test diventa rosso."""
-    path = write_light(tmp_path / "a.fits", obj="M 42")
-    with open(path, "rb") as f:
-        raw = f.read()
-    end = raw.index(b"END" + b" " * 77)
-    header_only = raw[: ((end // 2880) + 1) * 2880]
-    with open(path, "wb") as f:
-        f.write(header_only)
-    settle(path)
-    done = run(conn, add_folder(conn, tmp_path))
-    assert done["new"] == 1 and done["errors"] == 0
-    assert conn.execute("SELECT object_raw FROM frames").fetchone()[0] == "M 42"
 
 
 def test_scan_stores_raw_fields_and_marks_every_stage_pending(conn, tmp_path):
@@ -150,36 +124,21 @@ def test_scan_missing_returns(conn, tmp_path):
 
 
 def test_scan_skips_calibration(conn, tmp_path):
-    """Nessun file di calibrazione entra in archivio -- e non solo nella grafia di chi l'ha
-    scritto per primo: le grafie sono quelle di programmi diversi (`Dark Frame` dello standard,
-    `DARKFLAT` di N.I.N.A., il trattino, il plurale) piu' i due casi in cui il tipo NON sta in
-    `IMAGETYP`: la libreria che lo dichiara in `OBJECT` e il file gia' sommato."""
+    """Nessun file di calibrazione entra in archivio, nelle parole di N.I.N.A. (DARKFLAT
+    compreso), e nemmeno il file gia' sommato da un altro programma (ADR 0029)."""
     write_light(tmp_path / "light.fits")
-    for name, typ in (
-        ("dark", "Dark"),
-        ("flat", "Flat Field"),
-        ("bias", "Bias Frame"),
-        ("df", "Dark Flat"),
-        ("df2", "DARK-FLAT"),
-        ("darks", "darks"),
-    ):
+    for name, typ in (("dark", "DARK"), ("flat", "FLAT"), ("bias", "BIAS"), ("df", "DARKFLAT")):
         write_fits(tmp_path / f"{name}.fits", {"IMAGETYP": typ, "EXPTIME": 1.0})
-    # il tipo non e' in IMAGETYP: lo dice il nome del target, o il fatto che sia una somma
-    write_fits(tmp_path / "lib.fits", {"IMAGETYP": "LIGHT", "OBJECT": "flats", "EXPTIME": 1.0})
-    write_fits(tmp_path / "master.fits", {"IMAGETYP": "Light", "NCOMBINE": 40, "OBJECT": "M 1"})
+    write_fits(tmp_path / "master.fits", {"IMAGETYP": "LIGHT", "STACKCNT": 40, "OBJECT": "M 1"})
     done = run(conn, add_folder(conn, tmp_path))
-    assert (done["found"], done["new"], done["skipped"]) == (9, 1, 8)
+    assert (done["found"], done["new"], done["skipped"]) == (6, 1, 5)
     assert count(conn, "SELECT COUNT(*) FROM frames") == 1
     assert count(conn, "SELECT COUNT(*) FROM positions") == 1
 
 
 def _muto(tmp_path, name="muto.fits"):
     """Un file che non dice `IMAGETYP`: lo lasciano muto alcuni programmi di ripresa, e non si sa
-    se e' una foto del cielo o un file di calibrazione. Quali siano lo dice
-    `astrolog/fits/frame_type.py`, che e' la casa di quella decisione.
-
-    test-tolto: test_scan_unknown_type_enters -- rinominato in
-    `test_scan_unknown_type_enters_and_waits_before_the_object`, che prova anche l'attesa."""
+    se e' una foto del cielo o un file di calibrazione (`pipeline/card.py`)."""
     write_fits(
         tmp_path / name,
         {"OBJECT": "M 13", "EXPTIME": 60.0, "DATE-OBS": "2024-05-17T21:00:00"},
@@ -204,12 +163,7 @@ def test_scan_unknown_type_enters_and_waits_before_the_object(conn, tmp_path):
     assert _aspetta(conn)
 
 
-# the old scan and the new one, while both live (step 40.4 takes the old one out)
-SCANS = pytest.mark.parametrize("leggi", [run, scan_once], ids=["vecchia", "nuova"])
-
-
-@SCANS
-def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path, leggi):
+def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path):
     """Detto che in quella cartella ci sono file di calibrazione, i file nuovi che arrivano dopo
     non entrano affatto e la ricevuta li conta per motivo, come quelli che lo dicono da soli; un
     light che dice di esserlo entra. Un frame gia' in archivio spostato li' invece entra
@@ -219,12 +173,12 @@ def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path, leggi):
     typeless.declare(conn, chiave, TypeAnswer.CALIBRATION)
     _muto(tmp_path, "dark.fits")
     write_light(tmp_path / "luce.fits")
-    done = leggi(conn, folder_id)
+    done = run(conn, folder_id)
     assert (done["new"], done["skipped"]) == (1, 1)
     assert done["skipped_by_reason"] == [{"reason": "calibration", "count": 1}]
     assert count(conn, "SELECT COUNT(*) FROM frames") == 1
     typeless.declare(conn, chiave, TypeAnswer.LIGHT)
-    done = leggi(conn, folder_id)
+    done = run(conn, folder_id)
     assert (done["new"], done["skipped"]) == (1, 0)
 
 
@@ -239,8 +193,8 @@ def test_scan_a_pose_said_missing_found_unchanged_is_present_again(conn, tmp_pat
 
 
 def test_scan_touched_headers_and_late_copies_are_counted_one_by_one(conn, tmp_path):
-    """Due file toccati sul disco con gli stessi pixel sono due uguali; due copie arrivate dopo
-    di un frame gia' in archivio sono due doppioni."""
+    """Due file toccati sul disco con gli stessi pixel restano i loro frame; due copie arrivate
+    dopo di un frame gia' in archivio sono due doppioni."""
     a = write_light(tmp_path / "a.fits", obj="M 1")
     b = write_light(tmp_path / "b.fits", obj="M 2")
     fid = add_folder(conn, tmp_path)
@@ -251,7 +205,8 @@ def test_scan_touched_headers_and_late_copies_are_counted_one_by_one(conn, tmp_p
         (tmp_path / copia).write_bytes(Path(a).read_bytes())
         settle(tmp_path / copia)
     done = run(conn, fid)
-    assert (done["new"], done["unchanged"], done["duplicates"]) == (0, 2, 2)
+    assert (done["new"], done["duplicates"]) == (0, 2)
+    assert count(conn, "SELECT COUNT(*) FROM frames") == 2
 
 
 def test_scan_lets_in_a_folder_the_user_called_sky(conn, tmp_path):
@@ -277,24 +232,14 @@ def test_scan_partial_file(conn, tmp_path):
     assert run(conn, fid, min_age_s=30)["new"] == 1  # alla scansione dopo entra
 
 
-def test_the_default_wait_is_the_one_that_runs_in_production(conn, tmp_path):
-    """I 30 secondi di attesa sono il **default**, ed e' quello che gira davvero: la corsa
-    vera non passa `min_age_s` (`spine/run.py`). Ogni altro test lo passa a mano, quindi il
-    valore che conta non era pinnato da nessuno: portarlo a zero lasciava la suite verde e
-    faceva entrare in archivio i file che la camera sta ancora scrivendo."""
-    assert scan_mod.DEFAULT_MIN_AGE_S >= 30
-    adesso = write_light(tmp_path / "adesso.fits")
-    settle(adesso, 0)  # appena scritto: la camera potrebbe non aver finito
-    fid = add_folder(conn, tmp_path)
-    done = run(conn, fid)  # senza min_age_s: come in produzione
-    assert (done["new"], done["skipped"]) == (0, 1)
-    assert done["skipped_by_reason"] == [{"reason": "still_writing", "count": 1}]
+def test_the_wait_the_door_passes_is_at_least_30_seconds():
+    """I 30 secondi sono quelli che passa la porta dell'utente (`scan_door.scan_events`); ogni
+    altro test li passa a mano: portarli a zero farebbe entrare i file che la camera scrive."""
+    assert scan_door.MIN_AGE_S >= 30
 
 
 def test_scan_beyond_260_characters_reads_the_header(conn, tmp_path):
-    """Il tratto lungo della scansione (stat + astropy sulla forma `\\\\?\\`), non solo il walk."""
-    from astrolog.fits.walk import long_path
-
+    """Il tratto lungo della scansione (stat e lettura sulla forma `\\\\?\\`), non solo il walk."""
     deep = str(tmp_path)
     while len(deep) < 300:
         deep = os.path.join(deep, "Nebulosa della Testa di Cavallo - IC 434 - sessione lunga")
@@ -309,17 +254,15 @@ def test_scan_bad_header_counted(conn, tmp_path, monkeypatch):
     """Un file che non si legge si conta, e la ricevuta lo nomina con un codice e non con la
     frase dell'eccezione: un file senza permessi e un file rotto sono due motivi diversi."""
     write_light(tmp_path / "ok.fits")
-    write_light(tmp_path / "chiuso.fits", obj="M 2")
+    chiuso = write_light(tmp_path / "chiuso.fits", obj="M 2")
     (tmp_path / "rotto.fits").write_bytes(b"non e' un FITS\x00" * 50)
     settle(tmp_path / "rotto.fits")
-    vera = scan_mod.read_frame
+    vera = pipeline_scan.scan_file
 
-    def senza_permesso(p):
-        if os.path.basename(p) == "chiuso.fits":
-            raise HeaderReadError(p, PermissionError(13, "accesso negato (mock)"))
-        return vera(p)
+    def senza_permesso(p, size):
+        return Skipped(p, Skip.UNREADABLE) if Path(p) == Path(chiuso) else vera(p, size)
 
-    monkeypatch.setattr(scan_mod, "read_frame", senza_permesso)
+    monkeypatch.setattr(pipeline_scan, "scan_file", senza_permesso)
     done = run(conn, add_folder(conn, tmp_path))
     assert (done["new"], done["errors"]) == (1, 2)
     assert done["errors_detail"] == [
@@ -342,88 +285,6 @@ def test_scan_root_gone_aborts(conn, tmp_path):
         "aborted",
         "root_unreachable",
     )
-
-
-def test_scan_root_gone_midway_aborts_without_marking_missing(conn, tmp_path, monkeypatch):
-    """La condivisione cade DURANTE la scansione: `aborted`, e i file gia' in archivio non
-    diventano "non trovato"."""
-    root = tmp_path / "nas"
-    for i in range(4):
-        write_light(root / f"f{i}.fits", obj=f"M {i}")
-    fid = add_folder(conn, root)
-    run(conn, fid)
-    real_stat = os.stat
-    calls = []
-
-    def stat_then_vanish(path, *a, **kw):
-        calls.append(path)
-        if len(calls) == 2:
-            for p in root.iterdir():
-                p.unlink()
-            root.rmdir()
-        return real_stat(path, *a, **kw)
-
-    monkeypatch.setattr(scan_mod.os, "stat", stat_then_vanish)
-    done = run(conn, fid)
-    assert (done["status"], done["reason"]) == ("aborted", "root_unreachable")
-    assert done["missing"] == 0
-    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 4
-
-
-def test_scan_root_gone_while_reading_a_header_aborts(conn, tmp_path, monkeypatch):
-    """Il caso vero su NAS: la condivisione cade dentro la lettura dell'header (la parte
-    lenta), che esce come HeaderReadError. Deve essere `aborted`, non `ok` con N errori."""
-    root = tmp_path / "nas"
-    for i in range(4):
-        write_light(root / f"f{i}.fits", obj=f"M {i}")
-    fid = add_folder(conn, root)
-    real = scan_mod.read_frame
-    calls = []
-
-    def read_then_vanish(path):
-        calls.append(path)
-        if len(calls) == 2:
-            for p in root.iterdir():
-                p.unlink()
-            root.rmdir()
-        return real(path)
-
-    monkeypatch.setattr(scan_mod, "read_frame", read_then_vanish)
-    done = run(conn, fid)
-    assert (done["status"], done["reason"], done["errors"]) == ("aborted", "root_unreachable", 0)
-
-
-def test_scan_file_growing_while_read_is_skipped(conn, tmp_path, monkeypatch):
-    p = write_light(tmp_path / "a.fits")
-    real = scan_mod.read_frame
-
-    def read_and_grow(path):
-        result = real(path)
-        with open(p, "ab") as f:
-            f.write(b"\0" * 2880)  # il software sta ancora scrivendo i pixel
-        return result
-
-    monkeypatch.setattr(scan_mod, "read_frame", read_and_grow)
-    done = run(conn, add_folder(conn, tmp_path))
-    assert (done["new"], done["skipped"]) == (0, 1)
-    assert done["skipped_by_reason"] == [{"reason": "still_writing", "count": 1}]
-
-
-def test_scan_root_unreadable_right_after_the_precheck_aborts(conn, tmp_path, monkeypatch):
-    """Il pre-controllo passa, ma il walk non riesce ad aprire la radice: `aborted`, e le
-    posizioni restano com'erano."""
-    write_light(tmp_path / "a.fits")
-    fid = add_folder(conn, tmp_path)
-    run(conn, fid)
-
-    def walk_that_cannot_open_the_root(root, found=None, unreadable=None, **_):
-        unreadable.append(root)
-        return []
-
-    monkeypatch.setattr(scan_mod, "walk_dir", walk_that_cannot_open_the_root)
-    done = run(conn, fid)
-    assert (done["status"], done["reason"], done["missing"]) == ("aborted", "root_unreachable", 0)
-    assert conn.execute("SELECT status FROM positions").fetchone()[0] == "present"
 
 
 def test_scan_unreadable_subfolder_does_not_mark_its_frames_missing(conn, tmp_path, monkeypatch):
@@ -464,48 +325,17 @@ def test_scan_does_not_download_an_online_only_file(conn, tmp_path, monkeypatch)
     write_light(tmp_path / "a.fits")
     write_light(tmp_path / "b.fits", obj="M 2", date="2024-05-17T22:00:00")
     fid = add_folder(conn, tmp_path)
-    aperti, vera = [], scan_mod.read_frame
+    aperti, vera = [], pipeline_scan.scan_file
     # un contesto suo: `monkeypatch.undo()` toglierebbe anche il recinto di tutta la suite
     with monkeypatch.context() as finto:
         online_only(finto, tmp_path / "b.fits")
-        finto.setattr(scan_mod, "read_frame", lambda p: aperti.append(p) or vera(p))
+        finto.setattr(pipeline_scan, "scan_file", lambda p, s: aperti.append(p) or vera(p, s))
         done = run(conn, fid)
     assert (done["new"], done["online_only"]) == (1, 1)
     assert done["found"] == 2  # incontrati tutti e due: uno letto, uno lasciato dov'e'
     assert not any(os.path.basename(p) == "b.fits" for p in aperti)
     assert count(conn, "SELECT online_only FROM scan_runs") == 1
     assert run(conn, fid)["new"] == 1  # di nuovo sul disco: entra
-
-
-def test_scan_a_missing_pose_that_comes_back_online_only_is_present_again(
-    conn, tmp_path, monkeypatch
-):
-    """Un frame "non trovato" che ricompare solo online e' di nuovo li': torna presente, come se
-    fosse tornata sul disco."""
-    posa, altrove = tmp_path / "a.fits", tmp_path / "a.bak"
-    write_light(posa)
-    fid = add_folder(conn, tmp_path)
-    run(conn, fid)
-    posa.rename(altrove)
-    assert run(conn, fid)["missing"] == 1
-    altrove.rename(posa)
-    online_only(monkeypatch, posa)
-    run(conn, fid)
-    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 1
-
-
-def test_scan_names_the_linked_folders_it_does_not_follow(conn, tmp_path, monkeypatch):
-    """Una sottocartella raggiunta da una giunzione o da un collegamento non si percorre, ma la
-    ricevuta la nomina: invece di "0 file" senza una ragione, l'utente vede dove guardare."""
-    write_light(tmp_path / "a.fits")
-    write_light(tmp_path / "giunzione" / "b.fits", obj="M 2")
-    fake_entries(
-        monkeypatch, lambda _c, v: CartellaLegata(v, junction=True) if v.name == "giunzione" else v
-    )
-    done = run(conn, add_folder(conn, tmp_path))
-    assert done["new"] == 1
-    assert [os.path.basename(d) for d in done["linked_dirs"]] == ["giunzione"]
-    assert "giunzione" in conn.execute("SELECT linked_dirs_json FROM scan_runs").fetchone()[0]
 
 
 def test_scan_poses_under_a_folder_that_becomes_hidden_are_missing(conn, tmp_path):
@@ -548,31 +378,12 @@ def test_scan_names_the_hidden_folders_it_leaves_out(conn, tmp_path):
 def test_scan_receipt(conn, tmp_path):
     for i in range(2):
         write_light(tmp_path / f"f{i}.fits", obj=f"M {i}")
-    write_fits(tmp_path / "dark.fits", {"IMAGETYP": "Dark"})
+    write_fits(tmp_path / "dark.fits", {"IMAGETYP": "DARK"})
     done = run(conn, add_folder(conn, tmp_path))
     row = conn.execute("SELECT * FROM scan_runs").fetchone()
     assert row["status"] == "ok" and row["ended_at"] is not None
     assert (row["found"], row["new"], row["skipped"]) == (3, 2, 1)
     assert done["run_id"] == row["id"]
-
-
-def test_scan_stop_leaves_a_coherent_prefix(conn, tmp_path):
-    """Fermare lascia un prefisso coerente, e la ricevuta della corsa fermata porta i file non
-    letti fin li'."""
-    (tmp_path / "0_rotto.fits").write_bytes(b"non e' un FITS\x00" * 50)
-    settle(tmp_path / "0_rotto.fits")
-    for i in range(5):
-        write_light(tmp_path / f"f{i}.fits", obj=f"M {i}")
-    gen = scan_folder(conn, add_folder(conn, tmp_path))
-    for event in gen:
-        if event.get("new") == 2:
-            break
-    gen.close()  # e' cio' che fa il worker su Stop
-    assert count(conn, "SELECT COUNT(*) FROM frames") == 2
-    row = conn.execute("SELECT status, new, errors_detail_json FROM scan_runs").fetchone()
-    assert (row["status"], row["new"]) == ("stopped", 2)
-    rotto = [{"file": "0_rotto.fits", "reason": "header_unreadable"}]
-    assert json.loads(row["errors_detail_json"]) == rotto
 
 
 def test_scan_writes_canonical_dates_and_the_pixel_fingerprint(conn, tmp_path):
@@ -581,17 +392,3 @@ def test_scan_writes_canonical_dates_and_the_pixel_fingerprint(conn, tmp_path):
     row = conn.execute("SELECT date_obs, frame_hash FROM frames").fetchone()
     assert row["date_obs"] == "2024-05-17T21:00:00.123"
     assert len(row["frame_hash"]) == 64
-
-
-def test_scan_multi_hdu_counts_as_one_frame(conn, tmp_path):
-    fits.HDUList(
-        [
-            fits.PrimaryHDU(),
-            fits.ImageHDU(
-                data=np.zeros((4, 4), dtype=np.int16),
-                header=fits.Header({"OBJECT": "M 31", "EXPTIME": 300.0, "IMAGETYP": "LIGHT"}),
-            ),
-        ]
-    ).writeto(tmp_path / "m.fits")
-    settle(tmp_path / "m.fits")
-    assert run(conn, add_folder(conn, tmp_path))["new"] == 1

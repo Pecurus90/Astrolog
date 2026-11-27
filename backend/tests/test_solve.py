@@ -16,9 +16,8 @@ from astrolog.db import idlist
 from astrolog.db.connect import connect
 from astrolog.spine import solve_store as store
 from astrolog.spine import stages
-from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
-from conftest import add_folder, write_light
+from conftest import scan, write_light
 
 # Un esito risolto, nella forma vera di ASTAP.
 INI = """
@@ -83,7 +82,7 @@ def archivio(tmp_path, sessioni=(("M 31", 3), ("M 42", 2))):
 def popola(db_path, root):
     conn = connect(db_path)
     try:
-        list(scan_folder(conn, add_folder(conn, root)))
+        scan(conn, root)
     finally:
         conn.close()
 

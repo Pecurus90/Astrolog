@@ -15,7 +15,6 @@ from ..db.paths import cache_dir
 from ..pipeline.behind import Behind
 from ..spine import backup, night_moons
 from ..spine.run import ORDER, Reading, ScanWork, queue, queue_folders
-from ..spine.scan import root_readable
 from ..spine.scan_store import (
     COUNTS,
     RECEIPT_LISTS,
@@ -42,6 +41,7 @@ from .models import (
     ScanStarted,
 )
 from .models_page import page_of
+from .paths import root_readable
 from .scan_door import scan_events
 
 router = APIRouter(prefix="/api/v1", tags=["scan"])
@@ -200,7 +200,7 @@ def _unreachable_receipts(
     conn: sqlite3.Connection, skips: Iterable[FolderSkipped], batch: int
 ) -> None:
     """A folder that did not answer is in the gesture, blocked with its reason (Impostazioni,
-    Scansioni): a closed receipt, as when the root drops while it is read (`spine/scan`)."""
+    Scansioni): a closed receipt, as when the root drops while it is read."""
     for s in skips:
         if s.reason != "root_unreachable":
             continue

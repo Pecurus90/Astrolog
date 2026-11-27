@@ -229,6 +229,25 @@ def frame_by_file(conn, name):
     ).fetchone()
 
 
+def put_file(conn, frame_id, root_id, rel_path):
+    """Il file di un frame in una cartella, presente, come lo scrive la scansione: un file diverso
+    allo stesso percorso prende il posto."""
+    conn.execute(
+        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
+        " VALUES(?, ?, ?, 1, 1.0, 'present', 'ora') ON CONFLICT(folder_id, rel_path)"
+        " DO UPDATE SET frame_id = excluded.frame_id, status = 'present'",
+        (frame_id, root_id, rel_path),
+    )
+
+
+def file_present(conn, root_id, rel_path, present):
+    """Il file sparito o ritrovato, come lo segna la scansione."""
+    conn.execute(
+        "UPDATE positions SET status = ? WHERE folder_id = ? AND rel_path = ?",
+        ("present" if present else "missing", root_id, rel_path),
+    )
+
+
 def best_of(times, run):
     """Seconds of the best of `times` runs of `run`; skipped among other processes, where a
     timing measures the load and not the code."""

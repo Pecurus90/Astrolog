@@ -8,7 +8,7 @@ import pytest
 
 from astrolog.db import paths
 from astrolog.log import setup_logging
-from astrolog.spine import group, identify, normalize, scan, solve
+from astrolog.spine import group, identify, normalize, solve
 from astrolog.spine.stages import (
     SETTLED,
     STAGES,
@@ -146,7 +146,6 @@ def test_no_stage_counter_collides_with_a_reserved_log_field():
     esattamente questo."""
     moduli = {"normalize": normalize, "solve": solve, "identify": identify, "group": group}
     assert set(moduli) | set(STADI_CHE_DEVONO_NASCERE) == set(STAGES)
-    moduli["scan"] = scan  # non e' uno stadio del grafo per frame, ma versa i suoi contatori
 
     riservati = set(logging.LogRecord("n", 0, "p", 0, "m", None, None).__dict__) | {"message"}
     for stadio, modulo in moduli.items():
