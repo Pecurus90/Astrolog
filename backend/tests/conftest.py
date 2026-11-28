@@ -8,6 +8,7 @@ import hashlib
 import os
 import shutil
 import socket
+import sqlite3
 import sys
 import time
 from pathlib import Path
@@ -114,11 +115,33 @@ def dentro_il_recinto(monkeypatch, tmp_path):
     monkeypatch.setattr(place, "_last_search", 0.0)
 
 
+_ROOT_FRAMES_WRONG = (
+    "SELECT r.root_id, r.frames, (SELECT COUNT(*) FROM pipeline_files p WHERE p.root_id = r.root_id"
+    "  AND p.state = 'present' AND p.frame_id IN (SELECT id FROM frames)) AS counted"
+    " FROM root_frames r WHERE frames <> counted"
+)
+
+
+def _root_frames_hold(path):
+    """`root_frames` la tengono i trigger: a fine test vale il conto dalle tabelle vere (#16)."""
+    if not path.exists():
+        return
+    conn = connect(path)
+    try:
+        wrong = conn.execute(_ROOT_FRAMES_WRONG).fetchall()
+    except sqlite3.DatabaseError:
+        return  # chi rompe il file apposta
+    finally:
+        conn.close()
+    assert not wrong, f"root_frames diverge dal conto: {[tuple(r) for r in wrong]}"
+
+
 @pytest.fixture
 def db_path(tmp_path):
     path = tmp_path / "astrolog.db"
     create_database(path)
-    return path
+    yield path
+    _root_frames_hold(path)
 
 
 @pytest.fixture(scope="session")
@@ -148,7 +171,8 @@ def db_path_col_catalogo(tmp_path, _catalog_template):
     # esplodere `create_database` su un file che c'e' gia', e l'errore non direbbe perche'
     path = tmp_path / "astrolog_col_catalogo.db"
     shutil.copy(_catalog_template, path)
-    return path
+    yield path
+    _root_frames_hold(path)
 
 
 @pytest.fixture

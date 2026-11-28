@@ -46,9 +46,7 @@ PROBE_SECONDS: Final = 10  # [C Nielsen 1993: 10 s attention limit]
 
 _SELECT = (
     "SELECT f.id, f.name, f.path AS root_path, f.created_at,"
-    " (SELECT COUNT(*) FROM pipeline_files p WHERE p.root_id = f.id AND p.state = 'present'"
-    "  AND p.frame_id IN (SELECT id FROM frames))"
-    " AS frames FROM pipeline_roots f"
+    " (SELECT frames FROM root_frames r WHERE r.root_id = f.id) AS frames FROM pipeline_roots f"
 )
 
 

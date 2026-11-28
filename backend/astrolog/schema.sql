@@ -1069,6 +1069,36 @@ CREATE TRIGGER asks_type_file_out AFTER DELETE ON pipeline_files BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = OLD.frame_id)
   WHERE id = OLD.frame_id; END;
 
+-- DERIVATO. Frame di una cartella per GET /folders: file presenti con frame in `frames` (dark
+-- no). La scrivono i trigger sotto, a ogni file o frame che cambia: la lettura non conta (#16).
+CREATE TABLE root_frames (
+  root_id INTEGER PRIMARY KEY REFERENCES pipeline_roots (id) ON DELETE CASCADE,
+  frames  INTEGER NOT NULL CHECK (frames >= 0)
+) STRICT;
+CREATE TRIGGER root_frames_root_in AFTER INSERT ON pipeline_roots BEGIN
+  INSERT INTO root_frames (root_id, frames) VALUES (NEW.id, 0); END;
+CREATE TRIGGER root_frames_file_in AFTER INSERT ON pipeline_files
+  WHEN NEW.state = 'present' AND NEW.frame_id IN (SELECT id FROM frames) BEGIN
+  UPDATE root_frames SET frames = frames + 1 WHERE root_id = NEW.root_id; END;
+CREATE TRIGGER root_frames_file_out AFTER DELETE ON pipeline_files
+  WHEN OLD.state = 'present' AND OLD.frame_id IN (SELECT id FROM frames) BEGIN
+  UPDATE root_frames SET frames = frames - 1 WHERE root_id = OLD.root_id; END;
+CREATE TRIGGER root_frames_file_moved AFTER UPDATE OF state, frame_id, root_id ON pipeline_files
+  WHEN NEW.state IS NOT OLD.state OR NEW.frame_id IS NOT OLD.frame_id
+    OR NEW.root_id IS NOT OLD.root_id BEGIN
+  UPDATE root_frames SET frames = frames - 1 WHERE root_id = OLD.root_id
+    AND OLD.state = 'present' AND OLD.frame_id IN (SELECT id FROM frames);
+  UPDATE root_frames SET frames = frames + 1 WHERE root_id = NEW.root_id
+    AND NEW.state = 'present' AND NEW.frame_id IN (SELECT id FROM frames); END;
+CREATE TRIGGER root_frames_frame_in AFTER INSERT ON frames BEGIN
+  UPDATE root_frames SET frames = frames + (SELECT COUNT(*) FROM pipeline_files p
+    WHERE p.frame_id = NEW.id AND p.state = 'present' AND p.root_id = root_frames.root_id)
+  WHERE root_id IN (SELECT root_id FROM pipeline_files WHERE frame_id = NEW.id); END;
+CREATE TRIGGER root_frames_frame_out AFTER DELETE ON frames BEGIN
+  UPDATE root_frames SET frames = frames - (SELECT COUNT(*) FROM pipeline_files p
+    WHERE p.frame_id = OLD.id AND p.state = 'present' AND p.root_id = root_frames.root_id)
+  WHERE root_id IN (SELECT root_id FROM pipeline_files WHERE frame_id = OLD.id); END;
+
 -- RILEVATO. Spostati trovati da una scansione, scritti con lei: lo schermo legge, mai ricalcola.
 CREATE TABLE pipeline_moves (
   scan_id  INTEGER NOT NULL REFERENCES pipeline_scans (id),

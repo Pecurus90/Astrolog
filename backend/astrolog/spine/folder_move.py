@@ -8,10 +8,7 @@ from .declarations import EntityType
 from .frame_folder import folder_key
 
 # SQL out of the functions: mutmut upper-cases a literal in a function, an equivalent mutant
-_FRAMES = (
-    "SELECT COUNT(*) FROM pipeline_files WHERE root_id = ? AND state = 'present'"
-    " AND frame_id IN (SELECT id FROM frames)"
-)
+_FRAMES = "SELECT COALESCE((SELECT frames FROM root_frames WHERE root_id = ?), 0)"  # 0: no folder
 _ROOT_KEY = "SELECT root_key FROM pipeline_roots WHERE id = ?"
 # OR REPLACE: a stale answer of another folder on the new key yields to this folder's
 _FOLLOW = (
