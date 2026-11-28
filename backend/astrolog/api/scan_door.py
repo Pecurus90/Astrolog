@@ -62,6 +62,7 @@ _DUPLICATES = (
     "   AND o.state = 'present' AND ((o.arrived_scan_id = pf.arrived_scan_id AND o.id < pf.id)"
     "   OR (o.arrived_scan_id < pf.arrived_scan_id"
     "   AND pf.frame_id NOT IN (SELECT value FROM json_each(?)))))"
+    " AND pf.rel_path NOT IN (SELECT value FROM json_each(?))"  # back at its path: unchanged
 )
 
 
@@ -80,7 +81,7 @@ def scan_events(
         counts = dict.fromkeys(COUNTS, 0) | {
             "found": total + len(changes.unchanged) + len(changes.online_only),
             "new": len(seen.born),
-            "unchanged": len(changes.unchanged),
+            "unchanged": len(changes.unchanged) + len(_same(seen)),
             "online_only": len(changes.online_only),
         }
         events.put({"current": read, "total": total, "file": _shown(PurePosixPath(rel).name),
@@ -202,7 +203,10 @@ def _counts(
     reasons[SkipReason.STILL_WRITING] += len(result.still_writing)
     reasons[SkipReason.CALIBRATION] = conn.execute(_CALIBRATION, (changes.root_id,)).fetchone()[0]
     born = json.dumps(sorted(result.born))
-    duplicates = conn.execute(_DUPLICATES, (changes.root_id, changes.scan_id, born)).fetchone()[0]
+    same = _same(result)
+    duplicates = conn.execute(
+        _DUPLICATES, (changes.root_id, changes.scan_id, born, json.dumps(same))
+    ).fetchone()[0]
     errors = [
         {"file": _shown(rel), "reason": _ERROR_OF[why]} for rel, why in left if why in _ERROR_OF
     ]
@@ -214,7 +218,7 @@ def _counts(
         "found": len(changes.new) + len(changes.changed) + len(changes.reread)
         + len(changes.unchanged) + len(changes.unlooked) + len(changes.online_only),
         "new": len(result.born),
-        "unchanged": len(changes.unchanged),
+        "unchanged": len(changes.unchanged) + len(same),
         "duplicates": duplicates,
         "missing": len(changes.gone),
         "skipped": sum(reasons.values()),
@@ -223,6 +227,11 @@ def _counts(
     }  # fmt: skip
     skipped = [{"reason": r, "count": n} for r, n in sorted(reasons.items()) if n]
     return counts, skipped, errors
+
+
+def _same(result: ScanResult) -> list[str]:
+    """Read again at a path that held its frame: unchanged, unless the frame entered now."""
+    return [rel for rel, shot in result.same if shot not in result.born]
 
 
 def _unlooked(rel: str) -> FileError:

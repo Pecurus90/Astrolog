@@ -221,10 +221,46 @@ def test_scan_a_pose_said_missing_found_unchanged_is_present_again(conn, tmp_pat
     assert conn.execute(STATE).fetchone()[0] == "present"
 
 
-@pytest.mark.xfail(strict=True, reason="issue 110: the receipt counts it nowhere")
 def test_scan_a_pose_found_unchanged_is_counted_unchanged(conn, tmp_path):
     """Il ritorno uguale e' un file invariato nella ricevuta, come per la vecchia scansione."""
     assert _gone_and_back(conn, tmp_path)["unchanged"] == 1
+
+
+def test_scan_a_file_read_again_with_the_same_pixels_is_counted_unchanged(conn, tmp_path):
+    """Riletto (data cambiata) e stesso frame allo stesso posto: invariato, non in nessun conto."""
+    p = write_light(tmp_path / "a.fits")
+    fid = add_folder(conn, tmp_path)
+    run(conn, fid)
+    settle(p, 300)
+    done = run(conn, fid)
+    assert (done["new"], done["unchanged"], done["duplicates"]) == (0, 1, 0)
+
+
+def test_scan_a_dark_marked_light_again_is_new_only(conn, tmp_path):
+    """Stessi pixel, ora light: il frame entra adesso, e' nuovo e non anche invariato."""
+    p = write_light(tmp_path / "a.fits", IMAGETYP="DARK")
+    fid = add_folder(conn, tmp_path)
+    assert run(conn, fid)["new"] == 0
+    write_light(p)
+    settle(p, 300)
+    done = run(conn, fid)
+    assert (done["new"], done["unchanged"]) == (1, 0)
+
+
+def test_scan_a_copy_gone_and_back_unchanged_is_not_also_a_duplicate(conn, tmp_path):
+    """La copia che torna uguale al suo posto e' invariata: un file in un conto solo."""
+    a = write_light(tmp_path / "a.fits")
+    b = tmp_path / "b.fits"
+    b.write_bytes(Path(a).read_bytes())
+    settle(b)
+    fid = add_folder(conn, tmp_path)
+    run(conn, fid)
+    fuori = tmp_path.parent / f"{tmp_path.name}-fuori.fits"
+    os.rename(b, fuori)
+    run(conn, fid)
+    os.rename(fuori, b)
+    done = run(conn, fid)
+    assert (done["found"], done["unchanged"], done["duplicates"]) == (2, 2, 0)
 
 
 def test_scan_touched_headers_and_late_copies_are_counted_one_by_one(conn, tmp_path):

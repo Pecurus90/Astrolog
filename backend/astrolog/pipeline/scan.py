@@ -59,6 +59,8 @@ class ScanResult:
     moved: list[tuple[str, str]] = field(default_factory=list)  # (was, is now)
     skipped: list[Skipped] = field(default_factory=list)  # read, but not a frame
     born: set[int] = field(default_factory=set)  # frames that entered the archive now
+    # read again, path held this shot: unchanged in receipt unless the shot was born now
+    same: list[tuple[str, int]] = field(default_factory=list)
     still_writing: list[str] = field(default_factory=list)  # too young: read next scan
     finished: bool = False
     root_lost: bool = False  # root answered the walk, then went silent: nothing judged gone
@@ -138,7 +140,7 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str, watch: Watch) -
         with transaction(conn):
             touched: set[int] = set()
             for rel, got in batch:
-                touched |= _store(conn, changes, rel, got, now)
+                touched |= _store(conn, result, rel, got, now)
             touched |= frame_card.settle(conn, touched)
             result.born |= frame_row.write(conn, touched)
             conn.execute(  # running totals: a stopped scan keeps what its saved batches saw
@@ -242,14 +244,19 @@ def _read(path: Path, size: int, traced: set[type[Exception]]) -> Read:
         return Read(Skipped(path, Skip.FAULT))
 
 
-def _store(conn: sqlite3.Connection, changes: Changes, rel: str, read: Read, now: str) -> set[int]:
+def _store(
+    conn: sqlite3.Connection, result: ScanResult, rel: str, read: Read, now: str
+) -> set[int]:
     """File's size and date written with its read, frame and header together: skipped file
     loses both, unless locked or damaged file read before. Returns shots touched."""
+    changes = result.changes
     got = read.got
     skipped = isinstance(got, Skipped)
     shot = None if skipped else _frame_of(conn, got, now)
     was = _row_for(conn, changes.root_id, rel, shot)
     before = was["frame_id"] if was is not None else None
+    if shot is not None and before == shot:  # back from gone, or touched with same pixels
+        result.same.append((rel, shot))
     held = skipped and got.reason in KEEPS_FRAME and before is not None
     frame_id = (before if held else None) if skipped else shot
     file_id = _write_file(conn, changes, rel, was, (frame_id, got.reason if skipped else None))
