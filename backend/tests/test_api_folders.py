@@ -15,7 +15,7 @@ from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.fits import walk
 from astrolog.spine.scan_store import SELECT_RUN
-from conftest import online_only, unreadable_dir, write_light
+from conftest import online_only, settle, unreadable_dir, write_light
 
 
 def add(client_vuoto, path):
@@ -139,6 +139,26 @@ def test_duplicate_is_409_and_retire_reactivate_keep_data(client_vuoto, tmp_path
     assert client_vuoto.delete("/api/v1/folders/99999").status_code == 404
     client_vuoto.delete(f"/api/v1/folders/{f['id']}")
     assert client_vuoto.delete(f"/api/v1/folders/{f['id']}").json()["retired"] is False
+
+
+def test_a_light_written_again_as_a_dark_leaves_the_folder_count(client_vuoto, tmp_path, db_path):
+    root = tmp_path / "astro"
+    write_light(root / "a.fits")
+    write_light(root / "b.fits")
+    f = add(client_vuoto, root)
+    client_vuoto.post(f"/api/v1/folders/{f['id']}/scan")
+    client_vuoto.app.state.worker.join(10.0)
+    assert folders(client_vuoto)[0]["frames"] == 2
+    c = connect(db_path)
+    born = c.execute("SELECT id FROM frames WHERE id IN (SELECT frame_id FROM pipeline_files"
+                     " WHERE rel_path = 'a.fits')").fetchone()[0]  # fmt: skip
+    write_light(root / "a.fits", IMAGETYP="DARK")  # same pixels: same frame, now a dark
+    settle(root / "a.fits", age_s=300)
+    client_vuoto.post(f"/api/v1/folders/{f['id']}/scan")
+    client_vuoto.app.state.worker.join(10.0)
+    assert c.execute("SELECT COUNT(*) FROM frames WHERE id = ?", (born,)).fetchone()[0] == 0
+    c.close()
+    assert folders(client_vuoto)[0]["frames"] == 1
 
 
 def test_the_first_registration_is_not_a_reactivation(client_vuoto, tmp_path):
