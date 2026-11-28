@@ -323,7 +323,6 @@ CREATE TABLE frames (
   dec_hint_deg   REAL,
   site_lat       REAL,                             -- dall'header: indizio per "rivedi i siti"
   site_lon       REAL,
-  site_elev_m    REAL,
   header_json    TEXT NOT NULL,                    -- l'header intero, lista di coppie
   filter_id      INTEGER REFERENCES filters (id),  -- normalize
   object_id      INTEGER REFERENCES objects (id),  -- identify

@@ -40,7 +40,9 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
   `prima-del-40` su una copia dell'archivio, alla chiusura di ogni fetta; ogni differenza ha un
   perche' scritto. La vecchia intera resta solo nel tag. Il banco (passo 40.2):
   `tools/confronto_pagine.py` costruisce la copia col codice del tag (worktree) e con HEAD,
-  esporta le pagine e le confronta; le prove riempiono l'archivio da `backend/tests/porta.py`. Il thread resta quello di `Behind`: e' la
+  esporta le pagine e le confronta; le prove riempiono l'archivio da `backend/tests/porta.py`.
+  Una fetta che cambia chi scrive `frames` confronta anche i frame, uno per uno per file, sull'archivio
+  di prova intero (`tools/confronto_frame.py`: scansione e normalize, niente solver). Il thread resta quello di `Behind`: e' la
   vecchia che cede gli stadi, mai la nuova che entra nel worker dell'utente.
 - Costo: tre revisioni per passo del cuore (ordine di ore, non giorni). (superata: vedi 0040)
 - **Identita' della posa** (Marco, 22/10/2026, secondo audit): camera, inizio UTC normalizzato,
