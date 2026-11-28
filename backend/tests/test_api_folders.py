@@ -14,6 +14,7 @@ from astrolog.api import paths
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.fits import walk
+from astrolog.spine.scan_store import SELECT_RUN
 from conftest import online_only, unreadable_dir, write_light
 
 
@@ -118,21 +119,23 @@ def test_duplicate_is_409_and_retire_reactivate_keep_data(client_vuoto, tmp_path
     # **E le sue scansioni restano leggibili**, col percorso dentro: togliere una cartella e' un
     # ritiro, la sua riga non sparisce, e la ricevuta esce da una giunzione **interna**
     # (`spine/scan_store.SELECT_RUN`). Che la riga non possa sparire lo tiene fermo lo schema --
-    # `scan_runs.folder_id` la riferisce, e provato: sostituendo il ritiro con una cancellazione
+    # `pipeline_scans.root_id` la riferisce, e provato: sostituendo il ritiro con una cancellazione
     # vera si prende `FOREIGN KEY constraint failed`, non uno storico perso in silenzio.
-    letture = client_vuoto.get("/api/v1/scan-runs").json()["items"]
-    assert [riga["folder_id"] for riga in letture] == [f["id"]]
-    assert letture[0]["folder_path"] == str(root)
-    # A receipt says its folder is retired: otherwise the page shows a path that never updates.
-    assert letture[0]["folder_retired"] is True
+    letture = client_vuoto.get("/api/v1/scans").json()["items"]
+    assert [riga["folders"] for riga in letture] == [[str(root)]]
     c = connect(db_path)
+    # A receipt says its folder is retired: otherwise the page shows a path that never updates.
+    assert [
+        r["folder_retired"] for r in c.execute(SELECT_RUN + " WHERE r.gesture IS NOT NULL")
+    ] == [1]
     assert c.execute("SELECT COUNT(*) FROM frames").fetchone()[0] == 1
-    c.close()
     assert client_vuoto.post(f"/api/v1/folders/{f['id']}/scan").status_code == 409
     again = add(client_vuoto, root)
     assert again["id"] == f["id"] and again["reactivated"] is True
-    letture = client_vuoto.get("/api/v1/scan-runs").json()["items"]
-    assert letture[0]["folder_retired"] is False
+    assert [
+        r["folder_retired"] for r in c.execute(SELECT_RUN + " WHERE r.gesture IS NOT NULL")
+    ] == [0]
+    c.close()
     assert client_vuoto.delete("/api/v1/folders/99999").status_code == 404
     client_vuoto.delete(f"/api/v1/folders/{f['id']}")
     assert client_vuoto.delete(f"/api/v1/folders/{f['id']}").json()["retired"] is False

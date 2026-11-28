@@ -24,7 +24,7 @@ Cio' che vale per tutta la catena sta in [`spina.md`](spina.md).
 | La cartella del NAS la registro come `\\NAS\Foto` o come disco collegato `Z:`, e la ritrovo con la lettera o il percorso di rete che ho scelto | `test_the_folder_is_saved_in_the_form_the_user_finds_again`, `test_a_network_folder_is_accepted` |
 | Aprire le cartelle di rete non apre le zone di sistema, comunque siano scritte, e su qualunque sistema: anche su Mac, dove `/etc` e `/var` sono collegamenti | `test_the_checks_look_at_where_the_path_leads`, `test_a_system_zone_that_leads_elsewhere_is_refused_too`, `test_the_forms_that_would_bypass_the_checks_are_refused`, `test_a_path_that_resolves_to_no_absolute_path_is_refused`, `test_a_folder_that_does_not_answer_is_checked_and_kept_as_written` |
 | Sul NAS in Docker scelgo la cartella da un elenco, invece di indovinarne il percorso (rotte e worker; il primo avvio e le Impostazioni le usano) | `test_the_nas_folder_is_chosen_from_a_list`, `test_the_folders_to_choose_from_are_the_ones_the_walk_walks`, *nell elenco del NAS si entra, e si registra la cartella dove sei* (`frontend/tests/wizard-cartelle.test.tsx`); le Impostazioni senza prova (Issue #13) |
-| Una cartella raggiunta da un collegamento non fa girare la scansione a vuoto, e la ricevuta la nomina | `test_a_junction_is_not_followed_and_is_named`, `test_a_link_to_a_file_is_not_named_as_a_folder`, `test_the_linked_folders_are_named_in_order` |
+| Una cartella raggiunta da un collegamento si legge, una volta sola anche se ci arrivano due collegamenti, e uno verso una cartella sopra non fa girare la scansione a vuoto (pipeline nuova: la ricevuta non nomina piu' i collegamenti) | `test_a_linked_folder_is_walked`, `test_a_folder_reached_by_two_links_is_walked_once`, `test_a_link_back_to_an_ancestor_does_not_loop` |
 | La stessa cartella aggiunta da un collegamento, o scritta in un altro modo, e' la stessa cartella: i suoi file non contano due volte; un collegamento scritto dentro una cartella gia' mia e' dentro (pipeline nuova) | `test_the_same_folder_through_a_link_is_the_same_root`, `test_the_same_folder_written_another_way_is_the_same_root`, `test_a_linked_folder_written_inside_a_root_is_inside` |
 | Una cartella il cui nome non e' testo (NAS Linux con nomi latin-1, PEP 383) si rifiuta come cartella che non c'e', invece di rompere l'app; un file o una sottocartella cosi' resta fuori e la ricevuta lo nomina (pipeline nuova) | `test_a_root_whose_name_is_not_text_is_refused_as_a_folder_not_found`, `test_a_name_that_is_not_text_is_left_out_and_the_scan_goes_on` |
 | Le chiavi che nessuno stadio legge ancora (`READOUTM`, `EGAIN`, `ROTATOR`, `ROTATANG`) restano nell'header come le ha scritte il programma; il pilastro si legge; nessuna abbina calibrazioni, che l'app conta e non cataloga (pipeline nuova) | `test_nina_file_gives_every_nina_key_it_carries`, `test_asiair_file_gives_every_asiair_key_it_carries`, `test_the_pier_side_is_east_or_west_as_written_else_unknown`, `test_the_receipt_counts_the_skipped_by_reason` |
@@ -71,15 +71,19 @@ fermano la corsa col loro motivo (`database_error`) invece di dire "3.000 file n
 sani, e la ricevuta si chiude lo stesso, coi file non letti fin li' -- se il database torna a
 rispondere in tempo per scriverla: occupato oltre la sua attesa, la corsa resta aperta. La
 fermano anche la radice caduta e lo Stop. La ricevuta nello stato porta i numeri; **l'elenco dei
-file non letti si legge a pagine** (`GET /api/v1/scan-runs/{id}/errors`), perche' puo' contare
+file non letti si legge a pagine** (`GET /api/v1/scans/{id}/unread`), perche' puo' contare
 migliaia di nomi e la pagina interroga lo stato ogni pochi secondi; lo stato del worker dice solo
 che ci sono. Lo tiene **l'ultima scansione di ogni cartella, e se non e' arrivata in
 fondo anche l'ultima che ci e' arrivata** (Marco, 2026-09-11): quei file si riprovano a ogni
 scansione arrivata in fondo, e le altre ricevute tengono i numeri (`errors_not_kept`). Cosi' il
 database non cresce nemmeno se la condivisione cade a ogni giro. Di una corsa ancora aperta
-l'elenco non c'e' ancora (`scan_run_open`). **La pagina legge i gesti, non le ricevute**
-(`GET /api/v1/scans`, tavola v82): le ricevute di un gesto stanno insieme per `COALESCE(batch,
-id)`, coi conti sommati, e i file non leggibili di tutte le cartelle in `GET /scans/{id}/unread`.
+l'elenco non c'e' ancora. **La pagina legge i gesti, non le ricevute**
+(`GET /api/v1/scans`, tavola v82): le ricevute di un gesto stanno insieme per `gesture`, coi
+conti sommati, e i file non leggibili di tutte le cartelle in `GET /scans/{id}/unread`. **La
+ricevuta e' la riga della scansione** (`pipeline_scans`, una tabella sola): il gesto apre un
+segnaposto per cartella, e la scansione lo sostituisce con una riga nuova, perche' l'id e' il
+tempo della radice (le mosse e i doppioni confrontano gli id) e un giro di fondo puo' passare
+fra il gesto e il turno della cartella. I giri di fondo non hanno ricevuta (`gesture` NULL).
 La ricevuta porta i primi 100 percorsi e le 100
 chiavi sconosciute piu' frequenti (ADR 0038).
 
@@ -104,9 +108,10 @@ disco collegato il nome corto che Windows da' alle cartelle (`Z:\ARCHIV~1`) e' u
 nome lungo, perche' la lettera si tiene e il nome corto non coincide con quello risolto; e se
 il percorso non si risolve (NAS spento, credenziali rifiutate) si controlla e si salva com'e'
 scritto. Se `os.scandir(root)` fallisce
-prima del walk: abort con codice, posizioni intatte. **Collegamenti a cartella e giunzioni non si
-seguono** -- per Python una giunzione e' una cartella qualunque, e una verso un antenato farebbe
-girare il walk a vuoto -- **e la ricevuta li nomina** (`linked_dirs`). Percorsi lunghi su Windows
+prima del walk: abort con codice, posizioni intatte. **Collegamenti a cartella e giunzioni si
+seguono una volta, per percorso reale** -- per Python una giunzione e' una cartella qualunque, e
+una verso un antenato farebbe girare il walk a vuoto: la cartella gia' vista non si rilegge (pipeline
+nuova, `pipeline/walk.py`). Percorsi lunghi su Windows
 in forma `\\?\`, e una cartella di rete nella sua (`\\?\UNC\server\share`, come vuole la
 documentazione di Windows: col prefisso sbagliato non si apre).
 

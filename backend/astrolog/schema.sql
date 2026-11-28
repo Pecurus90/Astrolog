@@ -762,33 +762,6 @@ CREATE TABLE sessions (
 -- la stessa notte e lo stesso oggetto avrebbero potuto aprire due sessioni identiche.
 CREATE UNIQUE INDEX sessions_key ON sessions (night_id, object_id, COALESCE(rig_id, -1));
 
--- La ricevuta di ogni scansione: cosa ha trovato, cosa e' cambiato, come e' finita.
--- E' l'unico stato persistito della scansione: il progresso vive in memoria nel worker.
--- Una corsa aperta ha `ended_at` e `status` NULL: un processo che muore non lascia un
--- "in corso" scritto da nessuna parte.
-CREATE TABLE scan_runs (
-  id         INTEGER PRIMARY KEY,
-  folder_id  INTEGER NOT NULL REFERENCES pipeline_roots (id),
-  batch      INTEGER,      -- id della prima ricevuta del gesto (anche se poi scartata); NULL: se stessa
-  started_at TEXT NOT NULL,
-  ended_at   TEXT,
-  status     TEXT CHECK (status IN ('ok', 'stopped', 'aborted', 'error')),
-  reason     TEXT,                                 -- codice chiuso, se aborted/error
-  found      INTEGER NOT NULL DEFAULT 0,           -- file FITS incontrati, solo online compresi
-  new        INTEGER NOT NULL DEFAULT 0,           -- frame mai visti prima
-  unchanged  INTEGER NOT NULL DEFAULT 0,           -- pre-controllo size+mtime
-  duplicates INTEGER NOT NULL DEFAULT 0,           -- stessa impronta in un'altra posizione
-  missing    INTEGER NOT NULL DEFAULT 0,           -- posizioni non piu' trovate
-  skipped    INTEGER NOT NULL DEFAULT 0,           -- calibrazione, stack, ancora in scrittura
-  errors     INTEGER NOT NULL DEFAULT 0,
-  online_only INTEGER NOT NULL DEFAULT 0,          -- FITS solo online: non aperti, si rivedono
-  unreadable_dirs_json TEXT,                       -- cartelle senza permesso, elencate
-  hidden_dirs_json     TEXT,                       -- sottocartelle nascoste lasciate fuori, elencate
-  linked_dirs_json     TEXT,                       -- raggiunte da un collegamento o una giunzione
-  errors_detail_json   TEXT,                       -- i file non letti, ognuno col suo codice
-  skipped_by_reason_json TEXT                      -- quanti file saltati, per motivo
-) STRICT;
-
 -- Quanto e' servito ogni strumento, setup e filtro (DERIVATO: si riscrive intero a fine giro di
 -- ogni stadio che cambia i frame, `spine/gear_usage.py`, e la pagina Attrezzatura lo legge e
 -- basta). `subject_id` e' l'id della riga di `instruments`, `rigs` o `filters`: niente chiave
@@ -972,12 +945,17 @@ CREATE TABLE catalog_version (
 -- ============================================================ PIPELINE NUOVA (ADR 0030)
 -- Accanto alla vecchia finche' la sostituisce. Commenti: regola di tools/commenti.py.
 
--- RILEVATO. Ricevuta di ogni scansione.
+-- RILEVATO. Ricevuta di ogni scansione; id = tempo della radice (scan.MOVED): il gesto apre un
+-- segnaposto per cartella, la scansione lo sostituisce con una riga nuova. Aperta: ended_at NULL.
 CREATE TABLE pipeline_scans (
   id         INTEGER PRIMARY KEY,
   root_id    INTEGER NOT NULL REFERENCES pipeline_roots (id),
+  -- id del primo segnaposto del gesto dell'utente (anche se poi sostituito); NULL: giro di
+  -- Behind, fuori dalla storia
+  gesture    INTEGER,
   scanned_at TEXT NOT NULL,
-  reachable  INTEGER NOT NULL CHECK (reachable IN (0, 1)),  -- 0: radice muta, nessun giudizio
+  -- 0: radice muta, nessun giudizio; NULL: segnaposto, cartella non ancora letta
+  reachable  INTEGER CHECK (reachable IN (0, 1)),
   -- 1: sotto la radice un altro disco (stessa lettera, rimontaggio): giudicato lo stesso, si dice
   volume_changed INTEGER NOT NULL CHECK (volume_changed IN (0, 1)),
   -- new e gone contano anche gli spostati: le coppie stanno in pipeline_moves
@@ -1001,10 +979,30 @@ CREATE TABLE pipeline_scans (
   -- RAW non sembri vuota; le piu' frequenti (changes.LEFT_OUT_KEPT); NULL radice muta
   not_fits   TEXT CHECK (json_valid(not_fits) AND json_type(not_fits) = 'object'),
   finished   INTEGER NOT NULL CHECK (finished IN (0, 1)),  -- 0: fermata, il giro dopo rifa'
-  CHECK ((reachable = 1) = (left_out IS NOT NULL)),
+  -- la ricevuta dell'utente (api/scan_door.close); NULL in un giro di Behind
+  ended_at   TEXT,
+  status     TEXT CHECK (status IN ('ok', 'stopped', 'aborted', 'error')),
+  reason     TEXT,                                 -- codice chiuso, se stopped/aborted/error
+  found      INTEGER NOT NULL DEFAULT 0 CHECK (found >= 0),  -- file FITS visti, online compresi
+  born       INTEGER NOT NULL DEFAULT 0 CHECK (born >= 0),   -- frame entrati in archivio ora
+  -- riletti dove tenevano gia' il loro frame: "gia' in archivio" e' unchanged + same
+  same       INTEGER NOT NULL DEFAULT 0 CHECK (same >= 0),
+  duplicates INTEGER NOT NULL DEFAULT 0 CHECK (duplicates >= 0),  -- file di un frame gia' qui
+  errors     INTEGER NOT NULL DEFAULT 0 CHECK (errors >= 0),      -- file non letti
+  online_only INTEGER NOT NULL DEFAULT 0 CHECK (online_only >= 0),
+  -- fuori per motivo, stato della cartella (non solo i letti ora, come skipped): {"calibration": 4}
+  skipped_by_reason TEXT NOT NULL DEFAULT '{}'
+    CHECK (json_valid(skipped_by_reason) AND json_type(skipped_by_reason) = 'object'),
+  -- i file non letti col codice; resta solo sull'ultima di ogni radice e sull'ultima ok
+  errors_detail TEXT CHECK (json_valid(errors_detail) AND json_type(errors_detail) = 'array'),
+  CHECK (reachable IS NOT NULL OR left_out IS NULL),
+  CHECK (reachable IS NULL OR (reachable = 1) = (left_out IS NOT NULL)),
   CHECK ((left_out IS NULL) = (left_out_more IS NULL)),
-  CHECK ((left_out IS NULL) = (not_fits IS NULL))
+  CHECK ((left_out IS NULL) = (not_fits IS NULL)),
+  CHECK (gesture IS NOT NULL OR status IS NULL),
+  CHECK ((ended_at IS NULL) = (status IS NULL))
 ) STRICT;
+CREATE INDEX pipeline_scans_gesture ON pipeline_scans (gesture) WHERE gesture IS NOT NULL;
 
 -- RILEVATO. Frame (camera, inizio con frazione di secondo, dimensioni, durata: ADR 0030); senza
 -- file si toglie, sparito tiene la sua. Risposte alla chiave (nome, impronta...), mai a un id.

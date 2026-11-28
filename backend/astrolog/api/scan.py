@@ -1,46 +1,33 @@
 """The work lives in the worker, not in the request; the scan itself is the new pipeline's, on
 Behind's thread (`scan_door`), and a root a scan holds refuses a second one (`Behind.scanning`)."""
 
-import json
 import sqlite3
 from collections.abc import Container, Iterable, Sequence
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.datastructures import State
 
-from ..clock import elapsed_s, now_iso
+from ..clock import now_iso
 from ..db.connect import connect
 from ..db.paths import cache_dir
 from ..pipeline.behind import Behind
+from ..pipeline.changes import open_receipt
 from ..spine import backup, night_moons
 from ..spine.run import ORDER, Reading, ScanWork, queue, queue_folders
 from ..spine.scan_store import (
-    COUNTS,
-    RECEIPT_LISTS,
-    SELECT_RUN,
     FolderNotFoundError,
     ScanReason,
     ScanStatus,
     discard_run,
     finish_run,
     folder_root,
-    run_row,
-    start_run,
 )
 from ..spine.solve import solver_path
 from ..spine.stage_run import Factory
 from ..worker.worker import Stage, WorkerBusyError
 from .deps import get_db
-from .models import (
-    FolderSkipped,
-    ScanAllStarted,
-    ScanErrorList,
-    ScanRunList,
-    ScanRunOut,
-    ScanStarted,
-)
-from .models_page import page_of
+from .models import FolderSkipped, ScanAllStarted, ScanStarted
 from .paths import root_readable
 from .scan_door import scan_events
 
@@ -51,20 +38,6 @@ def scan_work(state: State) -> ScanWork:
     """The user's scan: the new pipeline's, on Behind's thread, followed by the worker."""
     return lambda conn, folder_id, run_id: scan_events(
         conn, folder_id, run_id, state.behind.scan_now
-    )
-
-
-def run_out(row: sqlite3.Row) -> ScanRunOut:
-    """Without the unread files: the page polls the receipt every few seconds, and those are read
-    in pages."""
-    lists = {f"{name}_json": name for name in RECEIPT_LISTS}
-    apart = {*lists, "errors_detail_json"}
-    return ScanRunOut(
-        # iterating a Row yields its values, so keys() is needed
-        **{k: row[k] for k in row.keys() if k not in apart},  # noqa: SIM118
-        **{name: json.loads(row[column] or "[]") for column, name in lists.items()},
-        # derived here: the database keeps the two instants, and the screen only formats
-        duration_s=elapsed_s(row["started_at"], row["ended_at"]),
     )
 
 
@@ -84,14 +57,14 @@ def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
             status_code=409, detail={"code": "scan_running", "folder_id": folder_id}
         )
     run_id: int | None = None
-    previous = (state.last_scan, state.scan_runs)
+    previous = (state.last_scan, state.gesture)
     try:
-        run_id = start_run(conn, folder_id, now_iso())
+        run_id = open_receipt(conn, folder_id, now_iso())
         _launch(state, [(folder_id, run_id)], _one_folder_stages(state, folder_id, run_id))
         return run_id
     except Exception as err:
         # whatever broke the start, the open receipt will never have a run
-        state.last_scan, state.scan_runs = previous
+        state.last_scan, state.gesture = previous
         if run_id is not None:
             discard_run(conn, run_id)
         if isinstance(err, WorkerBusyError):
@@ -102,7 +75,7 @@ def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
 def _launch(state: State, pairs: Sequence[tuple[int, int]], stages: list[Stage]) -> None:
     """`pairs` are (folder_id, run_id), the first one current."""
     # before the start, and the receipts before the current one: a poll never sees the old run
-    state.scan_runs = tuple(run_id for _, run_id in pairs)
+    state.gesture = pairs[0][1]  # the first placeholder's id is the gesture
     state.last_scan = pairs[0]
     state.worker.start(stages)
 
@@ -205,10 +178,9 @@ def _unreachable_receipts(
         if s.reason != "root_unreachable":
             continue
         now = now_iso()
-        run_id = start_run(conn, s.folder_id, now, batch)
-        counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
+        run_id = open_receipt(conn, s.folder_id, now, batch)
         finish_run(
-            conn, run_id, ScanStatus.ABORTED, ScanReason.ROOT_UNREACHABLE, counts, {}, [], now
+            conn, run_id, batch, ScanStatus.ABORTED, ScanReason.ROOT_UNREACHABLE, {}, {}, [], now
         )
 
 
@@ -242,11 +214,11 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
                 "skipped": [s.model_dump() for s in skips],
             },
         )
-    previous = (state.last_scan, state.scan_runs)
+    previous = (state.last_scan, state.gesture)
     try:
         for folder_id in taken:
             batch = opened[0].run_id if opened else None
-            run_id = start_run(conn, folder_id, now_iso(), batch)
+            run_id = open_receipt(conn, folder_id, now_iso(), batch)
             opened.append(ScanStarted(run_id=run_id, folder_id=folder_id))
         pairs = [(c.folder_id, c.run_id) for c in opened]
         # the reply carries every receipt, so they all open now
@@ -260,7 +232,7 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
         _launch(state, pairs, _stages_with_cleanup(state, steps, taken, opened, begun_runs))
     except Exception as err:
         _forget_start(conn, opened)
-        state.last_scan, state.scan_runs = previous
+        state.last_scan, state.gesture = previous
         if isinstance(err, WorkerBusyError):
             raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
         raise
@@ -295,51 +267,3 @@ def scan(
     `scan_running` with the `folder_id`, or `worker_busy`."""
     run_id = start_scan(request.app.state, conn, folder_id)
     return ScanStarted(run_id=run_id, folder_id=folder_id)
-
-
-@router.get("/scan-runs", response_model=ScanRunList)
-def scan_runs(
-    folder_id: int | None = None,
-    limit: int = Query(20, ge=1, le=500),  # [T]
-    offset: int = Query(0, ge=0),
-    conn: sqlite3.Connection = Depends(get_db),
-) -> ScanRunList:
-    """The receipts, newest first."""
-    if folder_id is None:
-        total = conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0]
-        rows = conn.execute(
-            SELECT_RUN + " ORDER BY r.id DESC LIMIT ? OFFSET ?", (limit, offset)
-        ).fetchall()
-    else:
-        total = conn.execute(
-            "SELECT COUNT(*) FROM scan_runs WHERE folder_id = ?", (folder_id,)
-        ).fetchone()[0]
-        rows = conn.execute(
-            SELECT_RUN + " WHERE r.folder_id = ? ORDER BY r.id DESC LIMIT ? OFFSET ?",
-            (folder_id, limit, offset),
-        ).fetchall()
-    return ScanRunList(items=[run_out(r) for r in rows], total=total, limit=limit, offset=offset)
-
-
-@router.get("/scan-runs/{run_id}/errors", response_model=ScanErrorList)
-def scan_run_errors(
-    run_id: int,
-    limit: int = Query(100, ge=1, le=1000),  # [T]
-    offset: int = Query(0, ge=0),
-    conn: sqlite3.Connection = Depends(get_db),
-) -> ScanErrorList:
-    """The files the scan did not read, each with its reason, in pages. The list is kept by the
-    last scan of each folder and, if that one did not reach the end, also by the last one that did
-    (`spine/scan_store.finish_run`): of the others only the numbers remain, and an open one has no
-    list yet; the reply says so with its code instead of an empty list.
-
-    404 `scan_run_not_found`; 409 `scan_run_open`; 410 `errors_not_kept`."""
-    row = run_row(conn, run_id)
-    if row is None:
-        raise HTTPException(status_code=404, detail={"code": "scan_run_not_found"})
-    if row["ended_at"] is None:
-        raise HTTPException(status_code=409, detail={"code": "scan_run_open"})
-    if row["errors"] and row["errors_detail_json"] is None:
-        raise HTTPException(status_code=410, detail={"code": "errors_not_kept"})
-    items = json.loads(row["errors_detail_json"] or "[]")
-    return ScanErrorList(**page_of(items, limit, offset))

@@ -251,6 +251,15 @@ def scan_of(conn, root_id):
     ).lastrowid
 
 
+def receipts(conn, where="1", args=()):
+    """Le ricevute dell'utente (gesture non NULL), dalla piu' vecchia; `where` le sceglie."""
+    return conn.execute(
+        "SELECT * FROM pipeline_scans WHERE gesture IS NOT NULL"  # noqa: S608
+        f" AND ({where}) ORDER BY id",
+        args,
+    ).fetchall()
+
+
 def put_file(conn, frame_id, root_id, rel_path):
     """Il file di un frame in una cartella, presente, come lo scrive la scansione: un file diverso
     allo stesso percorso prende il posto."""

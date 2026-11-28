@@ -20,11 +20,12 @@ from astrolog.api import scan as scan_api
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.pipeline import scan as pipeline_scan
+from astrolog.pipeline.changes import open_receipt
 from astrolog.spine import run
-from astrolog.spine.scan_store import COUNTS, start_run
+from astrolog.spine.scan_store import COUNTS
 from astrolog.spine.stages import mark_pending
 from astrolog.worker.worker import Stage, WorkerBusyError
-from conftest import add_folder, settle, wait_until, write_light
+from conftest import add_folder, receipts, settle, wait_until, write_light
 
 
 @contextlib.contextmanager
@@ -54,6 +55,12 @@ def app(db_path, tmp_path):
         yield c, uno, due
 
 
+def _rows(client):
+    """Le ricevute dell'utente, una per cartella di ogni gesto (`pipeline_scans`)."""
+    with connect(client.app.state.db_path) as conn:
+        return [dict(r) for r in receipts(conn)]
+
+
 def scan_all(client):
     """Il gesto della barra. Asserisce il 202: un helper che accettasse anche il rifiuto
     lascerebbe passare in silenzio i test che dopo guardano l'archivio."""
@@ -78,8 +85,8 @@ def test_one_gesture_reads_every_folder(app):
     assert len(set(avviate.values())) == 2, "due cartelle, due ricevute"
 
     client.app.state.worker.join(30.0)
-    ricevute = client.get("/api/v1/scan-runs").json()["items"]
-    per_cartella = {r["folder_id"]: r for r in ricevute}
+    ricevute = _rows(client)
+    per_cartella = {r["root_id"]: r for r in ricevute}
     assert per_cartella[uno]["found"] == 3
     assert per_cartella[due]["found"] == 2
     assert all(r["status"] == "ok" for r in ricevute)
@@ -140,7 +147,7 @@ def test_the_last_scan_says_when_how_many_new_and_how_many_not_read(app, db_path
     assert wait_until(lambda: status(client)["last_scan"] is not None)
     primo = status(client)["last_scan"]
     assert (primo["new"], primo["not_read"]) == (5, 0)
-    ricevute = client.get("/api/v1/scan-runs").json()["items"]
+    ricevute = _rows(client)
     assert primo["ended_at"] == max(r["ended_at"] for r in ricevute)
 
     scan_all(client)
@@ -162,7 +169,7 @@ def test_a_gesture_still_open_leaves_the_last_closed_one_said(app, db_path):
     chiuso = status(client)["last_scan"]
 
     with connect(db_path) as conn:
-        start_run(conn, uno, "2026-11-10T09:00:00.000Z")
+        open_receipt(conn, uno, "2026-11-10T09:00:00.000Z")
 
     assert status(client)["last_scan"] == chiuso
 
@@ -189,10 +196,8 @@ def test_the_end_of_the_run_is_not_a_number(db_path, tmp_path):
     with connect(db_path) as conn:
         uno = add_folder(conn, root)
         due = add_folder(conn, tmp_path)
-        corse = [
-            (uno, start_run(conn, uno, "2026-09-16T10:00:00.000Z")),
-            (due, start_run(conn, due, "2026-09-16T10:00:01.000Z")),
-        ]
+        gesto = open_receipt(conn, uno, "2026-09-16T10:00:00.000Z")
+        corse = [(uno, gesto), (due, open_receipt(conn, due, "2026-09-16T10:00:01.000Z", gesto))]
         # solo lo stadio della lettura: gli altri della catena hanno i loro numeri, e l'ultimo
         # evento della corsa sarebbe quello delle notti
         lettura = scan_door.direct(db_path)
@@ -223,12 +228,12 @@ def test_the_scan_waits_for_the_worker_after_each_file(db_path, tmp_path):
 
     with connect(db_path) as conn, mock.patch.object(pipeline_scan, "scan_file", conta):
         uno = add_folder(conn, root)
-        corsa = start_run(conn, uno, "2026-09-16T10:00:00.000Z")
+        corsa = open_receipt(conn, uno, "2026-09-16T10:00:00.000Z")
         eventi = scan_door.scan_events(conn, uno, corsa, scan_door.direct(db_path))
         assert next(eventi)["current"] == 1
         assert not secondo.wait(0.5), "la lettura e' andata avanti senza aspettare il worker"
         eventi.close()
-        stato = conn.execute("SELECT status FROM scan_runs WHERE id = ?", (corsa,)).fetchone()[0]
+        (stato,) = [r["status"] for r in receipts(conn, "gesture = ?", (corsa,))]
     assert (len(letti), stato) == (1, "stopped")
 
 
@@ -251,7 +256,7 @@ def test_a_folder_lost_while_reading_does_not_look_like_a_clean_run(app, tmp_pat
         "una cartella persa e lo schermo dice che e' andato tutto bene"
     )
     with connect(client.app.state.db_path) as conn:
-        righe = {r[0]: r[1] for r in conn.execute("SELECT folder_id, status FROM scan_runs")}
+        righe = {r["root_id"]: r["status"] for r in receipts(conn)}
     assert righe[uno] == "ok", "le altre cartelle si leggono lo stesso"
 
 
@@ -319,7 +324,7 @@ def test_a_reading_that_falls_before_the_first_folder_still_answers(app):
 
 def test_while_the_reading_is_being_settled_the_state_is_still_the_workers(app):
     """Chiusa l'ultima ricevuta, lo stadio lavora ancora (lo stacco di chi torna ad aspettare):
-    finche' non ha finito lo stato e' quello del worker, e la ricevuta non si mostra."""
+    finche' non ha finito lo stato e' quello del worker."""
     client, _, _ = app
     gate, dentro = threading.Event(), threading.Event()
     vero = run._detach_waiting
@@ -337,7 +342,7 @@ def test_while_the_reading_is_being_settled_the_state_is_still_the_workers(app):
     finally:
         gate.set()
         client.app.state.worker.join(30.0)
-    assert (scan["state"], scan["receipt"]) == ("running", None)
+    assert scan["state"] == "running"
 
 
 def test_a_folder_that_cannot_be_read_does_not_stop_the_others(app, tmp_path):
@@ -384,14 +389,14 @@ def test_with_nothing_to_read_it_says_so_instead_of_starting(db_path):
         r = client.post("/api/v1/scan")
         assert r.status_code == 409
         assert r.json()["detail"]["code"] == "no_folders"
-        assert client.get("/api/v1/scan-runs").json()["items"] == []
+        assert _rows(client) == []
 
 
 def test_a_stop_does_not_leave_receipts_open_forever(app):
     """Una corsa fermata a meta' non lascia dietro ricevute di cartelle che nessuno ha letto.
 
     Le righe si aprono tutte subito (la risposta le deve gia' portare), ma se lo Stop arriva
-    alla prima cartella la seconda non verra' mai letta: senza buttarla, `GET /scan-runs`
+    alla prima cartella la seconda non verra' mai letta: senza buttarla, `GET /scans`
     mostrerebbe per sempre una corsa "mai finita" su una cartella intatta, e ogni gesto ne
     aggiungerebbe un'altra.
 
@@ -405,7 +410,7 @@ def test_a_stop_does_not_leave_receipts_open_forever(app):
 
     assert client.get("/api/v1/pipeline/status").json()["worker"]["state"] == "stopped"
     with connect(client.app.state.db_path) as conn:
-        righe = {r[0]: r[1] for r in conn.execute("SELECT folder_id, status FROM scan_runs")}
+        righe = {r["root_id"]: r["status"] for r in receipts(conn)}
     assert righe.get(uno) == "stopped", "la cartella letta a meta' racconta di essere stata fermata"
     assert due not in righe, "ricevuta orfana su una cartella che nessuno ha letto"
 
@@ -538,7 +543,7 @@ def test_resume_does_not_re_read_when_the_reading_had_finished(app):
     client, _, _ = app
     scan_all(client)
     client.app.state.worker.join(30.0)
-    prima = len(client.get("/api/v1/scan-runs").json()["items"])
+    prima = len(_rows(client))
 
     blocco, porta, visto = _holding("identify_frames")
     with blocco:
@@ -551,7 +556,7 @@ def test_resume_does_not_re_read_when_the_reading_had_finished(app):
 
     client.post("/api/v1/pipeline/run")
     client.app.state.worker.join(30.0)
-    assert len(client.get("/api/v1/scan-runs").json()["items"]) == prima, (
+    assert len(_rows(client)) == prima, (
         "Riprendi ha riletto le cartelle per un lavoro che non era una scansione"
     )
 
@@ -567,10 +572,10 @@ def test_resume_after_a_stop_in_the_same_run_after_the_reading_does_not_re_read(
         client.post("/api/v1/pipeline/stop")
         porta.set()
         client.app.state.worker.join(30.0)
-    prima = len(client.get("/api/v1/scan-runs").json()["items"])
+    prima = len(_rows(client))
     client.post("/api/v1/pipeline/run")
     client.app.state.worker.join(30.0)
-    assert len(client.get("/api/v1/scan-runs").json()["items"]) == prima
+    assert len(_rows(client)) == prima
 
 
 def test_resume_reads_a_stopped_reading_even_after_another_stopped_job(app):
@@ -621,9 +626,7 @@ def test_resume_without_any_scan_behind_does_not_look_for_one(db_path, tmp_path)
 
         r = client.post("/api/v1/pipeline/run")
         assert r.status_code == 200, r.text
-        assert client.get("/api/v1/scan-runs").json()["items"] == [], (
-            "ha cercato una scansione da riprendere che non c'e' mai stata"
-        )
+        assert _rows(client) == [], "ha cercato una scansione da riprendere che non c'e' mai stata"
 
 
 def test_a_folder_already_being_read_is_skipped_and_said(app):
@@ -656,7 +659,7 @@ def test_when_no_folder_can_be_read_it_says_which_ones(app, tmp_path):
     assert detail["code"] == "no_readable_folders"
     assert {s["folder_id"] for s in detail["skipped"]} == {uno, due}
     with connect(client.app.state.db_path) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
+        assert receipts(conn) == []
 
 
 def test_the_work_left_names_only_the_stages_that_run(app):
@@ -687,7 +690,7 @@ def test_a_busy_worker_leaves_no_folder_locked(app):
         r = client.post("/api/v1/scan")
     assert r.status_code == 409 and r.json()["detail"]["code"] == "worker_busy"
     with connect(client.app.state.db_path) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
+        assert receipts(conn) == []
 
 
 def _stopped_while_reading(client, folder_id):
@@ -804,7 +807,7 @@ def test_status_after_a_stop_before_the_first_folder_has_no_receipt(app):
     assert r.status_code == 200, r.text
     scan = r.json()["scan"]
     lettura = next(s for s in r.json()["worker"]["stages"] if s["name"] == "scan")
-    assert (scan["receipt"], scan["state"]) == (None, lettura["state"])
+    assert (_rows(client), scan["state"]) == ([], lettura["state"])
     # lo stadio non e' mai partito: il worker e' fermo, la sua riga di lettura no
     assert (scan["state"], r.json()["worker"]["state"]) == ("not_run", "stopped")
 

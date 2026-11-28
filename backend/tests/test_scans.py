@@ -14,25 +14,46 @@ def _folder(conn, path):
     return add_folder(conn, path)
 
 
-def _run(conn, folder_id, *, batch=None, ended=True, status="ok", reason=None, **counts):
+def _run(conn, folder_id, *, gesture=None, ended=True, status="ok", reason=None, **counts):
+    """Una ricevuta letta (`reachable` 1) del gesto `gesture`; None: la prima del suo gesto."""
     errors_detail = counts.pop("errors_detail", None)
-    lists = {k: counts.pop(k, None) for k in ("unreadable_dirs", "hidden_dirs", "linked_dirs")}
-    skipped = counts.pop("skipped_by_reason", [])
+    if gesture is None:  # the row's own id: status needs a gesture already at the insert
+        gesture = conn.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM pipeline_scans").fetchone()[0]
+    left_out = {
+        "unreachable": counts.pop("unreadable_dirs", []),
+        "hidden": counts.pop("hidden_dirs", []),
+    }
     cols = {
-        "folder_id": folder_id,
-        "batch": batch,
-        "started_at": T0,
+        "root_id": folder_id,
+        "gesture": gesture,
+        "scanned_at": T0,
+        "reachable": 1,
+        "volume_changed": 0,
+        "new": 0,
+        "changed": 0,
+        "reread": 0,
+        "unchanged": counts.pop("unchanged", 0),
+        "gone": 0,
+        "skipped": "{}",
+        "unknown_keys": "{}",
+        "unknown_more": 0,
+        "left_out": json.dumps(left_out),
+        "left_out_more": "{}",
+        "not_fits": "{}",
+        "finished": 1,
         "ended_at": "2026-11-15T21:08:40+00:00" if ended else None,
         "status": status if ended else None,
         "reason": reason,
-        "skipped_by_reason_json": json.dumps(skipped),
-        "errors_detail_json": None if errors_detail is None else json.dumps(errors_detail),
-        **{f"{k}_json": json.dumps(v or []) for k, v in lists.items()},
+        "skipped_by_reason": json.dumps(counts.pop("skipped_by_reason", {})),
+        "errors_detail": None if errors_detail is None else json.dumps(errors_detail),
         **counts,
     }
     names = ", ".join(cols)
     marks = ", ".join("?" for _ in cols)
-    cur = conn.execute(f"INSERT INTO scan_runs({names}) VALUES({marks})", tuple(cols.values()))
+    cur = conn.execute(
+        f"INSERT INTO pipeline_scans({names}) VALUES({marks})",
+        tuple(cols.values()),
+    )
     conn.commit()
     return cur.lastrowid
 
@@ -47,9 +68,8 @@ def test_scansiona_on_two_folders_is_one_scan(client_vuoto, db_path):
     """Il gesto e' uno: le due cartelle in una carta, i conti sommati."""
     conn = connect(db_path)
     a, b = _folder(conn, "D:/Astro/2026"), _folder(conn, "E:/Sole")
-    first = _run(conn, a, new=120, unchanged=3, duplicates=2)
-    _run(conn, b, batch=first, new=66, duplicates=2,
-         skipped_by_reason=[{"reason": "calibration", "count": 4}])  # fmt: skip
+    first = _run(conn, a, born=120, unchanged=3, duplicates=2)
+    _run(conn, b, gesture=first, born=66, duplicates=2, skipped_by_reason={"calibration": 4})
     conn.close()
     body = _scans(client_vuoto)
     assert body["total"] == 1
@@ -80,7 +100,7 @@ def test_a_stop_is_said_and_a_fault_is_worse(client_vuoto, db_path):
     a, b = _folder(conn, "D:/Astro"), _folder(conn, "E:/Esterno")
     stopped = _run(conn, a, status="stopped", reason="stop_requested")
     first = _run(conn, a, status="stopped", reason="stop_requested")
-    _run(conn, b, batch=first, status="aborted", reason="root_unreachable")
+    _run(conn, b, gesture=first, status="aborted", reason="root_unreachable")
     conn.close()
     newest, older = _scans(client_vuoto)["items"]
     assert newest["outcome"] == "blocked" and newest["reason"] == "root_unreachable"

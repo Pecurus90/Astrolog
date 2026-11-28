@@ -2,6 +2,7 @@
 per test, sulla porta della pipeline nuova (`api/scan_door.py`). FITS veri fabbricati con astropy,
 DB nato da schema.sql. I test della vecchia scansione tolti: `tools/test_tolti.txt`."""
 
+import json
 import os
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from astrolog.spine.stages import STAGES, WAITING_SQL, count_pending
 from conftest import (
     add_folder,
     online_only,
+    receipts,
     settle,
     unreadable_dir,
     write_fits,
@@ -352,10 +354,8 @@ def test_scan_root_gone_aborts(conn, tmp_path):
     done = run(conn, fid)
     assert (done["status"], done["reason"]) == ("aborted", "root_unreachable")
     assert conn.execute(STATE).fetchone()[0] == "present"  # intatta
-    assert conn.execute("SELECT status, reason FROM scan_runs ORDER BY id DESC").fetchone()[:] == (
-        "aborted",
-        "root_unreachable",
-    )
+    last = receipts(conn)[-1]
+    assert (last["status"], last["reason"]) == ("aborted", "root_unreachable")
 
 
 def test_scan_root_gone_midway_aborts_without_marking_missing(conn, tmp_path, monkeypatch):
@@ -448,7 +448,7 @@ def test_scan_does_not_download_an_online_only_file(conn, tmp_path, monkeypatch)
     assert (done["new"], done["online_only"]) == (1, 1)
     assert done["found"] == 2  # incontrati tutti e due: uno letto, uno lasciato dov'e'
     assert not any(os.path.basename(p) == "b.fits" for p in aperti)
-    assert count(conn, "SELECT online_only FROM scan_runs") == 1
+    assert [r["online_only"] for r in receipts(conn)] == [1]
     assert run(conn, fid)["new"] == 1  # di nuovo sul disco: entra
 
 
@@ -485,8 +485,8 @@ def test_scan_names_the_hidden_folders_it_leaves_out(conn, tmp_path):
     assert done["new"] == 1
     assert [os.path.basename(d) for d in done["hidden_dirs"]] == [".nascosta però"]
     # il nome si salva com'e', leggibile anche aprendo il database: accenti compresi
-    salvato = conn.execute("SELECT hidden_dirs_json FROM scan_runs").fetchone()[0]
-    assert ".nascosta però" in salvato
+    (ricevuta,) = receipts(conn)
+    assert ".nascosta però" in ricevuta["left_out"]
 
 
 def test_scan_receipt(conn, tmp_path):
@@ -494,9 +494,10 @@ def test_scan_receipt(conn, tmp_path):
         write_light(tmp_path / f"f{i}.fits", obj=f"M {i}")
     write_fits(tmp_path / "dark.fits", {"IMAGETYP": "DARK"})
     done = run(conn, add_folder(conn, tmp_path))
-    row = conn.execute("SELECT * FROM scan_runs").fetchone()
+    (row,) = receipts(conn)
     assert row["status"] == "ok" and row["ended_at"] is not None
-    assert (row["found"], row["new"], row["skipped"]) == (3, 2, 1)
+    assert (row["found"], row["born"]) == (3, 2)
+    assert json.loads(row["skipped_by_reason"]) == {"calibration": 1}
     assert done["run_id"] == row["id"]
 
 

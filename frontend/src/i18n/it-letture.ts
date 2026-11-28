@@ -54,7 +54,6 @@ export const itLetture = {
   // Le cartelle lasciate fuori, ognuna col suo perche'.
   "settings.scans.dir.unreadable": "{percorso}: cartella non leggibile",
   "settings.scans.dir.hidden": "{percorso}: cartella nascosta, ignorata",
-  "settings.scans.dir.linked": "{percorso}: collegamento, non seguito",
   // Perche' un file non si e' potuto leggere.
   "settings.scans.file.file_unreadable": "file non apribile",
   "settings.scans.file.header_unreadable": "non è un FITS o l'intestazione è rovinata", // glifo-ok: testo della tavola

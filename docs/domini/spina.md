@@ -63,9 +63,9 @@ rifiuta il gesto (`worker_busy`), cosi' nessuno passa sopra frame che si stanno 
 
 **Commit per frame.** Un'interruzione lascia un prefisso coerente, mai un DB a meta'.
 
-**Il progresso vive in memoria, la ricevuta nel DB** (`scan_runs`), e c'e' un canale solo:
-`POST scan` risponde subito con l'id della corsa, `GET /pipeline/status` porta l'ultimo
-evento, la ricevuta e il verbo del pulsante -- 1-3 s mentre gira, 60 s da fermo, zero a
+**Il progresso vive in memoria, la ricevuta nel DB** (`pipeline_scans`), e c'e' un canale solo:
+`POST scan` risponde subito con l'id della ricevuta aperta, `GET /pipeline/status` porta l'ultimo
+evento, l'esito e il verbo del pulsante (le ricevute in `GET /scans`) -- 1-3 s mentre gira, 60 s da fermo, zero a
 scheda nascosta: e' il ritmo che la pagina dovra' tenere. Vale per il desktop, per un'altra
 scheda e per il telefono allo stesso modo. La corsa (quali stadi, in che ordine) la compone
 la spina, e in un posto solo: `run.queue` prende gli stadi che servono, aggiunge quelli che

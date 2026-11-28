@@ -83,9 +83,40 @@ def _held(mtime_ns: int) -> int:
     return max(SQLITE_MIN, min(mtime_ns, SQLITE_MAX))
 
 
-def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
-    """Compares folder with last reads; writes verdicts and receipt. Walk outside transaction:
-    slow disk never holds lock."""
+_OPEN = (
+    "INSERT INTO pipeline_scans (root_id, gesture, scanned_at, reachable, volume_changed, new,"
+    " changed, reread, unchanged, gone, skipped, unknown_keys, unknown_more, finished)"
+    " VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, 0, '{}', '{}', 0, 0)"
+)
+
+
+def open_receipt(
+    conn: sqlite3.Connection, root_id: int, now: str, gesture: int | None = None
+) -> int:
+    """The user's gesture, before the folder's turn: a placeholder, not read. `gesture` None:
+    first of its gesture, the gesture is its id."""
+    with transaction(conn):
+        receipt = inserted_id(conn.execute(_OPEN, (root_id, gesture, now, None)))
+        if gesture is None:
+            conn.execute("UPDATE pipeline_scans SET gesture = id WHERE id = ?", (receipt,))
+    return receipt
+
+
+def _replace(conn: sqlite3.Connection, receipt: int | None) -> int | None:
+    """Placeholder's gesture taken, placeholder gone: the scan's row is born now, so its id
+    stays after any round of Behind on the same root since the gesture."""
+    if receipt is None:
+        return None
+    row = conn.execute("SELECT gesture FROM pipeline_scans WHERE id = ?", (receipt,)).fetchone()
+    conn.execute("DELETE FROM pipeline_scans WHERE id = ? AND reachable IS NULL", (receipt,))
+    return None if row is None else row[0]
+
+
+def record_changes(
+    conn: sqlite3.Connection, root_id: int, now: str, receipt: int | None = None
+) -> Changes:
+    """Compares folder with last reads; writes verdicts and receipt (`receipt`: the gesture's
+    placeholder, replaced). Walk outside transaction: slow disk never holds lock."""
     row = conn.execute(
         "SELECT path, device FROM pipeline_roots WHERE id = ?", (root_id,)
     ).fetchone()
@@ -117,11 +148,13 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         changes.scan_id = inserted_id(
             conn.execute(
                 "INSERT INTO pipeline_scans"
-                " (root_id, scanned_at, reachable, volume_changed, new, changed, reread, unchanged,"
-                " gone, skipped, unknown_keys, unknown_more, left_out, left_out_more, not_fits,"
-                " finished) VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0, ?, ?, ?, 0)",
+                " (root_id, gesture, scanned_at, reachable, volume_changed, new, changed, reread,"
+                " unchanged, gone, skipped, unknown_keys, unknown_more, left_out, left_out_more,"
+                " not_fits, finished) VALUES (?, ?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0, ?, ?,"
+                " ?, 0)",
                 (
                     root_id,
+                    _replace(conn, receipt),
                     now,
                     int(changes.reachable),
                     int(changes.reachable and other_volume),
@@ -189,7 +222,14 @@ def _left_out(changes: Changes) -> tuple[str, str]:
     }
     kept = {name: paths[:LEFT_OUT_KEPT] for name, paths in lists.items()}
     more = {name: max(0, len(paths) - LEFT_OUT_KEPT) for name, paths in lists.items()}
-    return json.dumps(kept), json.dumps(more)
+    return _readable(kept), json.dumps(more)
+
+
+def _readable(value: object) -> str:
+    """JSON readable opening the database, accents as written; a name not UTF-8 (surrogates,
+    which SQLite refuses) stays a `\\udcxx` escape, read back the same."""
+    text = json.dumps(value, ensure_ascii=False)
+    return text.encode("utf-8", "backslashreplace").decode("utf-8")
 
 
 def _judge(

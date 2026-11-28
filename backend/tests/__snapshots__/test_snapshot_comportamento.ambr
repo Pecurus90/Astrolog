@@ -2991,39 +2991,33 @@
     ]),
   })
 # ---
-# name: test_the_pages_of_the_synthetic_archive[scan-runs]
+# name: test_the_pages_of_the_synthetic_archive[scans]
   dict({
     'items': list([
       dict({
-        'duplicates': 0,
-        'errors': 0,
-        'folder_id': 1,
-        'folder_retired': False,
-        'found': 14,
-        'hidden_dirs': list([
+        'can_retry': False,
+        'dirs_left_out': list([
         ]),
         'id': 1,
-        'linked_dirs': list([
-        ]),
-        'missing': 0,
-        'new': 11,
-        'online_only': 0,
-        'reason': None,
-        'skipped': 3,
-        'skipped_by_reason': list([
-          dict({
-            'count': 2,
-            'reason': 'not_supported',
-          }),
+        'left_out': list([
           dict({
             'count': 1,
             'reason': 'rewritten',
           }),
+          dict({
+            'count': 2,
+            'reason': 'not_supported',
+          }),
         ]),
-        'status': 'ok',
-        'unchanged': 0,
-        'unreadable_dirs': list([
+        'new': 11,
+        'outcome': 'completed',
+        'progress': None,
+        'reason': None,
+        'reason_folder': None,
+        'unread': 0,
+        'unread_files': list([
         ]),
+        'unread_kept': True,
       }),
     ]),
     'limit': 20,

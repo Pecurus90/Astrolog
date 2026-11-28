@@ -5,7 +5,7 @@ e' inglese, il nome che **l'utente legge** e' italiano, e ogni cosa ne ha **uno 
 ciascuno. Un identificatore nuovo che non sta qui, o che chiama con un altro nome una cosa
 che qui c'e', e' un rosso per il revisore. Nei documenti si usano le stesse parole -- **tranne
 dove una parola e' di dominio e non di schermo**, e allora la colonna *non si dice* non la
-nomina: `scan_run` a schermo e' **una scansione**, ma nel codice e nei contratti si chiama
+nomina: una riga di `pipeline_scans` a schermo e' **una scansione**, ma nel codice e nei contratti si chiama
 **ricevuta**, cioe' cio' che resta di una corsa. Le
 traduzioni nelle altre lingue attive le tiene il file comune di traduzione del frontend,
 che il `traduttore` legge per primo. Una parola a schermo per una cosa e vietata per un'altra
@@ -25,11 +25,11 @@ backfocus, setup, Deep sky.
 | la somma del tempo dei frame -- di un oggetto, di un mosaico -- in secondi. Le copie riscritte non contano, e un frame che non dice il tempo **non vale zero**: resta fuori dalla somma e si conta in `untimed`. Se **nessun** frame lo dice, a schermo le ore non compaiono affatto: restano i frame senza durata | `integration_s` | Integrazione nei titoli, ore nel numero («12 h») (Marco, 19/10/2026, uso dei forum italiani) | tempo totale, somma, esposizione, 0 h (per un tempo che non si sa) |
 | quanti frame, fra quelli contati, non dicono il loro tempo: viaggia accanto alle ore perche' "non lo sappiamo" e "zero ore" non sono la stessa cosa. Zero secondi invece e' una misura, e non si conta qui | `untimed` | senza durata | senza tempo, a zero, mancante, nullo, vuoto |
 | un dark, flat, bias o dark-flat: riconosciuto e contato, non catalogato | `calibration_frame` | file di calibrazione | calibrazioni, master |
-| una volta che l'app ha letto una cartella, con cosa e' entrato, cosa e' rimasto fuori e quanto e' durata: resta, e si rilegge dopo | `scan_run` | scansione | lettura, corsa, passata, sessione (e' `session`) |
+| una volta che l'app ha letto una cartella, con cosa e' entrato, cosa e' rimasto fuori e quanto e' durata: resta, e si rilegge dopo | ricevuta (`pipeline_scans`) | scansione | lettura, corsa, passata, sessione (e' `session`) |
 | un file che la scansione non ha letto, col suo motivo: il sistema non lo apre (`file_unreadable`), non e' un FITS (`header_unreadable`), il nome non si puo' scrivere (`name_not_utf8`), un guasto che nessuno aspettava (`internal_error`) | `errors_detail` | file non leggibile | file non letto, errore, fallito, scartato |
 | quanti file la scansione ha saltato, per motivo: calibrazione (`calibration`), somma di frame (`stack`), ancora in scrittura (`still_writing`) | `skipped_by_reason` | esclusi | saltati, scartati, ignorati |
-| il frame riscritto da un programma accanto al suo originale: resta in archivio con le sue posizioni, ma le sue ore le conta l'originale. Non e' il duplicato di una scansione, qui sotto | `copy_of` | copia | doppione, duplicato (e' `duplicates` (`scan_runs`)), gemello |
-| lo stesso file trovato dalla scansione in un'altra posizione: stessa impronta, quindi un frame solo con due posizioni. La scansione lo conta nella sua riga; non e' una copia riscritta da un programma (`copy_of`) | `duplicates` (`scan_runs`) | duplicato | doppione, copia (e' `copy_of`) |
+| il frame riscritto da un programma accanto al suo originale: resta in archivio con le sue posizioni, ma le sue ore le conta l'originale. Non e' il duplicato di una scansione, qui sotto | `copy_of` | copia | doppione, duplicato (e' `duplicates` (`pipeline_scans`)), gemello |
+| lo stesso file trovato dalla scansione in un'altra posizione: stessa impronta, quindi un frame solo con due posizioni. La scansione lo conta nella sua riga; non e' una copia riscritta da un programma (`copy_of`) | `duplicates` (`pipeline_scans`) | duplicato | doppione, copia (e' `copy_of`) |
 | cio' che un file dichiara di se': che e' stato calibrato, o che nomina due programmi diversi (uno lo ha scritto, l'altro lo ha ripreso). Non dice **chi**, e da solo non toglie niente: sceglie l'originale fra due copie, e il calibrato pesa piu' del riscritto | `rewrite_mark` | (non a schermo) | flag, elaborato, processato |
 | cio' che l'header di un frame lascia da chiedere in Da confermare: la camera non c'e' (`night_rig.asks_camera`), il filtro non dice niente (`unfiltered.says_no_filter`), e se nomina l'ottica (`header_asks.names_the_optics`: allora sull'ottica non si chiede). Dipende solo dal grezzo e dal vocabolario: lo scrive `scan`, una volta | `asks_camera`, `asks_filter`, `names_optics` (`spine/header_asks.py`) | (non a schermo) | verdetto (e' `verdict` (`go`, `marginal`, `nogo`)), flag |
 | l'immagine elaborata che l'utente carica a mano | `final_photo` | foto finale | immagine finale, elaborata, master |
@@ -237,7 +237,7 @@ manda a qualcuno).
 | le notti, una per una, con cosa e' stato ripreso | `/notti` | Notti | sessioni, serate, uscite |
 | gli strumenti, i setup e i filtri che possiedi | `/attrezzatura` | Attrezzatura | equipaggiamento |
 | i confronti nel tempo: stagioni, setup, filtri, qualita' | `/statistiche` | Statistiche | analitica, report, grafici |
-| le cartelle di FITS che hai indicato, e cosa e' successo l'ultima volta che l'app le ha lette: **una sezione di Impostazioni**, non una pagina in barra | `/impostazioni/cartelle` | Cartelle | importa, sorgenti, libreria, scansione (e' `scan_run`) |
+| le cartelle di FITS che hai indicato, e cosa e' successo l'ultima volta che l'app le ha lette: **una sezione di Impostazioni**, non una pagina in barra | `/impostazioni/cartelle` | Cartelle | importa, sorgenti, libreria, scansione (e' la ricevuta, `pipeline_scans`) |
 | le domande dell'app (la voce e' in *Da dove viene un valore*) | `/da-confermare` | Da confermare | revisione, dati mancanti |
 | le scansioni passate: cosa e' entrato, cosa e' rimasto fuori e perche', **coi file non leggibili** (Marco, 24/10/2026: l'indirizzo dice la parola a schermo) | `/impostazioni/scansioni` | Scansioni | Le letture, corse, passate, storico |
 | perche' l'app non parte o non funziona: il diario, il solver che non si avvia, lo stato del sistema | `/diagnostica` | Diagnostica | log, errori, problemi |

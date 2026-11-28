@@ -299,7 +299,7 @@ def create_app(  # noqa: PLR0913
     app.state.behind = scan.behind(db_path)
     app.state.token = token
     app.state.last_scan = None  # (folder_id, run_id) of the last scan started
-    app.state.scan_runs = ()  # the receipts of every folder of that gesture: its outcome
+    app.state.gesture = None  # that gesture (its first receipt's id): its outcome, its receipts
     app.state.backup_offer = backup.offered_on_start(db_path)
 
     app.add_middleware(

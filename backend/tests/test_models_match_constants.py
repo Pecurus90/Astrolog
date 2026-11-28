@@ -29,6 +29,7 @@ from astrolog.db import config
 from astrolog.db.connect import SCHEMA_PATH
 from astrolog.ephemeris import moon, planets, sun
 from astrolog.fits.frame_type import FrameType
+from astrolog.pipeline.changes import open_receipt
 from astrolog.spine import (
     archive,
     declarations,
@@ -40,6 +41,7 @@ from astrolog.spine import (
     object_answer,
     objects,
     rewrite,
+    scan_history,
     scan_store,
     signature,
     solve,
@@ -55,21 +57,26 @@ from astrolog.worker.worker import STRUCTURAL_KEYS, State
 from conftest import add_folder
 
 
+def _literal(annotation):
+    return {a for arg in get_args(annotation) for a in (get_args(arg) or (arg,))}
+
+
 def test_scan_run_status_and_counts_match_the_store():
-    status_literal = models.ScanRunOut.model_fields["status"].annotation
-    statuses = {a for arg in get_args(status_literal) for a in (get_args(arg) or (arg,))}
-    assert statuses == {*scan_store.ScanStatus, type(None)}  # None = corsa aperta
-    assert set(COUNTS) <= set(models.ScanRunOut.model_fields)
-    # cio' che la scansione lascia fuori: una lista di nomi, e le altre case la seguono
-    assert set(scan_store.RECEIPT_LISTS) <= set(models.ScanRunOut.model_fields)
-    assert set(scan_store.RECEIPT_LISTS) <= STRUCTURAL_KEYS
+    scan = models.ScanOut.model_fields
+    assert _literal(scan["outcome"].annotation) == set(scan_history.Outcome)
+    # una fermata non ha perche' sulla carta; una ricevuta rimasta aperta si'
+    reasons = {*scan_store.ScanReason} - {scan_store.ScanReason.STOP_REQUESTED}
+    assert _literal(scan["reason"].annotation) == {*reasons, scan_history.LEFT_OPEN, type(None)}
+    assert set(get_args(models.LeftOutReason)) == set(scan_history.LeftOut)
+    why = models.DirLeftOut.model_fields["why"].annotation
+    assert set(get_args(why)) == set(scan_history.DirLeftOut)
+    assert set(COUNTS) <= set(models.ScanEvent.model_fields)
+    # cio' che la scansione lascia fuori viaggia nell'evento finale, non nel conto
+    assert {"unreadable_dirs", "hidden_dirs", "skipped_by_reason"} <= STRUCTURAL_KEYS
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
-    assert all(f"{name}_json" in schema for name in scan_store.RECEIPT_LISTS)
+    table = schema[schema.index("CREATE TABLE pipeline_scans") :].split(") STRICT;")[0]
+    assert all(re.search(rf"^\s+{name}\s", table, re.M) for name in scan_store.TALLIES)
     assert set(get_args(models.FileError)) == set(scan_store.FileError)
-    assert set(get_args(models.SkipReason)) == set(scan_store.SkipReason)
-    reason_literal = models.ScanRunOut.model_fields["reason"].annotation
-    reasons = {a for arg in get_args(reason_literal) for a in (get_args(arg) or (arg,))}
-    assert reasons == {*scan_store.ScanReason, type(None)}
 
 
 def test_worker_states_match_the_constants():
@@ -80,22 +87,18 @@ def test_worker_states_match_the_constants():
 
 
 def test_finish_run_refuses_an_outcome_outside_the_vocabulary(conn):
-    run_id = scan_store.start_run(conn, add_folder(conn, "x"), "now")
-    counts = dict.fromkeys(COUNTS, 0)
+    run_id = open_receipt(conn, add_folder(conn, "x"), "now")
     with pytest.raises(ValueError):
-        scan_store.finish_run(conn, run_id, "boh", None, counts, {}, [], "now")
+        scan_store.finish_run(conn, run_id, run_id, "boh", None, {}, {}, [], "now")
     with pytest.raises(ValueError):
-        scan_store.finish_run(conn, run_id, "error", "FileNotFoundError", counts, {}, [], "now")
+        scan_store.finish_run(conn, run_id, run_id, "error", "FileNotFoundError", {}, {}, [], "now")
     # e i motivi dei file lasciati fuori: un codice, mai la frase di un'eccezione
     frase = [{"file": "a.fits", "reason": "PermissionError: accesso negato"}]
     with pytest.raises(ValueError):
-        scan_store.finish_run(conn, run_id, "ok", None, counts, {}, frase, "now")
-    tipo = [{"reason": "dark", "count": 1}]
+        scan_store.finish_run(conn, run_id, run_id, "ok", None, {}, {}, frase, "now")
     with pytest.raises(ValueError):
-        scan_store.finish_run(
-            conn, run_id, "ok", None, counts, {"skipped_by_reason": tipo}, [], "now"
-        )
-    scan_store.finish_run(conn, run_id, "aborted", "root_unreachable", counts, {}, [], "now")
+        scan_store.finish_run(conn, run_id, run_id, "ok", None, {}, {"dark": 1}, [], "now")
+    scan_store.finish_run(conn, run_id, run_id, "aborted", "root_unreachable", {}, {}, [], "now")
 
 
 def test_the_stage_words_and_the_rewrite_marks_are_the_ones_the_schema_allows():

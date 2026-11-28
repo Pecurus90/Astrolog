@@ -167,7 +167,7 @@ describe("Impostazioni / Scansioni, la carta", () => {
           folders: ["B"],
           dirs_left_out: [
             { why: "hidden", path: "B\\.cache" },
-            { why: "linked", path: "B\\link" },
+            { why: "unreadable", path: "B\\chiusa" },
           ],
         },
       ]),
@@ -175,7 +175,7 @@ describe("Impostazioni / Scansioni, la carta", () => {
     const [vuota, saltate] = await screen.findAllByRole("region", { name: /completata$/ })
     expect(righe(vuota!).map((r) => r.split("=")[0])).toEqual(["Cartelle", "Entrati"])
     expect(righe(saltate!).at(-1)).toBe(
-      "Rimasti fuori=B\\.cache: cartella nascosta, ignorataB\\link: collegamento, non seguito",
+      "Rimasti fuori=B\\.cache: cartella nascosta, ignorataB\\chiusa: cartella non leggibile",
     )
   })
 

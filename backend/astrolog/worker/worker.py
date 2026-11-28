@@ -41,7 +41,6 @@ STRUCTURAL_KEYS = frozenset(
         "skipped_by_reason",
         "unreadable_dirs",
         "hidden_dirs",
-        "linked_dirs",
         "run_id",
         "folder_id",
     }

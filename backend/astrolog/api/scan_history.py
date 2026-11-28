@@ -26,9 +26,10 @@ from .models_page import page_of
 router = APIRouter(prefix="/api/v1", tags=["scan"])
 
 
-def _live(state: State) -> set[int]:
+def _live(state: State) -> int | None:
+    """The gesture the worker is still reading."""
     running = state.worker.snapshot().state == WorkerState.RUNNING
-    return set(state.scan_runs) if running else set()
+    return state.gesture if running else None
 
 
 def _progress(state: State, g: scan_history.Gesture) -> ScanProgressOut | None:
@@ -96,7 +97,7 @@ def scan_unread(
 
     404 `scan_not_found`; 410 `errors_not_kept` when a folder's list is no longer kept (only the
     last scan of each folder keeps it)."""
-    if scan_history.one(conn, scan_id, set()) is None:
+    if scan_history.one(conn, scan_id, None) is None:
         raise HTTPException(status_code=404, detail={"code": "scan_not_found"})
     files = scan_history.unread_files(conn, scan_id)
     if files is None:

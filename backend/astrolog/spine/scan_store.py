@@ -1,13 +1,11 @@
-"""The scan's receipt and its codes. Frames and files come from the new pipeline
-(`api/scan_door.py`, `pipeline/frame_row.py`)."""
+"""The scan's receipt and its codes: the user's rows of `pipeline_scans` (gesture not NULL), a
+placeholder per folder at the gesture (`changes.open_receipt`) that the scan replaces."""
 
 import json
 import sqlite3
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any
 
-from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 
 
@@ -25,21 +23,11 @@ def folder_root(conn: sqlite3.Connection, folder_id: int) -> tuple[str, str | No
     return row[0], row[1]
 
 
-def start_run(conn: sqlite3.Connection, folder_id: int, now: str, batch: int | None = None) -> int:
-    """`batch`: the gesture's first receipt, so the last gesture is read back after a restart."""
-    with transaction(conn):
-        cursor = conn.execute(
-            "INSERT INTO scan_runs(folder_id, batch, started_at) VALUES(?, ?, ?)",
-            (folder_id, batch, now),
-        )
-    return inserted_id(cursor)
-
-
 # The newest gesture whose receipts have all closed: one still reading, or left open by a dead
 # process, does not hide the one before.
 _LAST_GESTURE = """
-SELECT MAX(ended_at) AS ended_at, SUM(new) AS new, SUM(errors) AS not_read
-FROM scan_runs GROUP BY COALESCE(batch, id)
+SELECT MAX(ended_at) AS ended_at, SUM(born) AS new, SUM(errors) AS not_read
+FROM pipeline_scans WHERE gesture IS NOT NULL GROUP BY gesture
 HAVING COUNT(*) = COUNT(ended_at) ORDER BY MAX(id) DESC LIMIT 1
 """
 
@@ -49,36 +37,39 @@ def last_gesture(conn: sqlite3.Connection) -> sqlite3.Row | None:
 
 
 def discard_run(conn: sqlite3.Connection, run_id: int) -> None:
-    """For a run that never read that folder. Only open rows, so it cannot take away the story of a
-    folder already read."""
-    conn.execute("DELETE FROM scan_runs WHERE id = ? AND ended_at IS NULL", (run_id,))
+    """For a placeholder whose folder was never read. Only placeholders still open, so it cannot
+    take away the story of a folder already read."""
+    conn.execute(
+        "DELETE FROM pipeline_scans WHERE id = ? AND reachable IS NULL AND ended_at IS NULL",
+        (run_id,),
+    )
 
 
 # The folder path is what the user recognises. The join is inner because a folder is retired,
-# never deleted: `scan_runs.folder_id` references it and the schema stops the delete.
+# never deleted: `pipeline_scans.root_id` references it and the schema stops the delete.
 SELECT_RUN = (
     "SELECT r.*, f.path AS folder_path, f.retired_at IS NOT NULL AS folder_retired"
-    " FROM scan_runs r JOIN pipeline_roots f ON f.id = r.folder_id"
+    " FROM pipeline_scans r JOIN pipeline_roots f ON f.id = r.root_id"
 )
 
 
-def run_row(conn: sqlite3.Connection, run_id: int) -> sqlite3.Row | None:
-    return conn.execute(SELECT_RUN + " WHERE r.id = ?", (run_id,)).fetchone()
+def gesture_of(conn: sqlite3.Connection, run_id: int) -> int:
+    """The gesture of a receipt: of the placeholder before its scan, which replaces it, then of
+    the scan's row."""
+    row = conn.execute("SELECT gesture FROM pipeline_scans WHERE id = ?", (run_id,)).fetchone()
+    if row is None or row[0] is None:
+        raise ValueError(f"ricevuta inesistente: id={run_id}")
+    return row[0]
 
 
-def run_outcomes(conn: sqlite3.Connection, run_ids: Iterable[int]) -> list[sqlite3.Row]:
+def run_outcomes(conn: sqlite3.Connection, gesture: int | None) -> list[sqlite3.Row]:
     """Without the unread-file list, which can hold thousands per receipt: it is asked at every
-    status poll. Receipts that are gone do not come back."""
-    return [
-        r
-        for r in (
-            conn.execute(
-                "SELECT id, status, errors, ended_at FROM scan_runs WHERE id = ?", (run_id,)
-            ).fetchone()
-            for run_id in run_ids
-        )
-        if r is not None
-    ]
+    status poll. Placeholders discarded do not come back."""
+    return conn.execute(
+        "SELECT id, root_id, status, errors, ended_at FROM pipeline_scans WHERE gesture = ?"
+        " ORDER BY id",
+        (gesture,),
+    ).fetchall()
 
 
 class ScanStatus(StrEnum):
@@ -112,65 +103,82 @@ class SkipReason(StrEnum):
     STILL_WRITING = "still_writing"
 
 
-# The run's counts, each a column of `scan_runs` with the same name.
+# The run's counts, as the worker's events carry them (`spine/run` sums them per gesture).
 COUNTS = ("found", "new", "unchanged", "duplicates", "missing", "skipped", "errors", "online_only")
-# What the scan leaves out, each carried whole in a `<name>_json` column of `scan_runs`. Unread
-# files are not here: they can be thousands, and are read in pages (`errors_detail_json`).
-RECEIPT_LISTS = ("unreadable_dirs", "hidden_dirs", "linked_dirs", "skipped_by_reason")
+# What only the receipt writes; the scan's own columns (unchanged, gone, left_out) stay its own.
+TALLIES = ("found", "born", "same", "duplicates", "errors", "online_only")
+
+# The row a close writes: the placeholder if the folder was never read, else the one row of the
+# gesture being read (one folder at a time), whatever root a merge moved it to.
+_TARGET = (
+    "SELECT id, root_id FROM pipeline_scans WHERE gesture = :g AND ended_at IS NULL"
+    " AND (id = :p OR (reachable IS NOT NULL AND NOT EXISTS (SELECT 1 FROM pipeline_scans"
+    "  WHERE id = :p AND reachable IS NULL))) ORDER BY id DESC LIMIT 1"
+)
+_KEEP_UNREAD = "SELECT MAX(id) FROM pipeline_scans WHERE root_id = ? AND status = 'ok' AND id < ?"
+_DROP_UNREAD = (
+    "UPDATE pipeline_scans SET errors_detail = NULL WHERE root_id = ? AND id < ? AND id IS NOT ?"
+)
 
 
 def finish_run(  # noqa: PLR0913
     conn: sqlite3.Connection,
     run_id: int,
+    gesture: int,
     status: ScanStatus,
     reason: ScanReason | None,
-    counts: Mapping[str, int],
-    left_out: Mapping[str, Sequence[Any]],
+    tallies: Mapping[str, int],
+    skipped: Mapping[str, int],
     errors: Sequence[Mapping[str, str]],
     now: str,
-) -> None:
-    """Status, reason and file reasons are closed codes: a sentence or a class name here is a
-    programming error."""
+) -> int | None:
+    """`run_id`: the folder's placeholder, gone once its scan began (`gesture` read before). Returns
+    the row closed (None: already closed). Status, reason and file reasons are closed codes."""
     if status not in ScanStatus or (reason is not None and reason not in ScanReason):
         raise ValueError(f"esito fuori dal vocabolario: {status}/{reason}")
     codes = {e["reason"] for e in errors} - set(FileError)
-    codes |= {e["reason"] for e in left_out.get("skipped_by_reason", ())} - set(SkipReason)
+    codes |= set(skipped) - set(SkipReason)
     if codes:
         raise ValueError(f"motivi fuori dal vocabolario: {sorted(codes)}")
-    tallies = "".join(f" {name} = ?," for name in COUNTS)
-    lists = ", ".join(f"{name}_json = ?" for name in RECEIPT_LISTS)
     with transaction(conn):
-        # S608: columns from constants of ours.
+        row = conn.execute(_TARGET, {"g": gesture, "p": run_id}).fetchone()
+        if row is None:
+            return None
+        # S608: columns from a constant of ours.
         conn.execute(
-            "UPDATE scan_runs SET ended_at = ?, status = ?, reason = ?,"  # noqa: S608
-            f"{tallies} errors_detail_json = ?, {lists} WHERE id = ?",
+            "UPDATE pipeline_scans SET ended_at = ?, status = ?, reason = ?,"  # noqa: S608
+            f"{''.join(f' {name} = ?,' for name in TALLIES)} skipped_by_reason = ?,"
+            " errors_detail = ? WHERE id = ?",
             (
                 now,
                 status,
                 reason,
-                *(counts[name] for name in COUNTS),
-                _as_json(errors),
-                *(_as_json(left_out.get(name)) for name in RECEIPT_LISTS),
-                run_id,
+                *(tallies.get(name, 0) for name in TALLIES),
+                json.dumps(dict(sorted(skipped.items()))),
+                json.dumps(errors, ensure_ascii=False) if errors else None,
+                row["id"],
             ),
         )
         # The unread-file list stays on a folder's last receipt, and on the last one that reached
         # the end if that did not: the database does not grow at every round of a flaky NAS.
-        folder = conn.execute("SELECT folder_id FROM scan_runs WHERE id = ?", (run_id,)).fetchone()
-        last_ok = conn.execute(
-            "SELECT MAX(id) FROM scan_runs WHERE folder_id = ? AND status = 'ok' AND id < ?",
-            (folder[0], run_id),
-        ).fetchone()[0]
-        conn.execute(
-            "UPDATE scan_runs SET errors_detail_json = NULL"
-            " WHERE folder_id = ? AND id < ? AND id IS NOT ?",
-            (folder[0], run_id, run_id if status == "ok" else last_ok),
-        )
+        last_ok = conn.execute(_KEEP_UNREAD, (row["root_id"], row["id"])).fetchone()[0]
+        kept = row["id"] if status == "ok" else last_ok
+        conn.execute(_DROP_UNREAD, (row["root_id"], row["id"], kept))
+    return row["id"]
 
 
-def _as_json(items: Sequence[Any] | None) -> str | None:
-    """Readable JSON, accents included, or NULL when empty."""
-    return json.dumps(items, ensure_ascii=False) if items else None
+# what the page shows of a scan's own judgement: unchanged, and the paths left out
+_BLANK = (
+    "UPDATE pipeline_scans SET unchanged = 0, left_out = (SELECT json_group_object(key, json('[]'))"
+    " FROM json_each(pipeline_scans.left_out)) WHERE id = ? AND left_out IS NOT NULL"
+)
+
+
+def blank_judgement(conn: sqlite3.Connection, row_id: int) -> None:
+    """A reading that broke or stopped with no result shows nothing it had seen: only its
+    reason, as the receipt always said."""
+    with transaction(conn):
+        conn.execute(_BLANK, (row_id,))
 
 
 def home_timezone(conn: sqlite3.Connection) -> str | None:

@@ -11,17 +11,20 @@ import pytest
 from astrolog.api import scan_door
 from astrolog.pipeline import changes as pipeline_changes
 from astrolog.pipeline import scan as pipeline_scan
+from astrolog.pipeline.changes import open_receipt
 from astrolog.pipeline.scan import ScanResult, Watch, scan_root
-from astrolog.spine import frame_folder, typeless
+from astrolog.spine import frame_folder, scan_history, typeless
 from astrolog.spine.declarations import TypeAnswer
-from astrolog.spine.scan_store import COUNTS, start_run
+from astrolog.spine.scan_store import COUNTS, TALLIES
 from conftest import add_folder, online_only, settle, write_fits, write_light
 
-_RUN = "SELECT * FROM scan_runs WHERE id = ?"
+# by gesture: the scan replaces the placeholder with its own row
+_RUN = "SELECT * FROM pipeline_scans WHERE gesture = ? ORDER BY id DESC"
+_ROW = "SELECT * FROM pipeline_scans WHERE id = ?"
 
 
 def _events(conn, db_path, folder_id, runner=None):
-    corsa = start_run(conn, folder_id, "2026-11-27T10:00:00.000Z")
+    corsa = open_receipt(conn, folder_id, "2026-11-27T10:00:00.000Z")
     return corsa, scan_door.scan_events(conn, folder_id, corsa, runner or scan_door.direct(db_path))
 
 
@@ -66,10 +69,10 @@ def test_the_reading_runs_in_its_own_thread_that_does_not_hold_the_app_open(
     visto = {}
     vero = scan_door.direct(db_path)
 
-    def guarda(root_id, watch):
+    def guarda(root_id, watch, run_id):
         corrente = threading.current_thread()
         visto.update(name=corrente.name, daemon=corrente.daemon)
-        return vero(root_id, watch)
+        return vero(root_id, watch, run_id)
 
     _, eventi = _events(conn, db_path, fid, guarda)
     assert list(eventi)[-1]["status"] == "ok"
@@ -98,16 +101,16 @@ def test_a_reading_that_breaks_closes_its_receipt_with_the_reason(
     non e' un guasto qualsiasi -- e zero in ogni conto, poi l'errore risale al worker."""
     fid = add_folder(conn, tmp_path)
 
-    def rompe(_root_id, _watch):
+    def rompe(_root_id, _watch, _run_id):
         raise guasto
 
     corsa, eventi = _events(conn, db_path, fid, rompe)
     with pytest.raises(type(guasto)):
         list(eventi)
     riga = conn.execute(_RUN, (corsa,)).fetchone()
-    assert (riga["status"], riga["reason"], riga["folder_id"]) == ("error", motivo, fid)
-    assert [riga[k] for k in COUNTS] == [0] * len(COUNTS)
-    assert riga["ended_at"] is not None and riga["errors_detail_json"] is None
+    assert (riga["status"], riga["reason"], riga["root_id"]) == ("error", motivo, fid)
+    assert [riga[k] for k in TALLIES] == [0] * len(TALLIES)
+    assert riga["ended_at"] is not None and riga["errors_detail"] is None
     assert not conn.in_transaction
 
 
@@ -123,8 +126,8 @@ def test_a_reading_stopped_then_broken_says_stopped_and_keeps_its_poses(conn, db
     write_light(tmp_path / "c.fits", obj="M 3")
     vero = scan_door.direct(db_path)
 
-    def legge_poi_rompe(root_id, watch):
-        vero(root_id, watch)
+    def legge_poi_rompe(root_id, watch, run_id):
+        vero(root_id, watch, run_id)
         raise ValueError("dopo lo Stop (mock)")
 
     corsa, eventi = _events(conn, db_path, fid, legge_poi_rompe)
@@ -132,7 +135,7 @@ def test_a_reading_stopped_then_broken_says_stopped_and_keeps_its_poses(conn, db
     eventi.close()
     riga = conn.execute(_RUN, (corsa,)).fetchone()
     assert (riga["status"], riga["reason"]) == ("stopped", "stop_requested")
-    assert [riga[k] for k in COUNTS] == [0] * len(COUNTS)
+    assert [riga[k] for k in (*TALLIES, "unchanged")] == [0] * (len(TALLIES) + 1)
     pose = dict(
         conn.execute(
             "SELECT rel_path, state FROM pipeline_files WHERE root_id = ?"
@@ -141,6 +144,28 @@ def test_a_reading_stopped_then_broken_says_stopped_and_keeps_its_poses(conn, db
         )
     )
     assert pose == {"a.fits": "present", "b.fits": "present", "c.fits": "present"}
+
+
+def test_a_reading_broken_after_its_judgement_shows_nothing_left_out(conn, db_path, tmp_path):
+    """Una lettura che si rompe dopo aver guardato la cartella non mostra a meta' cio' che aveva
+    visto: in Scansioni niente "gia' in archivio" e nessuna cartella lasciata fuori, come prima."""
+    write_light(tmp_path / "a.fits", obj="M 1")
+    write_light(tmp_path / "b.fits", obj="M 2")
+    write_light(tmp_path / "sotto" / ".cestino" / "x.fits", obj="M 3")
+    fid = add_folder(conn, tmp_path)
+    scan_door.scan_once(conn, fid)
+    vero = scan_door.direct(db_path)
+
+    def legge_poi_rompe(root_id, watch, run_id):
+        vero(root_id, watch, run_id)
+        raise ValueError("dopo il giudizio (mock)")
+
+    corsa, eventi = _events(conn, db_path, fid, legge_poi_rompe)
+    with pytest.raises(ValueError, match="dopo il giudizio"):
+        list(eventi)
+    gesto = scan_history.one(conn, corsa, None)
+    assert gesto is not None and (gesto.outcome, gesto.reason) == ("blocked", "internal_error")
+    assert (gesto.left_out, gesto.dirs_left_out) == ([], [])
 
 
 def test_a_reading_stopped_keeps_the_poses_of_its_folder(conn, db_path, tmp_path):
@@ -152,9 +177,9 @@ def test_a_reading_stopped_keeps_the_poses_of_its_folder(conn, db_path, tmp_path
     corsa, eventi = _events(conn, db_path, fid)
     next(eventi)
     eventi.close()
-    assert conn.execute("SELECT status FROM scan_runs WHERE id = ?", (corsa,)).fetchone()[0] == (
-        "stopped"
-    )
+    assert conn.execute("SELECT status FROM pipeline_scans WHERE gesture = ?", (corsa,)).fetchone()[
+        0
+    ] == ("stopped")
     righe = conn.execute(
         "SELECT root_id, rel_path FROM pipeline_files WHERE frame_id IN (SELECT id FROM frames)"
     ).fetchall()
@@ -167,15 +192,17 @@ def test_the_receipt_names_what_it_left_out_and_whose_it_is(conn, tmp_path):
     risponde, anche nella riga salvata."""
     write_light(tmp_path / "sotto" / ".cestino" / "buttata.fits")
     fid = add_folder(conn, tmp_path)
-    corsa = start_run(conn, fid, "2026-11-27T10:00:00.000Z")
+    corsa = open_receipt(conn, fid, "2026-11-27T10:00:00.000Z")
     fine = scan_door.scan_once(conn, fid, corsa)
-    assert (fine["run_id"], fine["folder_id"]) == (corsa, fid)
-    assert (fine["hidden_dirs"], fine["unreadable_dirs"], fine["linked_dirs"]) == (
-        ["sotto/.cestino"], [], [])  # fmt: skip
+    # run_id: la riga che ha preso il posto del segnaposto, del gesto della corsa
+    riga = conn.execute(_ROW, (fine["run_id"],)).fetchone()
+    assert (riga["gesture"], riga["root_id"], fine["folder_id"]) == (corsa, fid, fid)
+    assert (fine["hidden_dirs"], fine["unreadable_dirs"]) == (["sotto/.cestino"], [])
+    assert "linked_dirs" not in fine
     spenta = add_folder(conn, tmp_path / "spenta")
     fine = scan_door.scan_once(conn, spenta)
     assert (fine["status"], fine["reason"]) == ("aborted", "root_unreachable")
-    riga = conn.execute(_RUN, (fine["run_id"],)).fetchone()
+    riga = conn.execute(_ROW, (fine["run_id"],)).fetchone()
     assert (riga["status"], riga["reason"]) == ("aborted", "root_unreachable")
 
 
@@ -250,8 +277,8 @@ def test_a_name_that_is_not_text_is_said_readable_with_its_own_reason():
 def test_a_closed_result_without_a_finish_is_said_stopped(conn, tmp_path):
     """Una lettura che torna senza essere arrivata in fondo e' "fermata", col suo motivo."""
     fid = add_folder(conn, tmp_path)
-    corsa = start_run(conn, fid, "2026-11-27T10:00:00.000Z")
-    risultato = scan_root(conn, fid, "2026-11-27T10:00:01.000Z", watch=Watch())
+    corsa = open_receipt(conn, fid, "2026-11-27T10:00:00.000Z")
+    risultato = scan_root(conn, fid, "2026-11-27T10:00:01.000Z", watch=Watch(), receipt=corsa)
     risultato = ScanResult(risultato.changes, finished=False)
     fine = scan_door.close(conn, fid, corsa, risultato)
     assert (fine["status"], fine["reason"]) == ("stopped", "stop_requested")

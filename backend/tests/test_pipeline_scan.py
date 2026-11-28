@@ -11,6 +11,7 @@ import pytest
 
 from astrolog.db.connect import connect
 from astrolog.pipeline import scan
+from astrolog.pipeline.changes import open_receipt
 from astrolog.pipeline.roots import add_root
 from astrolog.pipeline.scan import ScanRunningError, scan_root
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped
@@ -75,6 +76,25 @@ def test_a_moved_file_is_the_same_frame(conn, tmp_path):
     result = scan_root(conn, root, LATER)
     assert result.moved == [("da_ordinare/posa.fits", "M42/posa.fits")]
     assert _files(conn) == {"M42/posa.fits": frame}
+
+
+def test_a_receipt_opened_before_another_scan_of_its_root_still_pairs_the_move(conn, tmp_path):
+    """Ricevuta aperta al gesto, un giro di fondo prima del turno della cartella: la scansione
+    dell'utente viene dopo lo stesso, la mossa si appaia e la ricevuta tiene il suo gesto."""
+    nina_light(tmp_path / "da_ordinare" / "posa.fits", 3)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    gesture = open_receipt(conn, root, LATER)
+    scan_root(conn, root, LATER)  # Behind's round, between the gesture and its turn
+    (tmp_path / "M42").mkdir()
+    (tmp_path / "da_ordinare" / "posa.fits").rename(tmp_path / "M42" / "posa.fits")
+    result = scan_root(conn, root, LATER, receipt=gesture)
+    assert result.moved == [("da_ordinare/posa.fits", "M42/posa.fits")]
+    rows = conn.execute(
+        "SELECT id, gesture, reachable FROM pipeline_scans WHERE root_id = ? ORDER BY id", (root,)
+    ).fetchall()
+    assert [(r["gesture"], r["reachable"]) for r in rows] == [(None, 1), (None, 1), (gesture, 1)]
+    assert rows[-1]["id"] == result.changes.scan_id != gesture
 
 
 def test_a_folder_renamed_while_its_files_are_read_is_still_a_move(conn, tmp_path, monkeypatch):
@@ -916,7 +936,7 @@ def test_a_stop_ends_the_scan_between_two_files_as_an_interrupted_one(conn, tmp_
         return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", then_stop)
-    scan_root(conn, root, NOW, stop=stop)
+    scan_root(conn, root, NOW, watch=scan.Watch(stop))
     assert len(_files(conn)) == 1
     assert conn.execute("SELECT finished FROM pipeline_scans").fetchone()[0] == 0
     monkeypatch.setattr(scan, "scan_file", real)

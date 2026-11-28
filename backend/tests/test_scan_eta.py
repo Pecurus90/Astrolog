@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 from astrolog.api.pipeline import _remaining, is_first_scan, remaining_s
 from astrolog.clock import iso_z
-from astrolog.spine.scan_store import start_run
+from astrolog.pipeline.changes import open_receipt
 from conftest import add_folder
 
 
@@ -45,34 +45,40 @@ def test_the_first_reading_is_the_one_with_no_reading_ended_before(conn):
     """La prima scansione: nessuna cartella aveva mai finito una scansione prima di questo gesto. Le
     scansioni del gesto in corso non contano, finite o no."""
     cartella = _folder(conn, "D:/Astro")
-    adesso = start_run(conn, cartella, "ora")
-    assert is_first_scan(conn, [adesso])
+    adesso = open_receipt(conn, cartella, "ora")
+    assert is_first_scan(conn, adesso)
 
-    conn.execute("UPDATE scan_runs SET ended_at = 'dopo', status = 'ok' WHERE id = ?", (adesso,))
-    assert is_first_scan(conn, [adesso])
+    conn.execute(
+        "UPDATE pipeline_scans SET ended_at = 'dopo', status = 'ok' WHERE id = ?", (adesso,)
+    )
+    assert is_first_scan(conn, adesso)
 
     # la stessa cartella riletta, dopo una scansione finita: non e' piu' la prima
-    poi = start_run(conn, cartella, "dopo ancora")
-    assert not is_first_scan(conn, [poi])
+    poi = open_receipt(conn, cartella, "dopo ancora")
+    assert not is_first_scan(conn, poi)
 
 
 def test_resuming_after_one_of_two_folders_was_read_is_still_the_first(conn):
     """Due cartelle: A finita, B fermata. Riprendi apre ricevute nuove per tutte e due: B non e'
     mai stata letta fino in fondo, quindi la scansione e' ancora la prima."""
     a, b = _folder(conn, "D:/A"), _folder(conn, "E:/B")
-    a1, b1 = start_run(conn, a, "ora"), start_run(conn, b, "ora")
-    conn.execute("UPDATE scan_runs SET ended_at = 'dopo', status = 'ok' WHERE id = ?", (a1,))
-    conn.execute("UPDATE scan_runs SET ended_at = 'dopo', status = 'stopped' WHERE id = ?", (b1,))
-    a2, b2 = start_run(conn, a, "poi"), start_run(conn, b, "poi")
-    assert is_first_scan(conn, [a2, b2])
+    a1 = open_receipt(conn, a, "ora")
+    b1 = open_receipt(conn, b, "ora", a1)
+    conn.execute("UPDATE pipeline_scans SET ended_at = 'dopo', status = 'ok' WHERE id = ?", (a1,))
+    conn.execute(
+        "UPDATE pipeline_scans SET ended_at = 'dopo', status = 'stopped' WHERE id = ?", (b1,)
+    )
+    a2 = open_receipt(conn, a, "poi")
+    open_receipt(conn, b, "poi", a2)
+    assert is_first_scan(conn, a2)
 
 
 def test_a_stopped_first_reading_is_still_the_first_when_it_resumes(conn):
     """Ferma e poi Riprendi: la prima scansione fermata non e' finita, e quella che riparte con una
     ricevuta nuova e' ancora la prima."""
-    fermata = start_run(conn, _folder(conn, "D:/Astro"), "ora")
+    fermata = open_receipt(conn, _folder(conn, "D:/Astro"), "ora")
     conn.execute(
-        "UPDATE scan_runs SET ended_at = 'dopo', status = 'stopped' WHERE id = ?", (fermata,)
+        "UPDATE pipeline_scans SET ended_at = 'dopo', status = 'stopped' WHERE id = ?", (fermata,)
     )
-    ripresa = start_run(conn, _folder(conn, "E:/Altro"), "dopo ancora")
-    assert is_first_scan(conn, [ripresa])
+    ripresa = open_receipt(conn, _folder(conn, "E:/Altro"), "dopo ancora")
+    assert is_first_scan(conn, ripresa)

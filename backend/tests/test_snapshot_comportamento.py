@@ -14,18 +14,20 @@ from test_header_corpus import FILES, card_of
 VOLATILE = props(
     "created_at",
     "started_at",
+    "started_day",
     "ended_at",
     "updated_at",
     "declared_at",
     "duration_s",
     "root_path",
     "folder_path",
+    "folders",
     "path",
     "rel_path",
 )
 
 # nights are left out: the synthetic archive stops before `group`, so its night page is empty
-PAGES = ("archive", "review", "gear", "folders", "scan-runs")
+PAGES = ("archive", "review", "gear", "folders", "scans")
 
 
 @pytest.mark.parametrize("path", FILES, ids=[f.stem for f in FILES])

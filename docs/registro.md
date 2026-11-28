@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 406; senza fonte: 0.
-Fonti: C norma: 210; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 39; T tecnico: 99.
+Valori: 404; senza fonte: 0.
+Fonti: C norma: 210; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 39; T tecnico: 97.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -125,8 +125,6 @@ Fonti: C norma: 210; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 39; T
 |---|---|---|
 | scan_all@router.post | `router.post("/scan", response_model=ScanAllStarted, status_code=202)` | C RFC 9110 15.3.3: 202 Accepted |
 | scan@router.post | `router.post("/folders/{folder_id}/scan", response_model=ScanStarted...` | C RFC 9110 15.3.3: 202 Accepted |
-| scan_runs(limit=) | `Query(20, ge=1, le=500)` | T |
-| scan_run_errors(limit=) | `Query(100, ge=1, le=1000)` | T |
 
 ### api/scan_history.py
 

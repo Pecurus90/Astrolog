@@ -87,13 +87,14 @@ def scan_root(
     root_id: int,
     now: str,
     *,
-    stop: threading.Event | None = None,
     watch: Watch | None = None,
+    receipt: int | None = None,
 ) -> ScanResult:
-    """One scan per root at a time (ScanRunningError, `busy`); a stop ends it between batches."""
-    watch = watch or Watch(stop or threading.Event())
+    """One scan per root at a time (ScanRunningError, `busy`); `watch.stop` ends it between
+    batches. `receipt`: the gesture's placeholder (changes.open_receipt), replaced by this row."""
+    watch = watch or Watch()
     with busy(root_id):
-        return _scan_root(conn, root_id, now, watch)
+        return _scan_root(conn, root_id, now, watch, receipt)
 
 
 def _young(changes: Changes, watch: Watch) -> list[str]:
@@ -106,11 +107,13 @@ def _young(changes: Changes, watch: Watch) -> list[str]:
     return [rel for rel in changes.to_read if abs(changes.stat[rel][1] - now_ns) < span_ns]
 
 
-def _scan_root(conn: sqlite3.Connection, root_id: int, now: str, watch: Watch) -> ScanResult:
+def _scan_root(
+    conn: sqlite3.Connection, root_id: int, now: str, watch: Watch, receipt: int | None
+) -> ScanResult:
     """Files opened outside any transaction, saved per batch: lock held only to write; stopped
     scan keeps saved batches, unread files keep old size and date, so read next time."""
     stop = watch.stop
-    changes = record_changes(conn, root_id, now)
+    changes = record_changes(conn, root_id, now, receipt)
     result = ScanResult(changes)
     result.still_writing = _young(changes, watch)
     young = set(result.still_writing)

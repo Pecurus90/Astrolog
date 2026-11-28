@@ -1,7 +1,6 @@
 """The only progress channel, the same for every device. The scan's remainder cannot be derived
 from the database: its denominator is the folders on disk."""
 
-import json
 import sqlite3
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict
@@ -15,7 +14,7 @@ from ..clock import parse_iso, relative_day
 from ..db.row import Row
 from ..site_of import home_site
 from ..spine.run import ORDER, queue
-from ..spine.scan_store import last_gesture, run_outcomes, run_row
+from ..spine.scan_store import last_gesture, run_outcomes
 from ..spine.stages import StageName, count_pending, pending_by_stage
 from ..worker.worker import TERMINAL_STATES, Snapshot, WorkerBusyError
 from ..worker.worker import State as WorkerState
@@ -31,7 +30,7 @@ from .models import (
     WorkerOut,
     WorkerSnapshot,
 )
-from .scan import run_out, start_scan_all
+from .scan import start_scan_all
 
 router = APIRouter(prefix="/api/v1", tags=["pipeline"])
 
@@ -116,17 +115,17 @@ def remaining_s(current: int, total: int, elapsed_s: float) -> int | None:
 # A folder of the gesture never read to the end outside it: a reading stopped or broken does not
 # count as one, so Stop then Resume is still the first reading of what was not read.
 _NEVER_READ = (
-    "SELECT 1 FROM scan_runs AS cur WHERE cur.id IN (SELECT value FROM json_each(:runs))"
-    " AND NOT EXISTS (SELECT 1 FROM scan_runs AS prev WHERE prev.folder_id = cur.folder_id"
-    " AND prev.status = 'ok' AND prev.id NOT IN (SELECT value FROM json_each(:runs))) LIMIT 1"
+    "SELECT 1 FROM pipeline_scans AS cur WHERE cur.gesture = :g"
+    " AND NOT EXISTS (SELECT 1 FROM pipeline_scans AS prev WHERE prev.root_id = cur.root_id"
+    " AND prev.status = 'ok' AND prev.gesture IS NOT :g) LIMIT 1"
 )
 _FOLDER_PATH = "SELECT path FROM pipeline_roots WHERE id = ?"
 
 
-def is_first_scan(conn: sqlite3.Connection, run_ids: Iterable[int]) -> bool:
+def is_first_scan(conn: sqlite3.Connection, gesture: int | None) -> bool:
     """The gesture reads at least one folder for the first time: its counts are still growing. A
     folder added to a read archive is a first reading too, of that folder."""
-    return conn.execute(_NEVER_READ, {"runs": json.dumps(list(run_ids))}).fetchone() is not None
+    return conn.execute(_NEVER_READ, {"g": gesture}).fetchone() is not None
 
 
 def _remaining(last: Mapping[str, Any] | None) -> int | None:
@@ -147,11 +146,10 @@ def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None
     folder_id, run_id = state.last_scan
     rec = state.worker.stage_record(StageName.SCAN)
     # receipts of folders never started are discarded at the end of the run
-    rows = run_outcomes(conn, state.scan_runs)
+    rows = run_outcomes(conn, state.gesture)
     closed = bool(rows) and all(r["ended_at"] is not None for r in rows)
     # the last receipt closes before the stage ends (the detach is still running)
     finished = closed and (rec is None or rec.state in TERMINAL_STATES)
-    row = run_row(conn, run_id) if finished else None
     last = rec.last_event if rec is not None else None
     stage_state = (
         _state_of(rows) if finished else (rec.state if rec is not None else WorkerState.NOT_RUN)
@@ -162,9 +160,8 @@ def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None
         folder_id=folder_id,
         run_id=run_id,
         last_event=ScanEvent(**last) if last else None,
-        receipt=run_out(row) if row is not None else None,
         remaining_s=None if finished else _remaining(last),
-        first=is_first_scan(conn, state.scan_runs),
+        first=is_first_scan(conn, state.gesture),
         folder_path=_folder_path(conn, last["folder_id"] if last else folder_id),
     )
 
@@ -181,9 +178,10 @@ def status(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Pipe
 
     Once the scan has finished, however it finished (a Stop included), `state` combines the
     receipts of every folder of the gesture (worst first); while it runs, it is the worker's.
-    `receipt`, like `folder_id` and `run_id`, is the last started folder's, present once the scan
-    has finished. If it stopped or fell before the first folder, no receipt is left: `receipt` is
-    `null` and the state is the worker's (`not_run` when the worker has no record of the scan)."""
+    `folder_id` and `run_id` are the last started folder's (`run_id`: the receipt opened by the
+    gesture). If it stopped or fell before the first folder, no receipt is left: the state is the
+    worker's (`not_run` when the worker has no record of the scan). The receipts themselves are
+    in `GET /scans`."""
     state = request.app.state
     snapshot = state.worker.snapshot()
     zone = _home_zone(conn)
@@ -204,7 +202,7 @@ def _reading_cut_short(conn: sqlite3.Connection, state: State) -> bool:
     or none). Asked of the receipts: after another stopped job the worker no longer knows."""
     if state.last_scan is None or state.worker.snapshot().state != WorkerState.STOPPED:
         return False
-    rows = run_outcomes(conn, state.scan_runs)
+    rows = run_outcomes(conn, state.gesture)
     return not rows or any(r["status"] == "stopped" or r["ended_at"] is None for r in rows)
 
 

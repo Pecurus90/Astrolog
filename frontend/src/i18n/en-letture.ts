@@ -49,7 +49,6 @@ export const enLetture = {
   "settings.scans.out.online_only.one": "1 online only, not downloaded",
   "settings.scans.dir.unreadable": "{percorso}: folder not readable",
   "settings.scans.dir.hidden": "{percorso}: hidden folder, ignored",
-  "settings.scans.dir.linked": "{percorso}: link, not followed",
   "settings.scans.file.file_unreadable": "file cannot be opened",
   "settings.scans.file.header_unreadable": "not a FITS file or the header is damaged", // glifo-ok: board text
   "settings.scans.file.name_not_utf8": "invalid file name (not UTF-8)",

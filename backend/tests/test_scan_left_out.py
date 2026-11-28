@@ -11,8 +11,9 @@ from astrolog.api import scan_door
 from astrolog.pipeline import changes as changes_mod
 from astrolog.pipeline import scan as pipeline_scan
 from astrolog.pipeline import scanner
-from astrolog.spine.scan_store import start_run
-from conftest import add_folder, settle, write_fits, write_light
+from astrolog.pipeline.changes import open_receipt
+from astrolog.spine import scan_history
+from conftest import add_folder, receipts, settle, write_fits, write_light
 from test_scan_archive import count, run
 
 
@@ -43,7 +44,8 @@ def test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on(conn, tmp_
         {"file": "f1.fits", "reason": "internal_error"},
     ]
     assert sorted(done["errors_detail"], key=lambda e: e["file"]) == rotti
-    salvato = json.loads(count(conn, "SELECT errors_detail_json FROM scan_runs"))
+    (ricevuta,) = receipts(conn)
+    salvato = json.loads(ricevuta["errors_detail"])
     assert sorted(salvato, key=lambda e: e["file"]) == rotti
     assert not conn.in_transaction
 
@@ -65,8 +67,9 @@ def test_a_name_the_archive_cannot_write_is_named_and_the_scan_goes_on(conn, tmp
     done = run(conn, add_folder(conn, tmp_path))
     assert (done["status"], done["new"]) == ("ok", 1)
     assert (done["hidden_dirs"], done["unreadable_dirs"]) == ([".sub_?"], ["chiusa_?"])
-    salvate = "SELECT hidden_dirs_json, unreadable_dirs_json FROM scan_runs"
-    assert [json.loads(v) for v in conn.execute(salvate).fetchone()] == [[".sub_?"], ["chiusa_?"]]
+    (ricevuta,) = receipts(conn)
+    salvate = scan_history.one(conn, ricevuta["gesture"], None).dirs_left_out
+    assert salvate == [("chiusa_?", "unreadable"), (".sub_?", "hidden")]
     json.dumps(done, ensure_ascii=False).encode("utf-8")  # la pagina lo riceve in JSON
 
 
@@ -107,7 +110,7 @@ def test_the_same_unexpected_fault_leaves_one_trace_in_the_log(conn, tmp_path, m
 
 def _stopped(conn, db_path, folder_id):
     """Una corsa fermata dall'utente al primo file: il rotto e' gia' contato."""
-    corsa = start_run(conn, folder_id, "2026-11-27T10:00:00.000Z")
+    corsa = open_receipt(conn, folder_id, "2026-11-27T10:00:00.000Z")
     eventi = scan_door.scan_events(conn, folder_id, corsa, scan_door.direct(db_path))
     next(eventi)
     eventi.close()
@@ -134,10 +137,10 @@ def test_only_the_last_scans_of_a_folder_keep_the_names(conn, db_path, tmp_path)
         write_light(tmp_path / "qui" / f"nuova{i}.fits", obj=f"M {i}")
     _stopped(conn, db_path, qui)
     _stopped(conn, db_path, mai)
-    righe = conn.execute(
-        "SELECT folder_id, status, errors_detail_json IS NOT NULL FROM scan_runs ORDER BY id"
-    ).fetchall()
-    assert [tuple(r) for r in righe] == [
+    righe = [
+        (r["root_id"], r["status"], int(r["errors_detail"] is not None)) for r in receipts(conn)
+    ]
+    assert righe == [
         (altrove, "ok", 1),
         (mai, "stopped", 0),  # nessuna arrivata in fondo: resta solo l'ultima
         (qui, "ok", 0),
@@ -166,10 +169,7 @@ def test_the_receipt_counts_the_skipped_by_reason(conn, tmp_path):
     atteso = {"calibration": 2, "rewritten": 1, "still_writing": 1}
     assert {e["reason"]: e["count"] for e in done["skipped_by_reason"]} == atteso
     assert done["missing"] == 0
-    salvato = json.loads(
-        count(conn, "SELECT skipped_by_reason_json FROM scan_runs ORDER BY id DESC")
-    )
-    assert {e["reason"]: e["count"] for e in salvato} == atteso
+    assert json.loads(receipts(conn)[-1]["skipped_by_reason"]) == atteso
 
 
 def test_a_left_out_folder_is_named_from_the_root_down(conn, tmp_path):
@@ -182,4 +182,5 @@ def test_a_left_out_folder_is_named_from_the_root_down(conn, tmp_path):
     write_light(nascosta / "buttata.fits", obj="M 2")
     done = run(conn, add_folder(conn, tmp_path))
     assert done["hidden_dirs"] == ["sotto/.cestino"]
-    assert json.loads(count(conn, "SELECT hidden_dirs_json FROM scan_runs")) == ["sotto/.cestino"]
+    (ricevuta,) = receipts(conn)
+    assert json.loads(ricevuta["left_out"])["hidden"] == ["sotto/.cestino"]

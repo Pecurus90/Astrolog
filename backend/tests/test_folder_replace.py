@@ -333,14 +333,18 @@ def test_an_overlap_seen_only_on_disk_is_refused_as_the_written_one(
 
 
 def _scanned(client, folder_id):
-    """Scansiona e torna la ricevuta di quella cartella."""
+    """Scansiona e torna i conti della scansione di quella cartella: nuovi, invariati, doppioni."""
     client.app.state.worker.join(30.0)  # ritiro e riaggiunta mettono in coda identify: worker_busy
-    assert client.post(f"/api/v1/folders/{folder_id}/scan").status_code == 202
+    started = client.post(f"/api/v1/folders/{folder_id}/scan")
+    assert started.status_code == 202
+    gesture = started.json()["run_id"]
     client.app.state.worker.join(30.0)
 
-    def receipt():
-        runs = client.get("/api/v1/scan-runs").json()["items"]
-        return next((r for r in runs if r["folder_id"] == folder_id and r["ended_at"]), None)
+    def scan():
+        items = client.get("/api/v1/scans", params={"limit": 100}).json()["items"]
+        return next((s for s in items if s["id"] == gesture and s["outcome"] != "running"), None)
 
-    assert wait_until(lambda: receipt() is not None)
-    return receipt()
+    assert wait_until(lambda: scan() is not None)
+    done = scan()
+    out = {c["reason"]: c["count"] for c in done["left_out"]}
+    return {"new": done["new"], **{k: out.get(k, 0) for k in ("unchanged", "duplicates")}}

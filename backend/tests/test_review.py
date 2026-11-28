@@ -21,7 +21,9 @@ from astrolog.api.review import unanswered
 from astrolog.api.review_write import constraint_code
 from astrolog.clock import now_iso
 from astrolog.db.connect import connect
+from astrolog.pipeline.changes import open_receipt
 from astrolog.spine import stages
+from astrolog.spine.scan_store import ScanStatus, finish_run
 from astrolog.vocab.filters import Passband
 from conftest import add_folder, apply, by_name, db, review, unnamed_cards, wait_until, write_light
 
@@ -46,10 +48,8 @@ def test_folders_added_and_never_read_are_said_apart(client_vuoto, db_path):
     assert add_folder(conn, "D:/Astro") == 1
     conn.commit()
     assert review(client_vuoto)["empty"] == "unread"
-    conn.execute(
-        "INSERT INTO scan_runs (folder_id, started_at, ended_at, status)"
-        " VALUES (1, '2026-11-18T00:00:00Z', '2026-11-18T00:01:00Z', 'ok')"
-    )
+    run_id = open_receipt(conn, 1, "2026-11-18T00:00:00Z")
+    finish_run(conn, run_id, run_id, ScanStatus.OK, None, {}, {}, [], "2026-11-18T00:01:00Z")
     conn.commit()
     conn.close()
     assert review(client_vuoto)["empty"] == "no_frames"
@@ -485,11 +485,13 @@ def test_the_scan_receipt_survives_a_normalize_run(client, tmp_path):
     client.post(f"/api/v1/folders/{fid}/scan")
     client.app.state.worker.join(10.0)
     prima = client.get("/api/v1/pipeline/status").json()["scan"]
-    assert prima["receipt"]["status"] == "ok"
+    assert prima["state"] == "completed"
 
     apply(client)
     dopo = client.get("/api/v1/pipeline/status").json()["scan"]
-    assert dopo["receipt"] is not None and dopo["receipt"]["id"] == prima["receipt"]["id"]
+    assert (dopo["state"], dopo["run_id"]) == (prima["state"], prima["run_id"])
+    (ultima, *_) = client.get("/api/v1/scans").json()["items"]
+    assert (ultima["id"], ultima["outcome"]) == (prima["run_id"], "completed")
 
 
 def test_the_rig_choices_count_the_poses_from_the_index(client):

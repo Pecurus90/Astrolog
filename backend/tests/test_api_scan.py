@@ -13,9 +13,10 @@ from fastapi.testclient import TestClient
 from astrolog.api import scan as scan_api
 from astrolog.api.app import TOKEN_HEADER, create_app
 from astrolog.db.connect import connect
-from astrolog.spine.scan_store import run_outcomes, start_run
+from astrolog.pipeline.changes import open_receipt
+from astrolog.spine.scan_store import run_outcomes
 from astrolog.worker.worker import State
-from conftest import add_folder, blocking_reader, settle, wait_until, write_light
+from conftest import add_folder, blocking_reader, receipts, settle, wait_until, write_light
 
 _FEED_BEHIND = scan_api._feed_behind  # the real one, before the suite's fence turns it off
 
@@ -34,9 +35,21 @@ def status(client):
     return client.get("/api/v1/pipeline/status").json()
 
 
+def scans(client):
+    return client.get("/api/v1/scans", params={"limit": 200}).json()["items"]
+
+
+def receipt(client):
+    """La scansione dell'ultima corsa, una volta chiusa: la carta del suo gesto in `/scans`."""
+    s = status(client)["scan"]
+    if s is None or s["state"] in ("running", "not_run"):
+        return None
+    carta = next((g for g in scans(client) if g["id"] == s["run_id"]), None)
+    return carta if carta is not None and carta["duration_s"] is not None else None
+
+
 def finished(client):
-    s = status(client)
-    return s["scan"] is not None and s["scan"]["receipt"] is not None
+    return receipt(client) is not None
 
 
 def test_the_new_run_is_visible_before_the_worker_starts(app):
@@ -117,14 +130,14 @@ def test_the_outcome_of_a_reading_does_not_carry_the_files_not_read(conn):
     """Lo stato chiede com'e' finita ogni cartella a ogni interrogazione: la riga porta l'esito e
     basta, non l'elenco dei file non letti, che si legge a pagine quando serve."""
     folder_id = add_folder(conn, "D:/Astro")
-    run_id = start_run(conn, folder_id, "ora")
-    (riga,) = run_outcomes(conn, [run_id, run_id + 1])
-    assert set(riga.keys()) == {"id", "status", "errors", "ended_at"}
+    run_id = open_receipt(conn, folder_id, "ora")
+    (riga,) = run_outcomes(conn, run_id)
+    assert set(riga.keys()) == {"id", "root_id", "status", "errors", "ended_at"}
 
 
 def open_receipts(db_path: str | Path) -> int:
     with connect(db_path) as conn:
-        return conn.execute("SELECT COUNT(*) FROM scan_runs WHERE ended_at IS NULL").fetchone()[0]
+        return len(receipts(conn, "ended_at IS NULL"))
 
 
 @pytest.mark.parametrize("stop_from_check", [1, 2])
@@ -160,7 +173,7 @@ def test_a_start_that_breaks_unexpectedly_leaves_nothing_behind(app):
     # a run before, so "put back" and "reset" give different states
     assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202
     state.worker.join(30.0)
-    previous = (state.last_scan, state.scan_runs)
+    previous = (state.last_scan, state.gesture)
     assert previous[0] is not None
     with (
         mock.patch.object(state.worker, "start", side_effect=RuntimeError("boom")),
@@ -168,9 +181,9 @@ def test_a_start_that_breaks_unexpectedly_leaves_nothing_behind(app):
     ):
         client.post(f"/api/v1/folders/{fid}/scan")
     with connect(state.db_path) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 1
+        assert len(receipts(conn)) == 1
     assert not state.behind.scanning(fid)
-    assert (state.last_scan, state.scan_runs) == previous
+    assert (state.last_scan, state.gesture) == previous
 
 
 def test_the_files_not_read_are_listed_a_page_at_a_time(app, db_path):
@@ -185,30 +198,25 @@ def test_the_files_not_read_are_listed_a_page_at_a_time(app, db_path):
     prima = client.post(f"/api/v1/folders/{fid}/scan").json()["run_id"]
     assert wait_until(lambda: finished(client))
     client.app.state.worker.join(10.0)
-    assert "errors_detail" not in status(client)["scan"]["receipt"]
-    pagina = client.get(f"/api/v1/scan-runs/{prima}/errors", params={"limit": 1, "offset": 1})
+    assert "errors_detail" not in str(status(client)["scan"])
+    pagina = client.get(f"/api/v1/scans/{prima}/unread", params={"limit": 1, "offset": 1})
     pagina = pagina.json()
     rotto = {"file": "b_rotto.fits", "reason": "header_unreadable"}
     assert (pagina["total"], pagina["items"]) == (2, [rotto])
     dopo = client.post(f"/api/v1/folders/{fid}/scan").json()["run_id"]
     assert wait_until(lambda: finished(client) and status(client)["scan"]["run_id"] == dopo)
     client.app.state.worker.join(10.0)
-    vecchia = client.get(f"/api/v1/scan-runs/{prima}/errors")
+    vecchia = client.get(f"/api/v1/scans/{prima}/unread")
     assert vecchia.status_code == 410 and vecchia.json()["detail"]["code"] == "errors_not_kept"
-    assert client.get(f"/api/v1/scan-runs/{dopo}/errors").json()["total"] == 2
-    assert client.get("/api/v1/scan-runs/99999/errors").status_code == 404
-    c = connect(db_path)
-    aperta = start_run(c, fid, "now")  # una corsa che non ha ancora scritto la sua ricevuta
-    c.close()
-    risposta = client.get(f"/api/v1/scan-runs/{aperta}/errors")
-    assert risposta.status_code == 409 and risposta.json()["detail"]["code"] == "scan_run_open"
+    assert client.get(f"/api/v1/scans/{dopo}/unread").json()["total"] == 2
+    assert client.get("/api/v1/scans/99999/unread").status_code == 404
 
 
 def test_the_errors_of_an_unknown_reading_are_a_404_with_its_code(client_vuoto):
     """Una ricevuta che non c'e' si dice col suo codice, non con una lista vuota."""
-    r = client_vuoto.get("/api/v1/scan-runs/99999/errors")
+    r = client_vuoto.get("/api/v1/scans/99999/unread")
     assert r.status_code == 404, r.text
-    assert r.json()["detail"]["code"] == "scan_run_not_found"
+    assert r.json()["detail"]["code"] == "scan_not_found"
 
 
 def test_stop_with_nothing_running_still_answers(client_vuoto):
@@ -225,35 +233,29 @@ def test_scan_answers_at_once_and_the_receipt_arrives_in_status(app):
     started = r.json()
     assert started["folder_id"] == fid and started["run_id"] >= 1
     assert wait_until(lambda: finished(client))
-    receipt = status(client)["scan"]["receipt"]
-    for key in ("status", "found", "new", "unchanged", "duplicates", "missing", "skipped",
-                "errors", "unreadable_dirs", "online_only", "hidden_dirs", "linked_dirs", "id",
-                "folder_id", "ended_at", "skipped_by_reason"):  # fmt: skip
-        assert key in receipt, key
-    assert receipt["status"] == "ok" and receipt["new"] == 5
-    assert receipt["id"] == started["run_id"]
-    runs = client.get("/api/v1/scan-runs").json()["items"]
-    assert runs[0]["id"] == started["run_id"] and runs[0]["new"] == 5
+    carta = receipt(client)
+    for key in ("id", "outcome", "reason", "folders", "new", "left_out", "dirs_left_out",
+                "unread", "unread_files", "duration_s"):  # fmt: skip
+        assert key in carta, key
+    assert carta["outcome"] == "completed" and carta["new"] == 5
+    assert carta["id"] == started["run_id"]
+    assert scans(client)[0]["id"] == started["run_id"]
     # **Quanto e' durata**, calcolata qui e non a schermo: il database tiene i due istanti, e la
     # differenza e' una derivazione come le altre. Zero secondi e' un valore vero -- una cartella
     # con cinque file si legge in un lampo -- quindi si guarda che sia un numero, non che sia > 0.
-    assert isinstance(runs[0]["duration_s"], (int, float))
+    assert isinstance(carta["duration_s"], (int, float))
     # **E di quale cartella parla**, col percorso che l'utente riconosce: con il solo `folder_id`
     # la pagina dovrebbe leggersi le cartelle e appaiarle da se', cioe' fare un lavoro che e' del
     # backend. E' il percorso, come nella sezione Cartelle, non il nome dato alla cartella.
-    assert runs[0]["folder_path"].endswith(root.name)
-    # **E si possono chiedere quelle di una cartella sola**: e' cosi' che la sezione Cartelle
-    # dira' com'e' andata l'ultima volta che ha letto quella li'. Il conto e' della cartella, non
-    # dell'archivio, o una pagina che ne mostra venti direbbe "ce ne sono altre" per sempre.
-    sola = client.get("/api/v1/scan-runs", params={"folder_id": fid}).json()
-    assert [r["id"] for r in sola["items"]] == [started["run_id"]] and sola["total"] == 1
-    altrui = client.get("/api/v1/scan-runs", params={"folder_id": fid + 1}).json()
-    assert altrui["items"] == [] and altrui["total"] == 0
+    assert [f.endswith(root.name) for f in carta["folders"]] == [True]
     client.app.state.worker.join(10.0)
     client.post(f"/api/v1/folders/{fid}/scan")
-    assert wait_until(
-        lambda: finished(client) and status(client)["scan"]["receipt"]["unchanged"] == 5
-    )
+
+    def invariati():
+        carta = receipt(client)
+        return carta is not None and {"reason": "unchanged", "count": 5} in carta["left_out"]
+
+    assert wait_until(invariati)
 
 
 def test_scan_lock_stop_and_the_button_verb(app):
@@ -280,8 +282,9 @@ def test_scan_lock_stop_and_the_button_verb(app):
     assert worker.snapshot().state == State.STOPPED
     s = status(client)
     assert s["action"] == "resume" and s["scan"]["folder_id"] == fid  # cosa riprendere
-    assert s["scan"]["receipt"]["status"] == "stopped"  # dal DB: il generatore non la emette
-    assert s["scan"]["receipt"]["new"] >= 1 and s["scan"]["receipt"]["ended_at"]
+    carta = receipt(client)
+    assert carta["outcome"] == "stopped"  # dal DB: il generatore non la emette
+    assert carta["new"] >= 1 and carta["duration_s"] is not None
     assert not client.app.state.behind.scanning(fid)
     assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202  # si riparte
 
@@ -349,10 +352,10 @@ def test_scan_schedule_nas(db_path, tmp_path):
     write_light(root / "a.fits")
     with TestClient(create_app(db_path, scan_every_s=0.2), base_url="http://localhost") as c:
         c.post("/api/v1/folders", json={"root_path": str(root)})
-        assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"] != [])
-        assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"][0]["status"] == "ok")
+        assert wait_until(lambda: scans(c) != [])
+        assert wait_until(lambda: scans(c)[0]["outcome"] == "completed")
         # a later round may end before this read and find nothing new: the file is new once
-        assert sum(run["new"] for run in c.get("/api/v1/scan-runs").json()["items"]) == 1
+        assert sum(run["new"] for run in scans(c)) == 1
 
 
 def test_a_locked_database_skips_one_round_of_the_schedule_not_all(db_path, tmp_path):
@@ -376,7 +379,7 @@ def test_a_locked_database_skips_one_round_of_the_schedule_not_all(db_path, tmp_
         app = create_app(db_path, scan_every_s=0.2)
         with TestClient(app, base_url="http://localhost") as c:
             c.post("/api/v1/folders", json={"root_path": str(root)})
-            assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"] != [])
+            assert wait_until(lambda: scans(c) != [])
 
 
 def test_a_closed_app_starts_no_folder_of_its_round(db_path, tmp_path):

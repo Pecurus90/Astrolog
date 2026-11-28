@@ -21,7 +21,7 @@ def test_database_is_created_from_the_single_schema(tmp_path):
     c = connect(p)
     tables = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {
-        "frames", "pipeline_files", "pipeline_roots", "frame_stages", "scan_runs", "sites"
+        "frames", "pipeline_files", "pipeline_roots", "frame_stages", "pipeline_scans", "sites"
     } <= tables  # fmt: skip
     c.close()
 
@@ -58,7 +58,7 @@ def test_create_refuses_to_overwrite_and_ensure_is_idempotent(tmp_path):
 @pytest.mark.parametrize(
     "change",
     [
-        "ALTER TABLE scan_runs ADD COLUMN gone_since INTEGER",
+        "ALTER TABLE pipeline_scans ADD COLUMN gone_since INTEGER",
         "DROP VIEW file_folders",
         "CREATE TABLE left_over (x INTEGER)",
     ],

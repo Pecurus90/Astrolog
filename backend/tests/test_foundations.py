@@ -9,6 +9,7 @@ from astropy.io import fits
 
 from astrolog.api.scan_door import scan_once
 from astrolog.clock import NIGHT_SQL, night_date
+from astrolog.pipeline.changes import open_receipt
 from astrolog.spine import run as run_mod
 from astrolog.spine import scan_store, solve_store, stages
 from astrolog.spine.run import ORDER, queue
@@ -150,15 +151,13 @@ def test_running_does_not_exist_in_the_db(conn, tmp_path):
             " VALUES(1, 'solve', 'running', 'now')"
         )
     fid = add_folder(conn, tmp_path)
+    run_id = open_receipt(conn, fid, "now")  # una corsa aperta: status NULL
     with pytest.raises(sqlite3.IntegrityError):
         conn.execute(
-            "INSERT INTO scan_runs(folder_id, started_at, status) VALUES(?, 'now', 'running')",
-            (fid,),
+            "UPDATE pipeline_scans SET status = 'running', ended_at = 'now' WHERE id = ?",
+            (run_id,),
         )
-    run_id = scan_store.start_run(conn, fid, "now")  # una corsa aperta: status NULL
-    assert (
-        conn.execute("SELECT status FROM scan_runs WHERE id = ?", (run_id,)).fetchone()[0] is None
-    )
+    assert scan_store.run_outcomes(conn, run_id)[0]["status"] is None
 
 
 # --- dichiarato su chiavi stabili ----------------------------------------------------------

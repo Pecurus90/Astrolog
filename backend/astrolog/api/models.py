@@ -156,9 +156,8 @@ class ScanAllStarted(BaseModel):
     skipped: list[FolderSkipped]
 
 
-# The words of `spine/scan_store` for why a file did not get in and why it was skipped.
+# The words of `spine/scan_store` for why a file did not get in.
 FileError = Literal["file_unreadable", "header_unreadable", "name_not_utf8", "internal_error"]
-SkipReason = Literal["calibration", "rewritten", "not_supported", "still_writing"]
 
 
 class FileNotRead(BaseModel):
@@ -167,58 +166,6 @@ class FileNotRead(BaseModel):
         "bad bytes."
     )
     reason: FileError
-
-
-class SkippedCount(BaseModel):
-    reason: SkipReason
-    count: int
-
-
-class ScanRunOut(BaseModel):
-    id: int
-    folder_id: int
-    folder_path: str = Field(
-        description="The folder's path, which is what the user recognises: with `folder_id` "
-        "alone the page would have to read the folders and pair them up itself. Never empty: "
-        "removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row."
-    )
-    folder_retired: bool = Field(
-        description="The folder was removed (retired) since: its path no longer updates."
-    )
-    started_at: str
-    ended_at: str | None
-    duration_s: float | None = Field(
-        description="None = unknown: the run is open, or the two instants do not add up."
-    )
-    status: Literal["ok", "stopped", "aborted", "error"] | None = Field(
-        description="None = the run is open."
-    )
-    reason: Literal["root_unreachable", "stop_requested", "internal_error", "database_error"] | None
-    found: int
-    new: int
-    unchanged: int
-    duplicates: int
-    missing: int
-    skipped: int
-    errors: int
-    online_only: int = Field(
-        description="Online-only FITS: not opened, so as not to download them; they are "
-        "revisited later."
-    )
-    unreadable_dirs: list[str]
-    hidden_dirs: list[str] = Field(
-        description="Hidden subfolders left out (the recycle bin, for instance)."
-    )
-    linked_dirs: list[str] = Field(
-        description="Reached through a link or a junction: not followed."
-    )
-    skipped_by_reason: list[SkippedCount] = Field(
-        description="How many were skipped per reason, calibration frames included."
-    )
-
-
-class ScanRunList(Page[ScanRunOut]):
-    pass
 
 
 class ScanErrorList(Page[FileNotRead]):
@@ -287,7 +234,6 @@ class ScanProgress(BaseModel):
     folder_id: int
     run_id: int
     last_event: ScanEvent | None
-    receipt: ScanRunOut | None
     remaining_s: int | None = Field(
         default=None,
         description="Seconds left for the folder being read, at the pace so far; `None` in the "
@@ -352,7 +298,7 @@ class LeftOutCount(BaseModel):
 
 class DirLeftOut(BaseModel):
     path: str
-    why: Literal["unreadable", "hidden", "linked"]
+    why: Literal["unreadable", "hidden"]
 
 
 class ScanProgressOut(BaseModel):

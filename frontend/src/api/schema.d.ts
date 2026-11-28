@@ -917,51 +917,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/scan-runs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Scan Runs
-         * @description The receipts, newest first.
-         */
-        get: operations["scan_runs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/scan-runs/{run_id}/errors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Scan Run Errors
-         * @description The files the scan did not read, each with its reason, in pages. The list is kept by the
-         *     last scan of each folder and, if that one did not reach the end, also by the last one that did
-         *     (`spine/scan_store.finish_run`): of the others only the numbers remain, and an open one has no
-         *     list yet; the reply says so with its code instead of an empty list.
-         *
-         *     404 `scan_run_not_found`; 409 `scan_run_open`; 410 `errors_not_kept`.
-         */
-        get: operations["scan_run_errors"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/scans": {
         parameters: {
             query?: never;
@@ -1080,9 +1035,10 @@ export interface paths {
          *
          *     Once the scan has finished, however it finished (a Stop included), `state` combines the
          *     receipts of every folder of the gesture (worst first); while it runs, it is the worker's.
-         *     `receipt`, like `folder_id` and `run_id`, is the last started folder's, present once the scan
-         *     has finished. If it stopped or fell before the first folder, no receipt is left: `receipt` is
-         *     `null` and the state is the worker's (`not_run` when the worker has no record of the scan).
+         *     `folder_id` and `run_id` are the last started folder's (`run_id`: the receipt opened by the
+         *     gesture). If it stopped or fell before the first folder, no receipt is left: the state is the
+         *     worker's (`not_run` when the worker has no record of the scan). The receipts themselves are
+         *     in `GET /scans`.
          */
         get: operations["status"];
         put?: never;
@@ -2373,7 +2329,7 @@ export interface components {
              * Why
              * @enum {string}
              */
-            why: "unreadable" | "hidden" | "linked";
+            why: "unreadable" | "hidden";
         };
         /** Distance */
         Distance: {
@@ -5537,7 +5493,6 @@ export interface components {
             /** Run Id */
             run_id: number;
             last_event: components["schemas"]["ScanEvent"] | null;
-            receipt: components["schemas"]["ScanRunOut"] | null;
             /**
              * Remaining S
              * @description Seconds left for the folder being read, at the pace so far; `None` in the first minute, before any file and once the reading is over.
@@ -5563,86 +5518,6 @@ export interface components {
             total: number;
             /** Pct */
             pct: number;
-        };
-        /** ScanRunList */
-        ScanRunList: {
-            /** Items */
-            items: components["schemas"]["ScanRunOut"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-        };
-        /** ScanRunOut */
-        ScanRunOut: {
-            /** Id */
-            id: number;
-            /** Folder Id */
-            folder_id: number;
-            /**
-             * Folder Path
-             * @description The folder's path, which is what the user recognises: with `folder_id` alone the page would have to read the folders and pair them up itself. Never empty: removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row.
-             */
-            folder_path: string;
-            /**
-             * Folder Retired
-             * @description The folder was removed (retired) since: its path no longer updates.
-             */
-            folder_retired: boolean;
-            /** Started At */
-            started_at: string;
-            /** Ended At */
-            ended_at: string | null;
-            /**
-             * Duration S
-             * @description None = unknown: the run is open, or the two instants do not add up.
-             */
-            duration_s: number | null;
-            /**
-             * Status
-             * @description None = the run is open.
-             */
-            status: ("ok" | "stopped" | "aborted" | "error") | null;
-            /** Reason */
-            reason: ("root_unreachable" | "stop_requested" | "internal_error" | "database_error") | null;
-            /** Found */
-            found: number;
-            /** New */
-            new: number;
-            /** Unchanged */
-            unchanged: number;
-            /** Duplicates */
-            duplicates: number;
-            /** Missing */
-            missing: number;
-            /** Skipped */
-            skipped: number;
-            /** Errors */
-            errors: number;
-            /**
-             * Online Only
-             * @description Online-only FITS: not opened, so as not to download them; they are revisited later.
-             */
-            online_only: number;
-            /** Unreadable Dirs */
-            unreadable_dirs: string[];
-            /**
-             * Hidden Dirs
-             * @description Hidden subfolders left out (the recycle bin, for instance).
-             */
-            hidden_dirs: string[];
-            /**
-             * Linked Dirs
-             * @description Reached through a link or a junction: not followed.
-             */
-            linked_dirs: string[];
-            /**
-             * Skipped By Reason
-             * @description How many were skipped per reason, calibration frames included.
-             */
-            skipped_by_reason: components["schemas"]["SkippedCount"][];
         };
         /** ScanStarted */
         ScanStarted: {
@@ -6006,16 +5881,6 @@ export interface components {
             sky_sqm: number | null;
             /** Bortle */
             bortle: number | null;
-        };
-        /** SkippedCount */
-        SkippedCount: {
-            /**
-             * Reason
-             * @enum {string}
-             */
-            reason: "calibration" | "rewritten" | "not_supported" | "still_writing";
-            /** Count */
-            count: number;
         };
         /**
          * SkyBandOut
@@ -8561,73 +8426,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScanStarted"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    scan_runs: {
-        parameters: {
-            query?: {
-                folder_id?: number | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScanRunList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    scan_run_errors: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                run_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScanErrorList"];
                 };
             };
             /** @description Validation Error */

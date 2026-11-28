@@ -25,6 +25,7 @@ class _Ask:
 
     root_id: int
     watch: Watch
+    receipt: int | None  # the gesture's placeholder (changes.open_receipt)
     done: threading.Event = field(default_factory=threading.Event)
     result: ScanResult | None = None
     error: BaseException | None = None
@@ -47,10 +48,10 @@ class Behind:
         self._asks: list[_Ask] = []
         self._scanning: set[int] = set()  # roots a user's scan holds, asked or running
 
-    def scan_now(self, root_id: int, watch: Watch) -> ScanResult:
+    def scan_now(self, root_id: int, watch: Watch, receipt: int | None = None) -> ScanResult:
         """The user's scan, on this thread: the round in course yields (its ASTAP killed, its
         roots back in the queue), the scan runs, the queue goes on. Blocks the caller."""
-        ask = _Ask(root_id, watch)
+        ask = _Ask(root_id, watch, receipt)
         with self._lock:
             self._asks.append(ask)
             self._scanning.add(root_id)
@@ -135,7 +136,9 @@ class Behind:
         try:
             for ask in asks:
                 try:
-                    ask.result = scan_root(conn, ask.root_id, now_iso(), watch=ask.watch)
+                    ask.result = scan_root(
+                        conn, ask.root_id, now_iso(), watch=ask.watch, receipt=ask.receipt
+                    )
                 except BaseException as err:  # noqa: BLE001 - the caller raises it, in its thread
                     ask.error = err
                 finally:
