@@ -25,6 +25,9 @@ dependencies = [
                              #         risulterebbe inesistente e ogni luogo nascerebbe
                              #         senza fuso, in silenzio
   "numpy>=2.5.4",              # BSD   - i pixel dei frame per measure (prima solo via astropy)
+  "pyerfa>=2.0.1.5",           # BSD-3 - le coordinate del puntamento (pipeline/sky.py, IAU SOFA);
+                             #         arrivava con astropy, dichiarata quando astropy e' uscito
+                             #         (passo 40.4; ruote abi3 per le quattro)
   "sep>=1.4.1",                # LGPL-3 - fondo, stelle e flussi di measure (ADR 0007; ruota
                              #         aarch64 compresa, la ragione per cui photutils e' fuori)
   "scipy>=1.18.1",             # BSD-3 - il fit di Moffat della forma delle stelle (ADR 0022
