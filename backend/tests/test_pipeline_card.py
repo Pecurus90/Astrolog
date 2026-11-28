@@ -679,3 +679,12 @@ def test_iso_written_as_number_or_digits_is_read():
 
 def test_an_infinite_exposure_is_unknown():
     assert read_card(NINA, {"EXPTIME": math.inf}).exposure_s is None
+
+
+@pytest.mark.parametrize(("name", "program"), [("nina.txt", NINA), ("asiair.txt", ASIAIR)])
+def test_the_measurements_a_header_writes_are_not_read(name, program, tmp_path):
+    """FWHM, HFR, HFD, SNR e le stelle che un programma scrive nell'header non si leggono: si
+    misurano (`spina-normalize.md`). La scheda resta quella del file senza."""
+    values = _values(name, tmp_path)
+    written = {"FWHM": 2.1, "HFR": 1.8, "HFD": 3.6, "SNR": 40.0, "STARCOUNT": 812, "STARS": 812}
+    assert read_card(program, {**values, **written}) == read_card(program, values)

@@ -58,9 +58,9 @@ a 1970 c'e', a 2099 pure): `bodies.covers` lo dice prima del conto, e quel frame
 e Sole, quella notte senza fase, mentre le altre della stessa radice si calcolano. Stanotte e il
 calendario dei prossimi mesi stanno dentro fino al 2053.
 
-**astropy resta per gli header, senza rete.** Le coordinate degli header (FK4, FK5) passano
-ancora da astropy, che non chiede dati di rotazione della Terra; il disarmo del suo download sta
-in `fits/header_coords.py` per il giorno che una conversione li chiedesse.
+**L'app non carica astropy.** Dal passo 40.4 header e coordinate li legge la pipeline (lettore
+suo, erfa); astropy resta solo nei test, come oracolo qui sopra, col download disarmato nel test
+stesso. Lo tengono il contratto di import-linter e `test_the_app_never_loads_astropy`.
 
 **La fase e' geocentrica, il sorgere e' topocentrico.** Quanto e' illuminata la Luna si vede
 uguale da tutta la Terra: calcolarla dal sito la farebbe ballare di pochissimo e senza motivo, e

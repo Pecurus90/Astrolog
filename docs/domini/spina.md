@@ -30,14 +30,14 @@ Da confermare.
 
 ## Le decisioni
 
-**Un'identita' sola, decisa alla scansione.** `frame_hash` = sha256 delle dimensioni e di
-64 KB di pixel presi dal **centro** del blocco dati (l'offset letto dal file, anche a piu'
-pagine): un accesso in piu' per file, quasi gratis, e stabile a una riscrittura
-dell'header (l'elaborazione riscrive anche i pixel: la copia calibrata e' un frame
-distinto, e `normalize` decide che e' una copia per data, camera ed esposizione). Il centro
-perche' un frame registrato ha i bordi a zero e un sensore puo' avere l'overscan: li' due
-frame diversi possono coincidere, al centro c'e' il rumore. Il pre-controllo incrementale
-e' (cartella, percorso relativo, dimensione, mtime al millisecondo).
+**Un'identita' sola, decisa alla scansione.** `frame_hash` e' l'impronta della pipeline
+(`pipeline/fingerprint.py`, ADR 0030; `frames.id` = `pipeline_frames.id` dal passo 40.4): lo
+scatto dall'header (camera, inizio posa alla frazione di secondo, dimensioni, posa), cosi' una
+copia `.fz` o con l'header riscritto e' lo stesso frame. Solo se l'header non dice lo scatto,
+sha256 delle dimensioni e di 64 KB di pixel presi dal **centro** del blocco dati: un frame
+registrato ha i bordi a zero e un sensore puo' avere l'overscan, li' due frame diversi possono
+coincidere, al centro c'e' il rumore. Il pre-controllo incrementale e' (cartella, percorso
+relativo, dimensione, mtime al millisecondo).
 
 **La spina e' un grafo, e gli archi stanno nei dati.** `stages.DEPENDS` dice chi dipende da
 chi (group <- normalize, identify; identify <- solve, normalize; measure <- solve) e

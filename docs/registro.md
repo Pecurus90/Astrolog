@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 412; senza fonte: 0.
-Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 40; T tecnico: 100.
+Valori: 406; senza fonte: 0.
+Fonti: C norma: 210; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 39; T tecnico: 99.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -224,16 +224,6 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 40; T
 | _YEAR | `366` | T |
 | _AROUND_MIDNIGHT | `range(-30, 31, 10)` | T |
 | _HAIR | `1e-9` | T |
-
-### fits/header_read.py
-
-| simbolo | valore | fonte |
-|---|---|---|
-| FINGERPRINT_BYTES | `65536` | P docs/domini/spina.md |
-| BLOCK | `2880` | C FITS 4.0 3.1: 2880-byte blocks |
-| _CARD | `80` | C FITS 4.0 4.1.1: 80-character records |
-| _CLEAN_END | `b"END" + b" " * (_CARD - 3)` | C FITS 4.0 4.4.1.1: END then spaces |
-| _BYTES_PER_PIXEL | `{8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}` | C FITS 4.0 table 8: BITPIX |
 
 ### fits/walk.py
 
@@ -845,7 +835,6 @@ Fonti: C norma: 214; U usanza: 3; D metodo: 34; M misura: 23; P decisione: 40; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| F32_SIGNIFICANT_DIGITS | `7` | T |
 | ARCSEC_PER_RAD_PER_1000 | `206.265` | C 648000/pi |
 | MAD_TO_SIGMA | `1.4826` | C Rousseeuw & Croux, JASA 88:1273, 1993 |
 | FOCAL_TOLERANCE | `0.05` | P ADR 0016 |

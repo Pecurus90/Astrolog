@@ -874,3 +874,60 @@ test_the_reader_extracts_exactly_what_gets_written - passo 40.4: le colonne le s
 test_a_reading_that_breaks_before_it_begins_leaves_no_open_receipt - passo 40.4: fingeva scan_store.folder_root, che api/scan.py importa per nome, e non provava nulla; la lettura che si rompe la prova test_scan_door
 test_the_end_of_the_normalization_writes_the_folders_without_its_copies - passo 40.4: la copia calibrata non entra (Marco 26/11/2026); diventato test_the_end_of_the_normalization_writes_the_folders
 test_a_file_the_pipeline_skips_for_good_is_not_waiting - passo 40.4 C3: un file non supportato non ha frame (CHECK di pipeline_files, ADR 0029); il caso rimasto lo prova test_a_file_damaged_after_its_read_keeps_its_frame_and_is_not_waiting
+test_clean_header_fields - passo 40.4 C4b: provava fits/header_fields, senza chiamanti; i campi li legge pipeline/card.py (test_pipeline_card, test_header_corpus)
+test_object_with_slash_is_not_truncated - passo 40.4 C4b: provava fits/header_fields, uscito; la lettura delle card la prova test_pipeline_scanner
+test_hierarch_cards_are_read - passo 40.4 C4b: provava la lettura astropy di fits/header_read, uscita; HIERARCH: test_a_hierarch_key_is_kept_and_reported
+test_coordinates_decimal_and_sexagesimal - passo 40.4 C4b: provava fits/header_coords, senza chiamanti; il puntamento lo legge pipeline/sky.py
+test_coordinates_out_of_range_are_none - passo 40.4 C4b: provava fits/header_coords, senza chiamanti; il puntamento lo legge pipeline/sky.py
+test_decimal_with_unit_is_none_never_times_15 - passo 40.4 C4b: provava fits/header_coords, senza chiamanti; il puntamento lo legge pipeline/sky.py
+test_zero_zero_without_wcs_is_none_with_wcs_is_kept - passo 40.4 C4b: provava fits/header_fields, senza chiamanti; il puntamento lo legge pipeline/sky.py
+test_jnow_equinox_is_precessed_to_icrs - passo 40.4 C4b: provava fits/header_coords (astropy), senza chiamanti; il puntamento lo legge pipeline/sky.py con erfa
+test_fk4_is_converted_and_j2000_untouched - passo 40.4 C4b: provava fits/header_coords (astropy), senza chiamanti; il puntamento lo legge pipeline/sky.py con erfa
+test_galactic_wcs_becomes_equatorial_but_objctra_does_not - passo 40.4 C4b: provava fits/header_coords (astropy), senza chiamanti; il puntamento lo legge pipeline/sky.py
+test_the_historic_spellings_of_the_reference_system_are_read - passo 40.4 C4b: provava fits/header_coords, senza chiamanti; il puntamento lo legge pipeline/sky.py
+test_image_type_variants - passo 40.4 C4b: provava fits/frame_type.image_type, senza chiamanti; il tipo lo da' pipeline/card.frame_type (test_pipeline_card)
+test_image_type_absent_is_unknown_never_light - passo 40.4 C4b: provava fits/frame_type.image_type, senza chiamanti; il tipo lo da' pipeline/card.frame_type (test_pipeline_card)
+test_stacks_are_unknown - passo 40.4 C4b: provava fits/frame_type.is_stack, senza chiamanti; un file impilato non entra (test_a_stack_count_alone_is_rewritten)
+test_a_count_of_one_is_a_single_frame - passo 40.4 C4b: provava fits/frame_type.is_stack, senza chiamanti; la regola della pipeline: test_pipeline_scanner
+test_a_combined_file_is_not_a_frame - passo 40.4 C4b: provava fits/frame_type.is_stack, senza chiamanti; diventato test_a_file_rewritten_by_another_program_is_skipped e test_a_stack_count_alone_is_rewritten
+test_a_calibration_word_in_the_object_field_is_calibration - passo 40.4 C4b: provava fits/frame_type.image_type, senza chiamanti; il tipo lo da' pipeline/card.frame_type (test_pipeline_card)
+test_an_object_that_merely_contains_a_calibration_word_is_a_frame - passo 40.4 C4b: provava fits/frame_type.image_type, senza chiamanti; il tipo lo da' pipeline/card.frame_type (test_pipeline_card)
+test_a_long_real_light_is_not_a_stack - passo 40.4 C4b: provava fits/frame_type.is_stack, senza chiamanti; la pipeline non guarda la posa per dire riscritto (test_pipeline_scanner)
+test_float32_noise_stops_at_the_reader_but_coordinates_keep_precision - passo 40.4 C4b: provava fits/header_fields, uscito; la coda del float32 la toglie pipeline/values.py (ADR 0030)
+test_site_and_bayer - passo 40.4 C4b: provava fits/header_fields, uscito; sito e Bayer li legge pipeline/card.py (test_pipeline_card)
+test_date_obs_chain_and_mjd_fallback - passo 40.4 C4b: provava fits/header_fields, uscito; l'inizio posa lo legge pipeline/card.start_utc (test_pipeline_card)
+test_software_raw_chain - passo 40.4 C4b: provava fits/header_fields, uscito; il programma lo dice pipeline/scanner.program_of (test_header_corpus_reads_every_file)
+test_data_page_header_for_multi_hdu - passo 40.4 C4b: provava fits/header_read (astropy), uscito; la pagina compressa la legge pipeline/scanner.py (test_pipeline_scanner)
+test_missing_keys_give_none_and_defaults - passo 40.4 C4b: provava fits/header_fields, uscito; le chiavi assenti della scheda: test_pipeline_card
+test_the_binning_is_what_the_header_says_or_unknown - passo 40.4 C4b: provava fits/header_fields, uscito; il binning lo legge pipeline/card.py (test_pipeline_card)
+test_broken_files_raise_a_typed_error - passo 40.4 C4b: provava fits/header_read, uscito; il file rotto lo dice pipeline/scanner.Skip (test_pipeline_scanner)
+test_giant_header_is_read_whole - passo 40.4 C4b: provava fits/header_read (astropy), uscito; le card le legge pipeline/scanner.py (test_pipeline_scanner)
+test_every_secondary_spelling_reaches_its_field - passo 40.4 C4b: provava gli alias di fits/header_keys.KEYS, usciti con header_fields; la scheda legge le chiavi dei programmi verificati (ADR 0029)
+test_the_first_value_of_a_chain_must_not_be_empty - passo 40.4 C4b: provava fits/header_fields, uscito; i valori vuoti della scheda: test_pipeline_card
+test_a_not_a_number_never_reaches_the_archive - passo 40.4 C4b: provava fits/header_fields, uscito; NaN e infiniti: test_words_python_reads_as_numbers_but_fits_does_not_stay_text, test_an_infinite_exposure_is_unknown
+test_the_saved_header_is_always_valid_json - passo 40.4 C4b: provava fits/header_read.header_to_json, uscito; header_json lo scrive pipeline/frame_row.py e lo prova test_words_python_reads_as_numbers_but_fits_does_not_stay_text
+test_the_saved_header_can_be_read_back - passo 40.4 C4b: provava header_to_json, uscito; header_from_json ora in spine/rewrite.py, passa da mark_of (copies, normalize: test_normalize_rewrite)
+test_the_container_keys_stay_out_of_the_combined_header - passo 40.4 C4b: provava fits/header_read (astropy), uscito; le chiavi della tabella compressa: test_pipeline_scanner
+test_the_fingerprint_carries_the_dimensions_not_only_the_pixels - passo 40.4 C4b: provava fits/header_read.frame_fingerprint, uscito; diventato test_two_shapes_with_the_same_bytes_are_two_frames
+test_the_site_is_read_in_every_written_form - passo 40.4 C4b: provava fits/header_coords.site, senza chiamanti; il sito lo legge pipeline/card.site (test_pipeline_card)
+test_the_site_out_of_range_is_dropped_never_corrected - passo 40.4 C4b: provava fits/header_coords.site, senza chiamanti; il sito lo legge pipeline/card.site (test_pipeline_card)
+test_importing_the_coordinate_reader_disarms_the_download - passo 40.4 C4b: l'app non carica piu' astropy; lo prova test_the_app_never_loads_astropy
+test_starting_the_app_already_disarms_the_download - passo 40.4 C4b: l'app non carica piu' astropy, niente da disarmare; diventato test_the_app_never_loads_astropy
+test_float32_noise - passo 40.4 C4b: units.strip_float32_noise senza chiamanti; la coda del float32 la toglie pipeline/values.py (ADR 0030)
+test_dates_are_canonical_utc_with_milliseconds - passo 40.4 C4b: provava fits/header_fields.canonical_utc, uscito; la data scritta la prova test_scan_writes_canonical_dates
+test_fingerprint_survives_a_header_rewrite - passo 40.4 C4b: provava fits/header_read.frame_fingerprint, uscito; l'impronta nuova: test_pipeline_fingerprint
+test_fingerprint_differs_when_the_pixels_differ - passo 40.4 C4b: provava fits/header_read.frame_fingerprint, uscito; l'impronta nuova: test_pipeline_fingerprint
+test_fingerprint_of_a_mef_survives_a_header_rewrite - passo 40.4 C4b: provava fits/header_read.frame_fingerprint, uscito; l'impronta nuova: test_pipeline_fingerprint
+test_fingerprint_reads_the_centre_so_a_black_border_does_not_merge_frames - passo 40.4 C4b: provava fits/header_read.frame_fingerprint, uscito; il centro della nuova: test_pipeline_fingerprint
+test_the_pixels_start_where_astropy_says - passo 40.4 C4b: provava fits/header_read._data_block, uscito; il blocco dati della nuova: test_pipeline_fingerprint
+test_without_a_start_the_pixel_fallback_is_today_s_fingerprint - passo 40.4 C4b: l'oracolo era il codice vecchio, uscito; il DB si ricrea (principio 3)
+test_a_header_read_file_with_pages_is_opened_once - passo 40.4 C4b: test_data_block_header_read provava fits/header_read, uscito; la nuova apre ogni file una volta (test_pipeline_fingerprint)
+test_a_header_without_end_is_still_read - passo 40.4 C4b: provava fits/header_read, uscito; senza END la nuova dice rotto (test_pipeline_scanner)
+test_a_simple_file_does_not_need_astropy - passo 40.4 C4b: provava fits/header_read, uscito; la nuova non usa astropy mai
+test_every_other_file_goes_through_astropy - passo 40.4 C4b: provava fits/header_read, uscito; la nuova non usa astropy mai
+test_the_data_block_is_the_one_astropy_finds_on_every_kind_of_file - passo 40.4 C4b: provava fits/header_read._data_block, uscito; il blocco della nuova: test_pipeline_fingerprint
+test_the_fingerprint_does_not_change - passo 40.4 C4b: provava fits/header_read.frame_fingerprint, uscito; il DB si ricrea (principio 3)
+test_the_fingerprint_is_the_same_with_the_block_read_with_the_header - passo 40.4 C4b: provava fits/header_read.frame_fingerprint, uscito
+test_the_header_of_the_pixel_page_joins_without_its_notes - passo 40.4 C4b: provava fits/header_read, uscito; la pagina compressa: test_pipeline_scanner
+test_the_header_reader_finds_the_block_astropy_finds_where_it_opens_the_file - passo 40.4 C4b: provava fits/header_read, uscito
+test_the_header_reader_stops_at_the_first_page_with_pixels - passo 40.4 C4b: provava fits/header_read, uscito; la nuova legge primario e pagina compressa (test_pipeline_scanner)

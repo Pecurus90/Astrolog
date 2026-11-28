@@ -12,7 +12,7 @@ if [ "$(id -u)" = 0 ]; then
     exec setpriv --reuid="$uid" --regid="$gid" --clear-groups "$0"
 fi
 
-# Libraries (astropy) keep config and cache under HOME: root's is not theirs.
+# Libraries (numba) keep their cache under HOME when the package dir is read-only: root's is not theirs.
 export HOME=/data/home
 mkdir -p "$HOME"
 

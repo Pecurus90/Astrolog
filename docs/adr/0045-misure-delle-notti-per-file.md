@@ -2,6 +2,8 @@
 
 **Stato:** accettata, 8/11/2026 (Marco, passo 33: "ponte per file, ora"). Anticipa una parte del
 passo 40; il ponte cade quando la pipeline nuova sostituisce la vecchia (ADR 0030).
+Superato in parte dal passo 40.4 (fd55a40e): un frame della spina e' il frame della nuova
+(`frames.id` = `pipeline_frames.id`), e il ponte passa per l'id, non piu' per cartella e percorso.
 
 ## Contesto
 

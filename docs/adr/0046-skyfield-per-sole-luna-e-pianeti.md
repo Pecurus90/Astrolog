@@ -1,7 +1,8 @@
 # 0046 -- Sole, Luna e pianeti con Skyfield sulla DE421
 
 **Stato:** accettata, 20/11/2026 (Marco, scelta del 20/11 sul passo 6.9, Issue #87). I FITS restano
-su astropy.
+su astropy. Superato in parte dal passo 40.4 (Marco, 28/11/2026): i FITS li legge la pipeline senza
+astropy, che resta solo fra le dipendenze di sviluppo, come oracolo dei test.
 
 ## Contesto
 

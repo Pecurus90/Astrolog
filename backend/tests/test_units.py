@@ -1,5 +1,5 @@
-"""Le unita' e i numeri: la scala dal setup, il raggio di un oggetto, il rumore della float32
-tolto dove il dato entra. Portati da old/ (numeri dell'archivio reale)."""
+"""Le unita' e i numeri: la scala dal setup, il raggio di un oggetto. Portati da old/ (numeri
+dell'archivio reale)."""
 
 from pathlib import Path
 
@@ -7,7 +7,6 @@ import pytest
 
 from astrolog import units
 from astrolog.units import (
-    F32_SIGNIFICANT_DIGITS,
     SQM_MAX,
     SQM_MIN,
     believable_sqm,
@@ -18,7 +17,6 @@ from astrolog.units import (
     scale_arcsec_px,
     sqm_from_brightness,
     sqm_of_bortle,
-    strip_float32_noise,
 )
 
 
@@ -32,17 +30,6 @@ def test_the_radius_of_an_object_is_half_its_size_in_degrees():
     raggio in gradi."""
     assert units.radius_deg(60.0) == pytest.approx(0.5)
     assert units.radius_deg(None) == 0.0 and units.radius_deg(0) == 0.0
-
-
-def test_float32_noise():
-    assert strip_float32_noise(4.28999996185303) == 4.29
-    assert strip_float32_noise(-10.1000003814697) == -10.1
-    assert strip_float32_noise(3.4000000953674316) == 3.4
-    for v in (3.76, 0.0, -5.5, 1234.5, 1e-9, 1.234567, 206.2648):
-        assert strip_float32_noise(v) == v
-    assert strip_float32_noise(None) is None
-    assert F32_SIGNIFICANT_DIGITS == 7
-    assert strip_float32_noise(1.23456789) == 1.234568
 
 
 def test_focal_jitter_collapses_to_one_group():

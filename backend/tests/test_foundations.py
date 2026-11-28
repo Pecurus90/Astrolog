@@ -4,15 +4,11 @@ nessun `running` nel DB. Una regola, un test che si rompe se la regola si rompe.
 
 import sqlite3
 
-import numpy as np
 import pytest
 from astropy.io import fits
 
 from astrolog.api.scan_door import scan_once
 from astrolog.clock import NIGHT_SQL, night_date
-from astrolog.fits import header_read
-from astrolog.fits.header_fields import canonical_utc
-from astrolog.fits.header_read import frame_fingerprint, read_header
 from astrolog.spine import run as run_mod
 from astrolog.spine import scan_store, solve_store, stages
 from astrolog.spine.run import ORDER, queue
@@ -25,93 +21,6 @@ def run(conn, fid):
 
 
 # --- identita' -------------------------------------------------------------------------
-
-
-def test_fingerprint_survives_a_header_rewrite(tmp_path):
-    """Un programma di elaborazione riscrive l'header lasciando i pixel: stesso frame."""
-    p = write_light(tmp_path / "a.fits", obj="M 31")
-    before = frame_fingerprint(p, read_header(p))
-    with fits.open(p, mode="update") as hdul:
-        hdul[0].header["HISTORY"] = "riscritto da un software di elaborazione"
-        hdul[0].header["OBJECT"] = "M31 rinominato"
-    assert frame_fingerprint(p, read_header(p)) == before
-
-
-def test_fingerprint_differs_when_the_pixels_differ(tmp_path):
-    """Due frame con header identico ma pixel diversi (il caso normale: rumore) sono due frame;
-    lo stesso file copiato in due cartelle e' uno."""
-    header = {"IMAGETYP": "Light", "OBJECT": "M 13", "EXPTIME": 60.0}
-    rng = np.random.default_rng(1)
-    paths = []
-    for i in range(2):
-        h = fits.Header()
-        for k, v in header.items():
-            h[k] = v
-        p = tmp_path / f"f{i}.fits"
-        fits.PrimaryHDU(data=rng.integers(0, 4000, (8, 8)).astype(np.int16), header=h).writeto(p)
-        paths.append(str(p))
-    a, b = (frame_fingerprint(p, read_header(p)) for p in paths)
-    assert a != b
-    copy = tmp_path / "copia.fits"
-    copy.write_bytes((tmp_path / "f0.fits").read_bytes())
-    assert frame_fingerprint(str(copy), read_header(str(copy))) == a
-
-
-def test_fingerprint_of_a_mef_survives_a_header_rewrite(tmp_path):
-    """In un file a piu' pagine l'offset dei pixel viene dal file, non dall'header combinato:
-    un primario che cresce oltre un blocco da 2880 byte non sposta l'impronta."""
-    rng = np.random.default_rng(3)
-    primary = fits.PrimaryHDU()
-    for i in range(30):
-        primary.header[f"CARD{i:02d}"] = i
-    image = fits.ImageHDU(data=rng.integers(0, 4000, (8, 8)).astype(np.int16))
-    image.header["OBJECT"] = "M 31"
-    p = tmp_path / "m.fits"
-    fits.HDUList([primary, image]).writeto(p)
-    before = frame_fingerprint(p, read_header(p))
-    with fits.open(p, mode="update") as hdul:
-        for i in range(60):
-            hdul[0].header[f"EXTRA{i:02d}"] = "riscritto"
-    assert frame_fingerprint(p, read_header(p)) == before
-
-
-def test_fingerprint_reads_the_centre_so_a_black_border_does_not_merge_frames(tmp_path):
-    """Due frame registrati hanno le prime righe a zero (bordo di registrazione): sono due
-    frame diversi, e l'impronta deve dirlo."""
-    paths = []
-    for seed in (1, 2):
-        data = np.zeros((400, 200), dtype=np.int16)  # 160 KB: 400 byte a riga
-        # il rumore sta fra i byte 68.000 e 76.000: fuori dai primi 64 KB, dentro la
-        # finestra centrale (48 KB - 112 KB). Con l'impronta vecchia i due file coincidono.
-        data[170:190, 90:110] = np.random.default_rng(seed).integers(0, 4000, (20, 20))
-        p = tmp_path / f"r{seed}.fits"
-        fits.PrimaryHDU(data=data).writeto(p)
-        paths.append(p)
-    a, b = (frame_fingerprint(p, read_header(p)) for p in paths)
-    assert a != b
-
-
-@pytest.mark.parametrize("cards", [0, 60])
-def test_the_pixels_start_where_astropy_says(tmp_path, cards):
-    """Dove cominciano i pixel lo dice il file, non l'header che abbiamo in mano: se
-    sbagliasse di un blocco, l'impronta guarderebbe altri byte e due frame diversi
-    potrebbero coincidere. Vale a pagina singola e a piu' pagine."""
-    header = fits.Header()
-    for i in range(cards):
-        header[f"C{i:02d}"] = i
-    data = np.random.default_rng(4).integers(0, 4000, (20, 20)).astype(np.float32)
-    single = tmp_path / f"s{cards}.fits"
-    fits.PrimaryHDU(data=data, header=header).writeto(single)
-    multi = tmp_path / f"m{cards}.fits"
-    fits.HDUList([fits.PrimaryHDU(header=header), fits.ImageHDU(data=data)]).writeto(multi)
-
-    for path in (single, multi):
-        with fits.open(path) as hdul:
-            expected = next(
-                hdul.fileinfo(i) for i, h in enumerate(hdul) if h.header.get("NAXIS", 0)
-            )
-        start, span = header_read._data_block(str(path))
-        assert (start, span) == (expected["datLoc"], expected["datSpan"]), path.name
 
 
 def test_scan_uses_the_single_identity(conn, tmp_path):
@@ -286,21 +195,6 @@ def test_a_single_frame_declares_only_its_object(conn):
 
 
 # --- date canoniche --------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "raw, expected",
-    [
-        ("2024-05-17T21:00:00", "2024-05-17T21:00:00.000"),
-        ("2024-05-17T21:00:00.1234567", "2024-05-17T21:00:00.123"),  # SGP a sette decimali
-        ("2024-02-02T18:01:38.077877", "2024-02-02T18:01:38.077"),  # ASIAIR a sei
-        ("2024-05-17T23:00:00+02:00", "2024-05-17T21:00:00.000"),  # un fuso esplicito
-        ("2024-05-17T21:00:00Z", "2024-05-17T21:00:00.000"),
-        ("non e' una data", None),
-    ],
-)
-def test_dates_are_canonical_utc_with_milliseconds(raw, expected):
-    assert canonical_utc(raw) == expected
 
 
 def test_scan_writes_canonical_dates(conn, tmp_path):

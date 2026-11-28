@@ -320,18 +320,21 @@ def test_a_site_whose_sky_was_never_declared_says_so_instead_of_guessing(client_
     assert detto["moon"]["phase_key"] in moon.PHASES
 
 
-def test_starting_the_app_already_disarms_the_download():
-    """**"Offline sempre" vale dall'avvio**, non dalla prima volta che qualcuno apre la Luna.
+def test_the_app_never_loads_astropy():
+    """**"Offline sempre" vale dall'avvio**: astropy sa scaricare i dati di rotazione della Terra,
+    e dal passo 40.4 l'app non lo carica mai (header e pixel li legge la pipeline, Sole e Luna
+    Skyfield). Lo vieta anche il contratto di import-linter; qui si prova a interprete nuovo, che
+    nella suite qualcun altro l'avrebbe gia' importato."""
+    import subprocess
+    import sys
 
-    L'import delle effemeridi era pigro, dentro la rotta, "per non far aspettare l'avvio": la
-    ragione era falsa -- misurato, l'app ci mette 531 ms e le effemeridi ne aggiungono uno --
-    e intanto il processo girava col download di astropy **armato** per tutto il tempo in cui
-    nessuno apriva quella rotta. Ogni altro uso di astropy, come la lettura degli header, girava
-    li' dentro."""
-    from astropy.utils import iers
-
-    assert iers.conf.auto_download is False
-    assert iers.conf.auto_max_age is None
+    guarda = ("import sys, astrolog.__main__, astrolog.worker.worker; "
+              "print('astropy' in sys.modules)")  # fmt: skip
+    fatto = subprocess.run(
+        [sys.executable, "-I", "-c", guarda], capture_output=True, text=True, timeout=120,
+        check=False,
+    )  # fmt: skip
+    assert fatto.stdout.split() == ["False"], fatto.stderr
 
 
 def test_the_phases_of_the_route_are_the_phases_of_the_sky():

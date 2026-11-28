@@ -67,8 +67,8 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
   un altro volume: si giudica sempre e la ricevuta lo segna (`volume_changed`). Il disco sbagliato
   mostra i frame spariti, che tornano col disco giusto; mai una radice muta per sempre.
 - **Coda del float32**: la pipeline nuova la toglie solo se il numero e' un float32
-  (`pipeline/values.py`, `_without_float32_tail`); la vecchia arrotonda a 7 cifre
-  (`units.py`, `strip_float32_noise`). Differenza voluta: un double vero resta com'e'.
+  (`pipeline/values.py`, `_without_float32_tail`); la vecchia arrotondava a 7 cifre (uscita al
+  passo 40.4). Differenza voluta: un double vero resta com'e'.
 - **Dietro le quinte** (Marco, 26/10/2026, passo 24): dopo ogni scansione dell'app la nuova legge
   e risolve le stesse cartelle (`pipeline/run.py` `Behind`, un thread suo, mai il worker
   dell'utente), mai a schermo; lo Stop e la chiusura uccidono i suoi ASTAP e fermano la lettura

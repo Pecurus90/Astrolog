@@ -62,7 +62,8 @@ def test_the_declared_dependencies_are_read_from_the_one_place_they_live():
     """L'elenco viene da `backend/pyproject.toml`, non da una copia: se qualcuno aggiunge una
     dipendenza e non la controlla, la guardia deve accorgersene da sola."""
     nomi = ruote.declared()
-    assert "astropy" in nomi and "tzfpy" in nomi and "tzdata" in nomi
+    assert "numpy" in nomi and "tzfpy" in nomi and "tzdata" in nomi
+    assert "astropy" not in nomi  # solo fra quelle di sviluppo (passo 40.4)
     assert all(c not in n for n in nomi for c in "<>=!~ #")
 
 

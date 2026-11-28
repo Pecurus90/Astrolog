@@ -16,6 +16,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 from astropy.io import fits
+from astropy.utils import iers
 from fastapi.testclient import TestClient
 
 import porta
@@ -32,6 +33,11 @@ from astrolog.weather import climate, forecast, history, meteoblue, sky
 from recinto import SuiteInRete
 
 real_bundle = bundle.path  # catturato prima del recinto della suite
+
+# astropy solo nei test (oracolo, FITS di prova): mai il download dei dati della Terra, per ogni
+# test anche raccolto da solo; senza, una data futura solleva invece di usare la tabella interna.
+iers.conf.auto_download = False
+iers.conf.auto_max_age = None
 
 
 # I moduli che scaricano, ognuno col suo `_fetch` che le prove sostituiscono. Che l'elenco sia

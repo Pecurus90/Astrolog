@@ -3,7 +3,9 @@ it is a sentinel more than a measurement, and its sign against CROTA2 is unknown
 
 import math
 
-from .header_keys import KEYS, HeaderLike, as_float, first
+from .header_keys import HeaderLike, as_float, first
+
+ROTATION_KEYS = ("CROTA2", "CROTA1")
 
 
 def solved(header: HeaderLike) -> bool:
@@ -37,7 +39,7 @@ def wcs_rotation_deg(header: HeaderLike) -> float | None:
         cd12, cd22 = cells["CD1_2"] or 0.0, cells["CD2_2"] or 0.0
         if cd12 or cd22:
             return round(math.degrees(math.atan2(-cd12, cd22)) % 360.0, 2)
-    crota = as_float(first(header, *KEYS["rotation"]))
+    crota = as_float(first(header, *ROTATION_KEYS))
     if crota is not None:
         return round(crota % 360.0, 2)
     return None

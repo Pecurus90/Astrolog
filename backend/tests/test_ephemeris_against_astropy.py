@@ -7,8 +7,8 @@ Luna entro 9,7" (l'errore del modello di astropy, non di DE421); orari del Sole 
 della Luna entro 2,4 s (a 64 gradi nord, dove sale piu' radente). La soglia degli orari e' **5 s**,
 quella del passo del piano: sotto il minuto a cui si arrotondano a schermo, sopra lo scarto vero.
 
-astropy resta una dipendenza per i FITS, quindi l'oracolo costa zero; il suo disarmo della rete
-sta in `fits/header_coords.py`, importato qui sotto apposta.
+astropy resta per i test (i FITS di prova), quindi l'oracolo costa zero; il suo download dei dati
+della Terra lo disarma `conftest.py`: la suite gira senza rete.
 """
 
 import datetime as dt
@@ -25,7 +25,6 @@ from astropy.coordinates import (
 )
 from astropy.time import Time
 
-import astrolog.fits.header_coords  # noqa: F401 - disarma il download di astropy per l'oracolo
 from astrolog.ephemeris import RISESET_DEG, bodies, moon
 from astrolog.ephemeris.frames import moon_and_sun
 from astrolog.ephemeris.grid import first_crossing, night_grid

@@ -1,12 +1,13 @@
 """The rewrite mark: that a file was rewritten after the camera, never by whom, and alone it takes
 nothing from anyone. It lets `copies.py` pick the original between two twins."""
 
+import json
 import sqlite3
 from enum import StrEnum
+from typing import Any
 
 from ..fits.frame_type import program_names, says_calibrated
 from ..fits.header_keys import HeaderLike
-from ..fits.header_read import header_from_json
 from ..vocab.software import normalize_software
 
 
@@ -27,6 +28,12 @@ def rewrite_mark(header: HeaderLike) -> RewriteMark | None:
         return None
     programs = {normalize_software(n) for n in acquirers + writers}
     return RewriteMark.REWRITTEN if len(programs) > 1 else None
+
+
+def header_from_json(header_json: str | None) -> dict[str, Any]:
+    """`frames.header_json` as `pipeline/frame_row.py` writes it: `[key, value]` pairs, one per key
+    (the scanner keeps the first of a repeated key)."""
+    return dict(json.loads(header_json or "[]"))
 
 
 def mark_of(row: sqlite3.Row) -> RewriteMark | None:

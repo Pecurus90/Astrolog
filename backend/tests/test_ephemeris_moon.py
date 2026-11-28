@@ -48,7 +48,7 @@ print(round(sun.altitudes(quando, 45.5, 11.5)[0]), moon.phase(quando[0]).illumin
 
 
 # test-tolto: test_importing_the_ephemeris_disarms_the_download -- le effemeridi non usano piu'
-# astropy; il suo disarmo sta coi FITS (test_fits_header.py), l'offline qui sotto si prova a
+# astropy; il suo disarmo sta in conftest.py (solo test), l'offline qui sotto si prova a
 # rete rotta
 def test_the_ephemeris_works_with_no_network_and_says_nothing(tmp_path):
     """**L'offline si prova senza rete**, non guardando un'impostazione: un interprete nuovo

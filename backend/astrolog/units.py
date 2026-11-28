@@ -7,22 +7,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
-# The digits a float32 can really assert: `4.29` read back in double precision becomes
-# `4.28999996185303`, and that tail is format, not measure. [T]
-F32_SIGNIFICANT_DIGITS = 7
-
 # Arcseconds in a radian, divided by a thousand: micron -> millimetre inside. [C 648000/pi]
 ARCSEC_PER_RAD_PER_1000 = 206.265
-
-
-def strip_float32_noise(
-    value: float | None, *, digits: int = F32_SIGNIFICANT_DIGITS
-) -> float | None:
-    """Not a convenience rounding: it cuts where the float32 stops saying anything. Shortening a
-    number that truly has too many digits is the caller's call, with `round`."""
-    if value is None:
-        return None
-    return float(f"%.{digits}g" % value)
 
 
 def most_frequent[T](weights: Mapping[T, int]) -> T | None:
@@ -35,7 +21,7 @@ def most_frequent[T](weights: Mapping[T, int]) -> T | None:
 
 def physical_pixel_um(pixel_um: float | None, binning: int | None) -> float | None:
     """`XPIXSZ` includes binning (`docs/domini/spina-solve.md`): split in decimal, 11.4 / 3 is 3.8.
-    Float32 tail cut by header readers (`pipeline/values`, `fits/header_fields`), not here."""
+    Float32 tail cut by the header reader (`pipeline/values`), not here."""
     if pixel_um is None or not binning:
         return None
     return float(Decimal(repr(pixel_um)) / binning)

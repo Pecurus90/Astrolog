@@ -1,5 +1,5 @@
 """Impronta del frame: dall'header (camera, inizio, dimensioni, posa), pixel solo come ripiego.
-Una sola apertura per file, niente astropy; ripiego uguale alla vecchia."""
+Una sola apertura per file, niente astropy."""
 
 import builtins
 import io
@@ -9,7 +9,6 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
-from astrolog.fits.header_read import frame_fingerprint, read_frame
 from astrolog.pipeline.fingerprint import BLOCK, Header, data_length, frame_identity
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped, read_header, scan_file
 from conftest import fits_bytes, scan_whole
@@ -158,15 +157,6 @@ def test_shots_in_the_same_whole_second_are_told_apart_by_their_pixels(tmp_path)
     c = _image(tmp_path / "c.fits", (3, 4), np.int16, keys=keys)  # copy of a
     assert _fingerprint(a) != _fingerprint(b)
     assert _fingerprint(a) == _fingerprint(c)
-
-
-def test_without_a_start_the_pixel_fallback_is_today_s_fingerprint(tmp_path):
-    """Ripiego (manca l'inizio): impronta = quella del codice vecchio, su ogni forma."""
-    for name, path in _bench(tmp_path).items():
-        if name in _FLOAT:
-            continue
-        header, block = read_frame(str(path))
-        assert _fingerprint(path) == frame_fingerprint(str(path), header, block), name
 
 
 def test_two_shapes_with_the_same_bytes_are_two_frames(tmp_path):

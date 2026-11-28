@@ -37,7 +37,6 @@ wheels = [
 name = "astrolog"
 source = { editable = "." }
 dependencies = [
-    { name = "astropy" },
     { name = "fastapi" },
     { name = "numba" },
     { name = "numpy" },
@@ -56,6 +55,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "astropy" },
     { name = "httpx2" },
     { name = "import-linter" },
     { name = "pre-commit" },
@@ -70,7 +70,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "astropy", specifier = ">=8.0.2" },
+    { name = "astropy", marker = "extra == 'dev'", specifier = ">=8.0.2" },
     { name = "fastapi", specifier = ">=0.162.0" },
     { name = "httpx2", marker = "extra == 'dev'", specifier = ">=2.16.0" },
     { name = "import-linter", marker = "extra == 'dev'", specifier = ">=2.0" },
