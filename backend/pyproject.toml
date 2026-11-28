@@ -338,8 +338,11 @@ forbidden_modules = ["astrolog.pipeline"]
 # Una porta sola: la nuova dietro le scansioni dell'app, mai a schermo (Marco 26/10/2026, passo 24).
 # Seconda, dichiarata: il bias della camera e' una risposta che la nuova applica allo SQM (Marco
 # 7/11/2026, passo 32), fino al passo 40. Terza: una radice, una riga per le due (passo 40.3):
-# cartelle e backup la scrivono da pipeline/roots.py, fino al taglio del 40.11.
+# cartelle e backup la scrivono da pipeline/roots.py, fino al taglio del 40.11. Quarta: la
+# ricevuta e' la riga della scansione, il gesto la apre da pipeline/changes.py (passo 40.4).
 ignore_imports = ["astrolog.api.scan -> astrolog.pipeline.behind",
+                  "astrolog.api.scan -> astrolog.pipeline.changes",
+                  "astrolog.api.scan_door -> astrolog.pipeline.changes",
                   "astrolog.api.scan_door -> astrolog.pipeline.scan",
                   "astrolog.api.scan_door -> astrolog.pipeline.scanner",
                   "astrolog.api.camera_bias -> astrolog.pipeline.sqm_measure",
