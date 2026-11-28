@@ -19,7 +19,7 @@ from astrolog.pipeline import recognise
 from astrolog.spine import typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import set_status
-from conftest import add_folder, move_folder, write_fits, write_light
+from conftest import add_folder, move_folder, put_file, write_fits, write_light
 
 
 def _frame(conn, folder_id, rel_path):
@@ -29,18 +29,14 @@ def _frame(conn, folder_id, rel_path):
         " VALUES(?, 'unknown', '[]', 'ora')",
         (f"{folder_id}:{rel_path}",),
     ).lastrowid
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, ?, 1, 1.0, 'ora')",
-        (frame_id, folder_id, rel_path),
-    )
+    put_file(conn, frame_id, folder_id, rel_path)
     set_status(conn, frame_id, "solve", "failed", reason="no_solution")
     return frame_id
 
 
 def _still(conn):
     frames = [tuple(r) for r in conn.execute("SELECT * FROM frames ORDER BY id")]
-    places = [tuple(r) for r in conn.execute("SELECT * FROM positions ORDER BY id")]
+    places = [tuple(r) for r in conn.execute("SELECT * FROM pipeline_files ORDER BY id")]
     return frames, places
 
 
@@ -155,8 +151,9 @@ def test_moving_to_the_same_files_keeps_everything_and_a_scan_adds_nothing(
     c.close()
     _scanned(client_vuoto, f["id"])
     assert _count(db_path, "SELECT COUNT(*) FROM frames") == frames
-    assert _count(db_path, "SELECT COUNT(*) FROM positions") == frames
-    assert _count(db_path, "SELECT COUNT(*) FROM positions WHERE status <> 'present'") == 0
+    di_frame = "FROM pipeline_files WHERE frame_id IN (SELECT id FROM frames)"
+    assert _count(db_path, f"SELECT COUNT(DISTINCT rel_path) {di_frame}") == frames
+    assert _count(db_path, f"SELECT COUNT(*) {di_frame} AND state <> 'present'") == 0
 
 
 def test_checking_a_move_says_same_files_and_writes_nothing(client_vuoto, tmp_path, db_path):

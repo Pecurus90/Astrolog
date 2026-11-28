@@ -168,7 +168,7 @@ def test_the_poses_of_the_nights_that_changed_are_worked_again(pagina):
         stato = dict(
             conn.execute(
                 "SELECT p.rel_path, s.status FROM frame_stages s"
-                " JOIN positions p ON p.frame_id = s.frame_id WHERE s.stage = 'normalize'"
+                " JOIN pipeline_files p ON p.frame_id = s.frame_id WHERE s.stage = 'normalize'"
             ).fetchall()
         )
     assert stato["b.fits"] == "pending"

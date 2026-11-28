@@ -10,7 +10,7 @@ from dataclasses import asdict
 
 from astrolog.clock import night_date
 from astrolog.spine import unnamed
-from conftest import add_folder
+from conftest import add_folder, files_gone, put_file
 
 
 def test_the_unnamed_groups_start_from_the_poses_without_a_name(conn):
@@ -50,11 +50,7 @@ def _posa(conn, folder_id, rel_path, *, date: str | None = NOTTE, pointing=ROSET
             height,
         ),
     ).lastrowid
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, ?, 1, 1.0, 'ora')",
-        (frame_id, folder_id, rel_path),
-    )
+    put_file(conn, frame_id, folder_id, rel_path)
     conn.execute(
         "INSERT INTO frame_stages(frame_id, stage, status, reason, updated_at)"
         " VALUES(?, 'solve', 'failed', 'no_solution', 'ora')",
@@ -218,7 +214,7 @@ def test_changing_my_mind_reaches_a_missing_pose_too(conn):
     b = _posa(conn, radice, "R/b.fits")
     chiave = _chiave(conn, a)
     unnamed.declare(conn, chiave, name="Rosetta")
-    conn.execute("UPDATE positions SET status = 'missing' WHERE frame_id = ?", (b,))
+    files_gone(conn, "frame_id = ?", (b,))
     unnamed.declare(conn, chiave, name="Caldwell 49")
     assert unnamed.named_by_group(conn, chiave) == ("Caldwell 49", None)
 

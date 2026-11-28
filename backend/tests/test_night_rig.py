@@ -66,7 +66,7 @@ def _setup(client, nome):
     with db(client) as conn:
         r = conn.execute(
             "SELECT o.name AS optics, c.name AS camera, g.focal_mm, g.id FROM frames f"
-            " JOIN positions p ON p.frame_id = f.id JOIN rigs g ON g.id = f.rig_id"
+            " JOIN pipeline_files p ON p.frame_id = f.id JOIN rigs g ON g.id = f.rig_id"
             " LEFT JOIN instruments o ON o.id = g.optics_id"
             " LEFT JOIN instruments c ON c.id = g.camera_id WHERE p.rel_path LIKE ?",
             (f"%{nome}",),

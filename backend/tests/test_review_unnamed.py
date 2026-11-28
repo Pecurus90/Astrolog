@@ -23,7 +23,16 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.spine import stages, unnamed
 from astrolog.spine.identify import identify_frames
-from conftest import all_objects, apply, db, populate, review, unnamed_cards, write_fits
+from conftest import (
+    all_objects,
+    apply,
+    db,
+    files_gone,
+    populate,
+    review,
+    unnamed_cards,
+    write_fits,
+)
 
 ROSETTA, M81, CALIBRATE = "2024-03-12_Rosetta/LIGHT", "2024-04-01_M81", "calibrate"
 
@@ -60,7 +69,7 @@ def _chiave(client, sotto):
     prova ogni cartella ne fa uno solo."""
     with db(client) as conn:
         (frame_id,) = conn.execute(
-            "SELECT f.id FROM frames f JOIN positions p ON p.frame_id = f.id"
+            "SELECT f.id FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
             " WHERE p.rel_path LIKE ? AND f.object_raw IS NULL ORDER BY f.id",
             (f"{sotto}/%",),
         ).fetchone()
@@ -76,7 +85,7 @@ def _col_cielo(client, sotto, nome, ra, dec):
     stato di un frame che il solver ha risolto. Torna il suo id."""
     with db(client) as conn:
         (frame_id,) = conn.execute(
-            "SELECT p.frame_id FROM positions p WHERE p.rel_path = ?", (f"{sotto}/{nome}",)
+            "SELECT p.frame_id FROM pipeline_files p WHERE p.rel_path = ?", (f"{sotto}/{nome}",)
         ).fetchone()
         conn.execute(
             "INSERT INTO frame_wcs(frame_id, ra_deg, dec_deg, scale_arcsec_px, rotation_deg,"
@@ -141,7 +150,7 @@ def test_a_pose_the_solver_has_not_looked_at_yet_is_not_asked(pagina):
     cio' che l'app sta per sapere da sola."""
     with db(pagina) as conn:
         (in_attesa,) = conn.execute(
-            "SELECT p.frame_id FROM positions p WHERE p.rel_path = ?", (f"{ROSETTA}/r_1.fits",)
+            "SELECT p.frame_id FROM pipeline_files p WHERE p.rel_path = ?", (f"{ROSETTA}/r_1.fits",)
         ).fetchone()
         stages.set_status(conn, in_attesa, "solve", "pending")
     assert _gruppi(pagina)[_chiave(pagina, ROSETTA)]["frames"] == 2
@@ -152,7 +161,7 @@ def test_a_pose_without_sky_is_asked_whatever_identify_has_done_with_it(pagina):
     `identify` e' stato rimesso in coda."""
     with db(pagina) as conn:
         (frame_id,) = conn.execute(
-            "SELECT p.frame_id FROM positions p WHERE p.rel_path = ?", (f"{ROSETTA}/r_1.fits",)
+            "SELECT p.frame_id FROM pipeline_files p WHERE p.rel_path = ?", (f"{ROSETTA}/r_1.fits",)
         ).fetchone()
         stages.set_status(conn, frame_id, "identify", "pending")
     assert _gruppi(pagina)[_chiave(pagina, ROSETTA)]["frames"] == 3
@@ -162,7 +171,7 @@ def test_an_object_made_only_of_spaces_is_not_a_name(pagina):
     """Se un valore e' un nome lo dice il vocabolario, non il fatto che il campo sia pieno."""
     with db(pagina) as conn:
         (frame_id,) = conn.execute(
-            "SELECT frame_id FROM positions WHERE rel_path = ?", (f"{M81}/col_nome.fits",)
+            "SELECT frame_id FROM pipeline_files WHERE rel_path = ?", (f"{M81}/col_nome.fits",)
         ).fetchone()
         conn.execute("UPDATE frames SET object_raw = '   ' WHERE id = ?", (frame_id,))
         stages.invalidate(conn, [frame_id], "identify")
@@ -174,9 +183,7 @@ def test_a_file_that_is_gone_and_a_retired_folder_do_not_ask_anything(pagina):
     """Su un file sparito o in una cartella ritirata non c'e' niente su cui agire: una domanda li'
     resterebbe aperta per sempre."""
     with db(pagina) as conn:
-        conn.execute(
-            "UPDATE positions SET status = 'missing' WHERE rel_path = ?", (f"{M81}/m_0.fits",)
-        )
+        files_gone(conn, "rel_path = ?", (f"{M81}/m_0.fits",))
     assert _gruppi(pagina)[_chiave(pagina, M81)]["frames"] == 1
     with db(pagina) as conn:
         conn.execute("UPDATE pipeline_roots SET retired_at = '2026-09-15'")

@@ -1,5 +1,5 @@
 """A frame's folder: the one holding the file, not the registered root, from its first present
-position in a live folder. Root and subfolder travel in the row: re-splitting a key goes wrong."""
+file in a live folder. Root and subfolder travel in the row: re-splitting a key goes wrong."""
 
 import sqlite3
 from collections.abc import Callable
@@ -7,9 +7,9 @@ from typing import Any
 
 from ..db.row import Row
 
-_FIRST_POSITION = """
-  SELECT p2.id FROM positions p2 JOIN pipeline_roots d2 ON d2.id = p2.folder_id
-  WHERE p2.frame_id = f.id AND p2.status = 'present' AND d2.retired_at IS NULL
+_FIRST_FILE = """
+  SELECT p2.id FROM pipeline_files p2 JOIN pipeline_roots d2 ON d2.id = p2.root_id
+  WHERE p2.frame_id = f.id AND p2.state = 'present' AND d2.retired_at IS NULL
   ORDER BY p2.id LIMIT 1
 """
 
@@ -17,7 +17,7 @@ _FIRST_POSITION = """
 # `night/M51/`; a file in the root has no slash and leaves it empty.
 _SUB = "rtrim(p.rel_path, replace(p.rel_path, '/', ''))"
 COLUMNS = f"d.path AS root, {_SUB} AS sub"
-JOIN = f"JOIN positions p ON p.id = ({_FIRST_POSITION}) JOIN pipeline_roots d ON d.id = p.folder_id"
+JOIN = f"JOIN pipeline_files p ON p.id = ({_FIRST_FILE}) JOIN pipeline_roots d ON d.id = p.root_id"
 
 # `folder_key` in SQL, for comparing inside a query; the two must say the same thing.
 _ROOT_KEY = r"rtrim(replace(d.path, '\', '/'), '/')"
@@ -25,18 +25,18 @@ _INSIDE = f"trim({_SUB}, '/')"
 KEY = f"{_ROOT_KEY} || CASE WHEN {_INSIDE} = '' THEN '' ELSE '/' || {_INSIDE} END"
 # For a query that already has `frames f`.
 KEY_OF_FRAME = (
-    f"SELECT {KEY} FROM positions p"  # noqa: S608 - constants
-    f" JOIN pipeline_roots d ON d.id = p.folder_id WHERE p.id = ({_FIRST_POSITION})"
+    f"SELECT {KEY} FROM pipeline_files p"  # noqa: S608 - constants
+    f" JOIN pipeline_roots d ON d.id = p.root_id WHERE p.id = ({_FIRST_FILE})"
 )
 
-# Searched from the folder, by index on its positions: starting from the frames would rebuild the
+# Searched from the folder, by index on its files: starting from the frames would rebuild the
 # folder of every frame in the archive at each answer.
 _IN_FOLDER = (
     "SELECT f.id, f.image_type FROM pipeline_roots d"  # noqa: S608 - constants of this file
-    " CROSS JOIN positions p ON p.folder_id = d.id"
+    " CROSS JOIN pipeline_files p ON p.root_id = d.id"
     " CROSS JOIN frames f ON f.id = p.frame_id"
     f" WHERE d.path = ? AND p.rel_path >= ? AND p.rel_path < ? AND {_SUB} = ?"
-    f" AND p.id = ({_FIRST_POSITION})"
+    f" AND p.id = ({_FIRST_FILE})"
 )
 # `night/` runs to `night0`, `0` being the character right after the slash. Under the root, an
 # empty BLOB, which SQLite sorts after every text.

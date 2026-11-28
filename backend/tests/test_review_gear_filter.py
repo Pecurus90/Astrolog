@@ -113,7 +113,7 @@ def _scheda(client, nome):
 def _filtro_del_file(client, nome):
     with db(client) as conn:
         riga = conn.execute(
-            "SELECT fi.name FROM frames f JOIN positions p ON p.frame_id = f.id"
+            "SELECT fi.name FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
             " LEFT JOIN filters fi ON fi.id = f.filter_id WHERE p.rel_path LIKE ?",
             (f"%{nome}",),
         ).fetchone()
@@ -155,7 +155,7 @@ def test_answering_no_filter_on_a_colour_camera_does_not_call_it_mono(pagina):
     si sente dire che quella domanda non c'e': la scheda della camera resta a colori."""
     with db(pagina) as conn:
         riga = conn.execute(
-            "SELECT f.* FROM frames f JOIN positions p ON p.frame_id = f.id"
+            "SELECT f.* FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
             " WHERE p.rel_path LIKE '%osc_senza.fits'"
         ).fetchone()
         chiave = signature.key_of(signature.parts_of(riga))

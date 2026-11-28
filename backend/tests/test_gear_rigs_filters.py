@@ -36,7 +36,7 @@ def _scansiona_un_altro(client, tmp_path, filtro, **header):
     with db(client) as conn:
         porta.fill(conn, 1, porta.Upto.NORMALIZED)
         riga = conn.execute(
-            "SELECT fi.name FROM frames f JOIN positions p ON p.frame_id = f.id"
+            "SELECT fi.name FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
             " LEFT JOIN filters fi ON fi.id = f.filter_id WHERE p.rel_path LIKE '%dopo.fits'"
         ).fetchone()
     return riga["name"]

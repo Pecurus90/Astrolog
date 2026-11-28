@@ -224,27 +224,60 @@ def one(conn, sql, args=()):
 
 def frame_by_file(conn, name):
     return conn.execute(
-        "SELECT f.* FROM frames f JOIN positions p ON p.frame_id = f.id WHERE p.rel_path LIKE ?",
+        "SELECT f.* FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
+        " WHERE p.rel_path LIKE ?",
         (f"%{name}",),
     ).fetchone()
+
+
+def scan_of(conn, root_id):
+    """Una ricevuta della nuova per la radice, la prima: i file di prova la citano."""
+    row = conn.execute(
+        "SELECT id FROM pipeline_scans WHERE root_id = ? ORDER BY id LIMIT 1", (root_id,)
+    ).fetchone()
+    if row is not None:
+        return row[0]
+    return conn.execute(
+        "INSERT INTO pipeline_scans (root_id, scanned_at, reachable, volume_changed, new,"
+        " changed, reread, unchanged, gone, skipped, unknown_keys, unknown_more, finished)"
+        " VALUES (?, 'ora', 0, 0, 0, 0, 0, 0, 0, '{}', '{}', 0, 1)",
+        (root_id,),
+    ).lastrowid
 
 
 def put_file(conn, frame_id, root_id, rel_path):
     """Il file di un frame in una cartella, presente, come lo scrive la scansione: un file diverso
     allo stesso percorso prende il posto."""
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
-        " VALUES(?, ?, ?, 1, 1.0, 'present', 'ora') ON CONFLICT(folder_id, rel_path)"
-        " DO UPDATE SET frame_id = excluded.frame_id, status = 'present'",
-        (frame_id, root_id, rel_path),
-    )
+    scan = scan_of(conn, root_id)
+    return conn.execute(
+        "INSERT INTO pipeline_files (root_id, rel_path, size, mtime_ns, state, seen_scan_id,"
+        " frame_id, arrived_scan_id) VALUES (?, ?, 1, 1000000000, 'present', ?, ?, ?)"
+        " ON CONFLICT (root_id, rel_path) WHERE state = 'present'"
+        " DO UPDATE SET frame_id = excluded.frame_id",
+        (root_id, rel_path, scan, frame_id, scan),
+    ).lastrowid
 
 
 def file_present(conn, root_id, rel_path, present):
-    """Il file sparito o ritrovato, come lo segna la scansione."""
+    """Il file sparito o ritrovato, come lo segna la scansione: l'ultimo a quel percorso."""
     conn.execute(
-        "UPDATE positions SET status = ? WHERE folder_id = ? AND rel_path = ?",
-        ("present" if present else "missing", root_id, rel_path),
+        "UPDATE pipeline_files SET state = ?, gone_scan_id = ? WHERE id = (SELECT MAX(id)"
+        " FROM pipeline_files WHERE root_id = ? AND rel_path = ?)",
+        (
+            "present" if present else "gone",
+            None if present else scan_of(conn, root_id),
+            root_id,
+            rel_path,
+        ),
+    )
+
+
+def files_gone(conn, where="1", args=()):
+    """I file presenti che `where` sceglie, spariti come li segna la scansione."""
+    conn.execute(
+        "UPDATE pipeline_files SET state = 'gone', gone_scan_id = seen_scan_id"  # noqa: S608
+        f" WHERE state = 'present' AND ({where})",
+        args,
     )
 
 
@@ -451,11 +484,11 @@ def add_folder(conn, root):
 
 
 def absorb_folder(conn, outer_id):
-    """La sostituzione come la fa POST /folders: la radice prende i file della nuova, poi le
-    posizioni della vecchia seguono."""
+    """La sostituzione come la fa POST /folders: la radice prende i file, poi le cartelle senza
+    tipo si riscrivono."""
     with transaction(conn):
         roots.absorb(conn, outer_id, "ora")
-        folder_move.absorb(conn, outer_id)
+        folder_move.absorb(conn)
 
 
 def move_folder(conn, folder_id, new_root):

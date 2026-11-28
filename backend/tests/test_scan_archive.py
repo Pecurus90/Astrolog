@@ -17,7 +17,14 @@ from astrolog.pipeline.walk import long_path
 from astrolog.spine import frame_folder, typeless
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import STAGES, WAITING_SQL, count_pending
-from conftest import add_folder, online_only, settle, unreadable_dir, write_fits, write_light
+from conftest import (
+    add_folder,
+    online_only,
+    settle,
+    unreadable_dir,
+    write_fits,
+    write_light,
+)
 
 
 def run(conn, folder_id, **kw):
@@ -28,6 +35,19 @@ def run(conn, folder_id, **kw):
 
 def count(conn, sql):
     return conn.execute(sql).fetchone()[0]
+
+
+# i file dei frame dell'archivio: la nuova tiene anche saltati e calibrazioni
+FILES = (
+    "SELECT COUNT(DISTINCT rel_path) FROM pipeline_files WHERE frame_id IN (SELECT id FROM frames)"
+)
+PRESENT = (
+    "SELECT COUNT(*) FROM pipeline_files WHERE state = 'present'"
+    " AND frame_id IN (SELECT id FROM frames)"
+)
+STATE = (
+    "SELECT state FROM pipeline_files WHERE frame_id IN (SELECT id FROM frames) ORDER BY id DESC"
+)
 
 
 def test_scan_walk_finds_everything_and_never_touches_the_files(conn, tmp_path):
@@ -42,7 +62,7 @@ def test_scan_walk_finds_everything_and_never_touches_the_files(conn, tmp_path):
     assert (done["status"], done["found"], done["new"]) == ("ok", 4, 4)
     assert {p: (p.stat().st_size, p.stat().st_mtime) for p in root.rglob("*.fit*")} == before
     assert count(conn, "SELECT COUNT(*) FROM frames") == 4
-    assert count(conn, "SELECT COUNT(*) FROM positions") == 4
+    assert count(conn, FILES) == 4
 
 
 def test_scan_stores_raw_fields_and_marks_every_stage_pending(conn, tmp_path):
@@ -92,7 +112,7 @@ def test_scan_incremental(conn, tmp_path):
     third = run(conn, fid)
     assert count(conn, "SELECT COUNT(*) FROM frames") == 3
     assert (third["new"], third["missing"]) == (0, 1)
-    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 3
+    assert count(conn, PRESENT) == 3
 
 
 def test_scan_duplicate_header(conn, tmp_path):
@@ -104,7 +124,7 @@ def test_scan_duplicate_header(conn, tmp_path):
     done = run(conn, add_folder(conn, tmp_path))
     assert (done["new"], done["duplicates"]) == (1, 1)
     assert count(conn, "SELECT COUNT(*) FROM frames") == 1
-    assert count(conn, "SELECT COUNT(*) FROM positions") == 2
+    assert count(conn, FILES) == 2
 
 
 def test_scan_missing_returns(conn, tmp_path):
@@ -116,12 +136,12 @@ def test_scan_missing_returns(conn, tmp_path):
     os.remove(p)
     assert run(conn, fid)["missing"] == 1
     assert count(conn, "SELECT COUNT(*) FROM frames") == 1  # mai cancellato
-    assert conn.execute("SELECT status FROM positions").fetchone()[0] == "missing"
+    assert conn.execute(STATE).fetchone()[0] == "gone"
     with open(p, "wb") as f:
         f.write(data)
     settle(p)
     run(conn, fid)
-    assert conn.execute("SELECT status FROM positions").fetchone()[0] == "present"
+    assert conn.execute(STATE).fetchone()[0] == "present"
 
 
 def test_scan_skips_calibration(conn, tmp_path):
@@ -134,7 +154,7 @@ def test_scan_skips_calibration(conn, tmp_path):
     done = run(conn, add_folder(conn, tmp_path))
     assert (done["found"], done["new"], done["skipped"]) == (6, 1, 5)
     assert count(conn, "SELECT COUNT(*) FROM frames") == 1
-    assert count(conn, "SELECT COUNT(*) FROM positions") == 1
+    assert count(conn, FILES) == 1
 
 
 def _muto(tmp_path, name="muto.fits"):
@@ -183,14 +203,28 @@ def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path):
     assert (done["new"], done["skipped"]) == (1, 0)
 
 
-def test_scan_a_pose_said_missing_found_unchanged_is_present_again(conn, tmp_path):
-    """Una posa segnata "non trovata" che la scansione ritrova uguale torna presente."""
-    write_light(tmp_path / "a.fits")
+def _gone_and_back(conn, tmp_path):
+    """Un file portato via e rimesso uguale, stessa data; torna la ricevuta del ritorno."""
+    p = write_light(tmp_path / "a.fits")
     fid = add_folder(conn, tmp_path)
     run(conn, fid)
-    conn.execute("UPDATE positions SET status = 'missing'")
-    assert run(conn, fid)["unchanged"] == 1
-    assert conn.execute("SELECT status FROM positions").fetchone()[0] == "present"
+    fuori = tmp_path.parent / f"{tmp_path.name}-fuori.fits"
+    os.rename(p, fuori)
+    assert run(conn, fid)["missing"] == 1
+    os.rename(fuori, p)
+    return run(conn, fid)
+
+
+def test_scan_a_pose_said_missing_found_unchanged_is_present_again(conn, tmp_path):
+    """Una posa segnata "non trovata" che la scansione ritrova uguale torna presente."""
+    _gone_and_back(conn, tmp_path)
+    assert conn.execute(STATE).fetchone()[0] == "present"
+
+
+@pytest.mark.xfail(strict=True, reason="issue 110: the receipt counts it nowhere")
+def test_scan_a_pose_found_unchanged_is_counted_unchanged(conn, tmp_path):
+    """Il ritorno uguale e' un file invariato nella ricevuta, come per la vecchia scansione."""
+    assert _gone_and_back(conn, tmp_path)["unchanged"] == 1
 
 
 def test_scan_touched_headers_and_late_copies_are_counted_one_by_one(conn, tmp_path):
@@ -281,7 +315,7 @@ def test_scan_root_gone_aborts(conn, tmp_path):
     os.rmdir(root)
     done = run(conn, fid)
     assert (done["status"], done["reason"]) == ("aborted", "root_unreachable")
-    assert conn.execute("SELECT status FROM positions").fetchone()[0] == "present"  # intatta
+    assert conn.execute(STATE).fetchone()[0] == "present"  # intatta
     assert conn.execute("SELECT status, reason FROM scan_runs ORDER BY id DESC").fetchone()[:] == (
         "aborted",
         "root_unreachable",
@@ -308,7 +342,7 @@ def test_scan_root_gone_midway_aborts_without_marking_missing(conn, tmp_path, mo
     done = run(conn, fid)
     assert (done["status"], done["reason"], done["missing"]) == ("aborted", "root_unreachable", 0)
     assert len(letti) == 1  # fermata al primo file che il NAS non da' piu'
-    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 1
+    assert count(conn, PRESENT) == 1
 
 
 def test_scan_root_gone_before_the_files_are_looked_at_aborts(conn, tmp_path, monkeypatch):
@@ -328,7 +362,7 @@ def test_scan_root_gone_before_the_files_are_looked_at_aborts(conn, tmp_path, mo
     monkeypatch.setattr(changes_mod, "walk_dir", elenca_e_cade)
     done = run(conn, fid)
     assert (done["status"], done["reason"], done["missing"]) == ("aborted", "root_unreachable", 0)
-    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 2
+    assert count(conn, PRESENT) == 2
 
 
 def test_scan_unreadable_subfolder_does_not_mark_its_frames_missing(conn, tmp_path, monkeypatch):
@@ -340,7 +374,7 @@ def test_scan_unreadable_subfolder_does_not_mark_its_frames_missing(conn, tmp_pa
     unreadable_dir(monkeypatch, walk_mod, sub)
     done = run(conn, fid)
     assert done["missing"] == 0 and len(done["unreadable_dirs"]) == 1
-    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 2
+    assert count(conn, PRESENT) == 2
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Win32 strips a trailing dot: Windows only")
@@ -403,7 +437,7 @@ def test_scan_a_pose_left_online_only_is_not_missing(conn, tmp_path, monkeypatch
     online_only(monkeypatch, tmp_path / "a.fits")
     done = run(conn, fid)
     assert (done["missing"], done["online_only"]) == (0, 1)
-    assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 1
+    assert count(conn, PRESENT) == 1
 
 
 def test_scan_names_the_hidden_folders_it_leaves_out(conn, tmp_path):

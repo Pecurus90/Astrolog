@@ -17,7 +17,7 @@ from astrolog.db.connect import connect
 from astrolog.spine import solve_store as store
 from astrolog.spine import stages
 from astrolog.spine.solve import solve_frames
-from conftest import scan, write_light
+from conftest import files_gone, scan, write_light
 
 # Un esito risolto, nella forma vera di ASTAP.
 INI = """
@@ -96,8 +96,8 @@ def id_per_percorso(conn):
     """`{percorso assoluto -> frame_id}`: e' cosi' che si legge l'ordine in cui lo stadio ha
     lavorato, guardando i comandi che ha composto."""
     righe = conn.execute(
-        "SELECT p.rel_path, d.path AS root_path, p.frame_id FROM positions p"
-        " JOIN pipeline_roots d ON d.id = p.folder_id"
+        "SELECT p.rel_path, d.path AS root_path, p.frame_id FROM pipeline_files p"
+        " JOIN pipeline_roots d ON d.id = p.root_id"
     )
     return {os.path.normpath(os.path.join(root, rel)): fid for rel, root, fid in righe}
 
@@ -227,7 +227,7 @@ def test_a_cached_sky_on_an_unplugged_disc_launches_nothing(db_path, archivio_le
     conn = connect(db_path)
     corri(conn, solver(), cache=cache)
     stages.invalidate(conn, [r[0] for r in conn.execute("SELECT id FROM frames")], "solve")
-    conn.execute("UPDATE positions SET status = 'missing'")
+    files_gone(conn)
 
     run = solver()
     ricevuta = corri(conn, run, cache=cache)
@@ -413,7 +413,7 @@ def test_a_frame_whose_disc_is_unplugged_waits_for_it(db_path, archivio_letto, t
     """Il disco esterno staccato: il frame resta DA FARE e riprende quando torna. Nessuna
     chiamata al solver per un file che non c'e'."""
     conn = connect(db_path)
-    conn.execute("UPDATE positions SET status = 'missing'")
+    files_gone(conn)
     run = solver()
     ricevuta = corri(conn, run, cache=tmp_path / "cache")
 

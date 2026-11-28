@@ -59,7 +59,7 @@ def _gruppi(client):
 def _aspetta(client, nome):
     """Se quel file aspetta di sapere che file e': il segno che legge chi decide chi e' pronto."""
     sql = (
-        f"SELECT COUNT(*) FROM frames f JOIN positions p ON p.frame_id = f.id"  # noqa: S608
+        f"SELECT COUNT(*) FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"  # noqa: S608
         f" WHERE p.rel_path LIKE ? AND {WAITING_SQL}"
     )
     with db(client) as conn:
@@ -181,7 +181,10 @@ def test_the_answer_holds_for_the_files_that_arrive_later_in_that_folder(pagina,
     assert r.status_code in (200, 202), r.text
     pagina.app.state.worker.join(20.0)
     with db(pagina) as conn:
-        entrati = conn.execute("SELECT COUNT(*) FROM positions WHERE rel_path LIKE '%d_9%'")
+        entrati = conn.execute(
+            "SELECT COUNT(*) FROM pipeline_files WHERE rel_path LIKE '%d_9%'"
+            " AND frame_id IN (SELECT id FROM frames)"
+        )
         assert entrati.fetchone()[0] == 0
 
 
@@ -189,7 +192,9 @@ def _cielo(client, sotto, stato, motivo=None):
     """Cio' che il solver avrebbe detto dei frame di quella cartella: la suite non lo lancia."""
     with db(client) as conn:
         for (frame_id,) in conn.execute(
-            "SELECT frame_id FROM positions WHERE rel_path LIKE ?", (f"{sotto}/%",)
+            "SELECT frame_id FROM pipeline_files WHERE rel_path LIKE ?"
+            " AND frame_id IN (SELECT id FROM frames)",
+            (f"{sotto}/%",),
         ).fetchall():
             if stato == "done":
                 sky_solved(conn, frame_id)
@@ -224,7 +229,7 @@ def _attaccato(client, nome):
     with db(client) as conn:
         riga = conn.execute(
             "SELECT f.object_id, f.night_id, f.session_id FROM frames f"
-            " JOIN positions p ON p.frame_id = f.id WHERE p.rel_path LIKE ?",
+            " JOIN pipeline_files p ON p.frame_id = f.id WHERE p.rel_path LIKE ?",
             (f"%{nome}",),
         ).fetchone()
     return tuple(riga)
@@ -361,7 +366,10 @@ def test_a_copy_in_a_folder_called_calibration_keeps_the_hours_of_the_original(p
     shutil.copy2(tmp_path / "lib" / M51 / "a_0.fits", tmp_path / "lib" / DARK / "a_0.fits")
     _rileggi(pagina, "tutte")
     with db(pagina) as conn:
-        dove = conn.execute("SELECT COUNT(*) FROM positions WHERE rel_path LIKE '%a_0.fits'")
+        dove = conn.execute(
+            "SELECT COUNT(DISTINCT rel_path) FROM pipeline_files WHERE rel_path LIKE '%a_0.fits'"
+            " AND frame_id IN (SELECT id FROM frames)"
+        )
         assert dove.fetchone()[0] == 2
     assert None not in _attaccato(pagina, "a_0.fits")
 
@@ -373,7 +381,8 @@ def test_a_frame_already_back_in_line_is_detached_all_the_same(pagina, tmp_path)
     _foto_con_le_ore(pagina)
     with db(pagina) as conn:
         (frame_id,) = conn.execute(
-            "SELECT frame_id FROM positions WHERE rel_path LIKE '%a_0.fits'"
+            "SELECT frame_id FROM pipeline_files WHERE rel_path LIKE '%a_0.fits'"
+            " AND frame_id IN (SELECT id FROM frames)"
         ).fetchone()
         invalidate(conn, [frame_id], "normalize")
     _sposta(tmp_path, "altrove")
@@ -452,7 +461,7 @@ def _rimetti_la_prima(pagina, tmp_path):
 def _stato_del_cielo(client, nome):
     with db(client) as conn:
         return conn.execute(
-            "SELECT s.status FROM frame_stages s JOIN positions p ON p.frame_id = s.frame_id"
+            "SELECT s.status FROM frame_stages s JOIN pipeline_files p ON p.frame_id = s.frame_id"
             " WHERE p.rel_path LIKE ? AND s.stage = 'solve'",
             (f"%{nome}",),
         ).fetchone()[0]

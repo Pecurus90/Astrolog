@@ -1,5 +1,5 @@
 """User's scan is the new pipeline's, on Behind's thread (step 40.4): followed per file, closed
-with the receipt (`scan_runs`); `positions` written from `pipeline_files` for the old stages."""
+with the receipt (`scan_runs`)."""
 
 import json
 import queue
@@ -12,7 +12,6 @@ from typing import Any
 
 from ..clock import now_iso
 from ..db.connect import connect
-from ..db.transaction import transaction
 from ..pipeline.scan import MIN_AGE_S, ScanResult, Watch, scan_root
 from ..pipeline.scanner import Skip
 from ..spine.scan_store import (
@@ -42,21 +41,6 @@ _ERROR_OF = {
 _DONE = object()
 
 # SQL out of the functions: mutmut upper-cases a literal in a function, an equivalent mutant
-_POSITIONS_SEEN = (
-    "INSERT INTO positions (frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
-    " SELECT pf.frame_id, pf.root_id, pf.rel_path, pf.size, pf.mtime_ns / 1e9, 'present', ?"
-    " FROM pipeline_files AS pf JOIN frames AS f ON f.id = pf.frame_id"
-    " WHERE pf.root_id = ? AND pf.state = 'present' AND true"  # upsert needs WHERE
-    " ON CONFLICT (folder_id, rel_path) DO UPDATE SET frame_id = excluded.frame_id,"
-    " filesize = excluded.filesize, mtime = excluded.mtime, status = 'present',"
-    " seen_at = excluded.seen_at"
-)
-_POSITIONS_MISSING = (
-    "UPDATE positions SET status = 'missing' WHERE folder_id = ? AND status = 'present'"
-    " AND NOT EXISTS (SELECT 1 FROM pipeline_files AS pf"
-    " WHERE pf.root_id = positions.folder_id AND pf.rel_path = positions.rel_path"
-    " AND pf.state = 'present' AND pf.frame_id = positions.frame_id)"
-)
 _LEFT_OUT = (
     "SELECT rel_path, skip_reason FROM pipeline_files WHERE root_id = ? AND state = 'present'"
     " AND skip_reason IS NOT NULL ORDER BY rel_path"
@@ -158,16 +142,14 @@ def scan_once(
 
 
 def close(conn: sqlite3.Connection, folder_id: int, run_id: int, result: ScanResult) -> Event:
-    """Positions, then the receipt: the event the worker stops on."""
+    """The receipt: the event the worker stops on."""
     changes = result.changes
     status, reason = ScanStatus.OK, None
     if not changes.reachable or result.root_lost:
         status, reason = ScanStatus.ABORTED, ScanReason.ROOT_UNREACHABLE
     elif not result.finished:
         status, reason = ScanStatus.STOPPED, ScanReason.STOP_REQUESTED
-    with transaction(conn):
-        _positions(conn, folder_id, mark_missing=status == ScanStatus.OK)
-        counts, skipped, errors = _counts(conn, result)
+    counts, skipped, errors = _counts(conn, result)
     left_out: dict[str, list[Any]] = {
         "unreadable_dirs": [_shown(d) for d in changes.unreachable],
         "hidden_dirs": [_shown(d) for d in changes.hidden],
@@ -187,13 +169,11 @@ def _close_closed(
     if isinstance(outcome, ScanResult):
         close(conn, folder_id, run_id, outcome)
     else:
-        _close_stopped(conn, folder_id, run_id)
+        _close_stopped(conn, run_id)
 
 
-def _close_stopped(conn: sqlite3.Connection, folder_id: int, run_id: int) -> None:
+def _close_stopped(conn: sqlite3.Connection, run_id: int) -> None:
     conn.rollback()
-    with transaction(conn):
-        _positions(conn, folder_id, mark_missing=False)
     _close_empty(conn, run_id, ScanStatus.STOPPED, ScanReason.STOP_REQUESTED)
 
 
@@ -208,14 +188,6 @@ def _close_empty(
     conn: sqlite3.Connection, run_id: int, status: ScanStatus, reason: ScanReason
 ) -> None:
     finish_run(conn, run_id, status, reason, dict.fromkeys(COUNTS, 0), {}, [], now_iso())
-
-
-def _positions(conn: sqlite3.Connection, folder_id: int, *, mark_missing: bool) -> None:
-    """The archive's files of this folder as the old stages read them, until they read
-    `pipeline_files` (step 40.4, third commit)."""
-    conn.execute(_POSITIONS_SEEN, (now_iso(), folder_id))
-    if mark_missing:
-        conn.execute(_POSITIONS_MISSING, (folder_id,))
 
 
 def _counts(

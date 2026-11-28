@@ -80,7 +80,7 @@ def _setup_del_frame(client, nome):
     with db(client) as conn:
         riga = conn.execute(
             "SELECT o.name AS optics, c.name AS camera, g.focal_mm, g.id FROM frames f"
-            " JOIN positions p ON p.frame_id = f.id LEFT JOIN rigs g ON g.id = f.rig_id"
+            " JOIN pipeline_files p ON p.frame_id = f.id LEFT JOIN rigs g ON g.id = f.rig_id"
             " LEFT JOIN instruments o ON o.id = g.optics_id"
             " LEFT JOIN instruments c ON c.id = g.camera_id WHERE p.rel_path LIKE ?",
             (f"%{nome}",),
@@ -96,7 +96,7 @@ def _senza_filtro(client, sotto):
     """Quanti frame di quella cartella che non dicono la camera sono ancora senza filtro."""
     with db(client) as conn:
         return conn.execute(
-            "SELECT COUNT(*) FROM frames f JOIN positions p ON p.frame_id = f.id"
+            "SELECT COUNT(*) FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
             " WHERE f.filter_id IS NULL AND f.instrument_raw IS NULL AND p.rel_path LIKE ?",
             (f"{sotto}%",),
         ).fetchone()[0]
@@ -141,7 +141,7 @@ def test_an_object_with_only_copies_in_a_group_is_not_something_imaged_there(pag
         )
         altro = conn.execute("SELECT id FROM objects WHERE catalog_slug = 'ngc-7000'").fetchone()[0]
         ids = [r[0] for r in conn.execute(
-            "SELECT p.frame_id FROM positions p WHERE p.rel_path LIKE ? ORDER BY p.rel_path",
+            "SELECT p.frame_id FROM pipeline_files p WHERE p.rel_path LIKE ? ORDER BY p.rel_path",
             (f"{M51}/a_%",),
         )]  # fmt: skip
         conn.execute(
@@ -674,7 +674,7 @@ def test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses(ottiche)
         )
         with db(ottiche) as conn:
             pose = conn.execute(
-                "SELECT f.mount_id FROM frames f JOIN positions p ON p.frame_id = f.id"
+                "SELECT f.mount_id FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
                 " WHERE p.rel_path LIKE '%m_0.fits'"
             ).fetchone()
         assert pose["mount_id"] == montatura.json()["id"]

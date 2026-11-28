@@ -485,8 +485,8 @@ def _frames_per_folder(client):
     with connect(client.app.state.db_path) as conn:
         return dict(
             conn.execute(
-                "SELECT p.folder_id, COUNT(DISTINCT f.id) FROM frames f"
-                " JOIN positions p ON p.frame_id = f.id GROUP BY p.folder_id"
+                "SELECT p.root_id, COUNT(DISTINCT f.id) FROM frames f"
+                " JOIN pipeline_files p ON p.frame_id = f.id GROUP BY p.root_id"
             )
         )
 

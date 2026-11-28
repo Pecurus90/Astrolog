@@ -46,7 +46,8 @@ PROBE_SECONDS: Final = 10  # [C Nielsen 1993: 10 s attention limit]
 
 _SELECT = (
     "SELECT f.id, f.name, f.path AS root_path, f.created_at,"
-    " (SELECT COUNT(*) FROM positions p WHERE p.folder_id = f.id AND p.status = 'present')"
+    " (SELECT COUNT(*) FROM pipeline_files p WHERE p.root_id = f.id AND p.state = 'present'"
+    "  AND p.frame_id IN (SELECT id FROM frames))"
     " AS frames FROM pipeline_roots f"
 )
 
@@ -247,7 +248,7 @@ def create_folder(
     body: FolderCreate, request: Request, conn: sqlite3.Connection = Depends(get_db)
 ) -> FolderOut:
     """Registers a folder; registering a retired one again reactivates it. One holding registered
-    folders replaces them only when `replaces` names exactly those: their frames, positions and
+    folders replaces them only when `replaces` names exactly those: their frames, files and
     answers pass to it (`folder_move.absorb`), so a scan reads only the files outside them.
 
     409 `folder_exists` with its `folder_id` if it is already active; 409 `folder_inside` with the
@@ -270,7 +271,7 @@ def create_folder(
             )
         if folder_id in before:
             roots.absorb(conn, folder_id, now)
-        folder_move.absorb(conn, folder_id)
+        folder_move.absorb(conn)
     if folder_id in before:
         _move(conn, request.app.state, folder_id, None)
     row = conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone()
@@ -381,7 +382,9 @@ def retire_folder(
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "folder_not_found"})
     kept = conn.execute(
-        "SELECT COUNT(*) FROM positions WHERE folder_id = ?", (folder_id,)
+        "SELECT COUNT(DISTINCT rel_path) FROM pipeline_files"
+        " WHERE root_id = ? AND frame_id IN (SELECT id FROM frames)",
+        (folder_id,),
     ).fetchone()[0]
     if row["retired_at"] is not None:
         return RetireOut(folder_id=folder_id, retired=False, kept_frames=kept)

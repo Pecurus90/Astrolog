@@ -1,5 +1,5 @@
-"""A night's measures per object and filter; until step 40 each spine frame takes its own file's,
-same folder and path (ADR 0045). SQL on both worlds, imports neither."""
+"""A night's measures per object and filter; until step 40 each spine frame takes those of the
+pipeline frame with its id, while a file of it is present (ADR 0045). SQL on both, imports none."""
 
 import json
 import sqlite3
@@ -28,16 +28,16 @@ LEFT JOIN pipeline_sky k ON k.frame_id = b.pipeline_frame_id
 LEFT JOIN pipeline_sqm q ON q.frame_id = b.pipeline_frame_id"""
 NEVER = ("not_supported", "rewritten", "broken")  # read, no frame, never measured
 
-# Per present position, present pipeline file at same path: its frame, or why never one.
+# Per spine frame with a present file (same id, step 40.4): its pipeline frame, or why never one.
 # Unreadable, incomplete: tried again, no row. Damaged keeps frame (scan.KEEPS_FRAME), lends none.
 _PAIRS = f"""
-SELECT po.frame_id,
+SELECT pf.frame_id,
        MIN(CASE WHEN pf.skip_reason IS NULL OR pf.skip_reason NOT IN {NEVER}
            THEN pf.frame_id END) AS pipeline_frame_id,
        MIN(CASE WHEN pf.skip_reason IN {NEVER} THEN pf.skip_reason END) AS never
-FROM positions po JOIN pipeline_files pf ON pf.rel_path = po.rel_path AND pf.state = 'present'
-WHERE po.status = 'present' AND pf.root_id = po.folder_id
-GROUP BY po.frame_id
+FROM pipeline_files pf
+WHERE pf.state = 'present' AND pf.frame_id IN (SELECT id FROM frames)
+GROUP BY pf.frame_id
 HAVING pipeline_frame_id IS NOT NULL OR never IS NOT NULL
 """  # noqa: S608 - our constants
 

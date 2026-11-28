@@ -62,7 +62,7 @@ def _chiave(client, sotto):
     """La chiave del gruppo dei frame senza nome di quella cartella: qui ne fa uno solo."""
     with db(client) as conn:
         (frame_id,) = conn.execute(
-            "SELECT f.id FROM frames f JOIN positions p ON p.frame_id = f.id"
+            "SELECT f.id FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
             " WHERE p.rel_path LIKE ? AND f.object_raw IS NULL ORDER BY f.id",
             (f"{sotto}/%",),
         ).fetchone()
@@ -71,7 +71,7 @@ def _chiave(client, sotto):
 
 def _frame(conn, sotto, nome):
     return conn.execute(
-        "SELECT p.frame_id FROM positions p WHERE p.rel_path = ?", (f"{sotto}/{nome}",)
+        "SELECT p.frame_id FROM pipeline_files p WHERE p.rel_path = ?", (f"{sotto}/{nome}",)
     ).fetchone()[0]
 
 
@@ -100,7 +100,7 @@ def _oggetti_dei_file(client, sotto):
     with db(client) as conn:
         righe = conn.execute(
             "SELECT n.name, s.status, s.reason FROM frames f"
-            " JOIN positions p ON p.frame_id = f.id"
+            " JOIN pipeline_files p ON p.frame_id = f.id"
             " JOIN frame_stages s ON s.frame_id = f.id AND s.stage = 'identify'"
             " LEFT JOIN object_names n ON n.object_id = f.object_id AND n.is_primary = 1"
             " WHERE p.rel_path LIKE ? AND f.copy_of IS NULL AND f.object_raw IS NULL",

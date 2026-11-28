@@ -16,7 +16,7 @@ from astrolog.spine import declarations as decl
 from astrolog.spine import frame_folder, typeless, typeless_answer, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import STAGES, count_pending, invalidate, mark_pending, ready, set_status
-from conftest import add_folder, sky_solved
+from conftest import add_folder, files_gone, put_file, sky_solved
 
 CHIAVI = [
     ("il file sta nella radice", "D:/Astro", "", "D:/Astro"),
@@ -39,11 +39,7 @@ def _frame(conn, folder_id, rel_path, *, image_type="unknown", copy_of=None,
         " VALUES(?, ?, ?, '[]', 'ora')",
         (f"{folder_id}:{rel_path}", image_type, copy_of),
     ).lastrowid
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, ?, 1, 1.0, 'ora')",
-        (frame_id, folder_id, rel_path),
-    )
+    put_file(conn, frame_id, folder_id, rel_path)
     mark_pending(conn, frame_id, "ora")
     if normalized:  # l'oggetto aspetta anche la normalizzazione
         set_status(conn, frame_id, "normalize", "done")
@@ -98,11 +94,7 @@ def test_the_frames_of_a_folder_are_those_whose_first_live_position_is_there(con
     _frame(conn, radice, "dark2/c.fits")
     in_radice = [_frame(conn, radice, "dark.fits"), *(_frame(conn, radice, u) for u in ultimi)]
     altrove = _frame(conn, add_folder(conn, "C:/Prima"), "e.fits")
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, 'dark/e.fits', 1, 1.0, 'ora')",
-        (altrove, radice),
-    )
+    put_file(conn, altrove, radice, "dark/e.fits")
 
     def pose(sub):
         return sorted(
@@ -120,7 +112,7 @@ def test_the_frames_of_a_folder_are_looked_up_from_the_folder(conn):
         r[3]
         for r in conn.execute("EXPLAIN QUERY PLAN " + frame_folder._IN_FOLDER, ("", "", "", ""))
     )
-    assert "SEARCH p USING INDEX sqlite_autoindex_positions_1 (folder_id=? AND rel_path>?" in piano
+    assert "SEARCH p USING INDEX pipeline_files_path (root_id=? AND rel_path>?" in piano
     assert "SCAN" not in piano, piano
 
 
@@ -367,7 +359,7 @@ def test_a_folder_answered_stays_on_the_page_after_its_frames_left(conn):
     radice = add_folder(conn, "D:/Astro")
     frame_id = _frame(conn, radice, "dark/a.fits")
     typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
-    conn.execute("UPDATE positions SET status = 'missing' WHERE frame_id = ?", (frame_id,))
+    files_gone(conn, "frame_id = ?", (frame_id,))
     righe = _cartelle(conn)
     assert [(g["key"], g["frames"], g["answer"]) for g in righe] == [
         ("D:/Astro/dark", 0, TypeAnswer.CALIBRATION)

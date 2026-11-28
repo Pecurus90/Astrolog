@@ -84,7 +84,8 @@ def _cielo(conn, nome, ra, dec):
     """Il cielo che il solver avrebbe misurato su quel frame. Si scrive la riga e si rifa'
     l'identificazione, come fa il giro vero quando il solve va a buon fine."""
     frame_id = conn.execute(
-        "SELECT f.id FROM frames f JOIN positions p ON p.frame_id = f.id WHERE p.rel_path LIKE ?",
+        "SELECT f.id FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
+        " WHERE p.rel_path LIKE ?",
         (f"%{nome}",),
     ).fetchone()["id"]
     conn.execute(
@@ -148,7 +149,7 @@ def _chiavi(client):
             r["rel_path"].rsplit("/", 1)[-1]: r["mosaic_key"]
             for r in conn.execute(
                 "SELECT p.rel_path, f.mosaic_key FROM frames f"
-                " JOIN positions p ON p.frame_id = f.id"
+                " JOIN pipeline_files p ON p.frame_id = f.id"
             )
         }
 

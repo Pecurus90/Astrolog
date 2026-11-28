@@ -10,10 +10,10 @@ from ..db import idlist
 # pixel: your word over the files', as `gear.camera_specs` reads it.
 _FRAME = (
     "SELECT f.*,"
-    " (SELECT d.path FROM positions p JOIN pipeline_roots d ON d.id = p.folder_id"
-    "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS root_path,"
-    " (SELECT p.rel_path FROM positions p"
-    "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS rel_path,"
+    " (SELECT d.path FROM pipeline_files p JOIN pipeline_roots d ON d.id = p.root_id"
+    "   WHERE p.frame_id = f.id AND p.state = 'present' ORDER BY p.id LIMIT 1) AS root_path,"
+    " (SELECT p.rel_path FROM pipeline_files p"
+    "   WHERE p.frame_id = f.id AND p.state = 'present' ORDER BY p.id LIMIT 1) AS rel_path,"
     " (SELECT COALESCE((SELECT d.value FROM declarations d WHERE d.entity_type = 'instrument'"
     "   AND d.entity_key = i.kind || '|' || i.name AND d.field = 'pixel_size_um'),"
     "   i.pixel_size_um) FROM rigs r JOIN instruments i ON i.id = r.camera_id"
@@ -24,8 +24,8 @@ _FRAME = (
 
 
 def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
-    """With its first present position; all `missing` gives a `None` path: a detached disk, not
-    an error."""
+    """With its first present file; all `gone` gives a `None` path: a detached disk, not an
+    error."""
     return conn.execute(_FRAME, (frame_id,)).fetchone()
 
 

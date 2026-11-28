@@ -275,7 +275,7 @@ CREATE TABLE frames (
   local_tz       TEXT,                             -- scan
   -- L'istante da cui viene la notte: `DATE-OBS`, o senza l'ora del file quando il frame e' entrato.
   -- Chi riscrive la notte quando casa cambia fuso parte da qui, perche' l'ora del file cambia
-  -- ogni volta che lo si tocca (`positions.mtime`).
+  -- ogni volta che lo si tocca (`pipeline_files.mtime_ns`).
   night_instant  TEXT,                             -- scan
   exposure_s     REAL,
   gain           REAL,
@@ -412,25 +412,6 @@ CREATE INDEX frames_image_type ON frames (image_type);
 -- scansione lo chiede ogni secondo e mezzo mentre la corsa gira.
 CREATE INDEX frames_asks_type ON frames (asks_type) WHERE asks_type = 1;
 
--- Dove sta un frame su disco: N posizioni per frame (stesso file in due cartelle).
--- `filesize` e `mtime` sono il pre-controllo della scansione incrementale.
-CREATE TABLE positions (
-  id         INTEGER PRIMARY KEY,
-  frame_id   INTEGER NOT NULL REFERENCES frames (id) ON DELETE CASCADE,
-  folder_id  INTEGER NOT NULL REFERENCES pipeline_roots (id),
-  rel_path   TEXT NOT NULL,
-  filesize   INTEGER NOT NULL,
-  mtime      REAL NOT NULL,
-  status     TEXT NOT NULL DEFAULT 'present' CHECK (status IN ('present', 'missing')),
-  seen_at    TEXT NOT NULL,
-  -- la sottocartella del file, '' alla radice: con `root_key` fa la chiave della cartella
-  rel_dir    TEXT GENERATED ALWAYS AS
-    (trim(rtrim(rel_path, replace(rel_path, '/', '')), '/')) VIRTUAL,
-  UNIQUE (folder_id, rel_path)
-) STRICT;
-CREATE INDEX positions_frame ON positions (frame_id);
-CREATE INDEX positions_dir ON positions (folder_id, rel_dir);
-
 -- Lo stato di ogni frame in ogni stadio: la spina e' un grafo, non una linea, e gli archi
 -- (chi dipende da chi) stanno in `spine/stages.py`. Ogni stadio lavora su cio' che per lui
 -- e' `pending`; la ripresa e' "cio' che manca", mai "dal file N". Non esiste `running`:
@@ -503,25 +484,25 @@ CREATE TABLE frame_wcs (
   solved_at       TEXT NOT NULL
 ) STRICT;
 
--- La regola di `frames.asks_type`: un frame senza tipo aspetta, se la cartella della sua prima
--- posizione viva non ha risposto "light", finche' il cielo non la risolve; "calibration" la ferma
+-- La regola di `frames.asks_type`: un frame senza tipo aspetta, se la cartella del suo primo
+-- file presente in una cartella viva non ha risposto "light", finche' il cielo non la risolve; "calibration" la ferma
 -- comunque. La chiave della cartella e' `spine/frame_folder.py` (`KEY_OF_FRAME`), le parole sono
 -- `spine/declarations.py`: `tests/test_asks_type.py` confronta il segno con la regola composta da
 -- quelle costanti, dopo ogni strada che cambia un ingresso.
--- La chiave della cartella di ogni posizione, scritta una volta: la legge la regola, e i trigger
+-- La chiave della cartella di ogni file, scritta una volta: la legge la regola, e i trigger
 -- delle risposte ci trovano i frame della cartella risposta.
-CREATE VIEW position_folders AS
-SELECT p.id AS position_id, p.frame_id,
+CREATE VIEW file_folders AS
+SELECT p.id AS file_id, p.frame_id,
   d.root_key || CASE WHEN p.rel_dir = '' THEN '' ELSE '/' || p.rel_dir END AS folder_key
-FROM positions p JOIN pipeline_roots d ON d.id = p.folder_id;
+FROM pipeline_files p JOIN pipeline_roots d ON d.id = p.root_id;
 
 CREATE VIEW frame_waits AS
 SELECT f.id AS frame_id, f.image_type = 'unknown' AND CASE (
   SELECT dc.value FROM declarations dc WHERE dc.entity_type = 'folder'
     AND dc.field = 'image_type' AND dc.entity_key = (
-      SELECT pf.folder_key FROM position_folders pf WHERE pf.position_id = (
-        SELECT p2.id FROM positions p2 JOIN pipeline_roots d2 ON d2.id = p2.folder_id
-        WHERE p2.frame_id = f.id AND p2.status = 'present' AND d2.retired_at IS NULL
+      SELECT pf.folder_key FROM file_folders pf WHERE pf.file_id = (
+        SELECT p2.id FROM pipeline_files p2 JOIN pipeline_roots d2 ON d2.id = p2.root_id
+        WHERE p2.frame_id = f.id AND p2.state = 'present' AND d2.retired_at IS NULL
         ORDER BY p2.id LIMIT 1)))
   WHEN 'light' THEN 0 WHEN 'calibration' THEN 1
   ELSE NOT (EXISTS (SELECT 1 FROM frame_stages sv WHERE sv.frame_id = f.id AND sv.stage = 'solve'
@@ -531,25 +512,13 @@ FROM frames f;
 
 -- Il segno lo riscrive SQLite a ogni scrittura di un ingresso della regola, non chi scrive: un
 -- segno rimasto a 0 manda un dark senza tipo all'oggetto, e diventa ore. Una risposta riscrive i
--- frame con una posizione nella sua cartella; una cartella registrata tutti quelli senza tipo.
+-- frame con un file nella sua cartella; una cartella registrata tutti quelli senza tipo.
 CREATE TRIGGER asks_type_frame_in AFTER INSERT ON frames BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.id)
   WHERE id = NEW.id; END;
 CREATE TRIGGER asks_type_frame_type AFTER UPDATE OF image_type ON frames BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.id)
   WHERE id = NEW.id; END;
-CREATE TRIGGER asks_type_position_in AFTER INSERT ON positions BEGIN
-  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.frame_id)
-  WHERE id = NEW.frame_id; END;
--- `seen_at` cambia a ogni scansione e non tocca la regola
-CREATE TRIGGER asks_type_position_moved AFTER UPDATE ON positions
-  WHEN NEW.frame_id IS NOT OLD.frame_id OR NEW.folder_id IS NOT OLD.folder_id
-    OR NEW.rel_path IS NOT OLD.rel_path OR NEW.status IS NOT OLD.status BEGIN
-  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
-  WHERE id IN (NEW.frame_id, OLD.frame_id); END;
-CREATE TRIGGER asks_type_position_out AFTER DELETE ON positions BEGIN
-  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = OLD.frame_id)
-  WHERE id = OLD.frame_id; END;
 CREATE TRIGGER asks_type_solve_in AFTER INSERT ON frame_stages WHEN NEW.stage = 'solve' BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.frame_id)
   WHERE id = NEW.frame_id; END;
@@ -567,7 +536,7 @@ CREATE TRIGGER asks_type_answer_in AFTER INSERT ON declarations
   WHEN NEW.entity_type = 'folder' AND NEW.field = 'image_type' BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'
-    AND id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
+    AND id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN pipeline_files p ON p.root_id = d.id
       AND p.rel_dir = substr(NEW.entity_key, length(d.root_key) + 2)
     WHERE NEW.entity_key = d.root_key OR substr(NEW.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/'); END;
 CREATE TRIGGER asks_type_answer_moved AFTER UPDATE ON declarations
@@ -575,17 +544,17 @@ CREATE TRIGGER asks_type_answer_moved AFTER UPDATE ON declarations
     OR (OLD.entity_type = 'folder' AND OLD.field = 'image_type') BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'
-    AND (id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
+    AND (id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN pipeline_files p ON p.root_id = d.id
       AND p.rel_dir = substr(NEW.entity_key, length(d.root_key) + 2)
     WHERE NEW.entity_key = d.root_key OR substr(NEW.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/')
-      OR id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
+      OR id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN pipeline_files p ON p.root_id = d.id
       AND p.rel_dir = substr(OLD.entity_key, length(d.root_key) + 2)
     WHERE OLD.entity_key = d.root_key OR substr(OLD.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/')); END;
 CREATE TRIGGER asks_type_answer_out AFTER DELETE ON declarations
   WHEN OLD.entity_type = 'folder' AND OLD.field = 'image_type' BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'
-    AND id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN positions p ON p.folder_id = d.id
+    AND id IN (SELECT p.frame_id FROM pipeline_roots d CROSS JOIN pipeline_files p ON p.root_id = d.id
       AND p.rel_dir = substr(OLD.entity_key, length(d.root_key) + 2)
     WHERE OLD.entity_key = d.root_key OR substr(OLD.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/'); END;
 CREATE TRIGGER asks_type_folder_moved AFTER UPDATE OF path, retired_at ON pipeline_roots BEGIN
@@ -1068,6 +1037,9 @@ CREATE TABLE pipeline_files (
   -- arrivato dopo l'ultima volta che lo sparito era presente: spostato, anche dopo fermate
   arrived_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),
   gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire
+  -- la sottocartella del file, '' alla radice: con `root_key` fa la chiave della cartella
+  rel_dir TEXT GENERATED ALWAYS AS
+    (trim(rtrim(rel_path, replace(rel_path, '/', '')), '/')) VIRTUAL,
   -- passeggeri e rovinati tengono il frame letto prima: i primi finche' si rilegge, i rovinati
   -- finche' il file cambia
   CHECK (
@@ -1083,6 +1055,21 @@ CREATE INDEX pipeline_files_path ON pipeline_files (root_id, rel_path);
 CREATE INDEX pipeline_files_frame ON pipeline_files (root_id, frame_id);  -- spostati e doppioni
 -- il file di un frame nella serie delle misure: senza, una scansione intera per frame
 CREATE INDEX pipeline_files_of_frame ON pipeline_files (frame_id);
+-- i file di una cartella risposta: i trigger delle risposte e `spine/frame_folder.py`
+CREATE INDEX pipeline_files_dir ON pipeline_files (root_id, rel_dir);
+-- Il segno `frames.asks_type` (regola: `frame_waits`) quando cambia il file di un frame; la
+-- scansione riscrive `seen_scan_id` a ogni giro, e non tocca la regola.
+CREATE TRIGGER asks_type_file_in AFTER INSERT ON pipeline_files BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.frame_id)
+  WHERE id = NEW.frame_id; END;
+CREATE TRIGGER asks_type_file_moved AFTER UPDATE ON pipeline_files
+  WHEN NEW.frame_id IS NOT OLD.frame_id OR NEW.root_id IS NOT OLD.root_id
+    OR NEW.rel_path IS NOT OLD.rel_path OR NEW.state IS NOT OLD.state BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
+  WHERE id IN (NEW.frame_id, OLD.frame_id); END;
+CREATE TRIGGER asks_type_file_out AFTER DELETE ON pipeline_files BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = OLD.frame_id)
+  WHERE id = OLD.frame_id; END;
 
 -- RILEVATO. Spostati trovati da una scansione, scritti con lei: lo schermo legge, mai ricalcola.
 CREATE TABLE pipeline_moves (
@@ -1461,8 +1448,8 @@ CREATE TABLE site_sky_measures (
   CHECK (first_night <= last_night)
 ) STRICT;
 
--- RICAVATO. Ponte fino al passo 40 (ADR 0045): frame della spina e della nuova, per cartella e
--- percorso del file. Riscritto intero a fine giro della nuova e a fine `group`.
+-- RICAVATO. Ponte fino al passo 40 (ADR 0045): frame della spina e della nuova, stesso id, con un
+-- file presente. Riscritto intero a fine giro della nuova e a fine `group`.
 CREATE TABLE night_measure_frames (
   frame_id          INTEGER PRIMARY KEY REFERENCES frames (id) ON DELETE CASCADE,
   pipeline_frame_id INTEGER REFERENCES pipeline_frames (id) ON DELETE CASCADE,

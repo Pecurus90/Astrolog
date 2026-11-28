@@ -68,7 +68,7 @@ def _metti_in_scena(client):
 def _pose(conn, nomi, sql, *prima):
     for nome in nomi:
         (frame_id,) = conn.execute(
-            "SELECT p.frame_id FROM positions p WHERE p.rel_path = ?", (f"{nome}.fits",)
+            "SELECT p.frame_id FROM pipeline_files p WHERE p.rel_path = ?", (f"{nome}.fits",)
         ).fetchone()
         conn.execute(sql, (*prima, frame_id))
 

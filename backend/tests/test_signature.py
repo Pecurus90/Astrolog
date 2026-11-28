@@ -12,7 +12,7 @@ from astrolog.clock import night_date
 from astrolog.spine import declarations as decl
 from astrolog.spine import header_asks, signature
 from astrolog.spine import signature_page as cards
-from conftest import add_folder
+from conftest import add_folder, files_gone, put_file
 
 CAM, OTT = "ZWO ASI2600MM", "Newton 200/800"
 NOTTE = "2026-03-14T21:00:00"  # la notte del 14
@@ -49,11 +49,7 @@ def _posa(conn, folder_id, rel_path, *, instrument=None, telescope=None, focal=N
             giudizi["names_optics"],
         ),
     ).lastrowid
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, ?, 1, 1.0, 'ora')",
-        (frame_id, folder_id, rel_path),
-    )
+    put_file(conn, frame_id, folder_id, rel_path)
     return frame_id
 
 
@@ -198,11 +194,7 @@ def test_a_pose_that_lives_in_two_folders_counts_once(conn):
     prima = add_folder(conn, "/vol/prima")
     dopo = add_folder(conn, "/vol/dopo")
     frame_id = _posa(conn, prima, "notte/a.fits")
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, 'notte/a.fits', 1, 1.0, 'ora')",
-        (frame_id, dopo),
-    )
+    put_file(conn, frame_id, dopo, "notte/a.fits")
     assert [g["frames"] for g in cards.by_signature(conn)] == [1]
 
 
@@ -214,13 +206,9 @@ def test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything(conn):
     viva = add_folder(conn, "/vol/viva")
     _posa(conn, ritirata, "notte/a.fits")
     sparita = _posa(conn, viva, "notte/b.fits")
-    conn.execute("UPDATE positions SET status = 'missing' WHERE frame_id = ?", (sparita,))
+    files_gone(conn, "frame_id = ?", (sparita,))
     doppia = _posa(conn, ritirata, "notte/c.fits")
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, 'altra/c.fits', 1, 1.0, 'ora')",
-        (doppia, viva),
-    )
+    put_file(conn, doppia, viva, "altra/c.fits")
     assert [g["frames"] for g in cards.by_signature(conn)] == [1]
 
 

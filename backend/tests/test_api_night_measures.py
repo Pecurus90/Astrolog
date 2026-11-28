@@ -111,8 +111,11 @@ def test_a_frame_never_measured_is_counted_and_not_shown(conn, db_path, world) -
     without a word (Marco, 8/11: the README says which programs are read)."""
     world.shot(2.0, start=T1)
     spine = world.frame()
-    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
-    world.skipped(rel, "not_supported")
+    rel = conn.execute(
+        "SELECT rel_path FROM pipeline_files WHERE frame_id = ?", (spine,)
+    ).fetchone()[0]
+    world.file(rel)  # a program not read has no frame at all (ADR 0029): a broken file has one
+    conn.execute("UPDATE pipeline_files SET skip_reason = 'broken' WHERE rel_path = ?", (rel,))
     night_measures.rebuild(conn)
     conn.commit()
     body = _get(db_path, world.night).json()
@@ -122,7 +125,9 @@ def test_a_frame_never_measured_is_counted_and_not_shown(conn, db_path, world) -
 
 def test_a_file_unreadable_now_waits_like_one_not_measured_yet(conn, db_path, world) -> None:
     spine = world.frame()
-    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
+    rel = conn.execute(
+        "SELECT rel_path FROM pipeline_files WHERE frame_id = ?", (spine,)
+    ).fetchone()[0]
     world.file(rel)
     conn.execute(
         "INSERT INTO pipeline_measures (frame_id, file_id, outcome, measured_at)"

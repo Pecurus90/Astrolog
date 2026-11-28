@@ -30,7 +30,7 @@ def _notti(client):
     with db(client) as conn:
         righe = conn.execute(
             "SELECT p.rel_path, f.local_night, f.local_tz FROM frames f"
-            " JOIN positions p ON p.frame_id = f.id"
+            " JOIN pipeline_files p ON p.frame_id = f.id"
         ).fetchall()
     return {r["rel_path"].split("/")[-1]: (r["local_night"], r["local_tz"]) for r in righe}
 

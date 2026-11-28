@@ -873,3 +873,4 @@ test_a_millisecond_truncated_mtime_is_still_unchanged - passo 40.4: la nuova con
 test_the_reader_extracts_exactly_what_gets_written - passo 40.4: le colonne le scrive pipeline/frame_row.py dalla scheda, non piu' header_fields
 test_a_reading_that_breaks_before_it_begins_leaves_no_open_receipt - passo 40.4: fingeva scan_store.folder_root, che api/scan.py importa per nome, e non provava nulla; la lettura che si rompe la prova test_scan_door
 test_the_end_of_the_normalization_writes_the_folders_without_its_copies - passo 40.4: la copia calibrata non entra (Marco 26/11/2026); diventato test_the_end_of_the_normalization_writes_the_folders
+test_a_file_the_pipeline_skips_for_good_is_not_waiting - passo 40.4 C3: un file non supportato non ha frame (CHECK di pipeline_files, ADR 0029); il caso rimasto lo prova test_a_file_damaged_after_its_read_keeps_its_frame_and_is_not_waiting

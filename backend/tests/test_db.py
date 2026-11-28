@@ -20,7 +20,9 @@ def test_database_is_created_from_the_single_schema(tmp_path):
     create_database(p)
     c = connect(p)
     tables = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    assert {"frames", "positions", "pipeline_roots", "frame_stages", "scan_runs", "sites"} <= tables
+    assert {
+        "frames", "pipeline_files", "pipeline_roots", "frame_stages", "scan_runs", "sites"
+    } <= tables  # fmt: skip
     c.close()
 
 
@@ -57,7 +59,7 @@ def test_create_refuses_to_overwrite_and_ensure_is_idempotent(tmp_path):
     "change",
     [
         "ALTER TABLE scan_runs ADD COLUMN gone_since INTEGER",
-        "DROP VIEW position_folders",
+        "DROP VIEW file_folders",
         "CREATE TABLE left_over (x INTEGER)",
     ],
 )
@@ -108,8 +110,8 @@ def test_connection_pragmas(tmp_path):
 def test_foreign_keys_are_enforced(conn):
     with pytest.raises(Exception):  # noqa: B017 - qualunque violazione di FK
         conn.execute(
-            "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-            " VALUES(999, 999, 'x', 1, 1.0, 'now')"
+            "INSERT INTO pipeline_files(root_id, rel_path, size, mtime_ns, state, seen_scan_id,"
+            " arrived_scan_id) VALUES(999, 'x', 1, 1, 'present', 999, 999)"
         )
 
 

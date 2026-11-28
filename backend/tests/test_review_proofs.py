@@ -21,7 +21,7 @@ ASKAR = "Askar 103Apo"
 def _frame_di(client, nome):
     with db(client) as conn:
         return conn.execute(
-            "SELECT frame_id FROM positions WHERE rel_path LIKE ?", (f"%{nome}",)
+            "SELECT frame_id FROM pipeline_files WHERE rel_path LIKE ?", (f"%{nome}",)
         ).fetchone()[0]
 
 

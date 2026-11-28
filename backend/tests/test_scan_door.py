@@ -133,7 +133,13 @@ def test_a_reading_stopped_then_broken_says_stopped_and_keeps_its_poses(conn, db
     riga = conn.execute(_RUN, (corsa,)).fetchone()
     assert (riga["status"], riga["reason"]) == ("stopped", "stop_requested")
     assert [riga[k] for k in COUNTS] == [0] * len(COUNTS)
-    pose = dict(conn.execute("SELECT rel_path, status FROM positions WHERE folder_id = ?", (fid,)))
+    pose = dict(
+        conn.execute(
+            "SELECT rel_path, state FROM pipeline_files WHERE root_id = ?"
+            " AND frame_id IN (SELECT id FROM frames)",
+            (fid,),
+        )
+    )
     assert pose == {"a.fits": "present", "b.fits": "present", "c.fits": "present"}
 
 
@@ -149,7 +155,9 @@ def test_a_reading_stopped_keeps_the_poses_of_its_folder(conn, db_path, tmp_path
     assert conn.execute("SELECT status FROM scan_runs WHERE id = ?", (corsa,)).fetchone()[0] == (
         "stopped"
     )
-    righe = conn.execute("SELECT folder_id, rel_path FROM positions").fetchall()
+    righe = conn.execute(
+        "SELECT root_id, rel_path FROM pipeline_files WHERE frame_id IN (SELECT id FROM frames)"
+    ).fetchall()
     assert [tuple(r) for r in righe] == [(fid, "f0.fits")]
 
 

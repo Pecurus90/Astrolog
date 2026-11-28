@@ -60,14 +60,14 @@ def col_cielo(db_path_col_catalogo, tmp_path):
 
 def _frame(conn, sotto, nome):
     return conn.execute(
-        "SELECT frame_id FROM positions WHERE rel_path = ?", (f"{sotto}/{nome}",)
+        "SELECT frame_id FROM pipeline_files WHERE rel_path = ?", (f"{sotto}/{nome}",)
     ).fetchone()[0]
 
 
 def _gruppo(client, sotto):
     with db(client) as conn:
         (frame_id,) = conn.execute(
-            "SELECT f.id FROM frames f JOIN positions p ON p.frame_id = f.id"
+            "SELECT f.id FROM frames f JOIN pipeline_files p ON p.frame_id = f.id"
             " WHERE p.rel_path LIKE ? AND f.object_raw IS NULL ORDER BY f.id",
             (f"{sotto}/%",),
         ).fetchone()

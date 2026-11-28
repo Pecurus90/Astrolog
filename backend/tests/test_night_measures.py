@@ -62,31 +62,38 @@ class _World:
 
     def frame(self, *, night=..., obj=None, flt=None, copy_of=None, rel=None) -> int:
         self.n += 1
-        frame = self.conn.execute(
-            "INSERT INTO frames (frame_hash, image_type, header_json, created_at, night_id,"
-            " object_id, filter_id, copy_of) VALUES (?, 'light', '[]', ?, ?, ?, ?, ?)",
-            (f"h{self.n}", LATER, self.night if night is ... else night, obj, flt, copy_of),
+        # spine frame takes the id of its pipeline frame, as the scan writes it (step 40.4)
+        pframe = self.conn.execute(
+            "INSERT INTO pipeline_frames (fingerprint, created_at) VALUES (?, ?)",
+            (f"h{self.n}", LATER),
         ).lastrowid
+        frame = self.conn.execute(
+            "INSERT INTO frames (id, frame_hash, image_type, header_json, created_at, night_id,"
+            " object_id, filter_id, copy_of) VALUES (?, ?, 'light', '[]', ?, ?, ?, ?, ?)",
+            (pframe, f"h{self.n}", LATER, self.night if night is ... else night, obj, flt,
+             copy_of),
+        ).lastrowid  # fmt: skip
         self.conn.execute(
-            "INSERT INTO positions (frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-            " VALUES (?, ?, ?, 1, 1, ?)",
-            (frame, self.folder, rel or f"M31/f{self.n}.fits", LATER),
+            "INSERT INTO pipeline_files (root_id, rel_path, size, mtime_ns, state, seen_scan_id,"
+            " arrived_scan_id, frame_id) VALUES (?, ?, 1, 1, 'present', ?, ?, ?)",
+            (self.folder, rel or f"M31/f{self.n}.fits", self.scan, self.scan, frame),
         )
         return frame
 
     def file(
         self, rel: str, *, state="present", measured: float | None = None, exp=60.0, start=None
     ) -> int:
-        """The pipeline's file at `rel`; `measured`: its HFD, None: not measured yet."""
-        pframe = self.conn.execute(
-            "INSERT INTO pipeline_frames (fingerprint, created_at) VALUES (?, ?)", (rel, LATER)
-        ).lastrowid
-        file = self.conn.execute(
-            "INSERT INTO pipeline_files (root_id, rel_path, size, mtime_ns, state, seen_scan_id,"
-            " arrived_scan_id, gone_scan_id, frame_id) VALUES (?, ?, 1, 1, ?, ?, ?, ?, ?)",
-            (self.root, rel, state, self.scan, self.scan,
-             self.scan if state == "gone" else None, pframe),
-        ).lastrowid  # fmt: skip
+        """The pipeline's read of a frame's file at `rel`; `measured`: its HFD, None: not
+        measured yet."""
+        file, pframe = self.conn.execute(
+            "SELECT id, frame_id FROM pipeline_files WHERE root_id = ? AND rel_path = ?"
+            " AND state = 'present'",
+            (self.root, rel),
+        ).fetchone()
+        self.conn.execute(
+            "UPDATE pipeline_files SET state = ?, gone_scan_id = ? WHERE id = ?",
+            (state, self.scan if state == "gone" else None, file),
+        )
         self.conn.execute(
             "INSERT INTO pipeline_headers (file_id, program, header) VALUES (?, 'N.I.N.A.', '{}')",
             (file,),
@@ -111,18 +118,18 @@ class _World:
         return pframe
 
     def skipped(self, rel: str, reason: str) -> None:
-        """A present file the new pipeline read and gave no frame to."""
+        """A present file whose last read failed for now: the scan keeps its frame."""
         self.conn.execute(
-            "INSERT INTO pipeline_files (root_id, rel_path, size, mtime_ns, state, seen_scan_id,"
-            " arrived_scan_id, skip_reason) VALUES (?, ?, 1, 1, 'present', ?, ?, ?)",
-            (self.root, rel, self.scan, self.scan, reason),
+            "UPDATE pipeline_files SET skip_reason = ?"
+            " WHERE root_id = ? AND rel_path = ? AND state = 'present'",
+            (reason, self.root, rel),
         )
 
     def shot(self, hfd: float | None, start=None, **frame) -> int:
         """A frame of the spine and its file in the pipeline, at the same path."""
         spine = self.frame(**frame)
         rel = self.conn.execute(
-            "SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)
+            "SELECT rel_path FROM pipeline_files WHERE frame_id = ?", (spine,)
         ).fetchone()[0]
         self.file(rel, measured=hfd, start=start)
         return spine
@@ -162,7 +169,9 @@ def test_a_frame_takes_the_measures_of_its_own_file(conn, world) -> None:
 
 def test_a_file_gone_from_the_pipeline_gives_no_measures(conn, world) -> None:
     spine = world.frame()
-    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
+    rel = conn.execute(
+        "SELECT rel_path FROM pipeline_files WHERE frame_id = ?", (spine,)
+    ).fetchone()[0]
     world.file(rel, state="gone", measured=3.0)
     night_measures.rebuild(conn)
     assert conn.execute("SELECT COUNT(*) FROM night_measure_frames").fetchone()[0] == 0
@@ -171,24 +180,13 @@ def test_a_file_gone_from_the_pipeline_gives_no_measures(conn, world) -> None:
     assert _group(conn, world.night)["pending"] == 1
 
 
-def test_a_file_the_pipeline_skips_for_good_is_not_waiting(conn, world) -> None:
-    """A program the new pipeline does not read: never measured, so not
-    "still to measure" either; the frame says why (scanner.py)."""
-    spine = world.frame()
-    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
-    world.skipped(rel, "not_supported")
-    night_measures.rebuild(conn)
-    bridged = conn.execute("SELECT * FROM night_measure_frames").fetchone()
-    assert (bridged["pipeline_frame_id"], bridged["skip_reason"]) == (None, "not_supported")
-    group = _group(conn, world.night)
-    assert (group["frames"], group["pending"]) == (1, 0)
-
-
 def test_a_file_damaged_after_its_read_keeps_its_frame_and_is_not_waiting(conn, world) -> None:
     """Damaged after the scan read it: the scan keeps its frame (spina-scan.md), but it is
     never read again until it changes, so not "still to measure"."""
     spine = world.frame()
-    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
+    rel = conn.execute(
+        "SELECT rel_path FROM pipeline_files WHERE frame_id = ?", (spine,)
+    ).fetchone()[0]
     world.file(rel)
     conn.execute("UPDATE pipeline_files SET skip_reason = 'broken' WHERE rel_path = ?", (rel,))
     night_measures.rebuild(conn)
@@ -201,7 +199,9 @@ def test_a_file_damaged_after_its_read_keeps_its_frame_and_is_not_waiting(conn, 
 def test_a_file_unreadable_for_now_is_still_waiting(conn, world) -> None:
     """Unreadable or incomplete is tried again at the next scan."""
     spine = world.frame()
-    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
+    rel = conn.execute(
+        "SELECT rel_path FROM pipeline_files WHERE frame_id = ?", (spine,)
+    ).fetchone()[0]
     world.skipped(rel, "incomplete")
     night_measures.rebuild(conn)
     assert _group(conn, world.night)["pending"] == 1
@@ -297,7 +297,9 @@ def test_what_differs_among_the_measured_frames(conn, world) -> None:
     night_measures.rebuild(conn)
     assert json.loads(_group(conn, world.night)["differs"]) == []
     spine = world.frame()
-    rel = conn.execute("SELECT rel_path FROM positions WHERE frame_id = ?", (spine,)).fetchone()[0]
+    rel = conn.execute(
+        "SELECT rel_path FROM pipeline_files WHERE frame_id = ?", (spine,)
+    ).fetchone()[0]
     world.file(rel, measured=2.0, exp=120.0)
     night_measures.rebuild(conn)
     assert json.loads(_group(conn, world.night)["differs"]) == ["exposure"]

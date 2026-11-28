@@ -743,7 +743,7 @@ export interface paths {
         /**
          * Create Folder
          * @description Registers a folder; registering a retired one again reactivates it. One holding registered
-         *     folders replaces them only when `replaces` names exactly those: their frames, positions and
+         *     folders replaces them only when `replaces` names exactly those: their frames, files and
          *     answers pass to it (`folder_move.absorb`), so a scan reads only the files outside them.
          *
          *     409 `folder_exists` with its `folder_id` if it is already active; 409 `folder_inside` with the

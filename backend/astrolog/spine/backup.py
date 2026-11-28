@@ -42,9 +42,13 @@ _STAYS_HERE: Final = config.SECRETS | {"astap_path"}
 _FILTER = (
     "name", "brand", "model", "catalog_id", "passband", "is_none", "color", *gear.FILTER_SPECS
 )  # fmt: skip
+# one shot per path: the one on disk, else the last gone (a shot back reuses its older row)
 _SAMPLE = (
-    "SELECT p.rel_path, f.frame_hash FROM positions p JOIN frames f ON f.id = p.frame_id"
-    " WHERE p.folder_id = ? ORDER BY p.rel_path LIMIT ?"
+    "SELECT p.rel_path, f.frame_hash FROM pipeline_files p JOIN frames f ON f.id = p.frame_id"
+    " WHERE p.root_id = ? AND p.id = (SELECT q.id FROM pipeline_files q"
+    "  JOIN frames g ON g.id = q.frame_id WHERE q.root_id = p.root_id AND q.rel_path = p.rel_path"
+    "  ORDER BY q.state = 'present' DESC, q.id DESC LIMIT 1)"
+    " ORDER BY p.rel_path LIMIT ?"
 )
 _ROOTS = "SELECT id, path, name, retired_at, sample_json FROM pipeline_roots ORDER BY id"
 

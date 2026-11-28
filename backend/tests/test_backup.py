@@ -15,7 +15,7 @@ from astrolog.pipeline import recognise, roots
 from astrolog.pipeline.scanner import scan_file
 from astrolog.spine import backup, typeless
 from astrolog.spine.declarations import TypeAnswer
-from conftest import add_folder, move_folder, write_light
+from conftest import add_folder, files_gone, move_folder, put_file, write_light
 
 
 def _file(db_path):
@@ -178,11 +178,7 @@ def test_a_scan_reading_before_an_answer_cannot_write_after_it(db_path, monkeypa
         "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
         " VALUES('h1', 'light', '[]', 'ora')"
     ).lastrowid
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(?, ?, 'a.fits', 1, 1.0, 'ora')",
-        (frame, cartella),
-    )
+    put_file(conn, frame, cartella, "a.fits")
     scansione.start()
     assert letto.wait(10.0)
     monkeypatch.setattr(backup, "collect", vera)
@@ -233,6 +229,27 @@ def test_a_file_that_is_not_a_backup_is_refused(client_vuoto):
     assert (r.status_code, r.json()["detail"]["code"]) == (422, "not_a_backup")
 
 
+def test_the_sample_names_the_shot_on_disk_when_an_older_one_came_back(conn):
+    """X sparito, Y al suo posto e poi sparito, X rimesso: la scansione riporta presente la riga
+    di X, piu' vecchia di quella di Y. Il campione dice X, o l'altra macchina non la riconosce."""
+    folder_id = add_folder(conn, "D:/Astro")
+    for impronta in ("impronta-x", "impronta-y"):
+        conn.execute(
+            "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
+            " VALUES(?, 'light', '[]', 'ora')",
+            (impronta,),
+        )
+    riga_x = put_file(conn, 1, folder_id, "a.fits")
+    files_gone(conn)
+    put_file(conn, 2, folder_id, "a.fits")
+    files_gone(conn)
+    conn.execute(
+        "UPDATE pipeline_files SET state = 'present', gone_scan_id = NULL WHERE id = ?", (riga_x,)
+    )
+    data = backup.collect(conn, this_machine=True)
+    assert data["folders"][0]["sample"] == [["a.fits", "impronta-x"]]
+
+
 def test_the_answers_keep_their_keys_and_the_folder_its_sample(conn, tmp_path):
     """Le risposte di Da confermare tornano con la loro chiave; la cartella col campione di file
     che la riconosce sull'altra macchina."""
@@ -241,11 +258,7 @@ def test_the_answers_keep_their_keys_and_the_folder_its_sample(conn, tmp_path):
         "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
         " VALUES('impronta-1', 'unknown', '[]', 'ora')"
     )
-    conn.execute(
-        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
-        " VALUES(1, ?, 'dark/a.fits', 1, 1.0, 'ora')",
-        (folder_id,),
-    )
+    put_file(conn, 1, folder_id, "dark/a.fits")
     typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     data = backup.collect(conn, this_machine=True)
     assert data["folders"][0]["sample"] == [["dark/a.fits", "impronta-1"]]
